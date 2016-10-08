@@ -3,7 +3,7 @@
   <node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
     <rosparam param="sounds">
       - assistance
-      - citemark
+      - cuitemark
       - creatures
       - fear
       - fun_begins
