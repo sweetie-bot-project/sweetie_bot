@@ -1,0 +1,12 @@
+<launch>
+  <arg name="model" />
+  <arg name="gui" default="True" />
+ 
+  <param name="use_gui" value="true"/>
+  <param name="robot_description" textfile="$(find sweetie_bot_description_proto2)/robots/sweetie_bot_description_proto2.URDF" />
+  <rosparam command="load" file="$(find sweetie_bot_config)/motion_core/motion.yaml" /> 
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find sweetie_bot_description_proto2)/urdf.rviz" required="true" />
+</launch>

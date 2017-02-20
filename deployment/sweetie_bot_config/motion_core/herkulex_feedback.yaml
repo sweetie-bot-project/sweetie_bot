@@ -1,0 +1,15 @@
+herkulex_driver:
+    port_name: '/dev/ttyUSB0'
+    baudrate: 115200
+herkulex_array:
+    timeout: 0.060
+    tryouts: 3
+herkulex_sched:
+    timeout: 0.004
+    period_RT_JOG: 0.013
+    period_RT_read: 0.022
+    period_CM: 0.012
+    detailed_state: 0
+    poll_list: [ ]
+    poll_round_size: 6
+

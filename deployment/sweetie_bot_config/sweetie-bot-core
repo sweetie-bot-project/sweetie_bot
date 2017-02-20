@@ -1,0 +1,2 @@
+#!/bin/sh
+rttlua -i `rospack find sweetie_bot_config`/common/config.lua $*

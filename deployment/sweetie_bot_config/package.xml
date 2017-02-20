@@ -1,0 +1,23 @@
+<package format="2">
+  <name>sweetie_bot_config</name>
+  <version>1.0.0</version>
+  <description>Basic controllers for SweetieBot operating in joint space.</description>
+  <maintainer email="goncharovoi@yandex.ru">Oleg Goncharov (disRecord)</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">https://gitlab.com/sweetie-bot/sweetie_doc/wikis</url>
+
+  <author>Oleg Goncharov (disRecord)</author>
+
+  <!-- ROS and OROCOS packages -->
+  <depend>catkin</depend>
+  <depend>rtt</depend>
+  <depend>ocl</depend>
+  <!-- ROS and OROCOS datatypes -->
+  <!-- SWEETIEBOT packages -->
+  <!-- SWEETIEBOT datatypes -->
+
+  <export>
+  </export>
+</package>

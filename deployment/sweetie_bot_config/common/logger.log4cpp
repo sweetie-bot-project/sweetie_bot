@@ -1,0 +1,8 @@
+# The most basic logger configuration.
+#
+log4j.rootCategory=WARN
+ 
+log4j.category.org.orocos.rtt=WARN
+log4j.additivity.org.orocos.rtt=false
+
+log4j.category.sweetie_bot=INFO

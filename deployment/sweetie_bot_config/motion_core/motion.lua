@@ -1,0 +1,62 @@
+-- 
+-- BASIC MOTION DEPLOYMENT
+--
+-- Setup logger, agreagator_ref, resource control, servo_inv, herkulex_*, agregator_real
+--
+-- Intended to be run via config script.
+--
+
+--
+-- deloy logger, agregator, resource_control
+--
+require "motion_core"
+
+-- 
+-- Servo trajectore generator invertion component.
+--
+ros:import("sweetie_bot_servo_inv");
+-- load component
+depl:loadComponent("servo_inv","sweetie_bot::motion::ServoInvLead")
+servo_inv = depl:getPeer("servo_inv")
+servo_inv:loadService("rosparam")
+servo_inv:provides("rosparam"):getAll() 
+--servo_inv:provides("rosparam"):getRelative("period");
+--servo_inv:getProperty("lead").set( servo_inv:getProperty("period") )
+
+-- timer syncronization
+depl:connect("timer.timer_10", "servo_inv.sync_step", rtt.Variable("ConnPolicy"));
+
+-- data flow: agregator_ref -> servo_inv -> herkulex_sched
+depl:connect("agregator_ref.out_joints_sorted", "servo_inv.in_joints_fixed", rtt.Variable("ConnPolicy"));
+
+assert(servo_inv:start())
+
+-- herkulex subsystem
+require "herkulex_feedback"
+
+-- data flow: servo_inv -> herkulex_sched
+depl:connect("servo_inv.out_goals", "herkulex_sched.in_goals", rtt.Variable("ConnPolicy"));
+-- data flow (setup): herkulex_array -> agregator_ref
+depl:connect("herkulex_array.out_joints", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+herkulex.array:publishJointStates()
+
+-- agregator for real pose
+ros:import("rtt_roscomm")
+ros:import("sweetie_bot_agregator");
+ros:import("sweetie_bot_robot_model");
+-- load component
+depl:loadComponent("agregator_real", "sweetie_bot::motion::agregator");
+agregator_real = depl:getPeer("agregator_real")
+agregator_real:loadService("marshalling")
+agregator_real:loadService("rosparam")
+--set properties
+agregator_real:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
+agregator_real:provides("rosparam"):getRelative("robot_model")
+-- publish pose to ROS
+depl:stream("agregator_real.out_joints_sorted", ros:topic("~agregator_real/out_joints_sorted"))
+-- start component
+agregator_real:configure()
+assert(agregator_real:start())
+
+-- data flow: herkulex_sched -> agregator_real
+depl:connect("herkulex_sched.out_joints", "agregator_real.in_joints", rtt.Variable("ConnPolicy"))

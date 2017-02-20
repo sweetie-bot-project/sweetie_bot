@@ -1,0 +1,8 @@
+resource_control:
+    resources: [ leg1, leg2, leg3, leg4, head, eyes, tail ]
+agregator_ref: []
+period: 0.056
+servo_inv:
+    period: 0.056
+    lead: 0.056
+agregator_real: []
