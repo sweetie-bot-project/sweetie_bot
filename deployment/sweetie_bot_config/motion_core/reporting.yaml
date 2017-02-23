@@ -1,0 +1,4 @@
+reporting:
+    directory: '~'
+    herkulex_statistics:
+        WriteHeader: 0
