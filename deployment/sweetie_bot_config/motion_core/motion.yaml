@@ -1,4 +1,4 @@
-resource_control:
+resource_control_arbiter:
     resources: [ leg1, leg2, leg3, leg4, head, eyes, tail ]
 agregator_ref: []
 period: 0.056

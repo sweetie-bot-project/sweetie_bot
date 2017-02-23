@@ -1,17 +1,21 @@
 <launch>
   <arg name="model" />
   <arg name="gui" default="True" />
+
+  <param name="use_gui" value="True" />
  
   <param name="robot_description" textfile="$(find sweetie_bot_description_proto2)/robots/sweetie_bot_description_proto2.URDF" />
   <rosparam command="load" ns="motion" file="$(find sweetie_bot_config)/motion_core/motion.yaml" /> 
   <rosparam command="load" ns="motion" file="$(find sweetie_bot_config)/motion_core/herkulex_feedback.yaml" /> 
+  <rosparam command="load" ns="motion" file="$(find sweetie_bot_config)/motion_core/reporting.yaml" /> 
+  <rosparam command="load" ns="motion" file="$(find sweetie_bot_config)/motion_core/controller.yaml" /> 
 
   <node name="motion" pkg="sweetie_bot_config" type="sweetie-bot-core" args="virtual_follow_joint_state joint_state_control motion_core" output="screen"/>
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
-	  <remap from="joint_states" to="motion/agregator_ref/in_joints"/>
+	  <remap from="joint_states" to="motion/controller_joint_state/in_joints_ref"/>
   </node>
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" output="screen">
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
 	  <remap from="joint_states" to="motion/agregator_ref/out_joints_sorted"/>
   </node>
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find sweetie_bot_description_proto2)/urdf.rviz">

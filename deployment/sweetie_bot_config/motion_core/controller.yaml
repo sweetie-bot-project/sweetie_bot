@@ -1,0 +1,2 @@
+controller_joint_state:
+    controlled_chains: [ leg1, leg2 ]
