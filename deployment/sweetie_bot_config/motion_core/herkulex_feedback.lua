@@ -15,15 +15,15 @@ depl:loadComponent("herkulex_array","herkulex::HerkulexArray");
 herkulex.array = depl:getPeer("herkulex_array")
 herkulex.array:loadService("marshalling")
 herkulex.array:provides("marshalling"):loadProperties(config.file("sweetie_bot_servos.cpf"))
-rttlib_extra.get_rosparam(herkulex.array)
+rttlib_extra.ros.get_peer_params(herkulex.array)
 
 depl:loadComponent("herkulex_driver","herkulex::HerkulexDriver");
 herkulex.driver = depl:getPeer("herkulex_driver")
-rttlib_extra.get_rosparam(herkulex.driver)
+rttlib_extra.ros.get_peer_params(herkulex.driver)
 
 depl:loadComponent("herkulex_sched","herkulex::HerkulexSched");
 herkulex.sched = depl:getPeer("herkulex_sched")
-rttlib_extra.get_rosparam(herkulex.sched)
+rttlib_extra.ros.get_peer_params(herkulex.sched)
 
 -- CONNECT OPERATIONS OF HERKULEX_* subsystem
 
@@ -40,7 +40,7 @@ depl:connectOperations("herkulex_sched.waitSendPacketDL", "herkulex_driver.waitS
 -- Check configuration sanity
 local herkulex_round_duration = herkulex.sched:getProperty("period_RT_JOG"):get() + herkulex.sched:getProperty("period_RT_read"):get() 
     + herkulex.sched:getProperty("period_CM"):get() + 2*herkulex.sched:getProperty("timeout"):get() 
-local timer_period = tonumber(rttlib_extra.rosparam_get_string(config.node_fullname .. "/period"))
+local timer_period = timer:getPeriod()
 local herkulex_array_timeout = herkulex.array:getProperty("timeout"):get()
 local herkulex_sched_timeout = herkulex.sched:getProperty("timeout"):get()
 local herkulex_sched_poll_size = herkulex.sched:getProperty("poll_round_size"):get()

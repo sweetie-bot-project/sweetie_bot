@@ -14,10 +14,11 @@ ros:import("rtt_sensor_msgs")
 
 require "logger"
 
-local logger_conf = rttlib_extra.rosparam_get_string("logger_conf")
+local logger_conf = rttlib_extra.ros.get_param_string("logger_conf")
 if not logger_conf then logger_conf = "logger.log4cpp" end
 
 logger.init_loglevels_log4cpp(config.file(logger_conf))
+-- logger.log4cpp:addRosAppender("motion", 20)
 
 --
 -- init resource_control module
@@ -36,12 +37,13 @@ ros:import("rtt_roscomm")
 ros:import("sweetie_bot_agregator");
 ros:import("sweetie_bot_robot_model");
 -- load component
-depl:loadComponent("agregator_ref", "SweetieBotAgregator");
+depl:loadComponent("agregator_ref", "sweetie_bot::motion::Agregator")
 agregator_ref = depl:getPeer("agregator_ref")
-agregator_ref:loadService("marshalling")
-agregator_ref:loadService("rosparam")
 --set properties
-agregator_ref:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
+agregator_ref:loadService("marshalling")
+agregator_ref:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"))
+agregator_ref:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
+agregator_ref:loadService("rosparam")
 --agregator_ref:provides("rosparam"):getRelative("robot_model")
 agregator_ref:provides("rosparam"):getParam("/", "robot_model")
 -- publish pose to ROS
@@ -54,8 +56,7 @@ assert(agregator_ref:start())
 -- load and start timer
 --
 depl:loadComponent("timer", "OCL::TimerComponent")
-print(rttlib_extra.rosparam_get_string(config.node_fullname .. "/period"))
-local timer_period = tonumber(rttlib_extra.rosparam_get_string(config.node_fullname .. "/period"))
+local timer_period = tonumber(rttlib_extra.ros.get_param_string(config.node_fullname .. "/period"))
 timer = depl:getPeer("timer")
 -- start timers:
 --    timer_10: controllers timer

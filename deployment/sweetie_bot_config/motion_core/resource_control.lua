@@ -22,19 +22,18 @@ resource_control.arbiter = depl:getPeer("resource_control_arbiter")
 -- Load controlled resources list
 -- resource_control.arbiter:loadService("marshalling")
 -- resource_control.arbiter:provides("marshalling"):updateProperties("resource_control.cpf")
-rttlib_extra.get_rosparam(resource_control.arbiter)
+rttlib_extra.ros.get_peer_params(resource_control.arbiter)
 
 -- Connect a requester to the arbiter
 function resource_control.register_controller(peer)
 	local cp = rtt.Variable("ConnPolicy")
-
+	if type(peer) ~= "string" then
+		peer = peer:getName()
+	end
 	success = depl:loadService(peer, "resource_client")
-	success = success and depl:connect("resource_arbiter.out_resource_assigment", peer .. ".resource_client.in_resource_assigment", cp )
-	success = success and depl:connect("resource_arbiter.in_resource_request", peer .. ".resource_client.out_resource_request", cp )
-	success = success and depl:connect("resource_arbiter.in_resource_requester_status", peer .. ".resource_client.out_resource_requester_status", cp )
-
-	success = success and depl:connectServices(peer, peer)
-
+	success = success and depl:connect("resource_control_arbiter.out_resource_assigment", peer .. ".resource_client.in_resource_assigment", cp )
+	success = success and depl:connect("resource_control_arbiter.in_resource_request", peer .. ".resource_client.out_resource_request", cp )
+	success = success and depl:connect("resource_control_arbiter.in_resource_requester_status", peer .. ".resource_client.out_resource_requester_status", cp )
 	return success
 end
 

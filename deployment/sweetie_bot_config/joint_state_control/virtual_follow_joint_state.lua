@@ -6,14 +6,22 @@ require "virtual_motion"
 
 controller = {}
 
--- depl:loadComponent("controller_joint_state", "sweetie_bot::controller::FollowJointState")
--- controller.joint_state = depl:getPeer("controller_joint_state")
--- rttlib_extra.get_rosparam(controller.joint_state)
--- -- register controller
--- resource_control.register_controller(controller.joint_state)
--- -- data flow: controller -> agregator_ref
--- depl:connect("controller_joint_state.out_joints", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
--- -- prepare to start
--- controller.joint_state:configre()
+ros:import("sweetie_bot_controllers_joint_space")
 
-depl:stream("agregator_ref.in_joints", ros:topic("~agregator_ref/in_joints"))
+-- load controller
+depl:loadComponent("controller_joint_state", "sweetie_bot::motion::controller::FollowJointState")
+controller.joint_state = depl:getPeer("controller_joint_state")
+rttlib_extra.ros.get_peer_params(controller.joint_state)
+-- register controller
+resource_control.register_controller(controller.joint_state)
+-- timer
+depl:connect("timer.timer_10", "controller_joint_state.sync", rtt.Variable("ConnPolicy"))
+-- data flow: controller <-> agregator_ref
+depl:connect("controller_joint_state.out_joints_ref_fixed", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+depl:connect("agregator_ref.out_joints_sorted", "controller_joint_state.in_joints_sorted", rtt.Variable("ConnPolicy"))
+-- ros redirect
+depl:stream("controller_joint_state.in_joints_ref", ros:topic("~controller_joint_state/in_joints_ref"))
+-- connect to RobotModel
+depl:connectServices("controller_joint_state", "agregator_ref")
+-- prepare to start
+controller.joint_state:configure()
