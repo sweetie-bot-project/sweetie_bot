@@ -22,7 +22,7 @@ resource_control.arbiter = depl:getPeer("resource_control_arbiter")
 -- Load controlled resources list
 -- resource_control.arbiter:loadService("marshalling")
 -- resource_control.arbiter:provides("marshalling"):updateProperties("resource_control.cpf")
-rttlib_extra.ros.get_peer_params(resource_control.arbiter)
+rttlib_extra.get_peer_rosparams(resource_control.arbiter)
 
 -- Connect a requester to the arbiter
 function resource_control.register_controller(peer)

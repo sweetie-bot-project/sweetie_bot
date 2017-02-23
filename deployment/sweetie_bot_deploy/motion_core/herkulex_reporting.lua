@@ -10,7 +10,7 @@
 reporting = {}
 
 -- get directory
-local directory = rttlib_extra.ros.get_param_string("~reporting/directory")
+local directory = rttlib_extra.get_rosparam("~reporting/directory", "string")
 directory = directory or "~"
 
 -- helper function to setup reporter
@@ -26,8 +26,7 @@ local function setup_reporting(reporter_name, peer_ports, file, complex_decompos
 	reporter:getProperty("WriteHeader"):set(true)
 	reporter:getProperty("ReportFile"):set(file)
 	-- configuere reporter: rosparam 
-	rttlib_extra.ros.get_peer_params(reporter)
-	-- TODO rosparam
+	rttlib_extra.get_peer_rosparams(reporter)
 	-- TODO period
 	-- add access to peers
 	for i, peer in ipairs(peer_ports) do

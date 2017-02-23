@@ -15,15 +15,15 @@ depl:loadComponent("herkulex_array","herkulex::HerkulexArray");
 herkulex.array = depl:getPeer("herkulex_array")
 herkulex.array:loadService("marshalling")
 herkulex.array:provides("marshalling"):loadProperties(config.file("sweetie_bot_servos.cpf"))
-rttlib_extra.ros.get_peer_params(herkulex.array)
+rttlib_extra.get_peer_rosparams(herkulex.array)
 
 depl:loadComponent("herkulex_driver","herkulex::HerkulexDriver");
 herkulex.driver = depl:getPeer("herkulex_driver")
-rttlib_extra.ros.get_peer_params(herkulex.driver)
+rttlib_extra.get_peer_rosparams(herkulex.driver)
 
 depl:loadComponent("herkulex_sched","herkulex::HerkulexSched");
 herkulex.sched = depl:getPeer("herkulex_sched")
-rttlib_extra.ros.get_peer_params(herkulex.sched)
+rttlib_extra.get_peer_rosparams(herkulex.sched)
 
 -- CONNECT OPERATIONS OF HERKULEX_* subsystem
 

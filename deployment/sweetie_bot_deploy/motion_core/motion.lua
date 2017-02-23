@@ -18,7 +18,7 @@ ros:import("sweetie_bot_servo_inv");
 -- load component
 depl:loadComponent("servo_inv","sweetie_bot::motion::ServoInvLead")
 servo_inv = depl:getPeer("servo_inv")
-rttlib_extra.ros.get_peer_params(servo_inv)
+rttlib_extra.get_peer_rosparams(servo_inv)
 
 -- timer syncronization
 depl:connect("timer.timer_10", "servo_inv.sync_step", rtt.Variable("ConnPolicy"));

@@ -11,7 +11,7 @@ ros:import("sweetie_bot_controllers_joint_space")
 -- load controller
 depl:loadComponent("controller_joint_state", "sweetie_bot::motion::controller::FollowJointState")
 controller.joint_state = depl:getPeer("controller_joint_state")
-rttlib_extra.ros.get_peer_params(controller.joint_state)
+rttlib_extra.get_peer_rosparams(controller.joint_state)
 -- register controller
 resource_control.register_controller(controller.joint_state)
 -- timer

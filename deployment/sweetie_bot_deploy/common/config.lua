@@ -2,7 +2,10 @@ require "rttlib"
 require "rttros"
 require "lfs"
 
+config = {}
+
 -- 0. Simplify access to OROCOS facilities in children scripts
+
 -- Deplyer
 depl = rtt.getTC():getPeer("Deployer")
 -- GlobalService
@@ -15,11 +18,9 @@ ros:import("rtt_rosnode")
 ros:import("rtt_rosparam")
 ros:import("rtt_dynamic_reconfigure")
 
-config = {}
-
 -- 1. Setup overalays
 
-config.path = rttros.rospack_find("sweetie_bot_config") 
+config.path = rttros.rospack_find("sweetie_bot_deploy") 
 
 -- Set overlays fullpaths
 config.overlay_paths = {} 

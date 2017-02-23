@@ -14,7 +14,7 @@ ros:import("rtt_sensor_msgs")
 
 require "logger"
 
-local logger_conf = rttlib_extra.ros.get_param_string("logger_conf")
+local logger_conf = rttlib_extra.get_rosparam("logger_conf", "string")
 if not logger_conf then logger_conf = "logger.log4cpp" end
 
 logger.init_loglevels_log4cpp(config.file(logger_conf))
@@ -56,7 +56,7 @@ assert(agregator_ref:start())
 -- load and start timer
 --
 depl:loadComponent("timer", "OCL::TimerComponent")
-local timer_period = tonumber(rttlib_extra.ros.get_param_string(config.node_fullname .. "/period"))
+local timer_period = rttlib_extra.get_rosparam("~period", "float")
 timer = depl:getPeer("timer")
 -- start timers:
 --    timer_10: controllers timer
