@@ -50,9 +50,26 @@ package.path = lua_path .. string.gsub(package.path, "^;*%./%?%.lua;*", "")
 --    * logger categories,
 --    * rosparam server.
 
-config.rosnode = gs:provides("rosnode")
-config.node_fullname = config.rosnode:getName()
-config.node_namespace = config.rosnode:getNamespace()
+-- if ros additional functions are supported
+if ros.getNodeName then
+	config.node_fullname = ros:getNodeName()
+	config.node_namespace = ros:getNodeNamespace()
+else
+-- otherwise
+	for i = 1,#arg do
+		if string.find(arg[i], "__name:=[^ ]+") then
+			config.node_fullname = string.sub(arg[i], 9)
+		elseif string.find(arg[i], "__ns:=[^ ]+") then
+			config.node_namespace = string.sub(arg[i], 7)
+		end
+	end
+	if not config.node_namespace then
+		config.node_namespace = "/"
+		config.node_fullname = "/" .. config.node_fullname
+	else
+		config.node_fullname = config.node_namespace .. "/" .. config.node_fullname
+	end
+end
 config.logger_root_category = string.gsub(string.gsub(config.node_fullname, "^/", ""), "/", ".")
 -- configure logger
 require "logger"
@@ -61,8 +78,9 @@ logger.set_root_category(config.logger_root_category)
 -- Helper functions: parameters access and etc
 require "rttlib_extra"
 
---print("logger_root", config.logger_root_category)
---print("node_name", config.node_fullname)
+print("logger_root", config.logger_root_category)
+print("node_name", config.node_fullname)
+print("node_namespace", config.node_namespace)
 
 -- 3. Setup working dir to first overlay
 lfs.chdir(config.overlay_paths[1])
