@@ -23,71 +23,352 @@
 				<description>Servo opertional state: ON=96, BRAKE=64, FREE=0</description>
 				<value>96</value>
 			</simple>
-			<simple name="min_position" type="ulong">
-				<description>Minimal allowed absolute position.</description>
-				<value>21</value>
-			</simple>
-			<simple name="max_position" type="ulong">
-				<description>Maximal allowed absolute position.</description>
-				<value>1002</value>
-			</simple>
-			<simple name="position_kp" type="ulong">
-				<description>Proportional PID gain.</description>
-				<value>254</value>
-			</simple>
-			<simple name="position_kd" type="ulong">
-				<description>Differential PID gain.</description>
-				<value>6500</value>
-			</simple>
-			<simple name="position_ki" type="ulong">
-				<description>Integral PID gain.</description>
-				<value>0</value>
-			</simple>
 		</struct>
 	</struct>
-	<struct name="servo1" type="PropertyBag">
-		<description>Test servo entry.</description>
-		<simple name="servo_id" type="ulong">
-			<description>Servo hardware ID.</description>
-			<value>0</value>
-		</simple>
-		<simple name="offset" type="ulong">
-			<description>Servo zero position offset (raw).</description>
-			<value>512</value>
-		</simple>
-		<simple name="reverse" type="boolean">
-			<description>Reverse direction flag.</description>
-			<value>0</value>
-		</simple>
-		<struct name="registers_init" type="PropertyBag">
-			<description>Values written to the servo RAM register after reboot.</description>
-			<simple name="led_control" type="ulong">
-				<description>Led status.</description>
-				<value>1</value>
-			</simple>
-		</struct>
-	</struct>
-	<struct name="servo2" type="PropertyBag">
-		<description>Test servo entry.</description>
-		<simple name="servo_id" type="ulong">
-			<description>Servo hardware ID.</description>
-			<value>1</value>
-		</simple>
-		<simple name="offset" type="ulong">
-			<description>Servo zero position offset (raw).</description>
-			<value>512</value>
-		</simple>
-		<simple name="reverse" type="boolean">
-			<description>Reverse direction flag.</description>
-			<value>0</value>
-		</simple>
-		<struct name="registers_init" type="PropertyBag">
-			<description>Values written to servo RAM register after reboot.</description>
-			<simple name="led_control" type="ulong">
-				<description>Led status.</description>
-				<value>2</value>
-			</simple>
-		</struct>
-	</struct>
+    <struct name="joint11" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>11</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint12" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>12</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint13" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>13</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint14" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>14</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint15" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>15</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint21" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>6</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint22" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>7</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint23" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>8</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint24" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>9</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint25" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>10</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint31" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>16</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint32" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>17</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint33" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>18</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint34" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>19</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint35" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>20</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint41" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>21</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint42" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>22</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint43" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>23</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint44" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>24</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint45" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>25</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint51" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>5</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+    </struct>
+    <struct name="joint52" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>3</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
+    <struct name="joint53" type="PropertyBag">
+        <description>Servo description.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>4</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>1</value>
+        </simple>
+    </struct>
   </struct>
 </properties>
