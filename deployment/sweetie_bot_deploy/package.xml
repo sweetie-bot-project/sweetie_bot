@@ -1,7 +1,7 @@
 <package format="2">
-  <name>sweetie_bot_config</name>
+  <name>sweetie_bot_deploy</name>
   <version>1.0.0</version>
-  <description>Basic controllers for SweetieBot operating in joint space.</description>
+  <description>SweetoeBot basic deployment scripts</description>
   <maintainer email="goncharovoi@yandex.ru">Oleg Goncharov (disRecord)</maintainer>
 
   <license>BSD</license>
