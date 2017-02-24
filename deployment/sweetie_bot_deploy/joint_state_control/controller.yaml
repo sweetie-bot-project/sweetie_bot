@@ -1,2 +1,4 @@
 controller_joint_state:
-    controlled_chains: [ leg1, leg2 ]
+    controlled_chains: [ head ]
+controller_joint_trajectory: 
+    period: 0.056

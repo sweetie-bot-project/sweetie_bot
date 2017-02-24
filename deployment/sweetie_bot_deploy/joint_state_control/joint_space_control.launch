@@ -8,9 +8,9 @@
   <rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/motion.yaml" /> 
   <rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/herkulex_feedback.yaml" /> 
   <rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/reporting.yaml" /> 
-  <rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/controller.yaml" /> 
+  <rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/joint_state_control/controller.yaml" /> 
 
-  <node name="motion" pkg="sweetie_bot_deploy" type="sweetie-bot-core" args="virtual_follow_joint_state joint_state_control motion_core" output="screen"/>
+  <node name="motion" pkg="sweetie_bot_deploy" type="sweetie-bot-core" args="motion.lua controller_joint_space_all.lua joint_state_control motion_core" output="screen"/>
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
 	  <remap from="joint_states" to="motion/controller_joint_state/in_joints_ref"/>

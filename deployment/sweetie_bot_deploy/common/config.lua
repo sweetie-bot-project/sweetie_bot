@@ -18,21 +18,48 @@ ros:import("rtt_rosnode")
 ros:import("rtt_rosparam")
 ros:import("rtt_dynamic_reconfigure")
 
--- 1. Setup overalays
+--
+local function str_array_join(array) 
+	result = ""
+	if array then
+		for i, s in ipairs(array) do result = result .. " " .. s end
+	end
+	return result
+end
 
+-- 0. Parse arguments: divide scripts, overlays and ros parameters
 config.path = rttros.rospack_find("sweetie_bot_deploy") 
-
--- Set overlays fullpaths
+config.modules = {}
 config.overlay_paths = {} 
-for i = 2,#arg do
-	local overlay_path = arg[i]
-	if not string.find(overlay_path, "^__") then
-		if not string.find(overlay_path, "^/") then
-			overlay_path = config.path .. "/" .. overlay_path
+for i, a in ipairs(arg) do
+	if string.find(a, "^__") then
+		-- argument is ROS parameter
+		if string.find(a, "__name:=[^ ]+") then
+			config.node_fullname = string.sub(a, 9)
+		elseif string.find(a, "__ns:=[^ ]+") then
+			config.node_namespace = string.sub(a, 7)
 		end
-		table.insert(config.overlay_paths, overlay_path)
+	elseif string.find(a, "\.lua$") then
+		-- argument is lua script name, i.e. module to run
+		a = string.sub(a, 1, -5)
+		print(a)
+		table.insert(config.modules, a)
+		print(config.modules[1])
+	else
+		-- argument is overlay directory
+		if not string.find(a, "^/") then
+			-- path is not absolute
+			a = config.path .. "/" .. a
+		end
+		table.insert(config.overlay_paths, a)
 	end
 end
+print("modules:", str_array_join(config.modules))
+print("overlays:", str_array_join(config.overlay_paths))
+		
+-- 1. Setup overalays
+
+-- Add default path
 table.insert(config.overlay_paths, config.path .. "/common")
 
 -- Set LUA_PATH to access overlays
@@ -51,19 +78,14 @@ package.path = lua_path .. string.gsub(package.path, "^;*%./%?%.lua;*", "")
 --    * logger categories,
 --    * rosparam server.
 
--- if ros additional functions are supported
+-- get node name and namespace
+-- if ros additional functions are supported 
 if ros.getNodeName then
 	config.node_fullname = ros:getNodeName()
 	config.node_namespace = ros:getNodeNamespace()
 else
--- otherwise
-	for i = 1,#arg do
-		if string.find(arg[i], "__name:=[^ ]+") then
-			config.node_fullname = string.sub(arg[i], 9)
-		elseif string.find(arg[i], "__ns:=[^ ]+") then
-			config.node_namespace = string.sub(arg[i], 7)
-		end
-	end
+	-- otherwise: use args
+	config.node_fullname = config.node_fullname or "motion"
 	if not config.node_namespace then
 		config.node_namespace = "/"
 		config.node_fullname = "/" .. config.node_fullname
@@ -71,6 +93,10 @@ else
 		config.node_fullname = config.node_namespace .. "/" .. config.node_fullname
 	end
 end
+print("node_fullname ", config.node_fullname)
+print("node_namespace:", config.node_namespace)
+
+-- construct category name
 config.logger_root_category = string.gsub(string.gsub(config.node_fullname, "^/", ""), "/", ".")
 -- configure logger
 require "logger"
@@ -79,9 +105,7 @@ logger.set_root_category(config.logger_root_category)
 -- Helper functions: parameters access and etc
 require "rttlib_extra"
 
-print("logger_root", config.logger_root_category)
-print("node_name", config.node_fullname)
-print("node_namespace", config.node_namespace)
+print("logger_root: ", config.logger_root_category)
 
 -- 3. Setup working dir to first overlay
 lfs.chdir(config.overlay_paths[1])
@@ -103,5 +127,7 @@ function config.file(conf_file)
 	return nil
 end
 
--- 5. Pass control to overlay
-require(arg[1])
+-- 5. Pass control to modules
+for i,mod in ipairs(config.modules) do
+	require(mod)
+end

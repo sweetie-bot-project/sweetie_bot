@@ -2,9 +2,11 @@
 -- VIRTUAL ROBOT and JOINT STATE controllers
 --
 -- Setup FollowJointState controller
-require "virtual_motion"
+--
+-- Intended to be run via config script.
+--
 
-controller = {}
+controller = controller or {}
 
 ros:import("sweetie_bot_controllers_joint_space")
 
