@@ -42,13 +42,14 @@ ros:import("rtt_roscomm")
 ros:import("sweetie_bot_agregator");
 ros:import("sweetie_bot_robot_model");
 -- load component
-depl:loadComponent("agregator_real", "sweetie_bot::motion::agregator");
+depl:loadComponent("agregator_real", "sweetie_bot::motion::Agregator");
 agregator_real = depl:getPeer("agregator_real")
 agregator_real:loadService("marshalling")
 agregator_real:loadService("rosparam")
 --set properties
 agregator_real:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
-agregator_real:provides("rosparam"):getRelative("robot_model")
+agregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
+agregator_real:provides("rosparam"):getParam("/","robot_model")
 -- publish pose to ROS
 depl:stream("agregator_real.out_joints_sorted", ros:topic("~agregator_real/out_joints_sorted"))
 -- start component
