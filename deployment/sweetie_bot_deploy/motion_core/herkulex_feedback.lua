@@ -37,10 +37,12 @@ depl:connectServices("herkulex_array","herkulex_sched");
 depl:connectOperations("herkulex_sched.waitSendPacketDL", "herkulex_driver.waitSendPacket");
 
 -- TIME PERIODS CONFIGURATION
+require "timer"
+
 -- Check configuration sanity
 local herkulex_round_duration = herkulex.sched:getProperty("period_RT_JOG"):get() + herkulex.sched:getProperty("period_RT_read"):get() 
     + herkulex.sched:getProperty("period_CM"):get() + 2*herkulex.sched:getProperty("timeout"):get() 
-local timer_period = timer:getPeriod()
+local timer_period = timer.period
 local herkulex_array_timeout = herkulex.array:getProperty("timeout"):get()
 local herkulex_sched_timeout = herkulex.sched:getProperty("timeout"):get()
 local herkulex_sched_poll_size = herkulex.sched:getProperty("poll_round_size"):get()
@@ -56,8 +58,7 @@ assert(timer_period <= herkulex_array_timeout)
 assert(herkulex_sched_period_RT_read >= herkulex_sched_poll_size*herkulex_sched_timeout)
 
 -- connect to timer
--- TODO require "timer"
-depl:connect("timer.timer_20", "herkulex_sched.sync", rtt.Variable("ConnPolicy"));
+depl:connect(timer.herkulex.port, "herkulex_sched.sync", rtt.Variable("ConnPolicy"));
 
 -- START HERKULEX_* SUBSYSTEM (without scheduler)
 

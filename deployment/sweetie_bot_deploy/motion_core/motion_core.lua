@@ -53,14 +53,6 @@ agregator_ref:configure()
 assert(agregator_ref:start())
 
 --
--- load and start timer
+-- timer
 --
-depl:loadComponent("timer", "OCL::TimerComponent")
-local timer_period = rttlib_extra.get_rosparam("~period", "float")
-timer = depl:getPeer("timer")
--- start timers:
---    timer_10: controllers timer
---    timer_20: herkulex timer
-timer:startTimer(10, timer_period)
-timer:wait(0, timer_period/2)
-timer:startTimer(20, timer_period)
+require "timer"

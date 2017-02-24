@@ -15,7 +15,7 @@ rttlib_extra.get_peer_rosparams(controller.joint_state)
 -- register controller
 resource_control.register_controller(controller.joint_state)
 -- timer
-depl:connect("timer.timer_10", "controller_joint_state.sync", rtt.Variable("ConnPolicy"))
+depl:connect(timer.controller.port, "controller_joint_state.sync", rtt.Variable("ConnPolicy"))
 -- data flow: controller <-> agregator_ref
 depl:connect("controller_joint_state.out_joints_ref_fixed", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
 depl:connect("agregator_ref.out_joints_sorted", "controller_joint_state.in_joints_sorted", rtt.Variable("ConnPolicy"))

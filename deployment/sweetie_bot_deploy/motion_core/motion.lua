@@ -21,7 +21,7 @@ servo_inv = depl:getPeer("servo_inv")
 rttlib_extra.get_peer_rosparams(servo_inv)
 
 -- timer syncronization
-depl:connect("timer.timer_10", "servo_inv.sync_step", rtt.Variable("ConnPolicy"));
+depl:connect(timer.controller.port, "servo_inv.sync_step", rtt.Variable("ConnPolicy"));
 
 -- data flow: agregator_ref -> servo_inv -> herkulex_sched
 depl:connect("agregator_ref.out_joints_sorted", "servo_inv.in_joints_fixed", rtt.Variable("ConnPolicy"));
