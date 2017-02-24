@@ -6,4 +6,4 @@ log4j.category.org.orocos.rtt=WARN
 log4j.additivity.org.orocos.rtt=false
 
 log4j.category.sweetie_bot=INFO
-log4j.category.motion=DEBUG
+log4j.category.motion=INFO

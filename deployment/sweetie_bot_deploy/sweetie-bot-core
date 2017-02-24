@@ -1,2 +1,3 @@
-#!/bin/sh
+#!/bin/bash
+#gdb --args rttlua-gnulinux -i `rospack find sweetie_bot_deploy`/common/config.lua $*
 rttlua -i `rospack find sweetie_bot_deploy`/common/config.lua $*
