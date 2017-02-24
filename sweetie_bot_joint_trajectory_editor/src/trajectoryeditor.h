@@ -31,6 +31,9 @@ private:
 private slots:
     void rosSpin();
 
+    void on_pushButton_4_clicked();
+    void on_pushButton_5_clicked();
+    void on_pushButton_6_clicked();
 };
 
 #endif // TRAJECTORYEDITOR_H

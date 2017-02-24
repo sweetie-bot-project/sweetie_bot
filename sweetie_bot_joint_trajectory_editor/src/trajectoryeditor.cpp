@@ -108,3 +108,28 @@ void TrajectoryEditor::rosSpin()
 }
 
 
+
+void TrajectoryEditor::on_pushButton_4_clicked()
+{
+  if (ui->pushButton_4->text() == "Turn all servos on")
+  {
+    qDebug("Command to turn on servos");
+    ui->pushButton_4->setText("Turn all servos off");
+  }
+  else
+  {
+    qDebug("Command to turn off servos");
+    ui->pushButton_4->setText("Turn all servos on");
+  }
+}
+
+void TrajectoryEditor::on_pushButton_5_clicked()
+{
+  qDebug("Command to switch selected servos");
+}
+
+void TrajectoryEditor::on_pushButton_6_clicked()
+{
+  qDebug("Command to switch trajectory servos");
+
+}
