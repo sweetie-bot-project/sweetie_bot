@@ -1,6 +1,9 @@
 #include "trajectoryeditor.h"
 #include "ui_Editor.h"
 
+#include <QStandardItemModel>
+#include <QMessageBox>
+
 ros::Publisher  pub;
 ros::Subscriber sub;
 
@@ -11,6 +14,8 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], QWidget *parent) :
     ui(new Ui::TrajectoryEditor)
 {
     ui->setupUi(this);
+
+    bootstrap();
 
     // ROS
     ros::init(argc, argv, "trajectory_editor");
@@ -107,7 +112,26 @@ void TrajectoryEditor::rosSpin()
     ros::spinOnce();
 }
 
+void TrajectoryEditor::bootstrap()
+{
+  QStandardItemModel *model = new QStandardItemModel(3, 4, ui->tableView);
+  ui->tableView->setModel(model);
+  ui->tableView->verticalHeader()->hide();
+  ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+  QStringList headerLabels = QStringList() << tr("time") << tr("marker") << tr ("active") << tr("angles");
+  model->setHorizontalHeaderLabels(headerLabels);
 
+  for(int row=0; row!=model->rowCount(); ++row)
+  {
+      for(int column=0; column!=model->columnCount(); ++column)
+      {
+          QStandardItem *newItem = new QStandardItem(tr("%1").arg((row+1)*(column+1)));
+          model->setItem(row, column, newItem);
+      }
+  }
+
+//  model->itemChanged();
+}
 
 void TrajectoryEditor::on_pushButton_4_clicked()
 {

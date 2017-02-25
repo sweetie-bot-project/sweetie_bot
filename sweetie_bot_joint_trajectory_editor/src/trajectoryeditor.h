@@ -23,7 +23,8 @@ class TrajectoryEditor : public QMainWindow
 
 public:
     explicit TrajectoryEditor(int argc, char *argv[], QWidget *parent = 0);
-    ~TrajectoryEditor();
+  ~TrajectoryEditor();
+  void bootstrap();
 private:
     void jointsRealCallback(const sensor_msgs::JointState::ConstPtr& msg);
 
