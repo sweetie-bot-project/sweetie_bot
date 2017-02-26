@@ -59,8 +59,10 @@ print("overlays:", str_array_join(config.overlay_paths))
 		
 -- 1. Setup overalays
 
--- Add default path
+-- Add default paths
 table.insert(config.overlay_paths, config.path .. "/common")
+ -- Allow to call scripts from any overlay using dot notation: "motion_core.motion.lua"
+table.insert(config.overlay_paths, config.path)
 
 -- Set LUA_PATH to access overlays
 local lua_path = ";./?.lua;" 
