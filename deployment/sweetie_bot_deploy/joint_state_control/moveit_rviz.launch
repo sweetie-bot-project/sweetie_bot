@@ -1,0 +1,14 @@
+<launch>
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+
+  <!-- Global remap fo all subsequent nodes. -->
+  <remap from="joint_states" to="motion/agregator_ref/out_joints_sorted" />
+
+  <!-- Run Rviz and load the default config to see the state of the move_group node -->
+  <!-- Not working in kinetics...  -->
+  <include file="$(find sweetie_bot_moveit_config_proto2)/launch/moveit_rviz.launch">
+    <arg name="config" value="true"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include>
+</launch>

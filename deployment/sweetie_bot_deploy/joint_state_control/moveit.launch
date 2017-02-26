@@ -1,0 +1,50 @@
+<launch>
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+
+  <!-- motion and controller parameteres -->
+  <param name="robot_description" textfile="$(find sweetie_bot_description_proto2)/robots/sweetie_bot_description_proto2.URDF" />
+  <rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/motion.yaml" /> 
+  <rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/joint_state_control/controller.yaml" /> 
+
+  <!-- OROCOS motion core -->
+  <node name="motion" pkg="sweetie_bot_deploy" type="sweetie-bot-core" args="virtual_motion.lua controller_joint_space_all.lua joint_state_control motion_core" output="screen" />
+
+  <!-- Global remap fo all subsequent nodes. -->
+  <remap from="joint_states" to="motion/agregator_ref/out_joints_sorted" />
+
+  <!-- Robot cartesian pose publishing -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+  <!-- Gui for control robot on joint level -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+	<remap from="joint_states" to="motion/controller/joint_state/in_joints_ref" />
+    <param name="/use_gui" value="true"/>
+    <rosparam param="/source_list">[]</rosparam>
+  </node>
+
+  <!-- Broadcast static tf for robot root -->
+  <node pkg="tf" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 0 odom_combined base_link 100" /> 
+
+  <!-- Load the URDF, SRDF and other .yaml configuration files on the param server -->
+  <include file="$(find sweetie_bot_moveit_config_proto2)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true"/>
+  </include>
+
+  <!-- Run the main MoveIt executable  -->
+  <include file="$(find sweetie_bot_moveit_config_proto2)/launch/move_group.launch">
+    <arg name="allow_trajectory_execution" value="true"/>
+    <arg name="fake_execution" value="false"/>
+    <arg name="info" value="true"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include>
+
+  <!-- Run Rviz and load the default config to see the state of the move_group node -->
+  <!-- Not working in kinetics...  -->
+  <!--
+  <include file="$(find sweetie_bot_moveit_config_proto2)/launch/moveit_rviz.launch">
+    <arg name="config" value="true"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include>
+  -->
+</launch>
