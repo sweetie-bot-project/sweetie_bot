@@ -31,10 +31,10 @@ assert(servo_inv:start())
 -- herkulex subsystem
 require "herkulex_feedback"
 
--- data flow: servo_inv -> herkulex_sched
-depl:connect("servo_inv.out_goals", "herkulex_sched.in_goals", rtt.Variable("ConnPolicy"));
--- data flow (setup): herkulex_array -> agregator_ref
-depl:connect("herkulex_array.out_joints", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+-- data flow: servo_inv -> herkulex/sched
+depl:connect("servo_inv.out_goals", "herkulex/sched.in_goals", rtt.Variable("ConnPolicy"));
+-- data flow (setup): herkulex/array -> agregator_ref
+depl:connect("herkulex/array.out_joints", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
 herkulex.array:publishJointStates()
 
 -- agregator for real pose
@@ -57,4 +57,4 @@ agregator_real:configure()
 assert(agregator_real:start())
 
 -- data flow: herkulex_sched -> agregator_real
-depl:connect("herkulex_sched.out_joints", "agregator_real.in_joints", rtt.Variable("ConnPolicy"))
+depl:connect("herkulex/sched.out_joints", "agregator_real.in_joints", rtt.Variable("ConnPolicy"))

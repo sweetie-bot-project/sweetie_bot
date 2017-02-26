@@ -16,7 +16,7 @@ timer = {}
 
 -- load and start timer
 depl:loadComponent("timer", "OCL::TimerComponent")
-timer.period = rttlib_extra.get_rosparam("~period", "float")
+timer.period = rttlib_extra.get_rosparam("~timer/period", "float")
 timer.timer = depl:getPeer("timer")
 -- start timers:
 --    timer_10: controllers timer
@@ -27,3 +27,7 @@ timer.timer:startTimer(20, timer.period)
 -- register groups
 timer.controller = { port = "timer.timer_10", shift = 0 }
 timer.herkulex = { port = "timer.timer_20", shift = timer.period/2 }
+
+-- TODO: helper function for add components
+--     - connect sync port
+--     - set/check if "period" property is valid

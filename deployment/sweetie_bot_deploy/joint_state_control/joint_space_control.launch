@@ -13,7 +13,7 @@
   <node name="motion" pkg="sweetie_bot_deploy" type="sweetie-bot-core" args="motion.lua controller_joint_space_all.lua joint_state_control motion_core" output="screen"/>
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
-	  <remap from="joint_states" to="motion/controller_joint_state/in_joints_ref"/>
+	  <remap from="joint_states" to="motion/controller/joint_state/in_joints_ref"/>
   </node>
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
 	  <remap from="joint_states" to="motion/agregator_ref/out_joints_sorted"/>

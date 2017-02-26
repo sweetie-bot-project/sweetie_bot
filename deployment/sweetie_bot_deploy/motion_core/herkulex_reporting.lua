@@ -39,8 +39,8 @@ local function setup_reporting(reporter_name, peer_ports, file, complex_decompos
 end
 
 -- herkulex_sched statistics
-setup_reporting("herkulex_statistics", { { name = "herkulex_sched" ,  ports= {"statistics"} } }, directory .. "/statistics.out")
--- servo states
-setup_reporting("herkulex_states", { { name = "herkulex_sched" ,  ports= {"out_states"} } }, directory .. "/states.out")
+setup_reporting("herkulex_statistics", { { name = "herkulex/sched" ,  ports= {"statistics"} } }, directory .. "/statistics.out")
+-- servo statej
+setup_reporting("herkulex_states", { { name = "herkulex/sched" ,  ports= {"out_states"} } }, directory .. "/states.out")
 -- control signals
 setup_reporting("herkulex_control", { { name = "agregator_ref" ,  ports= {"out_joints_sorted"} }, { name = "agregator_real" ,  ports= {"out_joints_sorted"} } }, directory .. "/control.out")

@@ -1,4 +1,5 @@
-controller_joint_state:
-    controlled_chains: [ head ]
-controller_joint_trajectory: 
-    period: 0.056
+controller:
+    joint_state:
+        controlled_chains: [ head ]
+    joint_trajectory: 
+        period: 0.056
