@@ -5,12 +5,12 @@
 --
 -- Intended to be run via config script.
 --
+require "motion_core"
 
 controller = controller or {}
 
-ros:import("sweetie_bot_controllers_joint_space")
-
 -- load controller
+ros:import("sweetie_bot_controller_joint_space")
 depl:loadComponent("controller/joint_state", "sweetie_bot::motion::controller::FollowJointState")
 controller.joint_state = depl:getPeer("controller/joint_state")
 rttlib_extra.get_peer_rosparams(controller.joint_state)
