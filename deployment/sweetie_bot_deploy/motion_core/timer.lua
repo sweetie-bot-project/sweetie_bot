@@ -16,8 +16,10 @@ timer = {}
 
 -- load and start timer
 depl:loadComponent("timer", "OCL::TimerComponent")
-timer.period = rttlib_extra.get_rosparam("~timer/period", "float")
 timer.timer = depl:getPeer("timer")
+
+timer.period = rttlib_extra.get_rosparam("~timer/period", "float")
+print(timer.period)
 -- start timers:
 --    timer_10: controllers timer
 --    timer_20: herkulex timer

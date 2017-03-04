@@ -34,15 +34,16 @@ config.overlay_paths = {}
 for i, a in ipairs(arg) do
 	if string.find(a, "^__") then
 		-- argument is ROS parameter
-		if string.find(a, "__name:=[^ ]+") then
+		if string.find(a, "^__name:=[^ ]+") then
 			config.node_fullname = string.sub(a, 9)
-		elseif string.find(a, "__ns:=[^ ]+") then
+		elseif string.find(a, "^__ns:=[^ ]+") then
 			config.node_namespace = string.sub(a, 7)
+		elseif string.find(a, "^__param_ns:=[^ ]+") then
+			config.param_namespace = string.sub(a, 13)
 		end
 	elseif string.find(a, "\.lua$") then
 		-- argument is lua script name, i.e. module to run
 		a = string.sub(a, 1, -5)
-		print(a)
 		table.insert(config.modules, a)
 		print(config.modules[1])
 	else
@@ -88,6 +89,7 @@ if ros.getNodeName then
 else
 	-- otherwise: use args
 	config.node_fullname = config.node_fullname or "motion"
+	config.node_namespace = config.node_namespace or os.getenv("ROS_NAMESPACE")
 	if not config.node_namespace then
 		config.node_namespace = "/"
 		config.node_fullname = "/" .. config.node_fullname
@@ -95,8 +97,12 @@ else
 		config.node_fullname = config.node_namespace .. "/" .. config.node_fullname
 	end
 end
-print("node_fullname ", config.node_fullname)
+if not config.param_namespace then
+	config.param_namespace = config.node_namespace
+end
+print("node_fullname:", config.node_fullname)
 print("node_namespace:", config.node_namespace)
+print("param_namespace:", config.param_namespace)
 
 -- construct category name
 config.logger_root_category = string.gsub(string.gsub(config.node_fullname, "^/", ""), "/", ".")
