@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   control_msgs
   std_msgs
+  actionlib
 )
 
 # QT packages
@@ -133,6 +134,7 @@ add_executable(trajectory_editor ${trajectory_editor_SOURCES} ${trajectory_edito
 
 add_dependencies(trajectory_editor
   ${catkin_EXPORTED_TARGETS}
+  ${sweetie_bot_joint_trajectory_editor_EXPORTED_TARGETS}
 )
 target_link_libraries(trajectory_editor
    ${catkin_LIBRARIES}

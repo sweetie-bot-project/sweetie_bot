@@ -12,6 +12,72 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 {
     ui->setupUi(this);
 
+    //*
+        control_msgs::FollowJointTrajectoryGoal msg;
+        msg.trajectory.header.stamp = ros::Time::now();
+        msg.goal_time_tolerance.sec=2.0;
+        msg.goal_time_tolerance.nsec=1.0;
+
+        trajectory_msgs::JointTrajectoryPoint traj;
+
+        for(int i=0; i<6; i++){
+          traj.positions.push_back(0.0);
+        }
+        traj.time_from_start.sec=0.0;
+        traj.time_from_start.nsec=0.0;
+        msg.trajectory.points.push_back(traj);
+
+        traj.positions.clear();
+        traj.positions.push_back(qDegreesToRadians(45.0));
+        traj.positions.push_back(qDegreesToRadians(-90.0));
+        traj.positions.push_back(qDegreesToRadians(45.0));
+        traj.positions.push_back(qDegreesToRadians(45.0));
+        traj.positions.push_back(qDegreesToRadians(-90.0));
+        traj.positions.push_back(qDegreesToRadians(45.0));
+
+        traj.time_from_start.sec=1.0;
+        traj.time_from_start.nsec=0.0;
+        msg.trajectory.points.push_back(traj);
+
+        traj.positions.clear();
+        for(int i=0; i<6; i++){
+          traj.positions.push_back(0.0);
+        }
+        traj.time_from_start.sec=2.0;
+        traj.time_from_start.nsec=0.0;
+        msg.trajectory.points.push_back(traj);
+
+        msg.trajectory.joint_names.push_back("joint12");
+        msg.trajectory.joint_names.push_back("joint13");
+        msg.trajectory.joint_names.push_back("joint14");
+        msg.trajectory.joint_names.push_back("joint42");
+        msg.trajectory.joint_names.push_back("joint43");
+        msg.trajectory.joint_names.push_back("joint44");
+    /*
+        control_msgs::JointTolerance tol1;
+        tol1.name = "joint11";
+        tol1.position = 0.1;
+        tol1.velocity = 0.1;
+        tol1.acceleration = 0.1;
+        msg.path_tolerance.push_back(tol1);
+
+        tol1.name = "joint12";
+        tol1.position = 0.2;
+        tol1.velocity = 0.2;
+        tol1.acceleration = 0.2;
+        msg.path_tolerance.push_back(tol1);
+
+
+        control_msgs::JointTolerance tol2;
+        tol2.name = "joint11";
+        tol2.position = 0.1;
+        tol2.velocity = 0.1;
+        tol2.acceleration = 0.1;
+        msg.goal_tolerance.push_back(tol2);
+
+    // */
+        loader_->setParam("/sweetie_bot_joint_trajectory_editor/trajectories/dance", msg);
+
     std::vector<std::string> trajectory_names = loader_->getNames("/sweetie_bot_joint_trajectory_editor/trajectories");
     for(auto &tname: trajectory_names)
     {
@@ -31,60 +97,8 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
     sub_real_ = node.subscribe<sensor_msgs::JointState>("/trajectory_editor/joints_real", 1000, &TrajectoryEditor::jointsRealCallback, this);
     sub_virtual_ = node.subscribe<sensor_msgs::JointState>("/trajectory_editor/joints_virtual", 1000, &TrajectoryEditor::jointsVirtualCallback, this);
 
-//*
-    control_msgs::FollowJointTrajectoryGoal msg;
+    client = new Client("/sweetie_bot/motion/controller/joint_trajectory", true);
 
-    trajectory_msgs::JointTrajectoryPoint traj;
-    traj.positions.push_back(0.0);
-    traj.velocities.push_back(0.0);
-    traj.accelerations.push_back(0.0);
-
-    traj.positions.push_back(1.0);
-    traj.velocities.push_back(1.0);
-    traj.accelerations.push_back(1.0);
-
-    traj.positions.push_back(2.0);
-    traj.velocities.push_back(2.0);
-    traj.accelerations.push_back(2.0);
-
-    traj.time_from_start.sec=0.0;
-    traj.time_from_start.nsec=0.0;
-
-    msg.trajectory.joint_names.push_back("joint11");
-    msg.trajectory.joint_names.push_back("joint12");
-    msg.trajectory.joint_names.push_back("joint13");
-    msg.trajectory.joint_names.push_back("joint14");
-    msg.trajectory.points.push_back(traj);
-    msg.trajectory.points.push_back(traj);
-    msg.trajectory.points.push_back(traj);
-
-    control_msgs::JointTolerance tol1;
-    tol1.name = "joint11";
-    tol1.position = 0.1;
-    tol1.velocity = 0.1; 
-    tol1.acceleration = 0.1;
-    msg.path_tolerance.push_back(tol1);
-
-    tol1.name = "joint12";
-    tol1.position = 0.2;
-    tol1.velocity = 0.2; 
-    tol1.acceleration = 0.2;
-    msg.path_tolerance.push_back(tol1);
-
-
-    control_msgs::JointTolerance tol2;
-    tol2.name = "joint11";
-    tol2.position = 0.1;
-    tol2.velocity = 0.1; 
-    tol2.acceleration = 0.1;
-    msg.goal_tolerance.push_back(tol2);
-
-    msg.goal_time_tolerance.sec=0.0;
-    msg.goal_time_tolerance.nsec=0.0;
-
-    loader_->setParam("/sweetie_bot_joint_trajectory_editor/trajectories/default", msg);
-    //pub.publish(msg);
-// */
 
     control_msgs::FollowJointTrajectoryGoal sd = loader_->getParam("/sweetie_bot_joint_trajectory_editor/trajectories/default");
     ROS_INFO_STREAM( "\n" << sd );
@@ -185,3 +199,16 @@ void TrajectoryEditor::on_deletePoseButton_clicked()
     joint_trajectory_point_table_view_->rereadData();
 }
 
+
+void TrajectoryEditor::on_executeButton_clicked()
+{
+  client->waitForServer();
+  client->sendGoal(joint_trajectory_data_->follow_joint_trajectory_goal_);
+}
+
+/*
+void TrajectoryEditor::executeActionCallback(const SimpleClientGoalState& state, const ResultConstPtr& result)
+{
+
+}
+*/
