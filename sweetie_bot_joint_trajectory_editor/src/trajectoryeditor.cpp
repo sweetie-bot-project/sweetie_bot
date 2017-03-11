@@ -47,12 +47,12 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
         traj.time_from_start.nsec=0.0;
         msg.trajectory.points.push_back(traj);
 
-        msg.trajectory.joint_names.push_back("joint12");
-        msg.trajectory.joint_names.push_back("joint13");
-        msg.trajectory.joint_names.push_back("joint14");
-        msg.trajectory.joint_names.push_back("joint42");
-        msg.trajectory.joint_names.push_back("joint43");
-        msg.trajectory.joint_names.push_back("joint44");
+        msg.trajectory.joint_names.push_back("joint22");
+        msg.trajectory.joint_names.push_back("joint23");
+        msg.trajectory.joint_names.push_back("joint24");
+        msg.trajectory.joint_names.push_back("joint32");
+        msg.trajectory.joint_names.push_back("joint33");
+        msg.trajectory.joint_names.push_back("joint34");
     /*
         control_msgs::JointTolerance tol1;
         tol1.name = "joint11";
@@ -95,7 +95,7 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
     timer->start(50);
 
     sub_real_ = node.subscribe<sensor_msgs::JointState>("/trajectory_editor/joints_real", 1000, &TrajectoryEditor::jointsRealCallback, this);
-    sub_virtual_ = node.subscribe<sensor_msgs::JointState>("/trajectory_editor/joints_virtual", 1000, &TrajectoryEditor::jointsVirtualCallback, this);
+    sub_virtual_ = node.subscribe<sensor_msgs::JointState>("/sweetie_bot/joint_states", 1000, &TrajectoryEditor::jointsVirtualCallback, this);
 
     client = new Client("/sweetie_bot/motion/controller/joint_trajectory", true);
 
@@ -118,15 +118,19 @@ TrajectoryEditor::~TrajectoryEditor()
 //*
 void TrajectoryEditor::jointsRealCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
-  ROS_INFO_STREAM("\n" <<  *msg);
-  ui->addRealPoseButton->setEnabled(true);
+  //ROS_INFO_STREAM("\n" <<  *msg);
+  joint_state_real_ = *msg;
+  if(!ui->addRealPoseButton->isEnabled())
+    ui->addRealPoseButton->setEnabled(true);
 } // */
 
 //*
 void TrajectoryEditor::jointsVirtualCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
-  ROS_INFO_STREAM("\n" <<  *msg);
-  ui->addVirtualPoseButton->setEnabled(true);
+  joint_state_virtual_ = *msg;
+  //ROS_INFO_STREAM("\n" <<  joint_state_virtual_);
+  if(!ui->addVirtualPoseButton->isEnabled())
+    ui->addVirtualPoseButton->setEnabled(true);
 } // */
 
 void TrajectoryEditor::rosSpin()
@@ -176,6 +180,7 @@ void TrajectoryEditor::on_turnAllSelectedServosButton_clicked()
 
 void TrajectoryEditor::on_addVirtualPoseButton_clicked()
 {
+  ROS_INFO_STREAM("\n" <<  joint_state_virtual_);
   joint_trajectory_data_->addPoint(joint_state_virtual_, ui->timeIncrementSpinBox->value());
   joint_trajectory_point_table_view_->rereadData();
 }
@@ -194,7 +199,6 @@ void TrajectoryEditor::on_saveTrajectoryButton_clicked()
 
 void TrajectoryEditor::on_deletePoseButton_clicked()
 {
-    ROS_INFO("%d", ui->pointsTableView->selectionModel()->currentIndex().row());
     joint_trajectory_point_table_view_->removeRow(ui->pointsTableView->selectionModel()->currentIndex().row(), QModelIndex());
     joint_trajectory_point_table_view_->rereadData();
 }
@@ -203,6 +207,7 @@ void TrajectoryEditor::on_deletePoseButton_clicked()
 void TrajectoryEditor::on_executeButton_clicked()
 {
   client->waitForServer();
+  joint_trajectory_data_->follow_joint_trajectory_goal_.goal_time_tolerance.fromSec(ui->goalTimeToleranceSpinBox->value());
   client->sendGoal(joint_trajectory_data_->follow_joint_trajectory_goal_);
 }
 
@@ -212,3 +217,20 @@ void TrajectoryEditor::executeActionCallback(const SimpleClientGoalState& state,
 
 }
 */
+
+void TrajectoryEditor::on_jointsTableView_clicked(const QModelIndex &index)
+{
+  ROS_INFO("%s %d",
+    joint_list_table_view_->data(index).toString().toStdString().c_str(), index.row());
+  ui->jointNameEditBox->setText(joint_list_table_view_->data(index).toString());
+}
+
+void TrajectoryEditor::on_addButton_clicked()
+{
+    //joint_trajectory_data_->follow_joint_trajectory_goal_.trajectory.joint_names.push_back(ui->jointNameEditBox->text().toStdString());
+}
+
+void TrajectoryEditor::on_applyButton_clicked()
+{
+    //int d = ui->jointsTableView->selectionModel()->sele;
+}

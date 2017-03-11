@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QtMath>
+#include <QTableWidgetItem>
+
 
 // ROS
 #include "ros/ros.h"
@@ -65,6 +67,9 @@ private slots:
     void on_deletePoseButton_clicked();
     void on_addVirtualPoseButton_clicked();
     void on_executeButton_clicked();
+    void on_jointsTableView_clicked(const QModelIndex &index);
+    void on_addButton_clicked();
+    void on_applyButton_clicked();
 };
 
 #endif // TRAJECTORYEDITOR_H

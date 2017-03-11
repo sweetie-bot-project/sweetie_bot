@@ -51,13 +51,19 @@ bool JointTrajectoryData::loadFromMsg(const FollowJointTrajectoryGoal& follow_jo
 
 bool JointTrajectoryData::addPoint(const JointState& msg, double time_from_start)
 {
+  ROS_INFO_STREAM("\n" << msg);
   trajectory_msgs::JointTrajectoryPoint traj;
-  for (int i = 0; i != msg.name.size(); ++i) {
-    traj.positions.push_back(msg.position[i]);
-	}
+  for(auto &name: joint_names_){
+    for (int i = 0; i != msg.name.size(); ++i) {
+      if(msg.name[i] == name) {
+        traj.positions.push_back(msg.position[i]);
+        ROS_INFO("%s=%f", name.c_str(), msg.position[i]);
+      }
+    }
+  }
   traj.time_from_start.fromSec(time_from_start);
   follow_joint_trajectory_goal_.trajectory.points.push_back(traj);
-  ROS_INFO_STREAM("/n" << follow_joint_trajectory_goal_);
+  //ROS_INFO_STREAM("/n" << follow_joint_trajectory_goal_);
   return true;
 }
 
