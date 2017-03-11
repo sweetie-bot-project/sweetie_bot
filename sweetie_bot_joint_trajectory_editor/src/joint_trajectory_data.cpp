@@ -4,7 +4,7 @@ namespace sweetie_bot {
 namespace interface {
 
 JointTrajectoryData::JointTrajectoryData(const FollowJointTrajectoryGoal& follow_joint_trajectory_goal) :
-		follow_joint_trajectory_goal_(follow_joint_trajectory_goal),
+    follow_joint_trajectory_goal_(follow_joint_trajectory_goal),
 		joint_names_(follow_joint_trajectory_goal.trajectory.joint_names)
 {
 	loadFromMsg(follow_joint_trajectory_goal);
@@ -12,7 +12,8 @@ JointTrajectoryData::JointTrajectoryData(const FollowJointTrajectoryGoal& follow
 
 bool JointTrajectoryData::loadFromMsg(const FollowJointTrajectoryGoal& follow_joint_trajectory_goal)
 {
-	joint_names_ = follow_joint_trajectory_goal.trajectory.joint_names;
+  follow_joint_trajectory_goal_ = follow_joint_trajectory_goal;
+  joint_names_ = follow_joint_trajectory_goal.trajectory.joint_names;
 	ROS_INFO("joint_names_.size=%lu", joint_names_.size());
 	tolerances_.clear();
 	for(int i = 0; i != joint_names_.size(); ++i) {
@@ -48,12 +49,16 @@ bool JointTrajectoryData::loadFromMsg(const FollowJointTrajectoryGoal& follow_jo
 	ROS_INFO("%lu", tolerances_.size());
 }
 
-bool JointTrajectoryData::addPoint(const JointState& msg)
+bool JointTrajectoryData::addPoint(const JointState& msg, double time_from_start)
 {
-	for (int i = 0; i != msg.name.size(); ++i) {
-	        //auto iterator = joint_names_.find(name);
+  trajectory_msgs::JointTrajectoryPoint traj;
+  for (int i = 0; i != msg.name.size(); ++i) {
+    traj.positions.push_back(msg.position[i]);
 	}
-	return true;
+  traj.time_from_start.fromSec(time_from_start);
+  follow_joint_trajectory_goal_.trajectory.points.push_back(traj);
+  ROS_INFO_STREAM("/n" << follow_joint_trajectory_goal_);
+  return true;
 }
 
 

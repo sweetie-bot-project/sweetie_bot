@@ -18,18 +18,35 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
         ui->comboBox->addItem(QString::fromStdString(tname));
     }
 
+    int index = ui->comboBox->findText("default"); //use default exact match
+    if(index >= 0)
+         ui->comboBox->setCurrentIndex(index);
+
+    ui->timeIncrementSpinBox->setValue(1.0);
 
     QTimer *timer = new QTimer(this);
     connect(timer,SIGNAL(timeout()),this,SLOT(rosSpin()));
     timer->start(50);
+
+    sub_real_ = node.subscribe<sensor_msgs::JointState>("/trajectory_editor/joints_real", 1000, &TrajectoryEditor::jointsRealCallback, this);
+    sub_virtual_ = node.subscribe<sensor_msgs::JointState>("/trajectory_editor/joints_virtual", 1000, &TrajectoryEditor::jointsVirtualCallback, this);
+
 //*
-    // only for msg publication demonstration, delete this in real app
     control_msgs::FollowJointTrajectoryGoal msg;
 
     trajectory_msgs::JointTrajectoryPoint traj;
     traj.positions.push_back(0.0);
     traj.velocities.push_back(0.0);
     traj.accelerations.push_back(0.0);
+
+    traj.positions.push_back(1.0);
+    traj.velocities.push_back(1.0);
+    traj.accelerations.push_back(1.0);
+
+    traj.positions.push_back(2.0);
+    traj.velocities.push_back(2.0);
+    traj.accelerations.push_back(2.0);
+
     traj.time_from_start.sec=0.0;
     traj.time_from_start.nsec=0.0;
 
@@ -37,6 +54,8 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
     msg.trajectory.joint_names.push_back("joint12");
     msg.trajectory.joint_names.push_back("joint13");
     msg.trajectory.joint_names.push_back("joint14");
+    msg.trajectory.points.push_back(traj);
+    msg.trajectory.points.push_back(traj);
     msg.trajectory.points.push_back(traj);
 
     control_msgs::JointTolerance tol1;
@@ -65,7 +84,6 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 
     loader_->setParam("/sweetie_bot_joint_trajectory_editor/trajectories/default", msg);
     //pub.publish(msg);
-    // only for msg publication demonstration, delete this in real app
 // */
 
     control_msgs::FollowJointTrajectoryGoal sd = loader_->getParam("/sweetie_bot_joint_trajectory_editor/trajectories/default");
@@ -76,31 +94,6 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
     joint_trajectory_point_table_view_ = new sweetie_bot::interface::JointTrajectoryPointTableView(parent, *joint_trajectory_data_);
 
     bootstrap();
-    //joint_trajectory_data_->sendTraj();
-/*
-    // Load msg from file
-    sensor_msgs::JointState msg;
-    std::ifstream ifs("/tmp/filename.txt", std::ios::in|std::ios::binary);
-
-    ifs.seekg (0, std::ios::end);
-    std::streampos end = ifs.tellg();
-    ifs.seekg (0, std::ios::beg);
-    std::streampos begin = ifs.tellg();
-
-    uint32_t file_size = end-begin;
-    ROS_INFO("file_size=%d", file_size );
-    if(file_size > 0){
-      boost::shared_array<uint8_t> ibuffer(new uint8_t[file_size]);
-
-      ifs.read((char*) ibuffer.get(), file_size);
-      ros::serialization::IStream istream(ibuffer.get(), file_size);
-      ros::serialization::deserialize(istream, msg);
-      ifs.close();
-      ROS_INFO("Msg loaded from file!" );
-      //ROS_INFO_STREAM("\n" <<  msg);
-    }
-    // Load msg from file
-*/
 }
 
 TrajectoryEditor::~TrajectoryEditor()
@@ -108,89 +101,87 @@ TrajectoryEditor::~TrajectoryEditor()
     delete ui;
 }
 
-/* 
+//*
 void TrajectoryEditor::jointsRealCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
   ROS_INFO_STREAM("\n" <<  *msg);
+  ui->addRealPoseButton->setEnabled(true);
+} // */
 
-  // Save msg to File
-  std::ofstream ofs("/tmp/filename.txt", std::ios::out|std::ios::binary);
-
-  uint32_t serial_size = ros::serialization::serializationLength(*msg);
-  boost::shared_array<uint8_t> buffer(new uint8_t[serial_size]);
-
-  ser::OStream ostream(buffer.get(), serial_size);
-  ser::serialize(ostream, *msg);
-
-  ofs.write((char*) buffer.get(), serial_size);
-  ofs.close();
-  // Save msg to File
+//*
+void TrajectoryEditor::jointsVirtualCallback(const sensor_msgs::JointState::ConstPtr& msg)
+{
+  ROS_INFO_STREAM("\n" <<  *msg);
+  ui->addVirtualPoseButton->setEnabled(true);
 } // */
 
 void TrajectoryEditor::rosSpin()
 {
-    //ROS_INFO("spinOnce");
     ros::spinOnce();
 }
 
 void TrajectoryEditor::bootstrap()
 {
-  //QStandardItemModel *model = new QStandardItemModel(3, 4, ui->tableView);
-  ui->tableView->setModel(joint_trajectory_point_table_view_);
-  ui->tableView_2->setModel(joint_list_table_view_);
-/*
-  ui->tableView->verticalHeader()->hide();
-  ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-  QStringList headerLabels = QStringList() << tr("time") << tr("marker") << tr ("active") << tr("angles");
-  model->setHorizontalHeaderLabels(headerLabels);
-
-  for(int row=0; row!=model->rowCount(); ++row)
-  {
-      for(int column=0; column!=model->columnCount(); ++column)
-      {
-          QStandardItem *newItem = new QStandardItem(tr("%1").arg((row+1)*(column+1)));
-          model->setItem(row, column, newItem);
-      }
-  }
-*/
-//  model->itemChanged();
+  ui->pointsTableView->setModel(joint_trajectory_point_table_view_);
+  ui->jointsTableView->setModel(joint_list_table_view_);
 }
 
-void TrajectoryEditor::on_pushButton_4_clicked()
+void TrajectoryEditor::on_loadTrajectoryButton_clicked()
 {
-  if (ui->pushButton_4->text() == "Turn all servos on")
+  qDebug("Load");
+  control_msgs::FollowJointTrajectoryGoal msg = loader_->getParam("/sweetie_bot_joint_trajectory_editor/trajectories/" + ui->comboBox->currentText().toStdString());
+  joint_trajectory_data_->loadFromMsg( msg );
+  joint_list_table_view_->rereadData();
+  joint_trajectory_point_table_view_->rereadData();
+}
+
+void TrajectoryEditor::on_turnAllServoOnButton_clicked()
+{
+
+  if (ui->turnAllServoOnButton->text() == "Turn all servos on")
   {
     qDebug("Command to turn on servos");
-    ui->pushButton_4->setText("Turn all servos off");
+    ui->turnAllServoOnButton->setText("Turn all servos off");
   }
   else
   {
     qDebug("Command to turn off servos");
-    ui->pushButton_4->setText("Turn all servos on");
+    ui->turnAllServoOnButton->setText("Turn all servos on");
   }
 }
 
-void TrajectoryEditor::on_pushButton_5_clicked()
+void TrajectoryEditor::on_turnAllTrajectoryServosButton_clicked()
+{
+  qDebug("Command to switch trajectory servos");
+}
+
+void TrajectoryEditor::on_turnAllSelectedServosButton_clicked()
 {
   qDebug("Command to switch selected servos");
 }
 
-void TrajectoryEditor::on_pushButton_6_clicked()
+void TrajectoryEditor::on_addVirtualPoseButton_clicked()
 {
-  qDebug("Command to switch trajectory servos");
-
+  joint_trajectory_data_->addPoint(joint_state_virtual_, ui->timeIncrementSpinBox->value());
+  joint_trajectory_point_table_view_->rereadData();
 }
 
-void TrajectoryEditor::on_pushButton_10_clicked()
+void TrajectoryEditor::on_addRealPoseButton_clicked()
 {
-  qDebug("Load");
-  //ui->comboBox->currentText().toStdString()
-  control_msgs::FollowJointTrajectoryGoal msg = loader_->getParam("/sweetie_bot_joint_trajectory_editor/trajectories/" + ui->comboBox->currentText().toStdString());
-  joint_trajectory_data_->loadFromMsg( msg );
-  //bootstrap();
-
-  //emit joint_list_table_view_->modelReset();
-  //joint_trajectory_point_table_view_->dataChanged(startIndex, stopIndex );
-  //ui->tableView->update();
-//  ui->tableView_2->
+    joint_trajectory_data_->addPoint(joint_state_real_, ui->timeIncrementSpinBox->value());
+    joint_trajectory_point_table_view_->rereadData();
 }
+
+void TrajectoryEditor::on_saveTrajectoryButton_clicked()
+{
+    loader_->setParam("/sweetie_bot_joint_trajectory_editor/trajectories/" + ui->comboBox->currentText().toStdString(), joint_trajectory_data_->follow_joint_trajectory_goal_);
+    system("rosparam dump `rospack find sweetie_bot_joint_trajectory_editor`/launch/trajectories.yaml /sweetie_bot_joint_trajectory_editor/trajectories" );
+}
+
+void TrajectoryEditor::on_deletePoseButton_clicked()
+{
+    ROS_INFO("%d", ui->pointsTableView->selectionModel()->currentIndex().row());
+    joint_trajectory_point_table_view_->removeRow(ui->pointsTableView->selectionModel()->currentIndex().row(), QModelIndex());
+    joint_trajectory_point_table_view_->rereadData();
+}
+

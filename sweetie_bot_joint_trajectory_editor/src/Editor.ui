@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>524</width>
-    <height>530</height>
+    <width>529</width>
+    <height>598</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -57,14 +57,14 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_5">
                <item>
-                <widget class="QPushButton" name="pushButton_10">
+                <widget class="QPushButton" name="loadTrajectoryButton">
                  <property name="text">
                   <string>Load</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_11">
+                <widget class="QPushButton" name="saveTrajectoryButton">
                  <property name="text">
                   <string>Save</string>
                  </property>
@@ -73,14 +73,14 @@
               </layout>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_3"/>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_4">
+              <widget class="QLabel" name="goalTimeToleranceLabel">
                <property name="text">
                 <string>Goal time tolerance</string>
                </property>
               </widget>
+             </item>
+             <item>
+              <widget class="QDoubleSpinBox" name="goalTimeToleranceSpinBox"/>
              </item>
             </layout>
            </item>
@@ -108,21 +108,30 @@
            <item row="0" column="0">
             <layout class="QVBoxLayout" name="verticalLayout_3">
              <item>
-              <widget class="QPushButton" name="pushButton_4">
+              <widget class="QPushButton" name="turnAllServoOnButton">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
                <property name="text">
                 <string>Turn all servos on</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_5">
+              <widget class="QPushButton" name="turnAllTrajectoryServosButton">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
                <property name="text">
                 <string>Turn all trajectory servos on/off</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton_6">
+              <widget class="QPushButton" name="turnAllSelectedServosButton">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Turn all selected servos on/off</string>
                </property>
@@ -157,7 +166,7 @@
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tabPoints">
          <property name="enabled">
@@ -170,7 +179,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
-             <widget class="QTableView" name="tableView">
+             <widget class="QTableView" name="pointsTableView">
               <property name="sizePolicy">
                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
                 <horstretch>0</horstretch>
@@ -179,6 +188,12 @@
               </property>
               <property name="verticalScrollBarPolicy">
                <enum>Qt::ScrollBarAlwaysOn</enum>
+              </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::AllEditTriggers</set>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
               </property>
              </widget>
             </item>
@@ -193,27 +208,56 @@
               <property name="title">
                <string/>
               </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+              <property name="checkable">
+               <bool>false</bool>
+              </property>
               <layout class="QVBoxLayout" name="verticalLayout_8">
                <item>
                 <layout class="QVBoxLayout" name="verticalLayout_4">
                  <item>
-                  <widget class="QPushButton" name="pushButton">
+                  <widget class="QPushButton" name="addVirtualPoseButton">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="text">
-                    <string>Add pose from marker</string>
+                    <string>Add virtual pose</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_2">
+                  <widget class="QPushButton" name="addRealPoseButton">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="text">
-                    <string>Add pose from real</string>
+                    <string>Add real pose</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_3">
+                  <widget class="QLabel" name="timeIncrementLabel">
                    <property name="text">
-                    <string>Set Virtual Pose</string>
+                    <string>Time from start</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QDoubleSpinBox" name="timeIncrementSpinBox"/>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="deletePoseButton">
+                   <property name="text">
+                    <string>Delete pose</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="setVirtualPoseButton">
+                   <property name="text">
+                    <string>Set virtual pose</string>
                    </property>
                   </widget>
                  </item>
@@ -231,28 +275,28 @@
                   </spacer>
                  </item>
                  <item>
-                  <widget class="QLabel" name="label_6">
+                  <widget class="QLabel" name="statusLabel">
                    <property name="text">
                     <string>Status</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_8">
+                  <widget class="QPushButton" name="executeButton">
                    <property name="text">
                     <string>Execute</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="checkBox">
+                  <widget class="QCheckBox" name="virtualCheckBox">
                    <property name="text">
                     <string>Virtual</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="checkBox_2">
+                  <widget class="QCheckBox" name="backwardCheckBox">
                    <property name="text">
                     <string>Backward</string>
                    </property>
@@ -275,7 +319,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <widget class="QTableView" name="tableView_2">
+             <widget class="QTableView" name="jointsTableView">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                 <horstretch>0</horstretch>
@@ -305,38 +349,38 @@
                <item>
                 <layout class="QVBoxLayout" name="verticalLayout_6">
                  <item>
-                  <widget class="QLabel" name="label">
+                  <widget class="QLabel" name="jointNameLabel">
                    <property name="text">
                     <string>Joint Name</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLineEdit" name="lineEdit">
+                  <widget class="QLineEdit" name="jointNameEditBox">
                    <property name="text">
                     <string/>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="label_2">
+                  <widget class="QLabel" name="pathToleranceLavel">
                    <property name="text">
                     <string>Path tolerance</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+                  <widget class="QDoubleSpinBox" name="pathToleranceSpinBox"/>
                  </item>
                  <item>
-                  <widget class="QLabel" name="label_3">
+                  <widget class="QLabel" name="goalToleranceLabel">
                    <property name="text">
                     <string>Goal tolerance</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_2"/>
+                  <widget class="QDoubleSpinBox" name="goalToleranceSpinBox"/>
                  </item>
                  <item>
                   <spacer name="verticalSpacer">
@@ -354,14 +398,14 @@
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_3">
                    <item>
-                    <widget class="QPushButton" name="pushButton_7">
+                    <widget class="QPushButton" name="applyButton">
                      <property name="text">
                       <string>Apply</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pushButton_9">
+                    <widget class="QPushButton" name="cancelButton">
                      <property name="text">
                       <string>Cancel</string>
                      </property>
@@ -401,7 +445,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>524</width>
+     <width>529</width>
      <height>20</height>
     </rect>
    </property>

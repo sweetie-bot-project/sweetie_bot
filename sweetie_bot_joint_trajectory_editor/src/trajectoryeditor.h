@@ -14,7 +14,7 @@
 #include "joint_list_table_view.h"
 #include "joint_trajectory_point_table_view.h"
 
-#include <sweetie_bot_joint_trajectory_editor/param_msg_loader.h>
+#include "param_msg_loader.h"
 
 namespace Ui {
 class TrajectoryEditor;
@@ -30,6 +30,11 @@ public:
   void bootstrap();
 private:
    ros::NodeHandle node_;
+   ros::Subscriber sub_real_;
+   ros::Subscriber sub_virtual_;
+   sensor_msgs::JointState joint_state_real_;
+   sensor_msgs::JointState joint_state_virtual_;
+
    Ui::TrajectoryEditor *ui;
    sweetie_bot::interface::JointTrajectoryData *joint_trajectory_data_;
 
@@ -37,13 +42,19 @@ private:
    sweetie_bot::interface::JointTrajectoryPointTableView *joint_trajectory_point_table_view_;
 
    sweetie_bot::tools::ParamMsgLoader<control_msgs::FollowJointTrajectoryGoal>* loader_;
+   void jointsRealCallback(const sensor_msgs::JointState::ConstPtr& msg);
+   void jointsVirtualCallback(const sensor_msgs::JointState::ConstPtr& msg);
 private slots:
     void rosSpin();
 
-    void on_pushButton_4_clicked();
-    void on_pushButton_5_clicked();
-    void on_pushButton_6_clicked();
-    void on_pushButton_10_clicked();
+    void on_turnAllTrajectoryServosButton_clicked();
+    void on_turnAllServoOnButton_clicked();
+    void on_loadTrajectoryButton_clicked();
+    void on_turnAllSelectedServosButton_clicked();
+    void on_addRealPoseButton_clicked();
+    void on_saveTrajectoryButton_clicked();
+    void on_deletePoseButton_clicked();
+    void on_addVirtualPoseButton_clicked();
 };
 
 #endif // TRAJECTORYEDITOR_H

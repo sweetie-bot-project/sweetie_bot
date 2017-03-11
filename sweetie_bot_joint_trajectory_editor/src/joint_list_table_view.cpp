@@ -24,11 +24,36 @@ QVariant JointListTableView::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole)
     {
-       return QString("Row%1, Column%2")
-                   .arg(index.row() + 1)
-                   .arg(index.column() +1);
+      return QString(trajectory_data_.joint_names_.at(index.row()).c_str());
     }
     return QVariant();
+}
+
+bool JointListTableView::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+  ROS_INFO("setData");
+  if (!index.isValid())
+    return false;
+/*
+  QList<QVariant> data;
+  data<<value;
+  TreeItem *item = static_cast<TreeItem *>(index.internalPointer());
+  item->setData(data);
+  emit dataChanged(index, index);
+*/
+  emit dataChanged(index, index);
+  return true;
+}
+
+bool JointListTableView::rereadData()
+{
+  /*
+  ROS_INFO("JointListTableView::rereadData");
+  QModelIndex indexBegin = createIndex(0,0);
+  QModelIndex indexEnd = createIndex(1,trajectory_data_.joint_names_.size());
+  emit dataChanged(indexBegin, indexEnd);
+  // */
+  emit layoutChanged();
 }
 
 } // namespace interface

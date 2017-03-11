@@ -3,8 +3,8 @@
 
 #include <ros/ros.h>
 
-#include <orocos/sensor_msgs/typekit/JointState.h>
-#include <orocos/control_msgs/typekit/FollowJointTrajectoryGoal.h>
+#include <sensor_msgs/JointState.h>
+#include <control_msgs/FollowJointTrajectoryGoal.h>
 
 namespace sweetie_bot {
 namespace interface {
@@ -53,7 +53,7 @@ class JointTrajectoryData
 		double goal_time_tolerance_;
 	public:
 		JointTrajectoryData(const FollowJointTrajectoryGoal& follow_joint_trajectory_goal);
-		bool addPoint(const JointState& msg);
+    bool addPoint(const JointState& msg, double time_from_start);
 };
 
 } // namespace interface
