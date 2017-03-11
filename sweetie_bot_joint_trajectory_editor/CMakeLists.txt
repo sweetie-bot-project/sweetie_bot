@@ -23,8 +23,8 @@ find_package(catkin REQUIRED COMPONENTS
 # QT packages
 find_package(Qt5Widgets REQUIRED)
 
-SET(trajectory_editor_SOURCES src/main.cpp src/trajectoryeditor.cpp)
-SET(trajectory_editor_HEADERS src/trajectoryeditor.h)
+SET(trajectory_editor_SOURCES src/main.cpp src/trajectoryeditor.cpp src/joint_trajectory_data.cpp src/joint_trajectory_point_table_view.cpp src/joint_list_table_view.cpp)
+SET(trajectory_editor_HEADERS src/trajectoryeditor.h src/joint_trajectory_data.h src/joint_trajectory_point_table_view.h src/joint_list_table_view.h)
 SET(trajectory_editor_FORMS src/Editor.ui)
 
 ## System dependencies are found with CMake's conventions
@@ -129,8 +129,7 @@ catkin_package(
 
 qt5_wrap_ui(trajectory_editor_FORMS_HDRS ${trajectory_editor_FORMS})
 
-add_executable(trajectory_editor src/main.cpp src/trajectoryeditor.cpp ${trajectory_editor_FORMS_HDRS})
-#qt5_use_modules(trajectory_editor Widgets)
+add_executable(trajectory_editor ${trajectory_editor_SOURCES} ${trajectory_editor_FORMS_HDRS})
 
 add_dependencies(trajectory_editor
   ${catkin_EXPORTED_TARGETS}
@@ -143,7 +142,7 @@ target_link_libraries(trajectory_editor
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(include)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

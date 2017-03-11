@@ -1,0 +1,7 @@
+<launch>
+  <rosparam command="load" ns="/sweetie_bot_joint_trajectory_editor/trajectories" file="$(find sweetie_bot_joint_trajectory_editor)/launch/trajectories.yaml" />
+  <rosparam command="load" ns="/sweetie_bot_joint_trajectory_editor/trajectories/default" file="$(find sweetie_bot_joint_trajectory_editor)/launch/default_tolerances.yaml" />
+
+  <node name="joint_trajectory_editor" pkg="sweetie_bot_joint_trajectory_editor" type="trajectory_editor" output="screen" args="" required="true" >
+  </node>
+</launch>

@@ -52,6 +52,9 @@
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_9">
              <item>
+              <widget class="QComboBox" name="comboBox"/>
+             </item>
+             <item>
               <layout class="QHBoxLayout" name="horizontalLayout_5">
                <item>
                 <widget class="QPushButton" name="pushButton_10">
@@ -70,14 +73,14 @@
               </layout>
              </item>
              <item>
+              <widget class="QDoubleSpinBox" name="doubleSpinBox_3"/>
+             </item>
+             <item>
               <widget class="QLabel" name="label_4">
                <property name="text">
                 <string>Goal time tolerance</string>
                </property>
               </widget>
-             </item>
-             <item>
-              <widget class="QDoubleSpinBox" name="doubleSpinBox_3"/>
              </item>
             </layout>
            </item>
@@ -154,7 +157,7 @@
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tabPoints">
          <property name="enabled">
