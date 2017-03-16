@@ -30,6 +30,11 @@ resource_control.arbiter:configure()
 assert(resource_control.arbiter:start())
 
 --
+-- timer
+--
+require "timer"
+
+--
 -- load and start pose agregator
 --
 
@@ -48,13 +53,11 @@ agregator_ref:loadService("rosparam")
 agregator_ref:provides("rosparam"):getParam("/", "robot_model")
 --get other properties
 rttlib_extra.get_peer_rosparams(agregator_ref)
+--timer syncronization
+depl:connect(timer.controller.port, "agregator_ref.sync_step", rtt.Variable("ConnPolicy"));
 -- publish pose to ROS
 depl:stream("agregator_ref.out_joints_sorted", ros:topic("~agregator_ref/out_joints_sorted"))
 -- start component
 agregator_ref:configure()
 assert(agregator_ref:start())
 
---
--- timer
---
-require "timer"

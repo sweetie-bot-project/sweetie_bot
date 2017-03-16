@@ -52,6 +52,8 @@ agregator_real:provides("marshalling"):loadServiceProperties(config.file("kinema
 agregator_real:provides("rosparam"):getParam("/","robot_model")
 --get other properties
 rttlib_extra.get_peer_rosparams(agregator_real)
+-- timer syncronization
+depl:connect(timer.controller.port, "agregator_real.sync_step", rtt.Variable("ConnPolicy"));
 -- publish pose to ROS
 depl:stream("agregator_real.out_joints_sorted", ros:topic("~agregator_real/out_joints_sorted"))
 -- start component
