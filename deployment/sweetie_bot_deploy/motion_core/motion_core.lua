@@ -46,6 +46,8 @@ agregator_ref:provides("marshalling"):loadServiceProperties(config.file("kinemat
 agregator_ref:loadService("rosparam")
 --agregator_ref:provides("rosparam"):getRelative("robot_model")
 agregator_ref:provides("rosparam"):getParam("/", "robot_model")
+--get other properties
+rttlib_extra.get_peer_rosparams(agregator_ref)
 -- publish pose to ROS
 depl:stream("agregator_ref.out_joints_sorted", ros:topic("~agregator_ref/out_joints_sorted"))
 -- start component

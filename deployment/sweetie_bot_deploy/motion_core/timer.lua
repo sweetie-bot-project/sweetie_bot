@@ -14,12 +14,20 @@ local ros = rtt.provides("ros")
 -- Module table
 timer = {}
 
--- load and start timer
+-- load timer
 depl:loadComponent("timer", "OCL::TimerComponent")
 timer.timer = depl:getPeer("timer")
+rttlib_extra.get_peer_rosparams(timer.timer)
 
+-- set timer period
 timer.period = rttlib_extra.get_rosparam("~timer/period", "float")
-print(timer.period)
+if timer.period then 
+	print("timer_period:" .. tostring(timer.period))
+else
+	print("ERROR: unable to get `~timer/period`")
+	assert(timer.period)
+end
+
 -- start timers:
 --    timer_10: controllers timer
 --    timer_20: herkulex timer

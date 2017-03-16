@@ -1,10 +1,14 @@
 resource_control:
     arbiter:
+        priority: 20
         resources: [ leg1, leg2, leg3, leg4, head, eyes, tail ]
-agregator_ref: []
+agregator_ref: 
+    priority: 20
 servo_inv:
-    period: 0.056
+    priority: 20
     lead: 0.056
-agregator_real: []
+agregator_real:
+    priority: 20
 timer:
+    priority: 45
     period: 0.056

@@ -1,5 +1,7 @@
 controller:
     joint_state:
-        controlled_chains: [ head ]
+        priority: 20
+        controlled_chains: [ leg1, leg2, leg3, leg4, head ]
+        activation_delay: 0.1
     joint_trajectory: 
-        period: 0.056
+        priority: 20

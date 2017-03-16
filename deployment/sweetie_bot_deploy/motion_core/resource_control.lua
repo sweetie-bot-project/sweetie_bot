@@ -19,9 +19,6 @@ resource_control = {}
 -- Load arbiter
 depl:loadComponent("resource_control/arbiter", "sweetie_bot::motion::ResourceArbiter")
 resource_control.arbiter = depl:getPeer("resource_control/arbiter")
--- Load controlled resources list
--- resource_control.arbiter:loadService("marshalling")
--- resource_control.arbiter:provides("marshalling"):updateProperties("resource_control.cpf")
 rttlib_extra.get_peer_rosparams(resource_control.arbiter)
 
 -- Connect a requester to the arbiter

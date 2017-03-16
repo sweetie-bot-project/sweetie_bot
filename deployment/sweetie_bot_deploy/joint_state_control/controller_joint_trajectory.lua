@@ -20,7 +20,6 @@ rttlib_extra.get_peer_rosparams(controller.joint_trajectory)
 -- register controller
 resource_control.register_controller(controller.joint_trajectory)
 -- timer
-controller.joint_trajectory:getProperty("period"):set(timer.period);
 depl:connect(timer.controller.port, "controller/joint_trajectory.sync", rtt.Variable("ConnPolicy"))
 -- data flow: controller <-> agregator_ref
 depl:connect("controller/joint_trajectory.out_joints_ref_fixed", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
