@@ -23,6 +23,7 @@ depl:connect("controller/joint_state.out_joints_ref_fixed", "agregator_ref.in_jo
 depl:connect("agregator_ref.out_joints_sorted", "controller/joint_state.in_joints_sorted", rtt.Variable("ConnPolicy"))
 -- ros redirect
 depl:stream("controller/joint_state.in_joints_ref", ros:topic("~controller/joint_state/in_joints_ref"))
+depl:stream("controller/joint_state.out_joints_src_reset", ros:topic("~controller/joint_state/out_joints_src_reset"))
 -- connect to RobotModel
 depl:connectServices("controller/joint_state", "agregator_ref")
 -- prepare to start
