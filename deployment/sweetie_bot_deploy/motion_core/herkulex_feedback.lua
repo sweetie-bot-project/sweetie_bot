@@ -63,8 +63,8 @@ depl:connect(timer.herkulex.port, "herkulex/sched.sync", rtt.Variable("ConnPolic
 -- START HERKULEX_* SUBSYSTEM (without scheduler)
 
 herkulex.driver:configure()
---assert(herkulex.driver:start())
+herkulex.driver:start()
 
-assert(herkulex.sched:configure())
---assert(herkulex.array:configure())
+herkulex.sched:configure()
+herkulex.array:configure()
 
