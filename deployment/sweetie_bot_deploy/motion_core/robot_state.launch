@@ -6,8 +6,8 @@
 	<arg name="tf_namespace" default="" />  <!-- namespace for tf nd tf_static topics -->
 	<arg name="name" default="robot_state_publisher" />  <!-- joint_states_topic topics -->
 
-	<node name="$(arg name)" pkg="robot_state_publisher" type="robot_state_publisher">
-		<param name="tf_prefix" value="$(arg tf_prefix)"/>
+	<node name="$(arg name)" machine="$(arg machine)" pkg="robot_state_publisher" type="robot_state_publisher">
+		<param name="tf_prefix" vszalue="$(arg tf_prefix)"/>
 		<remap from="joint_states" to="$(arg joint_states_topic)"/>
 		<remap from="/tf" to="$(arg tf_namespace)tf"/>
 		<remap from="/tf_static" to="$(arg tf_namespace)tf_static"/>
