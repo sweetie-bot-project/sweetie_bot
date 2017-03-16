@@ -1,6 +1,8 @@
 <!-- MODULE: run minimal configuration: core, local and global robot_state_punlisher, fixed world frame -->
 <launch>
 	<arg name="run_real" default="false" doc="Run on real robot."/>
+	<arg name="robot" default="true" doc="Launch components which meant to be run on robot side."/>
+	<arg name="host" default="true" doc="Launch components  which meant to be run on host side."/>
 	<arg name="interactive" default="false" doc="Run OROCOS in XTerm in interactive mode." /> 
 
 	<arg name="modules" default="motion_core.lua" doc="OROCOS deployment modules list" /> 
@@ -9,39 +11,43 @@
 	<arg name="tf_prefix" default="" doc="tf_prefix for robot pose." />
 	<arg name="tf_prefix_ref" default="ref" doc="tf_prefix for robot reference pose." />
 	<arg name="motion_param_ns" default="/sweetie_bot" doc="Namespace for parameters of OROCOS node." />
-	
-	<!-- motion core -->
-	<include file="$(find sweetie_bot_deploy)/motion_core/motion.launch">
-		<arg if="$(arg run_real)" name="joint_states_topic" value="motion/agregator_real/out_joints_sorted" />
-		<arg unless="$(arg run_real)" name="joint_states_topic" value="motion/agregator_ref/out_joints_sorted" />
-		<arg if="$(arg run_real)" name="machine" value="sweetiebot"/> 
-		<arg name="modules" value="$(arg modules)" /> 
-		<arg name="overlays" value="$(arg overlays)" />
-		<arg name="interactive" value="$(arg interactive)"/> 
-		<arg name="param_namespace"  value="$(arg motion_param_ns)"/>
-	</include>
-	<!-- robot_state_publisher: robot pose: local publisher -->
-	<include file="$(find sweetie_bot_deploy)/motion_core/robot_state.launch">
-		<arg if="$(arg run_real)" name="machine" value="sweetiebot"/> 
-	</include>
-	<!-- robot_state_publisher: robot pose: global publisher  -->
-	<node name="robot_state_publisher_root" pkg="robot_state_publisher" type="robot_state_publisher">
-		<param name="tf_prefix" value="$(arg tf_prefix)"/>
-	</node>
-	<!-- robot_state_publisher: robot reference pose: global publisher  -->
-	<node if="$(arg run_real)" name="robot_state_publisher_ref" pkg="robot_state_publisher" type="robot_state_publisher">
-		<remap from="joint_states" to="motion/agregator_ref/out_joints_sorted"/>
-		<param name="tf_prefix" value="$(arg tf_prefix_ref)"/>
-	</node>
-	<!-- odometry: fix base frames: local publisher -->
-	<node if="$(arg run_real)" machine="sweetiebot" pkg="tf" type="static_transform_publisher" name="odometry" args="0 0 0 0 0 0 odom_combined base_link 100" /> 
-	<node unless="$(arg run_real)" pkg="tf" type="static_transform_publisher" name="odometry" args="0 0 0 0 0 0 odom_combined base_link 100" /> 
-	<!-- odometry: fix base frames: global publisher -->
-	<group if="$(arg run_real)">
-		<node pkg="tf" type="static_transform_publisher" name="odometry_root" args="0.5 0 0 0 0 0 odom_combined $(arg tf_prefix)/base_link 100" /> 
-		<node pkg="tf" type="static_transform_publisher" name="odometry_ref" args="0.5 0 0 0 0 0 odom_combined $(arg tf_prefix_ref)/base_link 100" /> 
+
+	<group if="$(arg robot)">	
+		<!-- motion core -->
+		<include file="$(find sweetie_bot_deploy)/motion_core/motion.launch">
+			<arg if="$(arg run_real)" name="joint_states_topic" value="motion/agregator_real/out_joints_sorted" />
+			<arg unless="$(arg run_real)" name="joint_states_topic" value="motion/agregator_ref/out_joints_sorted" />
+			<arg if="$(arg run_real)" name="machine" value="sweetiebot"/> 
+			<arg name="modules" value="$(arg modules)" /> 
+			<arg name="overlays" value="$(arg overlays)" />
+			<arg name="interactive" value="$(arg interactive)"/> 
+			<arg name="param_namespace"  value="$(arg motion_param_ns)"/>
+		</include>
+		<!-- robot_state_publisher: robot pose: local publisher -->
+		<include file="$(find sweetie_bot_deploy)/motion_core/robot_state.launch">
+			<arg if="$(arg run_real)" name="machine" value="sweetiebot"/> 
+		</include>
+		<!-- odometry: fix base frames: local publisher -->
+		<node if="$(arg run_real)" machine="sweetiebot" pkg="tf" type="static_transform_publisher" name="odometry" args="0 0 0 0 0 0 odom_combined base_link 100">
+			<remap from="/tf" to="tf" />
+		</node>
+		<node unless="$(arg run_real)" pkg="tf" type="static_transform_publisher" name="odometry" args="0 0 0 0 0 0 odom_combined base_link 100"> 
+			<remap from="/tf" to="tf" />
+		</node>
 	</group>
-	<group unless="$(arg run_real)">
+
+	<group if="$(arg host)">
+		<!-- robot_state_publisher: robot pose: global publisher  -->
+		<node name="robot_state_publisher_root" pkg="robot_state_publisher" type="robot_state_publisher">
+			<param name="tf_prefix" value="$(arg tf_prefix)"/>
+		</node>
+		<!-- robot_state_publisher: robot reference pose: global publisher  -->
+		<node if="$(arg run_real)" name="robot_state_publisher_ref" pkg="robot_state_publisher" type="robot_state_publisher">
+			<remap from="joint_states" to="motion/agregator_ref/out_joints_sorted"/>
+			<param name="tf_prefix" value="$(arg tf_prefix_ref)"/>
+		</node>
+		<!-- odometry: fix base frames: global publishers -->
 		<node pkg="tf" type="static_transform_publisher" name="odometry_root" args="0 0 0 0 0 0 odom_combined $(arg tf_prefix)/base_link 100" /> 
+		<node if="$(arg run_real)" pkg="tf" type="static_transform_publisher" name="odometry_ref" args="0 0 0 0 0 0 odom_combined $(arg tf_prefix_ref)/base_link 100" /> 
 	</group>
 </launch>
