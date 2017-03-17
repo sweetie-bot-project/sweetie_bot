@@ -40,6 +40,9 @@ class JointTrajectoryData
 		std::vector<std::string> joint_names_;
 		FollowJointTrajectoryGoal follow_joint_trajectory_goal_;
 		bool loadFromMsg(const FollowJointTrajectoryGoal& follow_joint_trajectory_goal);
+		bool addJoint(const std::string name);
+		bool removeJoint(const std::string name);
+		bool removeJoint(const int row);
 	protected:
 
 		struct Tolerances {

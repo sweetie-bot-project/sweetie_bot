@@ -227,10 +227,17 @@ void TrajectoryEditor::on_jointsTableView_clicked(const QModelIndex &index)
 
 void TrajectoryEditor::on_addButton_clicked()
 {
-    //joint_trajectory_data_->follow_joint_trajectory_goal_.trajectory.joint_names.push_back(ui->jointNameEditBox->text().toStdString());
+    joint_trajectory_data_->addJoint(ui->jointNameEditBox->text().toStdString());
+    joint_list_table_view_->rereadData();
 }
 
 void TrajectoryEditor::on_applyButton_clicked()
 {
     //int d = ui->jointsTableView->selectionModel()->sele;
+}
+
+void TrajectoryEditor::on_delButton_clicked()
+{
+    joint_trajectory_data_->removeJoint(ui->jointNameEditBox->text().toStdString());
+    joint_list_table_view_->rereadData();
 }

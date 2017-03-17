@@ -166,7 +166,7 @@
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tabPoints">
          <property name="enabled">
@@ -412,7 +412,7 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pushButton">
+                    <widget class="QPushButton" name="delButton">
                      <property name="text">
                       <string>Del</string>
                      </property>

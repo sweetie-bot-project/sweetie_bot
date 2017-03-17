@@ -70,6 +70,7 @@ private slots:
     void on_jointsTableView_clicked(const QModelIndex &index);
     void on_addButton_clicked();
     void on_applyButton_clicked();
+    void on_delButton_clicked();
 };
 
 #endif // TRAJECTORYEDITOR_H

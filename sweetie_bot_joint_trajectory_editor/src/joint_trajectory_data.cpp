@@ -1,11 +1,13 @@
 #include "joint_trajectory_data.h"
 
+using namespace std;
+
 namespace sweetie_bot {
 namespace interface {
 
 JointTrajectoryData::JointTrajectoryData(const FollowJointTrajectoryGoal& follow_joint_trajectory_goal) :
-    follow_joint_trajectory_goal_(follow_joint_trajectory_goal),
-		joint_names_(follow_joint_trajectory_goal.trajectory.joint_names)
+	follow_joint_trajectory_goal_(follow_joint_trajectory_goal),
+	joint_names_(follow_joint_trajectory_goal.trajectory.joint_names)
 {
 	loadFromMsg(follow_joint_trajectory_goal);
 }
@@ -66,6 +68,29 @@ bool JointTrajectoryData::addPoint(const JointState& msg, double time_from_start
   //ROS_INFO_STREAM("/n" << follow_joint_trajectory_goal_);
   return true;
 }
+
+bool JointTrajectoryData::addJoint(const string name)
+{
+  follow_joint_trajectory_goal_.trajectory.joint_names.push_back(name);
+  return true;
+}
+
+bool JointTrajectoryData::removeJoint(const string name)
+{
+  auto n = find(follow_joint_trajectory_goal_.trajectory.joint_names.begin(), follow_joint_trajectory_goal_.trajectory.joint_names.end(), name);
+  if(n != follow_joint_trajectory_goal_.trajectory.joint_names.end())
+    follow_joint_trajectory_goal_.trajectory.joint_names.erase(n);
+  ROS_INFO("%lu", follow_joint_trajectory_goal_.trajectory.joint_names.size());
+  return true;
+}
+
+bool JointTrajectoryData::removeJoint(const int row)
+{
+  follow_joint_trajectory_goal_.trajectory.joint_names.erase(follow_joint_trajectory_goal_.trajectory.joint_names.begin()+row);
+  ROS_INFO("%lu", follow_joint_trajectory_goal_.trajectory.joint_names.size());
+  return true;
+}
+
 
 
 }
