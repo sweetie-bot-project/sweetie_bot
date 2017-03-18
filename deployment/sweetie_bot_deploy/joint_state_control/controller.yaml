@@ -3,5 +3,11 @@ controller:
         priority: 20
         controlled_chains: [ leg1, leg2, leg3, leg4, head ]
         activation_delay: 0.5
+        transient_joint_state_exp:
+            transient_time: 1
     joint_trajectory: 
         priority: 20
+    torque_off: 
+        priority: 20
+        herkulex_scheds: [ herkulex/sched ]
+        herkulex_arrays: [ herkulex/array ]
