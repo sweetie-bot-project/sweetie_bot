@@ -19,7 +19,7 @@
 			<arg name="run_real" value="$(arg run_real)" /> 
 			<arg name="host" value="$(arg host)" /> 
 			<arg name="robot" value="$(arg robot)" /> 
-			<arg if="$(arg run_real)" name="modules" value="motion.lua controller_joint_space_all.lua" />
+			<arg if="$(arg run_real)" name="modules" value="motion.lua controller_joint_space_all.lua controller_torque_off.lua" />
 			<arg unless="$(arg run_real)" name="modules" value="virtual_motion.lua controller_joint_space_all.lua" />
 			<arg name="overlays" value="joint_state_control motion_core" /> 
 			<arg name="interactive" value="false" /> 
