@@ -31,6 +31,6 @@ controller.joint_state:loadService("transient_joint_state_exp");
 rttlib_extra.get_peer_rosparams(controller.joint_state)
 -- advertise ROS operation
 controller.joint_state:loadService("rosservice")
-controller.joint_state:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "controller/joint_state/set_operational", "std_srvs/SetBool")
+controller.joint_state:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/joint_state/set_operational", "std_srvs/SetBool")
 -- prepare to start
 controller.joint_state:configure()

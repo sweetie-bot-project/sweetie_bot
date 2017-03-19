@@ -30,7 +30,7 @@ depl:addPeer("controller/torque_off", herkulex.sched:getName())
 rttlib_extra.get_peer_rosparams(controller.torque_off)
 -- advertise ROS operation
 controller.torque_off:loadService("rosservice")
-controller.torque_off:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "controller/torque_off/set_torque_off", "std_srvs/SetBool")
+controller.torque_off:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/torque_off/set_torque_off", "std_srvs/SetBool")
 
 -- prepare to start
 assert(controller.torque_off:configure())
