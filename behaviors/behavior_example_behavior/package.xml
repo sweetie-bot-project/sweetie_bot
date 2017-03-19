@@ -1,0 +1,19 @@
+<package>
+  <name>behavior_example_behavior</name>
+  <version>1.0.0</version>
+  <description>
+     This is a simple example for a behavior.
+  </description>
+  <maintainer email="schillinger@sim.tu-darmstadt.de">Philipp Schillinger</maintainer>
+  <license>BSD</license>
+
+  <url>http://ros.org/wiki/behavior_example_behavior</url>
+  <author>Philipp Schillinger</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>flexbe_core</run_depend>
+  <run_depend>flexbe_states</run_depend>
+
+</package>
