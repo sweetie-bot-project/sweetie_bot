@@ -12,7 +12,6 @@
   <run_depend>rospy</run_depend>
 
   <!-- Add here all ROS packages that contain behaviors -->
-  <run_depend>behavior_example_behavior</run_depend>
   <run_depend>behavior_sweetie_bot_flexbe_test</run_depend>
 
 </package>
