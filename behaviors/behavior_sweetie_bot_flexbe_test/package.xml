@@ -1,0 +1,22 @@
+<package>
+  <name>behavior_sweetie_bot_flexbe_test</name>
+  <version>1.0.0</version>
+  <description>
+     Test behavior for AnimationStoredJointTrajectory 
+  </description>
+  <maintainer email="todo@todo.com">disrecord</maintainer>
+  <license>BSD</license>
+
+  <url>http://ros.org/wiki/behavior_sweetie_bot_flexbe_test</url>
+  <author>disrecord</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>flexbe_core</run_depend>
+  <run_depend>sweetie_bot_flexbe_states</run_depend>
+  <run_depend>flexbe_manipulation_states</run_depend>
+  <run_depend>flexbe_navigation_states</run_depend>
+  <run_depend>flexbe_utility_states</run_depend>
+
+</package>
