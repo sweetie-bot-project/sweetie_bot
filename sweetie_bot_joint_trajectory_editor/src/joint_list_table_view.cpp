@@ -12,7 +12,7 @@ JointListTableView::JointListTableView(QObject *parent, JointTrajectoryData &tra
 
 int JointListTableView::rowCount(const QModelIndex & /*parent*/) const
 {
-   return trajectory_data_.follow_joint_trajectory_goal_.trajectory.joint_names.size();
+   return trajectory_data_.jointCount();
 }
 
 int JointListTableView::columnCount(const QModelIndex & /*parent*/) const
@@ -24,7 +24,7 @@ QVariant JointListTableView::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole)
     {
-      return QString(trajectory_data_.follow_joint_trajectory_goal_.trajectory.joint_names.at(index.row()).c_str());
+      return QString::fromStdString(trajectory_data_.getJointName(index.row()));
     }
     return QVariant();
 }
@@ -43,14 +43,6 @@ bool JointListTableView::setData(const QModelIndex &index, const QVariant &value
 */
   emit dataChanged(index, index);
   return true;
-}
-
-bool JointListTableView::removeRow(int row, const QModelIndex &parent)
-{
-    beginRemoveRows(parent, row, row-1);
-    trajectory_data_.removeJoint(row);
-    endRemoveRows();
-    return true;
 }
 
 bool JointListTableView::rereadData()

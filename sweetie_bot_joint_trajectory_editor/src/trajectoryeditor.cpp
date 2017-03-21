@@ -4,6 +4,7 @@
 #include <QStandardItemModel>
 #include <QMessageBox>
 
+
 TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TrajectoryEditor),
@@ -47,12 +48,29 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
         traj.time_from_start.nsec=0.0;
         msg.trajectory.points.push_back(traj);
 
-        msg.trajectory.joint_names.push_back("joint22");
-        msg.trajectory.joint_names.push_back("joint23");
-        msg.trajectory.joint_names.push_back("joint24");
-        msg.trajectory.joint_names.push_back("joint32");
-        msg.trajectory.joint_names.push_back("joint33");
-        msg.trajectory.joint_names.push_back("joint34");
+        msg.trajectory.joint_names.push_back("joint12");
+        msg.trajectory.joint_names.push_back("joint13");
+        msg.trajectory.joint_names.push_back("joint14");
+        msg.trajectory.joint_names.push_back("joint42");
+        msg.trajectory.joint_names.push_back("joint43");
+        msg.trajectory.joint_names.push_back("joint44");
+
+	for(auto &joint: msg.trajectory.joint_names)
+	{
+	  control_msgs::JointTolerance tol1;
+	  tol1.name = joint;
+	  tol1.position = qDegreesToRadians(15.0);
+	  msg.path_tolerance.push_back(tol1);
+	}
+
+	for(auto &joint: msg.trajectory.joint_names)
+	{
+	  control_msgs::JointTolerance tol1;
+	  tol1.name = joint;
+	  tol1.position = qDegreesToRadians(15.0);
+	  msg.goal_tolerance.push_back(tol1);
+	}
+
     /*
         control_msgs::JointTolerance tol1;
         tol1.name = "joint11";
@@ -98,6 +116,9 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
     sub_virtual_ = node.subscribe<sensor_msgs::JointState>("/sweetie_bot/joint_states", 1000, &TrajectoryEditor::jointsVirtualCallback, this);
 
     client = new Client("/sweetie_bot/motion/controller/joint_trajectory", true);
+    client->waitForServer();
+    //state_ = boost::make_shared<actionlib::SimpleClientGoalState>(client->getState());
+    //Client::ResultConstPtr result = *client->getResult();
 
 
     control_msgs::FollowJointTrajectoryGoal sd = loader_->getParam("/sweetie_bot_joint_trajectory_editor/trajectories/default");
@@ -135,6 +156,14 @@ void TrajectoryEditor::jointsVirtualCallback(const sensor_msgs::JointState::Cons
 
 void TrajectoryEditor::rosSpin()
 {
+/*
+    // ugly but I can't compile client callback
+    if(state_ != nullptr) {
+      //actionlib::SimpleClientGoalState state = client->getState();
+      state_ = boost::make_shared<actionlib::SimpleClientGoalState>(client->getState());
+      ROS_INFO("Action finished: %s",state.toString().c_str());
+    }
+// */
     ros::spinOnce();
 }
 
@@ -151,6 +180,7 @@ void TrajectoryEditor::on_loadTrajectoryButton_clicked()
   joint_trajectory_data_->loadFromMsg( msg );
   joint_list_table_view_->rereadData();
   joint_trajectory_point_table_view_->rereadData();
+  ui->goalTimeToleranceSpinBox->setValue(joint_trajectory_data_->getGoalTimeTolerance());
 }
 
 void TrajectoryEditor::on_turnAllServoOnButton_clicked()
@@ -193,7 +223,7 @@ void TrajectoryEditor::on_addRealPoseButton_clicked()
 
 void TrajectoryEditor::on_saveTrajectoryButton_clicked()
 {
-    loader_->setParam("/sweetie_bot_joint_trajectory_editor/trajectories/" + ui->comboBox->currentText().toStdString(), joint_trajectory_data_->follow_joint_trajectory_goal_);
+    loader_->setParam("/sweetie_bot_joint_trajectory_editor/trajectories/" + ui->comboBox->currentText().toStdString(), joint_trajectory_data_->getTrajectoryMsg());
     system("rosparam dump `rospack find sweetie_bot_joint_trajectory_editor`/launch/trajectories.yaml /sweetie_bot_joint_trajectory_editor/trajectories" );
 }
 
@@ -203,31 +233,38 @@ void TrajectoryEditor::on_deletePoseButton_clicked()
     joint_trajectory_point_table_view_->rereadData();
 }
 
+void TrajectoryEditor::executeActionCallback(const actionlib::SimpleClientGoalState& state, const control_msgs::FollowJointTrajectoryActionResultConstPtr& result)
+{
+  ROS_INFO("TrajectoryEditor::executeActionCallback");
+}
 
 void TrajectoryEditor::on_executeButton_clicked()
 {
-  client->waitForServer();
-  joint_trajectory_data_->follow_joint_trajectory_goal_.goal_time_tolerance.fromSec(ui->goalTimeToleranceSpinBox->value());
-  client->sendGoal(joint_trajectory_data_->follow_joint_trajectory_goal_);
-}
+  joint_trajectory_data_->setGoalTimeTolerance(ui->goalTimeToleranceSpinBox->value());
+  //client->sendGoal(joint_trajectory_data_->follow_joint_trajectory_goal_);
+  actionlib::SimpleClientGoalState state = client->sendGoalAndWait(joint_trajectory_data_->getTrajectoryMsg());
+  ROS_INFO_STREAM("\n" << joint_trajectory_data_->getTrajectoryMsg());
+  ROS_INFO("%s", state.toString().c_str());
+  ui->statusLabel->setText("Status: " + QString::fromStdString(state.toString()) );
 
-/*
-void TrajectoryEditor::executeActionCallback(const SimpleClientGoalState& state, const ResultConstPtr& result)
-{
-
+  // callback does not compile T_T
+  //client->sendGoal(joint_trajectory_data_->follow_joint_trajectory_goal_, boost::bind(&TrajectoryEditor::executeActionCallback, this, _1, _2));
+  //, Client::SimpleActiveCallback(), Client::SimpleFeedbackCallback());
 }
-*/
 
 void TrajectoryEditor::on_jointsTableView_clicked(const QModelIndex &index)
 {
-  ROS_INFO("%s %d",
-    joint_list_table_view_->data(index).toString().toStdString().c_str(), index.row());
+  std::string joint_name = joint_list_table_view_->data(index).toString().toStdString();
+
+  ROS_INFO("%s %d", joint_name.c_str(), index.row());
   ui->jointNameEditBox->setText(joint_list_table_view_->data(index).toString());
+  ui->pathToleranceSpinBox->setValue(joint_trajectory_data_->getPathTolerance(joint_name));
+  ui->goalToleranceSpinBox->setValue(joint_trajectory_data_->getGoalTolerance(joint_name));
 }
 
 void TrajectoryEditor::on_addButton_clicked()
 {
-    joint_trajectory_data_->addJoint(ui->jointNameEditBox->text().toStdString());
+    joint_trajectory_data_->addJoint(ui->jointNameEditBox->text().toStdString(), ui->pathToleranceSpinBox->value(), ui->goalToleranceSpinBox->value());
     joint_list_table_view_->rereadData();
 }
 

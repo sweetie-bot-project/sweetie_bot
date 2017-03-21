@@ -10,7 +10,8 @@
 // ROS
 #include "ros/ros.h"
 #include <actionlib/client/simple_action_client.h>
-#include "control_msgs/FollowJointTrajectoryAction.h"
+#include <control_msgs/FollowJointTrajectoryAction.h>
+
 #include "sensor_msgs/JointState.h"
 
 #include "joint_trajectory_data.h"
@@ -33,8 +34,6 @@ public:
   ~TrajectoryEditor();
   void bootstrap();
   typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> Client;
-  //typedef actionlib::SimpleClientGoalState SimpleClientGoalState;
-  //typedef Client::ResultConstPtr ResultConstPtr;
 private:
    ros::NodeHandle node_;
    ros::Subscriber sub_real_;
@@ -43,6 +42,7 @@ private:
    sensor_msgs::JointState joint_state_virtual_;
 
    Client *client;
+   //boost::shared_ptr<actionlib::SimpleClientGoalState> state_;
 
    Ui::TrajectoryEditor *ui;
    sweetie_bot::interface::JointTrajectoryData *joint_trajectory_data_;
@@ -53,7 +53,7 @@ private:
    sweetie_bot::tools::ParamMsgLoader<control_msgs::FollowJointTrajectoryGoal>* loader_;
    void jointsRealCallback(const sensor_msgs::JointState::ConstPtr& msg);
    void jointsVirtualCallback(const sensor_msgs::JointState::ConstPtr& msg);
-   //void executeActionCallback(const SimpleClientGoalState& state, const ResultConstPtr& result);
+   void executeActionCallback(const actionlib::SimpleClientGoalState& state, const control_msgs::FollowJointTrajectoryActionResultConstPtr& result);
 
 private slots:
     void rosSpin();

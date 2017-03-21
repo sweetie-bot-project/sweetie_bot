@@ -37,13 +37,29 @@ class JointTrajectoryData
 		typedef control_msgs::FollowJointTrajectoryGoal FollowJointTrajectoryGoal;
 		typedef control_msgs::JointTolerance JointTolerance;
 		
+		JointTrajectoryData(const FollowJointTrajectoryGoal& follow_joint_trajectory_goal);
+
 		std::vector<std::string> joint_names_;
-		FollowJointTrajectoryGoal follow_joint_trajectory_goal_;
 		bool loadFromMsg(const FollowJointTrajectoryGoal& follow_joint_trajectory_goal);
-		bool addJoint(const std::string name);
+		FollowJointTrajectoryGoal& getTrajectoryMsg();
+
+		bool addJoint(const std::string name, double path_tolerance = 0.0, double goal_tolerance = 0.0);
 		bool removeJoint(const std::string name);
-		bool removeJoint(const int row);
+		int jointCount();
+		std::string getJointName(int index);
+
+		int addPoint(const sensor_msgs::JointState& msg, double time_from_start);
+		double getPointTimeFromStart(int index);
+		bool setPointTimeFromStart(int index, double time_from_start);
+		bool removePoint(int index);
+		int pointCount();
+
+		double getPathTolerance(const std::string name);
+		double getGoalTolerance(const std::string name);
+		double getGoalTimeTolerance();
+		void setGoalTimeTolerance(const double sec);
 	protected:
+		FollowJointTrajectoryGoal follow_joint_trajectory_goal_;
 
 		struct Tolerances {
 			JointTolerance path_tolerance;
@@ -54,9 +70,6 @@ class JointTrajectoryData
 		std::vector<double> path_tolerance_; 
 		std::vector<double> goal_tolerance_;
 		double goal_time_tolerance_;
-	public:
-		JointTrajectoryData(const FollowJointTrajectoryGoal& follow_joint_trajectory_goal);
-    bool addPoint(const JointState& msg, double time_from_start);
 };
 
 } // namespace interface

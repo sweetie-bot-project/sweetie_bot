@@ -24,7 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
 # QT packages
 find_package(Qt5Widgets REQUIRED)
 
-SET(trajectory_editor_SOURCES src/main.cpp src/trajectoryeditor.cpp src/joint_trajectory_data.cpp src/joint_trajectory_point_table_view.cpp src/joint_list_table_view.cpp)
+SET(trajectory_editor_SOURCES src/main.cpp src/joint_trajectory_data.cpp src/joint_trajectory_point_table_view.cpp src/joint_list_table_view.cpp src/trajectoryeditor.cpp)
 SET(trajectory_editor_HEADERS src/trajectoryeditor.h src/joint_trajectory_data.h src/joint_trajectory_point_table_view.h src/joint_list_table_view.h)
 SET(trajectory_editor_FORMS src/Editor.ui)
 

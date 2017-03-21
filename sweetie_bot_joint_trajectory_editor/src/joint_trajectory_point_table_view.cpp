@@ -12,7 +12,7 @@ JointTrajectoryPointTableView::JointTrajectoryPointTableView(QObject *parent, Jo
 
 int JointTrajectoryPointTableView::rowCount(const QModelIndex & /*parent*/) const
 {
-   return trajectory_data_.follow_joint_trajectory_goal_.trajectory.points.size();
+   return trajectory_data_.pointCount();
 }
 
 int JointTrajectoryPointTableView::columnCount(const QModelIndex & /*parent*/) const
@@ -24,8 +24,7 @@ QVariant JointTrajectoryPointTableView::data(const QModelIndex &index, int role)
 {
     if (role == Qt::DisplayRole)
     {
-       ros::Duration d = trajectory_data_.follow_joint_trajectory_goal_.trajectory.points[index.row()].time_from_start;
-       return QString::number(d.toSec());
+       return QString::number(trajectory_data_.getPointTimeFromStart(index.row()));
        /*
        return QString("%1.%2")
                    .arg(d.sec)
@@ -43,21 +42,21 @@ Qt::ItemFlags JointTrajectoryPointTableView::flags (const QModelIndex &index) co
 bool JointTrajectoryPointTableView::removeRow(int row, const QModelIndex &parent)
 {
     beginRemoveRows(parent, row, row-1);
-    trajectory_data_.follow_joint_trajectory_goal_.trajectory.points.erase(trajectory_data_.follow_joint_trajectory_goal_.trajectory.points.begin()+row);
+    trajectory_data_.removePoint(row);
     endRemoveRows();
     return true;
 }
 
 bool JointTrajectoryPointTableView::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-  ROS_INFO("setData");
   if (!index.isValid())
     return false;
   double d = 0.0;
   if(value.isValid() && value.canConvert(QMetaType::Double))
     d = value.toDouble();
 
-  trajectory_data_.follow_joint_trajectory_goal_.trajectory.points[index.row()].time_from_start.fromSec(d);
+  //trajectory_data_.follow_joint_trajectory_goal_.trajectory.points[index.row()].time_from_start.fromSec(d);
+  trajectory_data_.setPointTimeFromStart(index.row(), d);
   //ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
 
   emit dataChanged(index, index);
