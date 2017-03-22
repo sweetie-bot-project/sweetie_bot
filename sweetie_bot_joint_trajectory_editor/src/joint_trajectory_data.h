@@ -4,7 +4,11 @@
 #include <ros/ros.h>
 
 #include <sensor_msgs/JointState.h>
+#include <trajectory_msgs/JointTrajectory.h>
+#include <trajectory_msgs/JointTrajectoryPoint.h>
 #include <control_msgs/FollowJointTrajectoryGoal.h>
+//#include <sweetie_bot_orocos_misc/joint_state_check.hpp>
+#include <unordered_map>
 
 namespace sweetie_bot {
 namespace interface {
@@ -36,11 +40,14 @@ class JointTrajectoryData
 		typedef sensor_msgs::JointState JointState;
 		typedef control_msgs::FollowJointTrajectoryGoal FollowJointTrajectoryGoal;
 		typedef control_msgs::JointTolerance JointTolerance;
+		typedef trajectory_msgs::JointTrajectory JointTrajectory;
+		typedef trajectory_msgs::JointTrajectoryPoint JointTrajectoryPoint;
 		
 		JointTrajectoryData(const FollowJointTrajectoryGoal& follow_joint_trajectory_goal);
 
-		std::vector<std::string> joint_names_;
-		bool loadFromMsg(const FollowJointTrajectoryGoal& follow_joint_trajectory_goal);
+		//std::vector<std::string> joint_names_;
+		bool loadFromMsg(const FollowJointTrajectoryGoal& msg);
+		void clear();
 		FollowJointTrajectoryGoal& getTrajectoryMsg();
 
 		bool addJoint(const std::string name, double path_tolerance = 0.0, double goal_tolerance = 0.0);
@@ -49,27 +56,49 @@ class JointTrajectoryData
 		std::string getJointName(int index);
 
 		int addPoint(const sensor_msgs::JointState& msg, double time_from_start);
+		sensor_msgs::JointState& getPoint(int index);
 		double getPointTimeFromStart(int index);
 		bool setPointTimeFromStart(int index, double time_from_start);
 		bool removePoint(int index);
 		int pointCount();
 
 		double getPathTolerance(const std::string name);
+		bool setPathTolerance(const std::string name, double path_tolerance);
 		double getGoalTolerance(const std::string name);
+		bool setGoalTolerance(const std::string name, double goal_tolerance);
 		double getGoalTimeTolerance();
 		void setGoalTimeTolerance(const double sec);
 	protected:
 		FollowJointTrajectoryGoal follow_joint_trajectory_goal_;
+        sensor_msgs::JointState joint_state_;
 
-		struct Tolerances {
-			JointTolerance path_tolerance;
-			JointTolerance goal_tolerance;
+		struct Tolerance {
+			double position;
+			double velocity;
+			double acceleration;
 		};
-		std::map<std::string, Tolerances> tolerances_;
-		double goal_time_;
-		std::vector<double> path_tolerance_; 
-		std::vector<double> goal_tolerance_;
-		double goal_time_tolerance_;
+/*
+		struct GoalPathTolerance {
+			Tolerance path_tolerance;
+			Tolerance goal_tolerance;
+		}; */
+		std::vector<std::string> joint_names_;
+		std::unordered_map<std::string, Tolerance> path_tolerances_;
+		std::unordered_map<std::string, Tolerance> goal_tolerances_;
+
+		struct TrajectoryPoint {
+			std::vector<double> position;
+			std::vector<double> velocity;
+			std::vector<double> acceleration;
+			std::vector<double> effort;
+			ros::Duration time_from_start;
+		};
+		std::vector<TrajectoryPoint> trajectory_point_;
+
+		//double goal_time_;
+		//std::vector<double> path_tolerance_; 
+		//std::vector<double> goal_tolerance_;
+		ros::Duration goal_time_tolerance_;
 };
 
 } // namespace interface

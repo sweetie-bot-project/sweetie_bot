@@ -3,5 +3,6 @@
   <rosparam command="load" ns="/sweetie_bot_joint_trajectory_editor/trajectories/default" file="$(find sweetie_bot_joint_trajectory_editor)/launch/default_tolerances.yaml" />
 
   <node name="joint_trajectory_editor" pkg="sweetie_bot_joint_trajectory_editor" type="trajectory_editor" output="screen" args="" required="true" >
+	<remap from="/sweetie_bot/joint_trajectory_editor/joint_virtual" to="/sweetie_bot/joint_states" />
   </node>
 </launch>

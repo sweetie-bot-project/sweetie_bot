@@ -17,7 +17,9 @@ class ParamMsgLoader
 		~ParamMsgLoader();
 		MsgType operator()(const std::string& name) { return getParam(name); }
 
+		bool getParam(const std::string& name, MsgType& msg);
 		MsgType getParam(const std::string& name);
+
 		bool setParam(const std::string& name, MsgType& msg);
 
 		std::vector<std::string> getNames(const std::string& name);
@@ -37,11 +39,35 @@ ParamMsgLoader<MsgType>::~ParamMsgLoader()
 {
 }
 
+
+template<class MsgType> 
+bool ParamMsgLoader<MsgType>::getParam(const std::string& name, MsgType& msg)
+{
+	XmlRpc::XmlRpcValue param;
+	if (!node_.hasParam(name)) return false;
+	if (!node_.getParam(name, param)) return false;
+	if ( param.getType() != XmlRpc::XmlRpcValue::TypeBase64) return false;
+	std::vector<char> tmp = param;
+
+        if(tmp.size() == 0) return false;
+	boost::shared_array<uint8_t> ibuffer(new uint8_t[tmp.size()]);
+	ros::serialization::IStream istream((unsigned char*)&tmp[0], tmp.size());
+	try{
+	  ros::serialization::deserialize(istream, msg);
+	}catch(...){
+	  return false;
+	}
+	return true;
+}
+
+
 template<class MsgType>
 MsgType ParamMsgLoader<MsgType>::getParam(const std::string& name)
 {
-	XmlRpc::XmlRpcValue param;
         MsgType msg;
+	getParam(name, msg);
+	return msg;
+/*
 	if (!node_.getParam(name, param)) return msg;
 	std::vector<char> tmp = param;
 
@@ -50,6 +76,7 @@ MsgType ParamMsgLoader<MsgType>::getParam(const std::string& name)
 	ros::serialization::IStream istream((unsigned char*)&tmp[0], tmp.size());
 	ros::serialization::deserialize(istream, msg);
 	return msg;
+*/
 }
 
 template<class MsgType>

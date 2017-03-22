@@ -52,9 +52,10 @@ bool JointTrajectoryPointTableView::setData(const QModelIndex &index, const QVar
   if (!index.isValid())
     return false;
   double d = 0.0;
+  if(value.toString() == "") return false;
   if(value.isValid() && value.canConvert(QMetaType::Double))
     d = value.toDouble();
-
+  else return false;
   //trajectory_data_.follow_joint_trajectory_goal_.trajectory.points[index.row()].time_from_start.fromSec(d);
   trajectory_data_.setPointTimeFromStart(index.row(), d);
   //ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
@@ -63,15 +64,9 @@ bool JointTrajectoryPointTableView::setData(const QModelIndex &index, const QVar
   return true;
 }
 
-bool JointTrajectoryPointTableView::rereadData()
+bool JointTrajectoryPointTableView::reReadData()
 {
-  ROS_INFO("JointTrajectoryPointTableView::rereadData");
-  /*
-  QModelIndex indexBegin = createIndex(0,0);
-  QModelIndex indexEnd = createIndex(1,trajectory_data_.follow_joint_trajectory_goal_.trajectory.points.size());
-  emit dataChanged(indexBegin, indexEnd);
-  // */
-  emit layoutChanged();
+	emit layoutChanged();
 }
 
 } // namespace interface

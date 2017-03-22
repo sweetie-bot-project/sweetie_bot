@@ -31,7 +31,6 @@ QVariant JointListTableView::data(const QModelIndex &index, int role) const
 
 bool JointListTableView::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-  ROS_INFO("setData");
   if (!index.isValid())
     return false;
 /*
@@ -45,9 +44,8 @@ bool JointListTableView::setData(const QModelIndex &index, const QVariant &value
   return true;
 }
 
-bool JointListTableView::rereadData()
+bool JointListTableView::reReadData()
 {
-  ROS_INFO("JointListTableView::rereadData");
   /*
   QModelIndex indexBegin = createIndex(0,0);
   QModelIndex indexEnd = createIndex(1,trajectory_data_.joint_names_.size());

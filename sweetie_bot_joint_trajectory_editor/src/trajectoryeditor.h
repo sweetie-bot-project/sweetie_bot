@@ -38,11 +38,16 @@ private:
    ros::NodeHandle node_;
    ros::Subscriber sub_real_;
    ros::Subscriber sub_virtual_;
+   ros::Publisher pub_joints_virtual_set;
+   ros::Publisher pub_joints_marker_set;
+
    sensor_msgs::JointState joint_state_real_;
    sensor_msgs::JointState joint_state_virtual_;
 
-   Client *client;
-   //boost::shared_ptr<actionlib::SimpleClientGoalState> state_;
+   const std::string trajectories_param_name = "/sweetie_bot_joint_trajectory_editor/trajectories";
+
+   Client *client_virtual;
+   Client *client_real;
 
    Ui::TrajectoryEditor *ui;
    sweetie_bot::interface::JointTrajectoryData *joint_trajectory_data_;
@@ -54,10 +59,10 @@ private:
    void jointsRealCallback(const sensor_msgs::JointState::ConstPtr& msg);
    void jointsVirtualCallback(const sensor_msgs::JointState::ConstPtr& msg);
    void executeActionCallback(const actionlib::SimpleClientGoalState& state, const control_msgs::FollowJointTrajectoryActionResultConstPtr& result);
+   void updateParamList();
 
 private slots:
     void rosSpin();
-
     void on_turnAllTrajectoryServosButton_clicked();
     void on_turnAllServoOnButton_clicked();
     void on_loadTrajectoryButton_clicked();
@@ -71,6 +76,12 @@ private slots:
     void on_addButton_clicked();
     void on_applyButton_clicked();
     void on_delButton_clicked();
+    void on_delTrajectoryButton_clicked();
+    void on_goalTimeToleranceSpinBox_valueChanged(double arg1);
+    void on_setVirtualPoseButton_clicked();
+    void on_pointsTableView_clicked(const QModelIndex &index);
+    void on_pointsTableView_doubleClicked(const QModelIndex &index);
+    void on_virtualCheckBox_clicked(bool checked);
 };
 
 #endif // TRAJECTORYEDITOR_H
