@@ -1,0 +1,19 @@
+<launch>
+  <include file="$(find sound_play)/soundplay_node.launch" />
+  <node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
+    <rosparam param="sounds">
+      - assistance
+      - cuitemark
+      - creatures
+      - fear
+      - fun_begins
+      - fun_level
+      - sad
+      - scaning
+      - signal
+      - song
+      - success
+    </rosparam>
+  </node>
+
+</launch>
