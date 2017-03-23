@@ -24,15 +24,15 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 
     timer->start(50);
 
-    sub_real_ = node.subscribe<sensor_msgs::JointState>("/trajectory_editor/joint_trajectory_editor/joints_real", 1000, &TrajectoryEditor::jointsRealCallback, this);
-    sub_virtual_ = node.subscribe<sensor_msgs::JointState>("/sweetie_bot/joint_trajectory_editor/joint_virtual", 1000, &TrajectoryEditor::jointsVirtualCallback, this);
-    pub_joints_virtual_set = node.advertise<sensor_msgs::JointState>("/sweetie_bot/joint_trajectory_editor/joints_virtual_set", 1);
-    pub_joints_marker_set = node.advertise<sensor_msgs::JointState>("/sweetie_bot/joint_trajectory_editor/joints_marker_set", 1);
-    
+    sub_real_ = node.subscribe<sensor_msgs::JointState>("joints_real", 1, &TrajectoryEditor::jointsRealCallback, this);
+    sub_virtual_ = node.subscribe<sensor_msgs::JointState>("joints_virtual", 1, &TrajectoryEditor::jointsVirtualCallback, this);
+	pub_joints_virtual_set = node.advertise<sensor_msgs::JointState>("joints_virtual_set", 1);
+	pub_joints_marker_set = node.advertise<sensor_msgs::JointState>("joints_marker_set", 1);
+	
     torque_main_switch_ = node.serviceClient<std_srvs::SetBool>("set_torque_off"); //TODO persistent connection and button disable
-    
-    client_virtual = new Client("/sweetie_bot/motion/controller/joint_trajectory", true);
-    client_real    = new Client("/sweetie_bot/motion/controller/follow_trajectory", true);
+
+    client_virtual = new Client("joint_trajectory_virtual", true);
+    client_real    = new Client("joint_trajectory_real", true);
     //client_virtual->waitForServer();
     //state_ = boost::make_shared<actionlib::SimpleClientGoalState>(client->getState());
     //Client::ResultConstPtr result = *client->getResult();

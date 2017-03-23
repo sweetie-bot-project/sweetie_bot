@@ -46,7 +46,7 @@ private:
    sensor_msgs::JointState joint_state_real_;
    sensor_msgs::JointState joint_state_virtual_;
 
-   const std::string trajectories_param_name = "/sweetie_bot_joint_trajectory_editor/trajectories";
+   const std::string trajectories_param_name = "trajectory_storage";
 
    Client *client_virtual;
    Client *client_real;

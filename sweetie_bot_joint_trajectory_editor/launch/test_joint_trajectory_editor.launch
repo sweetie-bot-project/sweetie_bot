@@ -1,8 +1,11 @@
 <launch>
-  <rosparam command="load" ns="/sweetie_bot_joint_trajectory_editor/trajectories" file="$(find sweetie_bot_joint_trajectory_editor)/launch/trajectories.yaml" />
-  <rosparam command="load" ns="/sweetie_bot_joint_trajectory_editor/trajectories/default" file="$(find sweetie_bot_joint_trajectory_editor)/launch/default_tolerances.yaml" />
+  <rosparam command="load" ns="/sweetie_bot_joint_trajectory_editor/trajectories" file="$(find sweetie_bot_joint_trajectory_editor)/launch/trajectories.yaml" ></rosparam>
+  <rosparam command="load" ns="/sweetie_bot_joint_trajectory_editor/trajectories/default" file="$(find sweetie_bot_joint_trajectory_editor)/launch/default_tolerances.yaml"  ></rosparam>
 
   <node name="joint_trajectory_editor" pkg="sweetie_bot_joint_trajectory_editor" type="trajectory_editor" output="screen" args="" required="true" >
-	<remap from="/sweetie_bot/joint_trajectory_editor/joint_virtual" to="/sweetie_bot/joint_states" />
+     <remap from="joints_virtual" to="/sweetie_bot/joint_states" />
+     <remap from="joints_virtual_set" to="/sweetie_bot/motion/controller/joint_state/out_joints_src_reset" />
+     <remap from="joint_trajectory_virtual" to="/sweetie_bot/motion/controller/joint_trajectory" />
+     <param name="trajectory_storage" value="/sweetie_bot_joint_trajectory_editor/trajectories" />
   </node>
 </launch>
