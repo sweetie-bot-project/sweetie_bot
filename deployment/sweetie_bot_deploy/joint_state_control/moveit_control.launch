@@ -15,7 +15,7 @@
 
 	<!-- ROBOT -->
 
-	<!-- start virtual robot -->
+	<!-- start robot -->
 	<group ns="sweetie_bot">
 		<!-- sweetie_bot core -->
 		<include file="$(find sweetie_bot_deploy)/motion_core/sweetie_bot_core.launch">
