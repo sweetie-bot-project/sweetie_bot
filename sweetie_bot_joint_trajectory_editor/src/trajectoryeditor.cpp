@@ -152,13 +152,16 @@ void TrajectoryEditor::on_turnAllSelectedServosButton_clicked()
 void TrajectoryEditor::on_addVirtualPoseButton_clicked()
 {
 	ROS_INFO_STREAM("\n" << joint_state_virtual_ );
-	joint_trajectory_data_->addPoint(joint_state_virtual_, ui->timeIncrementSpinBox->value());
+	int index = ui->pointsTableView->selectionModel()->currentIndex().row(); // TODO isValid check?
+	joint_trajectory_data_->addPoint(index + 1, joint_state_virtual_, ui->timeIncrementSpinBox->value());
 	joint_trajectory_point_table_view_->reReadData();
 }
 
 void TrajectoryEditor::on_addRealPoseButton_clicked()
 {
-    joint_trajectory_data_->addPoint(joint_state_real_, ui->timeIncrementSpinBox->value());
+	int index = ui->pointsTableView->selectionModel()->currentIndex().row(); // TODO isValid check?
+	// TODO How control where to add? In this model insertion before start time is not possible.
+    joint_trajectory_data_->addPoint(index + 1, joint_state_real_, ui->timeIncrementSpinBox->value());
     joint_trajectory_point_table_view_->reReadData();
 }
 

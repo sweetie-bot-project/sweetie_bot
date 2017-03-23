@@ -204,7 +204,7 @@ void JointTrajectoryData::clear()
   goal_time_tolerance_.fromSec( 0.0 );
 }
 
-int JointTrajectoryData::addPoint(const JointState& msg, double time_from_start)
+int JointTrajectoryData::addPoint(int index, const JointState& msg, double time_increment)
 {
 	//if(!sweetie_bot::isValidJointStatePos(msg)) return -1;
 	// prepare trajectory
@@ -224,11 +224,17 @@ int JointTrajectoryData::addPoint(const JointState& msg, double time_from_start)
 	if((new_point.velocity.size() > 0) and (new_point.velocity.size() != joint_names_.size())) return -1;
 	if((new_point.effort.size() > 0) and (new_point.effort.size() != joint_names_.size())) return -1;
 
-	new_point.time_from_start.fromSec(time_from_start);
 
-  trajectory_point_.push_back(new_point);
-  // return latst index
-  return trajectory_point_.size()-1;
+	// determine desired point position	
+	if (index < 0) index = 0;
+	if (index > trajectory_point_.size()) index = trajectory_point_.size();
+	// insert point
+	if (index == 0) new_point.time_from_start.fromSec(0.0);
+	else new_point.time_from_start = trajectory_point_[index-1].time_from_start + ros::Duration(time_increment);
+	
+	trajectory_point_.insert(trajectory_point_.begin() + index, new_point);
+	// return latst index
+	return trajectory_point_.size()-1;
 }
 
 sensor_msgs::JointState& JointTrajectoryData::getPoint(int index)

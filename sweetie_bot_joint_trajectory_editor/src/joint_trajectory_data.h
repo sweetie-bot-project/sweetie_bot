@@ -56,7 +56,7 @@ class JointTrajectoryData
 		int jointCount();
 		std::string getJointName(int index);
 
-		int addPoint(const sensor_msgs::JointState& msg, double time_from_start);
+		int addPoint(int index, const sensor_msgs::JointState& msg, double time_from_start);
 		sensor_msgs::JointState& getPoint(int index);
 		double getPointTimeFromStart(int index);
 		bool setPointTimeFromStart(int index, double time_from_start);
