@@ -41,6 +41,8 @@ private:
    ros::Publisher pub_joints_virtual_set;
    ros::Publisher pub_joints_marker_set;
 
+   ros::ServiceClient torque_main_switch_;
+
    sensor_msgs::JointState joint_state_real_;
    sensor_msgs::JointState joint_state_virtual_;
 

@@ -4,6 +4,8 @@
 #include <QStandardItemModel>
 #include <QMessageBox>
 
+#include <std_srvs/SetBool.h>
+
 
 TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node, QWidget *parent) :
     QMainWindow(parent),
@@ -24,15 +26,16 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 
     sub_real_ = node.subscribe<sensor_msgs::JointState>("/trajectory_editor/joint_trajectory_editor/joints_real", 1000, &TrajectoryEditor::jointsRealCallback, this);
     sub_virtual_ = node.subscribe<sensor_msgs::JointState>("/sweetie_bot/joint_trajectory_editor/joint_virtual", 1000, &TrajectoryEditor::jointsVirtualCallback, this);
-	pub_joints_virtual_set = node.advertise<sensor_msgs::JointState>("/sweetie_bot/joint_trajectory_editor/joints_virtual_set", 1);
-	pub_joints_marker_set = node.advertise<sensor_msgs::JointState>("/sweetie_bot/joint_trajectory_editor/joints_marker_set", 1);
-
+    pub_joints_virtual_set = node.advertise<sensor_msgs::JointState>("/sweetie_bot/joint_trajectory_editor/joints_virtual_set", 1);
+    pub_joints_marker_set = node.advertise<sensor_msgs::JointState>("/sweetie_bot/joint_trajectory_editor/joints_marker_set", 1);
+    
+    torque_main_switch_ = node.serviceClient<std_srvs::SetBool>("set_torque_off"); //TODO persistent connection and button disable
+    
     client_virtual = new Client("/sweetie_bot/motion/controller/joint_trajectory", true);
     client_real    = new Client("/sweetie_bot/motion/controller/follow_trajectory", true);
     //client_virtual->waitForServer();
     //state_ = boost::make_shared<actionlib::SimpleClientGoalState>(client->getState());
     //Client::ResultConstPtr result = *client->getResult();
-
 
     control_msgs::FollowJointTrajectoryGoal sd = loader_->getParam( trajectories_param_name + "/default");
     ROS_INFO_STREAM( "\n" << sd );
@@ -77,6 +80,9 @@ void TrajectoryEditor::updateParamList()
 
 void TrajectoryEditor::rosSpin()
 {
+	// TODO trottle checks down
+    ui->turnAllServoOnButton->setEnabled(torque_main_switch_.exists());
+
     ros::spinOnce();
 }
 
@@ -111,17 +117,26 @@ void TrajectoryEditor::on_loadTrajectoryButton_clicked()
 
 void TrajectoryEditor::on_turnAllServoOnButton_clicked()
 {
+  std_srvs::SetBool srv;
 
-  if (ui->turnAllServoOnButton->text() == "Turn all servos on")
-  {
-    ROS_INFO("Command to turn on servos");
-    ui->turnAllServoOnButton->setText("Turn all servos off");
+  // When TorqueMainSwitch controler is operational servos are off.
+  // So we have to send false if we want to activate servos.
+  srv.request.data  = !(ui->turnAllServoOnButton->text() == "Turn all servos on");
+
+  if (! torque_main_switch_.call(srv)) {
+    ROS_ERROR("TorqueMainSwitch setOperational service is not available.");
+	return;
   }
-  else
-  {
-    ROS_INFO("Command to turn off servos");
-    ui->turnAllServoOnButton->setText("Turn all servos on");
+  if (! srv.response.success) {
+	ROS_ERROR("TorqueMainSwitch setOperational service returned false: %s.", srv.response.message.c_str());
+	return;
   }
+
+  // Operation has succesed
+  ROS_INFO("TorqueMainSwitch setOperational call successed. Servos torque_off = %d.", (int) srv.request.data);
+  // Change button label
+  if (srv.request.data) ui->turnAllServoOnButton->setText("Turn all servos on");
+  else ui->turnAllServoOnButton->setText("Turn all servos off");
 }
 
 void TrajectoryEditor::on_turnAllTrajectoryServosButton_clicked()
