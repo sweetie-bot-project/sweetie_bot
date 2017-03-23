@@ -102,11 +102,11 @@ void TrajectoryEditor::on_loadTrajectoryButton_clicked()
 	if(ui->addRealPoseButton->isEnabled())
 	{
 	  for(auto &name: joint_state_real_.name){
-		joint_trajectory_data_->addJoint(name, 0.0, 0.0);
+    joint_trajectory_data_->addJoint(name, ui->pathToleranceSpinBox->value(), ui->goalToleranceSpinBox->value());
 	  }
 	} else if (ui->addVirtualPoseButton->isEnabled()){
 	  for(auto &name: joint_state_virtual_.name){
-		joint_trajectory_data_->addJoint(name, 0.0, 0.0);
+    joint_trajectory_data_->addJoint(name, ui->pathToleranceSpinBox->value(), ui->goalToleranceSpinBox->value());
 	  }
 	}
   }
