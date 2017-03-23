@@ -1,7 +1,7 @@
 controller:
     joint_state:
         priority: 20
-        controlled_chains: [ leg1, leg2, leg3, leg4, head ]
+        controlled_chains: [ leg1, leg2, leg3, leg4, head, eyes ]
         activation_delay: 2
         transient_joint_state_exp:
             transient_time: 1
