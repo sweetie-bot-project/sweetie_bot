@@ -1,0 +1,8 @@
+<launch>
+
+  <node name="sweetie_bot_eye_left"  pkg="sweetie_bot_eyes" type="eye" output="screen" args="">
+  </node>
+  <node name="sweetie_bot_eye_rigth" pkg="sweetie_bot_eyes" type="eye" output="screen" args="-r">
+  </node>
+
+</launch>

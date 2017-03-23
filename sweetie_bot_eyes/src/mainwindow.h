@@ -4,6 +4,7 @@
 #include <sensor_msgs/JointState.h>
 
 #include "ros/ros.h"
+#include <ros/package.h>
 
 #include <QWidget>
 #include <QTimer>
@@ -156,6 +157,7 @@ private:
 
 	ros::Subscriber sub;
 	ros::NodeHandle * node;
+	QString path;
 
 	void controlCallback(const sensor_msgs::JointState::ConstPtr& msg);
 public:

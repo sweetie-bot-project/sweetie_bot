@@ -17,7 +17,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs 
-  std_msgs
+  roslib
 )
 
 # QT packages
@@ -193,11 +193,11 @@ target_link_libraries(eye
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+install(FILES
+  overlays/leftEyeOverlay.png 
+  overlays/rightEyeOverlay.png 
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 #############
 ## Testing ##

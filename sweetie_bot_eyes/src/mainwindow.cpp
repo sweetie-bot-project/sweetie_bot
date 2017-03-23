@@ -120,6 +120,7 @@ MainWindow::MainWindow(int argc, char *argv[], bool isLeftEye, QWidget *parent) 
     // ROS
     ros::init(argc, argv, "eye");
     node = new ros::NodeHandle();
+	path = QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") );
 
     sub = node->subscribe<sensor_msgs::JointState>("/sweetie_bot/joint_states", 1000, &MainWindow::controlCallback, this);
 
@@ -149,10 +150,10 @@ void MainWindow::controlCallback(const sensor_msgs::JointState::ConstPtr& msg)
 		x = msg->position[n];
   }
  
-  ROS_INFO_STREAM(m_isLeftEye << "eye: " << x << " " << y);
+  float eyeToX = 160 - (160 * x) / 2;
+  float eyeToY = 120 - (120 * y) / 2;
 
-  float eyeToX = 80 + (160 * x) / 2;
-  float eyeToY = 80 + (120 * y) / 2;
+  ROS_INFO_STREAM(m_isLeftEye << "eye: ("<< x << "," << y << ") " << eyeToX << " " << eyeToY);
 
   m_isMoveWithBlink = false;
 
@@ -237,10 +238,10 @@ void MainWindow::paintEvent(QPaintEvent *) {
     }
 
     if(m_isLeftEye) {
-        painter.drawImage(0, 0, QImage(":/overlays/leftEyeOverlay"));
+        painter.drawImage(0, 0, QImage(path + "/overlays/leftEyeOverlay.png"));
     }
     else {
-        painter.drawImage(0, 0, QImage(":/overlays/rightEyeOverlay"));
+        painter.drawImage(0, 0, QImage(path + "/overlays/rightEyeOverlay.png"));
     }
 }
 
