@@ -12,23 +12,49 @@ JointTrajectoryData::JointTrajectoryData(const FollowJointTrajectoryGoal& follow
 	if(!loadFromMsg(follow_joint_trajectory_goal)) ROS_WARN("loadFromMsg == false");
 }
 
-control_msgs::FollowJointTrajectoryGoal& JointTrajectoryData::getTrajectoryMsg()
+control_msgs::FollowJointTrajectoryGoal& JointTrajectoryData::getTrajectoryMsg(bool reverse)
 {
 	FollowJointTrajectoryGoal follow_joint_trajectory_goal;
 	follow_joint_trajectory_goal.trajectory.header.stamp = ros::Time::now();
 	follow_joint_trajectory_goal.trajectory.joint_names = joint_names_;
 
-	JointTrajectoryPoint traj;
-	for(auto &traj: trajectory_point_)
+	std::vector<TrajectoryPoint> trajectory_point(trajectory_point_.size());
+
+//	if(reverse) // trajectory_point = boost::adaptors::reverse(trajectory_point_);
+//      std::reverse_copy(trajectory_point_.begin(), trajectory_point_.end(), trajectory_point.begin());
+//	else trajectory_point = trajectory_point_;
+	if(reverse)
 	{
-		JointTrajectoryPoint new_point;
-		new_point.positions      = traj.position;
-		new_point.velocities     = traj.velocity;
-		new_point.accelerations  = traj.acceleration;
-		new_point.effort         = traj.effort;
-		new_point.time_from_start= traj.time_from_start;
-		follow_joint_trajectory_goal.trajectory.points.push_back( new_point );
+		JointTrajectoryPoint traj;
+		for(auto &traj: boost::adaptors::reverse(trajectory_point_))
+		{
+			JointTrajectoryPoint new_point;
+			new_point.positions      = traj.position;
+			new_point.velocities     = traj.velocity;
+			new_point.accelerations  = traj.acceleration;
+			new_point.effort         = traj.effort;
+			follow_joint_trajectory_goal.trajectory.points.push_back( new_point );
+		}
+		int i = 0;
+		for(auto &traj: trajectory_point_)
+		{
+			follow_joint_trajectory_goal.trajectory.points[i].time_from_start = traj.time_from_start;
+			i++;
+		}
+	}else{
+		JointTrajectoryPoint traj;
+		for(auto &traj: trajectory_point_)
+		{
+			JointTrajectoryPoint new_point;
+			new_point.positions      = traj.position;
+			new_point.velocities     = traj.velocity;
+			new_point.accelerations  = traj.acceleration;
+			new_point.effort         = traj.effort;
+			new_point.time_from_start= traj.time_from_start;
+			follow_joint_trajectory_goal.trajectory.points.push_back( new_point );
+		}
 	}
+
 	if(path_tolerances_.size() > 0)
 	{
 		for(auto &joint: joint_names_)

@@ -9,6 +9,7 @@
 #include <control_msgs/FollowJointTrajectoryGoal.h>
 //#include <sweetie_bot_orocos_misc/joint_state_check.hpp>
 #include <unordered_map>
+#include <boost/range/adaptor/reversed.hpp>
 
 namespace sweetie_bot {
 namespace interface {
@@ -48,7 +49,7 @@ class JointTrajectoryData
 		//std::vector<std::string> joint_names_;
 		bool loadFromMsg(const FollowJointTrajectoryGoal& msg);
 		void clear();
-		FollowJointTrajectoryGoal& getTrajectoryMsg();
+		FollowJointTrajectoryGoal& getTrajectoryMsg(bool reverse = false);
 
 		bool addJoint(const std::string name, double path_tolerance = 0.0, double goal_tolerance = 0.0);
 		bool removeJoint(const std::string name);

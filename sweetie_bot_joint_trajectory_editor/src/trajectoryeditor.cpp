@@ -136,8 +136,9 @@ void TrajectoryEditor::on_turnAllSelectedServosButton_clicked()
 
 void TrajectoryEditor::on_addVirtualPoseButton_clicked()
 {
-  joint_trajectory_data_->addPoint(joint_state_virtual_, ui->timeIncrementSpinBox->value());
-  joint_trajectory_point_table_view_->reReadData();
+	ROS_INFO_STREAM("\n" << joint_state_virtual_ );
+	joint_trajectory_data_->addPoint(joint_state_virtual_, ui->timeIncrementSpinBox->value());
+	joint_trajectory_point_table_view_->reReadData();
 }
 
 void TrajectoryEditor::on_addRealPoseButton_clicked()
@@ -167,17 +168,19 @@ void TrajectoryEditor::executeActionCallback(const actionlib::SimpleClientGoalSt
 
 void TrajectoryEditor::on_executeButton_clicked()
 {
+  bool reverse = ui->backwardCheckBox->isChecked();
+  control_msgs::FollowJointTrajectoryGoal goal = joint_trajectory_data_->getTrajectoryMsg(reverse);
   if(ui->virtualCheckBox->isChecked())
   {
     client_virtual->waitForServer();
-    actionlib::SimpleClientGoalState state = client_virtual->sendGoalAndWait(joint_trajectory_data_->getTrajectoryMsg());
-    ROS_INFO_STREAM("\n" << joint_trajectory_data_->getTrajectoryMsg());
+    actionlib::SimpleClientGoalState state = client_virtual->sendGoalAndWait( goal );
+    ROS_INFO_STREAM("\n" << goal);
     ROS_INFO("%s", state.toString().c_str());
     ui->statusLabel->setText("Status: " + QString::fromStdString(state.toString()) );
   }else{
     client_real->waitForServer();
-    actionlib::SimpleClientGoalState state = client_real->sendGoalAndWait(joint_trajectory_data_->getTrajectoryMsg());
-    ROS_INFO_STREAM("\n" << joint_trajectory_data_->getTrajectoryMsg());
+    actionlib::SimpleClientGoalState state = client_real->sendGoalAndWait( goal );
+    ROS_INFO_STREAM("\n" << goal);
     ROS_INFO("%s", state.toString().c_str());
     ui->statusLabel->setText("Status: " + QString::fromStdString(state.toString()) );
   }
