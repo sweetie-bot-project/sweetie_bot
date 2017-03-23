@@ -10,6 +10,7 @@
 
 	<arg name="tf_prefix" default="" doc="tf_prefix for robot pose." />
 	<arg name="tf_prefix_ref" default="ref" doc="tf_prefix for robot reference pose." />
+	<arg name="static_tf_shift" default="0 0 0" doc="Shift of pose published in global namespace. Format: x y z " />
 	<arg name="motion_param_ns" default="/sweetie_bot" doc="Namespace for parameters of OROCOS node." />
 
 	<group if="$(arg robot)">	
@@ -47,7 +48,7 @@
 			<param name="tf_prefix" value="$(arg tf_prefix_ref)"/>
 		</node>
 		<!-- odometry: fix base frames: global publishers -->
-		<node pkg="tf" type="static_transform_publisher" name="odometry_root" args="0 0 0 0 0 0 odom_combined $(arg tf_prefix)/base_link 100" /> 
-		<node if="$(arg run_real)" pkg="tf" type="static_transform_publisher" name="odometry_ref" args="0 0 0 0 0 0 odom_combined $(arg tf_prefix_ref)/base_link 100" /> 
+		<node pkg="tf" type="static_transform_publisher" name="odometry_root" args="$(arg static_tf_shift) 0 0 0 odom_combined $(arg tf_prefix)/base_link 100" /> 
+		<node if="$(arg run_real)" pkg="tf" type="static_transform_publisher" name="odometry_ref" args="$(arg static_tf_shift) 0 0 0 odom_combined $(arg tf_prefix_ref)/base_link 100" /> 
 	</group>
 </launch>
