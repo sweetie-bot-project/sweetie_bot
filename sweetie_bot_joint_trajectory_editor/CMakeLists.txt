@@ -136,15 +136,16 @@ add_dependencies(trajectory_editor
   ${catkin_EXPORTED_TARGETS}
   ${sweetie_bot_joint_trajectory_editor_EXPORTED_TARGETS}
 )
+
 target_link_libraries(trajectory_editor
    ${catkin_LIBRARIES}
-   Qt5::Widgets
+   ${Qt5Widgets_LIBRARIES}
 )
 
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include)
+include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
