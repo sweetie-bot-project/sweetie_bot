@@ -60,6 +60,16 @@ class AnimationStoredJointTrajectoryState(EventState):
         # It may happen that the action client fails to send the action goal.
         self._error = False
 
+        # log_once support
+        self._logged = False
+        self._logfunc = { 'info': Logger.loginfo, 'warn': Logger.logwarn, 'err': Logger.logerr, 'hint': Logger.loghint }
+
+
+    def log_once(self, level, msg):
+        if not self._logged:
+            self._logfunc[level](msg)
+            self._logged = True
+
     def on_enter(self, userdata):
         # Send the goal
         self._error = False
@@ -88,20 +98,20 @@ class AnimationStoredJointTrajectoryState(EventState):
 
             if state == GoalStatus.SUCCEEDED:
                 # everything is good
-                Logger.loginfo('FollowJointTrajectory action succesed: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('info', 'FollowJointTrajectory action succesed: ' + repr(result.error_code) + " " + result.error_string)
                 return 'success'
             elif state in [ GoalStatus.ABORTED, GoalStatus.PREEMPTED ]:
                 # perhaps we stuck in midway due to tolerance error or controller switch.
-                Logger.loginfo('FollowJointTrajectory action aborted: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('warn', 'FollowJointTrajectory action aborted: ' + repr(result.error_code) + " " + result.error_string)
                 return 'partial_movement'
             elif state in [ GoalStatus.REJECTED, GoalStatus.RECALLED ]:
                 # Execution has not started, perhaps due to invalid goal.
-                Logger.loginfo('FollowJointTrajectory action rejected: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('warn', 'FollowJointTrajectory action rejected: ' + repr(result.error_code) + " " + result.error_string)
                 if result.error_code in [ FollowJointTrajectoryResult.PATH_TOLERANCE_VIOLATED, FollowJointTrajectoryResult.GOAL_TOLERANCE_VIOLATED]:
                     # Starting pose is invalid
                     return 'invalid_pose'
             # Any another kind of error.
-            Logger.loginfo('FollowJointTrajectory action failed (' + repr(state) + '): ' + repr(result.error_code) + " " + result.error_string)
+            self.log_once('warn', 'FollowJointTrajectory action failed (' + repr(state) + '): ' + repr(result.error_code) + " " + result.error_string)
             return 'failure'
 
 

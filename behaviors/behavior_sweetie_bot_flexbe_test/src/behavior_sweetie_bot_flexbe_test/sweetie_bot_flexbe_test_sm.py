@@ -24,7 +24,6 @@ Created on Sun Mar 19 2017
 class sweetie_bot_flexbe_testSM(Behavior):
 	'''
 	Test behavior for AnimationStoredJointTrajectoryState, TextCommandState, SetBoolState
-
 	'''
 
 
@@ -46,7 +45,7 @@ class sweetie_bot_flexbe_testSM(Behavior):
 
 
 	def create(self):
-		# x:259 y:688, x:578 y:422
+		# x:336 y:682, x:578 y:422
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 
 		# Additional creation code can be added inside the following tags
@@ -58,23 +57,23 @@ class sweetie_bot_flexbe_testSM(Behavior):
 		with _state_machine:
 			# x:240 y:109
 			OperatableStateMachine.add('TestMovement',
-										AnimationStoredJointTrajectoryState(action_topic='/sweetie_bot/motion/controller/joint_trajectory', trajectory_param='/stored/joint_trajectory/dance'),
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='/stored/joint_trajectory/ddance'),
 										transitions={'success': 'TurnOffJointStateController', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
-										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										autonomy={'success': Autonomy.Low, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
 			# x:114 y:352
 			OperatableStateMachine.add('TurnOffJointStateController',
 										SetBoolState(service='/sweetie_bot/motion/controller/joint_state/set_operational', value=False),
 										transitions={'true': 'SingASong', 'false': 'failed', 'failure': 'failed'},
-										autonomy={'true': Autonomy.Off, 'false': Autonomy.Off, 'failure': Autonomy.Off},
+										autonomy={'true': Autonomy.High, 'false': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'success': 'success', 'message': 'message'})
 
 			# x:136 y:518
 			OperatableStateMachine.add('SingASong',
-										TextCommandState(topic='/voice', type='voice/play_wav', command='song'),
+										TextCommandState(topic='voice/voice', type='voice/play_wav', command='song'),
 										transitions={'done': 'finished', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										autonomy={'done': Autonomy.Full, 'failed': Autonomy.Off})
 
 
 		return _state_machine

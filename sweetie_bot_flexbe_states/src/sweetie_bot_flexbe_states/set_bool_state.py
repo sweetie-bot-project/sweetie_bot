@@ -32,36 +32,37 @@ class SetBoolState(EventState):
 
         # get service caller
         self._service_caller = ProxyServiceCaller({ service: SetBool })
+        self._response = None
 
         # It may happen that the service caller fails to send the action goal.
         self._error = False
-
-    def execute(self, userdata):
-        # This method is called periodically while the state is active.
-        # Main purpose is to check state conditions and trigger a corresponding outcome.
-        
+    
+    def on_enter(self, userdata):
         userdata.success = None
         userdata.message = None
 
         try: 
-            response = self._service_caller.call(self._service, self._value)
+            self._response = self._service_caller.call(self._service, self._value)
         except Exception as e:
             Logger.logwarn('Failed to call SetBool service `' + self._service + '`:\n%s' % str(e))
+            self._error = True
+
+        Logger.loginfo('Call SetBool: `{0}` (value={1}) result: {2} "{3}".'.format(self._service, self._value, self._response.success, self._response.message))
+
+
+    def execute(self, userdata):
+        if self._error:
             return 'failure'
 
-        Logger.loginfo('Call SetBool: `{0}` (value={1}) result: {2} "{3}".'.format(self._service, self._value, response.success, response.message))
+        userdata.success = self._response.success
+        userdata.message = self._response.message
 
-        userdata.success = response.success
-        userdata.message = response.message
-
-        if response.success:
+        if self._response.success:
             return 'true'
         else:
             return 'false'
 
 
     def on_exit(self, userdata):
-        # This method is called when an outcome is returned and another state gets active.
-        # It can be used to stop possibly running processes started by on_enter.
         pass
 

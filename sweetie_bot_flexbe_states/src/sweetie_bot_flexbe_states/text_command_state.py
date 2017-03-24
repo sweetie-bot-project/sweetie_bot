@@ -34,17 +34,21 @@ class TextCommandState(EventState):
         # create publisher
         self._publisher = ProxyPublisher({ topic: TextCommand })
 
-    def execute(self, userdata):
-        # This method is called periodically while the state is active.
-        # Main purpose is to check state conditions and trigger a corresponding outcome.
-        
+        # error in enter hook
+        self._error = False
+
+    def on_enter(self, userdata):
         try: 
             self._publisher.publish(self._topic, self._message)
         except Exception as e:
             Logger.logwarn('Failed to send TextCommand message `' + self._topic + '`:\n%s' % str(e))
+            self._error = True
+
+        Logger.loginfo('Send TextCommand `{0}`: type = "{1}" cmd = "{2}".'.format(self._topic, self._message.type, self._message.command))
+
+    def execute(self, userdata):
+        if self._error:
             return 'failed'
 
-
-        Logger.loginfo('Sent TextCommand `{0}`: type = "{1}" cmd = "{2}".'.format(self._topic, self._message.type, self._message.command))
         return 'done'
 
