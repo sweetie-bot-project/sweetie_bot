@@ -155,6 +155,7 @@ private:
     float m_endBottomEyelidRotation;
     float m_stepBottomEyelidRotation;
 
+	QImage *overlay;
 	ros::Subscriber sub;
 	ros::NodeHandle * node;
 	QString path;

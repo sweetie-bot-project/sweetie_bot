@@ -124,6 +124,13 @@ MainWindow::MainWindow(int argc, char *argv[], bool isLeftEye, QWidget *parent) 
 
     sub = node->subscribe<sensor_msgs::JointState>("/sweetie_bot/joint_states", 1000, &MainWindow::controlCallback, this);
 
+    if(m_isLeftEye) {
+        overlay = new QImage(path + "/overlays/leftEyeOverlay.png");
+    }
+    else {
+        overlay = new QImage(path + "/overlays/rightEyeOverlay.png");
+    }
+
     QTimer *timer = new QTimer(this);
     connect(timer,SIGNAL(timeout()),this,SLOT(rosSpin()));
     timer->start(50);
@@ -153,7 +160,7 @@ void MainWindow::controlCallback(const sensor_msgs::JointState::ConstPtr& msg)
   float eyeToX = 160 - (160 * x) / 2;
   float eyeToY = 120 - (120 * y) / 2;
 
-  ROS_INFO_STREAM(m_isLeftEye << "eye: ("<< x << "," << y << ") " << eyeToX << " " << eyeToY);
+  //ROS_INFO_STREAM(m_isLeftEye << "eye: ("<< x << "," << y << ") " << eyeToX << " " << eyeToY);
 
   m_isMoveWithBlink = false;
 
@@ -237,12 +244,7 @@ void MainWindow::paintEvent(QPaintEvent *) {
         painter.drawPath(m_bottomEyelidPath);
     }
 
-    if(m_isLeftEye) {
-        painter.drawImage(0, 0, QImage(path + "/overlays/leftEyeOverlay.png"));
-    }
-    else {
-        painter.drawImage(0, 0, QImage(path + "/overlays/rightEyeOverlay.png"));
-    }
+    painter.drawImage(0, 0, *overlay);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *e) {
