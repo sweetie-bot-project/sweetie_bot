@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include <QApplication>
 
-#include <QDebug>
+#include "ros/ros.h"
 
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
@@ -13,7 +13,9 @@ int main(int argc, char *argv[]) {
             isRightEye = true;
         }
     }
-	MainWindow *w = new MainWindow(argc, argv, isRightEye);
+    ros::init(argc, argv, "eye");
+
+	MainWindow *w = new MainWindow(isRightEye);
     w->show();
 
     return a.exec();

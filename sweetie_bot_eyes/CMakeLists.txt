@@ -16,8 +16,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  sensor_msgs 
   roslib
+  sensor_msgs
+  sweetie_bot_text_msgs
 )
 
 # QT packages
