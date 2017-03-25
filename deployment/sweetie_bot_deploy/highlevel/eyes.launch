@@ -1,20 +1,16 @@
-<!-- MODULE: run eyes nodes in LOCAL namespace -->
+<!-- DEPLOYMENT: run eyes -->
 <launch>
 	<!-- <arg name="machine" default="localhost" doc="Machine to run nodes"/> -->
 	<arg name="run_real" default="false" doc="Run on real robot."/>
+	<arg name="ns" default="/sweetie_bot" doc="Namespace to run nodes."/>
+
+	<machine name="localhost" address="localhost" user="oleg" default="true"/>
+	<machine name="sweetiebot" address="sweetie" user="pi" default="never"/>
 	
-	<!-- run eyes on fb device -->
-	<group if="$(arg run_real)">
-		<remap from="joint_states" to="motion/agregator_ref/out_joints_sorted" />
-
-		<node machine="sweetiebot" name="eye_left"  pkg="sweetie_bot_eyes" type="eye" args="-platform linuxfb:fb=/dev/fb1 -plugin EvdevKeyboard"></node>
-		<node machine="sweetiebot" name="eye_rigth" pkg="sweetie_bot_eyes" type="eye" args="-r -platform linuxfb:fb=/dev/fb2 -plugin EvdevKeyboard"></node>
-	</group>
-	<!-- run eyes in windows -->
-	<group unless="$(arg run_real)">
-		<remap from="joint_states" to="motion/agregator_ref/out_joints_sorted" />
-
-		<node name="eye_left"  pkg="sweetie_bot_eyes" type="eye" args=""></node>
-		<node name="eye_rigth" pkg="sweetie_bot_eyes" type="eye" args="-r"></node>
+	<!-- eyes -->
+	<group ns="$(arg ns)">
+		<include file="$(find sweetie_bot_deploy)/highlevel/eyes_module.launch">
+			<arg name="run_real" value="$(arg run_real)" />
+		</include>
 	</group>
 </launch>

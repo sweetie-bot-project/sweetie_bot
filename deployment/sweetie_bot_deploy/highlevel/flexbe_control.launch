@@ -31,7 +31,9 @@
 			<arg name="interactive" value="false" /> 
 		</include>
 		<!-- eyes -->
-		<include if="$(arg robot)" file="$(find sweetie_bot_deploy)/highlevel/eyes.launch" />
+		<include if="$(arg robot)" file="$(find sweetie_bot_deploy)/highlevel/eyes_module.launch">
+			<arg name="run_real" value="$(arg run_real)" />
+		</include>
 	</group>
 	<!-- robot nodes on host side -->
 	<group ns="sweetie_bot" if="$(arg host)">
