@@ -178,12 +178,12 @@ target_link_libraries(eye
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
-## Mark executables and/or libraries for installation
-# install(TARGETS sweetie_bot_eyes sweetie_bot_eyes_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+# Mark executables and/or libraries for installation
+ install(TARGETS eye
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
 
 ## Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/
@@ -193,9 +193,10 @@ target_link_libraries(eye
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-install(FILES
-  overlays/leftEyeOverlay.png 
-  overlays/rightEyeOverlay.png 
+install(DIRECTORY
+  overlays
+  launch
+  scripts
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
