@@ -122,7 +122,7 @@ MainWindow::MainWindow(int argc, char *argv[], bool isLeftEye, QWidget *parent) 
     node = new ros::NodeHandle();
 	path = QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") );
 
-    sub = node->subscribe<sensor_msgs::JointState>("joint_state", 1, &MainWindow::controlCallback, this);
+    sub = node->subscribe<sensor_msgs::JointState>("joint_states", 1, &MainWindow::controlCallback, this);
 
     if(m_isLeftEye) {
         overlay = new QImage(path + "/overlays/leftEyeOverlay.png");
