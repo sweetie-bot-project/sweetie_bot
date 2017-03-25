@@ -1,0 +1,23 @@
+<package>
+  <name>behavior_discordgreeting</name>
+  <version>1.0.0</version>
+  <description>
+     Little scene play with Discord and Sweetie.
+  </description>
+  <maintainer email="todo@todo.com">disRecord</maintainer>
+  <license>BSD</license>
+
+  <url>http://ros.org/wiki/behavior_discordgreeting</url>
+  <author>disRecord</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>flexbe_core</run_depend>
+  <run_depend>flexbe_states</run_depend>
+  <run_depend>sweetie_bot_flexbe_states</run_depend>
+  <run_depend>flexbe_utility_states</run_depend>
+  <run_depend>flexbe_navigation_states</run_depend>
+  <run_depend>flexbe_manipulation_states</run_depend>
+
+</package>
