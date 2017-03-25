@@ -28,6 +28,8 @@ catkin_package(
 #############
 
 # Scripts installation
+install(DIRECTORY highlevel
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY joint_state_control
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY motion_core
