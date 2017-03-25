@@ -9,7 +9,7 @@
 #include <QDebug>
 
 
-MainWindow::MainWindow(int argc, char *argv[], bool isLeftEye, QWidget *parent) : QWidget(parent),
+MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     m_isLeftEye(isLeftEye),
 
     m_c(QPointF(160,120)),
@@ -91,7 +91,18 @@ MainWindow::MainWindow(int argc, char *argv[], bool isLeftEye, QWidget *parent) 
     m_endTopEyelidRotation(0.0),
     m_stepTopEyelidRotation(0.0),
     m_endBottomEyelidRotation(0.0),
-    m_stepBottomEyelidRotation(0.0) {
+    m_stepBottomEyelidRotation(0.0),
+    // ROS
+    node_( ros::NodeHandle() ),
+	path_( QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") ) )
+{
+	// Load overlay image
+    if(m_isLeftEye) {
+        overlay_ = new QImage(path_ + "/overlays/leftEyeOverlay.png");
+    }
+    else {
+        overlay_ = new QImage(path_ + "/overlays/rightEyeOverlay.png");
+    }
 
     setWindowFlags(Qt::FramelessWindowHint);
 
@@ -117,19 +128,9 @@ MainWindow::MainWindow(int argc, char *argv[], bool isLeftEye, QWidget *parent) 
 
     setGeometry(400,400,320,240);
 
-    // ROS
-    ros::init(argc, argv, "eye");
-    node = new ros::NodeHandle();
-	path = QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") );
-
-    sub = node->subscribe<sensor_msgs::JointState>("joint_states", 1, &MainWindow::controlCallback, this);
-
-    if(m_isLeftEye) {
-        overlay = new QImage(path + "/overlays/leftEyeOverlay.png");
-    }
-    else {
-        overlay = new QImage(path + "/overlays/rightEyeOverlay.png");
-    }
+	// ROS
+    sub_joint_state_ = node_.subscribe<sensor_msgs::JointState>("joint_states", 1, &MainWindow::moveCallback, this);
+    sub_blink_ = node_.subscribe<sweetie_bot_text_msgs::TextCommand>("control", 1, &MainWindow::controlCallback, this);
 
     QTimer *timer = new QTimer(this);
     connect(timer,SIGNAL(timeout()),this,SLOT(rosSpin()));
@@ -139,7 +140,65 @@ MainWindow::MainWindow(int argc, char *argv[], bool isLeftEye, QWidget *parent) 
 MainWindow::~MainWindow() {
 }
 
-void MainWindow::controlCallback(const sensor_msgs::JointState::ConstPtr& msg)
+constexpr unsigned int str2hash(const char* str, int h = 0)
+{
+    return !str[h] ? 5381 : (str2hash(str, h+1)*33) ^ str[h];
+}
+
+void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::ConstPtr& msg)
+{
+	//ROS_INFO_STREAM("\n" << *msg);
+	switch(str2hash(msg->type.c_str()))
+	{
+		case str2hash("eyes/action"):
+			switch(str2hash(msg->command.c_str())){
+				case str2hash("blink"):
+									//ROS_INFO("blink");
+									blink(200);
+									break;
+				case str2hash("slow_blink"):
+									//ROS_INFO("slow_blink");
+									blink(1000);
+									break;
+
+			}				
+			break;
+
+		case str2hash("eyes/emotion"):
+			switch(str2hash(msg->command.c_str())){
+				case str2hash("normal"):
+									//ROS_INFO("normal");
+									m_topEyelidRotation = 10;
+									m_topEyelidY = 60;
+
+									m_eyeColor = QColor(Qt::green);
+									m_eyelidColor = QColor(143,210,143);
+									m_eyelidOutlineColor = QColor(116,169,116);
+									break;
+				case str2hash("red_eyes"):
+									//ROS_INFO("red_eyes");
+									m_eyeColor = QColor(Qt::red);
+									m_eyelidColor = QColor(166,32,55);
+									m_eyelidOutlineColor = QColor(0,0,0);
+									break;
+				case str2hash("sad_look"):
+									//ROS_INFO("sad_look");
+									m_topEyelidRotation = 30;
+									m_topEyelidY = 0;
+									break;
+				case str2hash("evil_look"):
+									//ROS_INFO("evil_look");
+									m_topEyelidRotation = -30;
+									m_topEyelidY = 0;
+									break;
+			}				
+			break;
+
+	}
+	countEyelidTransforms();
+}
+
+void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
   double x = 0, y = 0;
 
@@ -244,7 +303,7 @@ void MainWindow::paintEvent(QPaintEvent *) {
         painter.drawPath(m_bottomEyelidPath);
     }
 
-    painter.drawImage(0, 0, *overlay);
+    painter.drawImage(0, 0, *overlay_);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *e) {

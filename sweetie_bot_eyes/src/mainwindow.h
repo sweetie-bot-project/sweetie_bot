@@ -1,9 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <sensor_msgs/JointState.h>
-
 #include "ros/ros.h"
+
+#include <sensor_msgs/JointState.h>
+#include <sweetie_bot_text_msgs/TextCommand.h>
+
 #include <ros/package.h>
 
 #include <QWidget>
@@ -155,14 +157,20 @@ private:
     float m_endBottomEyelidRotation;
     float m_stepBottomEyelidRotation;
 
-	QImage *overlay;
-	ros::Subscriber sub;
-	ros::NodeHandle * node;
-	QString path;
+	QString path_;
+	QImage *overlay_;
 
-	void controlCallback(const sensor_msgs::JointState::ConstPtr& msg);
+	// ROS
+	ros::NodeHandle node_;
+	ros::Subscriber sub_joint_state_;
+	ros::Subscriber sub_blink_;
+	ros::Subscriber sub_color_;
+
+	void controlCallback(const sweetie_bot_text_msgs::TextCommand::ConstPtr& msg);
+	void moveCallback(const sensor_msgs::JointState::ConstPtr& msg);
+
 public:
-    MainWindow(int argc, char *argv[], bool isLeftEye = true, QWidget *parent = 0);
+    MainWindow(bool isLeftEye = true, QWidget *parent = 0);
     ~MainWindow();
 
     QPointF rotatePoint(const QPointF& point, const QPointF& center, float angle);
