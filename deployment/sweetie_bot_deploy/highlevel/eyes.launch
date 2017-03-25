@@ -4,7 +4,7 @@
 	<arg name="run_real" default="false" doc="Run on real robot."/>
 	<arg name="ns" default="/sweetie_bot" doc="Namespace to run nodes."/>
 
-	<machine name="localhost" address="localhost" user="oleg" default="true"/>
+	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
 	<machine name="sweetiebot" address="sweetie" user="pi" default="never"/>
 	
 	<!-- eyes -->

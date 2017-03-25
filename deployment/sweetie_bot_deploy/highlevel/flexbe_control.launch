@@ -7,7 +7,7 @@
 	<arg name="run_moveit" default="false" doc="Run move_group associated with robot."/>
 	<arg name="run_flexbe" default="false" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 
-	<machine name="localhost" address="localhost" user="oleg" default="true"/>
+	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
 	<machine name="sweetiebot" address="sweetie" user="pi" default="never"/>
 
 	<!-- load parameters -->

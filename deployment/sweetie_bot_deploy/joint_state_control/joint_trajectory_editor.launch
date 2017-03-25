@@ -3,11 +3,6 @@
 	<arg name="run_real" default="false" doc="Real robot is active at '/sweetie_bot' namespace."/>
 	<arg name="run_virtual" default="true" doc="Virtual robot is active at '/sweetie_bot' namespace (run_real = false) or at '/sweetie_bot_virtual' (run_real = true)."/>
 
-	<!-- parametrs and trajectories -->
-	<!-- TODO: move to another packege -->
-	<!-- <rosparam command="load" ns="/stored/joint_trajectory" file="$(find sweetie_bot_joint_trajectory_editor)/launch/trajectories.yaml"></rosparam>
-	<rosparam command="load" ns="/stored/joint_trajectory/default" file="$(find sweetie_bot_joint_trajectory_editor)/launch/default_tolerances.yaml"></rosparam> -->
-
 	<!-- real robot is inside /sweetie_bot namespace -->
 	<group if="$(arg run_real)" ns="hmi">
 		<remap from="joints_real" to="/sweetie_bot/joint_states" />

@@ -4,7 +4,7 @@
 	<arg name="robot" default="true" doc="Launch components which meant to be run on robot side."/>
 	<arg name="host" default="true" doc="Launch components  which meant to be run on host side."/>
 
-	<machine name="localhost" address="localhost" user="oleg" default="true"/>
+	<machine name="localhost" address="localhost" user="$(env USER)" />
 	<machine name="sweetiebot" address="sweetie" user="pi" default="never"/>
 
 	<!-- load parameters -->
