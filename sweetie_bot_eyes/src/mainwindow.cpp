@@ -84,9 +84,9 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
 
     QTimer *timer = new QTimer(this);
     connect(timer,SIGNAL(timeout()),this,SLOT(rosSpin()));
-    timer->start(50);
+    timer->start(10);
 
-    sub_control_ = node_.subscribe<sweetie_bot_text_msgs::TextCommand>("control", 1, &MainWindow::controlCallback, this);
+    sub_control_ = node_.subscribe<sweetie_bot_text_msgs::TextCommand>("control", 1, &MainWindow::controlCallback, this, ros::TransportHints().tcpNoDelay());
     sub_joint_state_ = node_.subscribe<sensor_msgs::JointState>("joint_states", 1, &MainWindow::moveCallback, this, ros::TransportHints().tcpNoDelay());
 
     path_ =  QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") );
