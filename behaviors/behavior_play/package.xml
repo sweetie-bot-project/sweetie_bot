@@ -1,13 +1,13 @@
 <package>
-  <name>behavior_dogoodtricks</name>
+  <name>behavior_play</name>
   <version>1.0.0</version>
   <description>
-     Basic interaction with people behavior for "good" version of SweetieBot. 
+     SweetieBot performs.
   </description>
   <maintainer email="todo@todo.com">disRecord</maintainer>
   <license>BSD</license>
 
-  <url>http://ros.org/wiki/behavior_dogoodtricks</url>
+  <url>http://ros.org/wiki/behavior_play</url>
   <author>disRecord</author>
 
   <buildtool_depend>catkin</buildtool_depend>
@@ -15,11 +15,9 @@
   <run_depend>rospy</run_depend>
   <run_depend>flexbe_core</run_depend>
   <run_depend>flexbe_states</run_depend>
-  <run_depend>hector_flexbe_states</run_depend>
-  <run_depend>vigir_flexbe_states</run_depend>
+  <run_depend>sweetie_bot_flexbe_states</run_depend>
   <run_depend>flexbe_utility_states</run_depend>
   <run_depend>flexbe_navigation_states</run_depend>
   <run_depend>flexbe_manipulation_states</run_depend>
-  <run_depend>sweetie_bot_flexbe_states</run_depend>
 
 </package>

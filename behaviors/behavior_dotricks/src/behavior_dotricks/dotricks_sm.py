@@ -9,14 +9,15 @@
 import roslib; roslib.load_manifest('behavior_dotricks')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_states.decision_state import DecisionState
-from flexbe_states.wait_state import WaitState
 from flexbe_states.subscriber_state import SubscriberState
+from flexbe_states.wait_state import WaitState
 from flexbe_states.calculation_state import CalculationState
 from behavior_greeting.greeting_sm import GreetingSM
 from behavior_cheer.cheer_sm import CheerSM
+from behavior_play.play_sm import PlaySM
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
-
+import random
 # [/MANUAL_IMPORT]
 
 
@@ -41,6 +42,7 @@ class DoTricksSM(Behavior):
 		# references to used behaviors
 		self.add_behavior(GreetingSM, 'Greeting')
 		self.add_behavior(CheerSM, 'Cheer')
+		self.add_behavior(PlaySM, 'Play')
 
 		# Additional initialization code can be added inside the following tags
 		# [MANUAL_INIT]
@@ -71,12 +73,6 @@ class DoTricksSM(Behavior):
 										])
 
 		with _sm_checkjoy_0:
-			# x:85 y:162
-			OperatableStateMachine.add('WaitForJoy',
-										WaitState(wait_time=self.wait_time),
-										transitions={'done': 'no_activity'},
-										autonomy={'done': Autonomy.Off})
-
 			# x:293 y:147
 			OperatableStateMachine.add('DetectJoystickMsg',
 										SubscriberState(topic=joy_topic, blocking=True, clear=True),
@@ -84,23 +80,29 @@ class DoTricksSM(Behavior):
 										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
 										remapping={'message': 'message'})
 
+			# x:85 y:162
+			OperatableStateMachine.add('WaitForJoy',
+										WaitState(wait_time=self.wait_time),
+										transitions={'done': 'no_activity'},
+										autonomy={'done': Autonomy.Off})
+
 
 
 		with _state_machine:
-			# x:251 y:65
+			# x:646 y:31
 			OperatableStateMachine.add('RandomChoose',
-										DecisionState(outcomes=['greeting', 'play', 'cheer', 'bad'], conditions=lambda x: 'greeting'),
-										transitions={'greeting': 'Greeting', 'play': 'Cheer', 'cheer': 'Cheer', 'bad': 'Cheer'},
-										autonomy={'greeting': Autonomy.Off, 'play': Autonomy.Off, 'cheer': Autonomy.Off, 'bad': Autonomy.Off},
+										DecisionState(outcomes=['greeting', 'play', 'cheer', 'bad'], conditions=self.select_behavior),
+										transitions={'greeting': 'Greeting', 'play': 'Play', 'cheer': 'Cheer', 'bad': 'Cheer'},
+										autonomy={'greeting': Autonomy.Low, 'play': Autonomy.Low, 'cheer': Autonomy.Low, 'bad': Autonomy.Low},
 										remapping={'input_value': 'cycle_counter'})
 
-			# x:259 y:387
+			# x:383 y:460
 			OperatableStateMachine.add('CheckJoy',
 										_sm_checkjoy_0,
 										transitions={'no_activity': 'finished', 'activity_detected': 'AddCycleCounter', 'failed': 'failed'},
 										autonomy={'no_activity': Autonomy.Inherit, 'activity_detected': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
-			# x:256 y:225
+			# x:221 y:134
 			OperatableStateMachine.add('AddCycleCounter',
 										CalculationState(calculation=lambda x: x+1),
 										transitions={'done': 'RandomChoose'},
@@ -114,9 +116,16 @@ class DoTricksSM(Behavior):
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'be_evil': 'be_evil'})
 
-			# x:763 y:165
+			# x:849 y:197
 			OperatableStateMachine.add('Cheer',
 										self.use_behavior(CheerSM, 'Cheer'),
+										transitions={'finished': 'CheckJoy', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
+										remapping={'be_evil': 'be_evil'})
+
+			# x:687 y:197
+			OperatableStateMachine.add('Play',
+										self.use_behavior(PlaySM, 'Play'),
 										transitions={'finished': 'CheckJoy', 'failed': 'failed'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'be_evil': 'be_evil'})
@@ -128,4 +137,14 @@ class DoTricksSM(Behavior):
 	# Private functions can be added inside the following tags
 	# [MANUAL_FUNC]
 	
+        def select_behavior(self, cycle_counter):
+            if cycle_counter == 0:
+                return 'greeting'
+            elif cycle_counter < 5:
+                return random.choice(['greeting', 'play', 'cheer'])
+            elif cycle_counter < 10:
+                return random.choice(['play', 'cheer', 'bad'])
+            else:
+                return 'bad'
+
 	# [/MANUAL_FUNC]

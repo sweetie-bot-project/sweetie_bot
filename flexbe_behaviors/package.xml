@@ -15,9 +15,8 @@
   <run_depend>behavior_sweetie_bot_flexbe_test</run_depend>
   <run_depend>behavior_discordgreeting</run_depend>
   <run_depend>behavior_sweetieonponirebrik</run_depend>
-  <run_depend>behavior_dogoodtricks</run_depend>
   <run_depend>behavior_greeting</run_depend>
   <run_depend>behavior_dotricks</run_depend>
   <run_depend>behavior_cheer</run_depend>
-
+  <run_depend>behavior_play</run_depend>
 </package>

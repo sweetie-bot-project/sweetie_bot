@@ -8,13 +8,15 @@
 
 import roslib; roslib.load_manifest('behavior_sweetieonponirebrik')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
+from behavior_dotricks.dotricks_sm import DoTricksSM
+from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from sweetie_bot_flexbe_states.rand_head_movements_state import SweetieRandHeadMovementsState
 from flexbe_states.subscriber_state import SubscriberState
-from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.wait_state import WaitState
+from sweetie_bot_flexbe_states.publisher_state import PublisherState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
-
+from sensor_msgs.msg import JointState
 # [/MANUAL_IMPORT]
 
 
@@ -33,12 +35,10 @@ class SweetieOnPoniRebrikSM(Behavior):
 		self.name = 'SweetieOnPoniRebrik'
 
 		# parameters of this behavior
-		self.add_parameter('joint_state_control_topic', ''motion/controller/joint_state/out_joints_src_reset'')
-		self.add_parameter('joint_trajectory_control_topic', 'motion/controller/joint_trajectory')
-		self.add_parameter('voice_topic', 'voice/voice')
-		self.add_parameter('torque_off_service', 'motion/torque_off/set_operational')
+		self.add_parameter('be_evil', False)
 
 		# references to used behaviors
+		self.add_behavior(DoTricksSM, 'DoTricks')
 
 		# Additional initialization code can be added inside the following tags
 		# [MANUAL_INIT]
@@ -50,43 +50,36 @@ class SweetieOnPoniRebrikSM(Behavior):
 
 
 	def create(self):
-		# x:68 y:535, x:735 y:524
+		voice_topic = 'voice/voice'
+		torque_off_service = 'motion/controller/torque_off/set_operational'
+		joint_state_control_topic = 'motion/controller/joint_state/out_joints_src_reset'
+		joy_topic = '/hmi/joystick'
+		# x:68 y:535, x:786 y:525
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
+		_state_machine.userdata.be_evil = self.be_evil
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
 		
 		# [/MANUAL_CREATE]
 
-		# x:277 y:427, x:109 y:425
-		_sm_greetings_0 = OperatableStateMachine(outcomes=['finished', 'failed'])
-
-		with _sm_greetings_0:
-			# x:98 y:181
-			OperatableStateMachine.add('CheckJoyTopic',
-										SubscriberState(topic=self.joy_topic, blocking=False, clear=False),
-										transitions={'received': 'finished', 'unavailable': 'failed'},
-										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
-										remapping={'message': 'message'})
-
-
 		# x:538 y:386, x:347 y:384, x:134 y:383, x:831 y:385, x:906 y:386
-		_sm_idlebehavior_1 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
+		_sm_idlebehavior_0 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
 										('finished', [('RandomHeadMovements', 'done')]),
 										('finished', [('WaitForJoyEvent', 'received')]),
 										('failed', [('WaitForJoyEvent', 'unavailable')])
 										])
 
-		with _sm_idlebehavior_1:
+		with _sm_idlebehavior_0:
 			# x:474 y:110
 			OperatableStateMachine.add('RandomHeadMovements',
-										SweetieRandHeadMovementsState(topic=self.joint_state_control_topic, duration=100, interval=5, max2356=[ 0.3, 0.3, 1.5, 1.5 ], min2356=[ -0.3, -0.3, -1.5, -1.5 ]),
+										SweetieRandHeadMovementsState(topic=joint_state_control_topic, duration=100, interval=[3, 5], max2356=[ 0.3, 0.3, 1.5, 1.5 ], min2356=[ -0.3, -0.3, -1.5, -1.5 ]),
 										transitions={'done': 'finished'},
 										autonomy={'done': Autonomy.Off})
 
 			# x:148 y:118
 			OperatableStateMachine.add('WaitForJoyEvent',
-										SubscriberState(topic=self.joy_topic, blocking=True, clear=True),
+										SubscriberState(topic=joy_topic, blocking=True, clear=True),
 										transitions={'received': 'finished', 'unavailable': 'failed'},
 										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
 										remapping={'message': 'message'})
@@ -94,29 +87,36 @@ class SweetieOnPoniRebrikSM(Behavior):
 
 
 		with _state_machine:
-			# x:165 y:175
+			# x:368 y:279
 			OperatableStateMachine.add('IdleBehavior',
-										_sm_idlebehavior_1,
-										transitions={'finished': 'Greetings', 'failed': 'AskForAssistance'},
+										_sm_idlebehavior_0,
+										transitions={'finished': 'StartingStance', 'failed': 'AskForAssistance'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
-			# x:502 y:411
+			# x:550 y:467
 			OperatableStateMachine.add('AskForAssistance',
-										TextCommandState(topic=self.voice_topic, type='voice/play_wav', command='assistance'),
-										transitions={'done': 'WaitForAssistance', 'failed': 'failed'},
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='assistance'),
+										transitions={'done': 'failed', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:303 y:410
-			OperatableStateMachine.add('WaitForAssistance',
-										WaitState(wait_time=30),
-										transitions={'done': 'AskForAssistance'},
+			# x:213 y:108
+			OperatableStateMachine.add('WaitForMovementFinish',
+										WaitState(wait_time=1),
+										transitions={'done': 'DoTricks'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:580 y:130
-			OperatableStateMachine.add('Greetings',
-										_sm_greetings_0,
+			# x:174 y:365
+			OperatableStateMachine.add('StartingStance',
+										PublisherState(topic=joint_state_control_topic, msg_type=JointState, value={'name': ['joint52','joint53','joint55','joint56'], 'position': [0.0, 0.0, 0.0, 0.0]}),
+										transitions={'done': 'WaitForMovementFinish', 'failed': 'AskForAssistance'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:492 y:126
+			OperatableStateMachine.add('DoTricks',
+										self.use_behavior(DoTricksSM, 'DoTricks'),
 										transitions={'finished': 'IdleBehavior', 'failed': 'AskForAssistance'},
-										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
+										remapping={'be_evil': 'be_evil'})
 
 
 		return _state_machine

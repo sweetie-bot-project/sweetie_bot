@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(behavior_dogoodtricks)
+project(behavior_play)
 
 find_package(catkin REQUIRED)
 

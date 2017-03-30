@@ -13,7 +13,7 @@ from sweetie_bot_flexbe_states.animation_stored_trajectory_state import Animatio
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
-
+import random
 # [/MANUAL_IMPORT]
 
 
@@ -32,6 +32,7 @@ class CheerSM(Behavior):
 		self.name = 'Cheer'
 
 		# parameters of this behavior
+		self.add_parameter('be_evil', False)
 
 		# references to used behaviors
 
@@ -47,10 +48,10 @@ class CheerSM(Behavior):
 	def create(self):
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
 		voice_topic = 'voice/voice'
-		storage = '/hmi/trajectory_storage/'
+		storage = '/stored/joint_trajectory/'
 		# x:901 y:554, x:895 y:38
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['be_evil'])
-		_state_machine.userdata.be_evil = False
+		_state_machine.userdata.be_evil = self.be_evil
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -62,7 +63,7 @@ class CheerSM(Behavior):
 			# x:64 y:76
 			OperatableStateMachine.add('CheckEvil',
 										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'evil' if x else 'good'),
-										transitions={'good': 'SayMaximumFun', 'evil': 'finished'},
+										transitions={'good': 'SayMaximumFun', 'evil': 'SayDoNotTouch'},
 										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
 										remapping={'input_value': 'be_evil'})
 
@@ -77,6 +78,19 @@ class CheerSM(Behavior):
 			OperatableStateMachine.add('SayMaximumFun',
 										TextCommandState(topic=voice_topic, type='voice/play_wav', command='fun_level'),
 										transitions={'done': 'Prance', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:498 y:456
+			OperatableStateMachine.add('HoofStamp',
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'hoof_stamp'),
+										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
+
+			# x:309 y:437
+			OperatableStateMachine.add('SayDoNotTouch',
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='05donottouch'),
+										transitions={'done': 'HoofStamp', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
 

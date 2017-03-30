@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<behavior name="Greeting">
+<behavior name="Play">
 
-	<executable package_path="behavior_greeting.greeting_sm" class="GreetingSM" />
-	<tagstring>SweetieBot, greeting</tagstring>
+	<executable package_path="behavior_play.play_sm" class="PlaySM" />
+	<tagstring>SweetieBot</tagstring>
 	<author>disRecord</author>
-	<date>Tue Mar 28 2017</date>
+	<date>Thu Mar 30 2017</date>
 	<description>
-		SweetieBot greeting behavior.
+		SweetieBot performs.
 	</description>
 
 

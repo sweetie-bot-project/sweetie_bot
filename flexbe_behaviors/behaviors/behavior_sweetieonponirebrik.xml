@@ -12,17 +12,12 @@
 
 
 	<!-- Contained Behaviors -->
+	<contains name="DoTricks" />
 
 	<!-- Available Parameters -->
 	<params>
 
-		<param type="text" name="joint_state_control_topic" default="'motion/controller/joint_state/out_joints_src_reset'" label="joint_state_control_topic" hint="Set target joint states of robot. (JointState message topic)/" />
-
-		<param type="text" name="joint_trajectory_control_topic" default="motion/controller/joint_trajectory" label="joint_trajectory_control_topic" hint="Send trajectory to robot. (FollowJointTrajectoryAction)." />
-
-		<param type="text" name="voice_topic" default="voice/voice" label="voice_topic" hint="Execute voice command. (TextCommand topic)." />
-
-		<param type="text" name="torque_off_service" default="motion/torque_off/set_operational" label="torque_off_service" hint="Turn servos off. (SetBool service)." />
+		<param type="boolean" name="be_evil" default="False" label="be_evil" hint="Sets the be_evil" />
 
 	</params>
 
