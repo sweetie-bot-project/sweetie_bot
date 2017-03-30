@@ -24,6 +24,10 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 
     timer->start(50);
 
+	if (!ros::param::get("~trajectory_storage", trajectories_param_name)) {
+		trajectories_param_name = "/stored/joint_trajectory";
+	}
+
     sub_real_ = node.subscribe<sensor_msgs::JointState>("joints_real", 1, &TrajectoryEditor::jointsRealCallback, this);
     sub_virtual_ = node.subscribe<sensor_msgs::JointState>("joints_virtual", 1, &TrajectoryEditor::jointsVirtualCallback, this);
 	pub_joints_virtual_set = node.advertise<sensor_msgs::JointState>("joints_virtual_set", 1);
@@ -38,7 +42,7 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
     //Client::ResultConstPtr result = *client->getResult();
 
     control_msgs::FollowJointTrajectoryGoal sd = loader_->getParam( trajectories_param_name + "/default");
-    ROS_INFO_STREAM( "\n" << sd );
+    ROS_INFO_STREAM( "Trajectory storage namespace: " << trajectories_param_name );
     joint_trajectory_data_ = new sweetie_bot::interface::JointTrajectoryData(sd);
 
     joint_list_table_view_ = new sweetie_bot::interface::JointListTableView(parent, *joint_trajectory_data_);

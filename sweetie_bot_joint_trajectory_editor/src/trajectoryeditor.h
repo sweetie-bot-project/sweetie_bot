@@ -46,7 +46,7 @@ private:
    sensor_msgs::JointState joint_state_real_;
    sensor_msgs::JointState joint_state_virtual_;
 
-   const std::string trajectories_param_name = "trajectory_storage";
+   std::string trajectories_param_name;
 
    Client *client_virtual;
    Client *client_real;
