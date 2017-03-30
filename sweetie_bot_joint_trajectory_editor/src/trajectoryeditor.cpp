@@ -13,6 +13,12 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
     node_(node),
     loader_(new sweetie_bot::tools::ParamMsgLoader<control_msgs::FollowJointTrajectoryGoal>(node))
 {
+
+	if (!ros::param::get("~trajectory_storage", trajectories_param_name)) {
+		trajectories_param_name = "/stored/joint_trajectory";
+	}
+
+
     ui->setupUi(this);
     updateParamList();
 	ui->comboBox->setCurrentText("default");
@@ -23,10 +29,6 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
     connect(timer,SIGNAL(timeout()),this,SLOT(rosSpin()));
 
     timer->start(50);
-
-	if (!ros::param::get("~trajectory_storage", trajectories_param_name)) {
-		trajectories_param_name = "/stored/joint_trajectory";
-	}
 
     sub_real_ = node.subscribe<sensor_msgs::JointState>("joints_real", 1, &TrajectoryEditor::jointsRealCallback, this);
     sub_virtual_ = node.subscribe<sensor_msgs::JointState>("joints_virtual", 1, &TrajectoryEditor::jointsVirtualCallback, this);
