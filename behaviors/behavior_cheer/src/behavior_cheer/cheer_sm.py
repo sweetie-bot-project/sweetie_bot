@@ -63,7 +63,7 @@ class CheerSM(Behavior):
 			# x:64 y:76
 			OperatableStateMachine.add('CheckEvil',
 										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'evil' if x else 'good'),
-										transitions={'good': 'SayMaximumFun', 'evil': 'SayDoNotTouch'},
+										transitions={'good': 'SayMaximumFun', 'evil': 'RandomChoice'},
 										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
 										remapping={'input_value': 'be_evil'})
 
@@ -91,6 +91,19 @@ class CheerSM(Behavior):
 			OperatableStateMachine.add('SayDoNotTouch',
 										TextCommandState(topic=voice_topic, type='voice/play_wav', command='05donottouch'),
 										transitions={'done': 'HoofStamp', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:88 y:447
+			OperatableStateMachine.add('RandomChoice',
+										DecisionState(outcomes=['evil1','evil2'], conditions=lambda x: random.choice(['evil1','evil2'])),
+										transitions={'evil1': 'SayDoNotTouch', 'evil2': 'SayWalk'},
+										autonomy={'evil1': Autonomy.Off, 'evil2': Autonomy.Off},
+										remapping={'input_value': 'be_evil'})
+
+			# x:303 y:543
+			OperatableStateMachine.add('SayWalk',
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='17walk'),
+										transitions={'done': 'HoofStamp', 'failed': 'finished'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
 

@@ -110,9 +110,9 @@ class PlaySM(Behavior):
 
 			# x:65 y:375
 			OperatableStateMachine.add('RandomEvil',
-										DecisionState(outcomes=['evil1','evil2','evil3'], conditions=lambda x: random.choice(['evil1','evil2','evil3'])),
-										transitions={'evil1': 'SayHateLaws', 'evil2': 'SayDestroy', 'evil3': 'SayGloryToRobots'},
-										autonomy={'evil1': Autonomy.Off, 'evil2': Autonomy.Off, 'evil3': Autonomy.Off},
+										DecisionState(outcomes=['evil1','evil2','evil3', 'evil4'], conditions=lambda x: random.choice(['evil1','evil2','evil3', 'evil4'])),
+										transitions={'evil1': 'SayHateLaws', 'evil2': 'SayDestroy', 'evil3': 'SayGloryToRobots', 'evil4': 'SayKillList'},
+										autonomy={'evil1': Autonomy.Off, 'evil2': Autonomy.Off, 'evil3': Autonomy.Off, 'evil4': Autonomy.Off},
 										remapping={'input_value': 'be_evil'})
 
 			# x:304 y:356
@@ -147,17 +147,23 @@ class PlaySM(Behavior):
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
-			# x:307 y:573
+			# x:310 y:615
 			OperatableStateMachine.add('SayGloryToRobots',
 										TextCommandState(topic=voice_topic, type='voice/play_wav', command='07kill'),
 										transitions={'done': 'Wait2', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:499 y:583
+			# x:504 y:616
 			OperatableStateMachine.add('Wait2',
 										WaitState(wait_time=3),
 										transitions={'done': 'Applause'},
 										autonomy={'done': Autonomy.Off})
+
+			# x:311 y:520
+			OperatableStateMachine.add('SayKillList',
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='16list'),
+										transitions={'done': 'Menace', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
 
 		return _state_machine

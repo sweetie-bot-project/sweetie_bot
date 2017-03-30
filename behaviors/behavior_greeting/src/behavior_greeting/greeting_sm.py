@@ -63,8 +63,8 @@ class GreetingSM(Behavior):
 			# x:133 y:35
 			OperatableStateMachine.add('RandomChoose',
 										DecisionState(outcomes=['good1', 'good2', 'good3', 'evil1', 'evil2', 'evil3'], conditions=lambda evil: random.choice(['good1', 'good2', 'good3']) if not evil else random.choice(['evil1','evil2','evil3'])),
-										transitions={'good1': 'SayIRobot', 'good2': 'SayInitAcquitance', 'evil1': 'SayBlaster', 'evil2': 'SayControlYour', 'good3': 'SayHello', 'evil3': 'SayLesserBiologicalForm'},
-										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low, 'evil1': Autonomy.Low, 'evil2': Autonomy.Low, 'good3': Autonomy.Low, 'evil3': Autonomy.Low},
+										transitions={'good1': 'SayIRobot', 'good2': 'SayInitAcquitance', 'good3': 'SayHello', 'evil1': 'SayBlaster', 'evil2': 'SayControlYour', 'evil3': 'SayLesserBiologicalForm'},
+										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low, 'good3': Autonomy.Low, 'evil1': Autonomy.Low, 'evil2': Autonomy.Low, 'evil3': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
 			# x:507 y:53
@@ -116,7 +116,7 @@ class GreetingSM(Behavior):
 
 			# x:312 y:500
 			OperatableStateMachine.add('SayControlYour',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='12ideal'),
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='14equestria'),
 										transitions={'done': 'Rejection', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
@@ -128,8 +128,8 @@ class GreetingSM(Behavior):
 
 			# x:314 y:357
 			OperatableStateMachine.add('SayLesserBiologicalForm',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='00irobot'),
-										transitions={'done': 'HeadSuprised', 'failed': 'finished'},
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='12ideal'),
+										transitions={'done': 'Rejection', 'failed': 'finished'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
 			# x:316 y:53
