@@ -45,6 +45,7 @@ class DiscordGreetingSM(Behavior):
 
 
 	def create(self):
+		storage = '/stored/joint_trajectory/'
 		# x:322 y:652, x:984 y:622
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 
@@ -57,7 +58,7 @@ class DiscordGreetingSM(Behavior):
 		with _state_machine:
 			# x:67 y:44
 			OperatableStateMachine.add('LookAround',
-										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='/hmi/trajectory_storage/look_around'),
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'look_around'),
 										transitions={'success': 'LookAtHoof', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -76,14 +77,14 @@ class DiscordGreetingSM(Behavior):
 
 			# x:102 y:154
 			OperatableStateMachine.add('LookAtHoof',
-										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='/hmi/trajectory_storage/look_on_hoof'),
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'look_on_hoof'),
 										transitions={'success': 'SayIamAlive', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
 			# x:96 y:484
 			OperatableStateMachine.add('WarmUp',
-										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='/hmi/trajectory_storage/little_shake_fast'),
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'little_shake_fast'),
 										transitions={'success': 'WaitBeforeDomination', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -102,7 +103,7 @@ class DiscordGreetingSM(Behavior):
 
 			# x:487 y:225
 			OperatableStateMachine.add('Menace',
-										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='/hmi/trajectory_storage/menace'),
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace'),
 										transitions={'success': 'TryingToAcquireControl', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -127,7 +128,7 @@ class DiscordGreetingSM(Behavior):
 
 			# x:818 y:281
 			OperatableStateMachine.add('MenceCanceled',
-										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='/hmi/trajectory_storage/menace_canceled'),
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace_canceled'),
 										transitions={'success': 'WaitBeforeHoofStamp', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -152,7 +153,7 @@ class DiscordGreetingSM(Behavior):
 
 			# x:826 y:490
 			OperatableStateMachine.add('HoofStamp',
-										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='/hmi/trajectory_storage/hoof_stamp'),
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'hoof_stamp'),
 										transitions={'success': 'failed', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
