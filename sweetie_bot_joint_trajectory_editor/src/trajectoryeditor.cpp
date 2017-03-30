@@ -88,7 +88,7 @@ void TrajectoryEditor::rosSpin()
 {
 	// TODO trottle checks down
     ui->turnAllServoOnButton->setEnabled(torque_main_switch_.exists());
-
+    if(!ros::ok()) close();
     ros::spinOnce();
 }
 
