@@ -8,6 +8,8 @@
 require "controller_joint_state"
 assert(controller.joint_state:start())
 
+require "controller_joint_state_head"
+
 require "controller_joint_trajectory"
 
 if (agregator_real and herkulex) then
