@@ -6,12 +6,11 @@
 # Only code inside the [MANUAL] tags will be kept.        #
 ###########################################################
 
-import roslib; roslib.load_manifest('behavior_cheer')
+import roslib; roslib.load_manifest('behavior_bad')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_states.decision_state import DecisionState
-from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from flexbe_states.wait_state import WaitState
+from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import random
@@ -19,18 +18,18 @@ import random
 
 
 '''
-Created on Tue Mar 28 2017
-@author: disRecord
+Created on Fri Mar 31 2017
+@author: disRecord, Wave
 '''
-class CheerSM(Behavior):
+class BadSM(Behavior):
 	'''
-	Sweetie cheering state.
+	SweetieBot is unhappy.
 	'''
 
 
 	def __init__(self):
-		super(CheerSM, self).__init__()
-		self.name = 'Cheer'
+		super(BadSM, self).__init__()
+		self.name = 'Bad'
 
 		# parameters of this behavior
 		self.add_parameter('be_evil', False)
@@ -50,7 +49,7 @@ class CheerSM(Behavior):
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
 		voice_topic = 'voice/voice'
 		storage = '/stored/joint_trajectory/'
-		# x:901 y:554, x:895 y:38
+		# x:1011 y:80, x:1002 y:571
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['be_evil'])
 		_state_machine.userdata.be_evil = self.be_evil
 
@@ -61,61 +60,55 @@ class CheerSM(Behavior):
 
 
 		with _state_machine:
-			# x:64 y:76
+			# x:75 y:101
 			OperatableStateMachine.add('CheckEvil',
 										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'evil' if x else 'good'),
-										transitions={'good': 'SayMaximumFun', 'evil': 'RandomChoice'},
+										transitions={'good': 'RandomChoiceGood', 'evil': 'SayDoNotTouch'},
 										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
 										remapping={'input_value': 'be_evil'})
 
-			# x:504 y:79
-			OperatableStateMachine.add('Prance',
-										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'prance'),
-										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
-										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
-										remapping={'result': 'result'})
-
-			# x:325 y:57
-			OperatableStateMachine.add('SayMaximumFun',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='fun_level'),
-										transitions={'done': 'Prance', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
-
-			# x:579 y:498
-			OperatableStateMachine.add('HoofStamp',
-										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'hoof_stamp'),
-										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
-										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
-										remapping={'result': 'result'})
-
-			# x:309 y:437
-			OperatableStateMachine.add('SayDoNotTouch',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='05donottouch'),
-										transitions={'done': 'PointHoof', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
-
-			# x:88 y:447
-			OperatableStateMachine.add('RandomChoice',
-										DecisionState(outcomes=['evil1','evil2'], conditions=lambda x: random.choice(['evil1','evil2'])),
-										transitions={'evil1': 'SayDoNotTouch', 'evil2': 'SayWalk'},
-										autonomy={'evil1': Autonomy.High, 'evil2': Autonomy.High},
+			# x:320 y:143
+			OperatableStateMachine.add('RandomChoiceGood',
+										DecisionState(outcomes=['good1', 'good2'], conditions=lambda x: random.choice(['good1', 'good2'])),
+										transitions={'good1': 'SayOverflow', 'good2': 'SayDizzy'},
+										autonomy={'good1': Autonomy.Off, 'good2': Autonomy.Off},
 										remapping={'input_value': 'be_evil'})
 
-			# x:303 y:543
-			OperatableStateMachine.add('SayWalk',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='17walk'),
-										transitions={'done': 'Wait1', 'failed': 'finished'},
+			# x:450 y:508
+			OperatableStateMachine.add('SayDoNotTouch',
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='05donottouch'),
+										transitions={'done': 'HoofStamp', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:467 y:539
-			OperatableStateMachine.add('Wait1',
-										WaitState(wait_time=0.5),
-										transitions={'done': 'HoofStamp'},
-										autonomy={'done': Autonomy.Off})
+			# x:496 y:147
+			OperatableStateMachine.add('SayOverflow',
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='27queue'),
+										transitions={'done': 'Applause', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:574 y:414
-			OperatableStateMachine.add('PointHoof',
-										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'begone3'),
+			# x:747 y:153
+			OperatableStateMachine.add('Applause',
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'applause'),
+										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
+
+			# x:745 y:226
+			OperatableStateMachine.add('NoHeadShake',
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'head_shake'),
+										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
+
+			# x:495 y:227
+			OperatableStateMachine.add('SayDizzy',
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='26dizziness'),
+										transitions={'done': 'NoHeadShake', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:616 y:500
+			OperatableStateMachine.add('HoofStamp',
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'hoof_stamp'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

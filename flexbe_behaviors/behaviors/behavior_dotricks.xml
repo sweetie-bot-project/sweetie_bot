@@ -15,16 +15,17 @@
 	<contains name="Greeting" />
 	<contains name="Cheer" />
 	<contains name="Play" />
+	<contains name="Bad" />
 
 	<!-- Available Parameters -->
 	<params>
 
-		<param type="numeric" name="wait_time" default="10" label="wait_time" hint="Time to wait joystick activity (seconds).">
-			<min value="1" />
-			<max value="120" />
-		</param>
-
 		<param type="boolean" name="be_evil" default="False" label="be_evil" hint="Sets the be_evil" />
+
+		<param type="numeric" name="wait_time" default="1" label="wait_time" hint="Sets the wait_time">
+			<min value="0" />
+			<max value="100" />
+		</param>
 
 	</params>
 

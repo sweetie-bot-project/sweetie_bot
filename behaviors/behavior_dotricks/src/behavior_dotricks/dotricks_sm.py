@@ -15,6 +15,7 @@ from flexbe_states.calculation_state import CalculationState
 from behavior_greeting.greeting_sm import GreetingSM
 from behavior_cheer.cheer_sm import CheerSM
 from behavior_play.play_sm import PlaySM
+from behavior_bad.bad_sm import BadSM
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import random
@@ -36,13 +37,14 @@ class DoTricksSM(Behavior):
 		self.name = 'DoTricks'
 
 		# parameters of this behavior
-		self.add_parameter('wait_time', 10)
 		self.add_parameter('be_evil', False)
+		self.add_parameter('wait_time', 1)
 
 		# references to used behaviors
 		self.add_behavior(GreetingSM, 'Greeting')
 		self.add_behavior(CheerSM, 'Cheer')
 		self.add_behavior(PlaySM, 'Play')
+		self.add_behavior(BadSM, 'Bad')
 
 		# Additional initialization code can be added inside the following tags
 		# [MANUAL_INIT]
@@ -65,22 +67,40 @@ class DoTricksSM(Behavior):
 		
 		# [/MANUAL_CREATE]
 
-		# x:778 y:316, x:75 y:354, x:294 y:358, x:776 y:358, x:777 y:406, x:530 y:356
-		_sm_checkjoy_0 = ConcurrencyContainer(outcomes=['no_activity', 'activity_detected', 'failed'], conditions=[
-										('no_activity', [('WaitForJoy', 'done')]),
-										('failed', [('DetectJoystickMsg', 'unavailable')]),
-										('activity_detected', [('DetectJoystickMsg', 'received')])
-										])
+		# x:30 y:356, x:644 y:383
+		_sm_detectjoyevent_0 = OperatableStateMachine(outcomes=['received', 'unavailable'])
 
-		with _sm_checkjoy_0:
-			# x:293 y:147
-			OperatableStateMachine.add('DetectJoystickMsg',
-										SubscriberState(topic=joy_topic, blocking=True, clear=True),
-										transitions={'received': 'activity_detected', 'unavailable': 'failed'},
+		with _sm_detectjoyevent_0:
+			# x:229 y:154
+			OperatableStateMachine.add('JoyEvent',
+										SubscriberState(topic=joy_topic, blocking=True, clear=False),
+										transitions={'received': 'CheckEvent', 'unavailable': 'unavailable'},
 										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
 										remapping={'message': 'message'})
 
-			# x:85 y:162
+			# x:229 y:296
+			OperatableStateMachine.add('CheckEvent',
+										DecisionState(outcomes=['yes', 'no'], conditions=lambda msg: 'yes' if any(msg.buttons) or any(msg.axes[0:5]) else 'no'),
+										transitions={'yes': 'received', 'no': 'JoyEvent'},
+										autonomy={'yes': Autonomy.Off, 'no': Autonomy.Off},
+										remapping={'input_value': 'message'})
+
+
+		# x:778 y:316, x:75 y:354, x:294 y:358, x:776 y:358, x:777 y:406, x:530 y:356
+		_sm_checkjoy_1 = ConcurrencyContainer(outcomes=['no_activity', 'activity_detected', 'failed'], conditions=[
+										('no_activity', [('WaitForJoy', 'done')]),
+										('failed', [('DetectJoyEvent', 'unavailable')]),
+										('activity_detected', [('DetectJoyEvent', 'received')])
+										])
+
+		with _sm_checkjoy_1:
+			# x:219 y:132
+			OperatableStateMachine.add('DetectJoyEvent',
+										_sm_detectjoyevent_0,
+										transitions={'received': 'activity_detected', 'unavailable': 'failed'},
+										autonomy={'received': Autonomy.Inherit, 'unavailable': Autonomy.Inherit})
+
+			# x:624 y:152
 			OperatableStateMachine.add('WaitForJoy',
 										WaitState(wait_time=self.wait_time),
 										transitions={'done': 'no_activity'},
@@ -92,14 +112,14 @@ class DoTricksSM(Behavior):
 			# x:646 y:31
 			OperatableStateMachine.add('RandomChoose',
 										DecisionState(outcomes=['greeting', 'play', 'cheer', 'bad'], conditions=self.select_behavior),
-										transitions={'greeting': 'Greeting', 'play': 'Play', 'cheer': 'Cheer', 'bad': 'Cheer'},
+										transitions={'greeting': 'Greeting', 'play': 'Play', 'cheer': 'Cheer', 'bad': 'Bad'},
 										autonomy={'greeting': Autonomy.Low, 'play': Autonomy.Low, 'cheer': Autonomy.Low, 'bad': Autonomy.Low},
 										remapping={'input_value': 'cycle_counter'})
 
 			# x:383 y:460
 			OperatableStateMachine.add('CheckJoy',
-										_sm_checkjoy_0,
-										transitions={'no_activity': 'finished', 'activity_detected': 'AddCycleCounter', 'failed': 'failed'},
+										_sm_checkjoy_1,
+										transitions={'no_activity': 'ResetCounter', 'activity_detected': 'AddCycleCounter', 'failed': 'failed'},
 										autonomy={'no_activity': Autonomy.Inherit, 'activity_detected': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
 			# x:221 y:134
@@ -129,6 +149,20 @@ class DoTricksSM(Behavior):
 										transitions={'finished': 'CheckJoy', 'failed': 'failed'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'be_evil': 'be_evil'})
+
+			# x:991 y:203
+			OperatableStateMachine.add('Bad',
+										self.use_behavior(BadSM, 'Bad'),
+										transitions={'finished': 'CheckJoy', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
+										remapping={'be_evil': 'be_evil'})
+
+			# x:115 y:364
+			OperatableStateMachine.add('ResetCounter',
+										CalculationState(calculation=lambda x: 0),
+										transitions={'done': 'finished'},
+										autonomy={'done': Autonomy.Off},
+										remapping={'input_value': 'cycle_counter', 'output_value': 'cycle_counter'})
 
 
 		return _state_machine

@@ -8,12 +8,13 @@
 
 import roslib; roslib.load_manifest('behavior_sweetieonponirebrik')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from behavior_dotricks.dotricks_sm import DoTricksSM
+from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from sweetie_bot_flexbe_states.rand_head_movements_state import SweetieRandHeadMovementsState
-from flexbe_states.subscriber_state import SubscriberState
 from flexbe_states.wait_state import WaitState
 from sweetie_bot_flexbe_states.publisher_state import PublisherState
+from behavior_dotricks.dotricks_sm import DoTricksSM
+from sweetie_bot_flexbe_states.rand_head_movements_state import SweetieRandHeadMovementsState
+from flexbe_states.subscriber_state import SubscriberState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 from sensor_msgs.msg import JointState
@@ -36,6 +37,7 @@ class SweetieOnPoniRebrikSM(Behavior):
 
 		# parameters of this behavior
 		self.add_parameter('be_evil', False)
+		self.add_parameter('wait_time', 1)
 
 		# references to used behaviors
 		self.add_behavior(DoTricksSM, 'DoTricks')
@@ -54,6 +56,7 @@ class SweetieOnPoniRebrikSM(Behavior):
 		torque_off_service = 'motion/controller/torque_off/set_operational'
 		joint_state_control_topic = 'motion/controller/joint_state/out_joints_src_reset'
 		joy_topic = '/hmi/joystick'
+		eyes_topic = 'control'
 		# x:68 y:535, x:786 y:525
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 		_state_machine.userdata.be_evil = self.be_evil
@@ -63,35 +66,54 @@ class SweetieOnPoniRebrikSM(Behavior):
 		
 		# [/MANUAL_CREATE]
 
+		# x:554 y:394, x:130 y:397
+		_sm_waitforjoyevent_0 = OperatableStateMachine(outcomes=['received', 'unavailable'])
+
+		with _sm_waitforjoyevent_0:
+			# x:288 y:158
+			OperatableStateMachine.add('JoyEvent',
+										SubscriberState(topic=joy_topic, blocking=True, clear=False),
+										transitions={'received': 'CheckEvent', 'unavailable': 'unavailable'},
+										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
+										remapping={'message': 'message'})
+
+			# x:485 y:159
+			OperatableStateMachine.add('CheckEvent',
+										DecisionState(outcomes=['noactivity', 'activity'], conditions=lambda msg: 'activity' if any(msg.buttons) or any(msg.axes[0:5]) else 'noactivity'),
+										transitions={'noactivity': 'JoyEvent', 'activity': 'received'},
+										autonomy={'noactivity': Autonomy.Off, 'activity': Autonomy.Off},
+										remapping={'input_value': 'message'})
+
+
 		# x:538 y:386, x:347 y:384, x:134 y:383, x:831 y:385, x:906 y:386
-		_sm_idlebehavior_0 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
+		_sm_idlebehavior_1 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
 										('finished', [('RandomHeadMovements', 'done')]),
-										('finished', [('WaitForJoyEvent', 'received')]),
-										('failed', [('WaitForJoyEvent', 'unavailable')])
+										('failed', [('WaitForJoyEvent', 'unavailable')]),
+										('finished', [('WaitForJoyEvent', 'received')])
 										])
 
-		with _sm_idlebehavior_0:
+		with _sm_idlebehavior_1:
 			# x:474 y:110
 			OperatableStateMachine.add('RandomHeadMovements',
 										SweetieRandHeadMovementsState(topic=joint_state_control_topic, duration=100, interval=[3, 5], max2356=[ 0.3, 0.3, 1.5, 1.5 ], min2356=[ -0.3, -0.3, -1.5, -1.5 ]),
 										transitions={'done': 'finished'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:148 y:118
+			# x:144 y:133
 			OperatableStateMachine.add('WaitForJoyEvent',
-										SubscriberState(topic=joy_topic, blocking=True, clear=True),
+										_sm_waitforjoyevent_0,
 										transitions={'received': 'finished', 'unavailable': 'failed'},
-										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
-										remapping={'message': 'message'})
+										autonomy={'received': Autonomy.Inherit, 'unavailable': Autonomy.Inherit})
 
 
 
 		with _state_machine:
-			# x:368 y:279
-			OperatableStateMachine.add('IdleBehavior',
-										_sm_idlebehavior_0,
-										transitions={'finished': 'StartingStance', 'failed': 'AskForAssistance'},
-										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+			# x:79 y:99
+			OperatableStateMachine.add('CheckEvil',
+										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'evil' if x else 'good'),
+										transitions={'good': 'NormalEyes', 'evil': 'RedEyes'},
+										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
+										remapping={'input_value': 'be_evil'})
 
 			# x:550 y:467
 			OperatableStateMachine.add('AskForAssistance',
@@ -99,24 +121,61 @@ class SweetieOnPoniRebrikSM(Behavior):
 										transitions={'done': 'failed', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:213 y:108
+			# x:440 y:126
 			OperatableStateMachine.add('WaitForMovementFinish',
-										WaitState(wait_time=1),
+										WaitState(wait_time=0.8),
 										transitions={'done': 'DoTricks'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:174 y:365
+			# x:251 y:503
 			OperatableStateMachine.add('StartingStance',
-										PublisherState(topic=joint_state_control_topic, msg_type=JointState, value={'name': ['joint52','joint53','joint55','joint56'], 'position': [0.0, 0.0, 0.0, 0.0]}),
-										transitions={'done': 'WaitForMovementFinish', 'failed': 'AskForAssistance'},
+										PublisherState(topic=joint_state_control_topic, msg_type=JointState, value={'name': ['joint51','joint52','joint53','joint55','joint56'], 'position': [0.2, 0.0, 0.2, 0.0, 0.0]}),
+										transitions={'done': 'CheckEvil2', 'failed': 'AskForAssistance'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:492 y:126
+			# x:731 y:153
 			OperatableStateMachine.add('DoTricks',
 										self.use_behavior(DoTricksSM, 'DoTricks'),
-										transitions={'finished': 'IdleBehavior', 'failed': 'AskForAssistance'},
+										transitions={'finished': 'NormalLook', 'failed': 'AskForAssistance'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'be_evil': 'be_evil'})
+
+			# x:27 y:219
+			OperatableStateMachine.add('RedEyes',
+										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='red_eyes'),
+										transitions={'done': 'IdleBehavior', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:222 y:65
+			OperatableStateMachine.add('NormalEyes',
+										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='normal'),
+										transitions={'done': 'IdleBehavior', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:481 y:305
+			OperatableStateMachine.add('IdleBehavior',
+										_sm_idlebehavior_1,
+										transitions={'finished': 'StartingStance', 'failed': 'AskForAssistance'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+
+			# x:181 y:360
+			OperatableStateMachine.add('CheckEvil2',
+										DecisionState(outcomes=['evil','good'], conditions=lambda x: 'evil' if x else 'good'),
+										transitions={'evil': 'EvilLook', 'good': 'WaitForMovementFinish'},
+										autonomy={'evil': Autonomy.Off, 'good': Autonomy.Off},
+										remapping={'input_value': 'be_evil'})
+
+			# x:188 y:294
+			OperatableStateMachine.add('EvilLook',
+										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='evil_look'),
+										transitions={'done': 'WaitForMovementFinish', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:880 y:311
+			OperatableStateMachine.add('NormalLook',
+										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='normal_look'),
+										transitions={'done': 'IdleBehavior', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
 
 		return _state_machine

@@ -11,6 +11,7 @@ from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyC
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
+from flexbe_states.wait_state import WaitState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import random
@@ -74,13 +75,13 @@ class GreetingSM(Behavior):
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
-			# x:313 y:420
+			# x:314 y:336
 			OperatableStateMachine.add('SayBlaster',
 										TextCommandState(topic=voice_topic, type='voice/play_wav', command='18blaster'),
 										transitions={'done': 'HoofStamp', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:513 y:417
+			# x:506 y:290
 			OperatableStateMachine.add('HoofStamp',
 										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'hoof_stamp'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
@@ -100,10 +101,10 @@ class GreetingSM(Behavior):
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
-			# x:515 y:506
+			# x:510 y:604
 			OperatableStateMachine.add('Rejection',
 										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'begone'),
-										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										transitions={'success': 'HoofStompRejection', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
@@ -114,10 +115,10 @@ class GreetingSM(Behavior):
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
-			# x:312 y:500
+			# x:320 y:439
 			OperatableStateMachine.add('SayControlYour',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='14equestria'),
-										transitions={'done': 'Rejection', 'failed': 'failed'},
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='32rule'),
+										transitions={'done': 'Wait1', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
 			# x:321 y:211
@@ -126,17 +127,37 @@ class GreetingSM(Behavior):
 										transitions={'done': 'HeadSuprised', 'failed': 'finished'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:314 y:357
+			# x:314 y:576
 			OperatableStateMachine.add('SayLesserBiologicalForm',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='12ideal'),
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='29attention'),
 										transitions={'done': 'Rejection', 'failed': 'finished'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
 			# x:316 y:53
 			OperatableStateMachine.add('SayIRobot',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='00irobot'),
+										TextCommandState(topic=voice_topic, type='voice/play_wav', command='24hello_activate'),
 										transitions={'done': 'IntroduceHerself', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:480 y:409
+			OperatableStateMachine.add('Wait1',
+										WaitState(wait_time=1),
+										transitions={'done': 'PointOnHuman'},
+										autonomy={'done': Autonomy.Off})
+
+			# x:743 y:562
+			OperatableStateMachine.add('HoofStompRejection',
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'hoof_stamp'),
+										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
+
+			# x:593 y:388
+			OperatableStateMachine.add('PointOnHuman',
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'begone'),
+										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
 
 
 		return _state_machine
