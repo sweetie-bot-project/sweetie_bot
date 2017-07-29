@@ -83,7 +83,7 @@ class SweetieBotFollowHeadLeapMotion(EventState):
             palmpos = PointStamped()
             # TODO add leap_motion frame
             palmpos.header = Header(frame_id = 'base_link', stamp = rospy.Time.now())
-            palmpos.point = Point(x = leap_msg.palmpos.x/1000.0, y = leap_msg.palmpos.y/1000.0 - 0.5, z = leap_msg.palmpos.z/1000.0)
+            palmpos.point = Point(x = leap_msg.palmpos.x/1000.0, y = -leap_msg.palmpos.z/1000.0 - 0.5, z = leap_msg.palmpos.y/1000.0)
             # publish focus
             if self._focus_topic:
                 self._focus_publisher.publish(self._focus_topic, palmpos)
