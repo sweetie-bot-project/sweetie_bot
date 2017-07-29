@@ -4,3 +4,6 @@
 # Vim tmp files
 *.sw?
 .vimprj
+
+# Python
+*.pyc
