@@ -1,0 +1,13 @@
+path: sweetie_bot_flexbe_states.moveit_to_pose2
+class: MoveitToPose2
+
+import_only: false
+
+params:
+    move_group: leg1
+
+input: pose: /pose
+
+data: sweetie_bot_flexbe_states/tests/bags/pose_approx_reachable.bag
+
+outcome: planning_failed
