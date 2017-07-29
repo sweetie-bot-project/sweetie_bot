@@ -24,6 +24,8 @@ class MoveitToPose(EventState):
 	`move_group` node and `robot_description` parameter must present in current namespace.
 	State depends only on `move_group` action interface.
 
+	NOTE: sometimes lower tolerance values (e.g. 0.01 m and 0.1 rad) may cause planner to fail.
+
 	-- move_group				string		Name of the move group to be used for planning.
 	-- position_tolerance		float		Target positon tolerance in meters (default: 0.001 m).
 	-- orientation_tolerance	float		Target orientation tolerance in radians (deafult: 0.1 (6 degree))
@@ -36,7 +38,7 @@ class MoveitToPose(EventState):
 
 	'''
 
-	def __init__(self, move_group, position_tolerance = 0.001, orientation_tolerance = 0.1):
+	def __init__(self, move_group, position_tolerance = 0.001, orientation_tolerance = 0.001):
 		'''
 		Constructor
 		'''
@@ -68,7 +70,7 @@ class MoveitToPose(EventState):
 		self._control_failed = False
 		self._success = False
 
-		# check userdata
+		# TODO check userdata
 		# if not isinstance(userdata.pose, PoseStamped):
 			#Logger.logwarn('userdata.pose must be geomery_msgs.msg.PoseStamped. `%s` received' % str(type(userdata.pose)))
 			#self._planning_failed = True
@@ -85,7 +87,7 @@ class MoveitToPose(EventState):
 		# setup request
 		action_goal.request.group_name = self._move_group
 		action_goal.request.num_planning_attempts = 3
-		action_goal.request.allowed_planning_time = 5.0
+		action_goal.request.allowed_planning_time = 1.0
 		action_goal.request.max_velocity_scaling_factor = 1.0
 		action_goal.request.max_acceleration_scaling_factor = 1.0
 		# start pose

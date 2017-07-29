@@ -63,6 +63,7 @@ class MoveitToPose2(EventState):
                     self._group.clear_path_constraints()
                     # set target
                     # TODO set_joint_value_target is not working
+                    # TODO check userdata.pose type
                     pose = PoseStamped(header = userdata.pose.header, pose = userdata.pose.pose)
                     # self._group.set_joint_value_target(pose, True)
                     self._group.set_pose_target(pose)
@@ -70,6 +71,11 @@ class MoveitToPose2(EventState):
                     robot_trajectory = self._group.plan()
                 except MoveItCommanderException as e:
                     Logger.logwarn('Unable to plan trajectory for %s:\n%s' % (self._group.get_name(), str(e)))
+                    self._planning_failed = True
+                    return
+
+                if not robot_trajectory or (len(robot_trajectory.joint_trajectory.points) == 0 and len(robot_trajectory.multi_dof_joint_trajectory.points) == 0):
+                    Logger.logwarn('Unable to plan trajectory: move_commander.plan() has returned empty trajectory.')
                     self._planning_failed = True
                     return
 
