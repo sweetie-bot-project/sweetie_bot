@@ -11,7 +11,7 @@
 		</simple>
 		<simple name="last_link" type="string">
 			<description>Last  chain element.</description>
-			<value>bone15</value>
+			<value>bone16</value>
 		</simple>
 	</struct>
 	<struct name="leg2" type="PropertyBag">
@@ -22,7 +22,7 @@
 		</simple>
 		<simple name="last_link" type="string">
 			<description>Last  chain element.</description>
-			<value>bone25</value>
+			<value>bone26</value>
 		</simple>
 	</struct>
 	<struct name="leg3" type="PropertyBag">
@@ -33,7 +33,7 @@
 		</simple>
 		<simple name="last_link" type="string">
 			<description>Last  chain element.</description>
-			<value>bone35</value>
+			<value>bone36</value>
 		</simple>
 	</struct>
 	<struct name="leg4" type="PropertyBag">
@@ -44,7 +44,7 @@
 		</simple>
 		<simple name="last_link" type="string">
 			<description>Last  chain element.</description>
-			<value>bone45</value>
+			<value>bone46</value>
 		</simple>
 	</struct>
 	<struct name="head" type="PropertyBag">

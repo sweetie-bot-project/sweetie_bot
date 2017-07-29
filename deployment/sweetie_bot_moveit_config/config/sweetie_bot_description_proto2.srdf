@@ -15,12 +15,14 @@
         <link name="bone13" />
         <link name="bone14" />
         <link name="bone15" />
+        <link name="bone16" />
         <joint name="joint11" />
         <joint name="joint12" />
         <joint name="joint13" />
         <joint name="joint14" />
         <joint name="joint15" />
-        <chain base_link="base_link" tip_link="bone15" />
+        <joint name="joint16" />
+        <chain base_link="base_link" tip_link="bone16" />
     </group>
     <group name="leg2">
         <link name="bone21" />
@@ -28,12 +30,14 @@
         <link name="bone23" />
         <link name="bone24" />
         <link name="bone25" />
+        <link name="bone26" />
         <joint name="joint21" />
         <joint name="joint22" />
         <joint name="joint23" />
         <joint name="joint24" />
         <joint name="joint25" />
-        <chain base_link="base_link" tip_link="bone25" />
+        <joint name="joint26" />
+        <chain base_link="base_link" tip_link="bone26" />
     </group>
     <group name="leg3">
         <link name="bone31" />
@@ -41,12 +45,14 @@
         <link name="bone33" />
         <link name="bone34" />
         <link name="bone35" />
+        <link name="bone36" />
         <joint name="joint31" />
         <joint name="joint32" />
         <joint name="joint33" />
         <joint name="joint34" />
         <joint name="joint35" />
-        <chain base_link="base_link" tip_link="bone35" />
+        <joint name="joint36" />
+        <chain base_link="base_link" tip_link="bone36" />
     </group>
     <group name="leg4">
         <link name="bone41" />
@@ -54,12 +60,14 @@
         <link name="bone43" />
         <link name="bone44" />
         <link name="bone45" />
+        <link name="bone46" />
         <joint name="joint41" />
         <joint name="joint42" />
         <joint name="joint43" />
         <joint name="joint44" />
         <joint name="joint45" />
-        <chain base_link="base_link" tip_link="bone45" />
+        <joint name="joint46" />
+        <chain base_link="base_link" tip_link="bone46" />
     </group>
     <group name="head">
         <link name="bone51" />
@@ -98,6 +106,7 @@
         <joint name="joint13" value="0" />
         <joint name="joint14" value="0" />
         <joint name="joint15" value="0" />
+        <joint name="joint16" value="0" />
     </group_state>
     <group_state name="stand2" group="leg2">
         <joint name="joint21" value="0" />
@@ -119,6 +128,7 @@
         <joint name="joint43" value="0" />
         <joint name="joint44" value="0" />
         <joint name="joint45" value="0" />
+        <joint name="joint46" value="0" />
     </group_state>
     <group_state name="low_raised1" group="leg1">
         <joint name="joint11" value="0" />
@@ -192,11 +202,16 @@
     </group_state>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
     <end_effector name="hoof1" parent_link="bone16" group="leg1" />
-    <end_effector name="hoof2" parent_link="bone25" group="leg2" />
-    <end_effector name="hoof3" parent_link="bone35" group="leg3" />
-    <end_effector name="hoof4" parent_link="bone45" group="leg4" />
+    <end_effector name="hoof2" parent_link="bone26" group="leg2" />
+    <end_effector name="hoof3" parent_link="bone36" group="leg3" />
+    <end_effector name="hoof4" parent_link="bone46" group="leg4" />
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
     <virtual_joint name="virtual_joint" type="floating" parent_frame="odom_combined" child_link="base_link" />
+    <!--PASSIVE JOINT: Purpose: this element is used to mark joints that are not actuated-->
+    <passive_joint name="joint16" />
+    <passive_joint name="joint26" />
+    <passive_joint name="joint36" />
+    <passive_joint name="joint46" />
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="base_link" link2="bone11" reason="Adjacent" />
     <disable_collisions link1="base_link" link2="bone21" reason="Adjacent" />
