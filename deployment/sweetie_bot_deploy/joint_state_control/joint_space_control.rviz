@@ -10,6 +10,7 @@ Panels:
         - /Pose1/Links1/bone111/Orientation1
         - /TF1
         - /LeapMotion1
+        - /LeapMotionPose1
       Splitter Ratio: 0.5
     Tree Height: 555
   - Class: rviz/Selection
@@ -261,6 +262,8 @@ Visualization Manager:
           Value: true
         bone56:
           Value: true
+        leap_motion:
+          Value: true
         odom_combined:
           Value: true
       Marker Scale: 0.1
@@ -302,6 +305,8 @@ Visualization Manager:
                     bone55:
                       bone56:
                         {}
+          leap_motion:
+            {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -464,6 +469,21 @@ Visualization Manager:
       Topic: /hmi/leap_motion/point
       Unreliable: false
       Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.1
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.03
+      Head Radius: 0.01
+      Name: LeapMotionPose
+      Shaft Length: 1
+      Shaft Radius: 0.005
+      Shape: Arrow
+      Topic: /hmi/leap_motion/pose
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -523,5 +543,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1596
-  X: 0
+  X: 318
   Y: 27
