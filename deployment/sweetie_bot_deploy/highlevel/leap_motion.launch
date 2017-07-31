@@ -6,8 +6,8 @@
 			<remap from="/leapmotion/data" to="/hmi/leap_motion/data" />
 		</node>-->
 		<!--static transform publishers-->
-		<node pkg="tf" type="static_transform_publisher" name="leap_motion_tf_root" args="0 -0.4 0 0 0 1.57 odom_combined leap_motion 100" /> 
-		<node pkg="tf" type="static_transform_publisher" name="leap_motion_tf" args="0 -0.4 0 0 0 1.57 odom_combined leap_motion 100" > 
+		<node pkg="tf" type="static_transform_publisher" name="leap_motion_tf_root" args="0 -0.2 0 0 0 1.57 odom_combined leap_motion 100" /> 
+		<node pkg="tf" type="static_transform_publisher" name="leap_motion_tf" args="0 -0.2 0 0 0 1.57 odom_combined leap_motion 100" > 
 			<remap from="/tf" to="/sweetie_bot/tf" />
 		</node>
 	</group>
