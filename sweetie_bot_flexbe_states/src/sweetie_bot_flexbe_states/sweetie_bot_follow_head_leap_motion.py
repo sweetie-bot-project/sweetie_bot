@@ -17,6 +17,8 @@ class SweetieBotFollowHeadLeapMotion(EventState):
     '''
     SweetieBot head follows object, detected by LeapMotion. 
 
+    DEPRECATED: use SweetieBotFollowHeadPoseSmart
+
     -- leap_motion_topic                     string          Leap Motion topic.
     -- focus_point_topic                     string          Topic to publish focus point for vizualizaton purpose (may be Empty).
     -- follow_joint_state_controller         string          FollowJointState controller name.
@@ -27,7 +29,7 @@ class SweetieBotFollowHeadLeapMotion(EventState):
 
     '''
 
-    def __init__(self, leap_motion_topic, focus_point_topic, follow_joint_state_controller, neck_angle, deactivate):
+    def __init__(self, leap_motion_topic, focus_point_topic, follow_joint_state_controller, neck_angle = 0.13, deactivate = True):
         super(SweetieBotFollowHeadLeapMotion, self).__init__(outcomes = ['failed'])
 
         # store state parameter for later use.

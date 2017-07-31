@@ -74,6 +74,7 @@ class MoveitToPose2(EventState):
                     self._planning_failed = True
                     return
 
+                # another way to check failed planning?
                 if not robot_trajectory or (len(robot_trajectory.joint_trajectory.points) == 0 and len(robot_trajectory.multi_dof_joint_trajectory.points) == 0):
                     Logger.logwarn('Unable to plan trajectory: move_commander.plan() has returned empty trajectory.')
                     self._planning_failed = True
