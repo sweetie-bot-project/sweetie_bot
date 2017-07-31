@@ -1,3 +1,7 @@
+# ATTENTION: 
+#   1. Run `sweetie_bot_deploy moveit_control.launch` deployment module.
+#   2. Run test in `/sweetie_bot` namespace
+
 path: sweetie_bot_flexbe_states.moveit_to_pose2
 class: MoveitToPose2
 

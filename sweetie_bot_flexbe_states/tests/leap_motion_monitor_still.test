@@ -11,6 +11,6 @@ params:
     leap_motion_topic: //leapmotion/data
     pose_topic: //hmi/leap_motion/pose
     exit_states: [ no_object, still_object ]
-    parameters: [ 2.0, 0.02, 0.2 ]
+    parameters: [ 3.0, 0.02, 0.2 ]
 
 outcome: still_object
