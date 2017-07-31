@@ -105,8 +105,8 @@ class HeadIK:
             return None 
         # calculate angles
         direction = [ point_stamped.point.x, point_stamped.point.y, point_stamped.point.z ]
-        joints.position[0] = -math.atan2(point_stamped.point.x, point_stamped.point.z)
-        joints.position[1] = math.atan2(point_stamped.point.y, math.sqrt(point_stamped.point.x**2 + point_stamped.point.z**2))
+        joints.position[0] = math.atan2(point_stamped.point.y, math.sqrt(point_stamped.point.x**2 + point_stamped.point.z**2))
+        joints.position[1] = -math.atan2(point_stamped.point.x, math.sqrt(point_stamped.point.y**2 + point_stamped.point.z**2))
         # limit joints position
         joints.position = list(numpy.clip(joints.position, -numpy.pi/2, numpy.pi/2))
 
