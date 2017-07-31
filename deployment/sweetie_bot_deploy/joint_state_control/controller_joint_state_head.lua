@@ -26,7 +26,7 @@ depl:stream("controller/joint_state_head.out_joints_src_reset", ros:topic("~cont
 -- connect to RobotModel
 depl:connectServices("controller/joint_state_head", "agregator_ref")
 -- load trajectory filter
-controller.joint_state_head:loadService("transient_joint_state_exp");
+controller.joint_state_head:loadService("transient_joint_state_exp_individual");
 -- get ROS parameteres
 rttlib_extra.get_peer_rosparams(controller.joint_state_head)
 -- advertise ROS operation
