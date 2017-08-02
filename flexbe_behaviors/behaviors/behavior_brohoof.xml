@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="Brohoof">
+
+	<executable package_path="behavior_brohoof.brohoof_sm" class="BrohoofSM" />
+	<tagstring>SweetieBot, MoveIt, greeting</tagstring>
+	<author>disRecord</author>
+	<date>Wed Aug 02 2017</date>
+	<description>
+		Move leg1 up to specified target, perform greeting, wait and pt leg down. 
+
+Robot is assumed to be standing on four legs.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="wait_time" default="3" label="wait_time" hint="Set brohoof wait time.">
+			<min value="1" />
+			<max value="10" />
+		</param>
+
+		<param type="numeric" name="neck_angle" default="0.25" label="neck_angle" hint="Joint53 angle during brohoof.">
+			<min value="0" />
+			<max value="3.14" />
+		</param>
+
+	</params>
+
+
+</behavior>
