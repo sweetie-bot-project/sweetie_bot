@@ -27,18 +27,19 @@ class MoveitToPose(EventState):
 	NOTE: sometimes lower tolerance values (e.g. 0.01 m and 0.1 rad) may cause planner to fail.
 
 	-- move_group				string		Name of the move group to be used for planning.
-	-- position_tolerance		float		Target positon tolerance in meters (default: 0.001 m).
-	-- orientation_tolerance	float		Target orientation tolerance in radians (deafult: 0.1 (6 degree))
+        -- plan_only                            boolean         Do not perform any movements. Only plan trajectory.
+	-- position_tolerance		        float		Target positon tolerance in meters (default: 0.001 m).
+	-- orientation_tolerance	        float		Target orientation tolerance in radians (deafult: 0.1 (6 degree))
 
 	># pose						object		Desired pose as geomery_msgs.msg.PoseStamped message.
 
-	<= reached 					Target configuration has been reached.
+	<= reached 					Target configuration has been reached (or can be reaced).
 	<= planning_failed 				Failed to find a plan to the given configuration.
 	<= control_failed 				Failed to move along the planned trajectory.
 
 	'''
 
-	def __init__(self, move_group, position_tolerance = 0.001, orientation_tolerance = 0.001):
+	def __init__(self, move_group, plan_only = False, position_tolerance = 0.001, orientation_tolerance = 0.001):
 		'''
 		Constructor
 		'''
@@ -48,6 +49,7 @@ class MoveitToPose(EventState):
 		self._move_group = move_group
 		self._position_tolerance = position_tolerance
 		self._orientation_tolerance = orientation_tolerance
+		self._plan_only = plan_only
 		self._client = ProxyActionClient({ 'move_group' : MoveGroupAction })
 
 		# get end effector link
@@ -80,7 +82,7 @@ class MoveitToPose(EventState):
 		# request planing and execution
 		action_goal = MoveGroupGoal()   
 		# set palnning options
-		action_goal.planning_options.plan_only = False
+		action_goal.planning_options.plan_only = self._plan_only
 		action_goal.planning_options.replan = False
 #		action_goal.planning_options.planning_scene_diff.is_diff = True
 #		action_goal.planning_options.planning_scene_diff.robot_state.is_diff = True
