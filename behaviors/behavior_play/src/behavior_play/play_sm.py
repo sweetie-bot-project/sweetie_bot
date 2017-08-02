@@ -13,6 +13,7 @@ from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
 from flexbe_states.wait_state import WaitState
+from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import random
@@ -62,12 +63,12 @@ class PlaySM(Behavior):
 
 
 		with _state_machine:
-			# x:97 y:16
-			OperatableStateMachine.add('CheckEvil',
-										CheckConditionState(predicate=lambda x: x),
-										transitions={'true': 'RandomEvil', 'false': 'RandomGood'},
-										autonomy={'true': Autonomy.Off, 'false': Autonomy.Off},
-										remapping={'input_value': 'be_evil'})
+			# x:17 y:69
+			OperatableStateMachine.add('MoveToStandPose',
+										SrdfStateToMoveit(config_name='stand', move_group='all', action_topic='move_group', robot_name=''),
+										transitions={'reached': 'CheckEvil', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
+										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
 			# x:314 y:39
 			OperatableStateMachine.add('SayCanSing',
@@ -165,6 +166,13 @@ class PlaySM(Behavior):
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
+
+			# x:15 y:275
+			OperatableStateMachine.add('CheckEvil',
+										CheckConditionState(predicate=lambda x: x),
+										transitions={'true': 'RandomEvil', 'false': 'RandomGood'},
+										autonomy={'true': Autonomy.Off, 'false': Autonomy.Off},
+										remapping={'input_value': 'be_evil'})
 
 
 		return _state_machine

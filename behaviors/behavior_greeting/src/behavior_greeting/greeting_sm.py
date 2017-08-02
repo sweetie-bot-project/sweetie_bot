@@ -12,6 +12,7 @@ from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.wait_state import WaitState
+from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import random
@@ -61,12 +62,12 @@ class GreetingSM(Behavior):
 
 
 		with _state_machine:
-			# x:133 y:35
-			OperatableStateMachine.add('RandomChoose',
-										DecisionState(outcomes=['good1', 'good2', 'good3', 'evil1', 'evil2', 'evil3'], conditions=lambda evil: random.choice(['good1', 'good2', 'good3']) if not evil else random.choice(['evil1','evil2','evil3'])),
-										transitions={'good1': 'SayIRobot', 'good2': 'SayInitAcquitance', 'good3': 'SayHello', 'evil1': 'SayBlaster', 'evil2': 'SayControlYour', 'evil3': 'SayLesserBiologicalForm'},
-										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low, 'good3': Autonomy.Low, 'evil1': Autonomy.Low, 'evil2': Autonomy.Low, 'evil3': Autonomy.Low},
-										remapping={'input_value': 'be_evil'})
+			# x:37 y:189
+			OperatableStateMachine.add('MoveStandPose',
+										SrdfStateToMoveit(config_name='satnd', move_group='all', action_topic='move_group', robot_name=''),
+										transitions={'reached': 'RandomChoose', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
+										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
 			# x:507 y:53
 			OperatableStateMachine.add('IntroduceHerself',
@@ -158,6 +159,13 @@ class GreetingSM(Behavior):
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
+
+			# x:133 y:35
+			OperatableStateMachine.add('RandomChoose',
+										DecisionState(outcomes=['good1', 'good2', 'good3', 'evil1', 'evil2', 'evil3'], conditions=lambda evil: random.choice(['good1', 'good2', 'good3']) if not evil else random.choice(['evil1','evil2','evil3'])),
+										transitions={'good1': 'SayIRobot', 'good2': 'SayInitAcquitance', 'good3': 'SayHello', 'evil1': 'SayBlaster', 'evil2': 'SayControlYour', 'evil3': 'SayLesserBiologicalForm'},
+										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low, 'good3': Autonomy.Low, 'evil1': Autonomy.Low, 'evil2': Autonomy.Low, 'evil3': Autonomy.Low},
+										remapping={'input_value': 'be_evil'})
 
 
 		return _state_machine
