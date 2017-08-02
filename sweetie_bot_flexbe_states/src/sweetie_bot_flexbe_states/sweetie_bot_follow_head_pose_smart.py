@@ -24,7 +24,7 @@ class SweetieBotFollowHeadPoseSmart(EventState):
     If it is greater then `distance_comfortable` set joint51 to `neck_angle_comfortable`.
 
     -- pose_topic                            string          geometry_msgs.msg.PoseStamped topic, where object pose is published.
-    -- follow_joint_state_controller         string          FollowJointState controller name.
+    -- follow_joint_state_controller         string          FollowJointState controller name without prefix.
     -- discomfort_time                       boolean         If distance beetween head and object is less then `distance_uncomfortable` for `discomfort_time` seconds then `too_close` outcome is triggered.
     -- neck_control_parameteres              float[]         [ neck_angle_cofortable, distance_comfortable, neck_angle_uncofortable, distance_uncomfortable ] 
     -- deactivate                            boolean         Deactivate controller on stop/exit.
@@ -68,6 +68,7 @@ class SweetieBotFollowHeadPoseSmart(EventState):
     def on_enter(self, userdata):
         self._error = False
 
+        # activate head controller
         try: 
             res = self._set_operational_caller.call(self._controller + '/set_operational', True)
         except Exception as e:

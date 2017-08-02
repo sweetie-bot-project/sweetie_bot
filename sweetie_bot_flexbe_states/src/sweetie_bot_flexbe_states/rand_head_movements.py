@@ -5,36 +5,37 @@ import rospy
 from rospy.rostime import Time, Duration
 
 from flexbe_core import EventState, Logger
-from flexbe_core.proxy import ProxyPublisher
+from flexbe_core.proxy import ProxyPublisher, ProxyServiceCaller
 
 from std_msgs.msg import Header
+from std_srvs.srv import SetBool
 from sensor_msgs.msg import JointState
 
 
-class SweetieRandHeadMovementsState(EventState):
+class SweetieBotRandHeadMovements(EventState):
     '''
-    DEPRECATED: use SweetieBotHeadRandMovements instead.
+    Periodically reposition eyes and head of SweetieBot to random point using given FollowJointState controller.
 
-    Periodically reposition eyes and head of SweetieBot to random point.
-
-    -- topic        string          Input topic of FollowJointState controller (JointState).
+    -- controller   string          FollowJointState controller name without `controller` prefix.
     -- duration     float           How long this state will be executed (seconds).
     -- interval     float[2]        Array of floats, maximal and minimal interval between movements.
     -- max2356      float[4]        Max values for joint52, joint53, joint55, joint56.
     -- min2356      float[4]        Min values for joint52, joint53, joint55, joint56.
 
     <= done 	                    Finished.
+    <= failed 	                    Failed to activate FollowJointState controller.
 
     '''
 
-    def __init__(self, topic, duration, interval, max2356, min2356):
-        super(SweetieRandHeadMovementsState, self).__init__(outcomes = ['done'])
+    def __init__(self, controller = 'joint_state_head', duration = 120, interval = [3, 5], max2356 = [0.3, 0.3, 1.5, 1.5], min2356 = [-0.3, -0.3, -1.5, -1.5]):
+        super(SweetieBotRandHeadMovements, self).__init__(outcomes = ['done', 'failed'])
 
         # Store topic parameter for later use.
-        self._topic = topic
+        self._controller = 'motion/controller/' + controller 
 
-        # create publisher
-        self._publisher = ProxyPublisher({ topic: JointState })
+        # create proxies
+        self._set_operational_caller = ProxyServiceCaller({ self._controller + '/set_operational': SetBool })
+        self._publisher = ProxyPublisher({ self._controller + '/in_joints_ref': JointState })
 
         # state
         self._start_timestamp = None
@@ -55,15 +56,34 @@ class SweetieRandHeadMovementsState(EventState):
         self._max2356 = max2356
         self._min2356 = min2356
 
+        # error in enter hook
+        self._error = False
     
     def on_enter(self, userdata):
+        self._error = False
+
+        # activate head controller
+        try: 
+            res = self._set_operational_caller.call(self._controller + '/set_operational', True)
+        except Exception as e:
+            Logger.logwarn('Failed to activate `' + self._controller + '` controller:\n%s' % str(e))
+            self._error = True
+            return
+
+        if not res.success:
+            Logger.logwarn('Failed to activate `' + self._controller + '` controller (SetBoolResponse: success = false).')
+            self._error = True
+
         # set start timestamp
         self._start_timestamp = Time.now()
         self._movement_timestamp = Time.now();
 
-        Logger.loginfo('Start random pose generation (eyes, head).')
+        Logger.loginfo('Start random pose generation (eyes, head), controller `%s`.' % self._controller)
 
     def execute(self, userdata):
+        if self._error:
+            return 'failed'
+        
         # check if time elasped
         if Time.now() - self._start_timestamp > self._duration:
             return 'done'
@@ -88,7 +108,7 @@ class SweetieRandHeadMovementsState(EventState):
             msg.position[3] = self._min2356[3]*x + self._max2356[3]*(1-x)
             # send message
             try: 
-                self._publisher.publish(self._topic, msg)
+                self._publisher.publish(self._controller + '/in_joints_ref', msg)
             except Exception as e:
                 Logger.logwarn('Failed to send JointState message `' + self._topic + '`:\n%s' % str(e))
 

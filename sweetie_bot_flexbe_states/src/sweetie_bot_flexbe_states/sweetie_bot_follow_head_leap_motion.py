@@ -15,9 +15,10 @@ from proto2.head_ik import HeadIK
 
 class SweetieBotFollowHeadLeapMotion(EventState):
     '''
+    DEPRECATED: use SweetieBotFollowHeadPoseSmart.
+
     SweetieBot head follows object, detected by LeapMotion. 
 
-    DEPRECATED: use SweetieBotFollowHeadPoseSmart
 
     -- leap_motion_topic                     string          Leap Motion topic.
     -- focus_point_topic                     string          Topic to publish focus point for vizualizaton purpose (may be Empty).
