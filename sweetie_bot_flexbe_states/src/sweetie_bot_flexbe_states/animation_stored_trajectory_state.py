@@ -34,7 +34,7 @@ class AnimationStoredJointTrajectoryState(EventState):
     '''
     ##-- joint_trajectory_storage     string    ROS namespace containing stored trajectories.
 
-    def __init__(self, action_topic, trajectory_param):
+    def __init__(self, action_topic = 'motion/controller/joint_trajectory', trajectory_param = 'joint_trajectory'):
         # Declare outcomes and output keys
         super(AnimationStoredJointTrajectoryState, self).__init__(outcomes = ['success', 'partial_movement', 'invalid_pose', 'failure'],
                 output_keys = ['result'])

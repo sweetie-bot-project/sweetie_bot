@@ -38,8 +38,7 @@ class SetBoolState(EventState):
         self._error = False
     
     def on_enter(self, userdata):
-        userdata.success = None
-        userdata.message = None
+        self._error = False
 
         try: 
             self._response = self._service_caller.call(self._service, self._value)

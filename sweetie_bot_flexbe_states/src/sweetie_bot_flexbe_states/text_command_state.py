@@ -11,17 +11,15 @@ class TextCommandState(EventState):
     '''
     Send TextCommand message to the given topic.
 
-    -- topic        string          Topic where to publish message.
     -- type         string          Type field of TextCommand.
     -- command      string          Command string.
+    -- topic        string          Topic where to publish message.
 
     <= done 	                    Message is sent.  
-    <= failed 	                    Unable to send a message.
-
     '''
 
-    def __init__(self, topic, type, command):
-        super(TextCommandState, self).__init__(outcomes = ['done', 'failed'])
+    def __init__(self, type, command, topic = 'control'):
+        super(TextCommandState, self).__init__(outcomes = ['done'])
 
         # Store state parameter for later use.
         self._topic = topic
@@ -38,17 +36,17 @@ class TextCommandState(EventState):
         self._error = False
 
     def on_enter(self, userdata):
+        self._error = False
+
         try: 
             self._publisher.publish(self._topic, self._message)
         except Exception as e:
-            Logger.logwarn('Failed to send TextCommand message `' + self._topic + '`:\n%s' % str(e))
+            Logger.logerr('Failed to send TextCommand message `' + self._topic + '`:\n%s' % str(e))
             self._error = True
+            return
 
         Logger.loginfo('Send TextCommand `{0}`: type = "{1}" cmd = "{2}".'.format(self._topic, self._message.type, self._message.command))
 
     def execute(self, userdata):
-        if self._error:
-            return 'failed'
-
         return 'done'
 
