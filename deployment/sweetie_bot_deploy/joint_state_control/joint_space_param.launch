@@ -5,5 +5,5 @@
 	<rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/herkulex_feedback.yaml" ></rosparam> 
 	<rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/joint_state_control/controller.yaml" ></rosparam> 
 	<rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/reporting.yaml" ></rosparam> 
-	<rosparam command="load" ns="/stored/joint_trajectory" file="$(find sweetie_bot_deploy)/joint_state_control/joint_trajectories.yaml" ></rosparam> 
+	<rosparam command="load" ns="joint_trajectory" file="$(find sweetie_bot_deploy)/joint_state_control/joint_trajectories.yaml" ></rosparam> 
 </launch>

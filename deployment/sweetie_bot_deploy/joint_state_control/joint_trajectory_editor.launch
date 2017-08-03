@@ -13,7 +13,7 @@
 		<remap if="$(arg run_virtual)"  from="joint_trajectory_virtual" to="/sweetie_bot_virtual/motion/controller/joint_trajectory" />
 		<!-- run joint_trajectory_editor -->
 		<node name="joint_trajectory_editor" pkg="sweetie_bot_joint_trajectory_editor" type="trajectory_editor" output="screen" args="" required="true">
-			<param name="trajectory_storage" value="/stored/joint_trajectory" />
+			<param name="trajectory_storage" value="/sweetie_bot/joint_trajectory" />
 		</node>
 	</group>
 
@@ -26,7 +26,7 @@
 		<remap from="set_torque_off" to="/sweetie_bot/motion/controller/torque_off/set_torque_off" />
 		<!-- run joint_trajectory_editor -->
 		<node name="joint_trajectory_editor" pkg="sweetie_bot_joint_trajectory_editor" type="trajectory_editor" output="screen" args="" required="true">
-			<param name="trajectory_storage" value="/stored/joint_trajectory" />
+			<param name="trajectory_storage" value="/sweetie_bot/joint_trajectory" />
 		</node>
 	</group>
 </launch>
