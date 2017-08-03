@@ -144,6 +144,42 @@
         <joint name="joint24" value="-0.35" />
         <joint name="joint25" value="0" />
     </group_state>
+    <group_state name="stand_front" group="legs_front">
+        <joint name="joint11" value="0" />
+        <joint name="joint12" value="0" />
+        <joint name="joint13" value="0" />
+        <joint name="joint14" value="0" />
+        <joint name="joint15" value="0" />
+        <joint name="joint16" value="0" />
+        <joint name="joint21" value="0" />
+        <joint name="joint22" value="0" />
+        <joint name="joint23" value="0" />
+        <joint name="joint24" value="0" />
+        <joint name="joint25" value="0" />
+        <joint name="joint26" value="0" />
+    </group_state>
+    <group_state name="stand_legs" group="legs">
+        <joint name="joint11" value="0" />
+        <joint name="joint12" value="0" />
+        <joint name="joint13" value="0" />
+        <joint name="joint14" value="0" />
+        <joint name="joint15" value="0" />
+        <joint name="joint21" value="0" />
+        <joint name="joint22" value="0" />
+        <joint name="joint23" value="0" />
+        <joint name="joint24" value="0" />
+        <joint name="joint25" value="0" />
+        <joint name="joint31" value="0" />
+        <joint name="joint32" value="0" />
+        <joint name="joint33" value="0" />
+        <joint name="joint34" value="0" />
+        <joint name="joint35" value="0" />
+        <joint name="joint41" value="0" />
+        <joint name="joint42" value="0" />
+        <joint name="joint43" value="0" />
+        <joint name="joint44" value="0" />
+        <joint name="joint45" value="0" />
+    </group_state>
     <group_state name="stand" group="all">
         <joint name="joint11" value="0" />
         <joint name="joint12" value="0" />
