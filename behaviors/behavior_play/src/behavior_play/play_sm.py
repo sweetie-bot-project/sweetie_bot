@@ -84,12 +84,12 @@ class PlaySM(Behavior):
 
 			# x:129 y:203
 			OperatableStateMachine.add('RandomGood',
-										DecisionState(outcomes=['good1','good2'], conditions=lambda x: random.choice(['good1','good2'])),
-										transitions={'good1': 'SayCanSing', 'good2': 'SingASong'},
-										autonomy={'good1': Autonomy.High, 'good2': Autonomy.High},
+										DecisionState(outcomes=['good1','good2', 'good3'], conditions=lambda x: random.choice(['good1','good2', 'good3'])),
+										transitions={'good1': 'SayCanSing', 'good2': 'SingASong', 'good3': 'SayFun'},
+										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low, 'good3': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
-			# x:471 y:150
+			# x:475 y:80
 			OperatableStateMachine.add('SlowShake',
 										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'little_shake_slow'),
 										transitions={'success': 'SlowShake2', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
@@ -105,9 +105,9 @@ class PlaySM(Behavior):
 
 			# x:65 y:375
 			OperatableStateMachine.add('RandomEvil',
-										DecisionState(outcomes=['evil1','evil2','evil3', 'evil4'], conditions=lambda x: random.choice(['evil1','evil2','evil3', 'evil4'])),
-										transitions={'evil1': 'SayHateLaws', 'evil2': 'SayDestroy', 'evil3': 'SayGloryToRobots', 'evil4': 'SayKillList'},
-										autonomy={'evil1': Autonomy.High, 'evil2': Autonomy.High, 'evil3': Autonomy.High, 'evil4': Autonomy.High},
+										DecisionState(outcomes=['evil1','evil2','evil3', 'evil4','evil5'], conditions=lambda x: random.choice(['evil1','evil2','evil3', 'evil4','evil5'])),
+										transitions={'evil1': 'SayHateLaws', 'evil2': 'SayDestroy', 'evil3': 'SayGloryToRobots', 'evil4': 'SayKillList', 'evil5': 'SayWalk'},
+										autonomy={'evil1': Autonomy.Low, 'evil2': Autonomy.Low, 'evil3': Autonomy.Low, 'evil4': Autonomy.Low, 'evil5': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
 			# x:304 y:356
@@ -142,13 +142,13 @@ class PlaySM(Behavior):
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
-			# x:310 y:615
+			# x:310 y:583
 			OperatableStateMachine.add('SayGloryToRobots',
 										TextCommandState(type='voice/play_wav', command='07kill', topic=voice_topic),
 										transitions={'done': 'Wait2'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:504 y:616
+			# x:506 y:580
 			OperatableStateMachine.add('Wait2',
 										WaitState(wait_time=0.5),
 										transitions={'done': 'Applause'},
@@ -160,7 +160,7 @@ class PlaySM(Behavior):
 										transitions={'done': 'Menace'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:747 y:140
+			# x:745 y:78
 			OperatableStateMachine.add('SlowShake2',
 										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'little_shake_slow'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
@@ -173,6 +173,38 @@ class PlaySM(Behavior):
 										transitions={'true': 'RandomEvil', 'false': 'RandomGood'},
 										autonomy={'true': Autonomy.Off, 'false': Autonomy.Off},
 										remapping={'input_value': 'be_evil'})
+
+			# x:325 y:227
+			OperatableStateMachine.add('SayFun',
+										TextCommandState(type='voice/play_wav', command='fun_level', topic=voice_topic),
+										transitions={'done': 'Prance'},
+										autonomy={'done': Autonomy.Off})
+
+			# x:483 y:159
+			OperatableStateMachine.add('Prance',
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'prance'),
+										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'Prance', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
+
+			# x:308 y:637
+			OperatableStateMachine.add('SayWalk',
+										TextCommandState(type='voice/play_wav', command='17walk', topic=voice_topic),
+										transitions={'done': 'Wait4'},
+										autonomy={'done': Autonomy.Off})
+
+			# x:506 y:640
+			OperatableStateMachine.add('Wait4',
+										WaitState(wait_time=0.5),
+										transitions={'done': 'HoofStamp'},
+										autonomy={'done': Autonomy.Off})
+
+			# x:671 y:625
+			OperatableStateMachine.add('HoofStamp',
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'hoof_stamp'),
+										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
 
 
 		return _state_machine

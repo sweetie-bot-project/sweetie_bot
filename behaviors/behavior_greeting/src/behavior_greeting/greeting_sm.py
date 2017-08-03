@@ -64,7 +64,7 @@ class GreetingSM(Behavior):
 		with _state_machine:
 			# x:37 y:189
 			OperatableStateMachine.add('MoveStandPose',
-										SrdfStateToMoveit(config_name='satnd', move_group='all', action_topic='move_group', robot_name=''),
+										SrdfStateToMoveit(config_name='stand', move_group='all', action_topic='move_group', robot_name=''),
 										transitions={'reached': 'RandomChoose', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
