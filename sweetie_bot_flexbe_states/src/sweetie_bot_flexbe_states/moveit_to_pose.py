@@ -61,7 +61,8 @@ class MoveitToPose(EventState):
 				self._end_effector = ee.attrib['parent_link']
 				break
 		if not self._end_effector:
-			Logger.logerror('Unable to determine end effector for group `%s`.' % self._move_group)
+                    Logger.logerror('MoveitToPose: Unable to determine end effector for group `%s`.' % self._move_group)
+                    raise RuntimeError('Unable to determine end effector for group `%s`.' % self._move_group)
 
 		self._planning_failed = False
 		self._control_failed = False
@@ -120,8 +121,8 @@ class MoveitToPose(EventState):
 		try:
 			self._client.send_goal('move_group', action_goal)
 		except Exception as e:
-			Logger.logwarn('Failed to send MoveGroupAction goal for group: %s\n%s' % (self._move_group, str(e)))
-			self._planning_failed = True
+                    Logger.logwarn('MoveitToPose: Failed to send MoveGroupAction goal for group: %s\n%s' % (self._move_group, str(e)))
+                    self._planning_failed = True
 
 
 	def execute(self, userdata):
@@ -139,16 +140,16 @@ class MoveitToPose(EventState):
 			result = self._client.get_result('move_group')
 
 			if result.error_code.val == MoveItErrorCodes.CONTROL_FAILED:
-				Logger.logwarn('Control failed for MoveGroupAction of group: %s (error code: %s)' % (self._move_group, str(result.error_code)))
-				self._control_failed = True
-				return 'control_failed'
+                            Logger.logwarn('MoveitToPose: Control failed for MoveGroupAction of group: %s (error code: %s)' % (self._move_group, str(result.error_code)))
+                            self._control_failed = True
+                            return 'control_failed'
 			elif result.error_code.val != MoveItErrorCodes.SUCCESS:
-				Logger.logwarn('Move action failed with result error code: %s' % str(result.error_code))
-				self._planning_failed = True
-				return 'planning_failed'
+                            Logger.logwarn('MoveitToPose: Move action failed with result error code: %s' % str(result.error_code))
+                            self._planning_failed = True
+                            return 'planning_failed'
 			else:
-				self._success = True
-				return 'reached'
+                            self._success = True
+                            return 'reached'
 
 
 	def on_stop(self):
