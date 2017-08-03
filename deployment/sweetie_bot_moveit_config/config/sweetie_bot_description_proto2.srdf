@@ -81,14 +81,12 @@
         <chain base_link="base_link" tip_link="bone54" />
     </group>
     <group name="legs">
-        <link name="base_link" />
         <group name="leg1" />
         <group name="leg2" />
         <group name="leg3" />
         <group name="leg4" />
     </group>
     <group name="all">
-        <link name="base_link" />
         <group name="leg1" />
         <group name="leg2" />
         <group name="leg3" />
