@@ -18,6 +18,7 @@
 	<contains name="Brohoof" />
 	<contains name="Greeting" />
 	<contains name="Play" />
+	<contains name="Bad" />
 
 	<!-- Available Parameters -->
 

@@ -8,6 +8,7 @@
 
 import roslib; roslib.load_manifest('behavior_bad')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
+from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
@@ -48,7 +49,7 @@ class BadSM(Behavior):
 	def create(self):
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
 		voice_topic = 'voice/voice'
-		storage = '/stored/joint_trajectory/'
+		storage = 'joint_trajectory/'
 		# x:1011 y:80, x:1002 y:571
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['be_evil'])
 		_state_machine.userdata.be_evil = self.be_evil
@@ -60,12 +61,12 @@ class BadSM(Behavior):
 
 
 		with _state_machine:
-			# x:75 y:101
-			OperatableStateMachine.add('CheckEvil',
-										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'evil' if x else 'good'),
-										transitions={'good': 'RandomChoiceGood', 'evil': 'SayDoNotTouch'},
-										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
-										remapping={'input_value': 'be_evil'})
+			# x:70 y:242
+			OperatableStateMachine.add('StandFrontLegs',
+										SrdfStateToMoveit(config_name='stand_front', move_group='legs_front', action_topic='move_group', robot_name=''),
+										transitions={'reached': 'CheckEvil', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
+										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
 			# x:320 y:143
 			OperatableStateMachine.add('RandomChoiceGood',
@@ -76,15 +77,15 @@ class BadSM(Behavior):
 
 			# x:450 y:508
 			OperatableStateMachine.add('SayDoNotTouch',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='05donottouch'),
-										transitions={'done': 'HoofStamp', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='05donottouch', topic=voice_topic),
+										transitions={'done': 'HoofStamp'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:496 y:147
 			OperatableStateMachine.add('SayOverflow',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='27queue'),
-										transitions={'done': 'Applause', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='27queue', topic=voice_topic),
+										transitions={'done': 'Applause'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:747 y:153
 			OperatableStateMachine.add('Applause',
@@ -102,9 +103,9 @@ class BadSM(Behavior):
 
 			# x:495 y:227
 			OperatableStateMachine.add('SayDizzy',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='26dizziness'),
-										transitions={'done': 'NoHeadShake', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='26dizziness', topic=voice_topic),
+										transitions={'done': 'NoHeadShake'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:616 y:500
 			OperatableStateMachine.add('HoofStamp',
@@ -112,6 +113,13 @@ class BadSM(Behavior):
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
+
+			# x:242 y:273
+			OperatableStateMachine.add('CheckEvil',
+										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'evil' if x else 'good'),
+										transitions={'good': 'RandomChoiceGood', 'evil': 'SayDoNotTouch'},
+										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
+										remapping={'input_value': 'be_evil'})
 
 
 		return _state_machine
