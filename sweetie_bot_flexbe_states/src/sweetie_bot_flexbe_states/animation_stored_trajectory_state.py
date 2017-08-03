@@ -71,12 +71,13 @@ class AnimationStoredJointTrajectoryState(EventState):
             self._logged = True
 
     def on_enter(self, userdata):
-        # Send the goal
         self._error = False
+        self._logged = False
+        # Send the goal
         try:
             self._client.send_goal(self._topic, self._goal)
         except Exception as e:
-            Logger.logwarn('Failed to send the FollowJointTrajectory command:\n%s' % str(e))
+            Logger.logwarn('AnimationStoredJointTrajectoryState: Failed to send the FollowJointTrajectory command:\n%s' % str(e))
             self._error = True
 
 
@@ -98,20 +99,20 @@ class AnimationStoredJointTrajectoryState(EventState):
 
             if state == GoalStatus.SUCCEEDED:
                 # everything is good
-                self.log_once('info', 'FollowJointTrajectory action succesed: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('info', 'AnimationStoredJointTrajectoryState: FollowJointTrajectory action succesed: ' + repr(result.error_code) + " " + result.error_string)
                 return 'success'
             elif state in [ GoalStatus.ABORTED, GoalStatus.PREEMPTED ]:
                 # perhaps we stuck in midway due to tolerance error or controller switch.
-                self.log_once('warn', 'FollowJointTrajectory action aborted: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('warn', 'AnimationStoredJointTrajectoryState: FollowJointTrajectory action aborted: ' + repr(result.error_code) + " " + result.error_string)
                 return 'partial_movement'
             elif state in [ GoalStatus.REJECTED, GoalStatus.RECALLED ]:
                 # Execution has not started, perhaps due to invalid goal.
-                self.log_once('warn', 'FollowJointTrajectory action rejected: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('warn', 'AnimationStoredJointTrajectoryState: FollowJointTrajectory action rejected: ' + repr(result.error_code) + " " + result.error_string)
                 if result.error_code in [ FollowJointTrajectoryResult.PATH_TOLERANCE_VIOLATED, FollowJointTrajectoryResult.GOAL_TOLERANCE_VIOLATED]:
                     # Starting pose is invalid
                     return 'invalid_pose'
             # Any another kind of error.
-            self.log_once('warn', 'FollowJointTrajectory action failed (' + repr(state) + '): ' + repr(result.error_code) + " " + result.error_string)
+            self.log_once('warn', 'AnimationStoredJointTrajectoryState: FollowJointTrajectory action failed (' + repr(state) + '): ' + repr(result.error_code) + " " + result.error_string)
             return 'failure'
 
 
@@ -122,5 +123,5 @@ class AnimationStoredJointTrajectoryState(EventState):
         if not self._client.has_result(self._topic):
             self._client.cancel(self._topic)
             userdata.result = None
-            Logger.loginfo('Cancel active action goal.')
+            Logger.loginfo('AnimationStoredJointTrajectoryState: Cancel active action goal.')
 

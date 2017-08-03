@@ -72,13 +72,14 @@ class SweetieBotFollowHeadPoseSmart(EventState):
         try: 
             res = self._set_operational_caller.call(self._controller + '/set_operational', True)
         except Exception as e:
-            Logger.logwarn('Failed to activate `' + self._controller + '` controller:\n%s' % str(e))
+            Logger.logwarn('SweetieBotFollowHeadPoseSmart: Failed to activate `' + self._controller + '` controller:\n%s' % str(e))
             self._error = True
             return
 
         if not res.success:
-            Logger.logwarn('Failed to activate `' + self._controller + '` controller (SetBoolResponse: success = false).')
+            Logger.logwarn('SweetieBotFollowHeadPoseSmart: Failed to activate `' + self._controller + '` controller (SetBoolResponse: success = false).')
             self._error = True
+            return
 
         # set default value
         self._neck_angle = self._neck_params[0]
@@ -110,7 +111,7 @@ class SweetieBotFollowHeadPoseSmart(EventState):
                     # distance and direction angle
                     dist = math.sqrt(fp.x**2 + fp.y**2 + fp.z**2)
                     angle = math.acos(fp.z / dist)
-                    Logger.loginfo('SweetieBotFollowHeadLeapMotion: dist: %s, angle: %s' % (str(dist), str(angle)))
+                    # Logger.loginfo('SweetieBotFollowHeadLeapMotion: dist: %s, angle: %s' % (str(dist), str(angle)))
                     # check comfort distance
                     if angle < math.pi/4:
                         if dist > self._neck_params[1]:
@@ -126,7 +127,7 @@ class SweetieBotFollowHeadPoseSmart(EventState):
                     else:
                         self._comfortable_stamp = rospy.Time.now()
                 except tf.Exception as e:
-                    Logger.logwarn('Cannot transform to bone54:\n%s' % str(e))
+                    Logger.logwarn('SweetieBotFollowHeadLeapMotion: Cannot transform to bone54:\n%s' % str(e))
                     self._neck_angle = self._neck_params[0]
                 # calculate head pose for given angle
                 head_joints_msg = self._ik.pointDirectionToHeadPose(focus_point, self._neck_angle, 0.0)
@@ -152,7 +153,7 @@ class SweetieBotFollowHeadPoseSmart(EventState):
             try: 
                 res = self._set_operational_caller.call(self._controller + '/set_operational', False)
             except Exception as e:
-                Logger.logwarn('Failed to deactivate `' + self._controller + '` controller:\n%s' % str(e))
+                Logger.logwarn('SweetieBotFollowHeadLeapMotion: Failed to deactivate `' + self._controller + '` controller:\n%s' % str(e))
             Logger.loginfo('SweetieBotFollowHeadLeapMotion: controller `{0}` is deactivated.'.format(self._controller))
 
 
