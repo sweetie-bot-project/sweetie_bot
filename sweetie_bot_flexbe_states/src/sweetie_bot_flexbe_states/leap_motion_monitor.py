@@ -73,7 +73,7 @@ class LeapMotionMonitor(EventState):
         if self._leap_subscriber.has_msg(self._leap_topic):
             # GET LEAP MOTION message
             leap_msg = self._leap_subscriber.get_last_msg(self._leap_topic)
-            #Logger.loginfo('leap_motion: \n%s' % str(leap_msg))
+            #Logger.loginfo('LeapMotionMonitor: leap_motion: \n%s' % str(leap_msg.palmpos))
 
             # STORE POSE IN BUFFER
             self._pose = PoseVectorized()
@@ -110,8 +110,8 @@ class LeapMotionMonitor(EventState):
                 # messages are identical, now check how long they are in this state
                 if (self._pose.header.stamp - self._pose_prev.header.stamp).to_sec() > self._detecton_period:
                     # NO_OBJECT is detected
-                    Logger.loginfo('LeapMotionMonitor: no_object state is detected.')
                     if 'no_object' in self._exit_states: 
+                        Logger.loginfo('LeapMotionMonitor: no_object state is detected.')
                         return 'no_object'
                 # wait until detection_period
                 return None
@@ -123,8 +123,8 @@ class LeapMotionMonitor(EventState):
                 # check if averaging is performed long enought
                 if (self._pose.header.stamp - self._nonstillness_stamp).to_sec() > self._detecton_period:
                     # STILL_OBJECT is_detected
-                    Logger.loginfo('LeapMotionMonitor: still_object state is detected.')
                     if 'still_object' in self._exit_states: 
+                        Logger.loginfo('LeapMotionMonitor: still_object state is detected.')
                         return 'still_object'
                 # wait for detection_period from the start
                 return None
@@ -133,9 +133,11 @@ class LeapMotionMonitor(EventState):
 
 
             # DEFAULT: MOVING OBJECT
-            Logger.loginfo('LeapMotionMonitor: moving_object state is detected.')
             if 'moving_object' in self._exit_states: 
+                Logger.loginfo('LeapMotionMonitor: moving_object state is detected.')
                 return 'moving_object'
             else:
                 return None
 
+    def on_exit(self, userdata):
+        userdata.pose = self._pose.toPoseStamped()
