@@ -285,8 +285,6 @@ Visualization Manager:
           Value: true
         bone56:
           Value: true
-        leap_motion:
-          Value: true
         odom_combined:
           Value: true
       Marker Scale: 0.1
@@ -332,8 +330,6 @@ Visualization Manager:
                     bone55:
                       bone56:
                         {}
-          leap_motion:
-            {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -503,16 +499,6 @@ Visualization Manager:
       Value: true
       Visual Enabled: false
     - Alpha: 1
-      Class: rviz/PointStamped
-      Color: 204; 41; 204
-      Enabled: true
-      History Length: 1
-      Name: LeapMotion
-      Radius: 0.02
-      Topic: /hmi/leap_motion/point
-      Unreliable: false
-      Value: true
-    - Alpha: 1
       Axes Length: 0.1
       Axes Radius: 0.01
       Class: rviz/Pose
@@ -551,7 +537,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.77845
+      Distance: 0.937415
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -565,10 +551,10 @@ Visualization Manager:
       Focal Shape Size: 0.05
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.225399
+      Pitch: 0.375398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.84857
+      Yaw: 5.78357
     Saved: ~
 Window Geometry:
   Displays:
@@ -586,5 +572,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1596
-  X: 251
+  X: 0
   Y: 27
