@@ -28,6 +28,11 @@ Robot is assumed to be standing on four legs.
 			<max value="3.14" />
 		</param>
 
+		<param type="numeric" name="hoof_shift" default="0" label="hoof_shift" hint="Hoof shift toward sweetie from object center during greeting.">
+			<min value="0" />
+			<max value="1" />
+		</param>
+
 	</params>
 
 
