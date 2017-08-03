@@ -21,5 +21,19 @@
 	<contains name="Bad" />
 
 	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="hoof_shift" default="0" label="hoof_shift" hint="Shift hoof from object center during greeting.">
+			<min value="0" />
+			<max value="1" />
+		</param>
+
+		<param type="numeric" name="play_timeout" default="6" label="play_timeout" hint="Timeout between play actions.">
+			<min value="0" />
+			<max value="20" />
+		</param>
+
+	</params>
+
 
 </behavior>
