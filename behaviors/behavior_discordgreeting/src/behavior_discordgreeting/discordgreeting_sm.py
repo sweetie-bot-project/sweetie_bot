@@ -49,7 +49,7 @@ class DiscordGreetingSM(Behavior):
 
 
 	def create(self):
-		storage = '/stored/joint_trajectory/'
+		storage = 'joint_trajectory/'
 		joint_state_control_topic = 'motion/controller/joint_state/out_joints_src_reset'
 		eyes_topic = 'control'
 		voice_topic = 'voice/voice'
@@ -69,9 +69,9 @@ class DiscordGreetingSM(Behavior):
 		with _sm_seizure_0:
 			# x:125 y:111
 			OperatableStateMachine.add('SayDoNotTouch',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='05donottouch'),
-										transitions={'done': 'Seizure', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='05donottouch', topic=voice_topic),
+										transitions={'done': 'Seizure'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:389 y:247
 			OperatableStateMachine.add('AddCounter',
@@ -89,21 +89,21 @@ class DiscordGreetingSM(Behavior):
 
 			# x:612 y:81
 			OperatableStateMachine.add('SayWalk',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='17walk'),
-										transitions={'done': 'AddCounter', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='17walk', topic=voice_topic),
+										transitions={'done': 'AddCounter'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:681 y:173
 			OperatableStateMachine.add('SayBlaster',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='18blaster'),
-										transitions={'done': 'AddCounter', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='18blaster', topic=voice_topic),
+										transitions={'done': 'AddCounter'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:686 y:240
 			OperatableStateMachine.add('SayWin',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='08win'),
-										transitions={'done': 'AddCounter', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='08win', topic=voice_topic),
+										transitions={'done': 'AddCounter'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:85 y:238
 			OperatableStateMachine.add('Seizure',
@@ -150,9 +150,9 @@ class DiscordGreetingSM(Behavior):
 
 			# x:528 y:547
 			OperatableStateMachine.add('SayMenace',
-										TextCommandState(topic='/sweetie_bot/voice/voice', type='voice/play_wav', command='02technic'),
-										transitions={'done': 'WaitSayMenace', 'failed': 'finished'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='02technic', topic='/sweetie_bot/voice/voice'),
+										transitions={'done': 'WaitSayMenace'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:529 y:454
 			OperatableStateMachine.add('WaitSayMenace',
@@ -175,15 +175,15 @@ class DiscordGreetingSM(Behavior):
 
 			# x:429 y:301
 			OperatableStateMachine.add('SayBattleSystemActivation',
-										TextCommandState(topic='/sweetie_bot/voice/voice', type='voice/play_wav', command='03domination'),
-										transitions={'done': 'Menace', 'failed': 'finished'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='03domination', topic='/sweetie_bot/voice/voice'),
+										transitions={'done': 'Menace'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:840 y:91
 			OperatableStateMachine.add('SayDominationFailed',
-										TextCommandState(topic='/sweetie_bot/voice/voice', type='voice/play_wav', command='04notfound'),
-										transitions={'done': 'WaitFailed', 'failed': 'finished'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='04notfound', topic='/sweetie_bot/voice/voice'),
+										transitions={'done': 'WaitFailed'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:818 y:281
 			OperatableStateMachine.add('MenceCanceled',
@@ -219,9 +219,9 @@ class DiscordGreetingSM(Behavior):
 
 			# x:385 y:567
 			OperatableStateMachine.add('RedEyes',
-										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='red_eyes'),
-										transitions={'done': 'SayMenace', 'failed': 'finished'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='eyes/emotion', command='red_eyes', topic=eyes_topic),
+										transitions={'done': 'SayMenace'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:151 y:77
 			OperatableStateMachine.add('LookAround',
@@ -238,27 +238,27 @@ class DiscordGreetingSM(Behavior):
 
 			# x:195 y:10
 			OperatableStateMachine.add('NormalEyes',
-										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='normal'),
-										transitions={'done': 'Wait', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='eyes/emotion', command='normal', topic=eyes_topic),
+										transitions={'done': 'Wait'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:519 y:374
 			OperatableStateMachine.add('EvilLook',
-										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='evil_look'),
-										transitions={'done': 'SayBattleSystemActivation', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='eyes/emotion', command='evil_look', topic=eyes_topic),
+										transitions={'done': 'SayBattleSystemActivation'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:696 y:85
 			OperatableStateMachine.add('SadLook',
-										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='sad_look'),
-										transitions={'done': 'SayDominationFailed', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='eyes/emotion', command='sad_look', topic=eyes_topic),
+										transitions={'done': 'SayDominationFailed'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:817 y:569
 			OperatableStateMachine.add('NormalLook',
-										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='normal_look'),
-										transitions={'done': 'Seizure', 'failed': 'finished'},
-										autonomy={'done': Autonomy.High, 'failed': Autonomy.Off})
+										TextCommandState(type='eyes/emotion', command='normal_look', topic=eyes_topic),
+										transitions={'done': 'Seizure'},
+										autonomy={'done': Autonomy.High})
 
 			# x:1124 y:445
 			OperatableStateMachine.add('Seizure',
@@ -275,9 +275,9 @@ class DiscordGreetingSM(Behavior):
 
 			# x:127 y:254
 			OperatableStateMachine.add('SayIamAlive',
-										TextCommandState(topic='/sweetie_bot/voice/voice', type='voice/play_wav', command='01alive'),
-										transitions={'done': 'WaitSayIamAlive', 'failed': 'finished'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='01alive', topic='/sweetie_bot/voice/voice'),
+										transitions={'done': 'WaitSayIamAlive'},
+										autonomy={'done': Autonomy.Off})
 
 
 		return _state_machine

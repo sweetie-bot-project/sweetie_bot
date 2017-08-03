@@ -76,9 +76,9 @@ class sweetie_bot_flexbe_testSM(Behavior):
 
 			# x:136 y:518
 			OperatableStateMachine.add('SingASong',
-										TextCommandState(topic='voice/voice', type='voice/play_wav', command='song'),
-										transitions={'done': 'finished', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Full, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='song', topic='voice/voice'),
+										transitions={'done': 'finished'},
+										autonomy={'done': Autonomy.Full})
 
 			# x:882 y:207
 			OperatableStateMachine.add('RandEyes',

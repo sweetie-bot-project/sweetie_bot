@@ -49,7 +49,7 @@ class CheerSM(Behavior):
 	def create(self):
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
 		voice_topic = 'voice/voice'
-		storage = '/stored/joint_trajectory/'
+		storage = 'joint_trajectory/'
 		# x:901 y:554, x:895 y:38
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['be_evil'])
 		_state_machine.userdata.be_evil = self.be_evil
@@ -77,9 +77,9 @@ class CheerSM(Behavior):
 
 			# x:325 y:57
 			OperatableStateMachine.add('SayMaximumFun',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='fun_level'),
-										transitions={'done': 'Prance', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='fun_level', topic=voice_topic),
+										transitions={'done': 'Prance'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:579 y:498
 			OperatableStateMachine.add('HoofStamp',
@@ -90,9 +90,9 @@ class CheerSM(Behavior):
 
 			# x:309 y:437
 			OperatableStateMachine.add('SayDoNotTouch',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='05donottouch'),
-										transitions={'done': 'PointHoof', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='05donottouch', topic=voice_topic),
+										transitions={'done': 'PointHoof'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:88 y:447
 			OperatableStateMachine.add('RandomChoice',
@@ -103,9 +103,9 @@ class CheerSM(Behavior):
 
 			# x:303 y:543
 			OperatableStateMachine.add('SayWalk',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='17walk'),
-										transitions={'done': 'Wait1', 'failed': 'finished'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='17walk', topic=voice_topic),
+										transitions={'done': 'Wait1'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:467 y:539
 			OperatableStateMachine.add('Wait1',

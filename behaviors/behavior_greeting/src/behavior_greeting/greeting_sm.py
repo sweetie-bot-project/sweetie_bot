@@ -8,11 +8,11 @@
 
 import roslib; roslib.load_manifest('behavior_greeting')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from flexbe_states.decision_state import DecisionState
+from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.wait_state import WaitState
-from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
+from flexbe_states.decision_state import DecisionState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import random
@@ -50,7 +50,7 @@ class GreetingSM(Behavior):
 	def create(self):
 		voice_topic = 'voice/voice'
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
-		storage = '/stored/joint_trajectory/'
+		storage = 'joint_trajectory/'
 		# x:877 y:505, x:887 y:13
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['be_evil'])
 		_state_machine.userdata.be_evil = self.be_evil
@@ -78,9 +78,9 @@ class GreetingSM(Behavior):
 
 			# x:314 y:336
 			OperatableStateMachine.add('SayBlaster',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='18blaster'),
-										transitions={'done': 'HoofStamp', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='18blaster', topic=voice_topic),
+										transitions={'done': 'HoofStamp'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:506 y:290
 			OperatableStateMachine.add('HoofStamp',
@@ -91,9 +91,9 @@ class GreetingSM(Behavior):
 
 			# x:318 y:135
 			OperatableStateMachine.add('SayInitAcquitance',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='11friendship'),
-										transitions={'done': 'Greeting', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='11friendship', topic=voice_topic),
+										transitions={'done': 'Greeting'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:513 y:136
 			OperatableStateMachine.add('Greeting',
@@ -109,7 +109,7 @@ class GreetingSM(Behavior):
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
-			# x:514 y:212
+			# x:513 y:210
 			OperatableStateMachine.add('HeadSuprised',
 										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'head_suprised'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
@@ -118,27 +118,27 @@ class GreetingSM(Behavior):
 
 			# x:320 y:439
 			OperatableStateMachine.add('SayControlYour',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='32rule'),
-										transitions={'done': 'Wait1', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='32rule', topic=voice_topic),
+										transitions={'done': 'Wait1'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:321 y:211
 			OperatableStateMachine.add('SayHello',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='00irobot'),
-										transitions={'done': 'HeadSuprised', 'failed': 'finished'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='00irobot', topic=voice_topic),
+										transitions={'done': 'HeadSuprised'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:314 y:576
 			OperatableStateMachine.add('SayLesserBiologicalForm',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='29attention'),
-										transitions={'done': 'Rejection', 'failed': 'finished'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='29attention', topic=voice_topic),
+										transitions={'done': 'Rejection'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:316 y:53
 			OperatableStateMachine.add('SayIRobot',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='24hello_activate'),
-										transitions={'done': 'IntroduceHerself', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='24hello_activate', topic=voice_topic),
+										transitions={'done': 'IntroduceHerself'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:480 y:409
 			OperatableStateMachine.add('Wait1',

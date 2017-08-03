@@ -117,9 +117,9 @@ class SweetieOnPoniRebrikSM(Behavior):
 
 			# x:550 y:467
 			OperatableStateMachine.add('AskForAssistance',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='assistance'),
-										transitions={'done': 'failed', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='assistance', topic=voice_topic),
+										transitions={'done': 'failed'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:440 y:126
 			OperatableStateMachine.add('WaitForMovementFinish',
@@ -142,15 +142,15 @@ class SweetieOnPoniRebrikSM(Behavior):
 
 			# x:27 y:219
 			OperatableStateMachine.add('RedEyes',
-										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='red_eyes'),
-										transitions={'done': 'IdleBehavior', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='eyes/emotion', command='red_eyes', topic=eyes_topic),
+										transitions={'done': 'IdleBehavior'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:222 y:65
 			OperatableStateMachine.add('NormalEyes',
-										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='normal'),
-										transitions={'done': 'IdleBehavior', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='eyes/emotion', command='normal', topic=eyes_topic),
+										transitions={'done': 'IdleBehavior'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:481 y:305
 			OperatableStateMachine.add('IdleBehavior',
@@ -167,15 +167,15 @@ class SweetieOnPoniRebrikSM(Behavior):
 
 			# x:188 y:294
 			OperatableStateMachine.add('EvilLook',
-										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='evil_look'),
-										transitions={'done': 'WaitForMovementFinish', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='eyes/emotion', command='evil_look', topic=eyes_topic),
+										transitions={'done': 'WaitForMovementFinish'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:880 y:311
 			OperatableStateMachine.add('NormalLook',
-										TextCommandState(topic=eyes_topic, type='eyes/emotion', command='normal_look'),
-										transitions={'done': 'IdleBehavior', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='eyes/emotion', command='normal_look', topic=eyes_topic),
+										transitions={'done': 'IdleBehavior'},
+										autonomy={'done': Autonomy.Off})
 
 
 		return _state_machine

@@ -124,9 +124,9 @@ Robot is assumed to be standing on four legs.
 
 			# x:877 y:246
 			OperatableStateMachine.add('SayHello',
-										TextCommandState(topic='voice/voice', type='voice/play_wav', command='00irobot'),
-										transitions={'done': 'Wait', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='00irobot', topic='voice/voice'),
+										transitions={'done': 'Wait'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:615 y:51
 			OperatableStateMachine.add('RaiseHead',

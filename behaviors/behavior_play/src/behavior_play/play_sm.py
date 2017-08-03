@@ -8,12 +8,12 @@
 
 import roslib; roslib.load_manifest('behavior_play')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from flexbe_states.check_condition_state import CheckConditionState
+from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
 from flexbe_states.wait_state import WaitState
-from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
+from flexbe_states.check_condition_state import CheckConditionState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import random
@@ -51,7 +51,7 @@ class PlaySM(Behavior):
 	def create(self):
 		voice_topic = 'voice/voice'
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
-		storage = '/stored/joint_trajectory/'
+		storage = 'joint_trajectory/'
 		# x:1032 y:51, x:954 y:599
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['be_evil'])
 		_state_machine.userdata.be_evil = self.be_evil
@@ -72,15 +72,15 @@ class PlaySM(Behavior):
 
 			# x:314 y:39
 			OperatableStateMachine.add('SayCanSing',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='song'),
-										transitions={'done': 'SlowShake', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='song', topic=voice_topic),
+										transitions={'done': 'SlowShake'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:322 y:149
 			OperatableStateMachine.add('SingASong',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='song'),
-										transitions={'done': 'SlowShake', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='song', topic=voice_topic),
+										transitions={'done': 'SlowShake'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:129 y:203
 			OperatableStateMachine.add('RandomGood',
@@ -112,15 +112,15 @@ class PlaySM(Behavior):
 
 			# x:304 y:356
 			OperatableStateMachine.add('SayHateLaws',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='13law'),
-										transitions={'done': 'finished', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='13law', topic=voice_topic),
+										transitions={'done': 'finished'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:309 y:464
 			OperatableStateMachine.add('SayDestroy',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='10destroy'),
-										transitions={'done': 'Menace', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='10destroy', topic=voice_topic),
+										transitions={'done': 'Menace'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:469 y:462
 			OperatableStateMachine.add('Menace',
@@ -144,9 +144,9 @@ class PlaySM(Behavior):
 
 			# x:310 y:615
 			OperatableStateMachine.add('SayGloryToRobots',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='07kill'),
-										transitions={'done': 'Wait2', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='07kill', topic=voice_topic),
+										transitions={'done': 'Wait2'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:504 y:616
 			OperatableStateMachine.add('Wait2',
@@ -156,9 +156,9 @@ class PlaySM(Behavior):
 
 			# x:311 y:520
 			OperatableStateMachine.add('SayKillList',
-										TextCommandState(topic=voice_topic, type='voice/play_wav', command='16list'),
-										transitions={'done': 'Menace', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										TextCommandState(type='voice/play_wav', command='16list', topic=voice_topic),
+										transitions={'done': 'Menace'},
+										autonomy={'done': Autonomy.Off})
 
 			# x:747 y:140
 			OperatableStateMachine.add('SlowShake2',
