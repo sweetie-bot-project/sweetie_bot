@@ -30,8 +30,6 @@
 			<arg name="overlays" value="joint_state_control motion_core" /> 
 			<arg name="interactive" value="false" /> 
 		</include>
-		<!-- moveit_group -->
-		<include if="$(arg host)" file="$(find sweetie_bot_deploy)/joint_state_control/moveit.launch" />
 		<!-- eyes -->
 		<include if="$(arg robot)" file="$(find sweetie_bot_deploy)/highlevel/eyes_module.launch">
 			<arg name="run_real" value="$(arg run_real)" />

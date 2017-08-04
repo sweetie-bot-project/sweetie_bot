@@ -8,6 +8,12 @@
 	<!-- run behavior node -->
 	<node if="$(arg run_behavior)" ns="$(arg behavior_ns)" name="behavior" pkg="flexbe_onboard" type="start_behavior" respawn="true">
 		<param name="behaviors_package" value="$(arg behaviors_package)" />
+		<!-- common remaps to current namespace -->
+		<remap from="/tf" to="tf"/>
+		<remap from="/tf_static" to="tf_static"/>
+		<remap from="/joint_states" to="joint_states"/>
+		<remap from="/robot_description" to="robot_description"/>
+		<remap from="/robot_description_semantic" to="robot_description_semantic"/>
 	</node>
 
 	<!-- mapping for behavior node in another namespace -->
