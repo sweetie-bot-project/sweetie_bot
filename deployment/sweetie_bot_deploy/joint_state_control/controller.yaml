@@ -15,6 +15,8 @@ controller:
             transient_time_override: [ 0.3, 0.3 ]
     joint_trajectory: 
         priority: 20
+        transient_joint_state_exp:
+            transient_time: 0.5
     torque_off: 
         priority: 20
         herkulex_scheds: [ herkulex/sched ]
