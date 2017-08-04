@@ -97,7 +97,7 @@ class SweetieBotOnChequesruiaSM(Behavior):
 
 			# x:463 y:95
 			OperatableStateMachine.add('FollowObject',
-										SweetieBotFollowHeadPoseSmart(pose_topic=leap_pose_topic, follow_joint_state_controller='joint_state_head', discomfort_time=4, neck_control_parameteres=[-0.13,0.3,0.20,0.2], deactivate=True, controlled_chains=['eyes']),
+										SweetieBotFollowHeadPoseSmart(pose_topic=leap_pose_topic, follow_joint_state_controller='joint_state_head', discomfort_time=4, neck_control_parameteres=[-0.13,0.3,0.20,0.2], deactivate=True, controlled_chains=['eyes','head']),
 										transitions={'failed': 'failure', 'too_close': 'too_close'},
 										autonomy={'failed': Autonomy.Off, 'too_close': Autonomy.Off})
 

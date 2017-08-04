@@ -8,14 +8,14 @@
 
 import roslib; roslib.load_manifest('behavior_brohoof')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from flexbe_states.calculation_state import CalculationState
+from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.moveit_to_pose import MoveitToPose
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from flexbe_states.wait_state import WaitState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_manipulation_states.moveit_to_joints_state import MoveitToJointsState
 from flexbe_manipulation_states.get_joint_values_state import GetJointValuesState
-from flexbe_states.decision_state import DecisionState
+from flexbe_states.calculation_state import CalculationState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import math
@@ -65,7 +65,7 @@ Robot is assumed to be standing on four legs.
 	def create(self):
 		# x:321 y:391, x:319 y:225, x:1010 y:659
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'unreachable', 'failed'], input_keys=['pose'])
-		_state_machine.userdata.pose = PoseStamped(Header(frame_id = 'base_link'), Pose(Point(0.042, -0.200, 0.108), Quaternion(0.1137, -0.0058, 0.0081, 0.9934)))
+		_state_machine.userdata.pose = PoseStamped(Header(frame_id = 'base_link'), Pose(Point(0.03, -0.20, 0.1431), Quaternion(0, 0, 0, 1)))
 		_state_machine.userdata.joint53_pose = [ self.neck_angle ]
 
 		# Additional creation code can be added inside the following tags
@@ -84,9 +84,9 @@ Robot is assumed to be standing on four legs.
 
 			# x:286 y:54
 			OperatableStateMachine.add('CheckReacibility',
-										MoveitToPose(move_group='leg1', plan_only=True, position_tolerance=0.001, orientation_tolerance=0.001),
+										MoveitToPose(move_group='leg1', plan_only=True, position_tolerance=0.005, orientation_tolerance=0.001),
 										transitions={'reached': 'GetHeadPose', 'planning_failed': 'unreachable', 'control_failed': 'failed'},
-										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off},
+										autonomy={'reached': Autonomy.High, 'planning_failed': Autonomy.High, 'control_failed': Autonomy.Off},
 										remapping={'pose': 'pose'})
 
 			# x:870 y:62
@@ -187,7 +187,7 @@ Robot is assumed to be standing on four legs.
                 return None
 
             # move point forward along Oy of base_link
-            output_pose.pose.position = Point(input_pose.pose.position.x, input_pose.pose.position.y + self.hoof_shift, input_pose.pose.position.z)
+            output_pose.pose.position = Point(output_pose.pose.position.x, output_pose.pose.position.y + self.hoof_shift, output_pose.pose.position.z)
             # output_pose.pose.orientation = quaternion_about_axis([1, 0, 0], math.pi/2) * input_pose.pose.orientation
             output_pose.pose.orientation = Quaternion(0, 0, 0, 1)
             Logger.loginfo('calculateTargetPoseFunc: target hoof pose: %s' % str(output_pose))
