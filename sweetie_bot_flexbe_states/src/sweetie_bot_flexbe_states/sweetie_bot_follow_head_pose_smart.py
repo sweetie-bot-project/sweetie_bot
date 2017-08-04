@@ -27,7 +27,7 @@ class SweetieBotFollowHeadPoseSmart(EventState):
     -- follow_joint_state_controller         string          FollowJointState controller name without prefix.
     -- discomfort_time                       boolean         If distance beetween head and object is less then `distance_uncomfortable` for `discomfort_time` seconds then `too_close` outcome is triggered.
     -- neck_control_parameteres              float[]         [ neck_angle_cofortable, distance_comfortable, neck_angle_uncofortable, distance_uncomfortable ] 
-    -- deactivate                            boolean         Deactivate controller on stop/exit.
+    -- deactivate                            boolean         Deactivate controller on exit state.
     -- controlled_chains                     string[]        List of controlled kinematics chains, may contains 'head', 'eyes'.
 
     <= failed 	                    Unable to activate state (controller is unavailable and etc)
@@ -127,7 +127,7 @@ class SweetieBotFollowHeadPoseSmart(EventState):
                     else:
                         self._comfortable_stamp = rospy.Time.now()
                 except tf.Exception as e:
-                    Logger.logwarn('SweetieBotFollowHeadLeapMotion: Cannot transform to bone54:\n%s' % str(e))
+                    Logger.logwarn('SweetieBotFollowHeadPoseSmart: Cannot transform to bone54:\n%s' % str(e))
                     self._neck_angle = self._neck_params[0]
                 # calculate head pose for given angle
                 head_joints_msg = self._ik.pointDirectionToHeadPose(focus_point, self._neck_angle, 0.0)
@@ -148,13 +148,16 @@ class SweetieBotFollowHeadPoseSmart(EventState):
                 # publish pose
                 self._joints_publisher.publish(self._controller + '/in_joints_ref', eyes_joints_msg)
 
-    def on_stop(self):
+    def on_exit(self, userdata):
         if self._deactivate:
-            try: 
-                res = self._set_operational_caller.call(self._controller + '/set_operational', False)
-            except Exception as e:
-                Logger.logwarn('SweetieBotFollowHeadLeapMotion: Failed to deactivate `' + self._controller + '` controller:\n%s' % str(e))
-            Logger.loginfo('SweetieBotFollowHeadLeapMotion: controller `{0}` is deactivated.'.format(self._controller))
+            self.on_stop()
+
+    def on_stop(self):
+        try: 
+            res = self._set_operational_caller.call(self._controller + '/set_operational', False)
+        except Exception as e:
+            Logger.logwarn('SweetieBotFollowHeadPoseSmart: Failed to deactivate `' + self._controller + '` controller:\n%s' % str(e))
+        Logger.loginfo('SweetieBotFollowHeadPoseSmart: controller `{0}` is deactivated.'.format(self._controller))
 
 
 
