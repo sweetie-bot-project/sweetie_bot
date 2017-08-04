@@ -7,7 +7,7 @@
 	<group if="$(arg run_real)">
 		<remap from="joint_states" to="motion/agregator_ref/out_joints_sorted" />
 
-		<node machine="sweetiebot" name="eye_left"  pkg="sweetie_bot_eyes" type="eye" args="-platform linuxfb:fb=/dev/fb1 -plugin EvdevKeyboard"></node>
+		<node machine="sweetiebot" name="eye_left"  pkg="sweetie_bot_eyes" type="eye" args="-l -platform linuxfb:fb=/dev/fb1 -plugin EvdevKeyboard"></node>
 		<node machine="sweetiebot" name="eye_rigth" pkg="sweetie_bot_eyes" type="eye" args="-r -platform linuxfb:fb=/dev/fb2 -plugin EvdevKeyboard"></node>
 	</group>
 	<!-- run eyes in windows -->
