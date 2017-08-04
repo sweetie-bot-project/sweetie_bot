@@ -12,5 +12,8 @@
   <run_depend>rospy</run_depend>
   <run_depend>flexbe_core</run_depend>
   <run_depend>sweetie_bot_text_msgs</run_depend>
+  <run_depend>tf_conversions</run_depend>
+  <run_depend>moveit_msgs</run_depend>
+  <run_depend>moveit_commander</run_depend>
 
 </package>
