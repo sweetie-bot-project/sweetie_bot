@@ -61,10 +61,10 @@ class BadSM(Behavior):
 
 
 		with _state_machine:
-			# x:70 y:242
-			OperatableStateMachine.add('StandFrontLegs',
-										SrdfStateToMoveit(config_name='stand_front', move_group='legs_front', action_topic='move_group', robot_name=''),
-										transitions={'reached': 'CheckEvil', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+			# x:72 y:306
+			OperatableStateMachine.add('MovwStandPose',
+										SrdfStateToMoveit(config_name='stand', move_group='legs', action_topic='move_group', robot_name=''),
+										transitions={'reached': 'CheckEvil', 'planning_failed': 'MoveStandPose2', 'control_failed': 'MoveStandPose2', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
@@ -120,6 +120,13 @@ class BadSM(Behavior):
 										transitions={'good': 'RandomChoiceGood', 'evil': 'SayDoNotTouch'},
 										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
 										remapping={'input_value': 'be_evil'})
+
+			# x:129 y:436
+			OperatableStateMachine.add('MoveStandPose2',
+										SrdfStateToMoveit(config_name='stand', move_group='', action_topic='move_group', robot_name=''),
+										transitions={'reached': 'CheckEvil', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
+										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
 
 		return _state_machine
