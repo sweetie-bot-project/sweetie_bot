@@ -57,7 +57,7 @@ class HeadIK:
         try:
             # convert point coordinates to base_link frame
             point_stamped = self._tf.transformPoint('base_link', PointStamped(header = Header(frame_id = point_stamped.header.frame_id), point = point_stamped.point))
-        except tf.Exception:
+        except tf.Exception as e:
             Logger.logwarn('Cannot transform to base_link:\n%s' % str(e))
             return None 
 
