@@ -28,7 +28,17 @@ Robot is assumed to be standing on four legs.
 			<max value="3.14" />
 		</param>
 
-		<param type="numeric" name="hoof_shift" default="0" label="hoof_shift" hint="Hoof shift toward sweetie from object center during greeting.">
+		<param type="numeric" name="hoof_shift" default="0" label="hoof_shift" hint="DEPRECATED. Hoof shift toward sweetie from object center during greeting.">
+			<min value="0" />
+			<max value="1" />
+		</param>
+
+		<param type="numeric" name="brohoof_cone" default="0.78" label="brohoof_cone" hint="Do not perform brohoof if angle beetwen direction from shoulder1 to object and robot direction projected on horizontal plane is greater than this value.">
+			<min value="0" />
+			<max value="1.57" />
+		</param>
+
+		<param type="numeric" name="brohof_upper_limit" default="0.30" label="brohof_upper_limit" hint="Do not perform brohoof if object is higher then this value (meters).">
 			<min value="0" />
 			<max value="1" />
 		</param>

@@ -49,6 +49,8 @@ Robot is assumed to be standing on four legs.
 		self.add_parameter('wait_time', 3)
 		self.add_parameter('neck_angle', 0.25)
 		self.add_parameter('hoof_shift', 0)
+		self.add_parameter('brohoof_cone', 0.78)
+		self.add_parameter('brohof_upper_limit', 0.30)
 
 		# references to used behaviors
 
@@ -66,7 +68,7 @@ Robot is assumed to be standing on four legs.
 	def create(self):
 		# x:321 y:391, x:331 y:223, x:1010 y:659
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'unreachable', 'failed'], input_keys=['pose'])
-		_state_machine.userdata.pose = PoseStamped(Header(frame_id = 'base_link'), Pose(Point(0.1, -0.40, 0.25), Quaternion(0, 0, 0, 1)))
+		_state_machine.userdata.pose = PoseStamped(Header(frame_id = 'base_link'), Pose(Point(-0.1, -0.40, 0.25), Quaternion(0, 0, 0, 1)))
 		_state_machine.userdata.joint53_pose = [ self.neck_angle ]
 
 		# Additional creation code can be added inside the following tags
@@ -223,20 +225,27 @@ Robot is assumed to be standing on four legs.
 	            output_pose.pose.orientation = Quaternion(0, 0, 0, 1)
 	        # Set target position
 	        # Check if boundarie is sane
-	        if pos.z > 0.30 or pos.z < 0.10: 
+	        if pos.z > self.brohof_upper_limit or pos.z < 0.10: 
 	            # too high or to low
 	            return None
 	        if pos.y > -0.25:
 	            # too close
                     return None
+                # Move to shoulder1 point
+                pos.x -= 0.041
+                pos.y += 0.034
+                # Check if angle is out of 45 cone
+                if abs(math.atan2(pos.x,-pos.y)) > self.brohoof_cone:
+                    # out of cone
+                    return None
 	        # Project x coordinate to y = -0.225+0.034 in coordinates of leg1 base
-	        pos.x = (pos.x - 0.041)*((-0.225+0.034)/(pos.y+0.034)) + 0.041
-	        Logger.loginfo('calculateTargetPoseFunc2: x = %s' % str(pos.x))
-	        # Check if projection pose is in reachibility zone
-	        if pos.x < -0.03 or pos.y > 0.12:
-	            return None
+	        pos.x = pos.x*((-0.225+0.034)/pos.y)
+                # Return to base_link frame 
+                pos.x += 0.041
 	        pos.y = -0.225
 	        pos.z = 0.162
+	        # Clamp to reachibility zone
+                pos.x = numpy.clip(pos.x, -0.03, 0.12)
 	        # done: pose must be reachable
 	        Logger.loginfo('calculateTargetPoseFunc2: target hoof pose: %s' % str(output_pose))
 	        return output_pose
