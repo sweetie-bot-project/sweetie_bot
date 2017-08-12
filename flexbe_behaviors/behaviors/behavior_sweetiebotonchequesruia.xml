@@ -28,9 +28,9 @@
 			<max value="1" />
 		</param>
 
-		<param type="numeric" name="play_timeout" default="6" label="play_timeout" hint="Timeout between play actions.">
+		<param type="numeric" name="play_timeout" default="12" label="play_timeout" hint="Timeout between play actions.">
 			<min value="0" />
-			<max value="20" />
+			<max value="120" />
 		</param>
 
 	</params>

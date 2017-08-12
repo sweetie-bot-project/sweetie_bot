@@ -45,7 +45,7 @@ class SweetieBotOnChequesruiaSM(Behavior):
 
 		# parameters of this behavior
 		self.add_parameter('hoof_shift', 0)
-		self.add_parameter('play_timeout', 6)
+		self.add_parameter('play_timeout', 12)
 
 		# references to used behaviors
 		self.add_behavior(BrohoofSM, 'Brohoof')
@@ -67,7 +67,7 @@ class SweetieBotOnChequesruiaSM(Behavior):
 		eyes_cmd_topic = 'control'
 		voice_topic = 'voice/voice'
 		leap_pose_topic = '/hmi/leap_motion/pose'
-		# x:19 y:523, x:989 y:651
+		# x:286 y:634, x:989 y:651
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 		_state_machine.userdata.be_evil = False
 		_state_machine.userdata.pose = PoseStamped()
@@ -97,7 +97,7 @@ class SweetieBotOnChequesruiaSM(Behavior):
 
 			# x:463 y:95
 			OperatableStateMachine.add('FollowObject',
-										SweetieBotFollowHeadPoseSmart(pose_topic=leap_pose_topic, follow_joint_state_controller='joint_state_head', discomfort_time=4, neck_control_parameteres=[-0.13,0.3,0.20,0.2], deactivate=True, controlled_chains=['eyes']),
+										SweetieBotFollowHeadPoseSmart(pose_topic=leap_pose_topic, follow_joint_state_controller='joint_state_head', discomfort_time=4, neck_control_parameteres=[-0.13,0.3,0.20,0.2], deactivate=True, controlled_chains=['eyes','head']),
 										transitions={'failed': 'failure', 'too_close': 'too_close'},
 										autonomy={'failed': Autonomy.Off, 'too_close': Autonomy.Off})
 

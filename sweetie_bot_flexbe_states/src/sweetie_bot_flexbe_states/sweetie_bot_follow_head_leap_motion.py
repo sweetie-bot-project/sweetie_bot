@@ -24,7 +24,7 @@ class SweetieBotFollowHeadLeapMotion(EventState):
     -- focus_point_topic                     string          Topic to publish focus point for vizualizaton purpose (may be Empty).
     -- follow_joint_state_controller         string          FollowJointState controller name.
     -- neck_angle                            float           Joint51 angle (neck base angle).
-    -- deactivate                            boolean         Deactivate controller on stop/exit.
+    -- deactivate                            boolean         Deactivate controller on exit.
 
     <= failed 	                    Unable to activate state (controller is unavailable and etc)
 
@@ -106,13 +106,16 @@ class SweetieBotFollowHeadLeapMotion(EventState):
                 # publish pose
                 self._joints_publisher.publish(self._controller + '/in_joints_ref', eye_joints_msg)
 
-    def on_stop(self):
+    def on_exit(self, userdata):
         if self._deactivate:
-            try: 
-                res = self._set_operational_caller.call(self._controller + '/set_operational', False)
-            except Exception as e:
-                Logger.logwarn('Failed to deactivate `' + self._controller + '` controller:\n%s' % str(e))
-            Logger.loginfo('SweetieBotFollowHeadLeapMotion: controller `{0}` is deactivated.'.format(self._controller))
+            self.on_stop()
+
+    def on_stop(self):
+        try: 
+            res = self._set_operational_caller.call(self._controller + '/set_operational', False)
+        except Exception as e:
+            Logger.logwarn('Failed to deactivate `' + self._controller + '` controller:\n%s' % str(e))
+        Logger.loginfo('SweetieBotFollowHeadLeapMotion: controller `{0}` is deactivated.'.format(self._controller))
 
 
 

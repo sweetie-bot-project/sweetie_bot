@@ -66,7 +66,7 @@ class PlaySM(Behavior):
 			# x:17 y:69
 			OperatableStateMachine.add('MoveToStandPose',
 										SrdfStateToMoveit(config_name='stand', move_group='all', action_topic='move_group', robot_name=''),
-										transitions={'reached': 'CheckEvil', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										transitions={'reached': 'CheckEvil', 'planning_failed': 'MoveToStandPose2', 'control_failed': 'MoveToStandPose2', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
@@ -82,7 +82,7 @@ class PlaySM(Behavior):
 										transitions={'done': 'SlowShake'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:129 y:203
+			# x:160 y:290
 			OperatableStateMachine.add('RandomGood',
 										DecisionState(outcomes=['good1','good2', 'good3'], conditions=lambda x: random.choice(['good1','good2', 'good3'])),
 										transitions={'good1': 'SayCanSing', 'good2': 'SingASong', 'good3': 'SayFun'},
@@ -103,14 +103,14 @@ class PlaySM(Behavior):
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
-			# x:65 y:375
+			# x:78 y:497
 			OperatableStateMachine.add('RandomEvil',
 										DecisionState(outcomes=['evil1','evil2','evil3', 'evil4','evil5'], conditions=lambda x: random.choice(['evil1','evil2','evil3', 'evil4','evil5'])),
 										transitions={'evil1': 'SayHateLaws', 'evil2': 'SayDestroy', 'evil3': 'SayGloryToRobots', 'evil4': 'SayKillList', 'evil5': 'SayWalk'},
 										autonomy={'evil1': Autonomy.Low, 'evil2': Autonomy.Low, 'evil3': Autonomy.Low, 'evil4': Autonomy.Low, 'evil5': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
-			# x:304 y:356
+			# x:311 y:392
 			OperatableStateMachine.add('SayHateLaws',
 										TextCommandState(type='voice/play_wav', command='13law', topic=voice_topic),
 										transitions={'done': 'finished'},
@@ -167,7 +167,7 @@ class PlaySM(Behavior):
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
-			# x:15 y:275
+			# x:11 y:373
 			OperatableStateMachine.add('CheckEvil',
 										CheckConditionState(predicate=lambda x: x),
 										transitions={'true': 'RandomEvil', 'false': 'RandomGood'},
@@ -183,7 +183,7 @@ class PlaySM(Behavior):
 			# x:483 y:159
 			OperatableStateMachine.add('Prance',
 										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'prance'),
-										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'Prance', 'failure': 'failed'},
+										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
@@ -205,6 +205,13 @@ class PlaySM(Behavior):
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
+
+			# x:59 y:163
+			OperatableStateMachine.add('MoveToStandPose2',
+										SrdfStateToMoveit(config_name='stand', move_group='all', action_topic='move_group', robot_name=''),
+										transitions={'reached': 'CheckEvil', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
+										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
 
 		return _state_machine
