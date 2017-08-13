@@ -63,7 +63,7 @@ class BadSM(Behavior):
 		with _state_machine:
 			# x:72 y:306
 			OperatableStateMachine.add('MovwStandPose',
-										SrdfStateToMoveit(config_name='stand', move_group='legs', action_topic='move_group', robot_name=''),
+										SrdfStateToMoveit(config_name='head_basic', move_group='head', action_topic='move_group', robot_name=''),
 										transitions={'reached': 'CheckEvil', 'planning_failed': 'MoveStandPose2', 'control_failed': 'MoveStandPose2', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
@@ -123,7 +123,7 @@ class BadSM(Behavior):
 
 			# x:129 y:436
 			OperatableStateMachine.add('MoveStandPose2',
-										SrdfStateToMoveit(config_name='stand', move_group='', action_topic='move_group', robot_name=''),
+										SrdfStateToMoveit(config_name='head_basic', move_group='head', action_topic='move_group', robot_name=''),
 										transitions={'reached': 'CheckEvil', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
