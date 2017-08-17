@@ -58,13 +58,20 @@ class CZequestriaPresentationMenaceSM(Behavior):
 			# x:30 y:40
 			OperatableStateMachine.add('SayMenace',
 										TextCommandState(type='voice/play_wav', command='fear', topic='voice/voice'),
-										transitions={'done': 'MovmMenace'},
+										transitions={'done': 'MoveApplause'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:30 y:110
-			OperatableStateMachine.add('MovmMenace',
+			# x:321 y:156
+			OperatableStateMachine.add('MoveMenace',
 										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
+
+			# x:28 y:114
+			OperatableStateMachine.add('MoveApplause',
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'applause'),
+										transitions={'success': 'MoveMenace', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
