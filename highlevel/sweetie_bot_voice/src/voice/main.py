@@ -37,7 +37,7 @@ def main():
     rospy.init_node('voice', anonymous = True)
     rospy.Subscriber("voice", TextCommand, commandCallback)
 
-    lang_prefix = rospy.get_param('~lang', 'ru')
+    lang_prefix = rospy.get_param('lang', 'ru')
 
     rospack = rospkg.RosPack()
     path = os.path.join(rospack.get_path('sweetie_bot_voice'), 'sounds' , lang_prefix)
