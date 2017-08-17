@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="CZequestriaPresentationGreeting">
+
+	<executable package_path="behavior_czequestriapresentationgreeting.czequestriapresentationgreeting_sm" class="CZequestriaPresentationGreetingSM" />
+	<tagstring>sweetiebot, greeting, presentation</tagstring>
+	<author>mutronics</author>
+	<date>Thu Aug 17 2017</date>
+	<description>
+		Presentation greeting behavior for CZequestria
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+
+</behavior>
