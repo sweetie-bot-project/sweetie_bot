@@ -55,10 +55,10 @@ class CZequestriaPresentationGreetingSM(Behavior):
 
 
 		with _state_machine:
-			# x:105 y:53
-			OperatableStateMachine.add('SayGreeting',
-										TextCommandState(type='voice/play_wav', command='see_you_here', topic='voice/voice'),
-										transitions={'done': 'GreetingMove'},
+			# x:34 y:36
+			OperatableStateMachine.add('SetNormalEyes',
+										TextCommandState(type='eyes/emotion', command='normal', topic='control'),
+										transitions={'done': 'SayGreeting'},
 										autonomy={'done': Autonomy.Off})
 
 			# x:40 y:171
@@ -67,6 +67,12 @@ class CZequestriaPresentationGreetingSM(Behavior):
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
+
+			# x:186 y:77
+			OperatableStateMachine.add('SayGreeting',
+										TextCommandState(type='voice/play_wav', command='see_you_here', topic='voice/voice'),
+										transitions={'done': 'GreetingMove'},
+										autonomy={'done': Autonomy.Off})
 
 
 		return _state_machine
