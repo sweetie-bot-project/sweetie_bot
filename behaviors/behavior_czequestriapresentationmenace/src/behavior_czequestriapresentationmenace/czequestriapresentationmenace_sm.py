@@ -22,7 +22,7 @@ Created on Thu Aug 17 2017
 '''
 class CZequestriaPresentationMenaceSM(Behavior):
 	'''
-	State machines memace for CZequestria presentation
+	State machines menace for CZequestria presentation
 	'''
 
 
@@ -56,14 +56,14 @@ class CZequestriaPresentationMenaceSM(Behavior):
 
 		with _state_machine:
 			# x:30 y:40
-			OperatableStateMachine.add('SayMeance',
-										TextCommandState(type='voice/play_wav', command='die', topic='voice/voice'),
-										transitions={'done': 'MoveMeance'},
+			OperatableStateMachine.add('SayMenace',
+										TextCommandState(type='voice/play_wav', command='fear', topic='voice/voice'),
+										transitions={'done': 'MovmMenace'},
 										autonomy={'done': Autonomy.Off})
 
 			# x:30 y:110
-			OperatableStateMachine.add('MoveMeance',
-										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'meance'),
+			OperatableStateMachine.add('MovmMenace',
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
