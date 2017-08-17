@@ -61,7 +61,7 @@ class CZequestriaPresentationMenaceSM(Behavior):
 										transitions={'done': 'MoveApplause'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:321 y:156
+			# x:547 y:257
 			OperatableStateMachine.add('MoveMenace',
 										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
@@ -71,9 +71,22 @@ class CZequestriaPresentationMenaceSM(Behavior):
 			# x:28 y:114
 			OperatableStateMachine.add('MoveApplause',
 										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'applause'),
-										transitions={'success': 'MoveMenace', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										transitions={'success': 'MoveBuck', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
+
+			# x:326 y:36
+			OperatableStateMachine.add('MoveBuck',
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'buck3'),
+										transitions={'success': 'SetRedEyes', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
+
+			# x:610 y:39
+			OperatableStateMachine.add('SetRedEyes',
+										TextCommandState(type='eyes/emotion', command='red_eyes', topic='control'),
+										transitions={'done': 'MoveMenace'},
+										autonomy={'done': Autonomy.Off})
 
 
 		return _state_machine
