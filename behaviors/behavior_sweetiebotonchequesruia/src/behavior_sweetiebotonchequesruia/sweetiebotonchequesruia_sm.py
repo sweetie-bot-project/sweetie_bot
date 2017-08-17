@@ -13,8 +13,8 @@ from behavior_brohoof.brohoof_sm import BrohoofSM
 from behavior_greeting.greeting_sm import GreetingSM
 from behavior_play.play_sm import PlaySM
 from flexbe_states.decision_state import DecisionState
-from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.calculation_state import CalculationState
+from behavior_switchevilmode.switchevilmode_sm import SwitchEvilModeSM
 from sweetie_bot_flexbe_states.leap_motion_monitor import LeapMotionMonitor
 from sweetie_bot_flexbe_states.sweetie_bot_follow_head_pose_smart import SweetieBotFollowHeadPoseSmart
 from behavior_bad.bad_sm import BadSM
@@ -52,6 +52,7 @@ class SweetieBotOnChequesruiaSM(Behavior):
 		self.add_behavior(BrohoofSM, 'Brohoof')
 		self.add_behavior(GreetingSM, 'Greeting')
 		self.add_behavior(PlaySM, 'Play')
+		self.add_behavior(SwitchEvilModeSM, 'SwitchEvil/SwitchEvilMode')
 		self.add_behavior(BadSM, 'Bad')
 
 		# Additional initialization code can be added inside the following tags
@@ -157,8 +158,8 @@ class SweetieBotOnChequesruiaSM(Behavior):
 										autonomy={'failed': Autonomy.Off, 'too_close': Autonomy.Off})
 
 
-		# x:979 y:146
-		_sm_switchevil_3 = OperatableStateMachine(outcomes=['finished'], input_keys=['be_evil'], output_keys=['be_evil'])
+		# x:979 y:146, x:969 y:327
+		_sm_switchevil_3 = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['be_evil'], output_keys=['be_evil'])
 
 		with _sm_switchevil_3:
 			# x:269 y:101
@@ -168,45 +169,26 @@ class SweetieBotOnChequesruiaSM(Behavior):
 										autonomy={'evil': Autonomy.Off, 'good': Autonomy.Off},
 										remapping={'input_value': 'be_evil'})
 
-			# x:435 y:63
+			# x:423 y:54
 			OperatableStateMachine.add('NewState1',
-										DecisionState(outcomes=['evil', 'good'], conditions=lambda x: 'good' if 0.8 < random.random() else 'evil'),
-										transitions={'evil': 'RedEyes', 'good': 'NormalEyes'},
-										autonomy={'evil': Autonomy.Off, 'good': Autonomy.Off},
-										remapping={'input_value': 'be_evil'})
+										CalculationState(calculation=lambda x: random.uniform() < 0.2),
+										transitions={'done': 'SwitchEvilMode'},
+										autonomy={'done': Autonomy.Off},
+										remapping={'input_value': 'be_evil', 'output_value': 'new_be_evil'})
 
-			# x:428 y:195
+			# x:425 y:159
 			OperatableStateMachine.add('NewState2',
-										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'good' if 0.8 > random.random() else 'evil'),
-										transitions={'good': 'NormalEyes', 'evil': 'RedEyes'},
-										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
-										remapping={'input_value': 'be_evil'})
-
-			# x:710 y:33
-			OperatableStateMachine.add('NormalEyes',
-										TextCommandState(type='eyes/emotion', command='normal', topic=eyes_cmd_topic),
-										transitions={'done': 'SetGood'},
-										autonomy={'done': Autonomy.Off})
-
-			# x:729 y:264
-			OperatableStateMachine.add('RedEyes',
-										TextCommandState(type='eyes/emotion', command='red_eyes', topic=eyes_cmd_topic),
-										transitions={'done': 'SetEvil'},
-										autonomy={'done': Autonomy.Off})
-
-			# x:953 y:257
-			OperatableStateMachine.add('SetEvil',
-										CalculationState(calculation=lambda x: True),
-										transitions={'done': 'finished'},
+										CalculationState(calculation=lambda x: random.uniform() < 0.2),
+										transitions={'done': 'SwitchEvilMode'},
 										autonomy={'done': Autonomy.Off},
-										remapping={'input_value': 'be_evil', 'output_value': 'be_evil'})
+										remapping={'input_value': 'be_evil', 'output_value': 'new_be_evil'})
 
-			# x:952 y:31
-			OperatableStateMachine.add('SetGood',
-										CalculationState(calculation=lambda x: False),
-										transitions={'done': 'finished'},
-										autonomy={'done': Autonomy.Off},
-										remapping={'input_value': 'be_evil', 'output_value': 'be_evil'})
+			# x:678 y:91
+			OperatableStateMachine.add('SwitchEvilMode',
+										self.use_behavior(SwitchEvilModeSM, 'SwitchEvil/SwitchEvilMode'),
+										transitions={'finished': 'finished', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
+										remapping={'be_evil': 'be_evil', 'new_be_evil': 'new_be_evil'})
 
 
 
@@ -242,8 +224,8 @@ class SweetieBotOnChequesruiaSM(Behavior):
 			# x:78 y:247
 			OperatableStateMachine.add('SwitchEvil',
 										_sm_switchevil_3,
-										transitions={'finished': 'WatchOnLeapMotionObject'},
-										autonomy={'finished': Autonomy.Inherit},
+										transitions={'finished': 'WatchOnLeapMotionObject', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'be_evil': 'be_evil'})
 
 			# x:387 y:6

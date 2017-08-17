@@ -72,18 +72,18 @@ class BadSM(Behavior):
 			OperatableStateMachine.add('RandomChoiceGood',
 										DecisionState(outcomes=['good1', 'good2'], conditions=lambda x: random.choice(['good1', 'good2'])),
 										transitions={'good1': 'SayOverflow', 'good2': 'SayDizzy'},
-										autonomy={'good1': Autonomy.Off, 'good2': Autonomy.Off},
+										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
 			# x:450 y:508
 			OperatableStateMachine.add('SayDoNotTouch',
-										TextCommandState(type='voice/play_wav', command='05donottouch', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='do_not_touch_me', topic=voice_topic),
 										transitions={'done': 'HoofStamp'},
 										autonomy={'done': Autonomy.Off})
 
 			# x:496 y:147
 			OperatableStateMachine.add('SayOverflow',
-										TextCommandState(type='voice/play_wav', command='27queue', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='you_are_using_software_incorrectly', topic=voice_topic),
 										transitions={'done': 'Applause'},
 										autonomy={'done': Autonomy.Off})
 
@@ -103,7 +103,7 @@ class BadSM(Behavior):
 
 			# x:495 y:227
 			OperatableStateMachine.add('SayDizzy',
-										TextCommandState(type='voice/play_wav', command='26dizziness', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='why_do_i_see_these_creatures', topic=voice_topic),
 										transitions={'done': 'NoHeadShake'},
 										autonomy={'done': Autonomy.Off})
 
@@ -118,7 +118,7 @@ class BadSM(Behavior):
 			OperatableStateMachine.add('CheckEvil',
 										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'evil' if x else 'good'),
 										transitions={'good': 'RandomChoiceGood', 'evil': 'SayDoNotTouch'},
-										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
+										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
 			# x:129 y:436

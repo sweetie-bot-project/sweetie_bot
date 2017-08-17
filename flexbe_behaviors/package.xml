@@ -23,4 +23,5 @@
   <run_depend>behavior_test_leap_motion</run_depend>
   <run_depend>behavior_sweetiebotonchequesruia</run_depend>
   <run_depend>behavior_brohoof</run_depend>
+  <run_depend>behavior_switchevilmode</run_depend>
 </package>
