@@ -104,8 +104,8 @@ class GreetingSM(Behavior):
 
 			# x:500 y:629
 			OperatableStateMachine.add('Rejection',
-										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'begone'),
-										transitions={'success': 'HoofStompRejection', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'begone3'),
+										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
@@ -142,7 +142,7 @@ class GreetingSM(Behavior):
 
 			# x:476 y:550
 			OperatableStateMachine.add('Wait1',
-										WaitState(wait_time=1),
+										WaitState(wait_time=0.3),
 										transitions={'done': 'PointOnHuman'},
 										autonomy={'done': Autonomy.Off})
 
@@ -176,7 +176,7 @@ class GreetingSM(Behavior):
 
 			# x:690 y:126
 			OperatableStateMachine.add('Wait2',
-										WaitState(wait_time=2),
+										WaitState(wait_time=3),
 										transitions={'done': 'BrohoofEnd'},
 										autonomy={'done': Autonomy.Off})
 

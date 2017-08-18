@@ -65,7 +65,7 @@ class PlaySM(Behavior):
 		with _state_machine:
 			# x:17 y:69
 			OperatableStateMachine.add('MoveToStandPose',
-										SrdfStateToMoveit(config_name='head_basic', move_group='head', action_topic='move_group', robot_name=''),
+										SrdfStateToMoveit(config_name='head_upright', move_group='head', action_topic='move_group', robot_name=''),
 										transitions={'reached': 'CheckEvil', 'planning_failed': 'MoveToStandPose2', 'control_failed': 'MoveToStandPose2', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
@@ -183,12 +183,12 @@ class PlaySM(Behavior):
 			# x:506 y:640
 			OperatableStateMachine.add('Wait4',
 										WaitState(wait_time=0.5),
-										transitions={'done': 'Prance'},
+										transitions={'done': 'HoofStamp'},
 										autonomy={'done': Autonomy.Off})
 
 			# x:671 y:625
-			OperatableStateMachine.add('Prance',
-										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'prance'),
+			OperatableStateMachine.add('HoofStamp',
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'hoof_stamp'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

@@ -75,7 +75,7 @@ class BadSM(Behavior):
 										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
-			# x:450 y:508
+			# x:416 y:537
 			OperatableStateMachine.add('SayDoNotTouch',
 										TextCommandState(type='voice/play_wav', command='do_not_touch_me', topic=voice_topic),
 										transitions={'done': 'HoofStamp'},
@@ -107,7 +107,7 @@ class BadSM(Behavior):
 										transitions={'done': 'NoHeadShake'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:616 y:500
+			# x:648 y:466
 			OperatableStateMachine.add('HoofStamp',
 										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'hoof_stamp'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
