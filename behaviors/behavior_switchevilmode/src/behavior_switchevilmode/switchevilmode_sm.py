@@ -10,7 +10,6 @@ import roslib; roslib.load_manifest('behavior_switchevilmode')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from flexbe_manipulation_states.moveit_to_joints_state import MoveitToJointsState
 from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
 from flexbe_states.calculation_state import CalculationState
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
@@ -83,21 +82,14 @@ class SwitchEvilModeSM(Behavior):
 
 			# x:426 y:48
 			OperatableStateMachine.add('RedEyes',
-										TextCommandState(type='eyes/emotion', command='red', topic=eye_cmd_topic),
-										transitions={'done': 'RotateHead'},
+										TextCommandState(type='eyes/emotion', command='red_eyes', topic=eye_cmd_topic),
+										transitions={'done': 'Seizure'},
 										autonomy={'done': Autonomy.Off})
-
-			# x:585 y:31
-			OperatableStateMachine.add('RotateHead',
-										MoveitToJointsState(move_group='head', joint_names=['joint51','joint52','joint53','joint54'], action_topic='move_group'),
-										transitions={'reached': 'Seizure', 'planning_failed': 'failed', 'control_failed': 'failed'},
-										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off},
-										remapping={'joint_config': 'head_crooked_pose'})
 
 			# x:737 y:30
 			OperatableStateMachine.add('Seizure',
-										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'bull'),
-										transitions={'success': 'NormalHead', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'seizure_evil'),
+										transitions={'success': 'SetEvil', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
@@ -107,13 +99,6 @@ class SwitchEvilModeSM(Behavior):
 										transitions={'done': 'finished'},
 										autonomy={'done': Autonomy.Off},
 										remapping={'input_value': 'be_evil', 'output_value': 'be_evil'})
-
-			# x:966 y:27
-			OperatableStateMachine.add('NormalHead',
-										SrdfStateToMoveit(config_name='head_basic', move_group='head', action_topic='move_group', robot_name=''),
-										transitions={'reached': 'SetEvil', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
-										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
-										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
 			# x:419 y:135
 			OperatableStateMachine.add('NormalEyes',
@@ -130,7 +115,7 @@ class SwitchEvilModeSM(Behavior):
 
 			# x:416 y:331
 			OperatableStateMachine.add('NormalEyes2',
-										TextCommandState(type='eyes/normal', command='normal', topic=eye_cmd_topic),
+										TextCommandState(type='eyes/emotion', command='normal', topic=eye_cmd_topic),
 										transitions={'done': 'HeadAssumeBasicPose'},
 										autonomy={'done': Autonomy.Off})
 
@@ -157,7 +142,7 @@ class SwitchEvilModeSM(Behavior):
 
 			# x:420 y:200
 			OperatableStateMachine.add('RedEyes2',
-										TextCommandState(type='eyes/emotion', command='red', topic=eye_cmd_topic),
+										TextCommandState(type='eyes/emotion', command='red_eyes', topic=eye_cmd_topic),
 										transitions={'done': 'finished'},
 										autonomy={'done': Autonomy.Off})
 
