@@ -45,7 +45,7 @@ class CZequestriaPresentationMenaceSM(Behavior):
 
 	def create(self):
 		storage = 'joint_trajectory/'
-		# x:30 y:322, x:130 y:322
+		# x:200 y:516, x:130 y:322
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 
 		# Additional creation code can be added inside the following tags
@@ -61,11 +61,11 @@ class CZequestriaPresentationMenaceSM(Behavior):
 										transitions={'done': 'MoveApplause'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:547 y:257
+			# x:664 y:212
 			OperatableStateMachine.add('MoveMenace',
 										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace'),
-										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
-										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										transitions={'success': 'EyesNormal', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Full, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
 			# x:28 y:114
@@ -87,6 +87,26 @@ class CZequestriaPresentationMenaceSM(Behavior):
 										TextCommandState(type='eyes/emotion', command='red_eyes', topic='control'),
 										transitions={'done': 'MoveMenace'},
 										autonomy={'done': Autonomy.Off})
+
+			# x:684 y:336
+			OperatableStateMachine.add('EyesNormal',
+										TextCommandState(type='eyes/emotion', command='normal', topic='control'),
+										transitions={'done': 'MoveMenaceCanceled'},
+										autonomy={'done': Autonomy.Full})
+
+			# x:630 y:467
+			OperatableStateMachine.add('MoveMenaceCanceled',
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace_canceled'),
+										transitions={'success': 'MoveHeadShake', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
+
+			# x:340 y:480
+			OperatableStateMachine.add('MoveHeadShake',
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'look_around'),
+										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
 
 
 		return _state_machine

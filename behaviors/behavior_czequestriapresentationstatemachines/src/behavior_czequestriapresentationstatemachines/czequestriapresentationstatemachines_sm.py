@@ -45,7 +45,7 @@ class CZequestriaPresentationStateMachinesSM(Behavior):
 
 	def create(self):
 		storage = 'joint_trajectory/'
-		# x:30 y:322, x:130 y:322
+		# x:879 y:265, x:922 y:85
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 
 		# Additional creation code can be added inside the following tags
@@ -61,14 +61,14 @@ class CZequestriaPresentationStateMachinesSM(Behavior):
 										transitions={'done': 'SayStateMachines'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:30 y:110
+			# x:478 y:140
 			OperatableStateMachine.add('StateMachinesMove',
 										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'hoof_stamp'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
-			# x:297 y:30
+			# x:295 y:138
 			OperatableStateMachine.add('SayStateMachines',
 										TextCommandState(type='voice/play_wav', command='state_machines', topic='voice/voice'),
 										transitions={'done': 'StateMachinesMove'},
