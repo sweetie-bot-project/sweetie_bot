@@ -174,7 +174,7 @@ void TrajectoryEditor::on_addRealPoseButton_clicked()
 void TrajectoryEditor::on_saveTrajectoryButton_clicked()
 {
     loader_->setParam(trajectories_param_name + "/" + ui->comboBox->currentText().toStdString(), joint_trajectory_data_->getTrajectoryMsg());
-    std::string cmd = "rosparam dump `rospack find sweetie_bot_joint_trajectory_editor`/launch/trajectories.yaml " + trajectories_param_name;
+    std::string cmd = "rosparam dump `rospack find sweetie_bot_deploy`/joint_state_control/joint_trajectories.yaml " + trajectories_param_name;
     system( cmd.c_str() );
     updateParamList();
 }
