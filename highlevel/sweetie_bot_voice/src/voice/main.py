@@ -19,16 +19,20 @@ def commandCallback(cmd):
             snd = soundhandle.waveSound(filename)
             snd.play()
         else:
-            rospy.logerror('Unknown play_wav sound: ' + cmd.command)
+            rospy.logerr('Unknown play_wav sound: ' + cmd.command)
 
 
 def file_dict(directory, ext):
     files = {} 
-    for f in os.listdir(directory):
-        basename, extension = os.path.splitext(f)
-        print basename, ' ', extension
-        if extension.endswith(ext):
-            files[basename] = os.path.join(directory, f)
+    try:
+        for f in os.listdir(directory):
+            basename, extension = os.path.splitext(f)
+            print basename, ' ', extension
+            if extension.endswith(ext):
+                files[basename] = os.path.join(directory, f)
+    except OSError as e:
+        rospy.logerr('Unable to list `%s` directory.' % directory)
+        return []
     return files
 
 
@@ -37,8 +41,10 @@ def main():
     rospy.init_node('voice', anonymous = True)
     rospy.Subscriber('control', TextCommand, commandCallback)
 
+    lang_prefix = rospy.get_param('lang', 'ru')
+
     rospack = rospkg.RosPack()
-    path = rospack.get_path('sweetie_bot_voice') + '/sounds/'
+    path = os.path.join(rospack.get_path('sweetie_bot_voice'), 'sounds' , lang_prefix)
     rospy.loginfo("Sound files path: " + path)
 
     sounds = file_dict(path, 'wav')
