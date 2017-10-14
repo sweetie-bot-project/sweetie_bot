@@ -52,7 +52,7 @@ class DiscordGreetingSM(Behavior):
 		storage = 'joint_trajectory/'
 		joint_state_control_topic = 'motion/controller/joint_state/out_joints_src_reset'
 		eyes_topic = 'control'
-		voice_topic = 'voice/voice'
+		voice_topic = 'control'
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
 		# x:322 y:652, x:984 y:622
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])

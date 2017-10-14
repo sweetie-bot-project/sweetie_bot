@@ -48,7 +48,7 @@ class CheerSM(Behavior):
 
 	def create(self):
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
-		voice_topic = 'voice/voice'
+		voice_topic = 'control'
 		storage = 'joint_trajectory/'
 		# x:901 y:554, x:895 y:38
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['be_evil'])

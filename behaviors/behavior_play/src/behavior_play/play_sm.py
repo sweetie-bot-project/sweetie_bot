@@ -49,7 +49,7 @@ class PlaySM(Behavior):
 
 
 	def create(self):
-		voice_topic = 'voice/voice'
+		voice_topic = 'control'
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
 		storage = 'joint_trajectory/'
 		# x:1032 y:51, x:954 y:599

@@ -159,7 +159,7 @@ class MoveitToPose(EventState):
 						self._client.cancel(self._action_topic)
 		except:
 			# client already closed
-					pass
+			pass
 
 	def on_pause(self):
 		self._client.cancel(self._action_topic)

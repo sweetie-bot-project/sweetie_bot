@@ -48,7 +48,7 @@ class GreetingSM(Behavior):
 
 
 	def create(self):
-		voice_topic = 'voice/voice'
+		voice_topic = 'control'
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
 		storage = 'joint_trajectory/'
 		# x:877 y:505, x:887 y:13
