@@ -40,7 +40,9 @@
 		<!-- voice  -->
 		<group ns="voice">
 			<!-- voice node  -->
-			<node pkg="sweetie_bot_voice" type="voice" name="voice_node" />
+			<node pkg="sweetie_bot_voice" type="voice" name="voice_node">
+				<remap from="control" to="/sweetie_bot/control" />
+			</node>
 			<!-- sound_play server -->
 			<include file="$(find sound_play)/soundplay_node.launch" />
 		</group>
