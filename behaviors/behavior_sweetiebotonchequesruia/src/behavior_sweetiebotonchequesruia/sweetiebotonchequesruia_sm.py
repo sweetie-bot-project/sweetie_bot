@@ -8,17 +8,18 @@
 
 import roslib; roslib.load_manifest('behavior_sweetiebotonchequesruia')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from sweetie_bot_flexbe_states.leap_motion_monitor import LeapMotionMonitor
-from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
+from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from behavior_brohoof.brohoof_sm import BrohoofSM
 from behavior_greeting.greeting_sm import GreetingSM
 from behavior_play.play_sm import PlaySM
 from flexbe_states.decision_state import DecisionState
-from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.calculation_state import CalculationState
+from behavior_switchevilmode.switchevilmode_sm import SwitchEvilModeSM
+from sweetie_bot_flexbe_states.leap_motion_monitor import LeapMotionMonitor
 from sweetie_bot_flexbe_states.sweetie_bot_follow_head_pose_smart import SweetieBotFollowHeadPoseSmart
 from behavior_bad.bad_sm import BadSM
 from flexbe_states.wait_state import WaitState
+from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import random
@@ -51,6 +52,7 @@ class SweetieBotOnChequesruiaSM(Behavior):
 		self.add_behavior(BrohoofSM, 'Brohoof')
 		self.add_behavior(GreetingSM, 'Greeting')
 		self.add_behavior(PlaySM, 'Play')
+		self.add_behavior(SwitchEvilModeSM, 'SwitchEvil/SwitchEvilMode')
 		self.add_behavior(BadSM, 'Bad')
 
 		# Additional initialization code can be added inside the following tags
@@ -77,8 +79,32 @@ class SweetieBotOnChequesruiaSM(Behavior):
 		
 		# [/MANUAL_CREATE]
 
+		# x:30 y:353, x:343 y:356, x:209 y:349, x:843 y:453, x:473 y:355, x:638 y:361, x:907 y:552
+		_sm_randheadmovements_0 = ConcurrencyContainer(outcomes=['object_detected', 'failed'], conditions=[
+										('object_detected', [('WaitUntlObject', 'still_object')]),
+										('object_detected', [('WaitUntlObject', 'moving_object')]),
+										('failed', [('WaitUntlObject', 'no_object')]),
+										('object_detected', [('RandHeadMoveme', 'done')]),
+										('failed', [('RandHeadMoveme', 'failed')])
+										])
+
+		with _sm_randheadmovements_0:
+			# x:158 y:110
+			OperatableStateMachine.add('WaitUntlObject',
+										LeapMotionMonitor(leap_motion_topic=leap_topic, exit_states=['still_object', 'moving_object'], pose_topic=leap_pose_topic, parameters=[2.0,0.02,0.2]),
+										transitions={'no_object': 'failed', 'still_object': 'object_detected', 'moving_object': 'object_detected'},
+										autonomy={'no_object': Autonomy.Off, 'still_object': Autonomy.Off, 'moving_object': Autonomy.Off},
+										remapping={'pose': 'pose'})
+
+			# x:605 y:103
+			OperatableStateMachine.add('RandHeadMoveme',
+										SweetieBotRandHeadMovements(controller='joint_state_head', duration=120, interval=[1,4], max2356=[0.3,0.5,1,1], min2356=[-0.3,-0.1,-1,-1]),
+										transitions={'done': 'object_detected', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+
+
 		# x:30 y:353, x:357 y:355, x:671 y:353, x:140 y:353, x:237 y:356, x:530 y:353, x:742 y:441, x:730 y:353, x:452 y:353, x:732 y:406
-		_sm_waitnoobjecttimeout_0 = ConcurrencyContainer(outcomes=['no_object', 'timeout', 'failure', 'too_close'], conditions=[
+		_sm_waitnoobjecttimeout_1 = ConcurrencyContainer(outcomes=['no_object', 'timeout', 'failure', 'too_close'], conditions=[
 										('no_object', [('WaitNoObject', 'no_object')]),
 										('failure', [('WaitNoObject', 'moving_object')]),
 										('failure', [('WaitNoObject', 'still_object')]),
@@ -87,7 +113,7 @@ class SweetieBotOnChequesruiaSM(Behavior):
 										('too_close', [('FollowObject', 'too_close')])
 										])
 
-		with _sm_waitnoobjecttimeout_0:
+		with _sm_waitnoobjecttimeout_1:
 			# x:162 y:101
 			OperatableStateMachine.add('WaitNoObject',
 										LeapMotionMonitor(leap_motion_topic=leap_topic, exit_states=['no_object'], pose_topic=leap_pose_topic, parameters=[4.0,0.02,0.2]),
@@ -109,7 +135,7 @@ class SweetieBotOnChequesruiaSM(Behavior):
 
 
 		# x:30 y:353, x:130 y:353, x:330 y:366, x:737 y:355, x:898 y:596, x:899 y:486, x:900 y:533, x:902 y:443, x:568 y:345
-		_sm_watchonleapmotionobject_1 = ConcurrencyContainer(outcomes=['no_object', 'still_object', 'failed', 'to_close'], output_keys=['pose'], conditions=[
+		_sm_watchonleapmotionobject_2 = ConcurrencyContainer(outcomes=['no_object', 'still_object', 'failed', 'to_close'], output_keys=['pose'], conditions=[
 										('no_object', [('WaitTillObjectMOving', 'no_object')]),
 										('still_object', [('WaitTillObjectMOving', 'still_object')]),
 										('failed', [('WaitTillObjectMOving', 'moving_object')]),
@@ -117,10 +143,10 @@ class SweetieBotOnChequesruiaSM(Behavior):
 										('to_close', [('HeadFollowsMovingObject', 'too_close')])
 										])
 
-		with _sm_watchonleapmotionobject_1:
+		with _sm_watchonleapmotionobject_2:
 			# x:135 y:135
 			OperatableStateMachine.add('WaitTillObjectMOving',
-										LeapMotionMonitor(leap_motion_topic='/hmi/leap_motion/data', exit_states=['no_object', 'still_object'], pose_topic='/hmi/leap_motion/pose', parameters=[2.0,0.02,0.2]),
+										LeapMotionMonitor(leap_motion_topic='/hmi/leap_motion/data', exit_states=['no_object', 'still_object'], pose_topic='/hmi/leap_motion/pose', parameters=[1.0,0.02,0.2]),
 										transitions={'no_object': 'no_object', 'still_object': 'still_object', 'moving_object': 'failed'},
 										autonomy={'no_object': Autonomy.Off, 'still_object': Autonomy.Off, 'moving_object': Autonomy.Off},
 										remapping={'pose': 'pose'})
@@ -132,10 +158,10 @@ class SweetieBotOnChequesruiaSM(Behavior):
 										autonomy={'failed': Autonomy.Off, 'too_close': Autonomy.Off})
 
 
-		# x:979 y:146
-		_sm_switchevil_2 = OperatableStateMachine(outcomes=['finished'], input_keys=['be_evil'], output_keys=['be_evil'])
+		# x:979 y:146, x:969 y:327
+		_sm_switchevil_3 = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['be_evil'], output_keys=['be_evil'])
 
-		with _sm_switchevil_2:
+		with _sm_switchevil_3:
 			# x:269 y:101
 			OperatableStateMachine.add('CheckState',
 										DecisionState(outcomes=[ 'evil', 'good' ], conditions=lambda x: 'evil' if x else 'good'),
@@ -143,78 +169,36 @@ class SweetieBotOnChequesruiaSM(Behavior):
 										autonomy={'evil': Autonomy.Off, 'good': Autonomy.Off},
 										remapping={'input_value': 'be_evil'})
 
-			# x:435 y:63
+			# x:423 y:54
 			OperatableStateMachine.add('NewState1',
-										DecisionState(outcomes=['evil', 'good'], conditions=lambda x: 'good' if 0.8 < random.random() else 'evil'),
-										transitions={'evil': 'RedEyes', 'good': 'NormalEyes'},
-										autonomy={'evil': Autonomy.Off, 'good': Autonomy.Off},
-										remapping={'input_value': 'be_evil'})
+										CalculationState(calculation=lambda x: random.uniform() < 0.2),
+										transitions={'done': 'SwitchEvilMode'},
+										autonomy={'done': Autonomy.Off},
+										remapping={'input_value': 'be_evil', 'output_value': 'new_be_evil'})
 
-			# x:428 y:195
+			# x:425 y:159
 			OperatableStateMachine.add('NewState2',
-										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'good' if 0.8 > random.random() else 'evil'),
-										transitions={'good': 'NormalEyes', 'evil': 'RedEyes'},
-										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
-										remapping={'input_value': 'be_evil'})
-
-			# x:710 y:33
-			OperatableStateMachine.add('NormalEyes',
-										TextCommandState(type='eyes/emotion', command='normal', topic=eyes_cmd_topic),
-										transitions={'done': 'SetGood'},
-										autonomy={'done': Autonomy.Off})
-
-			# x:729 y:264
-			OperatableStateMachine.add('RedEyes',
-										TextCommandState(type='eyes/emotion', command='red_eyes', topic=eyes_cmd_topic),
-										transitions={'done': 'SetEvil'},
-										autonomy={'done': Autonomy.Off})
-
-			# x:953 y:257
-			OperatableStateMachine.add('SetEvil',
-										CalculationState(calculation=lambda x: True),
-										transitions={'done': 'finished'},
+										CalculationState(calculation=lambda x: random.uniform() < 0.2),
+										transitions={'done': 'SwitchEvilMode'},
 										autonomy={'done': Autonomy.Off},
-										remapping={'input_value': 'be_evil', 'output_value': 'be_evil'})
+										remapping={'input_value': 'be_evil', 'output_value': 'new_be_evil'})
 
-			# x:952 y:31
-			OperatableStateMachine.add('SetGood',
-										CalculationState(calculation=lambda x: False),
-										transitions={'done': 'finished'},
-										autonomy={'done': Autonomy.Off},
-										remapping={'input_value': 'be_evil', 'output_value': 'be_evil'})
-
-
-		# x:30 y:353, x:343 y:356, x:209 y:349, x:843 y:453, x:473 y:355, x:638 y:361, x:907 y:552
-		_sm_randheadmovements_3 = ConcurrencyContainer(outcomes=['object_detected', 'failed'], conditions=[
-										('object_detected', [('WaitUntlObject', 'still_object')]),
-										('object_detected', [('WaitUntlObject', 'moving_object')]),
-										('failed', [('WaitUntlObject', 'no_object')]),
-										('object_detected', [('RandHeadMoveme', 'done')]),
-										('failed', [('RandHeadMoveme', 'failed')])
-										])
-
-		with _sm_randheadmovements_3:
-			# x:158 y:110
-			OperatableStateMachine.add('WaitUntlObject',
-										LeapMotionMonitor(leap_motion_topic=leap_topic, exit_states=['still_object', 'moving_object'], pose_topic=leap_pose_topic, parameters=[2.0,0.02,0.2]),
-										transitions={'no_object': 'failed', 'still_object': 'object_detected', 'moving_object': 'object_detected'},
-										autonomy={'no_object': Autonomy.Off, 'still_object': Autonomy.Off, 'moving_object': Autonomy.Off},
-										remapping={'pose': 'pose'})
-
-			# x:605 y:103
-			OperatableStateMachine.add('RandHeadMoveme',
-										SweetieBotRandHeadMovements(controller='joint_state_head', duration=120, interval=[3,5], max2356=[0.3,0.3,1.5,1.5], min2356=[-0.3,-0.3,-1.5,-1.5]),
-										transitions={'done': 'object_detected', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+			# x:678 y:91
+			OperatableStateMachine.add('SwitchEvilMode',
+										self.use_behavior(SwitchEvilModeSM, 'SwitchEvil/SwitchEvilMode'),
+										transitions={'finished': 'finished', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
+										remapping={'be_evil': 'be_evil', 'new_be_evil': 'new_be_evil'})
 
 
 
 		with _state_machine:
-			# x:94 y:440
-			OperatableStateMachine.add('RandHeadMovements',
-										_sm_randheadmovements_3,
-										transitions={'object_detected': 'SwitchEvil', 'failed': 'failed'},
-										autonomy={'object_detected': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+			# x:114 y:550
+			OperatableStateMachine.add('PlaceHead',
+										SrdfStateToMoveit(config_name='head_upright', move_group='head', action_topic='move_group', robot_name=''),
+										transitions={'reached': 'RandHeadMovements', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
+										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
 			# x:500 y:88
 			OperatableStateMachine.add('Brohoof',
@@ -239,9 +223,9 @@ class SweetieBotOnChequesruiaSM(Behavior):
 
 			# x:78 y:247
 			OperatableStateMachine.add('SwitchEvil',
-										_sm_switchevil_2,
-										transitions={'finished': 'WatchOnLeapMotionObject'},
-										autonomy={'finished': Autonomy.Inherit},
+										_sm_switchevil_3,
+										transitions={'finished': 'WatchOnLeapMotionObject', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'be_evil': 'be_evil'})
 
 			# x:387 y:6
@@ -253,7 +237,7 @@ class SweetieBotOnChequesruiaSM(Behavior):
 
 			# x:144 y:77
 			OperatableStateMachine.add('WatchOnLeapMotionObject',
-										_sm_watchonleapmotionobject_1,
+										_sm_watchonleapmotionobject_2,
 										transitions={'no_object': 'Play', 'still_object': 'CheckEvil', 'failed': 'failed', 'to_close': 'Bad'},
 										autonomy={'no_object': Autonomy.Inherit, 'still_object': Autonomy.Inherit, 'failed': Autonomy.Inherit, 'to_close': Autonomy.Inherit},
 										remapping={'pose': 'pose'})
@@ -267,9 +251,15 @@ class SweetieBotOnChequesruiaSM(Behavior):
 
 			# x:646 y:375
 			OperatableStateMachine.add('WaitNoObjectTimeout',
-										_sm_waitnoobjecttimeout_0,
-										transitions={'no_object': 'RandHeadMovements', 'timeout': 'Play', 'failure': 'failed', 'too_close': 'Bad'},
+										_sm_waitnoobjecttimeout_1,
+										transitions={'no_object': 'PlaceHead', 'timeout': 'Play', 'failure': 'failed', 'too_close': 'Bad'},
 										autonomy={'no_object': Autonomy.Inherit, 'timeout': Autonomy.Inherit, 'failure': Autonomy.Inherit, 'too_close': Autonomy.Inherit})
+
+			# x:106 y:411
+			OperatableStateMachine.add('RandHeadMovements',
+										_sm_randheadmovements_0,
+										transitions={'object_detected': 'SwitchEvil', 'failed': 'failed'},
+										autonomy={'object_detected': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
 
 		return _state_machine

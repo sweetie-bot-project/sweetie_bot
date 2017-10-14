@@ -18,7 +18,7 @@ Robot is assumed to be standing on four legs.
 	<!-- Available Parameters -->
 	<params>
 
-		<param type="numeric" name="wait_time" default="3" label="wait_time" hint="Set brohoof wait time.">
+		<param type="numeric" name="wait_time" default="4" label="wait_time" hint="Set brohoof wait time.">
 			<min value="1" />
 			<max value="10" />
 		</param>
@@ -42,6 +42,8 @@ Robot is assumed to be standing on four legs.
 			<min value="0" />
 			<max value="1" />
 		</param>
+
+		<param type="boolean" name="is_simplified" default="True" label="is_simplified" hint="Do not use move it to perform greeting." />
 
 	</params>
 

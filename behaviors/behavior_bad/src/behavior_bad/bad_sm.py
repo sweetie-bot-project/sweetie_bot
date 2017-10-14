@@ -63,7 +63,7 @@ class BadSM(Behavior):
 		with _state_machine:
 			# x:72 y:306
 			OperatableStateMachine.add('MovwStandPose',
-										SrdfStateToMoveit(config_name='stand', move_group='legs', action_topic='move_group', robot_name=''),
+										SrdfStateToMoveit(config_name='head_basic', move_group='head', action_topic='move_group', robot_name=''),
 										transitions={'reached': 'CheckEvil', 'planning_failed': 'MoveStandPose2', 'control_failed': 'MoveStandPose2', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
@@ -72,18 +72,18 @@ class BadSM(Behavior):
 			OperatableStateMachine.add('RandomChoiceGood',
 										DecisionState(outcomes=['good1', 'good2'], conditions=lambda x: random.choice(['good1', 'good2'])),
 										transitions={'good1': 'SayOverflow', 'good2': 'SayDizzy'},
-										autonomy={'good1': Autonomy.Off, 'good2': Autonomy.Off},
+										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
-			# x:450 y:508
+			# x:416 y:537
 			OperatableStateMachine.add('SayDoNotTouch',
-										TextCommandState(type='voice/play_wav', command='05donottouch', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='do_not_touch_me', topic=voice_topic),
 										transitions={'done': 'HoofStamp'},
 										autonomy={'done': Autonomy.Off})
 
 			# x:496 y:147
 			OperatableStateMachine.add('SayOverflow',
-										TextCommandState(type='voice/play_wav', command='27queue', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='you_are_using_software_incorrectly', topic=voice_topic),
 										transitions={'done': 'Applause'},
 										autonomy={'done': Autonomy.Off})
 
@@ -103,11 +103,11 @@ class BadSM(Behavior):
 
 			# x:495 y:227
 			OperatableStateMachine.add('SayDizzy',
-										TextCommandState(type='voice/play_wav', command='26dizziness', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='why_do_i_see_these_creatures', topic=voice_topic),
 										transitions={'done': 'NoHeadShake'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:616 y:500
+			# x:648 y:466
 			OperatableStateMachine.add('HoofStamp',
 										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'hoof_stamp'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
@@ -118,12 +118,12 @@ class BadSM(Behavior):
 			OperatableStateMachine.add('CheckEvil',
 										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'evil' if x else 'good'),
 										transitions={'good': 'RandomChoiceGood', 'evil': 'SayDoNotTouch'},
-										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
+										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
 			# x:129 y:436
 			OperatableStateMachine.add('MoveStandPose2',
-										SrdfStateToMoveit(config_name='stand', move_group='', action_topic='move_group', robot_name=''),
+										SrdfStateToMoveit(config_name='head_basic', move_group='head', action_topic='move_group', robot_name=''),
 										transitions={'reached': 'CheckEvil', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})

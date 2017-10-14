@@ -16,6 +16,7 @@ from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_manipulation_states.moveit_to_joints_state import MoveitToJointsState
 from flexbe_manipulation_states.get_joint_values_state import GetJointValuesState
 from flexbe_states.decision_state import DecisionState
+from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import math
@@ -46,11 +47,12 @@ Robot is assumed to be standing on four legs.
 		self.name = 'Brohoof'
 
 		# parameters of this behavior
-		self.add_parameter('wait_time', 3)
+		self.add_parameter('wait_time', 4)
 		self.add_parameter('neck_angle', 0.25)
 		self.add_parameter('hoof_shift', 0)
 		self.add_parameter('brohoof_cone', 0.78)
 		self.add_parameter('brohof_upper_limit', 0.30)
+		self.add_parameter('is_simplified', True)
 
 		# references to used behaviors
 
@@ -66,10 +68,11 @@ Robot is assumed to be standing on four legs.
 
 
 	def create(self):
-		# x:321 y:391, x:331 y:223, x:1010 y:659
+		# x:228 y:396, x:331 y:223, x:1010 y:659
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'unreachable', 'failed'], input_keys=['pose'])
-		_state_machine.userdata.pose = PoseStamped(Header(frame_id = 'base_link'), Pose(Point(-0.1, -0.40, 0.25), Quaternion(0, 0, 0, 1)))
+		_state_machine.userdata.pose = PoseStamped(Header(frame_id = 'base_link'), Pose(Point(-0.3, -0.40, 0.25), Quaternion(0, 0, 0, 1)))
 		_state_machine.userdata.joint53_pose = [ self.neck_angle ]
+		_state_machine.userdata.is_simplified = self.is_simplified
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -92,14 +95,14 @@ Robot is assumed to be standing on four legs.
 										autonomy={'reached': Autonomy.High, 'planning_failed': Autonomy.High, 'control_failed': Autonomy.Off},
 										remapping={'pose': 'pose'})
 
-			# x:870 y:62
+			# x:836 y:84
 			OperatableStateMachine.add('RaiseLeg',
 										SrdfStateToMoveit(config_name='low_raised1', move_group='leg1', action_topic='move_group', robot_name=''),
 										transitions={'reached': 'MoveLeg', 'planning_failed': 'unreachable', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
-			# x:881 y:154
+			# x:832 y:179
 			OperatableStateMachine.add('MoveLeg',
 										MoveitToPose(move_group='leg1', plan_only=False, position_tolerance=0.001, orientation_tolerance=0.001),
 										transitions={'reached': 'SayHello', 'planning_failed': 'PutLegDownUreached', 'control_failed': 'failed'},
@@ -109,19 +112,19 @@ Robot is assumed to be standing on four legs.
 			# x:654 y:385
 			OperatableStateMachine.add('ReturnLeg',
 										SrdfStateToMoveit(config_name='low_raised1', move_group='leg1', action_topic='move_group', robot_name=''),
-										transitions={'reached': 'PutLegDown', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										transitions={'reached': 'PutLegDown', 'planning_failed': 'ReturnLeg2', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
-			# x:910 y:391
+			# x:1005 y:389
 			OperatableStateMachine.add('Wait',
 										WaitState(wait_time=self.wait_time),
-										transitions={'done': 'ReturnLeg'},
+										transitions={'done': 'CheckSimplified2'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:470 y:389
+			# x:360 y:393
 			OperatableStateMachine.add('PutLegDown',
-										SrdfStateToMoveit(config_name='stand_front', move_group='legs_front', action_topic='move_group', robot_name=''),
+										SrdfStateToMoveit(config_name='stand1', move_group='leg1', action_topic='move_group', robot_name=''),
 										transitions={'reached': 'finished', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
@@ -133,7 +136,7 @@ Robot is assumed to be standing on four legs.
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
-			# x:877 y:246
+			# x:986 y:302
 			OperatableStateMachine.add('SayHello',
 										TextCommandState(type='voice/play_wav', command='00irobot', topic='control'),
 										transitions={'done': 'Wait'},
@@ -142,7 +145,7 @@ Robot is assumed to be standing on four legs.
 			# x:648 y:42
 			OperatableStateMachine.add('RaiseHead',
 										MoveitToJointsState(move_group='head', joint_names=['joint51', 'joint52', 'joint53', 'joint54'], action_topic='move_group'),
-										transitions={'reached': 'RaiseLeg', 'planning_failed': 'failed', 'control_failed': 'failed'},
+										transitions={'reached': 'CheckSimplified', 'planning_failed': 'failed', 'control_failed': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off},
 										remapping={'joint_config': 'head_pose'})
 
@@ -166,6 +169,48 @@ Robot is assumed to be standing on four legs.
 										transitions={'good': 'CheckReacibility', 'none': 'unreachable'},
 										autonomy={'good': Autonomy.Off, 'none': Autonomy.Off},
 										remapping={'input_value': 'pose'})
+
+			# x:514 y:495
+			OperatableStateMachine.add('ReturnLeg2',
+										SrdfStateToMoveit(config_name='low_raised1', move_group='leg1', action_topic='move_group', robot_name=""),
+										transitions={'reached': 'PutLegDown', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
+										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
+
+			# x:926 y:3
+			OperatableStateMachine.add('CheckSimplified',
+										DecisionState(outcomes=['simple', 'complex'], conditions=lambda x: 'simple' if x else 'complex'),
+										transitions={'simple': 'LegStand', 'complex': 'RaiseLeg'},
+										autonomy={'simple': Autonomy.Off, 'complex': Autonomy.Off},
+										remapping={'input_value': 'is_simplified'})
+
+			# x:1046 y:140
+			OperatableStateMachine.add('RaiseLegProgram',
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='joint_trajectory/brohoof_begin'),
+										transitions={'success': 'SayHello', 'partial_movement': 'ReturnLeg', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
+
+			# x:1096 y:36
+			OperatableStateMachine.add('LegStand',
+										SrdfStateToMoveit(config_name='stand1', move_group='legq', action_topic='move_group', robot_name=''),
+										transitions={'reached': 'RaiseLegProgram', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
+										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
+
+			# x:853 y:412
+			OperatableStateMachine.add('CheckSimplified2',
+										DecisionState(outcomes=['simple','complex'], conditions=lambda x: 'simple' if x else 'complex'),
+										transitions={'simple': 'ReturnLegProgrammed', 'complex': 'ReturnLeg'},
+										autonomy={'simple': Autonomy.Off, 'complex': Autonomy.Off},
+										remapping={'input_value': 'is_simplified'})
+
+			# x:673 y:533
+			OperatableStateMachine.add('ReturnLegProgrammed',
+										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='joint_trajectory/brohoof_end'),
+										transitions={'success': 'finished', 'partial_movement': 'ReturnLeg', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
+										remapping={'result': 'result'})
 
 
 		return _state_machine
@@ -243,9 +288,10 @@ Robot is assumed to be standing on four legs.
                 # Return to base_link frame 
                 pos.x += 0.041
 	        pos.y = -0.225
-	        pos.z = 0.162
+	        pos.z = 0.172
 	        # Clamp to reachibility zone
-                pos.x = numpy.clip(pos.x, -0.03, 0.12)
+                # pos.x = numpy.clip(pos.x, -0.03, 0.12)
+                pos.x = numpy.clip(pos.x, -0.01, 0.12)
 	        # done: pose must be reachable
 	        Logger.loginfo('calculateTargetPoseFunc2: target hoof pose: %s' % str(output_pose))
 	        return output_pose
