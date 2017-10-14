@@ -35,7 +35,7 @@ def file_dict(directory, ext):
 def main():
     global soundhandle, sounds;
     rospy.init_node('voice', anonymous = True)
-    rospy.Subscriber("voice", TextCommand, commandCallback)
+    rospy.Subscriber('control', TextCommand, commandCallback)
 
     rospack = rospkg.RosPack()
     path = rospack.get_path('sweetie_bot_voice') + '/sounds/'
