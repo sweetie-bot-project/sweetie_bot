@@ -130,16 +130,16 @@
     </group_state>
     <group_state name="low_raised1" group="leg1">
         <joint name="joint11" value="0" />
-        <joint name="joint12" value="-0.35" />
-        <joint name="joint13" value="0.7" />
-        <joint name="joint14" value="-0.35" />
+        <joint name="joint12" value="-0.45" />
+        <joint name="joint13" value="0.9" />
+        <joint name="joint14" value="-0.45" />
         <joint name="joint15" value="0" />
     </group_state>
     <group_state name="low_raised2" group="leg2">
         <joint name="joint21" value="0" />
-        <joint name="joint22" value="-0.35" />
-        <joint name="joint23" value="0.7" />
-        <joint name="joint24" value="-0.35" />
+        <joint name="joint22" value="-0.45" />
+        <joint name="joint23" value="0.9" />
+        <joint name="joint24" value="-0.45" />
         <joint name="joint25" value="0" />
     </group_state>
     <group_state name="stand_front" group="legs_front">
@@ -206,9 +206,9 @@
     </group_state>
     <group_state name="low_raised1_shift" group="legs_front">
         <joint name="joint11" value="-0.05" />
-        <joint name="joint12" value="-0.35" />
-        <joint name="joint13" value="0.7" />
-        <joint name="joint14" value="-0.35" />
+        <joint name="joint12" value="-0.45" />
+        <joint name="joint13" value="0.9" />
+        <joint name="joint14" value="-0.45" />
         <joint name="joint15" value="0" />
         <joint name="joint21" value="-0.13" />
         <joint name="joint22" value="0" />
@@ -223,15 +223,21 @@
         <joint name="joint14" value="0" />
         <joint name="joint15" value="-0.13" />
         <joint name="joint21" value="0.05" />
-        <joint name="joint22" value="-0.35" />
-        <joint name="joint23" value="0.7" />
-        <joint name="joint24" value="-0.35" />
+        <joint name="joint22" value="-0.45" />
+        <joint name="joint23" value="0.9" />
+        <joint name="joint24" value="-0.45" />
         <joint name="joint25" value="0" />
     </group_state>
     <group_state name="head_basic" group="head">
         <joint name="joint51" value="-0.15" />
         <joint name="joint52" value="0" />
         <joint name="joint53" value="0.15" />
+        <joint name="joint54" value="0" />
+    </group_state>
+    <group_state name="head_upright" group="head">
+        <joint name="joint51" value="0" />
+        <joint name="joint52" value="0" />
+        <joint name="joint53" value="0" />
         <joint name="joint54" value="0" />
     </group_state>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
