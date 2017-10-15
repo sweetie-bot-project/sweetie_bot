@@ -18,7 +18,7 @@ Robot is assumed to be standing on four legs.
 	<!-- Available Parameters -->
 	<params>
 
-		<param type="numeric" name="wait_time" default="4" label="wait_time" hint="Set brohoof wait time.">
+		<param type="numeric" name="wait_time" default="5" label="wait_time" hint="Set brohoof wait time.">
 			<min value="1" />
 			<max value="10" />
 		</param>

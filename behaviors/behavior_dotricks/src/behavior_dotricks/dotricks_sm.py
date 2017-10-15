@@ -173,11 +173,11 @@ class DoTricksSM(Behavior):
 	
         def select_behavior(self, cycle_counter):
             if cycle_counter == 0:
-                return 'greeting'
+                return random.choice(['greeting', 'play'])
             elif cycle_counter < 5:
-                return random.choice(['greeting', 'play', 'cheer'])
+                return random.choice(['greeting', 'play'])
             elif cycle_counter < 10:
-                return random.choice(['play', 'cheer', 'bad'])
+                return random.choice(['play', 'bad'])
             else:
                 return 'bad'
 

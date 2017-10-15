@@ -47,7 +47,7 @@ Robot is assumed to be standing on four legs.
 		self.name = 'Brohoof'
 
 		# parameters of this behavior
-		self.add_parameter('wait_time', 4)
+		self.add_parameter('wait_time', 5)
 		self.add_parameter('neck_angle', 0.25)
 		self.add_parameter('hoof_shift', 0)
 		self.add_parameter('brohoof_cone', 0.78)
@@ -138,7 +138,7 @@ Robot is assumed to be standing on four legs.
 
 			# x:986 y:302
 			OperatableStateMachine.add('SayHello',
-										TextCommandState(type='voice/play_wav', command='00irobot', topic='voice/voice'),
+										TextCommandState(type='voice/play_wav', command='hello_im_sweetie_bot_friedship_programms', topic='voice/voice'),
 										transitions={'done': 'Wait'},
 										autonomy={'done': Autonomy.Off})
 

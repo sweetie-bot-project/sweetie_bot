@@ -148,14 +148,14 @@ class SweetieBotOnChequesruiaSM(Behavior):
 			OperatableStateMachine.add('WaitTillObjectMOving',
 										LeapMotionMonitor(leap_motion_topic='/hmi/leap_motion/data', exit_states=['no_object', 'still_object'], pose_topic='/hmi/leap_motion/pose', parameters=[1.0,0.02,0.2]),
 										transitions={'no_object': 'no_object', 'still_object': 'still_object', 'moving_object': 'failed'},
-										autonomy={'no_object': Autonomy.Off, 'still_object': Autonomy.Off, 'moving_object': Autonomy.Off},
+										autonomy={'no_object': Autonomy.High, 'still_object': Autonomy.High, 'moving_object': Autonomy.Off},
 										remapping={'pose': 'pose'})
 
 			# x:583 y:138
 			OperatableStateMachine.add('HeadFollowsMovingObject',
-										SweetieBotFollowHeadPoseSmart(pose_topic='/hmi/leap_motion/pose', follow_joint_state_controller='joint_state_head', discomfort_time=5.0, neck_control_parameteres=[-0.13,0.3,0.20,0.2], deactivate=True, controlled_chains=['head','eyes']),
+										SweetieBotFollowHeadPoseSmart(pose_topic='/hmi/leap_motion/pose', follow_joint_state_controller='joint_state_head', discomfort_time=4.0, neck_control_parameteres=[-0.13,0.3,0.20,0.2], deactivate=True, controlled_chains=['head','eyes']),
 										transitions={'failed': 'failed', 'too_close': 'to_close'},
-										autonomy={'failed': Autonomy.Off, 'too_close': Autonomy.Off})
+										autonomy={'failed': Autonomy.Off, 'too_close': Autonomy.High})
 
 
 		# x:979 y:146, x:969 y:327
@@ -171,14 +171,14 @@ class SweetieBotOnChequesruiaSM(Behavior):
 
 			# x:423 y:54
 			OperatableStateMachine.add('NewState1',
-										CalculationState(calculation=lambda x: random.uniform() < 0.2),
+										CalculationState(calculation=lambda x: random.random() < 0.8),
 										transitions={'done': 'SwitchEvilMode'},
 										autonomy={'done': Autonomy.Off},
 										remapping={'input_value': 'be_evil', 'output_value': 'new_be_evil'})
 
 			# x:425 y:159
 			OperatableStateMachine.add('NewState2',
-										CalculationState(calculation=lambda x: random.uniform() < 0.2),
+										CalculationState(calculation=lambda x: random.random() < 0.2),
 										transitions={'done': 'SwitchEvilMode'},
 										autonomy={'done': Autonomy.Off},
 										remapping={'input_value': 'be_evil', 'output_value': 'new_be_evil'})

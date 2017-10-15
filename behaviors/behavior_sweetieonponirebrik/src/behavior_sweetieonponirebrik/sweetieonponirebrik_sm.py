@@ -95,7 +95,7 @@ class SweetieOnPoniRebrikSM(Behavior):
 		with _sm_idlebehavior_1:
 			# x:474 y:110
 			OperatableStateMachine.add('RandomHeadMovements',
-										SweetieRandHeadMovementsState(topic=joint_state_control_topic, duration=100, interval=[3, 5], max2356=[ 0.3, 0.3, 1.5, 1.5 ], min2356=[ -0.3, -0.3, -1.5, -1.5 ]),
+										SweetieRandHeadMovementsState(topic=joint_state_control_topic, duration=100, interval=[1, 4], max2356=[ 0.3, 0.3, 1, 1], min2356=[ -0.3, -0.3, -1, -1 ]),
 										transitions={'done': 'finished'},
 										autonomy={'done': Autonomy.Off})
 
@@ -123,7 +123,7 @@ class SweetieOnPoniRebrikSM(Behavior):
 
 			# x:440 y:126
 			OperatableStateMachine.add('WaitForMovementFinish',
-										WaitState(wait_time=0.8),
+										WaitState(wait_time=0.0),
 										transitions={'done': 'DoTricks'},
 										autonomy={'done': Autonomy.Off})
 
