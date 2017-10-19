@@ -39,7 +39,7 @@ def file_dict(directory, ext):
 def main():
     global soundhandle, sounds;
     rospy.init_node('voice', anonymous = True)
-    rospy.Subscriber("voice", TextCommand, commandCallback)
+    rospy.Subscriber('control', TextCommand, commandCallback)
 
     lang_prefix = rospy.get_param('lang', 'ru')
 
