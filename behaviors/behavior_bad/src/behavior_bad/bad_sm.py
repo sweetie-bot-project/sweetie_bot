@@ -48,7 +48,7 @@ class BadSM(Behavior):
 
 	def create(self):
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
-		voice_topic = 'voice/voice'
+		voice_topic = 'control'
 		storage = 'joint_trajectory/'
 		# x:1011 y:80, x:1002 y:571
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['be_evil'])

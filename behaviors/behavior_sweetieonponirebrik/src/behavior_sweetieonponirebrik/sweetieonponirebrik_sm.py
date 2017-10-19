@@ -52,7 +52,7 @@ class SweetieOnPoniRebrikSM(Behavior):
 
 
 	def create(self):
-		voice_topic = 'voice/voice'
+		voice_topic = 'control'
 		torque_off_service = 'motion/controller/torque_off/set_operational'
 		joint_state_control_topic = 'motion/controller/joint_state/out_joints_src_reset'
 		joy_topic = '/hmi/joystick'

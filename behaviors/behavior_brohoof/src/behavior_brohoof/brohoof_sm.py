@@ -138,7 +138,7 @@ Robot is assumed to be standing on four legs.
 
 			# x:986 y:302
 			OperatableStateMachine.add('SayHello',
-										TextCommandState(type='voice/play_wav', command='hello_im_sweetie_bot_friedship_programms', topic='voice/voice'),
+										TextCommandState(type='voice/play_wav', command='hello_im_sweetie_bot_friedship_programms', topic='control'),
 										transitions={'done': 'Wait'},
 										autonomy={'done': Autonomy.Off})
 
