@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="Derpfest2017Presentation3">
+
+	<executable package_path="behavior_derpfest2017presentation3.derpfest2017presentation3_sm" class="Derpfest2017Presentation3SM" />
+	<tagstring>sweetiebot, derpfest2017, evil</tagstring>
+	<author>disRecord</author>
+	<date>Sat Oct 28 2017</date>
+	<description>
+		Forth part of Derpfest2017 presentation. SweetieBot is offended and tries to eliminate her creators.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+	<contains name="WatchPresentaion" />
+
+	<!-- Available Parameters -->
+
+</behavior>

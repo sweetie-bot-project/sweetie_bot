@@ -55,7 +55,7 @@ class CZequestriaPresentationStateMachinesSM(Behavior):
 
 
 		with _state_machine:
-			# x:30 y:40
+			# x:82 y:127
 			OperatableStateMachine.add('SetRedEyes',
 										TextCommandState(type='eyes/emotion', command='normal', topic='control'),
 										transitions={'done': 'SayStateMachines'},
@@ -70,7 +70,7 @@ class CZequestriaPresentationStateMachinesSM(Behavior):
 
 			# x:295 y:138
 			OperatableStateMachine.add('SayStateMachines',
-										TextCommandState(type='voice/play_wav', command='state_machines', topic='voice/voice'),
+										TextCommandState(type='voice/play_wav', command='state_machines', topic='control'),
 										transitions={'done': 'StateMachinesMove'},
 										autonomy={'done': Autonomy.Off})
 

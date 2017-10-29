@@ -27,4 +27,10 @@
   <run_depend>behavior_czequestriapresentationgreeting</run_depend>
   <run_depend>behavior_czequestriapresentationstatemachines</run_depend>
   <run_depend>behavior_czequestriapresentationmenace</run_depend>
+  <run_depend>behavior_derpfest2017presentation1</run_depend>
+  <run_depend>behavior_watchpresentaion</run_depend>
+  <run_depend>behavior_derpfest2017presentation2</run_depend>
+  <run_depend>behavior_derpfest2017presentation3</run_depend>
+  <run_depend>behavior_derpfest2017presentation4</run_depend>
+  <run_depend>behavior_derpfest2017presentation</run_depend>
 </package>
