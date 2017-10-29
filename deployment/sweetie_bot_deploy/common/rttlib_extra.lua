@@ -22,7 +22,13 @@ end
 --- Get parameter from ROS Parameter Server
 function rttlib_extra.get_rosparam(name, typename)
 	typename = string.lower(typename)
-	local getOp = rttlib_extra.rosparam:getOperation("get" .. typename:sub(1,1):upper() .. typename:sub(2))
+	local op_name
+	if typename:sub(-2) == '[]' then
+		op_name = 'getVectorOf' .. typename:sub(1,1):upper() .. typename:sub(2,-3)
+	else
+		op_name = 'get' .. typename:sub(1,1):upper() .. typename:sub(2)
+	end
+	local getOp = rttlib_extra.rosparam:getOperation(op_name)
 	if getOp then
 		local var = rtt.Variable(typename)
 		if getOp(name, var) then
@@ -47,9 +53,9 @@ end
 function rttlib_extra.get_peer_rosparams(peer)
 	-- process some properties specifically
 	-- `period` property is allways set to `~timer/period'
-	prop = rttlib_extra.get_property(peer, "period")
+	local prop = rttlib_extra.get_property(peer, "period")
 	if prop then
-		period = rttlib_extra.get_rosparam("~timer/period", "float")
+		local period = rttlib_extra.get_rosparam("~timer/period", "float")
 		if period then
 			prop:set(period) 
 		else
@@ -57,9 +63,17 @@ function rttlib_extra.get_peer_rosparams(peer)
 		end
 	end
 	-- use rosparam `priority` to set component RT priority
-	priority = rttlib_extra.get_rosparam("~" .. peer:getName() .. "/priority", "int")
+	local priority = rttlib_extra.get_rosparam("~" .. peer:getName() .. "/priority", "int")
 	if priority then
 		depl:setActivity(peer:getName(), 0, priority, rtt.globals.ORO_SCHED_RT)
+	end
+	-- use rosparam `services` to load additionaol services
+	services = rttlib_extra.get_rosparam("~" .. peer:getName() .. "/services", "string[]")
+	if services then
+		for k, service in ipairs(services) do 
+			print("Load service " .. service .. " into " .. peer:getName())
+			peer:loadService(service)
+		end
 	end
 	-- load parameters from parameter server
 	peer:loadService("rosparam")
