@@ -5,11 +5,11 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /MotionPlanning1
-        - /MotionPlanning1/Status1
         - /MotionPlanning1/Scene Robot1
+        - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planned Path1
       Splitter Ratio: 0.74256
-    Tree Height: 596
+    Tree Height: 337
   - Class: rviz/Help
     Name: Help
   - Class: rviz/Views
@@ -96,6 +96,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          bone16:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           bone21:
             Alpha: 1
             Show Axes: false
@@ -121,6 +125,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          bone26:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           bone31:
             Alpha: 1
             Show Axes: false
@@ -146,6 +154,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          bone36:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           bone41:
             Alpha: 1
             Show Axes: false
@@ -171,6 +183,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          bone46:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           bone51:
             Alpha: 1
             Show Axes: false
@@ -191,6 +207,15 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          bone55:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          bone56:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
         Loop Animation: false
         Robot Alpha: 0.5
         Robot Color: 150; 50; 150
@@ -198,6 +223,7 @@ Visualization Manager:
         Show Robot Visual: true
         Show Trail: false
         State Display Time: 0.05 s
+        Trail Step Size: 1
         Trajectory Topic: /sweetie_bot/move_group/display_planned_path
       Planning Metrics:
         Payload: 1
@@ -210,7 +236,7 @@ Visualization Manager:
         Colliding Link Color: 255; 0; 0
         Goal State Alpha: 1
         Goal State Color: 250; 128; 0
-        Interactive Marker Size: 0
+        Interactive Marker Size: 0.2
         Joint Violation Color: 255; 0; 255
         Planning Group: leg1
         Query Goal State: true
@@ -265,6 +291,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          bone16:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           bone21:
             Alpha: 1
             Show Axes: false
@@ -290,6 +320,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          bone26:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           bone31:
             Alpha: 1
             Show Axes: false
@@ -315,6 +349,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          bone36:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           bone41:
             Alpha: 1
             Show Axes: false
@@ -340,6 +378,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          bone46:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           bone51:
             Alpha: 1
             Show Axes: false
@@ -356,6 +398,15 @@ Visualization Manager:
             Show Trail: false
             Value: true
           bone54:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          bone55:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          bone56:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -399,16 +450,18 @@ Visualization Manager:
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 875
+  Height: 1047
   Help:
     collapsed: false
   Hide Left Dock: false
   Hide Right Dock: false
-  Motion Planning:
+  MotionPlanning:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000002aa0000030cfc0200000004fb0000000800480065006c00700000000342000000bb0000008100fffffffb0000000a0056006900650077007300000003b0000000b0000000bd00fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fc000000430000030c000001e10100001dfa000000000100000002fb000000100044006900730070006c0061007900730100000000ffffffff0000016a00fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000000000002aa000002aa00ffffff0000038c0000030c00000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  MotionPlanning - Slider:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd0000000100000000000002b8000003c1fc0200000006fb0000000800480065006c00700000000342000000bb0000006500fffffffb0000000a0056006900650077007300000003b0000000b0000000a100fffffffb0000000c00430061006d00650072006100000002ff000001610000000000000000fc00000039000001ea000000ba00fffffffa000000000100000002fb000000100044006900730070006c0061007900730100000000ffffffff0000014900fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670100000000000002aa0000000000000000fb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c00690064006500720000000000ffffffff0000004400fffffffb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670100000229000001d1000001bf00ffffff000004bc000003c100000001000000020000000100000002fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Views:
     collapsed: false
-  Width: 1596
-  X: 0
-  Y: 21
+  Width: 1914
+  X: 3
+  Y: 30
