@@ -91,7 +91,7 @@ class SweetieBotCompoundAction(EventState):
 					flexbe_state = TextCommandState(p.type, p.cmd, topic = 'control')
 					success_outcome = 'done'
 				# add action to list
-				actions.append( SimpleAction(previous_action, delay, 'WAITING', flexbe_state, success_outcome, None, description) )
+				actions.append( SimpleAction(previous_action, delay, 'WAITING', flexbe_state, success_outcome, 0.0, description) )
 		# remove None actions
 		actions = [ a for a in actions if a != None ]
 
@@ -131,6 +131,8 @@ class SweetieBotCompoundAction(EventState):
 		# Get start timestamp
 		self._start_time = rospy.get_rostime()
 		self._enter_userdata = userdata
+		for action in self._actions:
+                        action.state = 'WAITING'
 
 	def on_exit(self, userdata):
 		# If any behavior is running exit it
@@ -153,7 +155,7 @@ class SweetieBotCompoundAction(EventState):
 				if not action.previous_action:
 					should_start = t > action.delay
 				else:
-					should_start = action.previous_action.state == 'FINISHED' and (action.previous_action.finish_time + action.delay > t)
+					should_start = action.previous_action.state == 'FINISHED' and (t > action.previous_action.finish_time + action.delay)
 				# start action
 				if should_start:
 					action.flexbe_state.on_enter(self._enter_userdata)
