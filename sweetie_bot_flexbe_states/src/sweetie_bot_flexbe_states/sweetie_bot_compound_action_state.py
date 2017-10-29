@@ -49,7 +49,7 @@ class SweetieBotCompoundAction(EventState):
 		'''
 		Constructor
 		'''
-		super(SweetieBotCompoundAction, self).__init__(outcomes=['success', 'failure'])
+		#super(SweetieBotCompoundAction, self).__init__(outcomes=['success', 'failure'])
 
 		# Define C-like structure types
 		class Parameters: 
@@ -94,6 +94,19 @@ class SweetieBotCompoundAction(EventState):
 				actions.append( SimpleAction(previous_action, delay, 'WAITING', flexbe_state, success_outcome, 0.0, description) )
 		# remove None actions
 		actions = [ a for a in actions if a != None ]
+
+        # setup key lists
+		#TODO correct key remapping
+		#input_keys = sum( map(lambda n: [ ik + str(n) for ik in actions[n].flexbe_state.get_registered_input_keys() ], range(len(actions))), []) 
+		#output_keys = sum( map(lambda n: [ ok + str(n) for ok in actions[n].flexbe_state._output_keys ], range(len(actions))), []) 
+		#smach.Remapper(userdata,
+                       #action.flexbe_state.get_registered_input_keys(),
+                       #action.flexbe_state.get_registered_output_keys(),
+                       #{key: key + str(n) for key in action.flexbe_state.get_registered_input_keys() + action.flexbe_state.get_registered_output_keys()}) 
+		# instance superclass
+		super(SweetieBotCompoundAction, self).__init__(outcomes=['success', 'failure'],
+							input_keys = list( set.union(*[ actions[n].flexbe_state._input_keys for n in range(len(actions)) ]) ),
+							output_keys = list( set.union(*[ actions[n].flexbe_state._output_keys for n in range(len(actions)) ]) ) )
 
 		# set class fields
 		self._start_time = None
