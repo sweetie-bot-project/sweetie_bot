@@ -14,9 +14,9 @@ Created on 14.10.2017
 @author: disRecord
 '''
 
-class WaitForMessageState(SubscriberState):
+#class WaitForMessageState(EventState):
 	'''
-	Wit for the message on the given topic with specified properties.
+	Wait for the message on the given topic with specified properties.
 
 	-- topic		string	  The topic on which should be listened.
 	-- condition 		function	The condition to check message properties.
@@ -31,10 +31,12 @@ class WaitForMessageState(SubscriberState):
 	<= unavailable			  The topic is not available when this state becomes actives.
 
 	'''
+	#def __init__(self, topic, condition, buffered = False, clear = False):
+		#super(SubscriberState, self).__init__(outcomes=['received', 'unavailable'], output_keys=['message'])
 
+class WaitForMessageState(SubscriberState):
 
 	def __init__(self, topic, condition, buffered = False, clear = False):
-
 		super(WaitForMessageState , self).__init__(topic = topic, blocking = False, clear = clear)
 
 		self._buffered = buffered

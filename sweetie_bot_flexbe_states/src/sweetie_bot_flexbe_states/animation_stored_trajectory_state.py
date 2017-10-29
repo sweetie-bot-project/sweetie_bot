@@ -45,10 +45,10 @@ class AnimationStoredJointTrajectoryState(EventState):
         try:
             goal_raw = rospy.get_param(trajectory_param)
         except KeyError as e:
-            raise KeyError, "Unable to get '" + trajectory_param + "' parameter."
+            raise KeyError, "AnimationStoredJointTrajectoryState: Unable to get '" + trajectory_param + "' parameter."
 
         if not isinstance(goal_raw, xmlrpclib.Binary):
-            raise TypeError, "ROS parameter '" + trajectory_param + "' is not a binary data."
+            raise TypeError, "AnimationStoredJointTrajectoryState: ROS parameter '" + trajectory_param + "' is not a binary data."
         # deserialize
         self._goal = FollowJointTrajectoryGoal()
         self._goal.deserialize(goal_raw.data)
