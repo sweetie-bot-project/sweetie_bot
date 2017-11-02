@@ -124,7 +124,7 @@ class GreetingSM(Behavior):
 
 			# x:320 y:218
 			OperatableStateMachine.add('SayQuestion',
-										TextCommandState(type='voice/play_wav', command='are_you_too_collecting_points', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='has_anyone_seen_my_sister', topic=voice_topic),
 										transitions={'done': 'HeadSuprised'},
 										autonomy={'done': Autonomy.Off})
 
@@ -189,7 +189,7 @@ class GreetingSM(Behavior):
 
 			# x:324 y:277
 			OperatableStateMachine.add('SayMeetUp',
-										TextCommandState(type='voice/play_wav', command='do_you_want_meet_up', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='acquitance_procedure', topic=voice_topic),
 										transitions={'done': 'Greeting'},
 										autonomy={'done': Autonomy.Off})
 

@@ -72,13 +72,13 @@ class PlaySM(Behavior):
 
 			# x:314 y:39
 			OperatableStateMachine.add('SingSong1',
-										TextCommandState(type='voice/play_wav', command='song1', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='beep_beep_im_a_sheep', topic=voice_topic),
 										transitions={'done': 'SlowShake'},
 										autonomy={'done': Autonomy.Off})
 
 			# x:322 y:149
 			OperatableStateMachine.add('SingSong2',
-										TextCommandState(type='voice/play_wav', command='song2', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='mmm_song', topic=voice_topic),
 										transitions={'done': 'SlowShake'},
 										autonomy={'done': Autonomy.Off})
 
@@ -209,7 +209,7 @@ class PlaySM(Behavior):
 
 			# x:324 y:377
 			OperatableStateMachine.add('SayMakeAWish',
-										TextCommandState(type='voice/play_wav', command='make_a_wish', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='people_everywhere_people', topic=voice_topic),
 										transitions={'done': 'PointOnSomething'},
 										autonomy={'done': Autonomy.Off})
 

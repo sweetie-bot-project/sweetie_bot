@@ -103,7 +103,7 @@ class BadSM(Behavior):
 
 			# x:495 y:227
 			OperatableStateMachine.add('SayDizzy',
-										TextCommandState(type='voice/play_wav', command='why_do_i_see_these_creatures', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='who_am_i_what_is_my_purpose', topic=voice_topic),
 										transitions={'done': 'NoHeadShake'},
 										autonomy={'done': Autonomy.Off})
 
