@@ -67,6 +67,7 @@
 		<!-- manual joints control  -->
 		<node name="joint_state_ref" pkg="joint_state_publisher" type="joint_state_publisher">
 			<param name="use_gui" value="true"/>
+			<param name="num_rows" value="6"/>
 			<rosparam param="source_list">["/sweetie_bot/motion/controller/joint_state/out_joints_src_reset"]</rosparam>
 			<remap from="robot_description" to="/robot_description"/>
 			<remap from="joint_states" to="/sweetie_bot/motion/controller/joint_state/in_joints_ref"/>
