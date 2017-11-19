@@ -39,3 +39,5 @@ install(DIRECTORY common
 # python node installation
 catkin_install_python(PROGRAMS sweetie-bot-core
 	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+catkin_install_python(PROGRAMS store
+	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
