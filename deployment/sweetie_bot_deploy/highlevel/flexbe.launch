@@ -2,7 +2,7 @@
 <launch>
 	<arg name="ns" default="" doc="Current namespace (for operator control nodes)."/>
 	<arg name="behavior_ns" default="/sweetie_bot" doc="Location of behavior_onboard behavior node."/>
-	<arg name="behaviors_package" default="flexbe_behaviors" doc="Package with flexbe bahviors."/>
+	<arg name="behaviors_package" default="flexbe_behaviors" doc="Package with flexbe behaviors."/>
 	<arg name="run_behavior" default="true" doc="Run behavior_onboard behavior node."/>
 
 	<!-- run behavior node -->
@@ -43,6 +43,7 @@
 	<remap from="flexbe/uicommand"			to="$(arg behavior_ns)/flexbe/uicommand" />
 	<remap from="flexbe/request_behavior"	to="$(arg behavior_ns)/flexbe/request_behavior" />
 	<remap from="flexbe/ui_version"			to="$(arg behavior_ns)/flexbe/ui_version" /> -->
+
 	<!-- run operator interface nodes -->
 	<include file="$(find flexbe_widget)/launch/behavior_ocs.launch" >
 		<arg name="ns" value="$(arg ns)" />

@@ -71,7 +71,7 @@ function rttlib_extra.get_peer_rosparams(peer)
 	services = rttlib_extra.get_rosparam("~" .. peer:getName() .. "/services", "string[]")
 	if services then
 		for k, service in ipairs(services) do 
-			print("Load service " .. service .. " into " .. peer:getName())
+			-- print("Load service " .. service .. " into " .. peer:getName())
 			peer:loadService(service)
 		end
 	end

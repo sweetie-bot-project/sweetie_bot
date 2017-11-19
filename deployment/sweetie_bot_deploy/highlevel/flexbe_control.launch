@@ -52,7 +52,6 @@
 	</group>
 
 	<!-- FLEXBE -->
-
 	<group ns="/flexbe" if="$(arg run_flexbe)">
 		<include file="$(find sweetie_bot_deploy)/highlevel/flexbe.launch" >
 			<arg name="ns" value="/flexbe" />
