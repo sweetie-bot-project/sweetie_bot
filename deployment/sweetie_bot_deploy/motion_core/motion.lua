@@ -62,3 +62,13 @@ assert(agregator_real:start())
 
 -- data flow: herkulex_sched -> agregator_real
 depl:connect("herkulex/sched.out_joints", "agregator_real.in_joints", rtt.Variable("ConnPolicy"))
+
+--- start herkulex scheduler
+if herkulex.array:isConfigured() then
+	herkulex.sched:start()
+	print "herkulex.sched is stared!"
+else
+	print "WARNING: herkulex.array is not configured. herkulex.sched is not started."
+end
+
+
