@@ -2,10 +2,11 @@
 -- VIRTUAL ROBOT and JOINT STATE controllers
 --
 -- controllers: FollowJointState, AnimJointTrajectoryBase, TorqueMainSwitch if herkulex and agregator are present.
---.
+--
 -- Intended to be run via config script.
 --
 require "controller_joint_state"
+
 assert(controller.joint_state:start())
 
 require "controller_joint_state_head"
