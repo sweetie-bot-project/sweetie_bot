@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sweetie_bot_moveit_config_proto2)
+project(sweetie_bot_proto2_moveit_config)
 
 find_package(catkin REQUIRED)
 

@@ -15,6 +15,6 @@
   
   <!-- Load the robot specific controller manager; this sets the moveit_controller_manager ROS parameter -->
   <arg name="moveit_controller_manager" default="sweetie_bot_description_proto2" />
-  <include file="$(find sweetie_bot_moveit_config_proto2)/launch/$(arg moveit_controller_manager)_moveit_controller_manager.launch.xml" />
+  <include file="$(find sweetie_bot_proto2_moveit_config)/launch/$(arg moveit_controller_manager)_moveit_controller_manager.launch.xml" />
   
 </launch>

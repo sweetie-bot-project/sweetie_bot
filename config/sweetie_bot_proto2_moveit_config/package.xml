@@ -1,5 +1,5 @@
 <package>
-  <name>sweetie_bot_moveit_config_proto2</name>
+  <name>sweetie_bot_proto2_moveit_config</name>
   <version>0.3.0</version>
   <description>
      An automatically generated package with all the configuration and launch files for using the sweetie_bot_description_proto2 with the MoveIt! Motion Planning Framework

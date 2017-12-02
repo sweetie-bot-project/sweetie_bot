@@ -1,7 +1,7 @@
 <!-- MODULE: run move_group in current LOCAL context -->
 <launch>
 	<!-- Load the URDF, SRDF and other .yaml configuration files on the param server -->
-	<include file="$(find sweetie_bot_moveit_config_proto2)/launch/planning_context.launch">
+	<include file="$(find sweetie_bot_proto2_moveit_config)/launch/planning_context.launch">
 		<arg name="load_robot_description" value="true"/>
 	</include>
 	
@@ -9,7 +9,7 @@
 	<group>
 		<remap from="/tf" to="tf"/>
 		<remap from="/tf_static" to="tf_static"/>
-		<include file="$(find sweetie_bot_moveit_config_proto2)/launch/move_group.launch">
+		<include file="$(find sweetie_bot_proto2_moveit_config)/launch/move_group.launch">
 			<arg name="info" value="true"/>
 			<arg name="jiggle_fraction" default="0.2" />
 		</include>
