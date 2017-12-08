@@ -1,5 +1,6 @@
 <launch>
 	<!-- By default, we are not in debug mode -->
 	<node ns="hmi" name="rviz" pkg="rviz" type="rviz" args="-d $(find sweetie_bot_deploy)/joint_state_control/moveit_control.rviz">
+		<remap from="robot_description" to="/sweetie_bot/robot_description"/>
 	</node>
 </launch>

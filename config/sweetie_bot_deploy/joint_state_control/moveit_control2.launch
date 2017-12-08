@@ -9,7 +9,6 @@
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
-		<param name="robot_description" textfile="$(find sweetie_bot_description_proto2)/robots/sweetie_bot_description_proto2.URDF" />
 		<include ns="sweetie_bot" file="$(find sweetie_bot_deploy)/joint_state_control/joint_space_param.launch"/>
 		<include ns="sweetie_bot_virtual" file="$(find sweetie_bot_deploy)/joint_state_control/joint_space_param.launch"/>
 	</group>
