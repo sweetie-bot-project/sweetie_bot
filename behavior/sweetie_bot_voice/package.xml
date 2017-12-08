@@ -1,5 +1,4 @@
-<?xml version="2"?>
-<package>
+<package format="2">
   <name>sweetie_bot_voice</name>
   <version>1.0.0</version>
   <description>SweetieBot voice node.</description>
