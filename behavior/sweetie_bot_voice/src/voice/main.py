@@ -54,8 +54,8 @@ def main():
     lang_prefixes = string.split(rospy.get_param('lang', 'ru,en'), ',')
    
     # Get sounds location
-    sound_path = rospy.get_param('sound_path', '')
-    if not sound_path: 
+    sounds_path = rospy.get_param('sounds_path', '')
+    if not sounds_path: 
         rospack = rospkg.RosPack()
         sounds_path = os.path.join(rospack.get_path('sweetie_bot_voice'), 'sounds')
    
