@@ -6,7 +6,6 @@ project(sweetie_bot_voice)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   rospy
-  roslib
   rospack
   sound_play
 )
