@@ -1,0 +1,385 @@
+{
+    "goal_time_tolerance": {
+        "secs": 1, 
+        "nsecs": 0
+    }, 
+    "trajectory": {
+        "header": {
+            "stamp": {
+                "secs": 1512915145, 
+                "nsecs": 415482333
+            }, 
+            "frame_id": "", 
+            "seq": 0
+        }, 
+        "joint_names": [
+            "joint11", 
+            "joint12", 
+            "joint13", 
+            "joint14", 
+            "joint15", 
+            "joint21", 
+            "joint22", 
+            "joint23", 
+            "joint24", 
+            "joint25"
+        ], 
+        "points": [
+            {
+                "positions": [
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 0, 
+                    "nsecs": 0
+                }
+            }, 
+            {
+                "positions": [
+                    0.02497964116573174, 
+                    -0.6971247169556052, 
+                    1.1871531268958584, 
+                    -0.4899045716117825, 
+                    -0.024878165272810986, 
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 0, 
+                    "nsecs": 300000000
+                }
+            }, 
+            {
+                "positions": [
+                    1.0009562035091535e-09, 
+                    -2.793440087576351e-08, 
+                    4.7570270485384285e-08, 
+                    -1.963090729882155e-08, 
+                    -9.968899751813803e-10, 
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0, 
+                    0.0
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 0, 
+                    "nsecs": 600000000
+                }
+            }, 
+            {
+                "positions": [
+                    5.302425640580048e-84, 
+                    -1.4797858581485627e-82, 
+                    2.5199686166760467e-82, 
+                    -1.0399198870459867e-82, 
+                    -5.280885364122202e-84, 
+                    0.0018166464654544455, 
+                    -0.790045890904187, 
+                    1.3647179326991272, 
+                    -0.5746848309501559, 
+                    -0.009369363813919807
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 0, 
+                    "nsecs": 900000000
+                }
+            }, 
+            {
+                "positions": [
+                    5.8867746271968326e-92, 
+                    -1.6428643103952554e-90, 
+                    2.7976794621033247e-90, 
+                    -1.1545233107144564e-90, 
+                    -5.86286052419755e-92, 
+                    2.0168483340115555e-11, 
+                    -8.771121784910342e-09, 
+                    1.5151154290614176e-08, 
+                    -6.380174491428075e-09, 
+                    -1.0401906016493501e-10
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 1, 
+                    "nsecs": 199999999
+                }
+            }, 
+            {
+                "positions": [
+                    0.024979641163155434, 
+                    -0.697124716883706, 
+                    1.1871531267734214, 
+                    -0.4899045715612556, 
+                    -0.024878165270245126, 
+                    2.0338641634235463e-44, 
+                    -8.84512234783176e-42, 
+                    1.5278982175565526e-41, 
+                    -6.434003011368938e-42, 
+                    -1.0489665247245473e-43
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 1, 
+                    "nsecs": 500000000
+                }
+            }, 
+            {
+                "positions": [
+                    -4.683546593519549e-10, 
+                    1.3070708548987495e-08, 
+                    -2.2258474197326607e-08, 
+                    9.185443747165187e-09, 
+                    4.66452041658369e-10, 
+                    1.948486527246803e-63, 
+                    -8.473821426495561e-61, 
+                    1.4637600413304222e-60, 
+                    -6.163916159875248e-61, 
+                    -1.0049329634277324e-62
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 1, 
+                    "nsecs": 800000000
+                }
+            }, 
+            {
+                "positions": [
+                    -7.026702884198671e-19, 
+                    1.9609922443554212e-17, 
+                    -3.339428395067698e-17, 
+                    1.3780877969732813e-17, 
+                    6.998158000598019e-19, 
+                    0.0018166464639106782, 
+                    -0.7900458902328145, 
+                    1.364717931539404, 
+                    -0.5746848304617952, 
+                    -0.009369363805957827
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 2, 
+                    "nsecs": 100000000
+                }
+            }, 
+            {
+                "positions": [
+                    1.8869427176467658e-19, 
+                    -5.2660260378580264e-18, 
+                    8.9676626364064e-18, 
+                    -3.700701133420896e-18, 
+                    -1.8792773074075374e-19, 
+                    3.390189515597567e-10, 
+                    -1.4743679340571585e-07, 
+                    2.5468094729302157e-07, 
+                    -1.0724654057402444e-07, 
+                    -1.7484920469555531e-09
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 2, 
+                    "nsecs": 399999999
+                }
+            }, 
+            {
+                "positions": [
+                    8.334879073488427e-14, 
+                    -2.3260743324599373e-12, 
+                    3.961136866915517e-12, 
+                    -1.6346493269635254e-12, 
+                    -8.301019928327233e-14, 
+                    1.2935036756468376e-06, 
+                    -0.0005625350244241832, 
+                    0.0009717177754372935, 
+                    -0.0004091918572534961, 
+                    -6.671252091281716e-06
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 2, 
+                    "nsecs": 500000000
+                }
+            }, 
+            {
+                "positions": [
+                    8.334879073505563e-14, 
+                    -2.326074332464717e-12, 
+                    3.9611368669236585e-12, 
+                    -1.6346493269668846e-12, 
+                    -8.301019928344297e-14, 
+                    1.2935036756494952e-06, 
+                    -0.0005625350244253388, 
+                    0.0009717177754392906, 
+                    -0.0004091918572543371, 
+                    -6.6712520912954255e-06
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 2, 
+                    "nsecs": 600000000
+                }
+            }
+        ]
+    }, 
+    "path_tolerance": [
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint11", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint12", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint13", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint14", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint15", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint21", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint22", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint23", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint24", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint25", 
+            "velocity": 0.0
+        }
+    ], 
+    "goal_tolerance": [
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint11", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint12", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint13", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint14", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint15", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint21", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint22", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint23", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint24", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint25", 
+            "velocity": 0.0
+        }
+    ]
+}

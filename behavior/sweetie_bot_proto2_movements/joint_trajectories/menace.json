@@ -1,0 +1,584 @@
+{
+    "goal_time_tolerance": {
+        "secs": 0, 
+        "nsecs": 0
+    }, 
+    "trajectory": {
+        "header": {
+            "stamp": {
+                "secs": 1512914666, 
+                "nsecs": 529907764
+            }, 
+            "frame_id": "", 
+            "seq": 0
+        }, 
+        "joint_names": [
+            "joint11", 
+            "joint12", 
+            "joint13", 
+            "joint14", 
+            "joint15", 
+            "joint21", 
+            "joint22", 
+            "joint23", 
+            "joint24", 
+            "joint25", 
+            "joint31", 
+            "joint32", 
+            "joint33", 
+            "joint34", 
+            "joint35", 
+            "joint41", 
+            "joint42", 
+            "joint43", 
+            "joint44", 
+            "joint45", 
+            "joint51", 
+            "joint52", 
+            "joint53", 
+            "joint54", 
+            "joint55", 
+            "joint56"
+        ], 
+        "points": [
+            {
+                "positions": [
+                    0.0, 
+                    0.0, 
+                    6.640335040728528e-16, 
+                    -3.3388346534209886e-15, 
+                    -6.640335040728528e-16, 
+                    0.0, 
+                    3.320167520364264e-16, 
+                    0.0, 
+                    4.354589105534656e-15, 
+                    3.320167520364264e-16, 
+                    -1.0060751979360317e-15, 
+                    0.0, 
+                    6.640335040728528e-16, 
+                    6.640335040728528e-16, 
+                    -3.320167520364264e-16, 
+                    -3.320167520364264e-16, 
+                    3.320167520364264e-16, 
+                    -3.320167520364264e-16, 
+                    0.0, 
+                    -3.320167520364264e-16, 
+                    0.20020608821653998, 
+                    3.320167520364264e-16, 
+                    3.6995434803408845e-15, 
+                    0.0, 
+                    0.0, 
+                    0.0
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 0, 
+                    "nsecs": 0
+                }
+            }, 
+            {
+                "positions": [
+                    0.011344640137963142, 
+                    -0.14180800172453928, 
+                    0.3687008044838021, 
+                    -0.2892883235180601, 
+                    -0.022689280275926284, 
+                    0.005672320068981571, 
+                    -0.16449728200046557, 
+                    0.4084070449666731, 
+                    -0.1758419221384287, 
+                    0.005672320068981571, 
+                    0.005672320068981571, 
+                    -0.17016960206944715, 
+                    0.4481132854495441, 
+                    -0.2325651228282444, 
+                    -0.062395520758797285, 
+                    0.22689280275926285, 
+                    -0.8111417698643647, 
+                    1.3386675362796507, 
+                    -1.0550515328305723, 
+                    -0.32899456400093113, 
+                    0.1928588823453734, 
+                    0.005672320068981571, 
+                    0.005672320068981571, 
+                    0.0, 
+                    0.0, 
+                    0.0
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 0, 
+                    "nsecs": 500000000
+                }
+            }, 
+            {
+                "positions": [
+                    0.028274400000000036, 
+                    -0.1815844800000008, 
+                    0.5274746400000023, 
+                    -0.4027531200000014, 
+                    -0.011623919999999935, 
+                    0.07351344000000015, 
+                    -0.33489456000000095, 
+                    0.7260237600000022, 
+                    -0.3235848000000009, 
+                    0.005654880000000048, 
+                    0.011309760000000096, 
+                    -0.21017304000000067, 
+                    0.5670588000000022, 
+                    -0.3292396800000011, 
+                    -0.03424344000000014, 
+                    0.28902720000000104, 
+                    -0.17592960000000046, 
+                    0.3402352800000012, 
+                    -0.16461984000000063, 
+                    -0.2610669600000005, 
+                    0.04618152000000036, 
+                    0.005654880000000048, 
+                    0.16933224000000124, 
+                    -0.015393840000000039, 
+                    0.0, 
+                    0.0
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 1, 
+                    "nsecs": 0
+                }
+            }, 
+            {
+                "positions": [
+                    0.06220368000000031, 
+                    -0.340549440000001, 
+                    0.9245728800000034, 
+                    -0.5899924800000017, 
+                    -0.022933680000000043, 
+                    0.056548800000000295, 
+                    -0.44265144000000145, 
+                    1.0492944000000046, 
+                    -0.4765807200000016, 
+                    -0.005969040000000115, 
+                    -0.1021020000000003, 
+                    -0.6807847200000025, 
+                    1.366910160000005, 
+                    -0.9305419200000026, 
+                    -0.028588560000000082, 
+                    0.28337232000000057, 
+                    -0.1250356800000005, 
+                    0.3571999200000013, 
+                    -0.14765520000000049, 
+                    -0.266721840000001, 
+                    -0.3078768000000008, 
+                    0.011309760000000096, 
+                    0.5544924000000018, 
+                    -0.005969040000000115, 
+                    0.0, 
+                    0.0
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 1, 
+                    "nsecs": 500000000
+                }
+            }, 
+            {
+                "positions": [
+                    0.056247258908459906, 
+                    -0.44292906748106337, 
+                    1.355378244895508, 
+                    -0.8000558445486948, 
+                    -0.028901317899060065, 
+                    0.09044863588026054, 
+                    -0.44267815781235625, 
+                    1.423260796400482, 
+                    -0.7321549099425076, 
+                    -0.05714214537099702, 
+                    -0.2104349327927373, 
+                    -0.22759180491556208, 
+                    0.6805511578141571, 
+                    -0.23314650109790314, 
+                    0.1754649478324414, 
+                    0.2946722652934199, 
+                    0.01122096027380097, 
+                    0.36285480000000025, 
+                    -0.15361582739436017, 
+                    -0.28964009688965975, 
+                    -0.40057285046819346, 
+                    0.010997002100939759, 
+                    0.7699413517787755, 
+                    -0.006280863165099956, 
+                    -0.5544938794756666, 
+                    0.0
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 2, 
+                    "nsecs": 0
+                }
+            }, 
+            {
+                "positions": [
+                    0.05623464000000001, 
+                    -0.44296559999999996, 
+                    1.3552862400000023, 
+                    -0.80016552, 
+                    -0.02890272000000004, 
+                    0.09016391999999969, 
+                    -0.4429656, 
+                    1.4231448000000004, 
+                    -0.7323069600000001, 
+                    -0.057177119999999984, 
+                    -0.2104872, 
+                    -0.22776599999999997, 
+                    0.6804705599999994, 
+                    -0.23342088000000005, 
+                    0.1753012799999997, 
+                    0.29436792000000056, 
+                    0.010995599999999767, 
+                    0.36285480000000025, 
+                    -0.15362424000000005, 
+                    -0.2896555200000004, 
+                    -0.5237047200000006, 
+                    0.01099559999999977, 
+                    0.6468554399999988, 
+                    -0.006283199999999938, 
+                    -1.1702433254807372, 
+                    0.0
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 2, 
+                    "nsecs": 500000000
+                }
+            }
+        ]
+    }, 
+    "path_tolerance": [
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint11", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint12", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint13", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint14", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint15", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint21", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint22", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint23", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint24", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint25", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint31", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint32", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint33", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint34", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint35", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint41", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint42", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint43", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint44", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint45", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint51", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint52", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint53", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint54", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 3.0, 
+            "name": "joint55", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 3.0, 
+            "name": "joint56", 
+            "velocity": 0.0
+        }
+    ], 
+    "goal_tolerance": [
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint11", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint12", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint13", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint14", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint15", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint21", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint22", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint23", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint24", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint25", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint31", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint32", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint33", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint34", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint35", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint41", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint42", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint43", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint44", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint45", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint51", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint52", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint53", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint54", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint55", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint56", 
+            "velocity": 0.0
+        }
+    ]
+}

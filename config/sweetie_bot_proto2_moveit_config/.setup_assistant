@@ -1,9 +1,9 @@
 moveit_setup_assistant_config:
   URDF:
-    package: sweetie_bot_description_proto2
-    relative_path: robots/sweetie_bot_description_proto2.URDF
+    package: sweetie_bot_proto2_description
+    relative_path: urdf/sweetie_bot_proto2_description_stl.urdf
   SRDF:
-    relative_path: config/sweetie_bot_description_proto2.srdf
+    relative_path: config/sweetie_bot_proto2_description.srdf
   CONFIG:
     author_name: disrecord
     author_email: goncharovoi@yandex.ru

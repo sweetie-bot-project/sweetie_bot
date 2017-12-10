@@ -8,6 +8,7 @@
      <simple type="string"><value>leg3</value></simple>
      <simple type="string"><value>leg4</value></simple>
      <simple type="string"><value>eyes</value></simple>
+     <simple type="string"><value>eyes_focus</value></simple>
      <simple type="string"><value>tail</value></simple>
   </struct>
 </properties>

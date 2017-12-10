@@ -1,0 +1,22 @@
+<package format="2">
+  <name>sweetie_bot_proto2_movements</name>
+  <version>1.0.0</version>
+  <description>SweetieBot proto2 movements.</description>
+
+  <maintainer email="fsdfur@gmail.com">mutronics</maintainer>
+
+  <license>BSD</license>
+
+  <!-- Url tags are optional, but mutiple are allowed, one per tag -->
+  <!-- Optional attribute type can be: website, bugtracker, or repository -->
+  <!-- Example: -->
+  <url type="website">https://gitlab.com/sweetie-bot/sweetie_doc/wikis/home</url>
+  <url type="website">sweetiebot.net</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+  </export>
+</package>

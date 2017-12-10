@@ -1,0 +1,6 @@
+[submodule "config/sweetie_bot_proto2_description"]
+	path = config/sweetie_bot_proto2_description
+	url = git@gitlab.com:sweetie-bot/sweetie_bot_proto2_description.git
+[submodule "rt_control"]
+	path = rt_control
+	url = git@gitlab.com:sweetie-bot/sweetie_bot_rt_control.git

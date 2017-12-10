@@ -1,14 +1,14 @@
 controller:
     joint_state:
         priority: 20
-        controlled_chains: [ leg1, leg2, leg3, leg4, head, eyes ]
+        controlled_chains: [ leg1, leg2, leg3, leg4, head, eyes, eyes_focus ]
         activation_delay: 2
         services: [ filter_joint_state_exp ]
         filter_joint_state_exp:
             transient_time: 1
     joint_state_head:
         priority: 20
-        controlled_chains: [ head, eyes ]
+        controlled_chains: [ head, eyes, eyes_focus ]
         activation_delay: 2
         services: [ filter_joint_state_exp_individual ]
         filter_joint_state_exp_individual:

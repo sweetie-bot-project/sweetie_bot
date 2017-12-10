@@ -69,5 +69,16 @@
 			<value>bone56</value>
 		</simple>
 	</struct>
+	<struct name="eyes_focus" type="PropertyBag">
+		<description>Eyes pseudo kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>bone54</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>link_eyes_z</value>
+		</simple>
+	</struct>
   </struct>
 </properties>

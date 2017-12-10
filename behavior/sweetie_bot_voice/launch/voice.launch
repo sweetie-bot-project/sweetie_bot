@@ -1,0 +1,7 @@
+<launch>
+  <include file="$(find sound_play)/soundplay_node.launch" />
+  <node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
+		<param name="lang" value="ru,en" />
+		<param name="sound_path" value="$(find sweetie_bot_sounds)/sounds" />
+  </node>
+</launch>
