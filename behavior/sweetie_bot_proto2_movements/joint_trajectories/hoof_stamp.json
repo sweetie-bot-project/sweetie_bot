@@ -1,0 +1,169 @@
+{
+    "goal_time_tolerance": {
+        "secs": 1, 
+        "nsecs": 0
+    }, 
+    "trajectory": {
+        "header": {
+            "stamp": {
+                "secs": 1512914571, 
+                "nsecs": 794459963
+            }, 
+            "frame_id": "", 
+            "seq": 0
+        }, 
+        "joint_names": [
+            "joint11", 
+            "joint12", 
+            "joint13", 
+            "joint14", 
+            "joint15"
+        ], 
+        "points": [
+            {
+                "positions": [
+                    0.0, 
+                    1.9911608592998994e-15, 
+                    -3.80532964220586e-15, 
+                    2.477889069347684e-15, 
+                    4.079114260413245e-17
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 0, 
+                    "nsecs": 0
+                }
+            }, 
+            {
+                "positions": [
+                    -0.0, 
+                    -0.30063296365602327, 
+                    0.5388704065532492, 
+                    -0.26659904324213385, 
+                    -0.005672320068981571
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 0, 
+                    "nsecs": 350000000
+                }
+            }, 
+            {
+                "positions": [
+                    3.2318664089396385e-103, 
+                    -0.5544924328148183, 
+                    1.1394583883412654, 
+                    -0.7084308415140494, 
+                    -0.0059690402615275966
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 0, 
+                    "nsecs": 700000000
+                }
+            }, 
+            {
+                "positions": [
+                    9.161118966972138e-114, 
+                    -0.3006329300651371, 
+                    0.5388703463475057, 
+                    -0.26659901346040554, 
+                    -0.005672319435056056
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 1, 
+                    "nsecs": 0
+                }
+            }, 
+            {
+                "positions": [
+                    0.0, 
+                    -6.450161105704957e-06, 
+                    1.3433326296409146e-05, 
+                    -8.160103143835657e-06, 
+                    -5.140648529739205e-08
+                ], 
+                "accelerations": [], 
+                "velocities": [], 
+                "effort": [], 
+                "time_from_start": {
+                    "secs": 1, 
+                    "nsecs": 300000000
+                }
+            }
+        ]
+    }, 
+    "path_tolerance": [
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint11", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint12", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint13", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint14", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint15", 
+            "velocity": 0.0
+        }
+    ], 
+    "goal_tolerance": [
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint11", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint12", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint13", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint14", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.5, 
+            "name": "joint15", 
+            "velocity": 0.0
+        }
+    ]
+}
