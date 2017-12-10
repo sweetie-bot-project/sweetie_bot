@@ -17,6 +17,7 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 	if (!ros::param::get("~trajectory_storage", trajectories_param_name)) {
 		trajectories_param_name = "/stored/joint_trajectory";
 	}
+    ROS_INFO_STREAM( "Trajectory storage namespace: " << trajectories_param_name );
 
 
     ui->setupUi(this);
@@ -43,12 +44,9 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
     //state_ = boost::make_shared<actionlib::SimpleClientGoalState>(client->getState());
     //Client::ResultConstPtr result = *client->getResult();
 
-    control_msgs::FollowJointTrajectoryGoal sd = loader_->getParam( trajectories_param_name + "/default");
-    ROS_INFO_STREAM( "Trajectory storage namespace: " << trajectories_param_name );
-    joint_trajectory_data_ = new sweetie_bot::interface::JointTrajectoryData(sd);
-
-    joint_list_table_view_ = new sweetie_bot::interface::JointListTableView(parent, *joint_trajectory_data_);
-    joint_trajectory_point_table_view_ = new sweetie_bot::interface::JointTrajectoryPointTableView(parent, *joint_trajectory_data_);
+    joint_trajectory_data_ = new sweetie_bot::interface::JointTrajectoryData();
+    joint_list_table_model_ = new sweetie_bot::interface::JointListTableModel(parent, *joint_trajectory_data_);
+    joint_trajectory_point_table_model_ = new sweetie_bot::interface::JointTrajectoryPointTableModel(parent, *joint_trajectory_data_);
 
     bootstrap();
 }
@@ -60,16 +58,16 @@ TrajectoryEditor::~TrajectoryEditor()
 
 void TrajectoryEditor::jointsRealCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
-  joint_state_real_ = *msg;
-  if(!ui->addRealPoseButton->isEnabled())
-    ui->addRealPoseButton->setEnabled(true);
+	joint_state_real_ = *msg;
+	if(!ui->addRealPoseButton->isEnabled())
+		ui->addRealPoseButton->setEnabled(true);
 }
 
 void TrajectoryEditor::jointsVirtualCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
-  joint_state_virtual_ = *msg;
-  if(!ui->addVirtualPoseButton->isEnabled())
-    ui->addVirtualPoseButton->setEnabled(true);
+	joint_state_virtual_ = *msg;
+	if(!ui->addVirtualPoseButton->isEnabled())
+		ui->addVirtualPoseButton->setEnabled(true);
 }
 
 void TrajectoryEditor::updateParamList()
@@ -95,181 +93,212 @@ void TrajectoryEditor::rosSpin()
 
 void TrajectoryEditor::bootstrap()
 {
-  ui->pointsTableView->setModel(joint_trajectory_point_table_view_);
-  ui->jointsTableView->setModel(joint_list_table_view_);
+	ui->pointsTableView->setModel(joint_trajectory_point_table_model_);
+	ui->pointsTableView->setSelectionBehavior(QTableView::SelectRows);
+	ui->pointsTableView->setSelectionMode(QTableView::SingleSelection); 
+
+	ui->jointsTableView->setModel(joint_list_table_model_);
+	ui->jointsTableView->setSelectionBehavior(QTableView::SelectRows);
+	ui->jointsTableView->setSelectionMode(QTableView::SingleSelection); 
 }
 
 void TrajectoryEditor::on_loadTrajectoryButton_clicked()
 {
-  control_msgs::FollowJointTrajectoryGoal msg;
-  bool param_ok = loader_->getParam(trajectories_param_name + "/" + ui->comboBox->currentText().toStdString(), msg);
-  joint_trajectory_data_->loadFromMsg( msg );
-  if(!param_ok) {
-	if(ui->addRealPoseButton->isEnabled())
-	{
-	  for(auto &name: joint_state_real_.name){
-    joint_trajectory_data_->addJoint(name, ui->pathToleranceSpinBox->value(), ui->goalToleranceSpinBox->value());
-	  }
-	} else if (ui->addVirtualPoseButton->isEnabled()){
-	  for(auto &name: joint_state_virtual_.name){
-    joint_trajectory_data_->addJoint(name, ui->pathToleranceSpinBox->value(), ui->goalToleranceSpinBox->value());
-	  }
+	control_msgs::FollowJointTrajectoryGoal msg;
+	std::string param_name = trajectories_param_name + "/" + ui->comboBox->currentText().toStdString();
+
+	bool param_ok = loader_->getParam(param_name, msg);
+
+	if (param_ok) {
+		ROS_INFO("Loading FollowJointTrajectoryGoal message `%s`", param_name.c_str());
+		try {
+			joint_trajectory_data_->loadFromMsg( msg );
+		} 
+		catch (std::exception e) {
+			ROS_ERROR("Incorrect FollowJointTrajectoryGoal message `%s`: %s", param_name.c_str(), e.what());
+		}
 	}
-  }
-  joint_list_table_view_->reReadData();
-  joint_trajectory_point_table_view_->reReadData();
-  ui->goalTimeToleranceSpinBox->setValue(joint_trajectory_data_->getGoalTimeTolerance());
+	else {
+		joint_trajectory_data_->clear();
+		if(ui->addRealPoseButton->isEnabled())
+		{
+			for(auto &name: joint_state_real_.name){
+				joint_trajectory_data_->addJoint(name, ui->pathToleranceSpinBox->value(), ui->goalToleranceSpinBox->value());
+			}
+		} else if (ui->addVirtualPoseButton->isEnabled()){
+			for(auto &name: joint_state_virtual_.name){
+				joint_trajectory_data_->addJoint(name, ui->pathToleranceSpinBox->value(), ui->goalToleranceSpinBox->value());
+			}
+		}
+	}
+	joint_list_table_model_->reReadData();
+	joint_trajectory_point_table_model_->reReadData();
+	ui->goalTimeToleranceSpinBox->setValue(joint_trajectory_data_->getGoalTimeTolerance());
 }
 
 void TrajectoryEditor::on_turnAllServoOnButton_clicked()
 {
-  std_srvs::SetBool srv;
+	std_srvs::SetBool srv;
 
-  // When TorqueMainSwitch controler is operational servos are off.
-  // So we have to send false if we want to activate servos.
-  srv.request.data  = !(ui->turnAllServoOnButton->text() == "Turn all servos on");
+	// When TorqueMainSwitch controler is operational servos are off.
+	// So we have to send false if we want to activate servos.
+	srv.request.data  = !(ui->turnAllServoOnButton->text() == "Turn all servos on");
 
-  if (! torque_main_switch_.call(srv)) {
-    ROS_ERROR("TorqueMainSwitch setOperational service is not available.");
-	return;
-  }
-  if (! srv.response.success) {
-	ROS_ERROR("TorqueMainSwitch setOperational service returned false: %s.", srv.response.message.c_str());
-	return;
-  }
+	if (! torque_main_switch_.call(srv)) {
+		ROS_ERROR("TorqueMainSwitch setOperational service is not available.");
+		return;
+	}
+	if (! srv.response.success) {
+		ROS_ERROR("TorqueMainSwitch setOperational service returned false: %s.", srv.response.message.c_str());
+		return;
+	}
 
-  // Operation has succesed
-  ROS_INFO("TorqueMainSwitch setOperational call successed. Servos torque_off = %d.", (int) srv.request.data);
-  // Change button label
-  if (srv.request.data) ui->turnAllServoOnButton->setText("Turn all servos on");
-  else ui->turnAllServoOnButton->setText("Turn all servos off");
+	// Operation has succesed
+	ROS_INFO("TorqueMainSwitch setOperational call successed. Servos torque_off = %d.", (int) srv.request.data);
+	// Change button label
+	if (srv.request.data) ui->turnAllServoOnButton->setText("Turn all servos on");
+	else ui->turnAllServoOnButton->setText("Turn all servos off");
 }
 
 void TrajectoryEditor::on_turnAllTrajectoryServosButton_clicked()
 {
-  ROS_INFO("Command to switch trajectory servos");
+	ROS_INFO("Command to switch trajectory servos");
 }
 
 void TrajectoryEditor::on_turnAllSelectedServosButton_clicked()
 {
-  ROS_INFO("Command to switch selected servos");
+	ROS_INFO("Command to switch selected servos");
 }
 
 void TrajectoryEditor::on_addVirtualPoseButton_clicked()
 {
-	ROS_INFO_STREAM("\n" << joint_state_virtual_ );
-	int index = ui->pointsTableView->selectionModel()->currentIndex().row(); // TODO isValid check?
-	joint_trajectory_data_->addPoint(index + 1, joint_state_virtual_, ui->timeIncrementSpinBox->value());
-	joint_trajectory_point_table_view_->reReadData();
+	ROS_INFO_STREAM("Add JointState to JointTrajectory:\n" << joint_state_virtual_ );
+	joint_trajectory_data_->addPointMsg(joint_state_virtual_, ui->timeIncrementSpinBox->value());
+	joint_trajectory_point_table_model_->reReadData();
 }
 
 void TrajectoryEditor::on_addRealPoseButton_clicked()
 {
-	int index = ui->pointsTableView->selectionModel()->currentIndex().row(); // TODO isValid check?
-	// TODO How control where to add? In this model insertion before start time is not possible.
-    joint_trajectory_data_->addPoint(index + 1, joint_state_real_, ui->timeIncrementSpinBox->value());
-    joint_trajectory_point_table_view_->reReadData();
+	try { 
+		joint_trajectory_data_->addPointMsg(joint_state_real_, ui->timeIncrementSpinBox->value());
+	}
+	catch (std::exception e) {
+		ROS_ERROR("Unable to add point to JointTrajectory: %s", e.what());
+	}
+    joint_trajectory_point_table_model_->reReadData();
 }
 
 void TrajectoryEditor::on_saveTrajectoryButton_clicked()
 {
     loader_->setParam(trajectories_param_name + "/" + ui->comboBox->currentText().toStdString(), joint_trajectory_data_->getTrajectoryMsg());
-    std::string cmd = "rosparam dump `rospack find sweetie_bot_deploy`/joint_state_control/joint_trajectories.yaml " + trajectories_param_name;
-    system( cmd.c_str() );
+    // std::string cmd = "rosparam dump `rospack find sweetie_bot_deploy`/joint_state_control/joint_trajectories.yaml " + trajectories_param_name;
+    // system( cmd.c_str() );
     updateParamList();
 }
 
 void TrajectoryEditor::on_deletePoseButton_clicked()
 {
-    joint_trajectory_point_table_view_->removeRow(ui->pointsTableView->selectionModel()->currentIndex().row(), QModelIndex());
-    joint_trajectory_point_table_view_->reReadData();
+	QModelIndex index = ui->pointsTableView->selectionModel()->currentIndex();
+	if (index.isValid()) {
+		joint_trajectory_point_table_model_->removeRow(index.row(), QModelIndex());
+		joint_trajectory_point_table_model_->reReadData();
+	}
 }
 
-void TrajectoryEditor::executeActionCallback(const actionlib::SimpleClientGoalState& state, const control_msgs::FollowJointTrajectoryActionResultConstPtr& result)
+/*void TrajectoryEditor::executeActionCallback(const actionlib::SimpleClientGoalState& state, const control_msgs::FollowJointTrajectoryActionResultConstPtr& result)
 {
-  ROS_INFO("TrajectoryEditor::executeActionCallback");
-}
+	ROS_INFO("TrajectoryEditor::executeActionCallback");
+}*/
 
 void TrajectoryEditor::on_executeButton_clicked()
 {
-  bool reverse = ui->backwardCheckBox->isChecked();
-  control_msgs::FollowJointTrajectoryGoal goal = joint_trajectory_data_->getTrajectoryMsg(reverse);
-  if(ui->virtualCheckBox->isChecked())
-  {
-    client_virtual->waitForServer();
-    actionlib::SimpleClientGoalState state = client_virtual->sendGoalAndWait( goal );
-    ROS_INFO_STREAM("\n" << goal);
-    ROS_INFO("%s", state.toString().c_str());
-    ui->statusLabel->setText("Status: " + QString::fromStdString(state.toString()) );
-  }else{
-    client_real->waitForServer();
-    actionlib::SimpleClientGoalState state = client_real->sendGoalAndWait( goal );
-    ROS_INFO_STREAM("\n" << goal);
-    ROS_INFO("%s", state.toString().c_str());
-    ui->statusLabel->setText("Status: " + QString::fromStdString(state.toString()) );
-  }
-  // TODO callback does not compile T_T
-  //client->sendGoal(joint_trajectory_data_->follow_joint_trajectory_goal_, boost::bind(&TrajectoryEditor::executeActionCallback, this, _1, _2));
-  //, Client::SimpleActiveCallback(), Client::SimpleFeedbackCallback());
+	bool reverse = ui->backwardCheckBox->isChecked();
+	double scale = 1.0; //TODO add gui element
+	control_msgs::FollowJointTrajectoryGoal goal = joint_trajectory_data_->getTrajectoryMsg(reverse);
+	if(ui->virtualCheckBox->isChecked())
+	{
+		client_virtual->waitForServer();
+		actionlib::SimpleClientGoalState state = client_virtual->sendGoalAndWait( goal );
+		ROS_INFO_STREAM("\n" << goal);
+		ROS_INFO("%s", state.toString().c_str());
+		ui->statusLabel->setText("Status: " + QString::fromStdString(state.toString()) );
+	}
+	else {
+		client_real->waitForServer();
+		actionlib::SimpleClientGoalState state = client_real->sendGoalAndWait( goal );
+		ROS_INFO_STREAM("\n" << goal);
+		ROS_INFO("%s", state.toString().c_str());
+		ui->statusLabel->setText("Status: " + QString::fromStdString(state.toString()) );
+	}
+	// TODO callback does not compile T_T
+	//client->sendGoal(joint_trajectory_data_->follow_joint_trajectory_goal_, boost::bind(&TrajectoryEditor::executeActionCallback, this, _1, _2));
+	//, Client::SimpleActiveCallback(), Client::SimpleFeedbackCallback());
 }
 
 void TrajectoryEditor::on_jointsTableView_clicked(const QModelIndex &index)
 {
-  std::string joint_name = joint_list_table_view_->data(index).toString().toStdString();
-  ui->jointNameEditBox->setText(joint_list_table_view_->data(index).toString());
-  ui->pathToleranceSpinBox->setValue(joint_trajectory_data_->getPathTolerance(joint_name));
-  ui->goalToleranceSpinBox->setValue(joint_trajectory_data_->getGoalTolerance(joint_name));
+	int row = index.row();	
+	// TODO row check?
+	const sweetie_bot::interface::JointTrajectoryData::Joint& joint = joint_trajectory_data_->getJoint(row);
+	ui->jointNameEditBox->setText(QString::fromStdString(joint.name));
+	//ui->pathToleranceSpinBox->setValue(joint.path_tolerance);
+	//ui->goalToleranceSpinBox->setValue(joint.goal_tolerance);
 }
 
 void TrajectoryEditor::on_addButton_clicked()
 {
     joint_trajectory_data_->addJoint(ui->jointNameEditBox->text().toStdString(), ui->pathToleranceSpinBox->value(), ui->goalToleranceSpinBox->value());
-    joint_list_table_view_->reReadData();
+    joint_list_table_model_->reReadData();
+    joint_trajectory_point_table_model_->reReadData();
 }
 
 void TrajectoryEditor::on_applyButton_clicked()
 {
-    joint_trajectory_data_->setPathTolerance(ui->jointNameEditBox->text().toStdString(), ui->pathToleranceSpinBox->value());
-    joint_trajectory_data_->setGoalTolerance(ui->jointNameEditBox->text().toStdString(), ui->goalToleranceSpinBox->value());
+    joint_trajectory_data_->setPathTolerance(ui->pathToleranceSpinBox->value());
+    joint_trajectory_data_->setGoalTolerance(ui->goalToleranceSpinBox->value());
+    joint_list_table_model_->reReadData();
 }
 
 void TrajectoryEditor::on_delButton_clicked()
 {
-    if(ui->jointsTableView->selectionModel()->selection().indexes().size() > 0)
-    {
-      int row = ui->jointsTableView->selectionModel()->currentIndex().row();
-      qDebug( "%s", joint_trajectory_data_->getJointName(row).c_str() );
-      //joint_list_table_view_->se
-      //ROS_INFO(selectedItems())
-      joint_trajectory_data_->removeJoint(joint_trajectory_data_->getJointName(row));
-      joint_list_table_view_->reReadData();
-    }
+	QModelIndex index  = ui->jointsTableView->selectionModel()->currentIndex();
+	if (index.isValid()) {
+		joint_list_table_model_->removeRow(index.row(), QModelIndex());
+		joint_list_table_model_->reReadData();
+		joint_trajectory_point_table_model_->reReadData();
+	}
 }
 
 void TrajectoryEditor::on_delTrajectoryButton_clicked()
 {
-  node_.deleteParam(trajectories_param_name + "/" + ui->comboBox->currentText().toStdString());
-  updateParamList();
-  ui->comboBox->setCurrentText("default");
+	std::string name = ui->comboBox->currentText().toStdString();
+	if (name != "default") {
+		node_.deleteParam(trajectories_param_name + "/" + name);
+		updateParamList();
+		ui->comboBox->setCurrentText("default");
+	}
 }
 
 
-void TrajectoryEditor::on_goalTimeToleranceSpinBox_valueChanged(double arg1)
+void TrajectoryEditor::on_goalTimeToleranceSpinBox_valueChanged(double value)
 {
-    joint_trajectory_data_->setGoalTimeTolerance(arg1);
+    joint_trajectory_data_->setGoalTimeTolerance(value);
 }
 
 void TrajectoryEditor::on_setVirtualPoseButton_clicked()
 {
-	sensor_msgs::JointState msg = joint_trajectory_data_->getPoint(ui->pointsTableView->selectionModel()->currentIndex().row());
-	ROS_INFO_STREAM("\n" << msg);
-	pub_joints_virtual_set.publish(msg);
+	QModelIndex index = ui->pointsTableView->selectionModel()->currentIndex();
+	if (index.isValid()) {
+		sensor_msgs::JointState msg = joint_trajectory_data_->getPointMsg(index.row());
+		ROS_INFO_STREAM("\n" << msg);
+		pub_joints_virtual_set.publish(msg);
+	}
 }
 
 void TrajectoryEditor::on_pointsTableView_clicked(const QModelIndex &index)
 {
 	if(index.isValid()){
-	  sensor_msgs::JointState msg = joint_trajectory_data_->getPoint(index.row());
+	  sensor_msgs::JointState msg = joint_trajectory_data_->getPointMsg(index.row());
 	  ROS_INFO_STREAM("\n" << msg);
 	  pub_joints_marker_set.publish(msg);
 	}

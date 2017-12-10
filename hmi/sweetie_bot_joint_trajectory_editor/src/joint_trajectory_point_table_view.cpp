@@ -1,70 +1,117 @@
 #include "joint_trajectory_point_table_view.h"
 
+#include <QFont>
+
 namespace sweetie_bot {
 namespace interface {
 
-JointTrajectoryPointTableView::JointTrajectoryPointTableView(QObject *parent, JointTrajectoryData &trajectory_data)
-  :QAbstractTableModel(parent),
-   trajectory_data_(trajectory_data)
+JointTrajectoryPointTableModel::JointTrajectoryPointTableModel(QObject *parent, JointTrajectoryData &trajectory_data) :
+	QAbstractTableModel(parent),
+	trajectory_data_(trajectory_data)
 {
-
 }
 
-int JointTrajectoryPointTableView::rowCount(const QModelIndex & /*parent*/) const
+int JointTrajectoryPointTableModel::rowCount(const QModelIndex & /*parent*/) const
 {
    return trajectory_data_.pointCount();
 }
 
-int JointTrajectoryPointTableView::columnCount(const QModelIndex & /*parent*/) const
+int JointTrajectoryPointTableModel::columnCount(const QModelIndex & /*parent*/) const
 {
-    return 1;
+    return 1 + trajectory_data_.jointCount();
 }
 
-QVariant JointTrajectoryPointTableView::data(const QModelIndex &index, int role) const
+QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (role == Qt::DisplayRole)
-    {
-       return QString::number(trajectory_data_.getPointTimeFromStart(index.row()));
-       /*
-       return QString("%1.%2")
-                   .arg(d.sec)
-                   .arg(round(d.nsec));
-                   // */
+	if (orientation == Qt::Horizontal) {
+		switch (role) {
+			case Qt::DisplayRole:
+				if (section == 0) {
+					return QString("time");
+				}
+				else if (section >= 1 && section <= trajectory_data_.jointCount()) {
+				//else {
+					const std::string& name = trajectory_data_.getJoint(section - 1).name;
+					return QString::fromStdString(name);
+				}
+				/*QString tmp;
+				const std::string& name = trajectory_data_.getJoint(i).name;
+				for(int i = 0; i < trajectory_data_.jointCount(); i++) {
+					tmp.append( QString("%1, ").arg(QString::fromStdString( name.substr(std::max<int>(name.size()-5,0)) )) );
+				}
+				return tmp;*/
+				break;
+
+			/*case Qt::TextAlignmentRole:
+				return Qt::AlignLeft + Qt::AlignVCenter;*/
+    	}
+	}
+    return QVariant();
+}
+
+QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role) const
+{
+    if (role == Qt::DisplayRole) {
+		//TODO row index check
+		const JointTrajectoryData::TrajectoryPoint& point = trajectory_data_.getPoint(index.row());
+		switch (index.column()) {
+			case 0: 
+				return QString::number(point.time_from_start, 'f', 2);
+			/*case 1:
+				if (point.positions.size() == 0) { 
+					return QString();
+				}
+				else {
+					QString tmp;
+					for(auto it = point.positions.begin(); it != point.positions.end(); it++)
+						tmp.append( QString("%1, ").arg(*it, 5, 'f', 2) );
+					return tmp;
+				}*/
+			default:
+				if (index.column() >= 0 && index.column() <= trajectory_data_.jointCount()) {
+					return QString::number(point.positions[index.column()-1], 'f', 2);
+				}
+		}
     }
     return QVariant();
 }
 
-Qt::ItemFlags JointTrajectoryPointTableView::flags (const QModelIndex &index) const
+Qt::ItemFlags JointTrajectoryPointTableModel::flags (const QModelIndex &index) const
 {
-    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+	switch (index.column()) {
+		case 0:
+			return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled;
+		case 1:
+			return Qt::ItemIsSelectable |  Qt::ItemIsEnabled;
+	}
+	return QAbstractItemModel::flags(index);
 }
 
-bool JointTrajectoryPointTableView::removeRow(int row, const QModelIndex &parent)
+bool JointTrajectoryPointTableModel::removeRow(int row, const QModelIndex &parent)
 {
-    beginRemoveRows(parent, row, row-1);
-    trajectory_data_.removePoint(row);
-    endRemoveRows();
-    return true;
+	//TODO row index check
+	beginRemoveRows(parent, row, row);
+	trajectory_data_.removePoint(row);
+	endRemoveRows();
+	return true;
 }
 
-bool JointTrajectoryPointTableView::setData(const QModelIndex &index, const QVariant &value, int role)
+bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-  if (!index.isValid())
-    return false;
-  double d = 0.0;
-  if(value.toString() == "") return false;
-  if(value.isValid() && value.canConvert(QMetaType::Double))
-    d = value.toDouble();
-  else return false;
-  //trajectory_data_.follow_joint_trajectory_goal_.trajectory.points[index.row()].time_from_start.fromSec(d);
-  trajectory_data_.setPointTimeFromStart(index.row(), d);
-  //ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
-
-  emit dataChanged(index, index);
-  return true;
+	if (!index.isValid()) return false;
+	if (index.column() == 0) {
+		if (!value.isValid()) return false;
+		if (value.toString() == "") return false;
+		if (!value.canConvert(QMetaType::Double)) return false;
+		double d = value.toDouble();
+		trajectory_data_.setPointTimeFromStart(index.row(), d);
+		// ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
+		emit dataChanged(index, index);
+	}
+	return false;
 }
 
-bool JointTrajectoryPointTableView::reReadData()
+bool JointTrajectoryPointTableModel::reReadData()
 {
 	emit layoutChanged();
 }
