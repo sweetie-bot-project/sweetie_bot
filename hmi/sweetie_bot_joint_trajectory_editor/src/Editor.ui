@@ -243,7 +243,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="text">
-                    <string>Add virtual pose</string>
+                    <string>Add pose</string>
                    </property>
                   </widget>
                  </item>
@@ -253,7 +253,7 @@
                     <bool>false</bool>
                    </property>
                    <property name="text">
-                    <string>Add real pose</string>
+                    <string>DEPRECATED</string>
                    </property>
                   </widget>
                  </item>
@@ -280,7 +280,7 @@
                     <bool>true</bool>
                    </property>
                    <property name="text">
-                    <string>Set virtual pose</string>
+                    <string>Set pose</string>
                    </property>
                   </widget>
                  </item>
@@ -433,19 +433,9 @@
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_3">
                    <item>
-                    <widget class="QPushButton" name="applyButton">
-                     <property name="enabled">
-                      <bool>true</bool>
-                     </property>
-                     <property name="text">
-                      <string>Apply</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
                     <widget class="QPushButton" name="addButton">
                      <property name="text">
-                      <string>Add</string>
+						 <string>Add/Change Joint</string>
                      </property>
                     </widget>
                    </item>
@@ -457,6 +447,16 @@
                     </widget>
                    </item>
                   </layout>
+                 </item>
+                 <item>
+                   <widget class="QPushButton" name="applyButton">
+                    <property name="enabled">
+                     <bool>true</bool>
+                    </property>
+                    <property name="text">
+				   	 <string>Set All Tolerances</string>
+                    </property>
+                   </widget>
                  </item>
                 </layout>
                </item>

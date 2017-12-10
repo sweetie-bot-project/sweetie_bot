@@ -54,8 +54,8 @@ private:
    Ui::TrajectoryEditor *ui;
    sweetie_bot::interface::JointTrajectoryData *joint_trajectory_data_;
 
-   sweetie_bot::interface::JointListTableView *joint_list_table_view_;
-   sweetie_bot::interface::JointTrajectoryPointTableView *joint_trajectory_point_table_view_;
+   sweetie_bot::interface::JointListTableModel *joint_list_table_model_;
+   sweetie_bot::interface::JointTrajectoryPointTableModel *joint_trajectory_point_table_model_;
 
    sweetie_bot::tools::ParamMsgLoader<control_msgs::FollowJointTrajectoryGoal>* loader_;
    void jointsRealCallback(const sensor_msgs::JointState::ConstPtr& msg);
