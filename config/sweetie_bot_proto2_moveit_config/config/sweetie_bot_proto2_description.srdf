@@ -346,4 +346,6 @@
     <disable_collisions link1="bone51" link2="bone54" reason="Always" />
     <disable_collisions link1="bone52" link2="bone53" reason="Adjacent" />
     <disable_collisions link1="bone53" link2="bone54" reason="Adjacent" />
+    <disable_collisions link1="bone54" link2="eye_right" reason="Adjacent" />
+    <disable_collisions link1="bone54" link2="eye_left" reason="Adjacent" />
 </robot>
