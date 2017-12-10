@@ -239,10 +239,10 @@ Robot is assumed to be standing on four legs.
 	        except tf.Exception as e:
 	            Logger.logerr('calculateTargetPoseFunc: Cannot transform from `%s` to `base_link` frame.' % input_pose.header.frame_id)
 	            return None
-	        # move point forward along Oy of base_link
-	        output_pose.pose.position = Point(output_pose.pose.position.x, output_pose.pose.position.y + self.hoof_shift, output_pose.pose.position.z)
+	        # move point to Sweetie along Ox of base_link
+	        output_pose.pose.position = Point(output_pose.pose.position.x - self.hoof_shift, output_pose.pose.position.y, output_pose.pose.position.z)
 	        # output_pose.pose.orientation = quaternion_about_axis([1, 0, 0], math.pi/2) * input_pose.pose.orientation
-	        output_pose.pose.orientation = Quaternion(0, 0, 0, 1)
+	        output_pose.pose.orientation = Quaternion(0, -0.70711, 0, 0.70711)
 	        Logger.loginfo('calculateTargetPoseFunc: target hoof pose: %s' % str(output_pose))
 	        return output_pose
 
@@ -265,33 +265,34 @@ Robot is assumed to be standing on four legs.
 	        # Set target orientation
 	        if pos.z > 20:
 	            # Set hoof orintation: slightly up
-	            output_pose.pose.orientation = Quaternion(0.612947, -0.352558, 0.352557, 0.612945)
+	            output_pose.pose.orientation = Quaternion(0, -0.82058, 0, 0.57153)
 	        else:
-	            output_pose.pose.orientation = Quaternion(0, 0, 0, 1)
+	            output_pose.pose.orientation = Quaternion(0, -0.70711, 0, 0.70711)
 	        # Set target position
 	        # Check if boundarie is sane
 	        if pos.z > self.brohof_upper_limit or pos.z < 0.10: 
 	            # too high or to low
 	            return None
-	        if pos.y > -0.25:
+	        if pos.x < -0.25:
 	            # too close
                     return None
                 # Move to shoulder1 point
-                pos.x -= 0.041
-                pos.y += 0.034
-                # Check if angle is out of 45 cone
-                if abs(math.atan2(pos.x,-pos.y)) > self.brohoof_cone:
+                pos.x -= 0.080
+                pos.y -= 0.037
+                pos.z += 0.027
+                # Check if angle is out of cone
+                if abs(math.atan2(pos.y,pos.x)) > self.brohoof_cone:
                     # out of cone
                     return None
-	        # Project x coordinate to y = -0.225+0.034 in coordinates of leg1 base
-	        pos.x = pos.x*((-0.225+0.034)/pos.y)
+	        # Project x coordinate to x = 0.225-0.080 in coordinates of leg1 base
+	        pos.y = pos.y*((0.225-0.080)/pos.x)
                 # Return to base_link frame 
-                pos.x += 0.041
-	        pos.y = -0.225
-	        pos.z = 0.172
+	        pos.x = 0.225
+                pos.y += 0.037
+	        pos.z = 0.00
 	        # Clamp to reachibility zone
                 # pos.x = numpy.clip(pos.x, -0.03, 0.12)
-                pos.x = numpy.clip(pos.x, -0.01, 0.12)
+                pos.y= numpy.clip(pos.x, -0.01, 0.12)
 	        # done: pose must be reachable
 	        Logger.loginfo('calculateTargetPoseFunc2: target hoof pose: %s' % str(output_pose))
 	        return output_pose
