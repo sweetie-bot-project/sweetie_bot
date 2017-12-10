@@ -52,7 +52,12 @@ class HeadIK:
         joints.header.stamp = rospy.Time.now()
         # set known fields
         joints.name = [ 'joint51', 'joint52', 'joint53', 'joint54' ]
-        joints.position = [ neck_angle, 0.0, 0.0, 0.0 ]
+        joints.position = [ neck_angle, 0.0, 0.0, side_angle ]
+
+        if limit_joints:
+            joints.position = self.limitHeadJoints51to54(joints.position)
+            neck_angle = joints.position[0]
+            side_angle = joints.position[3]
         
         try:
             # convert point coordinates to base_link frame
@@ -65,19 +70,20 @@ class HeadIK:
         direction = [ point_stamped.point.x, point_stamped.point.y, point_stamped.point.z, 1.0]
         upward = [ 0.0, 0.0, 1.0, 1.0]
         direction[:3] = numpy.subtract(direction[:3], self._t5051)
-        upward[:3] = numpy.subtract(upward[:3], self._t5051)
         # rotate to neck_angle around Ox to transform it to desired bone51 frame.
-        direction = numpy.dot(rotation_matrix(-numpy.pi/2 + neck_angle, (1, 0, 0)), direction)
-        upward = numpy.dot(rotation_matrix(-numpy.pi/2 + neck_angle, (1, 0, 0)), upward)
+        direction = numpy.dot(rotation_matrix(neck_angle, (0, 1, 0)), direction)
+        upward = numpy.dot(rotation_matrix(neck_angle, (0, 1, 0)), upward)
         # move origin to bone52
         direction[:3] = numpy.subtract(direction[:3], self._t5152)
-        upward[:3] = numpy.subtract(upward[:3], self._t5152)
         # calculate rotation angles
-        joints.position[1] = -math.atan2(direction[0], direction[2])
-        upward = numpy.dot(rotation_matrix(joints.position[1], (0, 1, 0)), upward)
-        joints.position[2] = math.atan2(direction[1], math.sqrt(direction[0]**2 + direction[2]**2))
-        upward = numpy.dot(rotation_matrix(joints.position[2], (1, 0, 0)), upward)
-        joints.position[3] = math.atan2(upward[0], upward[1]) + side_angle
+        print(upward)
+        joints.position[1] = math.atan2(direction[1], direction[0])
+        upward = numpy.dot(rotation_matrix(joints.position[1], (0, 0, 1)), upward)
+        print(upward)
+        joints.position[2] = math.atan2(direction[2], math.sqrt(direction[0]**2 + direction[1]**2))
+        upward = numpy.dot(rotation_matrix(joints.position[2], (0, 1, 0)), upward)
+        print(upward)
+        joints.position[3] = math.atan2(upward[1], upward[2]) + side_angle
         # limit joints
         if limit_joints:
             joints.position = self.limitHeadJoints51to54(joints.position)
@@ -105,8 +111,8 @@ class HeadIK:
             return None 
         # calculate angles
         direction = [ point_stamped.point.x, point_stamped.point.y, point_stamped.point.z ]
-        joints.position[0] = math.atan2(point_stamped.point.y, math.sqrt(point_stamped.point.x**2 + point_stamped.point.z**2))
-        joints.position[1] = -math.atan2(point_stamped.point.x, math.sqrt(point_stamped.point.y**2 + point_stamped.point.z**2))
+        joints.position[0] = math.atan2(point_stamped.point.z, math.sqrt(point_stamped.point.x**2 + point_stamped.point.y**2))
+        joints.position[1] = -math.atan2(point_stamped.point.y, math.sqrt(point_stamped.point.x**2 + point_stamped.point.z**2))
         # limit joints position
         joints.position = list(numpy.clip(joints.position, -numpy.pi/2, numpy.pi/2))
 

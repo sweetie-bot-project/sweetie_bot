@@ -16,8 +16,8 @@ rospy.init_node('test_head_ik')
 
 ik = HeadIK()
 
-pub = rospy.Publisher('/sweetie_bot/motion/controller/joint_state_head/in_joints_ref', JointState, queue_size = 10)
-#pub = rospy.Publisher('/sweetie_bot/motion/controller/joint_state/out_joints_src_reset', JointState, queue_size = 10)
+#pub = rospy.Publisher('/sweetie_bot/motion/controller/joint_state_head/in_joints_ref', JointState, queue_size = 10)
+pub = rospy.Publisher('/sweetie_bot/motion/controller/joint_state/out_joints_src_reset', JointState, queue_size = 10)
 
 # Init point header
 point = PointStamped()
@@ -34,11 +34,15 @@ def lookAtPoint(point_stamped, neck_angle = 0.0):
 
 # test sequence
 
-point.point = Point(0.0, -1.0, 0.0)
+point.point = Point(1.0, 0.0, 0.0)
 lookAtPoint(point)
 sleep(2.0)
 
-point.point = Point(0.0, -1.0, 0.0)
+point.point = Point(1.0, 0.0, 0.0)
+lookAtPoint(point)
+sleep(2.0)
+
+point.point = Point(1.0, 1.0, 0.0)
 lookAtPoint(point)
 sleep(2.0)
 
