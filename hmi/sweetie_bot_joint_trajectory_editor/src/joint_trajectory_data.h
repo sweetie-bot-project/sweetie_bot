@@ -12,7 +12,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 namespace sweetie_bot {
-namespace interface {
+namespace hmi {
 
 class JointTrajectoryData
 {
@@ -40,6 +40,7 @@ class JointTrajectoryData
 		struct TrajectoryPoint {
 			std::vector<double> positions;
 			double time_from_start;
+			unsigned int crc;
 
 			bool operator<(const TrajectoryPoint& that) const { return time_from_start < that.time_from_start; }
 			bool operator<(double that) const { return time_from_start < that; }
@@ -50,6 +51,9 @@ class JointTrajectoryData
 		std::vector<Joint> joints_;
 		std::vector<TrajectoryPoint> trajectory_points_;
 		double goal_time_tolerance_;
+
+	protected:
+		static unsigned int crc(const std::vector<double>& positions); 
 
 	public:
 		
@@ -71,7 +75,9 @@ class JointTrajectoryData
 		const TrajectoryPoint& getPoint(unsigned int index) { return trajectory_points_.at(index); }
 		sensor_msgs::JointState getPointMsg(unsigned int index);
 		void setPointTimeFromStart(unsigned int index, double time_from_start);
+		void setPointJointPosition(unsigned int index, unsigned int joint_index, double value);
 		void removePoint(unsigned int index);
+		void scaleTrajectory(double scale);
 
 		void setJointPathTolerance(unsigned int index, double tolerance) { joints_.at(index).path_tolerance = tolerance; }
 		void setPathTolerance(double tolerance);
@@ -82,7 +88,7 @@ class JointTrajectoryData
 		void setGoalTimeTolerance(double sec) { goal_time_tolerance_ = sec; }
 };
 
-} // namespace interface
+} // namespace hmi
 } // namespace sweetie_bot
 
 #endif // JOINT_TRAJECTORY_POINT_LIST_H

@@ -6,11 +6,14 @@
 #include <QAbstractTableModel>
 
 namespace sweetie_bot {
-namespace interface {
+namespace hmi {
 
 class JointTrajectoryPointTableModel : public QAbstractTableModel
 {
 	Q_OBJECT
+	private:
+		static const std::vector<std::string> symbols;
+
 	private:
 		JointTrajectoryData &trajectory_data_;
 	public:
@@ -25,7 +28,7 @@ class JointTrajectoryPointTableModel : public QAbstractTableModel
 		bool reReadData();
 };
 
-} // namespace interface
+} // namespace hmi
 } // namespace sweetie_bot
 
 #endif // JOINT_TRAJECTORY_POINT_TABLE_VIEW_H

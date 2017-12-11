@@ -1,11 +1,22 @@
 #include "joint_trajectory_data.h"
 
+#include <cmath>
+#include <functional>
 #include <exception>
 
 using namespace std;
 
 namespace sweetie_bot {
-namespace interface {
+namespace hmi {
+
+
+unsigned int JointTrajectoryData::crc(const std::vector<double>& positions) 
+{	
+	size_t crc = 0;
+	std::hash<double> hash_fn;
+	for(auto it = positions.begin(); it != positions.end(); it++) crc ^= hash_fn(std::floor(*it * 100));
+	return crc;
+}
 
 void JointTrajectoryData::loadFromMsg(const FollowJointTrajectoryGoal& msg)
 {
@@ -44,6 +55,7 @@ void JointTrajectoryData::loadFromMsg(const FollowJointTrajectoryGoal& msg)
 			unsigned int old_index = joints_[i].index;
 			trajectory_points_[k].positions[i] = msg.trajectory.points[k].positions[old_index];
 		}
+		trajectory_points_[k].crc = crc(trajectory_points_[k].positions);
 		// ignore velocities, accelerations and efforts
 	}
 	// fix joint induces
@@ -184,7 +196,8 @@ void JointTrajectoryData::addPoint(const TrajectoryPoint& point)
 	// find appropriate place to insert new element
 	auto it = upper_bound(trajectory_points_.begin(), trajectory_points_.end(), point.time_from_start, [](double t, const TrajectoryPoint& p) { return t < p.time_from_start; } );
 	// insert it 
-	trajectory_points_.insert(it, point);
+	it = trajectory_points_.insert(it, point);
+	it->crc = crc(it->positions);
 }
 	
 void JointTrajectoryData::addPointMsg(const sensor_msgs::JointState& msg, double time_from_start) {
@@ -224,11 +237,28 @@ sensor_msgs::JointState JointTrajectoryData::getPointMsg(unsigned int index)
 	return msg;
 }
 
+void JointTrajectoryData::setPointJointPosition(unsigned int index, unsigned int joint_index, double value) 
+{ 
+	TrajectoryPoint& point = trajectory_points_.at(index);
+	point.positions.at(joint_index) = value; 
+	point.crc = crc(point.positions);
+}
+
+
 void JointTrajectoryData::setPointTimeFromStart(unsigned int index, double time_from_start)
 {
 	TrajectoryPoint& point = trajectory_points_.at(index);
+	if (time_from_start < 0.0) return; // TODO exception?
 	point.time_from_start = time_from_start;
 	sort(trajectory_points_.begin(), trajectory_points_.end());
+}
+
+void JointTrajectoryData::scaleTrajectory(double scale) 
+{
+	if (scale <= 0.0) return;
+	for(auto it = trajectory_points_.begin(); it != trajectory_points_.end(); it++) {
+		it->time_from_start *= scale;
+	}
 }
 
 void JointTrajectoryData::removePoint(unsigned int index)
@@ -249,5 +279,5 @@ void JointTrajectoryData::setGoalTolerance(double goal_tolerance)
 	for (auto it = joints_.begin(); it != joints_.end(); it++) it->goal_tolerance = goal_tolerance;
 }
 
-}
-}
+} // namespace hmi
+} // namespace sweetie_bot

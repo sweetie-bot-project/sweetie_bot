@@ -1,7 +1,7 @@
 #include "joint_list_table_view.h"
 
 namespace sweetie_bot {
-namespace interface {
+namespace hmi {
 
 JointListTableModel::JointListTableModel(QObject *parent, JointTrajectoryData &trajectory_data) :
 	QAbstractTableModel(parent),
@@ -23,8 +23,7 @@ QVariant JointListTableModel::headerData(int section, Qt::Orientation orientatio
     if (role == Qt::DisplayRole)
     {
         if (orientation == Qt::Horizontal) {
-            switch (section)
-            {
+            switch (section) {
             case 0:
                 return QString("joint_name");
             case 1:
@@ -57,17 +56,36 @@ QVariant JointListTableModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+Qt::ItemFlags JointListTableModel::flags(const QModelIndex &index) const
+{
+	switch (index.column()) {
+		case 0:
+			return Qt::ItemIsSelectable |  Qt::ItemIsEnabled;
+		case 1:
+		case 2:
+			return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled;
+	}
+	return QAbstractItemModel::flags(index);
+}
+
 bool JointListTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-	if (!index.isValid())
-		return false;
-	/*
-	   QList<QVariant> data;
-	   data<<value;
-	   TreeItem *item = static_cast<TreeItem *>(index.internalPointer());
-	   item->setData(data);
-	   emit dataChanged(index, index);
-	   */
+	if (!index.isValid()) return false;
+	if (!value.isValid()) return false;
+	if (value.toString() == "") return false;
+	if (!value.canConvert(QMetaType::Double)) return false;
+	double d = value.toDouble();
+
+	switch (index.column()) {
+		case 1:
+			trajectory_data_.setJointPathTolerance(index.row(), d);
+			break;
+		case 2:
+			trajectory_data_.setJointPathTolerance(index.row(), d);
+			break;
+		default:
+			return false;
+	}
 	emit dataChanged(index, index);
 	return true;
 }
@@ -95,5 +113,5 @@ bool JointListTableModel::reReadData()
 	emit layoutChanged();
 }
 
-} // namespace interface
+} // namespace hmi
 } // namespace sweetie_bot
