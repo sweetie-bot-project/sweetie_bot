@@ -1,27 +1,13 @@
 <!-- DEPLOYMENT: joint_trajectory_editor -->
 <launch>
-	<arg name="run_real" default="false" doc="Real robot is active at '/sweetie_bot' namespace."/>
-	<arg name="run_virtual" default="true" doc="Virtual robot is active at '/sweetie_bot' namespace (run_real = false) or at '/sweetie_bot_virtual' (run_real = true)."/>
+	<arg name="use_real_pose" default="false" doc="Use topic /sweetie_bot/motion/agregator_real/out_joints_sorted (real robot pose) instaed of /sweetie_bot/motion/agregator_ref/out_joints_sorted (reference pose) as input joint_state. "/>
 
-	<!-- real robot is inside /sweetie_bot namespace -->
-	<group if="$(arg run_real)" ns="hmi">
-		<remap from="joints_real" to="/sweetie_bot/joint_states" />
-		<remap if="$(arg run_virtual)" from="joints_virtual" to="/sweetie_bot_virtual/joint_states" />
-		<remap if="$(arg run_virtual)" from="joints_virtual_set" to="/sweetie_bot_virtual/motion/controller/joint_state/out_joints_src_reset" />
-		<remap from="set_torque_off" to="/sweetie_bot/motion/controller/torque_off/set_torque_off" />
-		<remap from="joint_trajectory_real" to="/sweetie_bot/motion/controller/joint_trajectory" />
-		<remap if="$(arg run_virtual)"  from="joint_trajectory_virtual" to="/sweetie_bot_virtual/motion/controller/joint_trajectory" />
-		<!-- run joint_trajectory_editor -->
-		<node name="joint_trajectory_editor" pkg="sweetie_bot_joint_trajectory_editor" type="trajectory_editor" output="screen" args="" required="true">
-			<param name="trajectory_storage" value="/sweetie_bot/joint_trajectory" />
-		</node>
-	</group>
-
-	<!-- virtual robot is inside /sweetie_bot namespace -->
-	<group unless="$(arg run_real)" ns="hmi">
-		<remap from="joints_virtual" to="/sweetie_bot/motion/agregator_ref/out_joints_sorted" />
-		<remap from="joints_virtual_set" to="/sweetie_bot/motion/controller/joint_state/out_joints_src_reset" /> -->
-		<remap from="joint_trajectory_virtual" to="/sweetie_bot/motion/controller/joint_trajectory" />
+	<!-- robot is inside /sweetie_bot namespace -->
+	<group ns="hmi">
+		<remap unless="$(arg use_real_pose)" from="joint_state" to="/sweetie_bot/motion/agregator_ref/out_joints_sorted" />
+		<remap if="$(arg use_real_pose)" from="joint_state" to="/sweetie_bot/motion/agregator_real/out_joints_sorted" />
+		<remap from="joint_state_set" to="/sweetie_bot/motion/controller/joint_state/out_joints_src_reset" /> -->
+		<remap from="joint_trajectory" to="/sweetie_bot/motion/controller/joint_trajectory" />
         <!-- just in case if virtual robot is actually real -->
 		<remap from="set_torque_off" to="/sweetie_bot/motion/controller/torque_off/set_torque_off" />
 		<!-- run joint_trajectory_editor -->
