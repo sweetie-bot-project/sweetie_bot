@@ -264,7 +264,7 @@ void JointTrajectoryData::scaleTrajectory(double scale)
 void JointTrajectoryData::removePoint(unsigned int index)
 {
 	// check diapazone
-	if (index >= joints_.size()) throw std::out_of_range("trajectory point index");
+	if (index >= trajectory_points_.size()) throw std::out_of_range("trajectory point index");
 	// delete joint
     trajectory_points_.erase(trajectory_points_.begin() + index);
 }

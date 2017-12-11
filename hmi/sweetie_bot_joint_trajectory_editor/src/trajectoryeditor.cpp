@@ -217,7 +217,8 @@ void TrajectoryEditor::on_saveTrajectoryButton_clicked()
 void TrajectoryEditor::on_deletePoseButton_clicked()
 {
 	QModelIndex index = ui.pointsTableView->selectionModel()->currentIndex();
-	if (index.isValid()) {
+	ROS_INFO_STREAM("Delete pose with index " << index.row());
+	if (index.isValid() && index.row() < joint_trajectory_data_.pointCount()) {
 		joint_trajectory_point_table_model_.removeRow(index.row(), QModelIndex());
 		joint_trajectory_point_table_model_.reReadData();
 	}
@@ -284,7 +285,7 @@ void TrajectoryEditor::on_resetTolerancesButton_clicked()
 void TrajectoryEditor::on_delJointButton_clicked()
 {
 	QModelIndex index  = ui.jointsTableView->selectionModel()->currentIndex();
-	if (index.isValid() && index.row() < joint_trajectory_data_.pointCount()) {
+	if (index.isValid() && index.row() < joint_trajectory_data_.jointCount()) {
 		joint_list_table_model_.removeRow(index.row(), QModelIndex());
 		joint_list_table_model_.reReadData();
 		joint_trajectory_point_table_model_.reReadData();
