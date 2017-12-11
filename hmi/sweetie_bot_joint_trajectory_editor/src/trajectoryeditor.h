@@ -6,19 +6,17 @@
 #include <QtMath>
 #include <QTableWidgetItem>
 
-
 // ROS
-#include "ros/ros.h"
+#include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
+#include <sensor_msgs/JointState.h>
 
-#include "sensor_msgs/JointState.h"
+#include "ui_Editor.h"
 
 #include "joint_trajectory_data.h"
-
 #include "joint_list_table_view.h"
 #include "joint_trajectory_point_table_view.h"
-
 #include "param_msg_loader.h"
 
 namespace Ui {
@@ -30,12 +28,12 @@ class TrajectoryEditor : public QMainWindow
 	Q_OBJECT
 	
 	public:
-		typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> Client;
+		typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> ActionClient;
 
 	public:
 		explicit TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node, QWidget *parent = 0);
-		~TrajectoryEditor();
 		void bootstrap();
+		~TrajectoryEditor();
 
 	private:
 		// ROS node
@@ -52,12 +50,13 @@ class TrajectoryEditor : public QMainWindow
 		// messages buffers
 		sensor_msgs::JointState joint_state_;
 		// actionlib clients
-		Client * action_execute_trajectory_;
+		ActionClient * action_execute_trajectory_;
 		// internals
-		Ui::TrajectoryEditor *ui;
-		sweetie_bot::interface::JointTrajectoryData *joint_trajectory_data_;
-		sweetie_bot::interface::JointListTableModel *joint_list_table_model_;
-		sweetie_bot::interface::JointTrajectoryPointTableModel *joint_trajectory_point_table_model_;
+		Ui::TrajectoryEditor ui;
+		sweetie_bot::interface::JointTrajectoryData joint_trajectory_data_;
+		sweetie_bot::interface::JointListTableModel joint_list_table_model_;
+		sweetie_bot::interface::JointTrajectoryPointTableModel joint_trajectory_point_table_model_;
+		QTimer * timer;
 
 	private:
 		// ROS callbacks
@@ -65,7 +64,7 @@ class TrajectoryEditor : public QMainWindow
 		void executeActionCallback(const actionlib::SimpleClientGoalState& state, const control_msgs::FollowJointTrajectoryActionResultConstPtr& result);
 
 		// parameters managment
-		sweetie_bot::tools::ParamMsgLoader<control_msgs::FollowJointTrajectoryGoal>* loader_;
+		sweetie_bot::tools::ParamMsgLoader<control_msgs::FollowJointTrajectoryGoal> loader_;
 		void updateParamList();
 	
 		// helper functions
