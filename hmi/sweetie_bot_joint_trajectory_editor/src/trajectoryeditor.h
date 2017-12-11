@@ -27,63 +27,80 @@ class TrajectoryEditor;
 
 class TrajectoryEditor : public QMainWindow
 {
-    Q_OBJECT
+	Q_OBJECT
+	
+	public:
+		typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> Client;
 
-public:
-    explicit TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node, QWidget *parent = 0);
-  ~TrajectoryEditor();
-  void bootstrap();
-  typedef actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> Client;
-private:
-   ros::NodeHandle node_;
-   ros::Subscriber sub_real_;
-   ros::Subscriber sub_virtual_;
-   ros::Publisher pub_joints_virtual_set;
-   ros::Publisher pub_joints_marker_set;
+	public:
+		explicit TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node, QWidget *parent = 0);
+		~TrajectoryEditor();
+		void bootstrap();
 
-   ros::ServiceClient torque_main_switch_;
+	private:
+		// ROS node
+		ros::NodeHandle node_;
 
-   sensor_msgs::JointState joint_state_real_;
-   sensor_msgs::JointState joint_state_virtual_;
+		// pub/sub interface
+		ros::Subscriber sub_joints_; 
+		ros::Publisher pub_joints_set_;
+		ros::Publisher pub_joints_marker_set_;
+		// services
+		ros::ServiceClient torque_main_switch_;
+		// parameteres buffers
+		std::string trajectories_param_name;
+		// messages buffers
+		sensor_msgs::JointState joint_state_;
+		// actionlib clients
+		Client * action_execute_trajectory_;
+		// internals
+		Ui::TrajectoryEditor *ui;
+		sweetie_bot::interface::JointTrajectoryData *joint_trajectory_data_;
+		sweetie_bot::interface::JointListTableModel *joint_list_table_model_;
+		sweetie_bot::interface::JointTrajectoryPointTableModel *joint_trajectory_point_table_model_;
 
-   std::string trajectories_param_name;
+	private:
+		// ROS callbacks
+		void jointsCallback(const sensor_msgs::JointState::ConstPtr& msg);
+		void executeActionCallback(const actionlib::SimpleClientGoalState& state, const control_msgs::FollowJointTrajectoryActionResultConstPtr& result);
 
-   Client *client_virtual;
-   Client *client_real;
+		// parameters managment
+		sweetie_bot::tools::ParamMsgLoader<control_msgs::FollowJointTrajectoryGoal>* loader_;
+		void updateParamList();
+	
+		// helper functions
+		void setServoTorqueOn(bool value);
 
-   Ui::TrajectoryEditor *ui;
-   sweetie_bot::interface::JointTrajectoryData *joint_trajectory_data_;
-
-   sweetie_bot::interface::JointListTableModel *joint_list_table_model_;
-   sweetie_bot::interface::JointTrajectoryPointTableModel *joint_trajectory_point_table_model_;
-
-   sweetie_bot::tools::ParamMsgLoader<control_msgs::FollowJointTrajectoryGoal>* loader_;
-   void jointsRealCallback(const sensor_msgs::JointState::ConstPtr& msg);
-   void jointsVirtualCallback(const sensor_msgs::JointState::ConstPtr& msg);
-   void executeActionCallback(const actionlib::SimpleClientGoalState& state, const control_msgs::FollowJointTrajectoryActionResultConstPtr& result);
-   void updateParamList();
-
-private slots:
-    void rosSpin();
-    void on_turnAllTrajectoryServosButton_clicked();
-    void on_turnAllServoOnButton_clicked();
-    void on_loadTrajectoryButton_clicked();
-    void on_turnAllSelectedServosButton_clicked();
-    void on_addRealPoseButton_clicked();
-    void on_saveTrajectoryButton_clicked();
-    void on_deletePoseButton_clicked();
-    void on_addVirtualPoseButton_clicked();
-    void on_executeButton_clicked();
-    void on_jointsTableView_clicked(const QModelIndex &index);
-    void on_addButton_clicked();
-    void on_applyButton_clicked();
-    void on_delButton_clicked();
-    void on_delTrajectoryButton_clicked();
-    void on_goalTimeToleranceSpinBox_valueChanged(double arg1);
-    void on_setVirtualPoseButton_clicked();
-    void on_pointsTableView_clicked(const QModelIndex &index);
-    void on_pointsTableView_doubleClicked(const QModelIndex &index);
-    void on_virtualCheckBox_clicked(bool checked);
+	private slots:
+		void rosSpin();
+		// servo control
+		void on_turnAllServoOnButton_clicked();
+		void on_turnAllServoOffButton_clicked();
+		// trajectory managment
+		void on_loadTrajectoryButton_clicked();
+		void on_saveTrajectoryButton_clicked();
+		void on_delTrajectoryButton_clicked();
+		// pose managment
+		void on_addRobotPoseButton_clicked();
+		void on_deletePoseButton_clicked();
+		void on_dublicatePoseButton_clicked();
+		// robot control
+		void on_setRobotPoseButton_clicked();
+		void on_executeButton_clicked();
+		// time scale parameters
+		void on_scaleSpinBox_valueChanged(double value);
+		void on_scaleSlider_sliderMoved(int value);
+		void on_applyScaleButton_clicked();
+		// joints managment
+		void on_addJointButton_clicked();
+		void on_delJointButton_clicked();
+		// tolerances
+		void on_resetTolerancesButton_clicked();
+		void on_goalTimeToleranceSpinBox_valueChanged(double arg1);
+		// table interactions 
+		void on_jointsTableView_clicked(const QModelIndex &index);
+		void on_pointsTableView_clicked(const QModelIndex &index);
+		void on_pointsTableView_doubleClicked(const QModelIndex &index);
 };
 
 #endif // TRAJECTORYEDITOR_H

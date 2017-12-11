@@ -20,6 +20,7 @@ namespace interface {
 			QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 			QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 			bool removeRow(int row, const QModelIndex &parent);
+			Qt::ItemFlags flags(const QModelIndex &index) const;
 			bool setData(const QModelIndex &index, const QVariant &value, int role);
 			bool reReadData();
 	};

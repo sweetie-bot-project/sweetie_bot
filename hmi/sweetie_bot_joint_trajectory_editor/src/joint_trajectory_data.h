@@ -71,7 +71,9 @@ class JointTrajectoryData
 		const TrajectoryPoint& getPoint(unsigned int index) { return trajectory_points_.at(index); }
 		sensor_msgs::JointState getPointMsg(unsigned int index);
 		void setPointTimeFromStart(unsigned int index, double time_from_start);
+		void setPointJointPosition(unsigned int index, unsigned int joint_index, double value) { trajectory_points_.at(index).positions.at(joint_index) = value; }
 		void removePoint(unsigned int index);
+		void scaleTrajectory(double scale);
 
 		void setJointPathTolerance(unsigned int index, double tolerance) { joints_.at(index).path_tolerance = tolerance; }
 		void setPathTolerance(double tolerance);

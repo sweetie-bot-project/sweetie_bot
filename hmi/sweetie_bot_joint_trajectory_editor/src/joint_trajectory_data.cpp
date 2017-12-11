@@ -227,8 +227,17 @@ sensor_msgs::JointState JointTrajectoryData::getPointMsg(unsigned int index)
 void JointTrajectoryData::setPointTimeFromStart(unsigned int index, double time_from_start)
 {
 	TrajectoryPoint& point = trajectory_points_.at(index);
+	if (time_from_start < 0.0) return; // TODO exception?
 	point.time_from_start = time_from_start;
 	sort(trajectory_points_.begin(), trajectory_points_.end());
+}
+
+void JointTrajectoryData::scaleTrajectory(double scale) 
+{
+	if (scale <= 0.0) return;
+	for(auto it = trajectory_points_.begin(); it != trajectory_points_.end(); it++) {
+		it->time_from_start *= scale;
+	}
 }
 
 void JointTrajectoryData::removePoint(unsigned int index)

@@ -18,7 +18,7 @@ int JointTrajectoryPointTableModel::rowCount(const QModelIndex & /*parent*/) con
 
 int JointTrajectoryPointTableModel::columnCount(const QModelIndex & /*parent*/) const
 {
-    return 1 + trajectory_data_.jointCount();
+    return 2 + trajectory_data_.jointCount();
 }
 
 QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -26,13 +26,16 @@ QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation
 	if (orientation == Qt::Horizontal) {
 		switch (role) {
 			case Qt::DisplayRole:
-				if (section == 0) {
-					return QString("time");
-				}
-				else if (section >= 1 && section <= trajectory_data_.jointCount()) {
-				//else {
-					const std::string& name = trajectory_data_.getJoint(section - 1).name;
-					return QString::fromStdString(name);
+				switch (section) {
+					case 0:
+						return QString("N");
+					case 1:
+						return QString("time");
+					default:
+						if (section >= 2 && section < 2 + trajectory_data_.jointCount()) {
+							const std::string& name = trajectory_data_.getJoint(section - 2).name;
+							return QString::fromStdString(name);
+						}
 				}
 				/*QString tmp;
 				const std::string& name = trajectory_data_.getJoint(i).name;
@@ -56,6 +59,8 @@ QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role
 		const JointTrajectoryData::TrajectoryPoint& point = trajectory_data_.getPoint(index.row());
 		switch (index.column()) {
 			case 0: 
+				return QString::number(index.row());
+			case 1: 
 				return QString::number(point.time_from_start, 'f', 2);
 			/*case 1:
 				if (point.positions.size() == 0) { 
@@ -68,8 +73,8 @@ QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role
 					return tmp;
 				}*/
 			default:
-				if (index.column() >= 0 && index.column() <= trajectory_data_.jointCount()) {
-					return QString::number(point.positions[index.column()-1], 'f', 2);
+				if (index.column() >= 2 && index.column() < 2 + trajectory_data_.jointCount()) {
+					return QString::number(point.positions[index.column()-2], 'f', 2);
 				}
 		}
     }
@@ -80,9 +85,9 @@ Qt::ItemFlags JointTrajectoryPointTableModel::flags (const QModelIndex &index) c
 {
 	switch (index.column()) {
 		case 0:
-			return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled;
-		case 1:
 			return Qt::ItemIsSelectable |  Qt::ItemIsEnabled;
+		default:
+			return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled;
 	}
 	return QAbstractItemModel::flags(index);
 }
@@ -99,15 +104,28 @@ bool JointTrajectoryPointTableModel::removeRow(int row, const QModelIndex &paren
 bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
 	if (!index.isValid()) return false;
-	if (index.column() == 0) {
-		if (!value.isValid()) return false;
-		if (value.toString() == "") return false;
-		if (!value.canConvert(QMetaType::Double)) return false;
-		double d = value.toDouble();
-		trajectory_data_.setPointTimeFromStart(index.row(), d);
-		// ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
-		emit dataChanged(index, index);
+	// check value
+	if (!value.isValid()) return false;
+	if (value.toString() == "") return false;
+	if (!value.canConvert(QMetaType::Double)) return false;
+	double d = value.toDouble();
+	// ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
+
+	switch (index.column()) {
+		case 1:
+			// edit time_from_start
+			trajectory_data_.setPointTimeFromStart(index.row(), d);
+			emit dataChanged(index, index);
+			return true;
+		default: 
+			if (index.column() >= 2 && index.column() < 2 + trajectory_data_.jointCount()) {
+				// edit position
+				trajectory_data_.setPointJointPosition(index.row(), index.column() - 2, d);
+				emit dataChanged(index, index);
+				return true;
+			}
 	}
+
 	return false;
 }
 
