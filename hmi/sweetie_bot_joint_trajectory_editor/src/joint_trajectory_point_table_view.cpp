@@ -1,9 +1,10 @@
 #include "joint_trajectory_point_table_view.h"
 
 #include <QFont>
+#include <QBrush>
 
 namespace sweetie_bot {
-namespace interface {
+namespace hmi {
 
 JointTrajectoryPointTableModel::JointTrajectoryPointTableModel(QObject *parent, JointTrajectoryData &trajectory_data) :
 	QAbstractTableModel(parent),
@@ -28,7 +29,7 @@ QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation
 			case Qt::DisplayRole:
 				switch (section) {
 					case 0:
-						return QString("N");
+						return QString("label");
 					case 1:
 						return QString("time");
 					default:
@@ -52,31 +53,50 @@ QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation
     return QVariant();
 }
 
+const std::vector<std::string> JointTrajectoryPointTableModel::symbols = {
+	":)) ", ":-) ", "=) ", "%) ", ":o)", ":( ", ":-( ", ";-) ", ";v)", ":D", ":-D ", "=D ", ":^D", ":-/ ", 
+	":/", ":P ", ":-р ", "=p ", ":-b ", "=b", ":-* ", ":-x", "8-] ", ":-] ", "=]", ":-|", "8) ", "8-)", ":-o ", 
+	"=O", ":'-( ", ":'( ", ":,-(", ":,-) ", ":'-)", ":*-) ", "%*", ":-Q", "X-)", ":-X", 
+	"(^_^)", "(^.^)", "(^__^)", "(^..^)", "(^___^)", "(o_O)", "(;_;)", "(T_T)", "(ToT)", "($_$)", "(@ @)", "(*_*)", 
+	"(+_+)", "(^o^)", "(^3^)", "(*-*)", "(-_-)", "(-_-)Zzzz", 
+	"IMO", "IMHO ", "LOL", "ROFL", "GG", "GL", "HF", "BB", "AKA", "BTW", "FYA", "THX", "10X", 
+};
+
+
 QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role) const
 {
-    if (role == Qt::DisplayRole) {
-		//TODO row index check
-		const JointTrajectoryData::TrajectoryPoint& point = trajectory_data_.getPoint(index.row());
-		switch (index.column()) {
-			case 0: 
-				return QString::number(index.row());
-			case 1: 
-				return QString::number(point.time_from_start, 'f', 2);
-			/*case 1:
-				if (point.positions.size() == 0) { 
-					return QString();
-				}
-				else {
-					QString tmp;
-					for(auto it = point.positions.begin(); it != point.positions.end(); it++)
-						tmp.append( QString("%1, ").arg(*it, 5, 'f', 2) );
-					return tmp;
-				}*/
-			default:
-				if (index.column() >= 2 && index.column() < 2 + trajectory_data_.jointCount()) {
-					return QString::number(point.positions[index.column()-2], 'f', 2);
-				}
-		}
+	const JointTrajectoryData::TrajectoryPoint& point = trajectory_data_.getPoint(index.row());
+	switch (role) {
+		case Qt::DisplayRole:
+			switch (index.column()) {
+				case 0: 
+					return QString::fromStdString(symbols[point.crc % symbols.size()]);
+				case 1: 
+					return QString::number(point.time_from_start, 'f', 2);
+				/*case 1:
+					if (point.positions.size() == 0) { 
+						return QString();
+					}
+					else {
+						QString tmp;
+						for(auto it = point.positions.begin(); it != point.positions.end(); it++)
+							tmp.append( QString("%1, ").arg(*it, 5, 'f', 2) );
+						return tmp;
+					}*/
+				default:
+					if (index.column() >= 2 && index.column() < 2 + trajectory_data_.jointCount()) {
+						return QString::number(point.positions[index.column()-2], 'f', 2);
+					}
+			}
+			break;
+
+		case Qt::BackgroundRole:
+			switch (index.column()) {
+				case 0: 
+					return QBrush(QColor(248 - 32 + 2*(point.crc & 0xf), 185 - 32 + 4*((point.crc >> 4) & 0xf), 206 - 16 + 2*((point.crc >> 8) & 0xf)));
+				case 1: 
+					return QBrush(QColor(163,223,249));
+			}
     }
     return QVariant();
 }
@@ -134,5 +154,5 @@ bool JointTrajectoryPointTableModel::reReadData()
 	emit layoutChanged();
 }
 
-} // namespace interface
+} // namespace hmi
 } // namespace sweetie_bot

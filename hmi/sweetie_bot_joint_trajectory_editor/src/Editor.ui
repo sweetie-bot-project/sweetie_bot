@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>TrajectoryEditor</string>
+   <string>TrajectoryPinkitor</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">

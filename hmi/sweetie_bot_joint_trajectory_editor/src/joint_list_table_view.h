@@ -6,7 +6,7 @@
 #include <QAbstractTableModel>
 
 namespace sweetie_bot {
-namespace interface {
+namespace hmi {
 
 	class JointListTableModel : public QAbstractTableModel
 	{
@@ -25,7 +25,7 @@ namespace interface {
 			bool reReadData();
 	};
 
-} // namespace interface
+} // namespace hmi
 } // namespace sweetie_bot
 
 #endif // JOINT_TRAJECTORY_VIEW_H

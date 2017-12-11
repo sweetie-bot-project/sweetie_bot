@@ -193,7 +193,7 @@ void TrajectoryEditor::on_dublicatePoseButton_clicked()
 		ROS_INFO_STREAM("Duplicate pose with index " << index.row() << " at time " << time_from_start);
 
 		try { 
-			sweetie_bot::interface::JointTrajectoryData::TrajectoryPoint point = joint_trajectory_data_.getPoint(index.row());
+			sweetie_bot::hmi::JointTrajectoryData::TrajectoryPoint point = joint_trajectory_data_.getPoint(index.row());
 			point.time_from_start = time_from_start;
 			joint_trajectory_data_.addPoint(point);
 		}
@@ -262,7 +262,7 @@ void TrajectoryEditor::on_executeButton_clicked()
 void TrajectoryEditor::on_jointsTableView_clicked(const QModelIndex &index)
 {
 	if (index.isValid()) {
-		const sweetie_bot::interface::JointTrajectoryData::Joint& joint = joint_trajectory_data_.getJoint(index.row());
+		const sweetie_bot::hmi::JointTrajectoryData::Joint& joint = joint_trajectory_data_.getJoint(index.row());
 		ui.jointNameEditBox->setText(QString::fromStdString(joint.name));
 	}
 }

@@ -1,7 +1,7 @@
 #include "joint_list_table_view.h"
 
 namespace sweetie_bot {
-namespace interface {
+namespace hmi {
 
 JointListTableModel::JointListTableModel(QObject *parent, JointTrajectoryData &trajectory_data) :
 	QAbstractTableModel(parent),
@@ -113,5 +113,5 @@ bool JointListTableModel::reReadData()
 	emit layoutChanged();
 }
 
-} // namespace interface
+} // namespace hmi
 } // namespace sweetie_bot

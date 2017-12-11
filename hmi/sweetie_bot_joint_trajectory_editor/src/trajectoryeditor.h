@@ -53,9 +53,9 @@ class TrajectoryEditor : public QMainWindow
 		ActionClient * action_execute_trajectory_;
 		// internals
 		Ui::TrajectoryEditor ui;
-		sweetie_bot::interface::JointTrajectoryData joint_trajectory_data_;
-		sweetie_bot::interface::JointListTableModel joint_list_table_model_;
-		sweetie_bot::interface::JointTrajectoryPointTableModel joint_trajectory_point_table_model_;
+		sweetie_bot::hmi::JointTrajectoryData joint_trajectory_data_;
+		sweetie_bot::hmi::JointListTableModel joint_list_table_model_;
+		sweetie_bot::hmi::JointTrajectoryPointTableModel joint_trajectory_point_table_model_;
 		QTimer * timer;
 
 	private:
