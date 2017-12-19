@@ -4,3 +4,4 @@
 [submodule "rt_control"]
 	path = rt_control
 	url = git@gitlab.com:sweetie-bot/sweetie_bot_rt_control.git
+	branch = master
