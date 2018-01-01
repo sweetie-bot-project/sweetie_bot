@@ -40,6 +40,7 @@
 		<!-- vizualization -->
 		<node name="rviz" pkg="rviz" type="rviz" args="-d $(find sweetie_bot_deploy)/joint_state_control/joint_space_control.rviz">
 			<remap from="robot_description" to="/sweetie_bot/robot_description"/>
+			<env name="LC_NUMERIC" value="C" />
 		</node>
 	</group>
 </launch>
