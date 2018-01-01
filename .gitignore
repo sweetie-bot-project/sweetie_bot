@@ -1,6 +1,9 @@
 # Common tmp files
 *~
 
+# QT
+*.autosave
+
 # Vim tmp files
 *.sw?
 .vimprj
