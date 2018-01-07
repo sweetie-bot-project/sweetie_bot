@@ -49,7 +49,7 @@ agregator_real:loadService("rosparam")
 --set properties
 agregator_real:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
 agregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
-agregator_real:provides("rosparam"):getParam("/","robot_model")
+agregator_real:provides("rosparam"):getParam("","robot_model")
 --get other properties
 rttlib_extra.get_peer_rosparams(agregator_real)
 -- timer syncronization
