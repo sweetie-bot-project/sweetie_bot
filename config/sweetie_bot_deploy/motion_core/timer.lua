@@ -29,14 +29,15 @@ else
 end
 
 -- start timers:
---    timer_10: controllers timer
---    timer_20: herkulex timer
+--    timer_10: controllers timer, herkulex timer
+--    timer_20: aggregator timer: causes kinematic and dynamic calculatons
 timer.timer:startTimer(10, timer.period)
 timer.timer:wait(0, timer.period/2)
 timer.timer:startTimer(20, timer.period)
 -- register groups
 timer.controller = { port = "timer.timer_10", shift = 0 }
-timer.herkulex = { port = "timer.timer_20", shift = timer.period/2 }
+timer.agregator = { port = "timer.timer_20", shift = timer.period/2 }
+timer.herkulex = { port = "timer.timer_10", shift = 0 }
 
 -- TODO: helper function for add components
 --     - connect sync port

@@ -21,7 +21,7 @@ servo_inv = depl:getPeer("servo_inv")
 rttlib_extra.get_peer_rosparams(servo_inv)
 
 -- timer syncronization
-depl:connect(timer.controller.port, "servo_inv.sync_step", rtt.Variable("ConnPolicy"));
+depl:connect(timer.agregator.port, "servo_inv.sync_step", rtt.Variable("ConnPolicy"));
 
 -- data flow: agregator_ref -> servo_inv -> herkulex_sched
 depl:connect("agregator_ref.out_joints_sorted", "servo_inv.in_joints_fixed", rtt.Variable("ConnPolicy"));
@@ -46,13 +46,16 @@ depl:loadComponent("agregator_real", "sweetie_bot::motion::Agregator");
 agregator_real = depl:getPeer("agregator_real")
 agregator_real:loadService("marshalling")
 agregator_real:loadService("rosparam")
+--set properties: publish on event
+agregator_real:getProperty("publish_on_timer"):set(false)
+agregator_real:getProperty("publish_on_event"):set(true)
 --set properties
 agregator_real:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
 agregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
 agregator_real:provides("rosparam"):getParam("","robot_model")
 --get other properties
 rttlib_extra.get_peer_rosparams(agregator_real)
--- timer syncronization
+-- timer syncronization: publish at same time as controllers
 depl:connect(timer.controller.port, "agregator_real.sync_step", rtt.Variable("ConnPolicy"));
 -- publish pose to ROS
 depl:stream("agregator_real.out_joints_sorted", ros:topic("~agregator_real/out_joints_sorted"))
@@ -66,7 +69,7 @@ depl:connect("herkulex/sched.out_joints", "agregator_real.in_joints", rtt.Variab
 --- start herkulex scheduler
 if herkulex.array:isConfigured() then
 	herkulex.sched:start()
-	print "herkulex.sched is stared!"
+	print "herkulex.sched is started!"
 else
 	print "WARNING: herkulex.array is not configured. herkulex.sched is not started."
 end

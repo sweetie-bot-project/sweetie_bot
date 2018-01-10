@@ -44,7 +44,10 @@ ros:import("sweetie_bot_robot_model");
 -- load component
 depl:loadComponent("agregator_ref", "sweetie_bot::motion::Agregator")
 agregator_ref = depl:getPeer("agregator_ref")
---set properties
+--set properties: publish only on timer
+agregator_ref:getProperty("publish_on_timer"):set(true)
+agregator_ref:getProperty("publish_on_event"):set(false)
+--set properties: autoload
 agregator_ref:loadService("marshalling")
 agregator_ref:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"))
 agregator_ref:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
@@ -54,7 +57,7 @@ agregator_ref:provides("rosparam"):getParam("", "robot_model")
 --get other properties
 rttlib_extra.get_peer_rosparams(agregator_ref)
 --timer syncronization
-depl:connect(timer.controller.port, "agregator_ref.sync_step", rtt.Variable("ConnPolicy"));
+depl:connect(timer.agregator.port, "agregator_ref.sync_step", rtt.Variable("ConnPolicy"));
 -- publish pose to ROS
 depl:stream("agregator_ref.out_joints_sorted", ros:topic("~agregator_ref/out_joints_sorted"))
 -- start component

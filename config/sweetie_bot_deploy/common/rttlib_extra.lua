@@ -38,6 +38,7 @@ function rttlib_extra.get_rosparam(name, typename)
 	return nil
 end
 
+--- Get Property object from peer.
 function rttlib_extra.get_property(peer, property_name)
 	prop_names = peer:getPropertyNames()
 	for i, name in pairs(prop_names) do
