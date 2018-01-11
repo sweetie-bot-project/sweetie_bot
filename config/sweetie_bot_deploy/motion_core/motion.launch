@@ -3,7 +3,6 @@
 	<arg name="machine" default="localhost" doc="Machine to run nodes" />  
 	<arg name="modules" default="motion_core.lua" doc="OROCOS deployment modules list" /> 
 	<arg name="overlays" default="motion_core" doc="OROCOS deployment overlays list" />
-	<arg name="joint_states_topic" default="motion/agregator_ref/out_joints_sorted" doc="OROCOS topic for joint_states" />
 	<arg name="interactive" default="false" doc="Run in XTerm in interactive mode." /> 
 	<arg name="param_namespace" default="" doc="Namespace for parameters of OROCOS node." />
 	
@@ -12,7 +11,5 @@
 		<param name="param_ns" value="$(arg param_namespace)" />
 		<node unless="$(arg interactive)" machine="$(arg machine)" name="motion" pkg="sweetie_bot_deploy" type="sweetie-bot-core" args="$(arg modules) $(arg overlays) __param_ns:=$(arg param_namespace)" output="screen"/>
 		<node if="$(arg interactive)" machine="$(arg machine)" launch-prefix="xterm -e " name="motion" pkg="sweetie_bot_deploy" type="sweetie-bot-core" args="$(arg modules) $(arg overlays) __param_ns:=$(arg param_namespace)" output="screen" />
-		<!-- relay joint_states topic -->
-		<node machine="$(arg machine)" name="joint_state_relay" pkg="topic_tools" type="relay" args="$(arg joint_states_topic) joint_states" />
 	</group>
 </launch>
