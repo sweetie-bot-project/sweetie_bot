@@ -7,7 +7,7 @@
 --
 
 --
--- deloy logger, agregator, resource_control
+-- deloy logger, agregator, resource_control, kinematics_fwd
 --
 require "motion_core"
 

@@ -62,5 +62,47 @@ depl:connect(timer.agregator.port, "agregator_ref.sync_step", rtt.Variable("Conn
 depl:stream("agregator_ref.out_joints_sorted", ros:topic("~agregator_ref/out_joints_sorted"))
 -- start component
 agregator_ref:configure()
-assert(agregator_ref:start())
+
+-- 
+-- Forward kineamtics component
+--
+
+ros:import("sweetie_bot_kinematics");
+-- load component
+depl:loadComponent("kinematics_fwd","sweetie_bot::motion::KinematicsFwd")
+kinematics_fwd = depl:getPeer("kinematics_fwd")
+rttlib_extra.get_peer_rosparams(kinematics_fwd)
+
+-- data flow: agregator_ref -> servo_inv -> herkulex_sched
+depl:connect("agregator_ref.out_joints_sorted", "kinematics_fwd.in_joints_sorted", rtt.Variable("ConnPolicy"));
+-- connect to RobotModel
+depl:connectServices("kinematics_fwd", "agregator_ref")
+-- publish pose to ROS
+-- depl:stream("kinematics_fwd.out_limbs_fixed", ros:topic("~kinematics_fwd/out_limbs_fixed"))
+
+kinematics_fwd:configure()
+
+-- 
+-- Odometry
+--
+
+ros:import("sweetie_bot_odometry");
+-- load component
+depl:loadComponent("odometry_ref","sweetie_bot::motion::Odometry")
+odometry_ref = depl:getPeer("odometry_ref")
+rttlib_extra.get_peer_rosparams(odometry_ref)
+
+-- data flow: agregator_ref, kinematics_fwd -> odometry_ref
+depl:connect("agregator_ref.out_support_sorted", "odometry_ref.in_support_fixed", rtt.Variable("ConnPolicy"));
+depl:connect("kinematics_fwd.out_limbs_fixed", "odometry_ref.in_limbs_fixed", rtt.Variable("ConnPolicy"));
+-- publish tf to ROS
+depl:stream("odometry_ref.out_tf", ros:topic("~odometry_ref/out_tf"))
+
+odometry_ref:configure()
+
+--- start components
+
+assert(agregator_ref:start()) 
+assert(kinematics_fwd:start())
+assert(odometry_ref:start()) 
 

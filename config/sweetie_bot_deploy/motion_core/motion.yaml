@@ -1,7 +1,7 @@
 resource_control:
     arbiter:
         priority: 20
-        resources: [ leg1, leg2, leg3, leg4, head, eyes, tail ]
+        resources: [ leg1, leg2, leg3, leg4, head, eyes, tail, eyes_focus ]
 agregator_ref: 
     priority: 20
 servo_inv:
@@ -9,6 +9,13 @@ servo_inv:
     lead: 0.056
 agregator_real:
     priority: 20
+kinematics_fwd:
+    priority: 20
+    kinematic_chains: [ leg1, leg2, leg3, leg4, head ]
+odometry_ref:
+    priority: 20
+    legs: [ leg1, leg2, leg3, leg4 ]
+    contact_points: [ 0.0, 0.0, 0.0, 0.0, 0.0, -0.02 ]
 timer:
     priority: 45
     period: 0.056
