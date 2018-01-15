@@ -24,6 +24,7 @@ resource_control.register_controller(controller.joint_trajectory)
 depl:connect(timer.controller.port, "controller/joint_trajectory.sync", rtt.Variable("ConnPolicy"))
 -- data flow: controller <-> agregator_ref
 depl:connect("controller/joint_trajectory.out_joints_ref_fixed", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+depl:connect("controller/joint_trajectory.out_supports", "agregator_ref.in_supports", rtt.Variable("ConnPolicy"))
 depl:connect("agregator_ref.out_joints_sorted", "controller/joint_trajectory.in_joints_sorted", rtt.Variable("ConnPolicy"))
 -- configure actionlib
 ros:import("rtt_actionlib")
