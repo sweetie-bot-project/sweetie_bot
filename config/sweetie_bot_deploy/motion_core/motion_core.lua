@@ -93,7 +93,7 @@ odometry_ref = depl:getPeer("odometry_ref")
 rttlib_extra.get_peer_rosparams(odometry_ref)
 
 -- data flow: agregator_ref, kinematics_fwd -> odometry_ref
-depl:connect("agregator_ref.out_support_sorted", "odometry_ref.in_support_fixed", rtt.Variable("ConnPolicy"));
+depl:connect("agregator_ref.out_supports_sorted", "odometry_ref.in_supports_fixed", rtt.Variable("ConnPolicy"));
 depl:connect("kinematics_fwd.out_limbs_fixed", "odometry_ref.in_limbs_fixed", rtt.Variable("ConnPolicy"));
 -- publish tf to ROS
 depl:stream("odometry_ref.out_tf", ros:topic("~odometry_ref/out_tf"))
