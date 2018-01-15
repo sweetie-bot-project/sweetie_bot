@@ -97,6 +97,7 @@ depl:connect("agregator_ref.out_support_sorted", "odometry_ref.in_support_fixed"
 depl:connect("kinematics_fwd.out_limbs_fixed", "odometry_ref.in_limbs_fixed", rtt.Variable("ConnPolicy"));
 -- publish tf to ROS
 depl:stream("odometry_ref.out_tf", ros:topic("~odometry_ref/out_tf"))
+depl:stream("odometry_ref.out_base", ros:topic("~odometry_ref/out_base"))
 
 odometry_ref:configure()
 
@@ -106,3 +107,15 @@ assert(agregator_ref:start())
 assert(kinematics_fwd:start())
 assert(odometry_ref:start()) 
 
+--- helper function for setting support
+--- 123 means leg1, leg2, leg3
+function set_support(val)
+	list = {}
+	while val >= 1 do
+		table.insert(list, "leg" .. tostring(val % 10))
+		val = math.floor(val / 10)
+	end
+	limbs = rtt.Variable("strings")
+	limbs:fromtab(list)
+	agregator_ref:setSupportState(limbs)
+end
