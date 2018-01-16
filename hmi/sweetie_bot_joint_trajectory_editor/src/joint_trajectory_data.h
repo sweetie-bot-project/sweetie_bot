@@ -37,8 +37,19 @@ class JointTrajectoryData
 			bool operator==(const std::string& that) const { return name == that; }
 		};
 
+		struct Support {
+			std::string name;
+			unsigned int index;
+
+			bool operator<(const Support& that) const { return name < that.name; }
+			bool operator<(const std::string& that) const { return name < that; }
+			bool operator==(const Support& that) const { return name == that.name; }
+			bool operator==(const std::string& that) const { return name == that; }
+		};
+
 		struct TrajectoryPoint {
 			std::vector<double> positions;
+			std::vector<double> supports;
 			double time_from_start;
 			unsigned int crc;
 
@@ -49,6 +60,7 @@ class JointTrajectoryData
 	protected:
 		// Trajectory Storage
 		std::vector<Joint> joints_;
+		std::vector<Support> supports_;
 		std::vector<TrajectoryPoint> trajectory_points_;
 		double goal_time_tolerance_;
 
@@ -69,6 +81,12 @@ class JointTrajectoryData
 		void removeJoint(unsigned int index);
 		int getJointIndex(const std::string& name);
 
+		unsigned int supportCount() { return supports_.size(); }
+		bool addSupport(const std::string& name);
+		const Support& getSupport(unsigned int index) { return supports_.at(index); }
+		void removeSupport(unsigned int index);
+		int getSupportIndex(const std::string& name);
+
 		unsigned int pointCount() { return trajectory_points_.size(); }
 		void addPoint(const TrajectoryPoint& point);
 		void addPointMsg(const sensor_msgs::JointState& msg, double time_from_start);
@@ -76,6 +94,7 @@ class JointTrajectoryData
 		sensor_msgs::JointState getPointMsg(unsigned int index);
 		void setPointTimeFromStart(unsigned int index, double time_from_start);
 		void setPointJointPosition(unsigned int index, unsigned int joint_index, double value);
+		void setPointSupport(unsigned int index, unsigned int support_index, double value);
 		void removePoint(unsigned int index);
 		void scaleTrajectory(double scale);
 

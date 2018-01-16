@@ -19,7 +19,7 @@ int JointTrajectoryPointTableModel::rowCount(const QModelIndex & /*parent*/) con
 
 int JointTrajectoryPointTableModel::columnCount(const QModelIndex & /*parent*/) const
 {
-    return 2 + trajectory_data_.jointCount();
+    return 2 + trajectory_data_.supportCount() + trajectory_data_.jointCount();
 }
 
 QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -33,19 +33,16 @@ QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation
 					case 1:
 						return QString("time");
 					default:
-						if (section >= 2 && section < 2 + trajectory_data_.jointCount()) {
-							const std::string& name = trajectory_data_.getJoint(section - 2).name;
+						if (section < 2 + trajectory_data_.supportCount()) {
+							const std::string& name = trajectory_data_.getSupport(section - 2).name;
+							return QString::fromStdString(name);
+						} 
+						else {
+							const std::string& name = trajectory_data_.getJoint(section - 2 - trajectory_data_.supportCount()).name;
 							return QString::fromStdString(name);
 						}
 				}
-				/*QString tmp;
-				const std::string& name = trajectory_data_.getJoint(i).name;
-				for(int i = 0; i < trajectory_data_.jointCount(); i++) {
-					tmp.append( QString("%1, ").arg(QString::fromStdString( name.substr(std::max<int>(name.size()-5,0)) )) );
-				}
-				return tmp;*/
 				break;
-
 			/*case Qt::TextAlignmentRole:
 				return Qt::AlignLeft + Qt::AlignVCenter;*/
     	}
@@ -65,6 +62,8 @@ const std::vector<std::string> JointTrajectoryPointTableModel::symbols = {
 
 QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role) const
 {
+	if (!index.isValid()) return QVariant();
+
 	const JointTrajectoryData::TrajectoryPoint& point = trajectory_data_.getPoint(index.row());
 	switch (role) {
 		case Qt::DisplayRole:
@@ -84,8 +83,11 @@ QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role
 						return tmp;
 					}*/
 				default:
-					if (index.column() >= 2 && index.column() < 2 + trajectory_data_.jointCount()) {
-						return QString::number(point.positions[index.column()-2], 'f', 2);
+					if (index.column() < 2 + trajectory_data_.supportCount()) {
+						return QString::number(point.supports.at(index.column() - 2), 'f', 2);
+					}
+					else {
+						return QString::number(point.positions.at(index.column() - 2 - trajectory_data_.supportCount()), 'f', 2);
 					}
 			}
 			break;
@@ -129,18 +131,26 @@ bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVa
 	if (value.toString() == "") return false;
 	if (!value.canConvert(QMetaType::Double)) return false;
 	double d = value.toDouble();
-	// ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
+	//ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
 
 	switch (index.column()) {
+		case 0:
+			return false;
 		case 1:
 			// edit time_from_start
 			trajectory_data_.setPointTimeFromStart(index.row(), d);
 			emit dataChanged(index, index);
 			return true;
 		default: 
-			if (index.column() >= 2 && index.column() < 2 + trajectory_data_.jointCount()) {
-				// edit position
-				trajectory_data_.setPointJointPosition(index.row(), index.column() - 2, d);
+			if (index.column() < 2 + trajectory_data_.supportCount()) {
+				// edit support
+				trajectory_data_.setPointSupport(index.row(), index.column() - 2, d);
+				emit dataChanged(index, index);
+				return true;
+			}
+			else {
+				// edit joint position
+				trajectory_data_.setPointJointPosition(index.row(), index.column() - 2 - trajectory_data_.supportCount(), d);
 				emit dataChanged(index, index);
 				return true;
 			}
