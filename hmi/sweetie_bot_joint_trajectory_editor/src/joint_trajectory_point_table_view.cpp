@@ -72,16 +72,6 @@ QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role
 					return QString::fromStdString(symbols[point.crc % symbols.size()]);
 				case 1: 
 					return QString::number(point.time_from_start, 'f', 2);
-				/*case 1:
-					if (point.positions.size() == 0) { 
-						return QString();
-					}
-					else {
-						QString tmp;
-						for(auto it = point.positions.begin(); it != point.positions.end(); it++)
-							tmp.append( QString("%1, ").arg(*it, 5, 'f', 2) );
-						return tmp;
-					}*/
 				default:
 					if (index.column() < 2 + trajectory_data_.supportCount()) {
 						return QString::number(point.supports.at(index.column() - 2), 'f', 2);
@@ -89,6 +79,13 @@ QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role
 					else {
 						return QString::number(point.positions.at(index.column() - 2 - trajectory_data_.supportCount()), 'f', 2);
 					}
+			}
+			break;
+
+		case Qt::CheckStateRole:
+			if (index.column() >= 2 && index.column() < 2 + trajectory_data_.supportCount()) {
+				if (point.supports.at(index.column() - 2) > 0) return Qt::Checked;
+				else return Qt::Unchecked;
 			}
 			break;
 
@@ -109,7 +106,12 @@ Qt::ItemFlags JointTrajectoryPointTableModel::flags (const QModelIndex &index) c
 		case 0:
 			return Qt::ItemIsSelectable |  Qt::ItemIsEnabled;
 		default:
-			return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled;
+			if (index.column() < 2 + trajectory_data_.supportCount()) {
+				return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable;
+			}
+			else {
+				return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled;
+			}
 	}
 	return QAbstractItemModel::flags(index);
 }
@@ -143,8 +145,9 @@ bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVa
 			return true;
 		default: 
 			if (index.column() < 2 + trajectory_data_.supportCount()) {
-				// edit support
-				trajectory_data_.setPointSupport(index.row(), index.column() - 2, d);
+				// edit support state
+				if (role == Qt::CheckStateRole)	trajectory_data_.setPointSupport(index.row(), index.column() - 2, (Qt::CheckState)value.toInt() == Qt::Checked ? 1.0 : 0.0);
+				else trajectory_data_.setPointSupport(index.row(), index.column() - 2, d);
 				emit dataChanged(index, index);
 				return true;
 			}
