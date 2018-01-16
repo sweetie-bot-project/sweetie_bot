@@ -98,6 +98,7 @@ depl:connect("kinematics_fwd.out_limbs_fixed", "odometry_ref.in_limbs_fixed", rt
 -- publish tf to ROS
 depl:stream("odometry_ref.out_tf", ros:topic("~odometry_ref/out_tf"))
 depl:stream("odometry_ref.out_base", ros:topic("~odometry_ref/out_base"))
+depl:stream("odometry_ref.in_base", ros:topic("~odometry_ref/in_base"))
 
 odometry_ref:configure()
 
