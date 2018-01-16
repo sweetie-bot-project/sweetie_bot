@@ -19,7 +19,7 @@ int JointTrajectoryPointTableModel::rowCount(const QModelIndex & /*parent*/) con
 
 int JointTrajectoryPointTableModel::columnCount(const QModelIndex & /*parent*/) const
 {
-    return 2 + trajectory_data_.jointCount();
+    return 2 + trajectory_data_.supportCount() + trajectory_data_.jointCount();
 }
 
 QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -33,19 +33,16 @@ QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation
 					case 1:
 						return QString("time");
 					default:
-						if (section >= 2 && section < 2 + trajectory_data_.jointCount()) {
-							const std::string& name = trajectory_data_.getJoint(section - 2).name;
+						if (section < 2 + trajectory_data_.supportCount()) {
+							const std::string& name = trajectory_data_.getSupport(section - 2).name;
+							return QString::fromStdString(name);
+						} 
+						else {
+							const std::string& name = trajectory_data_.getJoint(section - 2 - trajectory_data_.supportCount()).name;
 							return QString::fromStdString(name);
 						}
 				}
-				/*QString tmp;
-				const std::string& name = trajectory_data_.getJoint(i).name;
-				for(int i = 0; i < trajectory_data_.jointCount(); i++) {
-					tmp.append( QString("%1, ").arg(QString::fromStdString( name.substr(std::max<int>(name.size()-5,0)) )) );
-				}
-				return tmp;*/
 				break;
-
 			/*case Qt::TextAlignmentRole:
 				return Qt::AlignLeft + Qt::AlignVCenter;*/
     	}
@@ -65,6 +62,8 @@ const std::vector<std::string> JointTrajectoryPointTableModel::symbols = {
 
 QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role) const
 {
+	if (!index.isValid()) return QVariant();
+
 	const JointTrajectoryData::TrajectoryPoint& point = trajectory_data_.getPoint(index.row());
 	switch (role) {
 		case Qt::DisplayRole:
@@ -73,20 +72,20 @@ QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role
 					return QString::fromStdString(symbols[point.crc % symbols.size()]);
 				case 1: 
 					return QString::number(point.time_from_start, 'f', 2);
-				/*case 1:
-					if (point.positions.size() == 0) { 
-						return QString();
+				default:
+					if (index.column() < 2 + trajectory_data_.supportCount()) {
+						return QString::number(point.supports.at(index.column() - 2), 'f', 2);
 					}
 					else {
-						QString tmp;
-						for(auto it = point.positions.begin(); it != point.positions.end(); it++)
-							tmp.append( QString("%1, ").arg(*it, 5, 'f', 2) );
-						return tmp;
-					}*/
-				default:
-					if (index.column() >= 2 && index.column() < 2 + trajectory_data_.jointCount()) {
-						return QString::number(point.positions[index.column()-2], 'f', 2);
+						return QString::number(point.positions.at(index.column() - 2 - trajectory_data_.supportCount()), 'f', 2);
 					}
+			}
+			break;
+
+		case Qt::CheckStateRole:
+			if (index.column() >= 2 && index.column() < 2 + trajectory_data_.supportCount()) {
+				if (point.supports.at(index.column() - 2) > 0) return Qt::Checked;
+				else return Qt::Unchecked;
 			}
 			break;
 
@@ -107,7 +106,12 @@ Qt::ItemFlags JointTrajectoryPointTableModel::flags (const QModelIndex &index) c
 		case 0:
 			return Qt::ItemIsSelectable |  Qt::ItemIsEnabled;
 		default:
-			return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled;
+			if (index.column() < 2 + trajectory_data_.supportCount()) {
+				return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable;
+			}
+			else {
+				return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled;
+			}
 	}
 	return QAbstractItemModel::flags(index);
 }
@@ -129,18 +133,27 @@ bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVa
 	if (value.toString() == "") return false;
 	if (!value.canConvert(QMetaType::Double)) return false;
 	double d = value.toDouble();
-	// ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
+	//ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
 
 	switch (index.column()) {
+		case 0:
+			return false;
 		case 1:
 			// edit time_from_start
 			trajectory_data_.setPointTimeFromStart(index.row(), d);
 			emit dataChanged(index, index);
 			return true;
 		default: 
-			if (index.column() >= 2 && index.column() < 2 + trajectory_data_.jointCount()) {
-				// edit position
-				trajectory_data_.setPointJointPosition(index.row(), index.column() - 2, d);
+			if (index.column() < 2 + trajectory_data_.supportCount()) {
+				// edit support state
+				if (role == Qt::CheckStateRole)	trajectory_data_.setPointSupport(index.row(), index.column() - 2, (Qt::CheckState)value.toInt() == Qt::Checked ? 1.0 : 0.0);
+				else trajectory_data_.setPointSupport(index.row(), index.column() - 2, d);
+				emit dataChanged(index, index);
+				return true;
+			}
+			else {
+				// edit joint position
+				trajectory_data_.setPointJointPosition(index.row(), index.column() - 2 - trajectory_data_.supportCount(), d);
 				emit dataChanged(index, index);
 				return true;
 			}

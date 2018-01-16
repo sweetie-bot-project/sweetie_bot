@@ -21,21 +21,37 @@ unsigned int JointTrajectoryData::crc(const std::vector<double>& positions)
 void JointTrajectoryData::loadFromMsg(const FollowJointTrajectoryGoal& msg)
 {
 	clear();
-	unsigned int n_joints = msg.trajectory.joint_names.size();
-
 	// get joints names
-	joints_.resize(n_joints);
-	for(unsigned int i = 0; i < n_joints; i++) {
-		joints_[i].name = msg.trajectory.joint_names[i];
-		joints_[i].path_tolerance = 0.0;
-		joints_[i].goal_tolerance = 0.0;
-		joints_[i].index = i;
+	for(unsigned int i = 0; i < msg.trajectory.joint_names.size(); i++) {
+		const std::string& name = msg.trajectory.joint_names[i];
+		if (name.compare(0,8,"support/") == 0) {
+			Support support;
+			support.name = name.substr(8);
+			support.index = i;
+			// push it to supports list
+			supports_.push_back(support);
+		}
+		else {	
+			// add joint
+			Joint joint;
+			joint.name = msg.trajectory.joint_names[i];
+			joint.path_tolerance = 0.0;
+			joint.goal_tolerance = 0.0;
+			joint.index = i;
+			// push it to joint list
+			joints_.push_back(joint);
+		}
 	}
 	sort(joints_.begin(), joints_.end());
+	sort(supports_.begin(), supports_.end());
 	// check if all joints are unique
 	if(std::unique(joints_.begin(), joints_.end()) != joints_.end()) {
 		clear();
 		throw std::invalid_argument("Joints are not unique.");
+	}
+	if(std::unique(supports_.begin(), supports_.end()) != supports_.end()) {
+		clear();
+		throw std::invalid_argument("Supports are not unique.");
 	}
 
 	// load trajectory points
@@ -45,21 +61,28 @@ void JointTrajectoryData::loadFromMsg(const FollowJointTrajectoryGoal& msg)
 		// get time
 		trajectory_points_[k].time_from_start = msg.trajectory.points[k].time_from_start.toSec();
 		// check number of positions 
-		if (msg.trajectory.points[k].positions.size() != n_joints) {
+		if (msg.trajectory.points[k].positions.size() != msg.trajectory.joint_names.size()) {
 			clear(); 
 			throw std::invalid_argument("Inconsistent number of joints in FollowJointTrajectoryGoal message: trajectory.joint_names.size() != trajectory.points[k].positions.size(), k = " + std::to_string(k));
 		}
 		// fill positions in proper order
-		trajectory_points_[k].positions.resize(n_joints);
-		for(unsigned int i = 0; i < n_joints; i++) {
+		trajectory_points_[k].positions.resize(joints_.size());
+		for(unsigned int i = 0; i < joints_.size(); i++) {
 			unsigned int old_index = joints_[i].index;
 			trajectory_points_[k].positions[i] = msg.trajectory.points[k].positions[old_index];
 		}
 		trajectory_points_[k].crc = crc(trajectory_points_[k].positions);
+		// fill supports in proper oder
+		trajectory_points_[k].supports.resize(supports_.size());
+		for(unsigned int i = 0; i < supports_.size(); i++) {
+			unsigned int old_index = supports_[i].index;
+			trajectory_points_[k].supports[i] = msg.trajectory.points[k].positions[old_index];
+		}
 		// ignore velocities, accelerations and efforts
 	}
 	// fix joint induces
-	for(unsigned int i = 0; i < n_joints; i++) joints_[i].index = i;
+	for(unsigned int i = 0; i < joints_.size(); i++) joints_[i].index = i;
+	for(unsigned int i = 0; i < supports_.size(); i++) supports_[i].index = i;
 
 	// load path and goal tolerance (if present) 
 	// default values (zeros) are already present in joints_ structures.
@@ -105,6 +128,10 @@ control_msgs::FollowJointTrajectoryGoal JointTrajectoryData::getTrajectoryMsg(bo
 		msg.goal_tolerance.back().position = it->goal_tolerance;
 	}
 	msg.goal_time_tolerance.fromSec( goal_time_tolerance_ );
+	// add supports
+	for(auto it = supports_.begin(); it != supports_.end(); it++) {
+		msg.trajectory.joint_names.push_back("support/" + it->name);
+	}
 
 	// Load trajectory into message. Do not set velocities, accelerations and efforts.
 	if (!reverse) {
@@ -114,6 +141,8 @@ control_msgs::FollowJointTrajectoryGoal JointTrajectoryData::getTrajectoryMsg(bo
 			JointTrajectoryPoint& point = msg.trajectory.points.back();
 			// set postions, ignore (leave empty) velocities, accelerations and efforts
 			point.positions = it->positions;
+			// set supports values
+			point.positions.insert(point.positions.end(), it->supports.begin(), it->supports.end());
 			// set time
 			point.time_from_start.fromSec(scale * it->time_from_start);
 		}
@@ -128,6 +157,10 @@ control_msgs::FollowJointTrajectoryGoal JointTrajectoryData::getTrajectoryMsg(bo
 				JointTrajectoryPoint& point = msg.trajectory.points.back();
 				// set postions, ignore (leave empty) velocities, accelerations and efforts
 				point.positions = it->positions;
+				// set supports values
+				auto next = it + 1; // they must be shifted in time
+				if (next != trajectory_points_.rend()) point.positions.insert(point.positions.end(), next->supports.begin(), next->supports.end());
+				else point.positions.insert(point.positions.end(), it->supports.begin(), it->supports.end());
 				// set time
 				point.time_from_start.fromSec( scale*(end_time - it->time_from_start) );
 			}
@@ -140,6 +173,7 @@ control_msgs::FollowJointTrajectoryGoal JointTrajectoryData::getTrajectoryMsg(bo
 void JointTrajectoryData::clear()
 {
   joints_.clear();
+  supports_.clear();
   trajectory_points_.clear();
   goal_time_tolerance_ = 0.0;
 }
@@ -189,6 +223,50 @@ int JointTrajectoryData::getJointIndex(const std::string& name) {
 	if (it == joints_.end() || it->name != name) return -1; // joint not found
 	return distance(joints_.begin(), it);
 }
+
+bool JointTrajectoryData::addSupport(const std::string& name)
+{
+	auto it = lower_bound(supports_.begin(), supports_.end(), name);
+	if (it != supports_.end() && it->name == name) {
+		// support already exists
+		return false; 
+	}
+
+	// now add new support AFTER lower bound
+	auto new_support = supports_.emplace(it); // call default constructor
+	new_support->name = name;
+	new_support->index = distance(supports_.begin(), new_support);
+	// modify indexes of last supports
+	for(auto it = new_support + 1; it != supports_.end(); it++) it->index++;
+
+	// now insert position
+	for(auto point = trajectory_points_.begin(); point != trajectory_points_.end(); point++) {
+		point->supports.insert(point->supports.begin() + new_support->index, 0.0);
+    }
+
+	return true;
+}
+
+void JointTrajectoryData::removeSupport(unsigned int index)
+{
+	// check diapazone
+	if (index >= supports_.size()) throw std::out_of_range("support index");
+	// delete support
+    supports_.erase(supports_.begin() + index);
+	// delete corresponding trajectory points
+	for(auto point = trajectory_points_.begin(); point != trajectory_points_.end(); point++) { 
+		point->supports.erase(point->supports.begin() + index);
+	}
+}
+
+int JointTrajectoryData::getSupportIndex(const std::string& name)
+{
+	//TODO exception?
+	auto it = lower_bound(supports_.begin(), supports_.end(), name);
+	if (it == supports_.end() || it->name != name) return -1; // support not found
+	return distance(supports_.begin(), it);
+}
+
 
 void JointTrajectoryData::addPoint(const TrajectoryPoint& point)
 {
@@ -244,6 +322,11 @@ void JointTrajectoryData::setPointJointPosition(unsigned int index, unsigned int
 	point.crc = crc(point.positions);
 }
 
+void JointTrajectoryData::setPointSupport(unsigned int index, unsigned int support_index, double value)
+{
+	TrajectoryPoint& point = trajectory_points_.at(index);
+	point.supports.at(support_index) = value; 
+}
 
 void JointTrajectoryData::setPointTimeFromStart(unsigned int index, double time_from_start)
 {

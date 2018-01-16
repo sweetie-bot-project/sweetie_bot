@@ -263,14 +263,18 @@ void TrajectoryEditor::on_executeButton_clicked()
 void TrajectoryEditor::on_jointsTableView_clicked(const QModelIndex &index)
 {
 	if (index.isValid()) {
-		const sweetie_bot::hmi::JointTrajectoryData::Joint& joint = joint_trajectory_data_.getJoint(index.row());
-		ui.jointNameEditBox->setText(QString::fromStdString(joint.name));
+		std::string name;
+		if (index.row() < joint_trajectory_data_.supportCount()) name = joint_trajectory_data_.getSupport(index.row()).name;
+		else name = joint_trajectory_data_.getJoint(index.row() - joint_trajectory_data_.supportCount()).name;
+		ui.jointNameEditBox->setText(QString::fromStdString(name));
 	}
 }
 
 void TrajectoryEditor::on_addJointButton_clicked()
 {
-    joint_trajectory_data_.addJoint(ui.jointNameEditBox->text().toStdString(), ui.pathToleranceSpinBox->value(), ui.goalToleranceSpinBox->value());
+	std::string name = ui.jointNameEditBox->text().toStdString();
+	if (name.compare(0,8,"support/") == 0) joint_trajectory_data_.addSupport(name.substr(8));
+	else joint_trajectory_data_.addJoint(name, ui.pathToleranceSpinBox->value(), ui.goalToleranceSpinBox->value());
     joint_list_table_model_.reReadData();
     joint_trajectory_point_table_model_.reReadData();
 }

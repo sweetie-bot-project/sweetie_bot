@@ -10,12 +10,12 @@ JointListTableModel::JointListTableModel(QObject *parent, JointTrajectoryData &t
 
 int JointListTableModel::rowCount(const QModelIndex & /*parent*/) const
 {
-   return trajectory_data_.jointCount();
+   return trajectory_data_.supportCount() + trajectory_data_.jointCount();
 }
 
 int JointListTableModel::columnCount(const QModelIndex & /*parent*/) const
 {
-    return 3;
+    return 4;
 }
 
 QVariant JointListTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -27,8 +27,10 @@ QVariant JointListTableModel::headerData(int section, Qt::Orientation orientatio
             case 0:
                 return QString("joint_name");
             case 1:
-                return QString("path_tolerance");
+                return QString("type");
             case 2:
+                return QString("path_tolerance");
+            case 3:
                 return QString("goal_tolerance");
             }
         }
@@ -42,14 +44,27 @@ QVariant JointListTableModel::data(const QModelIndex &index, int role) const
     {
 		// if (index.row() >= 0 && index.row() < trajectory_data_.jointCount();
 		if (index.isValid()) {
-			const JointTrajectoryData::Joint& joint = trajectory_data_.getJoint(index.row());
-			switch (index.column()) {
-				case 0: 
-					return QString::fromStdString(joint.name);
-				case 1:
-					return QString::number(joint.path_tolerance);
-				case 2:
-					return QString::number(joint.goal_tolerance);
+			if (index.row() < trajectory_data_.supportCount()) {
+				const JointTrajectoryData::Support& joint = trajectory_data_.getSupport(index.row());
+				switch (index.column()) {
+					case 0: 
+						return QString::fromStdString(joint.name);
+					case 1:
+						return QString("support");
+				}
+			}
+			else {
+				const JointTrajectoryData::Joint& joint = trajectory_data_.getJoint(index.row() -  trajectory_data_.supportCount());
+				switch (index.column()) {
+					case 0: 
+						return QString::fromStdString(joint.name);
+					case 1:
+						return QString("joint");
+					case 2:
+						return QString::number(joint.path_tolerance);
+					case 3:
+						return QString::number(joint.goal_tolerance);
+				}
 			}
 		}
     }
@@ -60,10 +75,12 @@ Qt::ItemFlags JointListTableModel::flags(const QModelIndex &index) const
 {
 	switch (index.column()) {
 		case 0:
-			return Qt::ItemIsSelectable |  Qt::ItemIsEnabled;
 		case 1:
+			return Qt::ItemIsSelectable |  Qt::ItemIsEnabled;
 		case 2:
-			return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled;
+		case 3:
+			if (index.row() < trajectory_data_.supportCount()) return Qt::ItemIsSelectable;
+			else return Qt::ItemIsSelectable |  Qt::ItemIsEditable | Qt::ItemIsEnabled;
 	}
 	return QAbstractItemModel::flags(index);
 }
@@ -76,12 +93,15 @@ bool JointListTableModel::setData(const QModelIndex &index, const QVariant &valu
 	if (!value.canConvert(QMetaType::Double)) return false;
 	double d = value.toDouble();
 
+	int joint_index = index.row() - trajectory_data_.supportCount();
+	if (joint_index < 0) return false;
+
 	switch (index.column()) {
 		case 1:
-			trajectory_data_.setJointPathTolerance(index.row(), d);
+			trajectory_data_.setJointPathTolerance(joint_index, d);
 			break;
 		case 2:
-			trajectory_data_.setJointPathTolerance(index.row(), d);
+			trajectory_data_.setJointPathTolerance(joint_index, d);
 			break;
 		default:
 			return false;
@@ -98,7 +118,8 @@ bool JointListTableModel::removeRow(int row, const QModelIndex &parent)
 	// 2. Lock rows and JointTrajectoryPointTableModel and cols of JointTrajectoryPointTableModel in trajectoryeditor.cpp.
 	//TODO row index check
 	beginRemoveRows(parent, row, row);
-	trajectory_data_.removeJoint(row);
+	if (row < trajectory_data_.supportCount()) trajectory_data_.removeSupport(row);
+	else trajectory_data_.removeJoint(row - trajectory_data_.supportCount());
 	endRemoveRows();
 	return true;
 }
