@@ -49,7 +49,6 @@ agregator_ref:getProperty("publish_on_timer"):set(true)
 agregator_ref:getProperty("publish_on_event"):set(false)
 --set properties: autoload
 agregator_ref:loadService("marshalling")
-agregator_ref:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"))
 agregator_ref:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
 agregator_ref:loadService("rosparam")
 --agregator_ref:provides("rosparam"):getRelative("robot_model")
@@ -95,6 +94,8 @@ rttlib_extra.get_peer_rosparams(odometry_ref)
 -- data flow: agregator_ref, kinematics_fwd -> odometry_ref
 depl:connect("agregator_ref.out_supports_sorted", "odometry_ref.in_supports_fixed", rtt.Variable("ConnPolicy"));
 depl:connect("kinematics_fwd.out_limbs_fixed", "odometry_ref.in_limbs_fixed", rtt.Variable("ConnPolicy"));
+-- connect to RobotModel
+depl:connectServices("odometry_ref", "agregator_ref")
 -- publish tf to ROS
 depl:stream("odometry_ref.out_tf", ros:topic("~odometry_ref/out_tf"))
 depl:stream("odometry_ref.out_base", ros:topic("~odometry_ref/out_base"))
