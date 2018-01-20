@@ -13,6 +13,10 @@
 			<description>Last  chain element.</description>
 			<value>bone16</value>
 		</simple>
+		<simple name="default_contact" type="string">
+			<description>Default contact name.</description>
+			<value>hoof_flat</value>
+		</simple>
 	</struct>
 	<struct name="leg2" type="PropertyBag">
 		<description>Leg2 kinematics chain.</description>
@@ -23,6 +27,10 @@
 		<simple name="last_link" type="string">
 			<description>Last  chain element.</description>
 			<value>bone26</value>
+		</simple>
+		<simple name="default_contact" type="string">
+			<description>Default contact name.</description>
+			<value>hoof_flat</value>
 		</simple>
 	</struct>
 	<struct name="leg3" type="PropertyBag">
@@ -35,6 +43,10 @@
 			<description>Last  chain element.</description>
 			<value>bone36</value>
 		</simple>
+		<simple name="default_contact" type="string">
+			<description>Default contact name.</description>
+			<value>hoof_flat</value>
+		</simple>
 	</struct>
 	<struct name="leg4" type="PropertyBag">
 		<description>Leg4 kinematics chain.</description>
@@ -45,6 +57,10 @@
 		<simple name="last_link" type="string">
 			<description>Last  chain element.</description>
 			<value>bone46</value>
+		</simple>
+		<simple name="default_contact" type="string">
+			<description>Default contact name.</description>
+			<value>hoof_flat</value>
 		</simple>
 	</struct>
 	<struct name="head" type="PropertyBag">
@@ -79,6 +95,27 @@
 			<description>Last  chain element.</description>
 			<value>link_eyes_z</value>
 		</simple>
+    </struct>
+  </struct>
+  <struct name="contacts" type="PropertyBag">
+    <description>Contacts.</description>
+	<struct name="hoof_flat" type="PropertyBag">
+		<description>Hoof placed on ground flatly. One degree of freedom around vertical axis.</description>
+		<struct name="points" type="KDL.Vector[]">
+			<description>Equivalent set of fixed points.</description>
+			<struct name="Element0" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.03</value></simple>
+			</struct>
+			<struct name="Element1" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.05</value></simple>
+			</struct>
+		</struct>
 	</struct>
   </struct>
 </properties>
