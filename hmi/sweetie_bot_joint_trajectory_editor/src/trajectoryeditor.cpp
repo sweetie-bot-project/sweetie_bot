@@ -288,7 +288,7 @@ void TrajectoryEditor::on_resetTolerancesButton_clicked()
 void TrajectoryEditor::on_delJointButton_clicked()
 {
 	QModelIndex index  = ui.jointsTableView->selectionModel()->currentIndex();
-	if (index.isValid() && index.row() < joint_trajectory_data_.pointCount()) {
+	if (index.isValid() && index.row() < joint_trajectory_data_.jointCount()+joint_trajectory_data_.supportCount()) {
 		joint_list_table_model_.removeRow(index.row(), QModelIndex());
 		joint_list_table_model_.reReadData();
 		joint_trajectory_point_table_model_.reReadData();
