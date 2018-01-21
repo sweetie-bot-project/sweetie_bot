@@ -28,7 +28,7 @@ def xmlrpc_from_file(filename):
 	# store to dict
 	return xmlrpclib.Binary(buf.getvalue())
 
-def load(param, path):
+def load(param, path, replace_existing = False):
 	# determine what we are loading: namespace or regular parameter
 	if os.path.isfile(path):
 		# check if target parameter stores message
@@ -52,18 +52,39 @@ def load(param, path):
 		raise KeyError, 'Load failed: target path is neither file o directory.'
 
 	if not load_namespace:
+            if replace_existing or not rospy.has_param(param):
+                # create or replace existing parameter
 		print 'Loading file `{}` as parameter `{}`.'.format(path, param)
 		value = xmlrpc_from_file(path)
 		rospy.set_param(param, value)
+            else:
+                # do not touch existing parameter
+                print 'Update: skip existing parameter `{}`.'.format(param)
 	else:
-		print 'Loading directory `{}` as namespace `{}`.'.format(path, param)
-		values = dict()
+                print 'Loading directory `{}` as namespace `{}`.'.format(path, param)
+                if replace_existing or not rospy.has_param(param):
+                    values = dict()
+                else:
+                    values = rospy.get_param(param)
+
+                n_loaded = 0
+                n_skipped = 0
 		for f in os.listdir(path):
-			basename, extension = os.path.splitext(f)
-			if extension.endswith('json'):
-				values[basename] = xmlrpc_from_file(os.path.join(path, f))
+		    basename, extension = os.path.splitext(f)
+                    if extension.endswith('json'):
+                        if basename not in values:
+                            values[basename] = xmlrpc_from_file(os.path.join(path, f))
+                            n_loaded += 1
+                        else:
+                            n_skipped += 1
+
+
 		# save to parameter server
 		rospy.set_param(param, values)
+                if n_skipped > 0:
+                    print '{} parameters are loaded, {} existing parameters are skipped.'.format(n_loaded, n_skipped)
+                else:
+                    print '{} parameters are loaded.'.format(n_loaded)
 
 def save(param, path):
 	value = rospy.get_param(param)
@@ -86,9 +107,10 @@ def save(param, path):
 				xmlrpc_to_file(val, os.path.join(path, name + '.json'))
 
 def print_help():
-	print 'Usage: {} load|save PARAM PATH'.format(sys.argv[0])
+	print 'Usage: {} load|load_overwrite|save PARAM PATH'.format(sys.argv[0])
 	print '''
 Load/save  ROS messages to/from Parameter Server in binary format from/to JSON files.
+`load` mode does not change existing parameteres, `load_overwrite` overwrites existing.
 On Parameter Server messages are stored in serilized form as binary data.  Currently only 
 control_msgs/FollowJointTrajectoryGoal type are supported.
 
@@ -109,6 +131,8 @@ path = sys.argv[3]
 
 if cmd == 'load':
 	load(param, path)
+if cmd == 'load_overwrite':
+	load(param, path, True)
 elif cmd == 'save':  
 	save(param, path)
 else:
