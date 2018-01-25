@@ -131,7 +131,7 @@ path = sys.argv[3]
 
 if cmd == 'load':
 	load(param, path)
-if cmd == 'load_overwrite':
+elif cmd == 'load_overwrite':
 	load(param, path, True)
 elif cmd == 'save':  
 	save(param, path)
