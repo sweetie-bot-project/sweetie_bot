@@ -11,10 +11,10 @@ agregator_real:
     priority: 20
 kinematics_fwd:
     priority: 20
-    kinematic_chains: [ leg1, leg2, leg3, leg4, head ]
+    kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
 odometry_ref:
     priority: 20
-    legs: [ leg1, leg2, leg3, leg4 ]
+    legs: [ leg1, leg3, leg4, leg2 ]
     force_contact_z_to_zero: true
 timer:
     priority: 45
