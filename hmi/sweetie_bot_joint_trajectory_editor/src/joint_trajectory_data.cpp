@@ -270,6 +270,7 @@ int JointTrajectoryData::getSupportIndex(const std::string& name)
 
 void JointTrajectoryData::addPoint(const TrajectoryPoint& point)
 {
+	if (point.positions.size() != joints_.size() || point.supports.size() != supports_.size()) throw std::invalid_argument("Position or support size is incorrect.");
 	if (point.time_from_start < 0.0) throw std::invalid_argument("time_from_start must be nonegative.");
 	// find appropriate place to insert new element
 	auto it = upper_bound(trajectory_points_.begin(), trajectory_points_.end(), point.time_from_start, [](double t, const TrajectoryPoint& p) { return t < p.time_from_start; } );
@@ -294,6 +295,8 @@ void JointTrajectoryData::addPointMsg(const sensor_msgs::JointState& msg, double
             point.positions[i] = msg.position[index];
         }
     }
+	// add supports
+	point.supports.assign(supports_.size(), 0.0);
 	// add point
 	return addPoint(point);
 }
