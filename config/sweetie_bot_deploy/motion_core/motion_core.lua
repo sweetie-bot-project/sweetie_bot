@@ -52,6 +52,8 @@ agregator_ref:loadService("marshalling")
 agregator_ref:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
 agregator_ref:loadService("rosparam")
 agregator_ref:provides("rosparam"):getParam("", "robot_model")
+-- upload robot model parameteres to ROS
+agregator_ref:provides("rosparam"):setParam("robot_model", "robot_model") 
 --get other properties
 rttlib_extra.get_peer_rosparams(agregator_ref)
 --timer syncronization
@@ -123,7 +125,7 @@ function set_support(val)
 end
 
 
---
+-- 
 -- Dynamics
 --
 

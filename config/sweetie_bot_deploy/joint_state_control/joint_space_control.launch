@@ -42,5 +42,11 @@
 			<remap from="robot_description" to="/sweetie_bot/robot_description"/>
 			<env name="LC_NUMERIC" value="C" />
 		</node>
+		<node name="dynamics_visualizer" pkg="sweetie_bot_dynamics" type="visualizer" >
+			<remap from="robot_model" to="/sweetie_bot/robot_model"/>
+			<remap from="joint_state_accel" to="/sweetie_bot/motion/dynamics_inv/out_joints_accel_sorted"/>
+			<remap from="wrenches" to="/sweetie_bot/motion/dynamics_inv/out_wrenches_fixed"/>
+			<remap from="supports" to="/sweetie_bot/motion/agregator_ref/out_supports_sorted"/>
+		</node>
 	</group>
 </launch>
