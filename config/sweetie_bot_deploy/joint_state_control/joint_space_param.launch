@@ -1,6 +1,7 @@
 <!-- MODULE: Load default params to run joint space controllers -->
 <launch>
 	<param name="robot_description" textfile="$(find sweetie_bot_proto2_description)/urdf/sweetie_bot_proto2_description.urdf"></param>
+	<param name="motion/dynamics_inv/robot_description" textfile="$(find sweetie_bot_proto2_description)/urdf/sweetie_bot_proto2_description_dynamics.urdf"></param>
 	<rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/motion.yaml" ></rosparam> 
 	<rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/herkulex_feedback.yaml" ></rosparam> 
 	<rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/joint_state_control/controller.yaml" ></rosparam> 

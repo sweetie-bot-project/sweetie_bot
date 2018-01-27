@@ -51,14 +51,16 @@ agregator_ref:getProperty("publish_on_event"):set(false)
 agregator_ref:loadService("marshalling")
 agregator_ref:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
 agregator_ref:loadService("rosparam")
---agregator_ref:provides("rosparam"):getRelative("robot_model")
 agregator_ref:provides("rosparam"):getParam("", "robot_model")
+-- upload robot model parameteres to ROS
+agregator_ref:provides("rosparam"):setParam("robot_model", "robot_model") 
 --get other properties
 rttlib_extra.get_peer_rosparams(agregator_ref)
 --timer syncronization
 depl:connect(timer.agregator.port, "agregator_ref.sync_step", rtt.Variable("ConnPolicy"));
 -- publish pose to ROS
 depl:stream("agregator_ref.out_joints_sorted", ros:topic("~agregator_ref/out_joints_sorted"))
+depl:stream("agregator_ref.out_supports_sorted", ros:topic("~agregator_ref/out_supports_sorted"))
 -- start component
 agregator_ref:configure()
 
@@ -121,3 +123,28 @@ function set_support(val)
 	limbs:fromtab(list)
 	agregator_ref:setSupportState(limbs)
 end
+
+
+-- 
+-- Dynamics
+--
+
+ros:import("sweetie_bot_dynamics");
+-- load component
+depl:loadComponent("dynamics_inv","sweetie_bot::motion::DynamicsInvSimple")
+dynamics_inv = depl:getPeer("dynamics_inv")
+rttlib_extra.get_peer_rosparams(dynamics_inv)
+
+-- data flow: agregator_ref, kinematics_fwd -> dynamics_inv
+depl:connect("agregator_ref.out_joints_sorted", "dynamics_inv.in_joints_sorted", rtt.Variable("ConnPolicy"));
+depl:connect("agregator_ref.out_supports_sorted", "dynamics_inv.in_supports_sorted", rtt.Variable("ConnPolicy"));
+depl:connect("odometry_ref.out_base", "dynamics_inv.in_base", rtt.Variable("ConnPolicy"));
+depl:connect(timer.agregator.port, "dynamics_inv.sync_step", rtt.Variable("ConnPolicy"));
+-- connect to RobotModel
+depl:connectServices("dynamics_inv", "agregator_ref")
+-- publish tf to ROS
+depl:stream("dynamics_inv.out_wrenches_fixed", ros:topic("~dynamics_inv/out_wrenches_fixed"))
+depl:stream("dynamics_inv.out_joints_accel_sorted", ros:topic("~dynamics_inv/out_joints_accel_sorted"))
+
+dynamics_inv:configure()
+assert(dynamics_inv:start())
