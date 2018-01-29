@@ -83,6 +83,24 @@ depl:connectServices("kinematics_fwd", "agregator_ref")
 
 kinematics_fwd:configure()
 
+--
+-- Inverse kinematics
+--
+
+ros:import("sweetie_bot_kinematics")
+depl:loadComponent("kinematics_inv", "sweetie_bot::motion::KinematicsInvTracIK")
+kinematics_inv = depl:getPeer("kinematics_inv")
+-- get ROS parameteres and services
+rttlib_extra.get_peer_rosparams(kinematics_inv)
+-- data flow: controller <-> agregator_ref
+depl:connect("kinematics_inv.in_joints_seed_sorted", "agregator_ref.out_joints_sorted", rtt.Variable("ConnPolicy"))
+depl:connect("kinematics_inv.out_joints", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+-- connect to RobotModel
+depl:connectServices("kinematics_inv", "agregator_ref")
+-- prepare to start
+kinematics_inv:configure()
+
+
 -- 
 -- Odometry
 --
@@ -101,16 +119,18 @@ depl:connectServices("odometry_ref", "agregator_ref")
 -- publish tf to ROS
 depl:stream("odometry_ref.out_tf", ros:topic("~odometry_ref/out_tf"))
 depl:stream("odometry_ref.out_base", ros:topic("~odometry_ref/out_base"))
-depl:stream("odometry_ref.in_base", ros:topic("~odometry_ref/in_base"))
+-- depl:stream("odometry_ref.in_base", ros:topic("~odometry_ref/in_base"))
 
 odometry_ref:configure()
 
 --- start components
 
+assert(kinematics_inv:start())
 assert(agregator_ref:start()) 
 assert(kinematics_fwd:start())
 assert(odometry_ref:start()) 
 
+---
 --- helper function for setting support
 --- 123 means leg1, leg2, leg3
 function set_support(val)

@@ -9,6 +9,9 @@ servo_inv:
     lead: 0.056
 agregator_real:
     priority: 20
+kinematics_inv:
+    priority: 20
+    kinematic_chains: [ leg1, leg3, leg4, leg2 ]
 kinematics_fwd:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
