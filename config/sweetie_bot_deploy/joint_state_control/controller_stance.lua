@@ -34,6 +34,9 @@ end
 depl:connect("controller/stance.in_base", "odometry_ref.out_base", rtt.Variable("ConnPolicy"))
 -- data flow: controller <- kinematics_fwd
 depl:connect("controller/stance.in_limbs", "kinematics_fwd.out_limbs_fixed", rtt.Variable("ConnPolicy"))
+if not rttlib_extra.get_rosparam("~controller/stance/base_pose_feedback", "bool") then
+	depl:connectOperations("controller/stance.poseToJointStatePublish", "kinematics_inv.poseToJointStatePublish");
+end
 -- ROS redirect
 depl:stream("controller/stance.in_base_ref", ros:topic("~controller/stance/in_base_ref"))
 -- depl:stream("controller/stance.out_base_ref", ros:topic("~controller/stance/out_base_ref"))
@@ -59,6 +62,12 @@ p2.pose.orientation.z = -0.094577
 p2.pose.orientation.w = 0.9955
 p2.pose.position.x = 0.00
 p2.pose.position.z = 0.22
+
+p3 = rtt.Variable("geometry_msgs.PoseStamped")
+p3.pose.orientation.z = 0.0
+p3.pose.orientation.w = 1.0
+p3.pose.position.x = 0.10
+p3.pose.position.z = 0.22
 
 base_ref_port = rttlib.port_clone_conn( controller.stance:getPort("in_base_ref") )
 base_ref_port:write( p1 )
