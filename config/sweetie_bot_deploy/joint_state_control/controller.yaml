@@ -25,3 +25,9 @@ controller:
         herkulex_scheds: [ herkulex/sched ]
         herkulex_arrays: [ herkulex/array ]
         velocity_zeroing: true
+    stance: 
+        priority: 20
+        support_legs: [ leg1, leg2, leg3, leg4 ]
+        override_odometry: false
+        Kp: 4
+        Kd: 4

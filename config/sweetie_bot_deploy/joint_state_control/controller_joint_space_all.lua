@@ -13,6 +13,8 @@ require "controller_joint_state_head"
 
 require "controller_joint_trajectory"
 
+require "controller_stance"
+
 if (agregator_real and herkulex) then
 	require "controller_torque_off"
 end
