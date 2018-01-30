@@ -48,5 +48,8 @@
 			<remap from="wrenches" to="/sweetie_bot/motion/dynamics_inv/out_wrenches_fixed"/>
 			<remap from="supports" to="/sweetie_bot/motion/agregator_ref/out_supports_sorted"/>
 		</node>
+		<node name="base_link_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
+			<remap from="pose" to="/sweetie_bot/motion/controller/stance/in_base_ref"/>
+		</node>
 	</group>
 </launch>

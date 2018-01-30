@@ -9,6 +9,7 @@ Panels:
         - /Pose1/Links1/bone111
         - /Pose1/Links1/bone111/Orientation1
         - /TF1
+        - /base_link Reference Pose1
       Splitter Ratio: 0.5
     Tree Height: 683
   - Class: rviz/Selection
@@ -51,7 +52,7 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Alpha: 0.3
+    - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
       Enabled: true
@@ -622,66 +623,15 @@ Visualization Manager:
       Unreliable: false
       Value: false
       Width: 0.002
-      joint11:
-        Value: true
-      joint12:
-        Value: true
-      joint13:
-        Value: true
-      joint14:
-        Value: true
-      joint15:
-        Value: true
-      joint16:
-        Value: true
-      joint21:
-        Value: true
-      joint22:
-        Value: true
-      joint23:
-        Value: true
-      joint24:
-        Value: true
-      joint25:
-        Value: true
-      joint26:
-        Value: true
-      joint31:
-        Value: true
-      joint32:
-        Value: true
-      joint33:
-        Value: true
-      joint34:
-        Value: true
-      joint35:
-        Value: true
-      joint36:
-        Value: true
-      joint41:
-        Value: true
-      joint42:
-        Value: true
-      joint43:
-        Value: true
-      joint44:
-        Value: true
-      joint45:
-        Value: true
-      joint46:
-        Value: true
-      joint51:
-        Value: true
-      joint52:
-        Value: true
-      joint53:
-        Value: true
-      joint54:
-        Value: true
-      joint55:
-        Value: true
-      joint56:
-        Value: true
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Name: base_link Reference Pose
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
+      Update Topic: /hmi/update
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -707,25 +657,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.19076
+      Distance: 0.662873
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.0581178
-        Y: 0.0412019
-        Z: 0.135993
+        X: -0.0381868
+        Y: 0.0124754
+        Z: 0.227428
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.260398
+      Pitch: 0.310203
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.583384
+      Yaw: 3.63888
     Saved: ~
 Window Geometry:
   Displays:
@@ -743,5 +693,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1596
-  X: 0
-  Y: 27
+  X: 16
+  Y: 32
