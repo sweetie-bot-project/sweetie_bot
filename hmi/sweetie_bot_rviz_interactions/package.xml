@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sweetie_bot_rviz_interactions</name>
+  <version>0.0.0</version>
+  <description>Sweetie Bot rviz integration.</description>
+
+  <maintainer email="goncharovoi@yandex.ru">disRecord</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://sweetiebot.net</url> -->
+  <url type="website">https://gitlab.com/sweetie-bot/sweetie_doc/wikis/home</url>
+
+  <author email="goncharovoi@yandex.ru">disRecord</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>interactive_markers</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_export_depend>geometry_msgs</build_export_depend>
+  <build_export_depend>roscpp</build_export_depend>
+  <build_export_depend>visualization_msgs</build_export_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>interactive_markers</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>
