@@ -12,7 +12,7 @@
   <url type="website">https://gitlab.com/sweetie-bot/sweetie_doc/wikis/components-animation-stored-move</url>
 
   <author email="fsdfur@gmail.com">mutronics</author>
-  <author email="goncharovoi@yandex.ru">disRecord</maintainer>
+  <author email="goncharovoi@yandex.ru">disRecord</author>
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
