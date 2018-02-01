@@ -73,7 +73,6 @@ ros:import("sweetie_bot_kinematics");
 depl:loadComponent("kinematics_fwd","sweetie_bot::motion::KinematicsFwd")
 kinematics_fwd = depl:getPeer("kinematics_fwd")
 rttlib_extra.get_peer_rosparams(kinematics_fwd)
-
 -- data flow: agregator_ref -> servo_inv -> herkulex_sched
 depl:connect("agregator_ref.out_joints_sorted", "kinematics_fwd.in_joints_sorted", rtt.Variable("ConnPolicy"));
 -- connect to RobotModel
@@ -90,6 +89,9 @@ kinematics_fwd:configure()
 ros:import("sweetie_bot_kinematics")
 depl:loadComponent("kinematics_inv", "sweetie_bot::motion::KinematicsInvTracIK")
 kinematics_inv = depl:getPeer("kinematics_inv")
+-- load configuration from cpf
+kinematics_inv:loadService("marshalling")
+kinematics_inv:provides("marshalling"):loadProperties(config.file("kinematics_inv_joint_limits.cpf"))
 -- get ROS parameteres and services
 rttlib_extra.get_peer_rosparams(kinematics_inv)
 -- data flow: controller <-> agregator_ref
