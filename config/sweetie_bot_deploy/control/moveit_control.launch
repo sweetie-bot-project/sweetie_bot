@@ -9,7 +9,7 @@
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
-		<include ns="sweetie_bot" file="$(find sweetie_bot_deploy)/joint_state_control/joint_space_param.launch"/>
+		<include ns="sweetie_bot" file="$(find sweetie_bot_deploy)/control/load_param.launch"/>
 	</group>
 
 	<!-- ROBOT -->
@@ -21,12 +21,12 @@
 			<arg name="run_real" value="$(arg run_real)" /> 
 			<arg name="host" value="$(arg host)" /> 
 			<arg name="robot" value="$(arg robot)" /> 
-			<arg if="$(arg run_real)" name="modules" value="motion.lua controller_joint_space_all.lua" />
-			<arg unless="$(arg run_real)" name="modules" value="virtual_motion.lua controller_joint_space_all.lua" />
-			<arg name="overlays" value="joint_state_control motion_core" /> 
+			<arg if="$(arg run_real)" name="modules" value="motion.lua controller__all.lua" />
+			<arg unless="$(arg run_real)" name="modules" value="virtual_motion.lua controller_all.lua" />
+			<arg name="overlays" value="control motion_core" /> 
 			<arg name="interactive" value="false" /> 
 		</include>
-		<include if="$(arg host)" file="$(find sweetie_bot_deploy)/joint_state_control/moveit.launch" />
+		<include if="$(arg host)" file="$(find sweetie_bot_deploy)/control/moveit.launch" />
 	</group>
 
 	<!-- HMI -->
