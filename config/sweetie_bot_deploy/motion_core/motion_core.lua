@@ -1,7 +1,8 @@
 -- 
 -- MOTION CORE DEPLOYMENT
 --
--- Setup logger, agreagator, resource control, timer.
+-- Setup hardware independent part of control system. Can be used for simulation.
+-- Start logger, agreagator, resource control, timer, kinematics, odometry_ref and dynamics_inv.
 --
 -- Intended to be run via config script.
 --
