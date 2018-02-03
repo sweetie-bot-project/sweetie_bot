@@ -46,7 +46,7 @@ for i, a in ipairs(arg) do
 		a = string.sub(a, 1, -5)
 		table.insert(config.modules, a)
 		print(config.modules[1])
-	else
+	elseif not string.find(a, "[^ ]+:=[^ ]+") then
 		-- argument is overlay directory
 		if not string.find(a, "^/") then
 			-- path is not absolute
