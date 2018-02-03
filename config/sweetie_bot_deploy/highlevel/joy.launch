@@ -2,8 +2,8 @@
 <launch>
   <!-- include file="$(find sweetie_bot_arduino)/launch/arduino.launch"/ -->
 
-  <node pkg="joy" type="joy_node" name="ps3_joy" output="screen" >
-	  <remap from="joy" to="/hmi/joystick" />
+  <node ns="hmi" pkg="joy" type="joy_node" name="ps3_joy" output="screen" >
+	  <remap from="joy" to="joystick" />
 	  <param name="dev" type="string" value="/dev/input/js0" />
 	  <param name="deadzone" value="0.0012" />
 	  <param name="autorepeat_rate" value="5" />

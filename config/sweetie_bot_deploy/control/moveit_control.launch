@@ -12,8 +12,6 @@
 		<include ns="sweetie_bot" file="$(find sweetie_bot_deploy)/control/load_param.launch"/>
 	</group>
 
-	<!-- ROBOT -->
-
 	<!-- start robot -->
 	<group ns="sweetie_bot">
 		<!-- sweetie_bot core -->
@@ -26,23 +24,15 @@
 			<arg name="overlays" value="control motion_core" /> 
 			<arg name="interactive" value="false" /> 
 		</include>
+		<!-- moveit -->
 		<include if="$(arg host)" file="$(find sweetie_bot_deploy)/control/moveit.launch" />
 	</group>
 
-	<!-- HMI -->
-
-	<!-- run rviz -->
+	<!-- launch operator GUI -->
 	<group ns="hmi" if="$(arg host)">
-		<!-- manual joints control for virtual robot -->
-		<node name="joint_state_ref" pkg="joint_state_publisher" type="joint_state_publisher">
-			<param name="use_gui" value="true"/>
-			<param name="num_rows" value="6"/>
-			<rosparam param="source_list">["/sweetie_bot/motion/controller/joint_state/out_joints_src_reset"]</rosparam>
-			<remap from="robot_description" to="/sweetie_bot/robot_description"/>
-			<remap from="joint_states" to="/sweetie_bot/motion/controller/joint_state/in_joints_ref"/>
-		</node>
-		<!-- vizualization -->
-		<!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find sweetie_bot_deploy)/joint_state_control/moveit_control.rviz">
-		</node>-->
+		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
+			<arg name="rviz_config" value="$(find sweetie_bot_deploy)/control/moveit_control.rviz" /> 
+			<arg name="run_rviz" value="false" /> 
+		</include>
 	</group>
 </launch>
