@@ -1,11 +1,15 @@
 <!-- MODULE: Load default params to run joint space controllers -->
+<!-- Expects following files in robot description package: urdf/<robot_name>_description.urdf, urdf/<robot_name>_description_dynamics.urdf -->
+<!-- Expects following files in profile directory: motion.yaml, herkulex_feedback.yaml, controller.yaml and reporting.yaml -->
 <launch>
-	<param name="robot_description" textfile="$(find sweetie_bot_proto2_description)/urdf/sweetie_bot_proto2_description.urdf"></param>
-	<param name="motion/dynamics_inv/robot_description" textfile="$(find sweetie_bot_proto2_description)/urdf/sweetie_bot_proto2_description_dynamics.urdf"></param>
-	<rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/motion.yaml" ></rosparam> 
-	<rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/herkulex_feedback.yaml" ></rosparam> 
-	<rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/control/controller.yaml" ></rosparam> 
-	<rosparam command="load" ns="motion" file="$(find sweetie_bot_deploy)/motion_core/reporting.yaml" ></rosparam> 
-	<!-- <rosparam command="load" ns="joint_trajectory" file="$(find sweetie_bot_deploy)/joint_state_control/joint_trajectories.yaml" ></rosparam> -->
-	<node name="store" pkg="sweetie_bot_deploy" type="store" args=" load joint_trajectory $(find sweetie_bot_proto2_movements)/joint_trajectories" />
+	<arg name="robot_name" default="sweetie_bot_proto2" doc="Robot-specific configuration packages prefix (e.g. set 'sweetie_bot_proto2' for 'sweetie_bot_proto2_description', 'sweetie_bot_proto2_moveit_config', 'sweetie_bot_proto2_deploy' packages)."/>
+	<arg name="robot_profile" default="default" doc="Use configuration profile (load_param.launch, *.cpf, .log4cpp files) located in '`rospack find {robot_name}_deploy`/{robot_profile}' directory."/>
+
+	<param name="robot_description" textfile="$(eval find(arg('robot_name')+'_description') + '/urdf/' + arg('robot_name') + '_description.urdf')"></param>
+	<param name="robot_description_dynamics" textfile="$(eval find(arg('robot_name')+'_description') + '/urdf/' + arg('robot_name') + '_description_dynamics.urdf')"></param>
+	<rosparam command="load" ns="motion" file="$(eval find(arg('robot_name')+'_deploy') + '/' + arg('robot_profile') + '/motion.yaml')" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(eval find(arg('robot_name')+'_deploy') + '/' + arg('robot_profile') + '/herkulex_feedback.yaml')" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(eval find(arg('robot_name')+'_deploy') + '/' + arg('robot_profile') + '/controller.yaml')" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(eval find(arg('robot_name')+'_deploy') + '/' + arg('robot_profile') + '/reporting.yaml')" ></rosparam> 
+	<node name="store" pkg="sweetie_bot_deploy" type="store" args="$(eval ' load joint_trajectory ' + find(arg('robot_name')+'_movements') + '/joint_trajectories')" />
 </launch>

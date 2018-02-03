@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sweetie_bot_deploy)
+project(sweetie_bot_proto2_deploy)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED)
-
 
 ###################################
 ## catkin specific configuration ##
@@ -28,17 +27,8 @@ catkin_package(
 #############
 
 # Scripts installation
-install(DIRECTORY highlevel
+install(DIRECTORY default
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-install(DIRECTORY joint_state_control
-	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-install(DIRECTORY motion_core
-	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-install(DIRECTORY common
-	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-# python node installation
-catkin_install_python(PROGRAMS scripts/sweetie-bot-core
-	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
-# python scripts installation
-catkin_install_python(PROGRAMS scripts/store
+# bash script
+install(PROGRAMS scripts/store-joint-trajectories
 	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

@@ -156,6 +156,9 @@ ros:import("sweetie_bot_dynamics");
 -- load component
 depl:loadComponent("dynamics_inv","sweetie_bot::motion::DynamicsInvSimple")
 dynamics_inv = depl:getPeer("dynamics_inv")
+-- load parameters
+dynamics_inv:loadService("rosparam")
+dynamics_inv:provides("rosparam"):getParam("robot_description_dynamics", "robot_description")
 rttlib_extra.get_peer_rosparams(dynamics_inv)
 
 -- data flow: agregator_ref, kinematics_fwd -> dynamics_inv

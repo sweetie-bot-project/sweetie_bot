@@ -3,6 +3,9 @@
 	<arg name="run_real" default="false" doc="Run on real robot."/>
 	<arg name="robot" default="true" doc="Launch components which meant to be run on robot side."/>
 	<arg name="host" default="true" doc="Launch components  which meant to be run on host side."/>
+	<arg name="robot_name" default="sweetie_bot_proto2" doc="Robot-specific configuration packages prefix (e.g. set 'sweetie_bot_proto2' for 'sweetie_bot_proto2_description', 'sweetie_bot_proto2_moveit_config', 'sweetie_bot_proto2_deploy' packages)."/>
+	<arg name="robot_profile" default="default" doc="Use configuration profile (load_param.launch, *.cpf, .log4cpp files) located in '`rospack find {robot_name}_deploy`/{robot_profile}' directory."/>
+	<arg name="robot_profile_path" default="$(eval find(arg('robot_name')+'_deploy') + '/' + arg('robot_profile'))" doc="Fully qualified path to configuration profile. By default 'robot_name' and 'robot_profile' parameters are sed to determine it."/>
 
 	<arg name="run_moveit" default="false" doc="Run move_group associated with robot."/>
 	<arg name="run_flexbe" default="false" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
@@ -12,26 +15,25 @@
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
-		<include ns="sweetie_bot" file="$(find sweetie_bot_deploy)/control/load_param.launch"/>
+		<include ns="sweetie_bot" file="$(arg robot_profile_path)/load_param.launch"/>
 	</group>
 
 	<!-- ROBOT -->
 
-	<!-- start robot nodes -->
+	<!-- start robot -->
 	<group ns="sweetie_bot">
-		<!-- sweetie_bot core -->
 		<include file="$(find sweetie_bot_deploy)/motion_core/sweetie_bot_core.launch">
 			<arg name="run_real" value="$(arg run_real)" /> 
 			<arg name="host" value="$(arg host)" /> 
 			<arg name="robot" value="$(arg robot)" /> 
 			<arg if="$(arg run_real)" name="modules" value="motion.lua controller_all.lua" />
 			<arg unless="$(arg run_real)" name="modules" value="virtual_motion.lua controller_all.lua" />
-			<arg name="overlays" value="control motion_core" /> 
+			<arg name="overlays" value="$(arg robot_profile_path) control motion_core" /> 
 			<arg name="interactive" value="false" /> 
 		</include>
-		<!-- eyes -->
-		<include if="$(arg robot)" file="$(find sweetie_bot_deploy)/highlevel/eyes_module.launch">
-			<arg name="run_real" value="$(arg run_real)" />
+		<!-- moveit -->
+		<include if="$(arg host)" file="$(find sweetie_bot_deploy)/control/moveit.launch">
+			<arg name="robot_name" value="$(arg robot_name)" /> 
 		</include>
 	</group>
 	<!-- robot nodes on host side -->
@@ -48,8 +50,9 @@
 		</group>
 		<!-- moveit  -->
 		<include if="$(arg run_moveit)" file="$(find sweetie_bot_deploy)/control/moveit.launch" />
-	<!-- HMI -->
 	</group>
+
+	<!-- HMI -->
 
 	<!-- FLEXBE: control node and gui -->
 	<group ns="/flexbe" if="$(arg run_flexbe)">
@@ -63,9 +66,8 @@
 
 	<!-- launch operator GUI -->
 	<group ns="hmi" if="$(arg host)">
-		<!-- vizualization -->
 		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
-			<arg name="rviz_config" value="$(find sweetie_bot_deploy)/control/joint_space_control.rviz" /> 
+			<arg name="rviz_config" value="$(arg robot_profile_path)/joint_space_control.rviz" /> 
 		</include>
 	</group>
 </launch>
