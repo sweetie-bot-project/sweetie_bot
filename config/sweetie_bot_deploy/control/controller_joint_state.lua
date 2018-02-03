@@ -21,6 +21,7 @@ resource_control.register_controller(controller.joint_state)
 depl:connect(timer.controller.port, "controller/joint_state.sync", rtt.Variable("ConnPolicy"))
 -- data flow: controller <-> agregator_ref
 depl:connect("controller/joint_state.out_joints_ref_fixed", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+depl:connect("controller/joint_state.out_supports", "agregator_ref.in_supports", rtt.Variable("ConnPolicy"))
 depl:connect("controller/joint_state.in_joints_sorted", "agregator_ref.out_joints_sorted", rtt.Variable("ConnPolicy"))
 -- ROS redirect
 depl:stream("controller/joint_state.in_joints_ref", ros:topic("~controller/joint_state/in_joints_ref"))

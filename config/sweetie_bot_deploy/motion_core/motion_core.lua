@@ -136,6 +136,7 @@ assert(odometry_ref:start())
 ---
 --- helper function for setting support
 --- 123 means leg1, leg2, leg3
+---
 function set_support(val)
 	list = {}
 	while val >= 1 do

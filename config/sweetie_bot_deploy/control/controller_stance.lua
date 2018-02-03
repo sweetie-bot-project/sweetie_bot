@@ -48,6 +48,32 @@ controller.stance:provides("rosservice"):connect("rosSetOperational", config.nod
 -- prepare to start
 controller.stance:configure()
 
+
+---
+--- helper function for setting stance support legs
+--- 123 means leg1, leg2, leg3
+---
+function set_stance(val)
+	--- determine new support limbs
+	list = {}
+	while val >= 1 do
+		table.insert(list, "leg" .. tostring(val % 10))
+		val = math.floor(val / 10)
+	end
+	limbs = rtt.Variable("strings")
+	limbs:fromtab(list)
+	--- reconfigure controller
+	controller.stance:stop()
+	if #list then
+		controller.stance:cleanup()
+		controller.stance:getProperty("support_legs"):set(limbs)
+		return controller.stance:configure() and  controller.stance:start()
+	else
+		return true
+	end
+end
+
+
 --
 -- debug pose messages and pose control port
 -- TODO: move somewhere (write tests).

@@ -31,7 +31,7 @@ controller:
         support_legs: [ leg1, leg2, leg3, leg4 ]
         override_odometry: false # deployment parameter: discard odometry results if stance is active
         use_kinematics_inv_port: false # deployment parameter: do not connect stance to kinematics_inv IK service, use port interface instead
-        base_pose_feedback: false
+        base_pose_feedback: true
         filter_rigid_body_state_pd:
             Kp: 9
             Kd: 6
