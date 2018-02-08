@@ -25,7 +25,7 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
 	switch ( feedback->event_type )
 	{
 		case visualization_msgs::InteractiveMarkerFeedback::POSE_UPDATE:
-			ROS_INFO_STREAM( s.str() << ": pose changed"
+			ROS_DEBUG_STREAM( s.str() << ": pose changed"
 					<< "\nposition = "
 					<< feedback->pose.position.x
 					<< ", " << feedback->pose.position.y
