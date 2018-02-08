@@ -23,7 +23,9 @@
 	<node name="dynamics_visualizer" pkg="sweetie_bot_dynamics" type="visualizer" >
 		<remap from="robot_model" to="/sweetie_bot/robot_model"/>
 		<remap from="joint_state_accel" to="/sweetie_bot/motion/dynamics_inv/out_joints_accel_sorted"/>
-		<remap from="wrenches" to="/sweetie_bot/motion/dynamics_inv/out_wrenches_fixed"/>
+		<remap from="balance" to="/sweetie_bot/motion/dynamics_inv/out_balance"/>
+		<remap from="wrenches" to="/sweetie_bot/motion/dynamics_inv/out_wrenches_fixed"/> 
+		<!-- <remap from="wrenches" to="/sweetie_bot/motion/kinematics_fwd/out_limbs"/> -->
 		<remap from="supports" to="/sweetie_bot/motion/agregator_ref/out_supports_sorted"/>
 	</node>
 	<!-- robot stance control -->

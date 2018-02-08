@@ -32,6 +32,7 @@ if rttlib_extra.get_rosparam("~controller/stance/override_odometry", "bool") the
 	depl:connect("controller/stance.out_base_ref", "odometry_ref.in_base", rtt.Variable("ConnPolicy"))
 end
 depl:connect("controller/stance.in_base", "odometry_ref.out_base", rtt.Variable("ConnPolicy"))
+depl:connect("controller/stance.in_balance", "dynamics_inv.out_balance", rtt.Variable("ConnPolicy"))
 -- data flow: controller <- kinematics_fwd
 depl:connect("controller/stance.in_limbs", "kinematics_fwd.out_limbs_fixed", rtt.Variable("ConnPolicy"))
 if not rttlib_extra.get_rosparam("~controller/stance/use_kinematics_inv_port", "bool") then
@@ -39,7 +40,12 @@ if not rttlib_extra.get_rosparam("~controller/stance/use_kinematics_inv_port", "
 end
 -- ROS redirect
 depl:stream("controller/stance.in_base_ref", ros:topic("~controller/stance/in_base_ref"))
+-- ROS redirect: debug
+-- depl:stream("controller/stance.out_limbs_ref", ros:topic("~controller/stance/out_limbs_ref"))
 -- depl:stream("controller/stance.out_base_ref", ros:topic("~controller/stance/out_base_ref"))
+-- depl:stream("kinematics_fwd.out_limbs_fixed", ros:topic("~kinematics_fwd/out_limbs"))
+-- depl:stream("odometry_ref.out_base", ros:topic("~kinematics_fwd/out_base"))A
+
 -- connect to RobotModel
 depl:connectServices("controller/stance", "agregator_ref")
 -- advertise ROS operation

@@ -48,9 +48,6 @@ herkulex.array:publishJointStates()
 -- agregator for real pose
 --
 
-ros:import("rtt_roscomm")
-ros:import("sweetie_bot_agregator");
-ros:import("sweetie_bot_robot_model");
 -- load component
 depl:loadComponent("agregator_real", "sweetie_bot::motion::Agregator");
 agregator_real = depl:getPeer("agregator_real")

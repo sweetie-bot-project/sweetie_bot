@@ -74,7 +74,7 @@ ros:import("sweetie_bot_kinematics");
 depl:loadComponent("kinematics_fwd","sweetie_bot::motion::KinematicsFwd")
 kinematics_fwd = depl:getPeer("kinematics_fwd")
 rttlib_extra.get_peer_rosparams(kinematics_fwd)
--- data flow: agregator_ref -> servo_inv -> herkulex_sched
+-- data flow: agregator_ref -> kinemaitics_fwd -> odometry_ref
 depl:connect("agregator_ref.out_joints_sorted", "kinematics_fwd.in_joints_sorted", rtt.Variable("ConnPolicy"));
 -- connect to RobotModel
 depl:connectServices("kinematics_fwd", "agregator_ref")
@@ -170,6 +170,7 @@ depl:connect(timer.agregator.port, "dynamics_inv.sync_step", rtt.Variable("ConnP
 -- connect to RobotModel
 depl:connectServices("dynamics_inv", "agregator_ref")
 -- publish tf to ROS
+depl:stream("dynamics_inv.out_balance", ros:topic("~dynamics_inv/out_balance"))
 depl:stream("dynamics_inv.out_wrenches_fixed", ros:topic("~dynamics_inv/out_wrenches_fixed"))
 depl:stream("dynamics_inv.out_joints_accel_sorted", ros:topic("~dynamics_inv/out_joints_accel_sorted"))
 
