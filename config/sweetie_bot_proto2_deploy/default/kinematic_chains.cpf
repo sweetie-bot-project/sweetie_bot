@@ -145,5 +145,29 @@
 			</struct>
 		</struct>
 	</struct>
+	<struct name="hoof_fixed" type="PropertyBag">
+		<description>Hoof is fixed. No degrees of freedom.</description>
+		<struct name="points" type="KDL.Vector[]">
+			<description>Equivalent set of fixed points.</description>
+			<struct name="Element0" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.03</value></simple>
+			</struct>
+			<struct name="Element1" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.05</value></simple>
+			</struct>
+			<struct name="Element2" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0.02</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.03</value></simple>
+			</struct>
+		</struct>
+	</struct>
   </struct>
 </properties>
