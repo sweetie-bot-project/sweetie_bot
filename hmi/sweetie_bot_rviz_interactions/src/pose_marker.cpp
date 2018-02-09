@@ -12,11 +12,15 @@ boost::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
 //interactive_markers::MenuHandler menu_handler;
 // publisers 
 ros::Publisher pose_pub;
+// node name 
+std::string node_name;
+// marker sacle parameter
+double scale = 1.0;
 
 // event handler
 void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback )
 {
-	if ( feedback->marker_name != "pose6D" ) return;
+	if ( feedback->marker_name != node_name ) return;
 
 	std::ostringstream s;
 	s << "Feedback from marker '" << feedback->marker_name << "' "
@@ -58,9 +62,9 @@ Marker makeBody()
 	Marker marker;
 
 	marker.type = Marker::CUBE;
-	marker.scale.x = 0.16;
-	marker.scale.y = 0.08;
-	marker.scale.z = 0.02;
+	marker.scale.x = 0.16*scale;
+	marker.scale.y = 0.08*scale;
+	marker.scale.z = 0.02*scale;
 	marker.color.r = 0.8;
 	marker.color.g = 0.5;
 	marker.color.b = 0.5;
@@ -71,15 +75,17 @@ Marker makeBody()
 
 void make6DofMarker()
 {
+	// get node name to distigush markers	
+	node_name = ros::this_node::getName();
+	size_t slash_pos = node_name.find_last_of('/');
+	if (slash_pos != std::string::npos) node_name = node_name.substr(slash_pos + 1);
+
 	InteractiveMarker int_marker;
 	//header setup
 	int_marker.header.frame_id = "odom_combined";
 	//int_marker.pose.position = ...;
 	int_marker.scale = 0.1;
-	int_marker.name = "pose6D";
-	std::string node_name = ros::this_node::getName();
-	size_t slash_pos = node_name.find_last_of('/');
-	if (slash_pos != std::string::npos) node_name = node_name.substr(slash_pos + 1);
+	int_marker.name = node_name;
 	int_marker.description = node_name;
 
 	// insert base_link model 
@@ -135,6 +141,11 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "pose_marker");
 	ros::NodeHandle n;
+
+	// get parameters
+	if (!ros::param::get("~scale", scale)) {
+		scale = 1.0;
+	}
 
 	//pose publishing
 	pose_pub = n.advertise<geometry_msgs::PoseStamped>("pose", 1);
