@@ -29,7 +29,11 @@
 		<remap from="supports" to="/sweetie_bot/motion/agregator_ref/out_supports_sorted"/>
 	</node>
 	<!-- robot stance control -->
-	<node name="base_link_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
+	<node name="base_link_pose" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
 		<remap from="pose" to="/sweetie_bot/motion/controller/stance/in_base_ref"/>
+	</node>
+	<node name="limb_pose" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
+		<remap from="pose" to="/sweetie_bot/motion/controller/pose/in_pose_ref"/>
+		<param name="scale" value="0.5"/>
 	</node>
 </launch>
