@@ -1,0 +1,11 @@
+<!-- MODULE: Load default params to run joint space controllers -->
+<launch>
+	<param name="robot_description" textfile="$(find sweetie_bot_proto2_description)/urdf/sweetie_bot_proto2_description.urdf"></param>
+	<param name="robot_description_dynamics" textfile="$(find sweetie_bot_proto2_description)/urdf/sweetie_bot_proto2_description_dynamics.urdf"></param>
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto2_deploy)/default/motion.yaml" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto2_deploy)/torque_control/servo_inv.yaml" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto2_deploy)/default/herkulex_feedback.yaml" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto2_deploy)/default/controller.yaml" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto2_deploy)/default/reporting.yaml" ></rosparam> 
+	<node name="store" pkg="sweetie_bot_deploy" type="store" args=" load joint_trajectory $(find sweetie_bot_proto2_movements)/joint_trajectories" />
+</launch>

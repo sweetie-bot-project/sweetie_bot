@@ -1,0 +1,14 @@
+servo_inv:
+    priority: 20
+    battery_voltage: 9.0
+servo_ident:
+    priority: 10
+    control_delay: 1
+    threshold: 0.1
+    battery_voltage: 9.0
+    ignore_accel: true
+
+
+
+
+
