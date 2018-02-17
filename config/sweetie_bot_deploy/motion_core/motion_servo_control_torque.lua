@@ -71,7 +71,7 @@ depl:connect("servo_ident.out_servo_models", "servo_inv.in_servo_models", rtt.Va
 -- timer syncronization: start of next control cycle
 depl:connect(timer.controller.port, "servo_ident.sync_step", rtt.Variable("ConnPolicy"));
 
--- assert(servo_ident:start())
+assert(servo_ident:start())
 --
 -- agregator for real pose
 --
