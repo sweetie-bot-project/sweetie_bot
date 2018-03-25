@@ -27,7 +27,7 @@ catkin_package(
 #############
 
 # Scripts installation
-install(DIRECTORY default
+install(DIRECTORY default torque_control
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 # bash script
 install(PROGRAMS scripts/store-joint-trajectories
