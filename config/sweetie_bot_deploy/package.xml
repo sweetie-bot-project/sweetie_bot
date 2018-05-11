@@ -10,8 +10,9 @@
 
   <author>Oleg Goncharov (disRecord)</author>
 
+  <buildtool_depend>catkin</buildtool_depend>
+
   <!-- ROS and OROCOS packages -->
-  <depend>catkin</depend>
   <depend>rtt</depend>
   <depend>ocl</depend>
   <depend>rospy_message_converter</depend>
