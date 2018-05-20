@@ -13,7 +13,7 @@
   <url type="website">https://gitlab.com/sweetie-bot/sweetie_doc/wikis/home</url>
   <url type="website">sweetiebot.net</url>
 
-  <depend>catkin</depend>
+  <buildtool_depend>catkin</buildtool_depend>
   <depend>rospy</depend>
   <depend>rospack</depend>
   <depend>sound_play</depend>
