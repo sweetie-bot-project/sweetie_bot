@@ -2,6 +2,15 @@ require "rttlib"
 require "rttros"
 require "lfs"
 
+require "readline"
+require "complete"
+rttlib.color = true
+
+tc = rtt.getTC()
+depl = tc:getPeer("Deployer")
+depl:import("rtt_ros")
+ros = rtt.provides("ros")
+
 config = {}
 
 -- 0. Simplify access to OROCOS facilities in children scripts
