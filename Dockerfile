@@ -1,12 +1,11 @@
 # Usage:
 # $ sudo apt-get install --no-install-recommends docker.io qemu-user-static binfmt-support
 # $ sudo docker build -t my-sweetie-image .
+# $ sudo docker create --name temp-container my-sweetie-image
+# $ sudo docker cp temp-container:/tmp/repo/sweetie-armhf.deb ./sweetie-armhf_0.1~stretch.deb
 
-FROM slavanap/compile_orocos
+FROM slavanap/compile_orocos:lunar
 
 COPY . /tmp/repo/sweetie_bot/src
 
-RUN apt-get install libalglib-dev
-
-RUN ( source "/opt/ros/$ROS_DISTRO/setup.bash" && \
-	catkin_make_isolated --install --install-space "/opt/ros/sweetie" -DCMAKE_BUILD_TYPE=Release )
+RUN ./travis-armhf.bash sweetie-pkg
