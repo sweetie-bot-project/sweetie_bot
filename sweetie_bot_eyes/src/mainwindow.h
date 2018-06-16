@@ -9,6 +9,7 @@
 #include <ros/package.h>
 
 #include <sensor_msgs/JointState.h>
+#include <sensor_msgs/Image.h>
 #include <sweetie_bot_text_msgs/TextCommand.h>
 
 class MainWindow : public QWidget {
@@ -118,6 +119,7 @@ private:
     ros::NodeHandle node_;
     ros::Subscriber sub_joint_state_;
     ros::Subscriber sub_control_;
+    ros::Publisher  pub_eye_image_;
 
     void controlCallback(const sweetie_bot_text_msgs::TextCommand::ConstPtr& msg);
     void moveCallback(const sensor_msgs::JointState::ConstPtr& msg);
@@ -125,6 +127,8 @@ private:
 public:
     MainWindow(bool isLeftEye = true, QWidget *parent = 0);
     ~MainWindow();
+
+    void PublishImage();
 
     QPointF rotatePoint(QPointF point, QPointF center, float angle);
 

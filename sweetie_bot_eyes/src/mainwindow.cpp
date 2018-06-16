@@ -91,6 +91,10 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
 
     path_ =  QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") );
 
+    std::string image_eye_topic_name = (m_isLeftEye) ? "eye_image_left" : "eye_image_right";
+    pub_eye_image_ = node_.advertise<sensor_msgs::Image>(image_eye_topic_name, 1);
+
+
     if(m_isLeftEye) {
         overlay_ = new QImage(path_ + "/overlays/leftEyeOverlay.png");
     }
@@ -107,6 +111,21 @@ void MainWindow::rosSpin()
 {
     if(!ros::ok()) close();
     ros::spinOnce();
+}
+
+void MainWindow::PublishImage() {
+    QPixmap pixmap(this->size());
+    this->render(&pixmap);
+    QImage image = pixmap.toImage().convertToFormat(QImage::Format_RGBA8888).mirrored(false, true);
+    sensor_msgs::Image img;
+    img.header.stamp = ros::Time::now();
+    img.width = image.width();
+    img.height = image.height();
+    img.encoding = "rgba8";
+    img.step = image.bytesPerLine();
+    //ROS_INFO("format=%d bytesPerLine=%d", int(image.format()), image.bytesPerLine());
+    img.data = std::vector<unsigned char>(image.bits(), image.bits() + image.byteCount());
+    pub_eye_image_.publish(img);
 }
 
 constexpr unsigned int str2hash(const char* str, int h = 0)
@@ -165,6 +184,7 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 
 	}
 	countEyelidTransform();
+	PublishImage();
 }
 
 
@@ -199,6 +219,7 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
          0, 0,
          0, 0);
 
+  PublishImage();
 }
 
 QPointF MainWindow::rotatePoint(QPointF point, QPointF center, float angle) {
