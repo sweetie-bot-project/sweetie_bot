@@ -1,0 +1,5 @@
+/.dockerignore
+/*.dockerfile
+
+.git*
+/docker-build.bash
