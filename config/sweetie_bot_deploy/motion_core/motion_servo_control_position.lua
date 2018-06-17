@@ -39,10 +39,14 @@ assert(servo_inv:start())
 require "herkulex_feedback"
 
 -- data flow: servo_inv -> herkulex/sched
-depl:connect("servo_inv.out_goals", "herkulex/sched.in_goals", rtt.Variable("ConnPolicy"));
+for name, group in pairs(herkulex) do
+	depl:connect("servo_inv.out_goals", "herkulex/"..name.."/sched.in_goals", rtt.Variable("ConnPolicy"))
+end
 -- data flow (setup): herkulex/array -> agregator_ref
-depl:connect("herkulex/array.out_joints", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
-herkulex.array:publishJointStates()
+for name, group in pairs(herkulex) do
+	depl:connect("herkulex/"..name.."/array.out_joints", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+	group.array:publishJointStates()
+end
 
 --
 -- agregator for real pose
@@ -71,14 +75,18 @@ agregator_real:configure()
 assert(agregator_real:start())
 
 -- data flow: herkulex_sched -> agregator_real
-depl:connect("herkulex/sched.out_joints", "agregator_real.in_joints", rtt.Variable("ConnPolicy"))
+for name, group in pairs(herkulex) do
+	depl:connect("herkulex/"..name.."/sched.out_joints", "agregator_real.in_joints", rtt.Variable("ConnPolicy"))
+end
 
 --- start herkulex scheduler
-if herkulex.array:isConfigured() then
-	herkulex.sched:start()
-	print "herkulex.sched is started!"
-else
-	print "WARNING: herkulex.array is not configured. herkulex.sched is not started."
+for name, group in pairs(herkulex) do
+	if group.array:isConfigured() then
+		group.sched:start()
+		print("herkulex."..name..".sched is started!")
+	else
+		print("WARNING: herkulex."..name..".array is not configured. herkulex."..name..".sched is not started.")
+	end
 end
 
 

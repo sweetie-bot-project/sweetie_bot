@@ -6,65 +6,102 @@
 -- Intended to be run via config script.
 --
 
-ros:import("sweetie_bot_herkulex_control");
-
--- LOAD HERKULEX_* COMPONENTS
-herkulex = {}
-
-depl:loadComponent("herkulex/array","herkulex::HerkulexArray");
-herkulex.array = depl:getPeer("herkulex/array")
-herkulex.array:loadService("marshalling")
-herkulex.array:provides("marshalling"):loadProperties(config.file("sweetie_bot_servos.cpf"))
-rttlib_extra.get_peer_rosparams(herkulex.array)
-
-depl:loadComponent("herkulex/driver","herkulex::HerkulexDriver");
-herkulex.driver = depl:getPeer("herkulex/driver")
-rttlib_extra.get_peer_rosparams(herkulex.driver)
-
-depl:loadComponent("herkulex/sched","herkulex::HerkulexSched");
-herkulex.sched = depl:getPeer("herkulex/sched")
-rttlib_extra.get_peer_rosparams(herkulex.sched)
-
--- CONNECT OPERATIONS OF HERKULEX_* subsystem
-
-depl:connectOperations("herkulex/array.sendPacketCM", "herkulex/sched.sendPacketCM");
-depl:connectOperations("herkulex/sched.receivePacketCM", "herkulex/array.receivePacketCM");
-depl:connectOperations("herkulex/sched.sendPacketDL", "herkulex/driver.sendPacket");
-depl:connectOperations("herkulex/driver.receivePacket", "herkulex/sched.receivePacketDL");
-depl:connectServices("herkulex/array","herkulex/sched");
-
--- Scheduler waits for completion of JOG command if those operations are connected.
-depl:connectOperations("herkulex/sched.waitSendPacketDL", "herkulex/driver.waitSendPacket");
-
--- TIME PERIODS CONFIGURATION
 require "timer"
 
--- Check configuration sanity
-local herkulex_round_duration = herkulex.sched:getProperty("period_RT_JOG"):get() + herkulex.sched:getProperty("period_RT_read"):get() 
-    + herkulex.sched:getProperty("period_CM"):get() + 2*herkulex.sched:getProperty("timeout"):get() 
-local timer_period = timer.period
-local herkulex_array_timeout = herkulex.array:getProperty("timeout"):get()
-local herkulex_sched_timeout = herkulex.sched:getProperty("timeout"):get()
-local herkulex_sched_poll_size = herkulex.sched:getProperty("poll_round_size"):get()
-local herkulex_sched_period_RT_read = herkulex.sched:getProperty("period_RT_read"):get() + herkulex.sched:getProperty("timeout"):get()
+ros:import("sweetie_bot_herkulex_control");
 
-print("timer_period", timer_period)
-print("herkulex_round_duration", herkulex_round_duration)
-print("herkulex_sched_period_RT_read", herkulex_sched_period_RT_read)
-print("herkulex_sched_poll_size", herkulex_sched_poll_size)
+-- 
+-- Load HerkulexDriver, HerkulexSched, HerkulexArray components. 
+--
+-- Components are named "herkulex/<group>/driver", "herkulex/<group>/array", "herkulex/<group>/sched".
+-- Componts lua object are placed in herkulex table and can be accesed as herkulex.<group>.driver, 
+-- herkulex.<group>.array and herkulex.<group>.sched.
+-- servos_description_cpf parameter is .cpf configuration file name for HerkulexArray.
+--
+-- Function return true if components are succesfully configured and HerkulexDriver is started.
+--
+local function setup_herkulex_subsystem(herkulex, group, servos_description_cpf)
+	if type(group) ~= 'string' or string.len(group) == 0 then
+		print("ERROR: setup_herkulex_subsystem group parameter must be string.")
+		return false
+	end
+	-- add table for herkulex components
+	local basename = 'herkulex/'..group
+	herkulex[group] = {}
 
-assert(herkulex_round_duration <= timer_period)
-assert(timer_period <= herkulex_array_timeout)
-assert(herkulex_sched_period_RT_read >= herkulex_sched_poll_size*herkulex_sched_timeout)
+	-- LOAD HERKULEX_* COMPONENTS
+	
+	-- load HerkulexArray
+	depl:loadComponent(basename .. "/array", "herkulex::HerkulexArray");
+	herkulex[group].array = depl:getPeer(basename .. "/array")
+	herkulex[group].array:loadService("marshalling")
+	herkulex[group].array:provides("marshalling"):loadProperties(config.file(servos_description_cpf))
+	rttlib_extra.get_peer_rosparams(herkulex[group].array)
+	-- load HerkulexDriver
+	depl:loadComponent(basename .. "/driver", "herkulex::HerkulexDriver");
+	herkulex[group].driver = depl:getPeer(basename .. "/driver")
+	rttlib_extra.get_peer_rosparams(herkulex[group].driver)
+	-- load HerkulexSched
+	depl:loadComponent(basename .. "/sched", "herkulex::HerkulexSched");
+	herkulex[group].sched = depl:getPeer(basename .. "/sched")
+	rttlib_extra.get_peer_rosparams(herkulex[group].sched)
 
--- connect to timer
-depl:connect(timer.herkulex.port, "herkulex/sched.sync", rtt.Variable("ConnPolicy"));
+	-- CONNECT OPERATIONS OF HERKULEX_* subsystem
 
--- START HERKULEX_* SUBSYSTEM (without scheduler)
+	depl:connectOperations(basename.."/array.sendPacketCM", basename.."/sched.sendPacketCM");
+	depl:connectOperations(basename.."/sched.receivePacketCM", basename.."/array.receivePacketCM");
+	depl:connectOperations(basename.."/sched.sendPacketDL", basename.."/driver.sendPacket");
+	depl:connectOperations(basename.."/driver.receivePacket", basename.."/sched.receivePacketDL");
+	depl:connectServices(basename.."/array",basename.."/sched");
 
-herkulex.driver:configure()
-herkulex.driver:start()
+	-- Scheduler waits for completion of JOG command if those operations are connected.
+	depl:connectOperations(basename.."/sched.waitSendPacketDL", basename.."/driver.waitSendPacket");
 
-herkulex.sched:configure()
-herkulex.array:configure()
+	-- TIME PERIODS CONFIGURATION
+
+	-- Check configuration sanity
+	local herkulex_round_duration = herkulex[group].sched:getProperty("period_RT_JOG"):get() + herkulex[group].sched:getProperty("period_RT_read"):get() 
+		+ herkulex[group].sched:getProperty("period_CM"):get() + 2*herkulex[group].sched:getProperty("timeout"):get() 
+	local timer_period = timer.period
+	local herkulex_array_timeout = herkulex[group].array:getProperty("timeout"):get()
+	local herkulex_sched_timeout = herkulex[group].sched:getProperty("timeout"):get()
+	local herkulex_sched_poll_size = herkulex[group].sched:getProperty("poll_round_size"):get()
+	local herkulex_sched_period_RT_read = herkulex[group].sched:getProperty("period_RT_read"):get() + herkulex[group].sched:getProperty("timeout"):get()
+
+	print(group..": timer_period", timer_period)
+	print(group..": herkulex_round_duration", herkulex_round_duration)
+	print(group..": herkulex_sched_period_RT_read", herkulex_sched_period_RT_read)
+	print(group..": herkulex_sched_poll_size", herkulex_sched_poll_size)
+
+	assert(herkulex_round_duration <= timer_period)
+	assert(timer_period <= herkulex_array_timeout)
+	assert(herkulex_sched_period_RT_read >= herkulex_sched_poll_size*herkulex_sched_timeout)
+
+	-- connect to timer
+	depl:connect(timer.herkulex.port, basename.."/sched.sync", rtt.Variable("ConnPolicy"));
+
+	-- START HERKULEX_* SUBSYSTEM (without scheduler)
+
+	local success
+	success = herkulex[group].driver:configure() and herkulex[group].driver:start()
+
+	success = success and herkulex[group].sched:configure()
+	success = success and herkulex[group].array:configure()
+
+	return success
+end
+
+-- load herkulex groups
+herkulex = {}
+
+local groups = rttlib_extra.get_rosparam('~herkulex/groups', 'string[]')
+if not groups then
+	print("ERROR: Unable to load herkulex/groups parameter. Herkulex subsystem is not loaded.")
+else
+	for i, group in ipairs(groups) do
+		print("Setup herkulex group " .. group)
+		setup_herkulex_subsystem(herkulex, group, 'herkulex_servos_'..group..'.cpf')
+	end
+end
+
 

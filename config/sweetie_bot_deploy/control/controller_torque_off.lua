@@ -23,9 +23,18 @@ depl:connect("controller/torque_off.out_joints_ref", "agregator_ref.in_joints", 
 depl:connect("agregator_real.out_joints_sorted", "controller/torque_off.in_joints_actual", rtt.Variable("ConnPolicy"))
 -- connect to RobotModel
 depl:connectServices("controller/torque_off", "agregator_ref")
--- present herkulex subsystem
-depl:addPeer("controller/torque_off", herkulex.array:getName())
-depl:addPeer("controller/torque_off", herkulex.sched:getName())
+-- present herkulex subsystem and set corresponding options
+local herkulex_arrays = {}
+local herkulex_scheds = {}
+for name, group in pairs(herkulex) do
+	depl:addPeer("controller/torque_off", group.array:getName())
+	depl:addPeer("controller/torque_off", group.sched:getName())
+	-- TODO set herkulex_arrays and herkulex_scheds properties
+	table.insert(herkulex_scheds, "herkulex/"..name.."/sched")
+	table.insert(herkulex_arrays, "herkulex/"..name.."/array")
+end
+rttlib_extra.set_property(controller.torque_off, 'herkulex_arrays', 'string[]', herkulex_arrays )
+rttlib_extra.set_property(controller.torque_off, 'herkulex_scheds', 'string[]', herkulex_scheds )
 -- get ROS configuration
 rttlib_extra.get_peer_rosparams(controller.torque_off)
 -- advertise ROS operation
@@ -33,4 +42,4 @@ controller.torque_off:loadService("rosservice")
 controller.torque_off:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/torque_off/set_torque_off", "std_srvs/SetBool")
 
 -- prepare to start
-assert(controller.torque_off:configure())
+-- assert(controller.torque_off:configure())

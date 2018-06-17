@@ -24,8 +24,6 @@ controller:
             transient_time: 0.5
     torque_off: 
         priority: 20
-        herkulex_scheds: [ herkulex/sched ]
-        herkulex_arrays: [ herkulex/array ]
         velocity_zeroing: true
     stance: 
         priority: 20
