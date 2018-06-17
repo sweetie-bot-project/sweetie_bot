@@ -10,3 +10,7 @@
 
 # Python
 *.pyc
+
+/lunar-stretch-armhf.dockerfile
+/lunar-stretch.dockerfile
+/lunar-xenial.dockerfile
