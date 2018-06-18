@@ -32,4 +32,4 @@ depl:connectServices("controller/joint_state", "agregator_ref")
 controller.joint_state:loadService("rosservice")
 controller.joint_state:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/joint_state/set_operational", "std_srvs/SetBool")
 -- prepare to start
-controller.joint_state:configure()
+assert(controller.joint_state:configure(), "ERROR: Unable to configure controller/joint_state.")

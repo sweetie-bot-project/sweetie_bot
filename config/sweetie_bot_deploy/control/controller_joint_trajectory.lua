@@ -33,4 +33,4 @@ controller.joint_trajectory:provides("actionlib"):connect("~controller/joint_tra
 -- connect to RobotModel
 depl:connectServices("controller/joint_trajectory", "agregator_ref")
 -- prepare to start
-assert(controller.joint_trajectory:configure())
+assert(controller.joint_trajectory:configure(), "ERROR: controller joint trajectory is not configured.")

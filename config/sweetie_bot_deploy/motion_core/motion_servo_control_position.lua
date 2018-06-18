@@ -30,7 +30,7 @@ depl:connect(timer.agregator.port, "servo_inv.sync_step", rtt.Variable("ConnPoli
 -- data flow: agregator_ref -> servo_inv -> herkulex_sched
 depl:connect("agregator_ref.out_joints_sorted", "servo_inv.in_joints_fixed", rtt.Variable("ConnPolicy"));
 
-assert(servo_inv:start())
+assert(servo_inv:start(), "ERROR: Unable to start servo_inv.")
 
 --
 -- herkulex subsystem
@@ -72,7 +72,7 @@ depl:connect(timer.controller.port, "agregator_real.sync_step", rtt.Variable("Co
 depl:stream("agregator_real.out_joints_sorted", ros:topic("~agregator_real/out_joints_sorted"))
 -- start component
 agregator_real:configure()
-assert(agregator_real:start())
+assert(agregator_real:start(), "ERROR: Unable to start agregator_real.")
 
 -- data flow: herkulex_sched -> agregator_real
 for name, group in pairs(herkulex) do

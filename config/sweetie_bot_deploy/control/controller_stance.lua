@@ -52,7 +52,7 @@ depl:connectServices("controller/stance", "agregator_ref")
 controller.stance:loadService("rosservice")
 controller.stance:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/stance/set_operational", "std_srvs/SetBool")
 -- prepare to start
-controller.stance:configure()
+assert(controller.stance:configure(), "ERROR: Unable to configure controller/stance.")
 
 
 ---

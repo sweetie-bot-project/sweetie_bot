@@ -29,10 +29,11 @@ local herkulex_scheds = {}
 for name, group in pairs(herkulex) do
 	depl:addPeer("controller/torque_off", group.array:getName())
 	depl:addPeer("controller/torque_off", group.sched:getName())
-	-- TODO set herkulex_arrays and herkulex_scheds properties
+	-- form herkulex_arrays and herkulex_scheds lists
 	table.insert(herkulex_scheds, "herkulex/"..name.."/sched")
 	table.insert(herkulex_arrays, "herkulex/"..name.."/array")
 end
+-- set herkulex_arrays and herkulex_scheds properties
 rttlib_extra.set_property(controller.torque_off, 'herkulex_arrays', 'string[]', herkulex_arrays )
 rttlib_extra.set_property(controller.torque_off, 'herkulex_scheds', 'string[]', herkulex_scheds )
 -- get ROS configuration
@@ -42,4 +43,4 @@ controller.torque_off:loadService("rosservice")
 controller.torque_off:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/torque_off/set_torque_off", "std_srvs/SetBool")
 
 -- prepare to start
-assert(controller.torque_off:configure())
+assert(controller.torque_off:configure(), "ERROR: unable to configure controller/torque_off")

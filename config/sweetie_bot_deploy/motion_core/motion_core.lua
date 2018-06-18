@@ -28,7 +28,7 @@ logger.init_loglevels_log4cpp(config.file(logger_conf))
 require "resource_control"
 
 resource_control.arbiter:configure()
-assert(resource_control.arbiter:start())
+assert(resource_control.arbiter:start(), "ERROR: Unable to start arbiter.")
 
 --
 -- timer
@@ -128,10 +128,10 @@ odometry_ref:configure()
 
 --- start components
 
-assert(kinematics_inv:start())
-assert(agregator_ref:start()) 
-assert(kinematics_fwd:start())
-assert(odometry_ref:start()) 
+assert(kinematics_inv:start(), "ERROR: Unable to start kinematics_inv.")
+assert(agregator_ref:start(), "ERROR: Unable to start agregator_ref.") 
+assert(kinematics_fwd:start(), "ERROR: Unable to start kinematics_fwd.")
+assert(odometry_ref:start(), "ERROR: Unable to start odometry_ref.") 
 
 ---
 --- helper function for setting support
@@ -175,4 +175,4 @@ depl:stream("dynamics_inv.out_wrenches_fixed", ros:topic("~dynamics_inv/out_wren
 depl:stream("dynamics_inv.out_joints_accel_sorted", ros:topic("~dynamics_inv/out_joints_accel_sorted"))
 
 dynamics_inv:configure()
-assert(dynamics_inv:start())
+assert(dynamics_inv:start(), "ERROR: Unable to start dynamics_inv.")
