@@ -62,7 +62,7 @@ local function setup_herkulex_subsystem(herkulex, group, servos_description_cpf)
 	-- Check configuration sanity
 	local herkulex_round_duration = herkulex[group].sched:getProperty("period_RT_JOG"):get() + herkulex[group].sched:getProperty("period_RT_read"):get() 
 		+ herkulex[group].sched:getProperty("period_CM"):get() + 2*herkulex[group].sched:getProperty("timeout"):get() 
-	local timer_period = timer.period
+	local timer_period = timer.herkulex_period
 	local herkulex_array_timeout = herkulex[group].array:getProperty("timeout"):get()
 	local herkulex_sched_timeout = herkulex[group].sched:getProperty("timeout"):get()
 	local herkulex_sched_poll_size = herkulex[group].sched:getProperty("poll_round_size"):get()
@@ -95,13 +95,11 @@ end
 herkulex = {}
 
 local groups = rttlib_extra.get_rosparam('~herkulex/groups', 'string[]')
-if not groups then
-	print("ERROR: Unable to load herkulex/groups parameter. Herkulex subsystem is not loaded.")
-else
-	for i, group in ipairs(groups) do
-		print("Setup herkulex group " .. group)
-		setup_herkulex_subsystem(herkulex, group, 'herkulex_servos_'..group..'.cpf')
-	end
+assert(groups, "ERROR: Unable to load herkulex/groups parameter. Herkulex subsystem is not loaded.")
+
+for i, group in ipairs(groups) do
+	print("Setup herkulex group " .. group)
+	setup_herkulex_subsystem(herkulex, group, 'herkulex_servos_'..group..'.cpf')
 end
 
 

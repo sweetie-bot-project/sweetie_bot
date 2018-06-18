@@ -29,3 +29,4 @@ dynamics_inv:
 timer:
     priority: 45
     period: 0.056
+    herkulex_period: 0.056

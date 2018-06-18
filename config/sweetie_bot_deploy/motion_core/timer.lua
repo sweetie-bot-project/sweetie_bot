@@ -21,24 +21,28 @@ rttlib_extra.get_peer_rosparams(timer.timer)
 
 -- set timer period
 timer.period = rttlib_extra.get_rosparam("~timer/period", "float")
-if timer.period then 
-	print("timer_period:" .. tostring(timer.period))
-else
-	print("ERROR: unable to get `~timer/period`")
-	assert(timer.period)
-end
+assert(timer.period, "ERROR: unable to get `~timer/period`")
+timer.herkulex_period = rttlib_extra.get_rosparam("~timer/herkulex_period", "float")
+assert(timer.herkulex_period, "ERROR: unable to get `~timer/herkulex_period`")
+
+print("timer_period:" .. tostring(timer.period))
+print("herkulex_timer_period:" .. tostring(timer.herkulex_period))
 
 -- start timers:
---    timer_10: controllers timer, herkulex timer
+--    timer_10: controllers timer,
+--    timer_15: herkulex timer,
 --    timer_20: aggregator timer: causes kinematic and dynamic calculatons
 timer.timer:startTimer(10, timer.period)
+timer.timer:startTimer(15, timer.herkulex_period)
 timer.timer:wait(0, timer.period/2)
 timer.timer:startTimer(20, timer.period)
 -- register groups
 timer.controller = { port = "timer.timer_10", shift = 0 }
 timer.agregator = { port = "timer.timer_20", shift = timer.period/2 }
-timer.herkulex = { port = "timer.timer_10", shift = 0 }
-
--- TODO: helper function for add components
---     - connect sync port
---     - set/check if "period" property is valid
+if timer.period == timer.herkulex_period then
+	-- use the same timer for herkulex and controller components
+	timer.timer:killTimer(15)
+	timer.herkulex = { port = "timer.timer_10", shift = 0 }
+else
+	timer.herkulex = { port = "timer.timer_15", shift = 0 }
+end
