@@ -42,4 +42,4 @@ controller.torque_off:loadService("rosservice")
 controller.torque_off:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/torque_off/set_torque_off", "std_srvs/SetBool")
 
 -- prepare to start
--- assert(controller.torque_off:configure())
+assert(controller.torque_off:configure())
