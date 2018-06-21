@@ -27,6 +27,9 @@ depl:stream("controller/joint_state_head.in_joints_ref", ros:topic("~controller/
 depl:stream("controller/joint_state_head.out_joints_src_reset", ros:topic("~controller/joint_state_head/out_joints_src_reset"))
 -- connect to RobotModel
 depl:connectServices("controller/joint_state_head", "agregator_ref")
+-- advertise actionlib interface
+controller.joint_state_head:loadService("actionlib")
+controller.joint_state_head:provides("actionlib"):connect("~controller/joint_state_head")
 -- advertise ROS operation
 controller.joint_state_head:loadService("rosservice")
 controller.joint_state_head:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/joint_state_head/set_operational", "std_srvs/SetBool")

@@ -38,6 +38,9 @@ depl:stream("controller/pose.in_pose_ref", ros:topic("~controller/pose/in_pose_r
 
 -- connect to RobotModel
 depl:connectServices("controller/pose", "agregator_ref")
+-- advertise actionlib interface
+controller.pose:loadService("actionlib")
+controller.pose:provides("actionlib"):connect("~controller/pose")
 -- advertise ROS operation
 controller.pose:loadService("rosservice")
 controller.pose:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/pose/set_operational", "std_srvs/SetBool")
