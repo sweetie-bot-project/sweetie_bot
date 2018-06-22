@@ -34,7 +34,7 @@ end
 depl:connect("controller/stance.in_base", "odometry_ref.out_base", rtt.Variable("ConnPolicy"))
 depl:connect("controller/stance.in_balance", "dynamics_inv.out_balance", rtt.Variable("ConnPolicy"))
 -- data flow: controller <- kinematics_fwd
-depl:connect("controller/stance.in_limbs", "kinematics_fwd.out_limbs_fixed", rtt.Variable("ConnPolicy"))
+depl:connect("controller/stance.in_limbs_fixed", "kinematics_fwd.out_limbs_fixed", rtt.Variable("ConnPolicy"))
 if not rttlib_extra.get_rosparam("~controller/stance/use_kinematics_inv_port", "bool") then
 	depl:connectOperations("controller/stance.poseToJointStatePublish", "kinematics_inv.poseToJointStatePublish");
 end
