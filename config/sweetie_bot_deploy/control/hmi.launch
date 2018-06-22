@@ -40,5 +40,6 @@
 		<remap from="set_operational_action" to="/sweetie_bot/motion/controller/pose"/>
 		<param name="scale" value="0.5"/>
 		<param name="normalized_z_level" value="0.03"/>
+		<param name="resources_select_only_one" value="true"/>
 	</node>
 </launch>

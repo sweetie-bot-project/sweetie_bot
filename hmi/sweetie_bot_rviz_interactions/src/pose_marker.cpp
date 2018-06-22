@@ -23,9 +23,6 @@ typedef actionlib::SimpleClientGoalState GoalState;
 // COMPONENT INTERFACE
 
 // CONNECTIONS
-// interactive marker server
-std::shared_ptr<InteractiveMarkerServer> server;
-MenuHandler menu_handler;
 // action server 
 std::shared_ptr<ActionClient> action_client;
 // publisers 
@@ -39,19 +36,29 @@ std::shared_ptr<tf2_ros::TransformListener> tf_listener;
 std::string node_name;
 // marker sacle parameter
 double scale = 1.0;
-// chains list
+// resources list: corresponding menu items will be displayed in context menu
 std::vector<std::string> resources = { "leg1", "leg2", "leg3", "leg4" };
-// home frame to place marker on start operation
+// allow select only one resource
+bool resources_select_only_one = false;
+// Home frame to place marker on start operation. Leave empty to 
 std::string marker_home_frame;
-// basic z level 
+// Basic z level. When `Normilize pose` command is executed the marker is placed parallel Oxy plane on normalized_z_level heigh over it.
 double normalized_z_level = 0.0;
 
-
+// COMPONENT STATE
+// interactive marker server
+std::shared_ptr<InteractiveMarkerServer> server;
+// menu
+MenuHandler menu_handler;
 // menu index
-MenuHandler::EntryHandle menu_entry_set_operational;
-std::map<MenuHandler::EntryHandle, std::string> menu_entry_resources;
-MenuHandler::EntryHandle menu_entry_normalize_pose;
-
+struct {
+	MenuHandler::EntryHandle set_operational;
+	std::map<MenuHandler::EntryHandle, std::string> resources;
+	MenuHandler::EntryHandle normalize_pose;
+	MenuHandler::EntryHandle publish_pose;
+} menu_entries;
+// publish_pose flag
+bool publish_pose = true;
 
 void actionDoneCallback(const GoalState& state, const ResultConstPtr& result)
 {
@@ -60,7 +67,7 @@ void actionDoneCallback(const GoalState& state, const ResultConstPtr& result)
 
 	action_client->cancelAllGoals();
 	
-	menu_handler.setCheckState(menu_entry_set_operational, MenuHandler::UNCHECKED);
+	menu_handler.setCheckState(menu_entries.set_operational, MenuHandler::UNCHECKED);
 	menu_handler.reApply(*server);
 	server->applyChanges();
 }
@@ -70,7 +77,7 @@ void actionActiveCallback()
 	GoalState state = action_client->getState();
 	ROS_INFO_STREAM(" action client active: state: " << state.toString() << " state_text: " << state.getText() );
 	
-	menu_handler.setCheckState(menu_entry_set_operational, MenuHandler::CHECKED);
+	menu_handler.setCheckState(menu_entries.set_operational, MenuHandler::CHECKED);
 	menu_handler.reApply(*server);
 	server->applyChanges();
 }
@@ -93,7 +100,7 @@ bool setOperational(bool is_operational)
 		// form goal message
 		Goal goal;
 		goal.operational = true;
-		for( const auto& pair : menu_entry_resources ) {
+		for( const auto& pair : menu_entries.resources ) {
 			MenuHandler::CheckState check;
 			menu_handler.getCheckState( pair.first, check );
 			if (check == MenuHandler::CHECKED) goal.resources.push_back(pair.second);
@@ -141,7 +148,7 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
 					<< "\nframe: " << feedback->header.frame_id
 					<< " time: " << feedback->header.stamp.sec << "sec, "
 					<< feedback->header.stamp.nsec << " nsec" );
-			{
+			if (publish_pose) {
 				geometry_msgs::PoseStamped pose_stamped;
 
 				pose_stamped.header = feedback->header;
@@ -154,7 +161,7 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
 			ROS_INFO_STREAM( s.str() << ": menu select, entry id: " << feedback->menu_entry_id );
 
 			// check user toggled set operational meny entry
-			if (feedback->menu_entry_id == menu_entry_set_operational) {
+			if (feedback->menu_entry_id == menu_entries.set_operational) {
 				// cahnge server mode
 				GoalState state = action_client->getState();
 				if (state.isDone()) {
@@ -184,7 +191,7 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
 				}
 			}
 			// check for pose normalization command
-			else if (feedback->menu_entry_id == menu_entry_normalize_pose) {
+			else if (feedback->menu_entry_id == menu_entries.normalize_pose) {
 				geometry_msgs::PoseStamped pose_stamped;
 				pose_stamped.header = feedback->header;
 				pose_stamped.pose = feedback->pose;
@@ -196,12 +203,32 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
 				// set pose of marker
 				server->setPose(node_name, pose_stamped.pose);
 				// publish new pose
-				pose_pub.publish(pose_stamped);
+				if (publish_pose) pose_pub.publish(pose_stamped);
+			}
+			// check user toggled publish pose meny entry
+			else if (feedback->menu_entry_id == menu_entries.publish_pose) {
+				// toggle option
+				MenuHandler::CheckState check;
+				menu_handler.getCheckState(feedback->menu_entry_id, check);
+				switch (check) {
+					case MenuHandler::CHECKED:
+						menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED); 
+						publish_pose = false;
+						break;
+					case MenuHandler::UNCHECKED:
+						menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED); 
+						publish_pose = true;
+						// publish current pose
+						geometry_msgs::PoseStamped pose_stamped;
+						pose_stamped.header = feedback->header;
+						pose_stamped.pose = feedback->pose;
+						pose_pub.publish(pose_stamped);
+				}
 			}
 			else {
 				// check if user toggled resource
-				auto it = menu_entry_resources.find(feedback->menu_entry_id);
-				if (it != menu_entry_resources.end()) {
+				auto it_found = menu_entries.resources.find(feedback->menu_entry_id);
+				if (it_found != menu_entries.resources.end()) {
 					// toggle option
 					MenuHandler::CheckState check;
 					menu_handler.getCheckState(feedback->menu_entry_id, check);
@@ -211,6 +238,10 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
 							break;
 						case MenuHandler::UNCHECKED:
 							menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
+							if (resources_select_only_one) {
+								for(auto it = menu_entries.resources.begin(); it != menu_entries.resources.end(); it++)
+									if (it != it_found) menu_handler.setCheckState(it->first, MenuHandler::UNCHECKED);
+							}
 							break;
 					}
 					// apply changes if controller is operational
@@ -316,6 +347,7 @@ int main(int argc, char** argv)
 	// get parameters
 	ros::param::get("~scale", scale);
 	ros::param::get("~resources", resources);
+	ros::param::get("~resources_select_only_one", resources_select_only_one);
 	ros::param::get("~marker_home_frame", marker_home_frame);
 	ros::param::get("~normalized_z_level", normalized_z_level);
 
@@ -333,14 +365,17 @@ int main(int argc, char** argv)
 	ros::Duration(0.1).sleep();
 
 	// make menu
-	menu_entry_set_operational = menu_handler.insert( "OPERATIONAL", &processFeedback );
-	menu_handler.setCheckState(menu_entry_set_operational, MenuHandler::UNCHECKED);
+	menu_entries.set_operational = menu_handler.insert( "OPERATIONAL", &processFeedback );
+	menu_handler.setCheckState(menu_entries.set_operational, MenuHandler::UNCHECKED);
 	for ( const std::string& res : resources ) {
 		MenuHandler::EntryHandle handle = menu_handler.insert( "  " + res, &processFeedback );
-		menu_handler.setCheckState(handle, MenuHandler::CHECKED);
-		menu_entry_resources.emplace(handle, res);
+		if (!resources_select_only_one) menu_handler.setCheckState(handle, MenuHandler::CHECKED);
+		else menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
+		menu_entries.resources.emplace(handle, res);
 	}
-	menu_entry_normalize_pose = menu_handler.insert( "Normalize pose", &processFeedback );
+	menu_entries.normalize_pose = menu_handler.insert( "Normalize pose", &processFeedback );
+	menu_entries.publish_pose = menu_handler.insert( "Publish pose", &processFeedback );
+	menu_handler.setCheckState(menu_entries.publish_pose, MenuHandler::CHECKED); publish_pose = true;
 
 	// create marker
 	make6DofMarker();
