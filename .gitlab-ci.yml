@@ -1,0 +1,30 @@
+before_script:
+  - git submodule sync --recursive
+  - git submodule update --init --recursive
+
+desktop-stretch:
+  image: slavanap/compile_orocos:lunar-stretch
+  tags:
+    - docker
+  script:
+    - mkdir -p /tmp/repo/sweetie_bot || true
+    - ln -s "$PWD" /tmp/repo/sweetie_bot/src
+    - cd /tmp/repo && ./travis.bash sweetie-bot-pkg
+
+desktop-xenial:
+  image: slavanap/compile_orocos:lunar-xenial
+  tags:
+    - docker
+  script:
+    - mkdir -p /tmp/repo/sweetie_bot || true
+    - ln -s "$PWD" /tmp/repo/sweetie_bot/src
+    - cd /tmp/repo && ./travis.bash sweetie-bot-pkg
+
+armhf-stretch:
+  image: slavanap/compile_orocos:lunar-stretch-armhf
+  tags:
+    - docker-armhf
+  script:
+    - mkdir -p /tmp/repo/sweetie_bot || true
+    - ln -s "$PWD" /tmp/repo/sweetie_bot/src
+    - cd /tmp/repo && ./travis-armhf.bash sweetie-bot-pkg

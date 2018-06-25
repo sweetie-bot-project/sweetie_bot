@@ -2,4 +2,3 @@
 /*.dockerfile
 
 .git*
-/docker-build.bash
