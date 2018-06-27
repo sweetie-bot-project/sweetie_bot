@@ -27,7 +27,6 @@ depl:connect("controller/joint_trajectory.out_joints_ref_fixed", "agregator_ref.
 depl:connect("controller/joint_trajectory.out_supports", "agregator_ref.in_supports", rtt.Variable("ConnPolicy"))
 depl:connect("agregator_ref.out_joints_sorted", "controller/joint_trajectory.in_joints_sorted", rtt.Variable("ConnPolicy"))
 -- configure actionlib
-ros:import("rtt_actionlib")
 controller.joint_trajectory:loadService("actionlib")
 controller.joint_trajectory:provides("actionlib"):connect("~controller/joint_trajectory")
 -- connect to RobotModel

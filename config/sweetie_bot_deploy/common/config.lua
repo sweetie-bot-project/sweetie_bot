@@ -25,6 +25,7 @@ ros = rtt.provides("ros")
 -- ROS plugins
 ros:import("rtt_rosnode")
 ros:import("rtt_rosparam")
+ros:import("rtt_actionlib")
 ros:import("rtt_dynamic_reconfigure")
 
 --
