@@ -130,8 +130,46 @@ lfs.chdir(config.overlay_paths[1])
 
 -- 4. Provide configuration file finding function
 
--- Find configuration file in overlay and return full path to it. Return nul on failure
+--
+--Find configuration file and return full path to it. Return nul on failure
+--
+-- First of all tries to find parameter with the same name on ROS parameter server 
+-- in namespace `conf_file` (if path is relative). If parameter does not exists then 
+-- search for configuration file under defined overlays. 
+--
+-- All not valid characters in parameter name is replaced by "_"
+--
 function config.file(conf_file)
+	-- add prefix to parameter name and replace not valid characters
+	local conf_file_param = string.gsub(conf_file, "[^A-Za-z0-9/~_]", "_")
+	if not string.find(conf_file_param, "^[~/]") then
+		conf_file_param = "conf_file/" .. conf_file_param
+	end
+	-- try to get rosparam
+	print(conf_file_param)
+	local buffer = rttlib_extra.get_rosparam(conf_file_param, 'string')
+	if buffer then
+		print("config.file: use ROS parameter ", conf_file_param)
+		-- create directory in /tmp/<node_fullname>
+		local full_path = "/tmp" .. config.node_namespace 
+		local cd = lfs.currentdir()
+		full_path = "/tmp" .. config.node_namespace
+		local success = lfs.chdir(full_path) or lfs.mkdir(full_path)
+		full_path = "/tmp" .. config.node_fullname
+		success = success and (lfs.chdir(full_path) or lfs.mkdir(full_path))
+		lfs.chdir(cd)
+		assert(success, "config.file: Unable to create directory " .. full_path)
+		-- create file
+		full_path = full_path .. "/" .. string.gsub(conf_file_param, "[~/]", "_")
+		local file = io.open(full_path, "w");
+		assert(file, "config.file: Unable to create file " .. full_path)
+		-- store parameter to file
+		success = file:write(buffer) and file:close()
+		assert(success, "config.file: Unable to write file " .. full_path)
+		-- return full path
+		return full_path
+	end
+	-- try to find file in overlays
 	for i, path in ipairs(config.overlay_paths) do
 		local full_path = path .. "/" .. conf_file
 		local fd = io.open(full_path, "r")
@@ -141,6 +179,7 @@ function config.file(conf_file)
 			return full_path
 		end
 	end
+	-- file not found
 	print("config.file: not found ", conf_file)
 	return nil
 end
