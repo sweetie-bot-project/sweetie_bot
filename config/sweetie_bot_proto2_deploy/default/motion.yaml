@@ -11,7 +11,7 @@ agregator_real:
     priority: 20
 kinematics_inv:
     priority: 20
-    kinematic_chains: [ leg1, leg3, leg4, leg2 ]
+    kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
     eps_pos: 0.0001
     timeout_pos: 0.003
     eps_vel: 0.01

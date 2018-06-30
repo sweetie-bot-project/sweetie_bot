@@ -1,17 +1,17 @@
 Panels:
   - Class: rviz/Displays
-    Help Height: 89
+    Help Height: 85
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Pose1
-        - /Pose1/Links1/base_link1
-        - /Pose1/Links1/bone111
-        - /Pose1/Links1/bone111/Orientation1
+        - /Global Options1
+        - /Status1
         - /TF1
-        - /base_link Reference Pose1
+        - /MarkerArray1
+        - /InteractiveMarkers1
+        - /RobotReal1
       Splitter Ratio: 0.5
-    Tree Height: 683
+    Tree Height: 730
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -20,7 +20,7 @@ Panels:
       - /2D Nav Goal1
       - /Publish Point1
     Name: Tool Properties
-    Splitter Ratio: 0.588679
+    Splitter Ratio: 0.5886790156364441
   - Class: rviz/Views
     Expanded:
       - /Current View1
@@ -40,7 +40,7 @@ Visualization Manager:
       Color: 160; 160; 164
       Enabled: true
       Line Style:
-        Line Width: 0.03
+        Line Width: 0.029999999329447746
         Value: Lines
       Name: Grid
       Normal Cell Count: 0
@@ -211,13 +211,21 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         eye_left:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
         eye_right:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        eyes_link_pitch:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        eyes_link_yaw:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -243,7 +251,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-      Name: Pose
+      Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
       Update Interval: 0
@@ -320,6 +328,10 @@ Visualization Manager:
           Value: true
         eye_right:
           Value: true
+        eyes_link_pitch:
+          Value: true
+        eyes_link_yaw:
+          Value: true
         link_eyes_x:
           Value: true
         link_eyes_y:
@@ -332,7 +344,7 @@ Visualization Manager:
           Value: true
         screen_right:
           Value: true
-      Marker Scale: 0.1
+      Marker Scale: 0.10000000149011612
       Name: TF
       Show Arrows: true
       Show Axes: true
@@ -379,6 +391,9 @@ Visualization Manager:
                       {}
                     eye_right:
                       {}
+                    eyes_link_pitch:
+                      eyes_link_yaw:
+                        {}
                     link_eyes_x:
                       link_eyes_y:
                         link_eyes_z:
@@ -389,249 +404,41 @@ Visualization Manager:
                       {}
       Update Interval: 0
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /hmi/marker_array
+      Name: MarkerArray
+      Namespaces:
+        balance: true
+        contacts: true
+        limbs_external_forces_and_twists: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Name: InteractiveMarkers
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
+      Update Topic: /hmi/update
+      Value: true
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
-      Enabled: true
+      Enabled: false
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone11:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone12:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone13:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone14:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone15:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone16:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        bone21:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone22:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone23:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone24:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone25:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone26:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        bone31:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone32:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone33:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone34:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone35:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone36:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        bone41:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone42:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone43:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone44:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone45:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone46:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        bone51:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone52:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone53:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone54:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        bone55:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        bone56:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        eye_left:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        eye_right:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        link_eyes_x:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        link_eyes_y:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        link_eyes_z:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        screen_left:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        screen_right:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-      Name: Real Pose
+      Name: RobotReal
       Robot Description: robot_description
       TF Prefix: real
       Update Interval: 0
-      Value: true
-      Visual Enabled: false
-    - Alpha: 1
-      Axes Length: 0.1
-      Axes Radius: 0.01
-      Class: rviz/Pose
-      Color: 255; 25; 0
-      Enabled: true
-      Head Length: 0.03
-      Head Radius: 0.01
-      Name: LeapMotionPose
-      Shaft Length: 1
-      Shaft Radius: 0.005
-      Shape: Axes
-      Topic: /hmi/leap_motion/pose
-      Unreliable: false
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /hmi/marker_array
-      Name: RobotBalance
-      Namespaces:
-        external_forces: true
-        support_contacts: true
-      Queue Size: 100
-      Value: true
-    - Alpha: 1
-      Class: rviz/Effort
-      Enabled: false
-      History Length: 1
-      Joints:
-        {}
-      Name: Effort
-      Robot Description: robot_description
-      Scale: 0.01
-      Topic: /hmi/joint_efforts
-      Unreliable: false
       Value: false
-      Width: 0.002
-    - Class: rviz/InteractiveMarkers
-      Enable Transparency: true
-      Enabled: true
-      Name: base_link Reference Pose
-      Show Axes: false
-      Show Descriptions: true
-      Show Visual Aids: false
-      Update Topic: /hmi/update
-      Value: true
+      Visual Enabled: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -657,33 +464,33 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.662873
+      Distance: 1.1836256980895996
       Enable Stereo Rendering:
-        Stereo Eye Separation: 0.06
+        Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.0381868
-        Y: 0.0124754
-        Z: 0.227428
+        X: 0
+        Y: 0
+        Z: 0
       Focal Shape Fixed Size: true
-      Focal Shape Size: 0.05
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
-      Near Clip Distance: 0.01
-      Pitch: 0.310203
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.6553981304168701
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.63888
+      Yaw: 0.38039883971214294
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 875
+  Height: 1047
   Hide Left Dock: false
-  Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd0000000400000000000001ec0000033efc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000000130000033e000000c600fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f0000022efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007300000000430000022e0000009e00fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000063c0000003efc0100000002fb0000000800540069006d006500000000000000063c0000024200fffffffb0000000800540069006d006501000000000000045000000000000000000000044a0000033e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730000000000ffffffff0000000000000000
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd00000004000000000000015900000370fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006b00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000004400000370000000eb00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000370fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000004400000370000000b900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000077a0000003efc0100000002fb0000000800540069006d006501000000000000077a000002b400fffffffb0000000800540069006d00650100000000000004500000000000000000000005040000037000000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -691,7 +498,7 @@ Window Geometry:
   Tool Properties:
     collapsed: false
   Views:
-    collapsed: true
-  Width: 1596
-  X: 16
-  Y: 32
+    collapsed: false
+  Width: 1914
+  X: 0
+  Y: 27
