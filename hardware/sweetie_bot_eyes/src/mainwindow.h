@@ -17,6 +17,7 @@ class MainWindow : public QWidget {
 
 private:
     bool m_isLeftEye;
+    bool m_publishPixmap;
 
     QPointF m_c;     //Center of eye
     float m_R;       //Radius1 of eye

@@ -7,6 +7,7 @@
 
 MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     m_isLeftEye(isLeftEye),
+	m_publishPixmap(false),
 
     m_c(QPointF(160,120)),
     m_R(125.0),
@@ -86,20 +87,22 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     connect(timer,SIGNAL(timeout()),this,SLOT(rosSpin()));
     timer->start(10);
 
+	// NODE INTERFACE 
+	// parameteres
+	ros::param::get("~is_left", m_isLeftEye);
+	ros::param::get("~publish_pixmap", m_publishPixmap);
+	// subscribers
     sub_control_ = node_.subscribe<sweetie_bot_text_msgs::TextCommand>("control", 1, &MainWindow::controlCallback, this, ros::TransportHints().tcpNoDelay());
     sub_joint_state_ = node_.subscribe<sensor_msgs::JointState>("joint_states", 1, &MainWindow::moveCallback, this, ros::TransportHints().tcpNoDelay());
-
-    path_ =  QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") );
-
+	// publishers
     std::string image_eye_topic_name = (m_isLeftEye) ? "eye_image_left" : "eye_image_right";
     pub_eye_image_ = node_.advertise<sensor_msgs::Image>(image_eye_topic_name, 1);
 
-
+    path_ =  QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") );
     if(m_isLeftEye) {
         overlay_ = new QImage(path_ + "/overlays/leftEyeOverlay.png");
     }
     else {
-
         overlay_ = new QImage(path_ + "/overlays/rightEyeOverlay.png");
     }
 }
@@ -184,7 +187,7 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 
 	}
 	countEyelidTransform();
-	PublishImage();
+	if (m_publishPixmap) PublishImage();
 }
 
 
@@ -192,14 +195,14 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
   double x = 0, y = 0;
 
-  auto pos = std::find(msg->name.begin(), msg->name.end(), "joint55");
+  auto pos = std::find(msg->name.begin(), msg->name.end(), "eyes_pitch");
   if(pos != msg->name.end()) {
         int n = std::distance(msg->name.begin(), pos);
     if(msg->position.size() > n)
                 y = msg->position[n];
   }
 
-  pos = std::find(msg->name.begin(), msg->name.end(), "joint56");
+  pos = std::find(msg->name.begin(), msg->name.end(), "eyes_yaw");
   if(pos != msg->name.end()) {
         int n = std::distance(msg->name.begin(), pos);
     if(msg->position.size() > n)
@@ -219,7 +222,7 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
          0, 0,
          0, 0);
 
-  PublishImage();
+  if (m_publishPixmap) PublishImage();
 }
 
 QPointF MainWindow::rotatePoint(QPointF point, QPointF center, float angle) {
