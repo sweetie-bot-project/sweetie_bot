@@ -385,7 +385,13 @@ int main(int argc, char** argv)
 
 	// main loop()
 	ros::spin();
+
 	// shutdown
-	server.reset();
+
 	action_client.reset();
+	server.reset();
+	tf_listener.reset();
+	ROS_INFO("pose_marker is shutdown!");
+
+	ros::Duration(0.5).sleep();
 }
