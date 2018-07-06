@@ -27,6 +27,8 @@
 			<arg name="overlays" value="$(arg robot_profile_path) control motion_core" /> 
 			<arg name="interactive" value="false" /> 
 		</include>
+		<!-- robot-specific ROS nodes -->
+		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch" />
 	</group>
 	
 	<!-- launch operator GUI -->

@@ -27,6 +27,8 @@
 			<arg name="overlays" value="$(arg robot_profile_path) control motion_core" /> 
 			<arg name="interactive" value="false" /> 
 		</include>
+		<!-- robot-specific ROS nodes -->
+		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch" />
 		<!-- moveit -->
 		<include if="$(arg host)" file="$(find sweetie_bot_deploy)/control/moveit.launch">
 			<arg name="robot_name" value="$(arg robot_name)" /> 
@@ -37,7 +39,7 @@
 	<group ns="hmi" if="$(arg host)">
 		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
 			<arg name="rviz_config" value="$(arg robot_profile_path)/moveit_control.rviz" /> 
-			<arg name="run_rviz" value="false" /> 
+			<arg name="run_rviz" value="true" /> 
 		</include>
 	</group>
 </launch>

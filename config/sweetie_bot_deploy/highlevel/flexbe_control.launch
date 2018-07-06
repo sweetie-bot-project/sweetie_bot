@@ -31,13 +31,15 @@
 			<arg name="overlays" value="$(arg robot_profile_path) control motion_core" /> 
 			<arg name="interactive" value="false" /> 
 		</include>
+		<!-- robot-specific ROS nodes -->
+		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch" />
+	</group>
+	<!-- robot nodes on host side -->
+	<group ns="sweetie_bot" if="$(arg host)">
 		<!-- moveit -->
 		<include if="$(arg host)" file="$(find sweetie_bot_deploy)/control/moveit.launch">
 			<arg name="robot_name" value="$(arg robot_name)" /> 
 		</include>
-	</group>
-	<!-- robot nodes on host side -->
-	<group ns="sweetie_bot" if="$(arg host)">
 		<!-- voice  -->
 		<group ns="voice">
 			<param name="sounds_path" value="$(find sweetie_bot_sounds)/sounds" />

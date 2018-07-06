@@ -22,7 +22,7 @@ High-level launch files takes following parameters:
 * `host` (boolean) --- Launch components which meant to be run on host side (default: true).
 * `robot` (boolean) --- Launch components which meant to be run on robot side (default: false).
 * `robot_name` (string) --- Robot-specific configuration packages prefix (e.g. set `sweetie_bot_proto2` for `sweetie_bot_proto2_description`, `sweetie_bot_proto2_moveit_config`, `sweetie_bot_proto2_deploy` packages). (Default: `sweetie_bot_proto2`).
-* `robot_profile` (string) --- Use configuration profile (`load_param.launch`, `*.cpf`, `*.log4cpp` files) located in `package:<robot_name>_deploy/<robot_profile>`. (Default: `default`).
+* `robot_profile` (string) --- Use configuration profile (`load_param.launch`, `robot_module.launch`, `*.cpf`, `*.log4cpp` files) located in `package:<robot_name>_deploy/<robot_profile>`. (Default: `default`).
 
 `robot_name` and `robot_profile` parameters allows to run different robots with different configuration.
 
@@ -30,6 +30,7 @@ High-level launch files takes following parameters:
 The most important launch files:
 
 * `load_param.launch` --- load parameters to ROS Parameter Server.
+* `robot_module.launch` --- robot-specific ROS nodes and parameters. 
 * `joint_space_control.launch` --- robot deployment script. It starts basic motion control configuration.
 * `flexbe_control.launch` --- robot deployment script. It starts basic motion control configuration and high level control nodes (eyes and voice).
 * `flexbe.launch` --- FlexBe core and user interface module. Starts GUI to control robot high-level behavior.
@@ -41,14 +42,18 @@ For more information see description and parameter documentation inside files.
 Typical robot profile directory contains following files:
 
 * `load_param.launch` --- load parameters to ROS Parameter Server. It must set `robot_description` and `robot_description_dynamics` parameters. (The last is used by `dynamics_inv` component).
+* `robot_module.launch` --- launch hardware-specific eyes control.
 * `logger.log4cpp` --- logger reporting level configuration.
-* `controller.yaml` --- controller parameters.
+* `controller.yaml` --- controller parameters (OROCOS).
 * `kinematic_chains.cpf` --- kinematic chains description.
 * `sweetie_bot_servos.cpf` --- servos hardware ID mapping.
 * `kinematics_inv_joint_limits.cpf` --- joint limits for `kinematics_inv_trac_ik` component.
 * `herkulex_feedback.yaml` --- hardware interface configuration.
 * `motion.yaml` --- motion core parameters.
-Some parameters has special meaning: `services` is list of OROCOS subservices to be loaded into componet, 
+
+Some parameters of OROCOS components has special meaning: 
+`period` is set to the main timer period (control cycle duration).
+`services` is list of OROCOS subservices to be loaded into component, 
 `priority` is linux RT priority.
 
 See `sweetie_bot_proto2_deploy` for example.

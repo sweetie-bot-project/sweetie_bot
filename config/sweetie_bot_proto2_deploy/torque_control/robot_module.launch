@@ -1,0 +1,6 @@
+<!-- MODULE: init robot-specific nodes and ROS services. -->
+<!-- run_real and robot launch parameters are always assumed. -->
+<launch>
+	<!-- link to default configuration -->
+	<include file="$(find sweetie_bot_proto2_deploy)/default/robot_module.launch" />
+</launch>
