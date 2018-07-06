@@ -40,4 +40,17 @@
 		<remap from="set_operational_action" to="/sweetie_bot/motion/controller/pose"/>
 		<param name="resources_select_only_one" value="true"/>
 	</node>
+	<!-- eyes vizualization -->
+	<group>
+		<remap from="joint_states" to="/sweetie_bot/joint_states"/>
+		<remap from="control" to="/sweetie_bot/control"/>
+		<node name="eye_left_rviz"  pkg="sweetie_bot_eyes" type="eye">
+			<param name="is_left" value="true"/>
+			<param name="publish_pixmap" value="true"/>
+		</node>
+		<node name="eye_right_rviz" pkg="sweetie_bot_eyes" type="eye">
+			<param name="is_left" value="false"/>
+			<param name="publish_pixmap" value="true"/>
+		</node>
+	</group>
 </launch>
