@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/overlays">
+        <file alias="leftEyeOverlay">leftEyeOverlay.png</file>
+        <file alias="rightEyeOverlay">rightEyeOverlay.png</file>
+    </qresource>
+</RCC>
