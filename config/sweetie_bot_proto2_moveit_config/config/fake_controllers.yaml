@@ -6,7 +6,6 @@ controller_list:
       - joint13
       - joint14
       - joint15
-      - joint16
   - name: fake_leg2_controller
     joints:
       - joint21
@@ -14,7 +13,6 @@ controller_list:
       - joint23
       - joint24
       - joint25
-      - joint26
   - name: fake_leg3_controller
     joints:
       - joint31
@@ -22,7 +20,6 @@ controller_list:
       - joint33
       - joint34
       - joint35
-      - joint36
   - name: fake_leg4_controller
     joints:
       - joint41
@@ -30,7 +27,6 @@ controller_list:
       - joint43
       - joint44
       - joint45
-      - joint46
   - name: fake_head_controller
     joints:
       - joint51
@@ -39,58 +35,48 @@ controller_list:
       - joint54
   - name: fake_legs_controller
     joints:
-      - virtual_joint
       - joint11
       - joint12
       - joint13
       - joint14
       - joint15
-      - joint16
       - joint21
       - joint22
       - joint23
       - joint24
       - joint25
-      - joint26
       - joint31
       - joint32
       - joint33
       - joint34
       - joint35
-      - joint36
       - joint41
       - joint42
       - joint43
       - joint44
       - joint45
-      - joint46
   - name: fake_all_controller
     joints:
-      - virtual_joint
       - joint11
       - joint12
       - joint13
       - joint14
       - joint15
-      - joint16
       - joint21
       - joint22
       - joint23
       - joint24
       - joint25
-      - joint26
       - joint31
       - joint32
       - joint33
       - joint34
       - joint35
-      - joint36
       - joint41
       - joint42
       - joint43
       - joint44
       - joint45
-      - joint46
       - joint51
       - joint52
       - joint53
@@ -102,10 +88,8 @@ controller_list:
       - joint13
       - joint14
       - joint15
-      - joint16
       - joint21
       - joint22
       - joint23
       - joint24
       - joint25
-      - joint26

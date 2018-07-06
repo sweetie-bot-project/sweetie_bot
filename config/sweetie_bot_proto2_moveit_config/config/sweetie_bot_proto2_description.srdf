@@ -78,7 +78,9 @@
         <joint name="joint52" />
         <joint name="joint53" />
         <joint name="joint54" />
-        <chain base_link="base_link" tip_link="bone54" />
+        <joint name="joint55" />
+        <joint name="joint56" />
+        <chain base_link="base_link" tip_link="bone56" />
     </group>
     <group name="legs">
         <group name="leg1" />
@@ -184,25 +186,31 @@
         <joint name="joint13" value="0" />
         <joint name="joint14" value="0" />
         <joint name="joint15" value="0" />
+        <joint name="joint16" value="0" />
         <joint name="joint21" value="0" />
         <joint name="joint22" value="0" />
         <joint name="joint23" value="0" />
         <joint name="joint24" value="0" />
         <joint name="joint25" value="0" />
+        <joint name="joint26" value="0" />
         <joint name="joint31" value="0" />
         <joint name="joint32" value="0" />
         <joint name="joint33" value="0" />
         <joint name="joint34" value="0" />
         <joint name="joint35" value="0" />
+        <joint name="joint36" value="0" />
         <joint name="joint41" value="0" />
         <joint name="joint42" value="0" />
         <joint name="joint43" value="0" />
         <joint name="joint44" value="0" />
         <joint name="joint45" value="0" />
+        <joint name="joint46" value="0" />
         <joint name="joint51" value="-0.15" />
         <joint name="joint52" value="0" />
         <joint name="joint53" value="0.15" />
         <joint name="joint54" value="0" />
+        <joint name="joint55" value="0" />
+        <joint name="joint56" value="0" />
     </group_state>
     <group_state name="low_raised1_shift" group="legs_front">
         <joint name="joint11" value="-0.05" />
@@ -233,119 +241,166 @@
         <joint name="joint52" value="0" />
         <joint name="joint53" value="0.15" />
         <joint name="joint54" value="0" />
+        <joint name="joint55" value="0" />
+        <joint name="joint56" value="0" />
     </group_state>
     <group_state name="head_upright" group="head">
         <joint name="joint51" value="0" />
         <joint name="joint52" value="0" />
         <joint name="joint53" value="0" />
         <joint name="joint54" value="0" />
+        <joint name="joint55" value="0" />
+        <joint name="joint56" value="0" />
     </group_state>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
     <end_effector name="hoof1" parent_link="bone16" group="leg1" />
     <end_effector name="hoof2" parent_link="bone26" group="leg2" />
     <end_effector name="hoof3" parent_link="bone36" group="leg3" />
     <end_effector name="hoof4" parent_link="bone46" group="leg4" />
+    <end_effector name="nose" parent_link="bone56" group="head" />
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
-    <virtual_joint name="virtual_joint" type="floating" parent_frame="odom_combined" child_link="base_link" />
+    <virtual_joint name="floating_base" type="floating" parent_frame="odom_combined" child_link="base_link" />
     <!--PASSIVE JOINT: Purpose: this element is used to mark joints that are not actuated-->
+    <passive_joint name="floating_base" />
     <passive_joint name="joint16" />
     <passive_joint name="joint26" />
     <passive_joint name="joint36" />
     <passive_joint name="joint46" />
+    <passive_joint name="joint55" />
+    <passive_joint name="joint56" />
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="base_link" link2="bone11" reason="Adjacent" />
     <disable_collisions link1="base_link" link2="bone21" reason="Adjacent" />
     <disable_collisions link1="base_link" link2="bone31" reason="Adjacent" />
     <disable_collisions link1="base_link" link2="bone41" reason="Adjacent" />
     <disable_collisions link1="base_link" link2="bone51" reason="Adjacent" />
+    <disable_collisions link1="base_link" link2="bone52" reason="Never" />
+    <disable_collisions link1="base_link" link2="bone53" reason="Never" />
+    <disable_collisions link1="base_link" link2="eye_left" reason="Never" />
+    <disable_collisions link1="base_link" link2="eye_right" reason="Never" />
     <disable_collisions link1="bone11" link2="bone12" reason="Adjacent" />
     <disable_collisions link1="bone11" link2="bone13" reason="Never" />
-    <disable_collisions link1="bone11" link2="bone14" reason="Never" />
-    <disable_collisions link1="bone11" link2="bone15" reason="Never" />
     <disable_collisions link1="bone11" link2="bone31" reason="Never" />
     <disable_collisions link1="bone11" link2="bone32" reason="Never" />
     <disable_collisions link1="bone11" link2="bone41" reason="Never" />
     <disable_collisions link1="bone11" link2="bone42" reason="Never" />
+    <disable_collisions link1="bone11" link2="bone51" reason="Never" />
     <disable_collisions link1="bone11" link2="bone52" reason="Never" />
     <disable_collisions link1="bone11" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone11" link2="eye_left" reason="Never" />
+    <disable_collisions link1="bone11" link2="eye_right" reason="Never" />
+    <disable_collisions link1="bone11" link2="eyes_link_yaw" reason="Never" />
     <disable_collisions link1="bone12" link2="bone13" reason="Adjacent" />
     <disable_collisions link1="bone12" link2="bone14" reason="Never" />
     <disable_collisions link1="bone12" link2="bone15" reason="Never" />
     <disable_collisions link1="bone12" link2="bone31" reason="Never" />
     <disable_collisions link1="bone12" link2="bone41" reason="Never" />
-    <disable_collisions link1="bone12" link2="bone42" reason="Never" />
+    <disable_collisions link1="bone12" link2="bone51" reason="Never" />
     <disable_collisions link1="bone12" link2="bone52" reason="Never" />
     <disable_collisions link1="bone12" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone12" link2="eyes_link_yaw" reason="Never" />
     <disable_collisions link1="bone13" link2="bone14" reason="Adjacent" />
-    <disable_collisions link1="bone13" link2="bone51" reason="Never" />
-    <disable_collisions link1="bone13" link2="bone52" reason="Never" />
-    <disable_collisions link1="bone13" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone13" link2="eyes_link_yaw" reason="Never" />
     <disable_collisions link1="bone14" link2="bone15" reason="Adjacent" />
-    <disable_collisions link1="bone14" link2="bone51" reason="Never" />
-    <disable_collisions link1="bone14" link2="bone52" reason="Never" />
-    <disable_collisions link1="bone14" link2="bone53" reason="Never" />
-    <disable_collisions link1="bone15" link2="bone51" reason="Never" />
-    <disable_collisions link1="bone15" link2="bone52" reason="Never" />
+    <disable_collisions link1="bone14" link2="link_eyes_z" reason="Never" />
+    <disable_collisions link1="bone15" link2="link_eyes_z" reason="Never" />
     <disable_collisions link1="bone21" link2="bone22" reason="Adjacent" />
     <disable_collisions link1="bone21" link2="bone23" reason="Never" />
-    <disable_collisions link1="bone21" link2="bone24" reason="Never" />
-    <disable_collisions link1="bone21" link2="bone25" reason="Never" />
     <disable_collisions link1="bone21" link2="bone31" reason="Never" />
     <disable_collisions link1="bone21" link2="bone32" reason="Never" />
     <disable_collisions link1="bone21" link2="bone41" reason="Never" />
     <disable_collisions link1="bone21" link2="bone42" reason="Never" />
+    <disable_collisions link1="bone21" link2="bone51" reason="Never" />
     <disable_collisions link1="bone21" link2="bone52" reason="Never" />
     <disable_collisions link1="bone21" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone21" link2="eye_left" reason="Never" />
+    <disable_collisions link1="bone21" link2="eye_right" reason="Never" />
+    <disable_collisions link1="bone21" link2="eyes_link_yaw" reason="Never" />
     <disable_collisions link1="bone22" link2="bone23" reason="Adjacent" />
     <disable_collisions link1="bone22" link2="bone24" reason="Never" />
     <disable_collisions link1="bone22" link2="bone25" reason="Never" />
     <disable_collisions link1="bone22" link2="bone31" reason="Never" />
-    <disable_collisions link1="bone22" link2="bone32" reason="Never" />
     <disable_collisions link1="bone22" link2="bone41" reason="Never" />
+    <disable_collisions link1="bone22" link2="bone51" reason="Never" />
     <disable_collisions link1="bone22" link2="bone52" reason="Never" />
-    <disable_collisions link1="bone22" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone22" link2="eyes_link_yaw" reason="Never" />
     <disable_collisions link1="bone23" link2="bone24" reason="Adjacent" />
-    <disable_collisions link1="bone23" link2="bone51" reason="Never" />
-    <disable_collisions link1="bone23" link2="bone52" reason="Never" />
+    <disable_collisions link1="bone23" link2="eyes_link_yaw" reason="Never" />
+    <disable_collisions link1="bone23" link2="link_eyes_z" reason="Never" />
     <disable_collisions link1="bone24" link2="bone25" reason="Adjacent" />
-    <disable_collisions link1="bone24" link2="bone51" reason="Never" />
-    <disable_collisions link1="bone25" link2="bone51" reason="Never" />
-    <disable_collisions link1="bone25" link2="bone52" reason="Never" />
+    <disable_collisions link1="bone24" link2="eyes_link_yaw" reason="Never" />
     <disable_collisions link1="bone31" link2="bone32" reason="Adjacent" />
     <disable_collisions link1="bone31" link2="bone33" reason="Never" />
-    <disable_collisions link1="bone31" link2="bone34" reason="Never" />
-    <disable_collisions link1="bone31" link2="bone35" reason="Never" />
     <disable_collisions link1="bone31" link2="bone51" reason="Never" />
     <disable_collisions link1="bone31" link2="bone52" reason="Never" />
     <disable_collisions link1="bone31" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone31" link2="bone54" reason="Never" />
+    <disable_collisions link1="bone31" link2="eye_left" reason="Never" />
+    <disable_collisions link1="bone31" link2="eye_right" reason="Never" />
+    <disable_collisions link1="bone31" link2="eyes_link_yaw" reason="Never" />
     <disable_collisions link1="bone32" link2="bone33" reason="Adjacent" />
     <disable_collisions link1="bone32" link2="bone34" reason="Never" />
     <disable_collisions link1="bone32" link2="bone35" reason="Never" />
     <disable_collisions link1="bone32" link2="bone51" reason="Never" />
     <disable_collisions link1="bone32" link2="bone52" reason="Never" />
     <disable_collisions link1="bone32" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone32" link2="bone54" reason="Never" />
+    <disable_collisions link1="bone32" link2="eye_left" reason="Never" />
+    <disable_collisions link1="bone32" link2="eye_right" reason="Never" />
     <disable_collisions link1="bone33" link2="bone34" reason="Adjacent" />
+    <disable_collisions link1="bone33" link2="bone52" reason="Never" />
+    <disable_collisions link1="bone33" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone33" link2="bone54" reason="Never" />
+    <disable_collisions link1="bone33" link2="eye_left" reason="Never" />
+    <disable_collisions link1="bone33" link2="eye_right" reason="Never" />
     <disable_collisions link1="bone34" link2="bone35" reason="Adjacent" />
+    <disable_collisions link1="bone34" link2="bone52" reason="Never" />
+    <disable_collisions link1="bone34" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone34" link2="eye_right" reason="Never" />
     <disable_collisions link1="bone41" link2="bone42" reason="Adjacent" />
     <disable_collisions link1="bone41" link2="bone43" reason="Never" />
-    <disable_collisions link1="bone41" link2="bone44" reason="Never" />
-    <disable_collisions link1="bone41" link2="bone45" reason="Never" />
     <disable_collisions link1="bone41" link2="bone51" reason="Never" />
     <disable_collisions link1="bone41" link2="bone52" reason="Never" />
     <disable_collisions link1="bone41" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone41" link2="bone54" reason="Never" />
+    <disable_collisions link1="bone41" link2="eye_left" reason="Never" />
+    <disable_collisions link1="bone41" link2="eye_right" reason="Never" />
+    <disable_collisions link1="bone41" link2="eyes_link_yaw" reason="Never" />
+    <disable_collisions link1="bone41" link2="link_eyes_z" reason="Never" />
     <disable_collisions link1="bone42" link2="bone43" reason="Adjacent" />
     <disable_collisions link1="bone42" link2="bone44" reason="Never" />
     <disable_collisions link1="bone42" link2="bone45" reason="Never" />
     <disable_collisions link1="bone42" link2="bone51" reason="Never" />
     <disable_collisions link1="bone42" link2="bone52" reason="Never" />
     <disable_collisions link1="bone42" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone42" link2="bone54" reason="Never" />
+    <disable_collisions link1="bone42" link2="eye_left" reason="Never" />
+    <disable_collisions link1="bone42" link2="eye_right" reason="Never" />
     <disable_collisions link1="bone43" link2="bone44" reason="Adjacent" />
+    <disable_collisions link1="bone43" link2="bone52" reason="Never" />
+    <disable_collisions link1="bone43" link2="bone53" reason="Never" />
+    <disable_collisions link1="bone43" link2="eye_left" reason="Never" />
+    <disable_collisions link1="bone43" link2="eye_right" reason="Never" />
     <disable_collisions link1="bone44" link2="bone45" reason="Adjacent" />
+    <disable_collisions link1="bone44" link2="eye_right" reason="Never" />
     <disable_collisions link1="bone51" link2="bone52" reason="Adjacent" />
     <disable_collisions link1="bone51" link2="bone53" reason="Never" />
-    <disable_collisions link1="bone51" link2="bone54" reason="Always" />
+    <disable_collisions link1="bone51" link2="eyes_link_yaw" reason="Never" />
     <disable_collisions link1="bone52" link2="bone53" reason="Adjacent" />
+    <disable_collisions link1="bone52" link2="eye_left" reason="Never" />
+    <disable_collisions link1="bone52" link2="eye_right" reason="Never" />
+    <disable_collisions link1="bone52" link2="eyes_link_yaw" reason="Never" />
+    <disable_collisions link1="bone52" link2="link_eyes_z" reason="Never" />
     <disable_collisions link1="bone53" link2="bone54" reason="Adjacent" />
-    <disable_collisions link1="bone54" link2="eye_right" reason="Adjacent" />
+    <disable_collisions link1="bone53" link2="eye_left" reason="Never" />
+    <disable_collisions link1="bone53" link2="eye_right" reason="Never" />
+    <disable_collisions link1="bone53" link2="eyes_link_yaw" reason="Never" />
     <disable_collisions link1="bone54" link2="eye_left" reason="Adjacent" />
+    <disable_collisions link1="bone54" link2="eye_right" reason="Adjacent" />
+    <disable_collisions link1="bone54" link2="eyes_link_yaw" reason="Adjacent" />
+    <disable_collisions link1="bone54" link2="link_eyes_z" reason="Adjacent" />
+    <disable_collisions link1="eye_left" link2="eye_right" reason="Never" />
+    <disable_collisions link1="eye_left" link2="eyes_link_yaw" reason="Never" />
+    <disable_collisions link1="eye_left" link2="link_eyes_z" reason="Never" />
+    <disable_collisions link1="eye_right" link2="eyes_link_yaw" reason="Never" />
 </robot>
