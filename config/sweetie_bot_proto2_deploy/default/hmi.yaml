@@ -1,0 +1,10 @@
+stance_pose_marker:
+    normalized_z_level: 0.03
+    scale: 1.0
+    resources: [leg1, leg2, leg3, leg4 ]
+    marker_home_frame: base_link
+    normalized_z_level: 0.2335
+limb_pose_marker:
+    normalized_z_level: 0.03
+    scale: 0.5
+    resources: [leg1, leg2, leg3, leg4, head ]

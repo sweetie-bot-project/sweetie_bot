@@ -13,4 +13,6 @@
     <!-- OROCOS cpf file configuration: replace not valid charcters with "_"  -->
 	<param name="conf_file/logger_log4cpp" textfile="$(find sweetie_bot_proto2_deploy)/default/logger.log4cpp" ></param>
 	<param name="conf_file/kinematic_chains_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/kinematic_chains.cpf" ></param>
+	<!-- other configuraton -->
+	<rosparam command="load" ns="/hmi" file="$(find sweetie_bot_proto2_deploy)/default/hmi.yaml" ></rosparam> 
 </launch>
