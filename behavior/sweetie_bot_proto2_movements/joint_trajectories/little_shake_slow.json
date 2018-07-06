@@ -37,8 +37,8 @@
             "joint52", 
             "joint53", 
             "joint54", 
-            "joint55", 
-            "joint56", 
+            "eyes_pitch", 
+            "eyes_yaw", 
             "support/leg1", 
             "support/leg2", 
             "support/leg3", 
@@ -441,13 +441,13 @@
         {
             "acceleration": 0.0, 
             "position": 3.14, 
-            "name": "joint55", 
+            "name": "eyes_pitch", 
             "velocity": 0.0
         }, 
         {
             "acceleration": 0.0, 
             "position": 3.14, 
-            "name": "joint56", 
+            "name": "eyes_yaw", 
             "velocity": 0.0
         }
     ], 
@@ -599,13 +599,13 @@
         {
             "acceleration": 0.0, 
             "position": 0.5, 
-            "name": "joint55", 
+            "name": "eyes_pitch", 
             "velocity": 0.0
         }, 
         {
             "acceleration": 0.0, 
             "position": 0.5, 
-            "name": "joint56", 
+            "name": "eyes_yaw", 
             "velocity": 0.0
         }
     ]

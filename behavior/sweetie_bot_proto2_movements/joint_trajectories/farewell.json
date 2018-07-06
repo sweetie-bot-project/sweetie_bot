@@ -25,8 +25,8 @@
             "joint25", 
             "joint52", 
             "joint54", 
-            "joint55", 
-            "joint56"
+            "eyes_pitch", 
+            "eyes_yaw"
         ], 
         "points": [
             {
@@ -432,13 +432,13 @@
         {
             "acceleration": 0.0, 
             "position": 3.14, 
-            "name": "joint55", 
+            "name": "eyes_pitch", 
             "velocity": 0.0
         }, 
         {
             "acceleration": 0.0, 
             "position": 3.14, 
-            "name": "joint56", 
+            "name": "eyes_yaw", 
             "velocity": 0.0
         }
     ], 
@@ -518,13 +518,13 @@
         {
             "acceleration": 0.0, 
             "position": 0.5, 
-            "name": "joint55", 
+            "name": "eyes_pitch", 
             "velocity": 0.0
         }, 
         {
             "acceleration": 0.0, 
             "position": 0.5, 
-            "name": "joint56", 
+            "name": "eyes_yaw", 
             "velocity": 0.0
         }
     ]
