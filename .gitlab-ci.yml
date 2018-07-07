@@ -2,48 +2,35 @@ before_script:
   - git submodule sync --recursive
   - git submodule update --init --recursive
 
-desktop-stretch:
-  image: slavanap/compile_orocos:lunar-stretch
+desktop-xenial: &anchor
+  image: slavanap/ros-build:lunar-xenial
   stage: build
   tags:
     - docker
   script:
-    - export ROS_PARALLEL_JOBS=-j3
-    - ( mkdir -p /tmp/repo/sweetie_bot || true ) && ln -s "$PWD" /tmp/repo/sweetie_bot/src
-    - ( cd /tmp/repo && ./travis.bash sweetie-bot-pkg )
-    - mv /tmp/repo/sweetie-bot.deb ./ 
+    - mkdir /tmp/build && ln -s "$PWD" /tmp/build/src && cd /tmp/build
+    - source "/opt/ros/$ROS_DISTRO/setup.bash"
+    - catkin_make_isolated --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
+    - source "/tmp/repo/buildpkg.bash"
+    - export BASE_VERSION="$DEB_VERSION"
+    - export DEB_VERSION="${DEB_VERSION%~*}-${CI_JOB_ID}~${DEB_VERSION#*~}"
+    - export DEB_FILE="sweetie-bot$PKG_SUFFIX"
+    - export DEB_NAME="ros-${ROS_DISTRO}-${DEB_FILE}"
+    - export DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO" DEB_HOMEPAGE="http://sweetiebot.net/"
+    - buildpkg "/opt/ros/sweetie_bot" "${DEB_FILE}.deb" "ros-${ROS_DISTRO}-sweetie-bot-base$PKG_SUFFIX (=${BASE_VERSION})" || echo "ret code $?"
+    - mv "${DEB_FILE}.deb" "$CI_PROJECT_DIR/${CI_JOB_NAME}.deb"
   artifacts:
-    name: "$CI_JOB_NAME.deb"
+    name: "${CI_JOB_NAME}.deb"
     expire_in: 3 weeks
     paths:
-      - sweetie-bot.deb
+      - "${CI_JOB_NAME}.deb"
 
-desktop-xenial:
-  image: slavanap/compile_orocos:lunar-xenial
-  stage: build
-  tags:
-    - docker
-  script:
-    - ( mkdir -p /tmp/repo/sweetie_bot || true ) && ln -s "$PWD" /tmp/repo/sweetie_bot/src
-    - ( cd /tmp/repo && ./travis.bash sweetie-bot-pkg )
-    - mv /tmp/repo/sweetie-bot.deb ./ 
-  artifacts:
-    name: "$CI_JOB_NAME.deb"
-    expire_in: 3 weeks
-    paths:
-      - sweetie-bot.deb
+desktop-stretch:
+  <<: *anchor
+  image: slavanap/ros-build:lunar-stretch
 
 rpi3-stretch:
-  image: slavanap/compile_orocos:lunar-stretch-rpi3
-  stage: build
+  <<: *anchor
+  image: slavanap/ros-build:lunar-stretch-rpi3
   tags:
     - docker-armhf
-  script:
-    - ( mkdir -p /tmp/repo/sweetie_bot || true ) && ln -s "$PWD" /tmp/repo/sweetie_bot/src
-    - ( cd /tmp/repo && ./travis.bash sweetie-bot-pkg )
-    - mv /tmp/repo/sweetie-bot-rpi3.deb ./ 
-  artifacts:
-    name: "$CI_JOB_NAME.deb"
-    expire_in: 3 weeks
-    paths:
-      - sweetie-bot-rpi3.deb
