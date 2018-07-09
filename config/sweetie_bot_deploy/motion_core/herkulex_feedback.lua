@@ -10,15 +10,16 @@ require "timer"
 
 ros:import("sweetie_bot_herkulex_control");
 
--- 
--- Load HerkulexDriver, HerkulexSched, HerkulexArray components. 
+--- Load HerkulexDriver, HerkulexSched, HerkulexArray components. 
 --
 -- Components are named "herkulex/<group>/driver", "herkulex/<group>/array", "herkulex/<group>/sched".
--- Componts lua object are placed in herkulex table and can be accesed as herkulex.<group>.driver, 
+-- Componts lua object are placed in herkulex (first parameter) table and can be accesed as herkulex.<group>.driver, 
 -- herkulex.<group>.array and herkulex.<group>.sched.
--- servos_description_cpf parameter is .cpf configuration file name for HerkulexArray.
 --
--- Function return true if components are succesfully configured and HerkulexDriver is started.
+-- @param herkulex table to hold reference to components. 
+-- @param group new servos group name (string).
+-- @param servos_description_cpf parameter  is .cpf configuration file name for HerkulexArray (string). It is processed with config.file function.
+-- @return true if components are succesfully configured and HerkulexDriver is started.
 --
 local function setup_herkulex_subsystem(herkulex, group, servos_description_cpf)
 	if type(group) ~= 'string' or string.len(group) == 0 then
@@ -36,15 +37,15 @@ local function setup_herkulex_subsystem(herkulex, group, servos_description_cpf)
 	herkulex[group].array = depl:getPeer(basename .. "/array")
 	herkulex[group].array:loadService("marshalling")
 	herkulex[group].array:provides("marshalling"):loadProperties(config.file(servos_description_cpf))
-	rttlib_extra.get_peer_rosparams(herkulex[group].array)
+	config.get_peer_rosparams(herkulex[group].array)
 	-- load HerkulexDriver
 	depl:loadComponent(basename .. "/driver", "herkulex::HerkulexDriver");
 	herkulex[group].driver = depl:getPeer(basename .. "/driver")
-	rttlib_extra.get_peer_rosparams(herkulex[group].driver)
+	config.get_peer_rosparams(herkulex[group].driver)
 	-- load HerkulexSched
 	depl:loadComponent(basename .. "/sched", "herkulex::HerkulexSched");
 	herkulex[group].sched = depl:getPeer(basename .. "/sched")
-	rttlib_extra.get_peer_rosparams(herkulex[group].sched)
+	config.get_peer_rosparams(herkulex[group].sched)
 
 	-- CONNECT OPERATIONS OF HERKULEX_* subsystem
 
@@ -94,7 +95,7 @@ end
 -- load herkulex groups
 herkulex = {}
 
-local groups = rttlib_extra.get_rosparam('~herkulex/groups', 'string[]')
+local groups = config.get_rosparam('~herkulex/groups', 'string[]')
 assert(groups, "ERROR: Unable to load herkulex/groups parameter. Herkulex subsystem is not loaded.")
 
 for i, group in ipairs(groups) do

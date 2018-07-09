@@ -120,24 +120,25 @@ config.logger_root_category = string.gsub(string.gsub(config.node_fullname, "^/"
 require "logger"
 logger.set_root_category(config.logger_root_category)
 
--- Helper functions: parameters access and etc
-require "rttlib_extra"
-
 print("logger_root: ", config.logger_root_category)
 
 -- 3. Setup working dir to first overlay
 lfs.chdir(config.overlay_paths[1])
 
--- 4. Provide configuration file finding function
+-- 4. Provide helper functions
 
+-- Helper functions: parameters access and etc
+require "config_extra"
+
+--- Find configuration file and return full path to it. Return nul on failure
 --
---Find configuration file and return full path to it. Return nul on failure
---
--- First of all tries to find parameter with the same name on ROS parameter server 
--- in namespace `conf_file` (if path is relative). If parameter does not exists then 
+-- First of all tries to find parameter with the same name on ROS parameter server.
+-- If path is relative  "conf_file/" namespace is assumed. If parameter does not exists then 
 -- search for configuration file under defined overlays. 
 --
 -- All not valid characters in parameter name is replaced by "_"
+--
+-- @param conf_file configuration file name (string).
 --
 function config.file(conf_file)
 	-- add prefix to parameter name and replace not valid characters
@@ -147,7 +148,7 @@ function config.file(conf_file)
 	end
 	-- try to get rosparam
 	print(conf_file_param)
-	local buffer = rttlib_extra.get_rosparam(conf_file_param, 'string')
+	local buffer = config.get_rosparam(conf_file_param, 'string')
 	if buffer then
 		print("config.file: use ROS parameter ", conf_file_param)
 		-- create directory in /tmp/<node_fullname>

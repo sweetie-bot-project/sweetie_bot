@@ -22,7 +22,7 @@ ros:import("sweetie_bot_servo_inv");
 -- load component
 depl:loadComponent("servo_inv","sweetie_bot::motion::ServoInvLead")
 servo_inv = depl:getPeer("servo_inv")
-rttlib_extra.get_peer_rosparams(servo_inv)
+config.get_peer_rosparams(servo_inv)
 
 -- timer syncronization
 depl:connect(timer.agregator.port, "servo_inv.sync_step", rtt.Variable("ConnPolicy"));
@@ -65,7 +65,7 @@ agregator_real:provides("marshalling"):loadProperties(config.file("kinematic_cha
 agregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
 agregator_real:provides("rosparam"):getParam("","robot_model")
 --get other properties
-rttlib_extra.get_peer_rosparams(agregator_real)
+config.get_peer_rosparams(agregator_real)
 -- timer syncronization: publish at same time as controllers
 depl:connect(timer.controller.port, "agregator_real.sync_step", rtt.Variable("ConnPolicy"));
 -- publish pose to ROS

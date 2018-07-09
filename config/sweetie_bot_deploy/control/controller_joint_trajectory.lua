@@ -17,7 +17,7 @@ ros:import("sweetie_bot_controller_joint_space")
 depl:loadComponent("controller/joint_trajectory", "sweetie_bot::motion::controller::AnimJointTrajectory")
 controller.joint_trajectory = depl:getPeer("controller/joint_trajectory")
 -- load parameters and services
-rttlib_extra.get_peer_rosparams(controller.joint_trajectory)
+config.get_peer_rosparams(controller.joint_trajectory)
 -- register controller
 resource_control.register_controller(controller.joint_trajectory)
 -- timer

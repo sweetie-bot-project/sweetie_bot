@@ -34,10 +34,10 @@ for name, group in pairs(herkulex) do
 	table.insert(herkulex_arrays, "herkulex/"..name.."/array")
 end
 -- set herkulex_arrays and herkulex_scheds properties
-rttlib_extra.set_property(controller.torque_off, 'herkulex_arrays', 'string[]', herkulex_arrays )
-rttlib_extra.set_property(controller.torque_off, 'herkulex_scheds', 'string[]', herkulex_scheds )
+config.set_property(controller.torque_off, 'herkulex_arrays', 'string[]', herkulex_arrays )
+config.set_property(controller.torque_off, 'herkulex_scheds', 'string[]', herkulex_scheds )
 -- get ROS configuration
-rttlib_extra.get_peer_rosparams(controller.torque_off)
+config.get_peer_rosparams(controller.torque_off)
 -- advertise actionlib interface
 controller.torque_off:loadService("actionlib")
 controller.torque_off:provides("actionlib"):connect("~controller/torque_off")

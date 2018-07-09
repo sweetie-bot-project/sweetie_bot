@@ -2,7 +2,7 @@
 -- TIMER DEPLOYMENT MODULE
 --
 require 'rttlib'
-require 'rttlib_extra'
+require 'config_extra'
 
 -- get Deployer
 local depl = rtt.getTC():getPeer("Deployer")
@@ -17,12 +17,12 @@ timer = {}
 -- load timer
 depl:loadComponent("timer", "OCL::TimerComponent")
 timer.timer = depl:getPeer("timer")
-rttlib_extra.get_peer_rosparams(timer.timer)
+config.get_peer_rosparams(timer.timer)
 
 -- set timer period
-timer.period = rttlib_extra.get_rosparam("~timer/period", "float")
+timer.period = config.get_rosparam("~timer/period", "float")
 assert(timer.period, "ERROR: unable to get `~timer/period`")
-timer.herkulex_period = rttlib_extra.get_rosparam("~timer/herkulex_period", "float")
+timer.herkulex_period = config.get_rosparam("~timer/herkulex_period", "float")
 assert(timer.herkulex_period, "ERROR: unable to get `~timer/herkulex_period`")
 
 print("timer_period:" .. tostring(timer.period))

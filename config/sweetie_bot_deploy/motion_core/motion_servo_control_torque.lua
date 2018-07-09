@@ -31,7 +31,7 @@ servo_inv = depl:getPeer("servo_inv")
 servo_inv:loadService("marshalling")
 servo_inv:provides("marshalling"):loadProperties(config.file("servo_models.cpf"))
 -- get ROS parameteres and services
-rttlib_extra.get_peer_rosparams(servo_inv)
+config.get_peer_rosparams(servo_inv)
 
 -- data flow: dynamics_inv -> servo_inv -> herkulex_sched
 depl:connect("dynamics_inv.out_joints_accel_sorted", "servo_inv.in_joints_accel_fixed", rtt.Variable("ConnPolicy"));
@@ -61,7 +61,7 @@ servo_ident = depl:getPeer("servo_ident")
 servo_ident:loadService("marshalling")
 servo_ident:provides("marshalling"):loadProperties(config.file("servo_models.cpf"))
 -- get ROS parameteres and services
-rttlib_extra.get_peer_rosparams(servo_ident)
+config.get_peer_rosparams(servo_ident)
 
 -- data flow: herkulex_sched, dynamics_ident -> servo_ident
 depl:connect("herkulex/sched.out_joints", "servo_ident.in_joints_measured", rtt.Variable("ConnPolicy"));
@@ -89,7 +89,7 @@ agregator_real:provides("marshalling"):loadProperties(config.file("kinematic_cha
 agregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
 agregator_real:provides("rosparam"):getParam("","robot_model")
 --get other properties
-rttlib_extra.get_peer_rosparams(agregator_real)
+config.get_peer_rosparams(agregator_real)
 -- timer syncronization: publish at same time as controllers
 depl:connect(timer.controller.port, "agregator_real.sync_step", rtt.Variable("ConnPolicy"));
 -- publish pose to ROS

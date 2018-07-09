@@ -2,13 +2,15 @@
 --
 -- Simplify logger initialization.
 
+require 'config'
+
 -- get Deployer
 local depl = rtt.getTC():getPeer("Deployer")
 
 -- get directory
 reporting = {}
 reporting.peers = {}
-reporting.directory = rttlib_extra.get_rosparam("~reporting/directory", "string") or ""
+reporting.directory = config.get_rosparam("~reporting/directory", "string") or ""
 
 -- Setup file reporter.
 -- Usage example: 
@@ -30,7 +32,7 @@ function reporting.add_filereporter(reporter_name, peer_ports, file, complex_dec
 	reporter:getProperty("ComplexDecompose"):set(complex_decompose)
 	reporter:getProperty("ReportFile"):set(file)
 	-- configuere reporter: rosparam 
-	rttlib_extra.get_peer_rosparams(reporter)
+	config.get_peer_rosparams(reporter)
 	-- TODO period
 	-- add access to peers
 	for i, peer in ipairs(peer_ports) do

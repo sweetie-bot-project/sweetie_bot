@@ -14,7 +14,7 @@ ros:import("sweetie_bot_controller_cartesian")
 depl:loadComponent("controller/stance", "sweetie_bot::motion::controller::FollowStance")
 controller.stance = depl:getPeer("controller/stance")
 -- get ROS parameteres and services
-rttlib_extra.get_peer_rosparams(controller.stance)
+config.get_peer_rosparams(controller.stance)
 -- register controller
 resource_control.register_controller(controller.stance)
 -- timer

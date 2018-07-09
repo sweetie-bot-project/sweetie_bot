@@ -1,7 +1,14 @@
 -- RESOURCE CONTROL DEPLOYMENT MODULE
 --
+-- Load:
+--  * resource_control.arbiter (ResourceArbiter) component.
+-- Provide 
+--  * resource_control.register_controller() function.
+--
+-- Intended to be run via config script.
+--
 require 'rttlib'
-require 'rttlib_extra'
+require 'config_extra'
 
 -- get Deployer
 local depl = rtt.getTC():getPeer("Deployer")
@@ -19,9 +26,16 @@ resource_control = {}
 -- Load arbiter
 depl:loadComponent("resource_control/arbiter", "sweetie_bot::motion::ResourceArbiter")
 resource_control.arbiter = depl:getPeer("resource_control/arbiter")
-rttlib_extra.get_peer_rosparams(resource_control.arbiter)
+config.get_peer_rosparams(resource_control.arbiter)
 
--- Connect a requester to the arbiter
+--- Connect a requester to the arbiter.
+--
+-- This function connects component with "resource_client" (ResourceClient) service to
+-- the resource arbiter. It connects tree ports: resource_assigment, resource_request, resource_status.
+--
+-- @param peer component (TaskContext) to connect. Must have "resource_client" service loaded.
+-- @return true on success.
+--
 function resource_control.register_controller(peer)
 	local cp = rtt.Variable("ConnPolicy")
 	if type(peer) ~= "string" then

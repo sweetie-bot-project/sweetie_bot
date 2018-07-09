@@ -17,7 +17,7 @@ ros:import("sweetie_bot_controller_cartesian")
 depl:loadComponent("controller/stance", "sweetie_bot::motion::controller::FollowStance")
 controller.stance = depl:getPeer("controller/stance")
 -- get ROS parameteres and services
-rttlib_extra.get_peer_rosparams(controller.stance)
+config.get_peer_rosparams(controller.stance)
 -- register controller
 resource_control.register_controller(controller.stance)
 -- timer
@@ -27,7 +27,7 @@ depl:connect("controller/stance.out_supports", "agregator_ref.in_supports", rtt.
 -- data flow: controller -> agregator_ref
 depl:connect("controller/stance.out_limbs_ref", "kinematics_inv.in_limbs", rtt.Variable("ConnPolicy"))
 -- data flow: controller <-> odometry_ref
-if rttlib_extra.get_rosparam("~controller/stance/override_odometry", "bool") then
+if config.get_rosparam("~controller/stance/override_odometry", "bool") then
 	-- odometry results are overrided with controller/stance.out_base_ref port
 	depl:connect("controller/stance.out_base_ref", "odometry_ref.in_base", rtt.Variable("ConnPolicy"))
 end
@@ -35,7 +35,7 @@ depl:connect("controller/stance.in_base", "odometry_ref.out_base", rtt.Variable(
 depl:connect("controller/stance.in_balance", "dynamics_inv.out_balance", rtt.Variable("ConnPolicy"))
 -- data flow: controller <- kinematics_fwd
 depl:connect("controller/stance.in_limbs_fixed", "kinematics_fwd.out_limbs_fixed", rtt.Variable("ConnPolicy"))
-if not rttlib_extra.get_rosparam("~controller/stance/use_kinematics_inv_port", "bool") then
+if not config.get_rosparam("~controller/stance/use_kinematics_inv_port", "bool") then
 	depl:connectOperations("controller/stance.poseToJointStatePublish", "kinematics_inv.poseToJointStatePublish");
 end
 -- ROS redirect

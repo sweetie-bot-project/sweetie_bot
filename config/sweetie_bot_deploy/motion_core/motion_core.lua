@@ -15,7 +15,7 @@ ros:import("rtt_sensor_msgs")
 
 require "logger"
 
-local logger_conf = rttlib_extra.get_rosparam("logger_conf", "string")
+local logger_conf = config.get_rosparam("logger_conf", "string")
 if not logger_conf then logger_conf = "logger.log4cpp" end
 
 logger.init_loglevels_log4cpp(config.file(logger_conf))
@@ -56,7 +56,7 @@ agregator_ref:provides("rosparam"):getParam("", "robot_model")
 -- upload robot model parameteres to ROS
 agregator_ref:provides("rosparam"):setParam("robot_model", "robot_model") 
 --get other properties
-rttlib_extra.get_peer_rosparams(agregator_ref)
+config.get_peer_rosparams(agregator_ref)
 --timer syncronization
 depl:connect(timer.agregator.port, "agregator_ref.sync_step", rtt.Variable("ConnPolicy"));
 -- publish pose to ROS
@@ -73,7 +73,7 @@ ros:import("sweetie_bot_kinematics");
 -- load component
 depl:loadComponent("kinematics_fwd","sweetie_bot::motion::KinematicsFwd")
 kinematics_fwd = depl:getPeer("kinematics_fwd")
-rttlib_extra.get_peer_rosparams(kinematics_fwd)
+config.get_peer_rosparams(kinematics_fwd)
 -- data flow: agregator_ref -> kinemaitics_fwd -> odometry_ref
 depl:connect("agregator_ref.out_joints_sorted", "kinematics_fwd.in_joints_sorted", rtt.Variable("ConnPolicy"));
 -- connect to RobotModel
@@ -94,7 +94,7 @@ kinematics_inv = depl:getPeer("kinematics_inv")
 kinematics_inv:loadService("marshalling")
 kinematics_inv:provides("marshalling"):loadProperties(config.file("kinematics_inv_joint_limits.cpf"))
 -- get ROS parameteres and services
-rttlib_extra.get_peer_rosparams(kinematics_inv)
+config.get_peer_rosparams(kinematics_inv)
 -- data flow: controller <-> agregator_ref
 depl:connect("kinematics_inv.in_joints_seed_sorted", "agregator_ref.out_joints_sorted", rtt.Variable("ConnPolicy"))
 depl:connect("kinematics_inv.out_joints", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
@@ -112,7 +112,7 @@ ros:import("sweetie_bot_odometry");
 -- load component
 depl:loadComponent("odometry_ref","sweetie_bot::motion::Odometry")
 odometry_ref = depl:getPeer("odometry_ref")
-rttlib_extra.get_peer_rosparams(odometry_ref)
+config.get_peer_rosparams(odometry_ref)
 
 -- data flow: agregator_ref, kinematics_fwd -> odometry_ref
 depl:connect("agregator_ref.out_supports_sorted", "odometry_ref.in_supports_fixed", rtt.Variable("ConnPolicy"));
@@ -160,7 +160,7 @@ dynamics_inv = depl:getPeer("dynamics_inv")
 -- load parameters
 dynamics_inv:loadService("rosparam")
 dynamics_inv:provides("rosparam"):getParam("robot_description_dynamics", "robot_description")
-rttlib_extra.get_peer_rosparams(dynamics_inv)
+config.get_peer_rosparams(dynamics_inv)
 
 -- data flow: agregator_ref, kinematics_fwd -> dynamics_inv
 depl:connect("agregator_ref.out_joints_sorted", "dynamics_inv.in_joints_sorted", rtt.Variable("ConnPolicy"));
