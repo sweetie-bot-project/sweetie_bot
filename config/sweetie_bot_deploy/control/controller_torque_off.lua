@@ -38,6 +38,9 @@ rttlib_extra.set_property(controller.torque_off, 'herkulex_arrays', 'string[]', 
 rttlib_extra.set_property(controller.torque_off, 'herkulex_scheds', 'string[]', herkulex_scheds )
 -- get ROS configuration
 rttlib_extra.get_peer_rosparams(controller.torque_off)
+-- advertise actionlib interface
+controller.torque_off:loadService("actionlib")
+controller.torque_off:provides("actionlib"):connect("~controller/torque_off")
 -- advertise ROS operation
 controller.torque_off:loadService("rosservice")
 controller.torque_off:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/torque_off/set_torque_off", "std_srvs/SetBool")
