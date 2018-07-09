@@ -34,8 +34,8 @@ for name, group in pairs(herkulex) do
 	table.insert(herkulex_arrays, "herkulex/"..name.."/array")
 end
 -- set herkulex_arrays and herkulex_scheds properties
-config.set_property(controller.torque_off, 'herkulex_arrays', 'string[]', herkulex_arrays )
-config.set_property(controller.torque_off, 'herkulex_scheds', 'string[]', herkulex_scheds )
+config.set_property(controller.torque_off, 'herkulex_arrays', herkulex_arrays )
+config.set_property(controller.torque_off, 'herkulex_scheds', herkulex_scheds )
 -- get ROS configuration
 config.get_peer_rosparams(controller.torque_off)
 -- advertise actionlib interface

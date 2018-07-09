@@ -16,19 +16,21 @@ config.rosparam = depl:provides("rosparam")
 -- It creates rtt.Variale of corresponding type, assign it value with fromtab() and set property.
 -- @param peer OROCOS component (TaskContext)
 -- @param prop property name (string)
--- @param prop_type typename (string, add '[]' for array),
 -- @param value table which would be converted to desired type with fromtab() call.
-function config.set_property(peer, prop, prop_type, value) 
+function config.set_property(peer, prop, value) 
+	local prop = peer:getProperty(prop)
+	local prop_type = prop:info()["type"]
+
 	var = rtt.Variable(prop_type);
 	var:fromtab(value)
-	peer:getProperty(prop):set(var)
+	prop:set(var)
 end
 
 --- Get parameter from ROS Parameter Server
 -- Get parameter using rospram service as rtt.Variable, return totab() output,
 -- @param name  parameter name (absolute, relative or private path)
--- @param string with rtt_ros typename
--- @return 
+-- @param typename string with rtt_ros typename: "bool", "int", "float", "double", "string" with, possibly, "[]" postfix.
+-- @return table which contains totab() result.
 function config.get_rosparam(name, typename)
 	typename = string.lower(typename)
 	local op_name
