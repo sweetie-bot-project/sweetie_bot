@@ -22,9 +22,9 @@ config.get_peer_rosparams(controller.pose)
 resource_control.register_controller(controller.pose)
 -- timer
 depl:connect(timer.controller.port, "controller/pose.sync", rtt.Variable("ConnPolicy"))
--- data flow: controller -> agregator_ref
-depl:connect("controller/pose.out_supports", "agregator_ref.in_supports", rtt.Variable("ConnPolicy"))
--- data flow: controller -> kinematics_inv -> agregator_ref
+-- data flow: controller -> aggregator_ref
+depl:connect("controller/pose.out_supports", "aggregator_ref.in_supports", rtt.Variable("ConnPolicy"))
+-- data flow: controller -> kinematics_inv -> aggregator_ref
 depl:connect("controller/pose.out_limbs_ref", "kinematics_inv.in_limbs", rtt.Variable("ConnPolicy"))
 if not config.get_rosparam("~controller/pose/use_kinematics_inv_port", "bool") then
 	depl:connectOperations("controller/pose.poseToJointStatePublish", "kinematics_inv.poseToJointStatePublish");
@@ -37,7 +37,7 @@ depl:connect("controller/pose.in_limbs", "kinematics_fwd.out_limbs_fixed", rtt.V
 depl:stream("controller/pose.in_pose_ref", ros:topic("~controller/pose/in_pose_ref"))
 
 -- connect to RobotModel
-depl:connectServices("controller/pose", "agregator_ref")
+depl:connectServices("controller/pose", "aggregator_ref")
 -- advertise actionlib interface
 controller.pose:loadService("actionlib")
 controller.pose:provides("actionlib"):connect("~controller/pose")

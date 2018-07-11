@@ -17,12 +17,12 @@ controller.torque_off = depl:getPeer("controller/torque_off")
 resource_control.register_controller(controller.torque_off)
 -- timer
 depl:connect(timer.controller.port, "controller/torque_off.sync", rtt.Variable("ConnPolicy"))
--- data flow: controller -> agregator_ref
-depl:connect("controller/torque_off.out_joints_ref", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
--- data flow: agregator_real -> controller
-depl:connect("agregator_real.out_joints_sorted", "controller/torque_off.in_joints_actual", rtt.Variable("ConnPolicy"))
+-- data flow: controller -> aggregator_ref
+depl:connect("controller/torque_off.out_joints_ref", "aggregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+-- data flow: aggregator_real -> controller
+depl:connect("aggregator_real.out_joints_sorted", "controller/torque_off.in_joints_actual", rtt.Variable("ConnPolicy"))
 -- connect to RobotModel
-depl:connectServices("controller/torque_off", "agregator_ref")
+depl:connectServices("controller/torque_off", "aggregator_ref")
 -- present herkulex subsystem and set corresponding options
 local herkulex_arrays = {}
 local herkulex_scheds = {}

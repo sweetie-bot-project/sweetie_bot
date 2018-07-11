@@ -1,7 +1,7 @@
 -- 
 -- SERVO TORQUE CONTROL MODULE
 --
--- Setup servo_inv, servo_ident and agregator_real.
+-- Setup servo_inv, servo_ident and aggregator_real.
 --
 -- It's second stage control schema. 
 --
@@ -15,7 +15,7 @@
 --
 
 --
--- deloy logger, agregator, resource_control, kinematics_fwd
+-- deloy logger, aggregator, resource_control, kinematics_fwd
 --
 require "motion_core"
 
@@ -46,8 +46,8 @@ require "herkulex_feedback"
 
 -- data flow: servo_inv -> herkulex/sched
 depl:connect("servo_inv.out_goals", "herkulex/sched.in_goals", rtt.Variable("ConnPolicy"));
--- data flow (setup): herkulex/array -> agregator_ref
-depl:connect("herkulex/array.out_joints", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+-- data flow (setup): herkulex/array -> aggregator_ref
+depl:connect("herkulex/array.out_joints", "aggregator_ref.in_joints", rtt.Variable("ConnPolicy"))
 herkulex.array:publishJointStates()
 
 -- 
@@ -73,33 +73,33 @@ depl:connect(timer.controller.port, "servo_ident.sync_step", rtt.Variable("ConnP
 
 assert(servo_ident:start())
 --
--- agregator for real pose
+-- aggregator for real pose
 --
 
 -- load component
-depl:loadComponent("agregator_real", "sweetie_bot::motion::Agregator");
-agregator_real = depl:getPeer("agregator_real")
-agregator_real:loadService("marshalling")
-agregator_real:loadService("rosparam")
+depl:loadComponent("aggregator_real", "sweetie_bot::motion::Aggregator");
+aggregator_real = depl:getPeer("aggregator_real")
+aggregator_real:loadService("marshalling")
+aggregator_real:loadService("rosparam")
 --set properties: publish on event
-agregator_real:getProperty("publish_on_timer"):set(false)
-agregator_real:getProperty("publish_on_event"):set(true)
+aggregator_real:getProperty("publish_on_timer"):set(false)
+aggregator_real:getProperty("publish_on_event"):set(true)
 --set properties
-agregator_real:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
-agregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
-agregator_real:provides("rosparam"):getParam("","robot_model")
+aggregator_real:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
+aggregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
+aggregator_real:provides("rosparam"):getParam("","robot_model")
 --get other properties
-config.get_peer_rosparams(agregator_real)
+config.get_peer_rosparams(aggregator_real)
 -- timer syncronization: publish at same time as controllers
-depl:connect(timer.controller.port, "agregator_real.sync_step", rtt.Variable("ConnPolicy"));
+depl:connect(timer.controller.port, "aggregator_real.sync_step", rtt.Variable("ConnPolicy"));
 -- publish pose to ROS
-depl:stream("agregator_real.out_joints_sorted", ros:topic("~agregator_real/out_joints_sorted"))
+depl:stream("aggregator_real.out_joints_sorted", ros:topic("~aggregator_real/out_joints_sorted"))
 -- start component
-agregator_real:configure()
-assert(agregator_real:start())
+aggregator_real:configure()
+assert(aggregator_real:start())
 
--- data flow: herkulex_sched -> agregator_real
-depl:connect("herkulex/sched.out_joints", "agregator_real.in_joints", rtt.Variable("ConnPolicy"))
+-- data flow: herkulex_sched -> aggregator_real
+depl:connect("herkulex/sched.out_joints", "aggregator_real.in_joints", rtt.Variable("ConnPolicy"))
 
 --- start herkulex scheduler
 if herkulex.array:isConfigured() then

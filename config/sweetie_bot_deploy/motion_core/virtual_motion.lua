@@ -6,5 +6,5 @@
 -- Intended to be run via config script.
 --
 
--- deloy logger, agregator, resource_control
+-- deloy logger, aggregator, resource_control
 require "motion_core"

@@ -15,7 +15,7 @@
 	<group if="$(arg robot)">
 		<!-- REFERENCE POSE PUBLISHING: tf, joint_states -->
 		<!-- remaps -->
-		<remap from="motion/agregator_ref/out_joints_sorted" to="joint_states" />
+		<remap from="motion/aggregator_ref/out_joints_sorted" to="joint_states" />
 		<!-- robot_state_publisher: reference robot pose: local publisher -->
 		<include file="$(find sweetie_bot_deploy)/motion_core/robot_state.launch">
 			<arg if="$(arg run_real)" name="machine" value="sweetiebot"/> 
@@ -23,7 +23,7 @@
 		<remap from="motion/odometry_ref/out_tf" to="tf" />
 		<!-- REAL POSE PUBLISHING: joint_states_real -->
 		<!-- remaps -->
-		<remap from="motion/agregator_real/out_joints_sorted" to="joint_states_real" /> 
+		<remap from="motion/aggregator_real/out_joints_sorted" to="joint_states_real" /> 
 		<!-- MOTION CORE -->
 		<include file="$(find sweetie_bot_deploy)/motion_core/motion.launch">
 			<arg if="$(arg run_real)" name="machine" value="sweetiebot"/> 

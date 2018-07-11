@@ -1,6 +1,6 @@
 <!-- DEPLOYMENT: joint_trajectory_editor -->
 <launch>
-	<arg name="use_real_pose" default="false" doc="Use topic /sweetie_bot/motion/agregator_real/out_joints_sorted (real robot pose) instaed of /sweetie_bot/motion/agregator_ref/out_joints_sorted (reference pose) as input joint_state. "/>
+	<arg name="use_real_pose" default="false" doc="Use topic /sweetie_bot/motion/aggregator_real/out_joints_sorted (real robot pose) instaed of /sweetie_bot/motion/aggregator_ref/out_joints_sorted (reference pose) as input joint_state. "/>
 
 	<!-- robot is inside /sweetie_bot namespace -->
 	<group ns="hmi">

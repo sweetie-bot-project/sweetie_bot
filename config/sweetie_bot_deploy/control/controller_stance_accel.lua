@@ -19,9 +19,9 @@ config.get_peer_rosparams(controller.stance)
 resource_control.register_controller(controller.stance)
 -- timer
 depl:connect(timer.controller.port, "controller/stance.sync", rtt.Variable("ConnPolicy"))
--- data flow: controller <-> agregator_ref
-depl:connect("controller/stance.out_joints_ref", "agregator_ref.in_joints", rtt.Variable("ConnPolicy"))
-depl:connect("controller/stance.out_supports", "agregator_ref.in_supports", rtt.Variable("ConnPolicy"))
+-- data flow: controller <-> aggregator_ref
+depl:connect("controller/stance.out_joints_ref", "aggregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+depl:connect("controller/stance.out_supports", "aggregator_ref.in_supports", rtt.Variable("ConnPolicy"))
 -- data flow: controller <-> dynamics_inv
 -- depl:connect("controller/stance.out_base_accel", "dynamics_inv.in_base_accel", rtt.Variable("ConnPolicy"))
 depl:connect("controller/stance.in_joints_accel_sorted", "dynamics_inv.out_joints_accel_sorted", rtt.Variable("ConnPolicy"))
@@ -30,7 +30,7 @@ depl:connect("controller/stance.in_base", "odometry_ref.out_base", rtt.Variable(
 -- ROS redirect
 depl:stream("controller/stance.in_base_ref", ros:topic("~controller/stance/in_base_ref"))
 -- connect to RobotModel
-depl:connectServices("controller/stance", "agregator_ref")
+depl:connectServices("controller/stance", "aggregator_ref")
 -- advertise ROS operation
 controller.stance:loadService("rosservice")
 controller.stance:provides("rosservice"):connect("rosSetOperational", config.node_fullname .. "/controller/stance/set_operational", "std_srvs/SetBool")

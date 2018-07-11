@@ -22,9 +22,9 @@ config.get_peer_rosparams(controller.stance)
 resource_control.register_controller(controller.stance)
 -- timer
 depl:connect(timer.controller.port, "controller/stance.sync", rtt.Variable("ConnPolicy"))
--- data flow: controller -> agregator_ref
-depl:connect("controller/stance.out_supports", "agregator_ref.in_supports", rtt.Variable("ConnPolicy"))
--- data flow: controller -> agregator_ref
+-- data flow: controller -> aggregator_ref
+depl:connect("controller/stance.out_supports", "aggregator_ref.in_supports", rtt.Variable("ConnPolicy"))
+-- data flow: controller -> aggregator_ref
 depl:connect("controller/stance.out_limbs_ref", "kinematics_inv.in_limbs", rtt.Variable("ConnPolicy"))
 -- data flow: controller <-> odometry_ref
 if config.get_rosparam("~controller/stance/override_odometry", "bool") then
@@ -47,7 +47,7 @@ depl:stream("controller/stance.in_base_ref", ros:topic("~controller/stance/in_ba
 -- depl:stream("odometry_ref.out_base", ros:topic("~kinematics_fwd/out_base"))A
 
 -- connect to RobotModel
-depl:connectServices("controller/stance", "agregator_ref")
+depl:connectServices("controller/stance", "aggregator_ref")
 -- advertise actionlib interface
 controller.stance:loadService("actionlib")
 controller.stance:provides("actionlib"):connect("~controller/stance")

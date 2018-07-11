@@ -13,4 +13,4 @@ reporting.add_filereporter("herkulex_statistics", { { name = "herkulex/sched" , 
 -- servo statej
 reporting.add_filereporter("herkulex_states", { { name = "herkulex/sched" ,  ports= {"out_states"} } }, directory .. "/states.out")
 -- control signals
-reporting.add_filereporter("herkulex_control", { { name = "agregator_ref" ,  ports= {"out_joints_sorted"} }, { name = "agregator_real" ,  ports= {"out_joints_sorted"} } }, directory .. "/control.out")
+reporting.add_filereporter("herkulex_control", { { name = "aggregator_ref" ,  ports= {"out_joints_sorted"} }, { name = "aggregator_real" ,  ports= {"out_joints_sorted"} } }, directory .. "/control.out")

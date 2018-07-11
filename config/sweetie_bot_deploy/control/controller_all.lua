@@ -1,7 +1,7 @@
 --
 -- VIRTUAL ROBOT and JOINT STATE controllers
 --
--- controllers: FollowJointState, AnimJointTrajectoryBase, TorqueMainSwitch if herkulex and agregator are present.
+-- controllers: FollowJointState, AnimJointTrajectoryBase, TorqueMainSwitch if herkulex and aggregator are present.
 --
 -- Intended to be run via config script.
 --
@@ -15,7 +15,7 @@ require "controller_stance"
 
 require "controller_pose"
 
-if (agregator_real and herkulex) then
+if (aggregator_real and herkulex) then
 	require "controller_torque_off"
 end
 
@@ -24,7 +24,7 @@ end
 -- dir = "/home/oleg/"
 -- reporting.add_filereporter("joint_state", { { name = "controller/joint_state" ,  ports= {"out_joints_ref_fixed"} } }, dir .. "joint_state.out", true)
 -- reporting.add_filereporter("joint_trajectory", { { name = "controller/joint_trajectory" ,  ports= {"out_joints_ref_fixed"} } }, dir .. "joint_traject.out", true)
--- reporting.add_filereporter("agregator", {  { name = "agregator_ref" ,  ports= {"out_joints_sorted"} } }, dir .. "agregator.out", true)
+-- reporting.add_filereporter("aggregator", {  { name = "aggregator_ref" ,  ports= {"out_joints_sorted"} } }, dir .. "aggregator.out", true)
 
 -- make robot to stand on four legs
 set_support(1234)

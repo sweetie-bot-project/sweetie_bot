@@ -1,10 +1,10 @@
 <launch>
 
   <node name="sweetie_bot_eye_left"  pkg="sweetie_bot_eyes" type="eye" output="screen" args="-l">
-	<remap from="joint_state" to="/sweetie_bot/motion/agregator_ref/out_joints_sorted" />
+	<remap from="joint_state" to="/sweetie_bot/motion/aggregator_ref/out_joints_sorted" />
   </node>
   <node name="sweetie_bot_eye_rigth" pkg="sweetie_bot_eyes" type="eye" output="screen" args="-r">
-	<remap from="joint_state" to="/sweetie_bot/motion/agregator_ref/out_joints_sorted" />
+	<remap from="joint_state" to="/sweetie_bot/motion/aggregator_ref/out_joints_sorted" />
   </node>
 
 </launch>

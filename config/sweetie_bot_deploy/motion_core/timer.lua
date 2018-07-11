@@ -38,7 +38,7 @@ timer.timer:wait(0, timer.period/2)
 timer.timer:startTimer(20, timer.period)
 -- register groups
 timer.controller = { port = "timer.timer_10", shift = 0 }
-timer.agregator = { port = "timer.timer_20", shift = timer.period/2 }
+timer.aggregator = { port = "timer.timer_20", shift = timer.period/2 }
 if timer.period == timer.herkulex_period then
 	-- use the same timer for herkulex and controller components
 	timer.timer:killTimer(15)
