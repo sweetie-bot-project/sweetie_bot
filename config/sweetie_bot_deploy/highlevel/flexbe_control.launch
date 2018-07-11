@@ -63,8 +63,8 @@
 		<include file="$(find sweetie_bot_deploy)/highlevel/flexbe.launch" >
 			<arg name="robot_ns" value="/" />
 			<arg name="behavior_ns" value="/flexbe" />
-			<arg name="behaviors_package" default="flexbe_behaviors" />
-			<arg name="run_behavior" default="true" />
+			<!-- arg name="behaviors_package" default="flexbe_behaviors" />
+			<arg name="run_behavior" default="true" / -->
 		</include>
 	</group>
 
