@@ -2,7 +2,7 @@
 
 <behavior name="SweetieBotOnChequesruia">
 
-	<executable package_path="flexbe_behaviors.sweetiebotonchequesruia_sm" class="SweetieBotOnChequesruiaSM" />
+	<executable package_path="sweetie_bot_flexbe_behaviors.sweetiebotonchequesruia_sm" class="SweetieBotOnChequesruiaSM" />
 	<tagstring>cheeqstria, leapmotion</tagstring>
 	<author>disRecord</author>
 	<date>Wed Aug 02 2017</date>

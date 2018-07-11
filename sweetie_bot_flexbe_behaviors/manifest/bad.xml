@@ -2,7 +2,7 @@
 
 <behavior name="Bad">
 
-	<executable package_path="flexbe_behaviors.bad_sm" class="BadSM" />
+	<executable package_path="sweetie_bot_flexbe_behaviors.bad_sm" class="BadSM" />
 	<tagstring>bad, SweetieBot</tagstring>
 	<author>disRecord, Wave</author>
 	<date>Fri Mar 31 2017</date>

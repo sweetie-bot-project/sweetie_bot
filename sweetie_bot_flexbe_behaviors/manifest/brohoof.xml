@@ -2,7 +2,7 @@
 
 <behavior name="Brohoof">
 
-	<executable package_path="flexbe_behaviors.brohoof_sm" class="BrohoofSM" />
+	<executable package_path="sweetie_bot_flexbe_behaviors.brohoof_sm" class="BrohoofSM" />
 	<tagstring>SweetieBot, MoveIt, greeting</tagstring>
 	<author>disRecord</author>
 	<date>Wed Aug 02 2017</date>

@@ -2,7 +2,7 @@
 
 <behavior name="SwitchEvilMode">
 
-	<executable package_path="flexbe_behaviors.switchevilmode_sm" class="SwitchEvilModeSM" />
+	<executable package_path="sweetie_bot_flexbe_behaviors.switchevilmode_sm" class="SwitchEvilModeSM" />
 	<tagstring>SweetieBot, evil</tagstring>
 	<author>disRecord</author>
 	<date>Thu Aug 17 2017</date>

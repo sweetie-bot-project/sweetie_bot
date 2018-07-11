@@ -2,7 +2,7 @@
 
 <behavior name="Play">
 
-	<executable package_path="flexbe_behaviors.play_sm" class="PlaySM" />
+	<executable package_path="sweetie_bot_flexbe_behaviors.play_sm" class="PlaySM" />
 	<tagstring>SweetieBot</tagstring>
 	<author>disRecord</author>
 	<date>Thu Mar 30 2017</date>

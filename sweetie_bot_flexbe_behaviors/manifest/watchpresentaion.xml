@@ -2,7 +2,7 @@
 
 <behavior name="WatchPresentaion">
 
-	<executable package_path="flexbe_behaviors.watchpresentaion_sm" class="WatchPresentaionSM" />
+	<executable package_path="sweetie_bot_flexbe_behaviors.watchpresentaion_sm" class="WatchPresentaionSM" />
 	<tagstring>derpfest2017, sweetiebot, presentation</tagstring>
 	<author>disRecord</author>
 	<date>Sat Oct 21 2017</date>

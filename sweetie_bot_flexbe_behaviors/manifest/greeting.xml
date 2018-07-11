@@ -2,7 +2,7 @@
 
 <behavior name="Greeting">
 
-	<executable package_path="flexbe_behaviors.greeting_sm" class="GreetingSM" />
+	<executable package_path="sweetie_bot_flexbe_behaviors.greeting_sm" class="GreetingSM" />
 	<tagstring>SweetieBot, greeting</tagstring>
 	<author>disRecord</author>
 	<date>Tue Mar 28 2017</date>

@@ -2,7 +2,7 @@
 
 <behavior name="CZequestriaPresentationMenace">
 
-	<executable package_path="flexbe_behaviors.czequestriapresentationmenace_sm" class="CZequestriaPresentationMenaceSM" />
+	<executable package_path="sweetie_bot_flexbe_behaviors.czequestriapresentationmenace_sm" class="CZequestriaPresentationMenaceSM" />
 	<tagstring>sweetiebot, presentation</tagstring>
 	<author>mutronics</author>
 	<date>Thu Aug 17 2017</date>

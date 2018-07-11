@@ -2,7 +2,7 @@
 
 <behavior name="DiscordGreeting">
 
-	<executable package_path="flexbe_behaviors.discordgreeting_sm" class="DiscordGreetingSM" />
+	<executable package_path="sweetie_bot_flexbe_behaviors.discordgreeting_sm" class="DiscordGreetingSM" />
 	<tagstring>SweetieBot, PoniRebrik</tagstring>
 	<author>disRecord</author>
 	<date>Sat Mar 25 2017</date>
