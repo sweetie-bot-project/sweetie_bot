@@ -9,3 +9,6 @@
 [submodule "behavior/sweetie_bot_sounds"]
 	path = behavior/sweetie_bot_sounds
 	url = git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
+[submodule "behavior/sweetie_bot_flexbe_behaviors"]
+	path = behavior/sweetie_bot_flexbe_behaviors
+	url = git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
