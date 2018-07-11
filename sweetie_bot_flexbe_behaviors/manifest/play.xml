@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="Play">
+
+	<executable package_path="flexbe_behaviors.play_sm" class="PlaySM" />
+	<tagstring>SweetieBot</tagstring>
+	<author>disRecord</author>
+	<date>Thu Mar 30 2017</date>
+	<description>
+		SweetieBot performs.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="boolean" name="be_evil" default="False" label="be_evil" hint="Sets the be_evil" />
+
+	</params>
+
+
+</behavior>

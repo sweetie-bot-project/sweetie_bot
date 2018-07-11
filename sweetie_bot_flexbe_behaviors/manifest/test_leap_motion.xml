@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="test_leap_motion">
+
+	<executable package_path="flexbe_behaviors.test_leap_motion_sm" class="test_leap_motionSM" />
+	<tagstring>leap_motion, head, test</tagstring>
+	<author>disRecord</author>
+	<date>Tue Jul 25 2017</date>
+	<description>
+		Robot head follows object detected by leap_motion
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+
+</behavior>

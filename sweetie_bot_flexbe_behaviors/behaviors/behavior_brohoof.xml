@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="Brohoof">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.brohoof_sm" class="BrohoofSM" />
+	<tagstring>SweetieBot, MoveIt, greeting</tagstring>
+	<author>disRecord</author>
+	<date>Wed Aug 02 2017</date>
+	<description>
+		Move leg1 up to specified target, perform greeting, wait and pt leg down. 
+
+Robot is assumed to be standing on four legs.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="wait_time" default="5" label="wait_time" hint="Set brohoof wait time.">
+			<min value="1" />
+			<max value="10" />
+		</param>
+
+		<param type="numeric" name="neck_angle" default="0.25" label="neck_angle" hint="Joint53 angle during brohoof.">
+			<min value="0" />
+			<max value="3.14" />
+		</param>
+
+		<param type="numeric" name="hoof_shift" default="0" label="hoof_shift" hint="DEPRECATED. Hoof shift toward sweetie from object center during greeting.">
+			<min value="0" />
+			<max value="1" />
+		</param>
+
+		<param type="numeric" name="brohoof_cone" default="0.78" label="brohoof_cone" hint="Do not perform brohoof if angle beetwen direction from shoulder1 to object and robot direction projected on horizontal plane is greater than this value.">
+			<min value="0" />
+			<max value="1.57" />
+		</param>
+
+		<param type="numeric" name="brohof_upper_limit" default="0.30" label="brohof_upper_limit" hint="Do not perform brohoof if object is higher then this value (meters).">
+			<min value="0" />
+			<max value="1" />
+		</param>
+
+		<param type="boolean" name="is_simplified" default="True" label="is_simplified" hint="Do not use move it to perform greeting." />
+
+	</params>
+
+
+</behavior>

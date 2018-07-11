@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="Greeting">
+
+	<executable package_path="flexbe_behaviors.greeting_sm" class="GreetingSM" />
+	<tagstring>SweetieBot, greeting</tagstring>
+	<author>disRecord</author>
+	<date>Tue Mar 28 2017</date>
+	<description>
+		SweetieBot greeting behavior.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="boolean" name="be_evil" default="False" label="be_evil" hint="Sets the be_evil" />
+
+	</params>
+
+
+</behavior>

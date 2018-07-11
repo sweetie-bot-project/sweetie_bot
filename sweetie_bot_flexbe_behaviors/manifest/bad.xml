@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="Bad">
+
+	<executable package_path="flexbe_behaviors.bad_sm" class="BadSM" />
+	<tagstring>bad, SweetieBot</tagstring>
+	<author>disRecord, Wave</author>
+	<date>Fri Mar 31 2017</date>
+	<description>
+		SweetieBot is unhappy.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="boolean" name="be_evil" default="False" label="be_evil" hint="Sets the be_evil" />
+
+	</params>
+
+
+</behavior>

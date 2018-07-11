@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="SweetieBotOnChequesruia">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.sweetiebotonchequesruia_sm" class="SweetieBotOnChequesruiaSM" />
+	<tagstring>cheeqstria, leapmotion</tagstring>
+	<author>disRecord</author>
+	<date>Wed Aug 02 2017</date>
+	<description>
+		SweetieBot beahavior for Cheqestria 2017. 
+1. Watch after moving hand.
+2. Give leg for brohoof or perform Greeting if hand is still.
+3. Perform random action and fall back to random head movements if no object.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+	<contains name="Brohoof" />
+	<contains name="Greeting" />
+	<contains name="Play" />
+	<contains name="SwitchEvilMode" />
+	<contains name="Bad" />
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="hoof_shift" default="0" label="hoof_shift" hint="Shift hoof from object center during greeting.">
+			<min value="0" />
+			<max value="1" />
+		</param>
+
+		<param type="numeric" name="play_timeout" default="12" label="play_timeout" hint="Timeout between play actions.">
+			<min value="0" />
+			<max value="120" />
+		</param>
+
+	</params>
+
+
+</behavior>

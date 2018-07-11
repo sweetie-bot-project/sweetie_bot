@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="Derpfest2017Presentation">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.derpfest2017presentation_sm" class="Derpfest2017PresentationSM" />
+	<tagstring>derpfest2017, sweetiebot, presentation</tagstring>
+	<author>disRecord</author>
+	<date>Sat Oct 28 2017</date>
+	<description>
+		Encapsulates all
+	</description>
+
+
+	<!-- Contained Behaviors -->
+	<contains name="Derpfest2017Presentation2" />
+	<contains name="Derpfest2017Presentation3" />
+	<contains name="Derpfest2017Presentation4" />
+	<contains name="Derpfest2017Presentation1" />
+
+	<!-- Available Parameters -->
+
+</behavior>
