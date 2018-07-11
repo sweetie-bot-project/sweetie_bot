@@ -100,7 +100,7 @@ class HeadIK:
         joints.header = Header()
         joints.header.stamp = rospy.Time.now()
         # set known fields
-        joints.name = [ 'joint55', 'joint56' ]
+        joints.name = [ 'eyes_pitch', 'eyes_yaw' ]
         joints.position = [ 0.0, 0.0 ]
         
         try:

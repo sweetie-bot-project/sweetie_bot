@@ -269,7 +269,7 @@ class DiscordGreetingSM(Behavior):
 
 			# x:40 y:35
 			OperatableStateMachine.add('StartPose',
-										PublisherState(topic=joint_state_control_topic, msg_type=JointState, value={'name': ['joint51','joint52','joint53','joint55','joint56'], 'position': [0.2, 0.0, 0, 0.0, 0.0]}),
+										PublisherState(topic=joint_state_control_topic, msg_type=JointState, value={'name': ['joint51','joint52','joint53','eyes_pitch','eyes_yaw'], 'position': [0.2, 0.0, 0, 0.0, 0.0]}),
 										transitions={'done': 'NormalEyes', 'failed': 'finished'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 

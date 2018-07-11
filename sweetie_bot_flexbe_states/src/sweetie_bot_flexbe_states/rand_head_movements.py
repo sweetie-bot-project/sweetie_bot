@@ -19,8 +19,8 @@ class SweetieBotRandHeadMovements(EventState):
     -- controller   string          FollowJointState controller name without `controller` prefix.
     -- duration     float           How long this state will be executed (seconds).
     -- interval     float[2]        Array of floats, maximal and minimal interval between movements.
-    -- max2356      float[4]        Max values for joint52, joint53, joint55, joint56.
-    -- min2356      float[4]        Min values for joint52, joint53, joint55, joint56.
+    -- max2356      float[4]        Max values for joint52, joint53, eyes_pitch, eyes_yaw.
+    -- min2356      float[4]        Min values for joint52, joint53, eyes_pitch, eyes_yaw.
 
     <= done 	                    Finished.
     <= failed 	                    Failed to activate FollowJointState controller.
@@ -95,7 +95,7 @@ class SweetieBotRandHeadMovements(EventState):
             # form message
             msg = JointState()
             msg.header = Header(stamp = Time.now())
-            msg.name = [ 'joint52', 'joint53', 'joint55', 'joint56' ]
+            msg.name = [ 'joint52', 'joint53', 'eyes_pitch', 'eyes_yaw' ]
             # random durection
             x = random.uniform(0, 1)
             y = random.uniform(0, 1)
