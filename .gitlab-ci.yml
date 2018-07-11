@@ -2,23 +2,34 @@ before_script:
   - git submodule sync --recursive
   - git submodule update --init --recursive
 
-desktop-xenial: &anchor
+desktop-xenial: &job_template
   image: slavanap/ros-build:lunar-xenial
   stage: build
   tags:
     - docker
+  variables:
+    PACKAGES: ""
   script:
-    - mkdir /tmp/build && ln -s "$PWD" /tmp/build/src && cd /tmp/build
-    - source "/opt/ros/$ROS_DISTRO/setup.bash"
-    - catkin_make_isolated --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
-    - source "/tmp/repo/buildpkg.bash"
-    - export BASE_VERSION="$DEB_VERSION"
-    - export DEB_VERSION="${DEB_VERSION%~*}-${CI_JOB_ID}~${DEB_VERSION#*~}"
-    - export DEB_FILE="sweetie-bot$PKG_SUFFIX"
-    - export DEB_NAME="ros-${ROS_DISTRO}-${DEB_FILE}"
-    - export DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO" DEB_HOMEPAGE="http://sweetiebot.net/"
-    - buildpkg "/opt/ros/sweetie_bot" "${DEB_FILE}.deb" "ros-${ROS_DISTRO}-sweetie-bot-base$PKG_SUFFIX (=${BASE_VERSION})" || echo "ret code $?"
-    - mv "${DEB_FILE}.deb" "$CI_PROJECT_DIR/${CI_JOB_NAME}.deb"
+    - | # prepare environment
+      mkdir /tmp/build && ln -s "$PWD" /tmp/build/src && cd /tmp/build
+      source "/opt/ros/$ROS_DISTRO/setup.bash"
+      [[ ! -z "$PACKAGES" ]] && export PACKAGES="--pkg $PACKAGES"
+
+    # build selected (or all) packages
+    - catkin_make_isolated --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout $PACKAGES
+
+    - | # prepare for deb package build
+      source "/tmp/repo/buildpkg.bash"
+      export BASE_VERSION="$DEB_VERSION"
+      export DEB_VERSION="${DEB_VERSION%~*}-${CI_JOB_ID}~${DEB_VERSION#*~}"
+      export DEB_FILE="sweetie-bot$PKG_SUFFIX"
+      export DEB_NAME="ros-${ROS_DISTRO}-${DEB_FILE}"
+      export DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO" DEB_HOMEPAGE="http://sweetiebot.net/"
+
+    - | # build deb package
+      buildpkg "/opt/ros/sweetie_bot" "${DEB_FILE}.deb" "ros-${ROS_DISTRO}-sweetie-bot-base$PKG_SUFFIX (=${BASE_VERSION})" || echo "ret code $?"
+      mv "${DEB_FILE}.deb" "$CI_PROJECT_DIR/${CI_JOB_NAME}.deb"
+
   artifacts:
     name: "${CI_JOB_NAME}.deb"
     expire_in: 3 weeks
@@ -26,11 +37,33 @@ desktop-xenial: &anchor
       - "${CI_JOB_NAME}.deb"
 
 desktop-stretch:
-  <<: *anchor
+  <<: *job_template
   image: slavanap/ros-build:lunar-stretch
 
 rpi3-stretch:
-  <<: *anchor
+  <<: *job_template
   image: slavanap/ros-build:lunar-stretch-rpi3
   tags:
     - docker-armhf
+  variables:
+    PACKAGES: >
+      sweetie_bot_deploy
+      sweetie_bot_eyes
+      sweetie_bot_herkulex_control
+      sweetie_bot_herkulex_msgs
+      sweetie_bot_herkulex_msgs_rtt
+      sweetie_bot_controller_cartesian
+      sweetie_bot_controller_joint_space
+      sweetie_bot_aggregator
+      sweetie_bot_kinematics
+      sweetie_bot_odometry
+      sweetie_bot_resource_client_usage_example
+      sweetie_bot_resource_control
+      sweetie_bot_robot_model
+      sweetie_bot_servo_inv
+      rtt_sweetie_bot_kinematics_msgs
+      rtt_sweetie_bot_resource_control_msgs
+      sweetie_bot_kinematics_msgs
+      sweetie_bot_resource_control_msgs
+      sweetie_bot_logger
+      sweetie_bot_orocos_misc
