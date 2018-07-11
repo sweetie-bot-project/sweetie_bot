@@ -6,18 +6,17 @@
 # Only code inside the [MANUAL] tags will be kept.        #
 ###########################################################
 
-import roslib; roslib.load_manifest('behavior_sweetiebotonchequesruia')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
-from behavior_brohoof.brohoof_sm import BrohoofSM
-from behavior_greeting.greeting_sm import GreetingSM
-from behavior_play.play_sm import PlaySM
+from sweetie_bot_flexbe_behaviors.brohoof_sm import BrohoofSM
+from sweetie_bot_flexbe_behaviors.greeting_sm import GreetingSM
+from sweetie_bot_flexbe_behaviors.play_sm import PlaySM
 from flexbe_states.decision_state import DecisionState
 from flexbe_states.calculation_state import CalculationState
-from behavior_switchevilmode.switchevilmode_sm import SwitchEvilModeSM
+from sweetie_bot_flexbe_behaviors.switchevilmode_sm import SwitchEvilModeSM
 from sweetie_bot_flexbe_states.leap_motion_monitor import LeapMotionMonitor
 from sweetie_bot_flexbe_states.sweetie_bot_follow_head_pose_smart import SweetieBotFollowHeadPoseSmart
-from behavior_bad.bad_sm import BadSM
+from sweetie_bot_flexbe_behaviors.bad_sm import BadSM
 from flexbe_states.wait_state import WaitState
 from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
 # Additional imports can be added inside the following tags

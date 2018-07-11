@@ -6,13 +6,12 @@
 # Only code inside the [MANUAL] tags will be kept.        #
 ###########################################################
 
-import roslib; roslib.load_manifest('behavior_derpfest2017presentation')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from behavior_derpfest2017presentation2.derpfest2017presentation2_sm import Derpfest2017Presentation2SM
-from behavior_derpfest2017presentation3.derpfest2017presentation3_sm import Derpfest2017Presentation3SM
-from behavior_derpfest2017presentation4.derpfest2017presentation4_sm import Derpfest2017Presentation4SM
-from behavior_derpfest2017presentation1.derpfest2017presentation1_sm import Derpfest2017Presentation1SM
+from sweetie_bot_flexbe_behaviors.derpfest2017presentation2_sm import Derpfest2017Presentation2SM
+from sweetie_bot_flexbe_behaviors.derpfest2017presentation3_sm import Derpfest2017Presentation3SM
+from sweetie_bot_flexbe_behaviors.derpfest2017presentation4_sm import Derpfest2017Presentation4SM
+from sweetie_bot_flexbe_behaviors.derpfest2017presentation1_sm import Derpfest2017Presentation1SM
 from flexbe_states.decision_state import DecisionState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]

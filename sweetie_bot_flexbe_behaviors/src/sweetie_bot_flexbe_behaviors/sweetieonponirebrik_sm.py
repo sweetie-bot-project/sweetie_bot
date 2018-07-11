@@ -6,13 +6,12 @@
 # Only code inside the [MANUAL] tags will be kept.        #
 ###########################################################
 
-import roslib; roslib.load_manifest('behavior_sweetieonponirebrik')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.wait_state import WaitState
 from sweetie_bot_flexbe_states.publisher_state import PublisherState
-from behavior_dotricks.dotricks_sm import DoTricksSM
+from sweetie_bot_flexbe_behaviors.dotricks_sm import DoTricksSM
 from sweetie_bot_flexbe_states.rand_head_movements_state import SweetieRandHeadMovementsState
 from flexbe_states.subscriber_state import SubscriberState
 # Additional imports can be added inside the following tags

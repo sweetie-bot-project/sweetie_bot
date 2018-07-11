@@ -12,7 +12,7 @@ from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.wait_state import WaitState
-from behavior_watchpresentaion.watchpresentaion_sm import WatchPresentaionSM
+from sweetie_bot_flexbe_behaviors.watchpresentaion_sm import WatchPresentaionSM
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 

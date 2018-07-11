@@ -6,7 +6,6 @@
 # Only code inside the [MANUAL] tags will be kept.        #
 ###########################################################
 
-import roslib; roslib.load_manifest('behavior_test_leap_motion')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.sweetie_bot_follow_head_leap_motion import SweetieBotFollowHeadLeapMotion
 # Additional imports can be added inside the following tags

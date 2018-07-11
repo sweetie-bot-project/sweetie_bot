@@ -10,7 +10,7 @@ import roslib; roslib.load_manifest('behavior_derpfest2017presentation2')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_manipulation_states.moveit_to_joints_state import MoveitToJointsState
 from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
-from behavior_watchpresentaion.watchpresentaion_sm import WatchPresentaionSM
+from sweetie_bot_flexbe_behaviors.watchpresentaion_sm import WatchPresentaionSM
 from flexbe_states.wait_state import WaitState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
