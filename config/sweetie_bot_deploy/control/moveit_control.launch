@@ -7,17 +7,18 @@
 	<arg name="robot_name" default="sweetie_bot_proto2" doc="Robot-specific configuration packages prefix (e.g. set 'sweetie_bot_proto2' for 'sweetie_bot_proto2_description', 'sweetie_bot_proto2_moveit_config', 'sweetie_bot_proto2_deploy' packages)."/>
 	<arg name="robot_profile" default="default" doc="Use configuration profile (load_param.launch, *.cpf, .log4cpp files) located in '`rospack find {robot_name}_deploy`/{robot_profile}' directory."/>
 	<arg name="robot_profile_path" default="$(eval find(arg('robot_name')+'_deploy') + '/' + arg('robot_profile'))" doc="Fully qualified path to configuration profile. By default 'robot_name' and 'robot_profile' parameters are sed to determine it."/>
+	<arg name="robot_ns" default="/" doc="Namespace where to run robot components "/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" />
 	<machine name="sweetiebot" address="sweetie" user="pi" default="never"/>
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
-		<include ns="sweetie_bot" file="$(arg robot_profile_path)/load_param.launch"/>
+		<include ns="$(arg robot_ns)" file="$(arg robot_profile_path)/load_param.launch"/>
 	</group>
 
 	<!-- start robot -->
-	<group ns="sweetie_bot">
+	<group ns="$(arg robot_ns)">
 		<include file="$(find sweetie_bot_deploy)/motion_core/sweetie_bot_core.launch">
 			<arg name="run_real" value="$(arg run_real)" /> 
 			<arg name="host" value="$(arg host)" /> 
@@ -31,15 +32,18 @@
 		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch" />
 		<!-- moveit -->
 		<include if="$(arg host)" file="$(find sweetie_bot_deploy)/control/moveit.launch">
+			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 			<arg name="robot_name" value="$(arg robot_name)" /> 
 		</include>
 	</group>
 
 	<!-- launch operator GUI -->
-	<group ns="hmi" if="$(arg host)">
+	<group ns="$(arg robot_ns)/hmi" if="$(arg host)">
 		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
+			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 			<arg name="rviz_config" value="$(arg robot_profile_path)/moveit_control.rviz" /> 
 			<arg name="run_rviz" value="true" /> 
+
 		</include>
 	</group>
 </launch>

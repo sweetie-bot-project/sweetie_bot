@@ -1,18 +1,19 @@
 <!-- DEPLOYMENT: joint_trajectory_editor -->
 <launch>
-	<arg name="use_real_pose" default="false" doc="Use topic /sweetie_bot/motion/aggregator_real/out_joints_sorted (real robot pose) instaed of /sweetie_bot/motion/aggregator_ref/out_joints_sorted (reference pose) as input joint_state. "/>
+	<arg name="robot_ns" default="/" doc="Namspace where robot nodes and topics are located."/>
+	<arg name="use_real_pose" default="false" doc="Use topic $(arg robot_ns)/joint_states_real (real robot pose) instead of $(arg robot_ns)joint_states (reference pose) as input joint_state. "/>
 
 	<!-- robot is inside /sweetie_bot namespace -->
 	<group ns="hmi">
-		<remap unless="$(arg use_real_pose)" from="joint_state" to="/sweetie_bot/joint_states" />
-		<remap if="$(arg use_real_pose)" from="joint_state" to="/sweetie_bot/joint_states_real" />
-		<remap from="joint_state_set" to="/sweetie_bot/motion/controller/joint_state/out_joints_src_reset" /> -->
-		<remap from="joint_trajectory" to="/sweetie_bot/motion/controller/joint_trajectory" />
+		<remap unless="$(arg use_real_pose)" from="joint_state" to="$(arg robot_ns)/joint_states" />
+		<remap if="$(arg use_real_pose)" from="joint_state" to="$(arg robot_ns)/joint_states_real" />
+		<remap from="joint_state_set" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset" /> -->
+		<remap from="joint_trajectory" to="$(arg robot_ns)/motion/controller/joint_trajectory" />
         <!-- just in case if virtual robot is actually real -->
-		<remap from="set_torque_off" to="/sweetie_bot/motion/controller/torque_off/set_torque_off" />
+		<remap from="set_torque_off" to="$(arg robot_ns)/motion/controller/torque_off/set_torque_off" />
 		<!-- run joint_trajectory_editor -->
 		<node name="joint_trajectory_editor" pkg="sweetie_bot_joint_trajectory_editor" type="trajectory_editor" output="screen" args="" required="true">
-			<param name="trajectory_storage" value="/sweetie_bot/joint_trajectory" />
+			<param name="trajectory_storage" value="$(arg robot_ns)/joint_trajectory" />
 		</node>
 	</group>
 </launch>
