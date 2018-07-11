@@ -23,6 +23,7 @@ odometry_ref:
     priority: 20
     legs: [ leg1, leg3, leg4, leg2 ]
     force_contact_z_to_zero: true
+    zero_twist_if_no_contacts: true
 dynamics_inv:
     priority: 20
     legs: [ leg1, leg3, leg4, leg2 ]
