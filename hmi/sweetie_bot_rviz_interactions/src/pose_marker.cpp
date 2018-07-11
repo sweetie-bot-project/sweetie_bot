@@ -351,9 +351,6 @@ int main(int argc, char** argv)
 	ros::param::get("~marker_home_frame", marker_home_frame);
 	ros::param::get("~normalized_z_level", normalized_z_level);
 
-	//actionlib client
-	action_client.reset( new ActionClient("set_operational_action", false) );
-
 	//pose publishing
 	pose_pub = n.advertise<geometry_msgs::PoseStamped>("pose", 1);
 
@@ -381,17 +378,19 @@ int main(int argc, char** argv)
 	make6DofMarker();
 	server->applyChanges();
 
+	//actionlib client
+	action_client.reset( new ActionClient("set_operational_action", false) );
+
 	ROS_INFO("pose_marker is started!");
 
 	// main loop()
 	ros::spin();
 
 	// shutdown
-
-	action_client.reset();
 	server.reset();
 	tf_listener.reset();
-	ROS_INFO("pose_marker is shutdown!");
+	pose_pub.shutdown();
+	action_client.reset();
 
-	ros::Duration(0.5).sleep();
+	ROS_INFO("pose_marker is shutdown!");
 }
