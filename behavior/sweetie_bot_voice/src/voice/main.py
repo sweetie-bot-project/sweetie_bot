@@ -9,6 +9,7 @@ from sweetie_bot_text_msgs.msg import TextCommand
 
 soundhandle = SoundClient()
 sounds = {}
+playback_command = None
 
 def commandCallback(cmd):
     global soundhandle, sounds;
@@ -18,10 +19,20 @@ def commandCallback(cmd):
         if cmd.command in sounds:
             filename = sounds[cmd.command]
             rospy.loginfo('Playing sound: {0} ({1}).'.format(cmd.command, filename))
-            snd = soundhandle.waveSound(filename)
-            snd.play()
+            # playback selection
+            if not playback_command:
+                # use sound client
+                snd = soundhandle.waveSound(filename)
+                snd.play()
+            else:
+                # use system command
+                os.system(playback_command + " " + filename)
         else:
             rospy.logerr('Unknown play_wav sound: ' + cmd.command)
+    elif cmd.type == 'voice/say':
+        # use voice synthesis
+        snd = soundhandle.voiceSound(cmd.command)
+        snd.play()
 
 
 def file_dict(directory, ext):
@@ -46,9 +57,12 @@ def file_dict(directory, ext):
 
 
 def main():
-    global soundhandle, sounds;
+    global soundhandle, sounds, playback_command
     rospy.init_node('voice', anonymous = True)
     rospy.Subscriber('control', TextCommand, commandCallback)
+
+    # Playback configuration
+    playback_command = rospy.get_param('~playback_command', None) 
 
     # Get language settings
     lang_prefixes = string.split(rospy.get_param('lang', 'ru,en'), ',')
@@ -64,6 +78,8 @@ def main():
     sounds = {}
     for p in reversed(paths):
         sounds.update(file_dict(p, 'wav'))
+        sounds.update(file_dict(p, 'ogg'))
+
     rospy.loginfo('Registered sounds:\n' + repr(sounds))
 
     rospy.sleep(1)

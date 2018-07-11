@@ -1,0 +1,3 @@
+lang: "ru,en"
+voice_node:
+    playback_command: "mpv"

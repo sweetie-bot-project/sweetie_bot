@@ -15,4 +15,5 @@
 	<param name="conf_file/kinematic_chains_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/kinematic_chains.cpf" ></param>
 	<!-- other configuraton -->
 	<rosparam command="load" ns="/hmi" file="$(find sweetie_bot_proto2_deploy)/default/hmi.yaml" ></rosparam> 
+	<rosparam command="load" ns="/sweetie_bot/voice" file="$(find sweetie_bot_proto2_deploy)/default/voice.yaml" ></rosparam> 
 </launch>
