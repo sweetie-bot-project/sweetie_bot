@@ -1,9 +1,9 @@
-<!-- MODULE: run flexbe operator interface -->
+<!-- MODULE: launch flexbe behavior node (in robot_ns) and opertor interface operator interface (in flexbe_ns). -->
 <launch>
-	<arg name="behavior_ns" default="/flexbe" doc="Location of behavior_onboard behavior node."/>
-	<arg name="robot_ns" default="/" doc="Namspace where robot nodes and topics are located."/>
+	<arg name="flexbe_ns" default="/flexbe" doc="Location where flexbe user interface should be started."/>
+	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
 
-	<!-- run behavior node -->
+	<!-- run behavior node  in robot namespace -->
 	<node ns="$(arg robot_ns)" name="behavior" pkg="flexbe_onboard" type="start_behavior" respawn="true">
 		<!-- common remaps to current namespace -->
 		<remap from="/tf" to="tf"/>
@@ -12,38 +12,41 @@
 		<remap from="/robot_description" to="robot_description"/>
 		<remap from="/robot_description_semantic" to="robot_description_semantic"/>
 		<!-- mapping for behavior node in another namespace -->
-		<remap from="flexbe/command_feedback"	to="$(arg behavior_ns)/flexbe/command_feedback" />
-		<remap from="flexbe/heartbeat"			to="$(arg behavior_ns)/flexbe/heartbeat" />
-		<remap from="flexbe/log"				to="$(arg behavior_ns)/flexbe/log" />
-		<remap from="flexbe/outcome_request"	to="$(arg behavior_ns)/flexbe/outcome_request" />
-		<remap from="flexbe/start_behavior"		to="$(arg behavior_ns)/flexbe/start_behavior" />
-		<remap from="flexbe/status"				to="$(arg behavior_ns)/flexbe/status" />
-		<remap from="flexbe/request_mirror_structure" to="$(arg behavior_ns)/flexbe/request_mirror_structure" />
-		<remap from="flexbe/mirror/outcome"		to="$(arg behavior_ns)/flexbe/mirror/outcome" />
-		<remap from="flexbe/mirror/sync"		to="$(arg behavior_ns)/flexbe/mirror/sync" />
-		<remap from="flexbe/mirror/structure"	to="$(arg behavior_ns)/flexbe/mirror/structure" />
-		<remap from="flexbe/mirror/preempt"		to="$(arg behavior_ns)/flexbe/mirror/preempt" />
-		<remap from="flexbe/debug/current_state" to="$(arg behavior_ns)/flexbe/debug/current_state" />
-		<remap from="flexbe/command/preempt"	to="$(arg behavior_ns)/flexbe/command/preempt" />
-		<remap from="flexbe/command/transition" to="$(arg behavior_ns)/flexbe/command/transition" />
-		<remap from="flexbe/command/repeat"		to="$(arg behavior_ns)/flexbe/command/repeat" />
-		<remap from="flexbe/command/pause"		to="$(arg behavior_ns)/flexbe/command/pause" />
-		<remap from="flexbe/command/lock"		to="$(arg behavior_ns)/flexbe/command/lock" />
-		<remap from="flexbe/command/unlock"		to="$(arg behavior_ns)/flexbe/command/unlock" />
-		<remap from="flexbe/command/attach"		to="$(arg behavior_ns)/flexbe/command/attach" />
-		<remap from="flexbe/command/sync"		to="$(arg behavior_ns)/flexbe/command/sync" />
-		<remap from="flexbe/command/autonomy"	to="$(arg behavior_ns)/flexbe/command/autonomy" />
-		<remap from="flexbe/behavior_input"		to="$(arg behavior_ns)/flexbe/behavior_input" />
-		<remap from="flexbe/behavior_update"	to="$(arg behavior_ns)/flexbe/behavior_update" />
-		<remap from="flexbe/uicommand"			to="$(arg behavior_ns)/flexbe/uicommand" />
-		<remap from="flexbe/request_behavior"	to="$(arg behavior_ns)/flexbe/request_behavior" />
-		<remap from="flexbe/ui_version"			to="$(arg behavior_ns)/flexbe/ui_version" />
+		<remap from="flexbe/command_feedback"	to="$(arg flexbe_ns)/flexbe/command_feedback" />
+		<remap from="flexbe/heartbeat"			to="$(arg flexbe_ns)/flexbe/heartbeat" />
+		<remap from="flexbe/log"				to="$(arg flexbe_ns)/flexbe/log" />
+		<remap from="flexbe/outcome_request"	to="$(arg flexbe_ns)/flexbe/outcome_request" />
+		<remap from="flexbe/start_behavior"		to="$(arg flexbe_ns)/flexbe/start_behavior" />
+		<remap from="flexbe/status"				to="$(arg flexbe_ns)/flexbe/status" />
+		<remap from="flexbe/request_mirror_structure" to="$(arg flexbe_ns)/flexbe/request_mirror_structure" />
+		<remap from="flexbe/mirror/outcome"		to="$(arg flexbe_ns)/flexbe/mirror/outcome" />
+		<remap from="flexbe/mirror/sync"		to="$(arg flexbe_ns)/flexbe/mirror/sync" />
+		<remap from="flexbe/mirror/structure"	to="$(arg flexbe_ns)/flexbe/mirror/structure" />
+		<remap from="flexbe/mirror/preempt"		to="$(arg flexbe_ns)/flexbe/mirror/preempt" />
+		<remap from="flexbe/debug/current_state" to="$(arg flexbe_ns)/flexbe/debug/current_state" />
+		<remap from="flexbe/command/preempt"	to="$(arg flexbe_ns)/flexbe/command/preempt" />
+		<remap from="flexbe/command/transition" to="$(arg flexbe_ns)/flexbe/command/transition" />
+		<remap from="flexbe/command/repeat"		to="$(arg flexbe_ns)/flexbe/command/repeat" />
+		<remap from="flexbe/command/pause"		to="$(arg flexbe_ns)/flexbe/command/pause" />
+		<remap from="flexbe/command/lock"		to="$(arg flexbe_ns)/flexbe/command/lock" />
+		<remap from="flexbe/command/unlock"		to="$(arg flexbe_ns)/flexbe/command/unlock" />
+		<remap from="flexbe/command/attach"		to="$(arg flexbe_ns)/flexbe/command/attach" />
+		<remap from="flexbe/command/sync"		to="$(arg flexbe_ns)/flexbe/command/sync" />
+		<remap from="flexbe/command/autonomy"	to="$(arg flexbe_ns)/flexbe/command/autonomy" />
+		<remap from="flexbe/behavior_input"		to="$(arg flexbe_ns)/flexbe/behavior_input" />
+		<remap from="flexbe/behavior_update"	to="$(arg flexbe_ns)/flexbe/behavior_update" />
+		<remap from="flexbe/uicommand"			to="$(arg flexbe_ns)/flexbe/uicommand" />
+		<remap from="flexbe/request_behavior"	to="$(arg flexbe_ns)/flexbe/request_behavior" />
+		<remap from="flexbe/ui_version"			to="$(arg flexbe_ns)/flexbe/ui_version" />
 	</node>
 
-
-	<!-- run operator interface nodes -->
-	<include ns="$(arg behavior_ns)" file="$(find flexbe_app)/launch/flexbe_ocs.launch" >
-		<!--<arg name="ns" value="$(arg ns)" />
-		<arg name="behaviors_package" value="$(arg behaviors_package)" />-->
-	</include>
+	<group ns="$(arg flexbe_ns)">
+		<!-- operator interface nodes: flexbe_app -->
+		<include file="$(find flexbe_app)/launch/flexbe_ocs.launch" />
+		<!-- old operator interface nodes: launch flexbe_widget in browser -->
+		<!-- <include file="$(find flexbe_widget)/launch/behavior_ocs.launch" >
+			<arg name="ns" value="$(arg robot_ns)" />
+			<arg name="behaviors_package" value="flexbe_behaviors" />
+		</include> -->
+	</group>
 </launch>

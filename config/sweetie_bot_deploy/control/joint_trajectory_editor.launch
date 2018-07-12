@@ -1,10 +1,10 @@
 <!-- DEPLOYMENT: joint_trajectory_editor -->
 <launch>
-	<arg name="use_real_pose" default="false" doc="Use topic $(arg robot_ns)/joint_states_real (real robot pose) instead of $(arg robot_ns)joint_states (reference pose) as input joint_state. "/>
 	<arg name="robot_ns" default="/" doc="Namspace where robot nodes and topics are located."/>
+	<arg name="use_real_pose" default="false" doc="Use topic $(arg robot_ns)/joint_states_real (real robot pose) instead of $(arg robot_ns)joint_states (reference pose) as input joint_state. "/>
 
 	<!-- robot is inside /sweetie_bot namespace -->
-	<group ns="@(arg robot_ns)/hmi">
+	<group ns="$(arg robot_ns)/hmi">
 		<remap unless="$(arg use_real_pose)" from="joint_state" to="$(arg robot_ns)/joint_states" />
 		<remap if="$(arg use_real_pose)" from="joint_state" to="$(arg robot_ns)/joint_states_real" />
 		<remap from="joint_state_set" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset" /> -->

@@ -38,7 +38,7 @@
 	</group>
 
 	<!-- launch operator GUI -->
-	<group ns="$(arg robot_ns)/hmi" if="$(arg host)">
+	<group if="$(arg host)">
 		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 			<arg name="rviz_config" value="$(arg robot_profile_path)/moveit_control.rviz" /> 

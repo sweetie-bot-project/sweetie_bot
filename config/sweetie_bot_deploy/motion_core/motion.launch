@@ -6,7 +6,7 @@
 	<arg name="interactive" default="false" doc="Run in XTerm in interactive mode." /> 
 	<arg name="param_namespace" default="" doc="Namespace for parameters of OROCOS node." />
 	
-	<group >
+	<group>
 		<!-- OROCOS motion core -->
 		<param name="param_ns" value="$(arg param_namespace)" />
 		<node unless="$(arg interactive)" machine="$(arg machine)" name="motion" pkg="sweetie_bot_deploy" type="sweetie-bot-core" args="$(arg modules) $(arg overlays) __param_ns:=$(arg param_namespace)" output="screen"/>

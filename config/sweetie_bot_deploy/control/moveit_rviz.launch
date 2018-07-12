@@ -1,8 +1,9 @@
 <!-- MODULE: start rviz with MoveIt! plugin. (Walkaround for Debian/Jessie rviz crash). -->
 <launch>
+	<arg name="robot_ns" default="/" doc="Namspace where robot nodes and topics are located."/>
 	<!-- By default, we are not in debug mode -->
-	<node ns="hmi" name="rviz" pkg="rviz" type="rviz" args="-d $(find sweetie_bot_deploy)/control/moveit_control.rviz">
-		<remap from="robot_description" to="/sweetie_bot/robot_description"/>
+	<node ns="/" name="rviz" pkg="rviz" type="rviz" args="-d $(find sweetie_bot_deploy)/control/moveit_control.rviz">
+		<remap from="robot_description" to="$(arg robot_ns)/robot_description"/>
 		<env name="LC_NUMERIC" value="C" />
 	</node>
 </launch>
