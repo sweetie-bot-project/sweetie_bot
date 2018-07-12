@@ -11,7 +11,6 @@
 		<remap from="/joint_states" to="joint_states"/>
 		<remap from="/robot_description" to="robot_description"/>
 		<remap from="/robot_description_semantic" to="robot_description_semantic"/>
-		<remap from="move_group" to="moveit/move_group"/>
 		<!-- mapping for behavior node in another namespace -->
 		<remap from="flexbe/command_feedback"	to="$(arg behavior_ns)/flexbe/command_feedback" />
 		<remap from="flexbe/heartbeat"			to="$(arg behavior_ns)/flexbe/heartbeat" />

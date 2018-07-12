@@ -5,7 +5,6 @@
 	<arg name="robot_ns" default="/" doc="Namspace where robot nodes and topics are located."/>
 
 	<remap from="robot_description" to="$(arg robot_ns)/robot_description"/>
-	<remap from="robot_description_semantic" to="$(arg robot_ns)/robot_description_semantic"/>
 
 	<!-- manual joints control -->
 	<node name="joint_state_ref" pkg="joint_state_publisher" type="joint_state_publisher">
@@ -17,11 +16,17 @@
 		<remap from="joint_states_reset" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset"/>
 	</node>
 	<!-- vizualization -->
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)">
-		<remap from="/clicked_point" to="clicked_point"/>
-		<remap from="/move_base_simple/goal" to="move_base_simple/goal"/>
-		<remap from="/initialpose" to="initialpose"/>
-		<env name="LC_NUMERIC" value="C" />
+	<!-- NOTE: rviz is lauched in root namespace due to problems with moveit plugin.
+	     If rviz is lauched in /hmi and move_group  is deployed in / rviz plugin uable to find necessary topics.
+		 If move_group is startd inside /moveit/ namespace rviz plugin has problems with finding necessary parameters.  -->
+	<node if="$(arg run_rviz)" ns="/" name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)">
+		<remap from="/clicked_point" to="/hmi/clicked_point"/>
+		<remap from="/move_base_simple/goal" to="/hmi/move_base_simple/goal"/>
+		<remap from="/initialpose" to="/hmi/initialpose"/>
+		<remap from="/feedback" to="/hmi/feedback"/>
+		<remap from="/update" to="/hmi/update"/>
+		<remap from="/update_full" to="/hmi/update_full"/>
+		<env name="LC_NUMERIC" value="C" /> <!-- this fixes crash induced by .DAE mesh files -->
 	</node>
 	<!-- robot balance visualization -->
 	<node name="dynamics_visualizer" pkg="sweetie_bot_dynamics" type="visualizer" >

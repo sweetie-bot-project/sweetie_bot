@@ -43,7 +43,6 @@
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 			<arg name="rviz_config" value="$(arg robot_profile_path)/moveit_control.rviz" /> 
 			<arg name="run_rviz" value="true" /> 
-
 		</include>
 	</group>
 </launch>

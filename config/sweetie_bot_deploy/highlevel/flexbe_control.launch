@@ -3,12 +3,13 @@
 	<arg name="run_real" default="false" doc="Run on real robot."/>
 	<arg name="robot" default="true" doc="Launch components which meant to be run on robot side."/>
 	<arg name="host" default="true" doc="Launch components  which meant to be run on host side."/>
+
 	<arg name="robot_name" default="sweetie_bot_proto2" doc="Robot-specific configuration packages prefix (e.g. set 'sweetie_bot_proto2' for 'sweetie_bot_proto2_description', 'sweetie_bot_proto2_moveit_config', 'sweetie_bot_proto2_deploy' packages)."/>
 	<arg name="robot_profile" default="default" doc="Use configuration profile (load_param.launch, *.cpf, .log4cpp files) located in '`rospack find {robot_name}_deploy`/{robot_profile}' directory."/>
 	<arg name="robot_profile_path" default="$(eval find(arg('robot_name')+'_deploy') + '/' + arg('robot_profile'))" doc="Fully qualified path to configuration profile. By default 'robot_name' and 'robot_profile' parameters are sed to determine it."/>
 	<arg name="robot_ns" default="/" doc="Namespace where to run robot components "/>
 
-	<arg name="run_moveit" default="false" doc="Run move_group associated with robot."/>
+	<arg name="run_moveit" default="true" doc="Run move_group associated with robot."/>
 	<arg name="run_flexbe" default="false" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
@@ -38,7 +39,7 @@
 	<!-- robot nodes on host side -->
 	<group ns="$(arg robot_ns)" if="$(arg host)">
 		<!-- moveit -->
-		<include if="$(arg host)" file="$(find sweetie_bot_deploy)/control/moveit.launch">
+		<include if="$(arg run_moveit)" file="$(find sweetie_bot_deploy)/control/moveit.launch">
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 			<arg name="robot_name" value="$(arg robot_name)" /> 
 		</include>
@@ -52,8 +53,6 @@
 			<!-- sound_play server -->
 			<include file="$(find sound_play)/soundplay_node.launch" />
 		</group>
-		<!-- moveit  -->
-		<include if="$(arg run_moveit)" file="$(find sweetie_bot_deploy)/control/moveit.launch" />
 	</group>
 
 	<!-- HMI -->
@@ -61,7 +60,7 @@
 	<!-- FLEXBE: control node and gui -->
 	<group ns="$(arg robot_ns)/flexbe" if="$(arg run_flexbe)">
 		<include file="$(find sweetie_bot_deploy)/highlevel/flexbe.launch" >
-			<arg name="robot_ns" value="/" />
+			<arg name="robot_ns" value="$(arg robot_ns)" />
 			<arg name="behavior_ns" value="/flexbe" />
 			<!-- arg name="behaviors_package" default="flexbe_behaviors" />
 			<arg name="run_behavior" default="true" / -->
@@ -69,7 +68,7 @@
 	</group>
 
 	<!-- launch operator GUI -->
-	<group ns="hmi" if="$(arg host)">
+	<group ns="$(arg robot_ns)/hmi" if="$(arg host)">
 		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 			<arg name="rviz_config" value="$(arg robot_profile_path)/joint_space_control.rviz" /> 

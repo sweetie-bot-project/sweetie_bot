@@ -1,4 +1,4 @@
-<!-- DEPLOYMENT: start rviz with MoveIt! plugin. (Walkaround for Debian/Jessie rviz crash). -->
+<!-- MODULE: start rviz with MoveIt! plugin. (Walkaround for Debian/Jessie rviz crash). -->
 <launch>
 	<!-- By default, we are not in debug mode -->
 	<node ns="hmi" name="rviz" pkg="rviz" type="rviz" args="-d $(find sweetie_bot_deploy)/control/moveit_control.rviz">

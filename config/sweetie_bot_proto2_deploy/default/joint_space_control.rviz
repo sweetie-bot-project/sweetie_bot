@@ -4,17 +4,8 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
-        - /RobotModel1
-        - /RobotModel1/Status1
         - /RobotModel1/Links1
-        - /TF1
-        - /TF1/Status1
         - /TF1/Frames1
-        - /RobotReal1
-        - /EyeLeft1
-        - /EyeRight1
       Splitter Ratio: 0.4801381826400757
     Tree Height: 752
   - Class: rviz/Selection
@@ -355,60 +346,58 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        base_link:
-          bone11:
-            bone12:
-              bone13:
-                bone14:
-                  bone15:
-                    bone16:
-                      {}
-          bone21:
-            bone22:
-              bone23:
-                bone24:
-                  bone25:
-                    bone26:
-                      {}
-          bone31:
-            bone32:
-              bone33:
-                bone34:
-                  bone35:
-                    bone36:
-                      {}
-          bone41:
-            bone42:
-              bone43:
-                bone44:
-                  bone45:
-                    bone46:
-                      {}
-          bone51:
-            bone52:
-              bone53:
-                {}
-        bone54:
-          bone55:
-            bone56:
-              {}
-          eye_left:
-            {}
-          eye_right:
-            {}
-          eyes_link_pitch:
-            eyes_link_yaw:
-              {}
-          link_eyes_x:
-            link_eyes_y:
-              link_eyes_z:
-                {}
-          screen_left:
-            {}
-          screen_right:
-            {}
         odom_combined:
-          {}
+          base_link:
+            bone11:
+              bone12:
+                bone13:
+                  bone14:
+                    bone15:
+                      bone16:
+                        {}
+            bone21:
+              bone22:
+                bone23:
+                  bone24:
+                    bone25:
+                      bone26:
+                        {}
+            bone31:
+              bone32:
+                bone33:
+                  bone34:
+                    bone35:
+                      bone36:
+                        {}
+            bone41:
+              bone42:
+                bone43:
+                  bone44:
+                    bone45:
+                      bone46:
+                        {}
+            bone51:
+              bone52:
+                bone53:
+                  bone54:
+                    bone55:
+                      bone56:
+                        {}
+                    eye_left:
+                      {}
+                    eye_right:
+                      {}
+                    eyes_link_pitch:
+                      eyes_link_yaw:
+                        {}
+                    link_eyes_x:
+                      link_eyes_y:
+                        link_eyes_z:
+                          {}
+                    screen_left:
+                      {}
+                    screen_right:
+                      {}
       Update Interval: 0
       Value: true
     - Class: rviz/MarkerArray
@@ -417,6 +406,7 @@ Visualization Manager:
       Name: MarkerArray
       Namespaces:
         balance: true
+        contacts: true
         limbs_external_forces_and_twists: true
       Queue Size: 100
       Value: true
@@ -499,10 +489,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.2253994345664978
+      Pitch: 0.43539953231811523
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.713590145111084
+      Yaw: 4.755404472351074
     Saved: ~
 Window Geometry:
   Displays:

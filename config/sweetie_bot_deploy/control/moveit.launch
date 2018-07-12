@@ -2,17 +2,14 @@
 <launch>
 	<arg name="robot_name" default="sweetie_bot_proto2" doc="Robot-specific configuration packages prefix (e.g. set 'sweetie_bot_proto2' for 'sweetie_bot_proto2_description', 'sweetie_bot_proto2_moveit_config', 'sweetie_bot_proto2_deploy' packages)."/>
 	<arg name="robot_ns" default="/" doc="Namspace where robot nodes and topics are located."/>
-	<!--Load the URDF, SRDF and other .yaml configuration files on the param server -->
-	<include file="$(eval find(arg('robot_name')+'_moveit_config') + '/launch/planning_context.launch')">
-		<arg name="load_robot_description" value="false"/>
-	</include> 
 	
 	<!-- Run the main MoveIt executable  -->
-	<group ns="moveit">
+	<group>
 		<remap from="/tf" to="$(arg robot_ns)/tf"/>
 		<remap from="/tf_static" to="$(arg robot_ns)/tf_static"/>
+		<!--<remap from="robot_description" to="$(arg robot_ns)//robot_description"/>
 		<remap from="joint_states" to="$(arg robot_ns)/joint_states"/>
-		<remap from="motion/controller/joint_trajectory" to="$(arg robot_ns)/motion/controller/joint_trajectory"/>
+		<remap from="motion/controller/joint_trajectory" to="$(arg robot_ns)/motion/controller/joint_trajectory"/>-->
 		<include file="$(eval find(arg('robot_name')+'_moveit_config') + '/launch/move_group.launch')">
 			<arg name="info" value="true"/>
 			<arg name="jiggle_fraction" default="0.2" />
