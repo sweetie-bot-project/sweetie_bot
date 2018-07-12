@@ -10,7 +10,7 @@
 
 	<arg name="tf_prefix_real" default="real" doc="tf_prefix for robot real pose if it is published." />
 	<arg name="static_tf_shift" default="0 0 0" doc="Shift of pose published in global namespace. Format: x y z " />
-	<arg name="motion_param_ns" default="/sweetie_bot" doc="Namespace for parameters of OROCOS node." />
+	<arg name="robot_ns" default="/" doc="Namespace where robot is being launch." />
 
 	<group if="$(arg robot)">
 		<!-- REFERENCE POSE PUBLISHING: tf, joint_states -->
@@ -30,21 +30,24 @@
 			<arg name="modules" value="$(arg modules)" /> 
 			<arg name="overlays" value="$(arg overlays)" />
 			<arg name="interactive" value="$(arg interactive)"/> 
-			<arg name="param_namespace"  value="$(arg motion_param_ns)"/>
+			<arg name="param_namespace"  value="$(arg robot_ns)"/>
 		</include>
 	</group>
 
 	<group if="$(arg host)">
 		<!-- relay local tf topic to root /tf  -->
-		<node name="tf_relay" pkg="topic_tools" type="relay" args="tf /tf" />
-		<node name="tf_static_relay" pkg="topic_tools" type="relay" args="tf_static /tf_static" />
+		<group unless="$(eval robot_ns == '/')"> 
+			<node name="tf_relay" pkg="topic_tools" type="relay" args="tf /tf" />
+			<node name="tf_static_relay" pkg="topic_tools" type="relay" args="tf_static /tf_static" />
+		</group>
 		<!-- publish real pose to /tf with tf_prefix_real for visualization purpose  -->
 		<group if="$(arg run_real)">
 			<!-- robot_state_publisher: real robot pose -->
-			<node name="robot_state_publisher_real" pkg="robot_state_publisher" type="robot_state_publisher">
-				<remap from="joint_states" to="joint_states_real"/>
-				<param name="tf_prefix" value="$(arg tf_prefix_real)"/>
-			</node>
+			<include file="$(find sweetie_bot_deploy)/motion_core/robot_state.launch">
+				<arg name="name" value="robot_state_publisher_real" /> 
+				<arg name="tf_prefix" value="$(arg tf_prefix_real)" /> 
+				<arg name="joint_states_topic" value="joint_states_real" /> 
+			</include>
 			<!-- fix together reference and real base_link: real odometry is unavailable -->
 			<node if="$(arg run_real)" pkg="tf" type="static_transform_publisher" name="odometry_real" args="$(arg static_tf_shift) 0 0 0 base_link $(arg tf_prefix_real)/base_link 100" /> 
 		</group>

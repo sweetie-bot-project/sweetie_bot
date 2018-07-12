@@ -14,6 +14,57 @@ To start ROS nodes roslaunch files are used.
 * `store` and `store-joint-trajectories` (moved to robot-specific package) are used to load and save movements from/to Parameter Server to/from json files.
 * `sweetie-bot-core` rttlua envelop to launch SweetieBot OROCOS components.
 
+### Namespace structure
+
+Sweetie Bot is using following namespace structure. Namespaces are marked by caps, the topics and parameters have topic: and param: prefixes prefix.
+
+    /
+    |- param: robot_description --- URDF model
+    |- param: robot_description_semantic --- MoveIt configuration
+    |
+    |- CONF_FILE --- OROCOS configuration files parameters (.cpf, .log4cpp)
+    |- JOINT_TRAJECTORY --- parameters with joint trajectories.
+    |
+    |- MOTION --- OROCOS rt control node and configuration. Note that ROS see all OROCOS component as a one node with 'motion' name.
+    |    |             This node is lauched on the robot on-board computer.
+    |    |
+    |    |- ROBOT_MODEL --- OROCOS robot semantic model (kinematics chains, contacts). It is loaded from `kinematic_chains.cpf`.
+    |    |
+    |    |- CONTROLLER --- motion controllers
+    |    |    |- <controller_name> --- controller parameters and its topics.
+    |    |    ...
+    |    |- HERKULEX --- servo control groups
+    |    |    |- LEG12 
+    |    |    |    |- array --- provides configuration and debug interface for servos.
+    |    |    |    |- driver
+    |    |    |    \- sched 
+    |    |    ...
+    |    |- aggregator_ref --- provides robot reference pose in joint space 
+    |    |- kinematics_fwd --- provides robot limbs positons in cartesian space
+    |    |- odometry_ref --- base_link odometry
+    |    |- dynamics_inv --- robot balace and servo efforts calculation
+    |    ...
+    |
+    |- topic: joint_states, tf
+    |- topic: control --- high level TextCommands for eyes emotions change and voice control.
+    |- topic: move_group, trajectory_execution, pick, place --- MoveIt! topics.
+    |
+    |- robot_state_publisher --- /tf publication
+    |- move_group --- MoveIt! control node, coresponding topics and parameters are loaded in / namespace.
+    |- behavior --- FlexBe behavior engine
+    |- eye_left, eye_right --- hardware dependent eyes node. They are lauched on the robot on-board computer.
+    |
+    |- VOICE 
+    |   |- voice_node
+    |   \- sound_play
+    |
+    |- FLEXBE --- flexbe operator interface nodes.
+    |
+    \- HMI --- visualization and opertor interfce
+        |- rviz 
+        \- pose_markers
+
+
 ### Launch files
 
 High-level launch files takes following parameters:
@@ -23,6 +74,7 @@ High-level launch files takes following parameters:
 * `robot` (boolean) --- Launch components which meant to be run on robot side (default: false).
 * `robot_name` (string) --- Robot-specific configuration packages prefix (e.g. set `sweetie_bot_proto2` for `sweetie_bot_proto2_description`, `sweetie_bot_proto2_moveit_config`, `sweetie_bot_proto2_deploy` packages). (Default: `sweetie_bot_proto2`).
 * `robot_profile` (string) --- Use configuration profile (`load_param.launch`, `robot_module.launch`, `*.cpf`, `*.log4cpp` files) located in `package:<robot_name>_deploy/<robot_profile>`. (Default: `default`).
+* `robot_ns` (string) --- launch all nodes in given namespace.
 
 `robot_name` and `robot_profile` parameters allows to run different robots with different configuration.
 
@@ -46,7 +98,7 @@ Typical robot profile directory contains following files:
 * `logger.log4cpp` --- logger reporting level configuration.
 * `controller.yaml` --- controller parameters (OROCOS).
 * `kinematic_chains.cpf` --- kinematic chains description.
-* `sweetie_bot_servos.cpf` --- servos hardware ID mapping.
+* `herkulex_servos_*.cpf` --- servos group definitions and hardware configuration and ID mapping.
 * `kinematics_inv_joint_limits.cpf` --- joint limits for `kinematics_inv_trac_ik` component.
 * `herkulex_feedback.yaml` --- hardware interface configuration.
 * `motion.yaml` --- motion core parameters.
@@ -57,6 +109,16 @@ Some parameters of OROCOS components has special meaning:
 `priority` is linux RT priority.
 
 See `sweetie_bot_proto2_deploy` for example.
+
+### Host and robot on-board computer relations 
+
+* All parameters (including .cpf files, and trajectories) can be loaded into ROS Pearameter Server. So any changes performed on host affects on-board subsystem.
+    Note that the actual list of  configuration files loaded into pareamter server is defined in `load_param.launch`
+* `.launch` scripts support `machine` tag so if configuration is right host is able to start all necessary nodes on on-board computer via ssh.
+    But note that even remote deplyment procedure uses local `.lua` scritpts. If deployment is not remote then local launch file is used.
+    So launch files must be consistent beetwen the robot and the host.
+* `.lua` scripts are always local. So they must be consistent between host and robot.
+
 
 ### Usage example
 

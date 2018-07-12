@@ -1,15 +1,15 @@
 <!-- DEPLOYMENT: start joystick module and publish events on "joystick" -->
 <launch>
-  <!-- include file="$(find sweetie_bot_arduino)/launch/arduino.launch"/ -->
+	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
 
-  <node ns="hmi" pkg="joy" type="joy_node" name="ps3_joy" output="screen" >
-	  <remap from="joy" to="joystick" />
-	  <param name="dev" type="string" value="/dev/input/js0" />
-	  <param name="deadzone" value="0.0012" />
-	  <param name="autorepeat_rate" value="5" />
-	  <param name="coalesce_interval" value="0.0000" />
-  </node>
-  <!--<node pkg="diagnostic_aggregator" type="aggregator_node" name="diagnostic_aggregator" output="screen" >
-    <rosparam command="load" file="$(find ps3joy)/diagnostics.yaml" />
-  </node>-->
+	<node ns="$(arg robot_ns)/hmi" pkg="joy" type="joy_node" name="ps3_joy" output="screen" >
+		<remap from="joy" to="joystick" />
+		<param name="dev" type="string" value="/dev/input/js0" />
+		<param name="deadzone" value="0.0012" />
+		<param name="autorepeat_rate" value="5" />
+		<param name="coalesce_interval" value="0.0000" />
+	</node>
+	<!--<node pkg="diagnostic_aggregator" type="aggregator_node" name="diagnostic_aggregator" output="screen" >
+	<rosparam command="load" file="$(find ps3joy)/diagnostics.yaml" />
+	</node>-->
 </launch>

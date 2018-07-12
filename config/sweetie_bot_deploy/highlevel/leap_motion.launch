@@ -1,14 +1,13 @@
 <!-- DEPLOYMENT: start Leap Motion node and publish events on "/hmi/leap_motion/data", setup `leap_motion` frame publishers. -->
 <launch>
 	<arg name="run_real" default="false" doc="Run on real hardware."/>
-	<group ns="/hmi" >
+	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
+
+	<group ns="$(arg robot_ns)/hmi" >
 		<node if="$(arg run_real)" pkg="leap_motion" type="sender.py" name="leap_motion_sender">
-			<remap from="leapmotion/data" to="/hmi/leap_motion/data" />
+			<remap from="leapmotion/data" to="hmi/leap_motion/data" />
 		</node>
 		<!--static transform publishers-->
-		<node pkg="tf" type="static_transform_publisher" name="leap_motion_tf_root" args="0 -0.3 0 0 0 1.57 odom_combined leap_motion 100" /> 
-		<node pkg="tf" type="static_transform_publisher" name="leap_motion_tf" args="0 -0.3 0 0 0 1.57 odom_combined leap_motion 100" > 
-			<remap from="/tf" to="/sweetie_bot/tf" />
-		</node>
+		<node pkg="tf" type="static_transform_publisher" name="leap_motion_tf" args="0 -0.3 0 0 0 1.57 odom_combined leap_motion 100" /> 
 	</group>
 </launch>

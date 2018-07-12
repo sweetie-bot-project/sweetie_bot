@@ -2,55 +2,66 @@
 <launch>
 	<arg name="rviz_config" default="$(find sweetie_bot_deploy)/control/joint_space_control.rviz" doc="Rviz configuration file."/>
 	<arg name="run_rviz" default="true" doc="Set true to start rviz. (Use as walkaround for rviz crash on Debina/Jessie)."/>
+	<arg name="robot_ns" default="/" doc="Namspace where robot nodes and topics are located."/>
 
-	<!-- manual joints control -->
-	<node name="joint_state_ref" pkg="joint_state_publisher" type="joint_state_publisher">
-		<param name="use_gui" value="true"/>
-		<rosparam param="source_list">["/sweetie_bot/motion/controller/joint_state/out_joints_src_reset"]</rosparam>
-		<param name="rate" value="5"/>
-		<param name="num_rows" value="6"/>
-		<remap from="robot_description" to="/sweetie_bot/robot_description"/>
-		<remap from="joint_states" to="/sweetie_bot/motion/controller/joint_state/in_joints_ref"/>
-	</node>
-	<!-- vizualization -->
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)">
-		<remap from="robot_description" to="/sweetie_bot/robot_description"/>
-		<remap from="/clicked_point" to="clicked_point"/>
-		<remap from="/move_base_simple/goal" to="move_base_simple/goal"/>
-		<remap from="/initialpose" to="initialpose"/>
-		<env name="LC_NUMERIC" value="C" />
-	</node>
-	<!-- robot balance visualization -->
-	<node name="dynamics_visualizer" pkg="sweetie_bot_dynamics" type="visualizer" >
-		<remap from="robot_model" to="/sweetie_bot/robot_model"/>
-		<remap from="joint_state_accel" to="/sweetie_bot/motion/dynamics_inv/out_joints_accel_sorted"/>
-		<remap from="balance" to="/sweetie_bot/motion/dynamics_inv/out_balance"/>
-		<remap from="wrenches" to="/sweetie_bot/motion/dynamics_inv/out_wrenches_fixed"/> 
-		<!-- <remap from="wrenches" to="/sweetie_bot/motion/kinematics_fwd/out_limbs"/> -->
-		<remap from="supports" to="/sweetie_bot/motion/aggregator_ref/out_supports_sorted"/>
-	</node>
-	<!-- robot pose control -->
-	<node name="stance_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-		<remap from="pose" to="/sweetie_bot/motion/controller/stance/in_base_ref"/>
-		<remap from="set_operational_action" to="/sweetie_bot/motion/controller/stance"/>
-		<param name="resources_select_only_one" value="false"/>
-	</node>
-	<node name="limb_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-		<remap from="pose" to="/sweetie_bot/motion/controller/pose/in_pose_ref"/>
-		<remap from="set_operational_action" to="/sweetie_bot/motion/controller/pose"/>
-		<param name="resources_select_only_one" value="true"/>
-	</node>
-	<!-- eyes vizualization -->
-	<group>
-		<remap from="joint_states" to="/sweetie_bot/joint_states"/>
-		<remap from="control" to="/sweetie_bot/control"/>
-		<node name="eye_left_rviz"  pkg="sweetie_bot_eyes" type="eye">
-			<param name="is_left" value="true"/>
-			<param name="publish_pixmap" value="true"/>
+	<group ns="$(arg robot_ns)/hmi">
+		<!-- global remapping -->
+		<remap from="robot_description" to="$(arg robot_ns)/robot_description"/>
+
+		<!-- manual joints control -->
+		<node name="joint_state_ref" pkg="joint_state_publisher" type="joint_state_publisher">
+			<param name="use_gui" value="true"/>
+			<rosparam param="source_list">["joint_states_reset"]</rosparam>
+			<param name="rate" value="5"/>
+			<param name="num_rows" value="6"/>
+			<remap from="joint_states" to="$(arg robot_ns)/motion/controller/joint_state/in_joints_ref"/>
+			<remap from="joint_states_reset" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset"/>
 		</node>
-		<node name="eye_right_rviz" pkg="sweetie_bot_eyes" type="eye">
-			<param name="is_left" value="false"/>
-			<param name="publish_pixmap" value="true"/>
+		<!-- vizualization -->
+		<!-- NOTE: rviz is lauched in root namespace due to problems with moveit plugin.
+			 If rviz is lauched in /hmi and move_group  is deployed in / rviz plugin uable to find necessary topics.
+			 If move_group is startd inside /moveit/ namespace rviz plugin has problems with finding necessary parameters.  -->
+		<node if="$(arg run_rviz)" ns="/" name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)">
+			<remap from="/clicked_point" to="$(arg robot_ns)/hmi/clicked_point"/>
+			<remap from="/move_base_simple/goal" to="$(arg robot_ns)/hmi/move_base_simple/goal"/>
+			<remap from="/initialpose" to="$(arg robot_ns)/hmi/initialpose"/>
+			<remap from="/feedback" to="$(arg robot_ns)/hmi/feedback"/>
+			<remap from="/update" to="$(arg robot_ns)/hmi/update"/>
+			<remap from="/update_full" to="$(arg robot_ns)/hmi/update_full"/>
+			<env name="LC_NUMERIC" value="C" /> <!-- this fixes crash induced by .DAE mesh files -->
 		</node>
+		<!-- robot balance visualization -->
+		<node name="dynamics_visualizer" pkg="sweetie_bot_dynamics" type="visualizer" >
+			<remap from="robot_model" to="$(arg robot_ns)/robot_model"/>
+			<remap from="joint_state_accel" to="$(arg robot_ns)/motion/dynamics_inv/out_joints_accel_sorted"/>
+			<remap from="balance" to="$(arg robot_ns)/motion/dynamics_inv/out_balance"/>
+			<remap from="wrenches" to="$(arg robot_ns)/motion/dynamics_inv/out_wrenches_fixed"/> 
+			<!-- <remap from="wrenches" to="$(arg robot_ns)/motion/kinematics_fwd/out_limbs"/> -->
+			<remap from="supports" to="$(arg robot_ns)/motion/aggregator_ref/out_supports_sorted"/>
+		</node>
+		<!-- robot pose control -->
+		<node name="stance_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
+			<remap from="pose" to="$(arg robot_ns)/motion/controller/stance/in_base_ref"/>
+			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/stance"/>
+			<param name="resources_select_only_one" value="false"/>
+		</node>
+		<node name="limb_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
+			<remap from="pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/>
+			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/pose"/>
+			<param name="resources_select_only_one" value="true"/>
+		</node>
+		<!-- eyes vizualization -->
+		<group>
+			<remap from="joint_states" to="$(arg robot_ns)/joint_states"/>
+			<remap from="control" to="$(arg robot_ns)/control"/>
+			<node name="eye_left_rviz"  pkg="sweetie_bot_eyes" type="eye">
+				<param name="is_left" value="true"/>
+				<param name="publish_pixmap" value="true"/>
+			</node>
+			<node name="eye_right_rviz" pkg="sweetie_bot_eyes" type="eye">
+				<param name="is_left" value="false"/>
+				<param name="publish_pixmap" value="true"/>
+			</node>
+		</group>
 	</group>
 </launch>

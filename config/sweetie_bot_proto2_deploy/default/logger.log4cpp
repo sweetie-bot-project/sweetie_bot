@@ -5,8 +5,8 @@ log4j.rootCategory=WARN
 log4j.category.org.orocos.rtt=WARN
 log4j.additivity.org.orocos.rtt=false
 
-log4j.category.sweetie_bot=INFO
-log4j.category.sweetie_bot.motion.controller=INFO
-log4j.category.sweetie_bot.motion.dynamics_inv=INFO
-log4j.category.sweetie_bot.motion.odometry_ref=INFO
-log4j.category.sweetie_bot.herkulex=INFO
+log4j.category.motion=INFO
+log4j.category.motion.controller=INFO
+log4j.category.motion.dynamics_inv=INFO
+log4j.category.motion.odometry_ref=INFO
+log4j.category.motion.herkulex=INFO

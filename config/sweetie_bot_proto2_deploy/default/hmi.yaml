@@ -1,5 +1,5 @@
 dynamics_visualizer:
-    robot_model_namespace: "/sweetie_bot"
+    robot_model_namespace: "/motion"
     display_twist: true
 stance_pose_marker:
     normalized_z_level: 0.03

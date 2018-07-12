@@ -54,7 +54,7 @@ aggregator_ref:provides("marshalling"):loadServiceProperties(config.file("kinema
 aggregator_ref:loadService("rosparam")
 aggregator_ref:provides("rosparam"):getParam("", "robot_model")
 -- upload robot model parameteres to ROS
-aggregator_ref:provides("rosparam"):setParam("robot_model", "robot_model") 
+aggregator_ref:provides("rosparam"):setParam("~robot_model", "robot_model") 
 --get other properties
 config.get_peer_rosparams(aggregator_ref)
 --timer syncronization
