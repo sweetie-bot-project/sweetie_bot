@@ -1,10 +1,10 @@
 <launch>
 
   <node name="sweetie_bot_eye_left"  pkg="sweetie_bot_eyes" type="eye" output="screen" args="-l -platform linuxfb:fb=/dev/fb1 ">
-	<remap from="joint_states" to="/sweetie_bot/motion/aggregator_ref/out_joints_sorted" />
+	<remap from="joint_states" to="motion/aggregator_ref/out_joints_sorted" />
   </node>
   <node name="sweetie_bot_eye_rigth" pkg="sweetie_bot_eyes" type="eye" output="screen" args="-r -platform linuxfb:fb=/dev/fb2 ">
-	<remap from="joint_states" to="/sweetie_bot/motion/aggregator_ref/out_joints_sorted" />
+	<remap from="joint_states" to="motion/aggregator_ref/out_joints_sorted" />
   </node>
 
 </launch>
