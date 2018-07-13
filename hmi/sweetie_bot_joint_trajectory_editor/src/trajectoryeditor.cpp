@@ -22,15 +22,15 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 
 	// load parameters
 	if (!ros::param::get("~trajectory_storage", trajectories_param_name)) {
-		trajectories_param_name = "/stored/joint_trajectory";
+		trajectories_param_name = "joint_trajectory";
 	}
     ROS_INFO_STREAM( "Trajectory storage namespace: " << trajectories_param_name );
     updateParamList();
 	ui.comboBox->setCurrentText("default");
 
 	// initialize ROS interface
-    sub_joints_ = node.subscribe<sensor_msgs::JointState>("joint_state", 1, &TrajectoryEditor::jointsCallback, this);
-	pub_joints_set_ = node.advertise<sensor_msgs::JointState>("joint_state_set", 1);
+    sub_joints_ = node.subscribe<sensor_msgs::JointState>("joint_states", 1, &TrajectoryEditor::jointsCallback, this);
+	pub_joints_set_ = node.advertise<sensor_msgs::JointState>("joint_states_set", 1);
 	pub_joints_marker_set_ = node.advertise<sensor_msgs::JointState>("joints_marker_set", 1);
     torque_main_switch_ = node.serviceClient<std_srvs::SetBool>("set_torque_off"); //TODO persistent connection and button disable
 

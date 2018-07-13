@@ -5,9 +5,9 @@
 
 	<!-- robot is inside /sweetie_bot namespace -->
 	<group ns="$(arg robot_ns)/hmi">
-		<remap unless="$(arg use_real_pose)" from="joint_state" to="$(arg robot_ns)/joint_states" />
-		<remap if="$(arg use_real_pose)" from="joint_state" to="$(arg robot_ns)/joint_states_real" />
-		<remap from="joint_state_set" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset" /> -->
+		<remap unless="$(arg use_real_pose)" from="joint_states" to="$(arg robot_ns)/joint_states" />
+		<remap if="$(arg use_real_pose)" from="joint_states" to="$(arg robot_ns)/joint_states_real" />
+		<remap from="joint_states_set" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset" /> -->
 		<remap from="joint_trajectory" to="$(arg robot_ns)/motion/controller/joint_trajectory" />
         <!-- just in case if virtual robot is actually real -->
 		<remap from="set_torque_off" to="$(arg robot_ns)/motion/controller/torque_off/set_torque_off" />
