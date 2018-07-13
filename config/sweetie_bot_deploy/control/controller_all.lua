@@ -1,7 +1,7 @@
 --
 -- VIRTUAL ROBOT and JOINT STATE controllers
 --
--- controllers: FollowJointState, AnimJointTrajectoryBase, TorqueMainSwitch if herkulex and aggregator are present.
+-- controllers: FollowJointState, ExecuteJointTrajectory, TorqueMainSwitch if herkulex and aggregator are present.
 --
 -- Intended to be run via config script.
 --

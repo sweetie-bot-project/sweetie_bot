@@ -1,7 +1,7 @@
 --
 -- VIRTUAL ROBOT and JOINT STATE controllers
 --
--- controllers: AnimJointTrajectory
+-- controllers: ExecuteJointTrajectory
 --
 -- Intended to be run via config script.
 --
@@ -10,11 +10,11 @@ require "motion_core"
 controller = controller or {}
 
 -- 
--- load AnimJointTrajectory controller
+-- load ExecuteJointTrajectory controller
 --
 ros:import("sweetie_bot_controller_joint_space")
 
-depl:loadComponent("controller/joint_trajectory", "sweetie_bot::motion::controller::AnimJointTrajectory")
+depl:loadComponent("controller/joint_trajectory", "sweetie_bot::motion::controller::ExecuteJointTrajectory")
 controller.joint_trajectory = depl:getPeer("controller/joint_trajectory")
 -- load parameters and services
 config.get_peer_rosparams(controller.joint_trajectory)
