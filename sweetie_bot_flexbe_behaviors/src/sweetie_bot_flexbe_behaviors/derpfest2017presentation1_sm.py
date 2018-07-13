@@ -13,7 +13,7 @@ from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieB
 from flexbe_manipulation_states.moveit_to_joints_state import MoveitToJointsState
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from sweetie_bot_flexbe_behaviors.watchpresentaion_sm import WatchPresentaionSM
-from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -203,7 +203,7 @@ class Derpfest2017Presentation1SM(Behavior):
 
 			# x:73 y:332
 			OperatableStateMachine.add('Greeting',
-										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param='joint_trajectory/greeting'),
+										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param='joint_trajectory/greeting'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

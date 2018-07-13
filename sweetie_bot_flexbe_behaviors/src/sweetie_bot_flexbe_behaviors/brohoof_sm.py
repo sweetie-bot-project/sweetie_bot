@@ -16,7 +16,7 @@ from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_manipulation_states.moveit_to_joints_state import MoveitToJointsState
 from flexbe_manipulation_states.get_joint_values_state import GetJointValuesState
 from flexbe_states.decision_state import DecisionState
-from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import math
@@ -186,7 +186,7 @@ Robot is assumed to be standing on four legs.
 
 			# x:1046 y:140
 			OperatableStateMachine.add('RaiseLegProgram',
-										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='joint_trajectory/brohoof_begin'),
+										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='joint_trajectory/brohoof_begin'),
 										transitions={'success': 'SayHello', 'partial_movement': 'ReturnLeg', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -207,7 +207,7 @@ Robot is assumed to be standing on four legs.
 
 			# x:673 y:533
 			OperatableStateMachine.add('ReturnLegProgrammed',
-										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='joint_trajectory/brohoof_end'),
+										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='joint_trajectory/brohoof_end'),
 										transitions={'success': 'finished', 'partial_movement': 'ReturnLeg', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

@@ -17,7 +17,7 @@ from actionlib_msgs.msg import *
 #import trajectory_msgs.msg
 
 
-class AnimationStoredJointTrajectoryState(EventState):
+class ExecuteStoredJointTrajectoryState(EventState):
     '''
     Execute stored control_msgs::FollowJointTrajectoryAction. Goal is stored on ROS parameter server in serialized form.
 
@@ -36,7 +36,7 @@ class AnimationStoredJointTrajectoryState(EventState):
 
     def __init__(self, action_topic = 'motion/controller/joint_trajectory', trajectory_param = 'joint_trajectory'):
         # Declare outcomes and output keys
-        super(AnimationStoredJointTrajectoryState, self).__init__(outcomes = ['success', 'partial_movement', 'invalid_pose', 'failure'],
+        super(ExecuteStoredJointTrajectoryState, self).__init__(outcomes = ['success', 'partial_movement', 'invalid_pose', 'failure'],
                 output_keys = ['result'])
 
         print(trajectory_param)
@@ -45,10 +45,10 @@ class AnimationStoredJointTrajectoryState(EventState):
         try:
             goal_raw = rospy.get_param(trajectory_param)
         except KeyError as e:
-            raise KeyError, "AnimationStoredJointTrajectoryState: Unable to get '" + trajectory_param + "' parameter."
+            raise KeyError, "ExecuteStoredJointTrajectoryState: Unable to get '" + trajectory_param + "' parameter."
 
         if not isinstance(goal_raw, xmlrpclib.Binary):
-            raise TypeError, "AnimationStoredJointTrajectoryState: ROS parameter '" + trajectory_param + "' is not a binary data."
+            raise TypeError, "ExecuteStoredJointTrajectoryState: ROS parameter '" + trajectory_param + "' is not a binary data."
         # deserialize
         self._goal = FollowJointTrajectoryGoal()
         self._goal.deserialize(goal_raw.data)
@@ -77,7 +77,7 @@ class AnimationStoredJointTrajectoryState(EventState):
         try:
             self._client.send_goal(self._topic, self._goal)
         except Exception as e:
-            Logger.logwarn('AnimationStoredJointTrajectoryState: Failed to send the FollowJointTrajectory command:\n%s' % str(e))
+            Logger.logwarn('ExecuteStoredJointTrajectoryState: Failed to send the FollowJointTrajectory command:\n%s' % str(e))
             self._error = True
 
 
@@ -99,20 +99,20 @@ class AnimationStoredJointTrajectoryState(EventState):
 
             if state == GoalStatus.SUCCEEDED:
                 # everything is good
-                self.log_once('info', 'AnimationStoredJointTrajectoryState: FollowJointTrajectory action succesed: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('info', 'ExecuteStoredJointTrajectoryState: FollowJointTrajectory action succesed: ' + repr(result.error_code) + " " + result.error_string)
                 return 'success'
             elif state in [ GoalStatus.ABORTED, GoalStatus.PREEMPTED ]:
                 # perhaps we stuck in midway due to tolerance error or controller switch.
-                self.log_once('warn', 'AnimationStoredJointTrajectoryState: FollowJointTrajectory action aborted: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('warn', 'ExecuteStoredJointTrajectoryState: FollowJointTrajectory action aborted: ' + repr(result.error_code) + " " + result.error_string)
                 return 'partial_movement'
             elif state in [ GoalStatus.REJECTED, GoalStatus.RECALLED ]:
                 # Execution has not started, perhaps due to invalid goal.
-                self.log_once('warn', 'AnimationStoredJointTrajectoryState: FollowJointTrajectory action rejected: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('warn', 'ExecuteStoredJointTrajectoryState: FollowJointTrajectory action rejected: ' + repr(result.error_code) + " " + result.error_string)
                 if result.error_code in [ FollowJointTrajectoryResult.PATH_TOLERANCE_VIOLATED, FollowJointTrajectoryResult.GOAL_TOLERANCE_VIOLATED]:
                     # Starting pose is invalid
                     return 'invalid_pose'
             # Any another kind of error.
-            self.log_once('warn', 'AnimationStoredJointTrajectoryState: FollowJointTrajectory action failed (' + repr(state) + '): ' + repr(result.error_code) + " " + result.error_string)
+            self.log_once('warn', 'ExecuteStoredJointTrajectoryState: FollowJointTrajectory action failed (' + repr(state) + '): ' + repr(result.error_code) + " " + result.error_string)
             return 'failure'
 
 
@@ -123,5 +123,5 @@ class AnimationStoredJointTrajectoryState(EventState):
         if not self._client.has_result(self._topic):
             self._client.cancel(self._topic)
             userdata.result = None
-            Logger.loginfo('AnimationStoredJointTrajectoryState: Cancel active action goal.')
+            Logger.loginfo('ExecuteStoredJointTrajectoryState: Cancel active action goal.')
 

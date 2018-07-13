@@ -8,7 +8,7 @@ Use `flexbe_app`/`flexbe_widget` build-in documentation system to browse full AP
 
 Defined states:
 
-* `ExecuteJointTrajectoryState` (`AnimationStoredJointTrajectoryState`) --- pass stored in ROS parameter `control_msgs::FollowJointTrajectoryGoal` to the action server to
+* `ExecuteStoredJointTrajectoryState` --- pass stored in ROS parameter `control_msgs::FollowJointTrajectoryGoal` to the action server to
     perform corresponding motion.
 * `LeapMotionMonitor` --- listen to Leap Motion topic and detect hand presence.
 * `MoveitToPose`, `MoveToPose2` --- move MoveIt! move group to desired pose.

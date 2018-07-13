@@ -9,7 +9,7 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
 from flexbe_states.calculation_state import CalculationState
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 # Additional imports can be added inside the following tags
@@ -87,7 +87,7 @@ class SwitchEvilModeSM(Behavior):
 
 			# x:737 y:30
 			OperatableStateMachine.add('Seizure',
-										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'seizure_evil'),
+										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'seizure_evil'),
 										transitions={'success': 'SetEvil', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -120,7 +120,7 @@ class SwitchEvilModeSM(Behavior):
 
 			# x:613 y:321
 			OperatableStateMachine.add('ShakeHead',
-										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'head_shake'),
+										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'head_shake'),
 										transitions={'success': 'LookAround', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -134,7 +134,7 @@ class SwitchEvilModeSM(Behavior):
 
 			# x:671 y:437
 			OperatableStateMachine.add('LookAround',
-										AnimationStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'look_around'),
+										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'look_around'),
 										transitions={'success': 'SetGood', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

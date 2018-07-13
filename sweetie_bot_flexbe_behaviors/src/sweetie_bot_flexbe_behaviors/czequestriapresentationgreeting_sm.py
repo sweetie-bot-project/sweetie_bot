@@ -8,7 +8,7 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from sweetie_bot_flexbe_states.animation_stored_trajectory_state import AnimationStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -62,7 +62,7 @@ class CZequestriaPresentationGreetingSM(Behavior):
 
 			# x:40 y:171
 			OperatableStateMachine.add('GreetingMove',
-										AnimationStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'greeting'),
+										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'greeting'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
