@@ -18,7 +18,7 @@ is available in Russian [here](https://gitlab.com/sweetie-bot/sweetie_doc/wikis/
 * If you are working with real robot `Set troque on/off` buttons can be used to switch servos on or off. Trajectory editor `set_torque_off` service (`std_srvs::SetBool`) 
     to control servo state. (See `MainTorqueSwitch` controller from `sweetie_bot_controllers_joint_space` package).
 
-* New way point can be added in to ways. You can duplicate existing point or you can add current robot pose from `joint_state` (`sensor_msgs::JointState`) topic.
+* New way point can be added in two ways. You can duplicate existing point or you can add current robot pose from `joint_state` (`sensor_msgs::JointState`) topic.
     To place robot in desired pose you can utilize `joint_state_publiser` GUI or MoviIt! rviz plugin. If you are working with real robot it can be placed in 
 	desired pose manually if the servos are turned off.
 
@@ -29,6 +29,34 @@ is available in Russian [here](https://gitlab.com/sweetie-bot/sweetie_doc/wikis/
 
 * When your press `Execute trajectory` button `FollowJointTrajectoryGoal` messages is formed from current way point list and editor requests `FollowJointTrajectory` 
     action server with name `joint_trajectory`  to execute trajectory. (See `ExecuteJointTrajectory` controller from `sweetie_bot_controllers_joint_space` package)
+
+* `FollowJointTrajectoryGoal` do not store information about contacts. As walkaround special joints `support/<kinematic_chain_name>` was introduced. Sweetie Bot action server 
+    assumes that corresponding kinemtic chain is in contact but oes not test movement consistently. Those joints are supported in TrajectoryPinkiptor interface and displayed as 
+    checkboxes. If contact is set it is active is period from the current to the next waypoint,
+    
+
+### ROS interface
+
+#### Publish topics
+
+* `joints_marker_set` (`JointState`) --- pose clicked by user in waypoints' list.
+* `joints_state_set` (`JointState`) --- publish pose if `Set robot pose` button is clicked.
+
+#### Subscribe topics
+
+* `joints_state` (`JointState`) --- current robot pose.
+
+#### Services
+
+* Requires: `set_torque_off` (`std_srvs::SetBool`) --- turn robot servos off.
+
+#### Actionlib
+
+* Client: `joint_trajectory` (`FollowJointTrajectory`) --- execute trajectory if `Execute trajectory` button is pressed.
+
+#### Parameters
+
+* `~trajectory_storage` (`string`, default `joint_trajectory`) --- trajectory storage namespace.
 
 ### Usage
 
