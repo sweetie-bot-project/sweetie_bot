@@ -116,7 +116,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>6</value>
+            <value>21</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -131,7 +131,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>7</value>
+            <value>22</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -146,7 +146,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>8</value>
+            <value>23</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -161,7 +161,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>9</value>
+            <value>24</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -176,7 +176,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>10</value>
+            <value>25</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -191,7 +191,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>16</value>
+            <value>31</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -206,7 +206,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>17</value>
+            <value>32</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -221,7 +221,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>18</value>
+            <value>33</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -236,7 +236,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>19</value>
+            <value>34</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -251,7 +251,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>20</value>
+            <value>35</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -266,7 +266,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>21</value>
+            <value>41</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -281,7 +281,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>22</value>
+            <value>42</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -296,7 +296,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>23</value>
+            <value>43</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -311,7 +311,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>24</value>
+            <value>44</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -326,7 +326,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>25</value>
+            <value>45</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -341,7 +341,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>5</value>
+            <value>51</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -356,7 +356,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>3</value>
+            <value>52</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -371,7 +371,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>4</value>
+            <value>53</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -386,7 +386,7 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>26</value>
+            <value>54</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
