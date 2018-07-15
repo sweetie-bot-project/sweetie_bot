@@ -1,5 +1,5 @@
 herkulex:
-    groups: [ leg12, leg34, head ]
+    groups: [ all ]
     all:
         driver:
             port_name: '/dev/ttyS0'
