@@ -178,7 +178,11 @@ class SweetieBotCompoundAction(EventState):
 			if action.state == 'RUNNING':
 				is_finished = False
 				# execute state
-				outcome = action.flexbe_state.execute(userdata)
+
+                                # In constructor of EventState user-defined method `execute()` is renamed to `__execute()`.
+                                # To skip all EventState facilities and operate FlexBe state object directly we should access private method of EventState.
+				outcome = action.flexbe_state._EventState__execute(userdata)
+
 				# check outcome
 				if outcome and outcome != 'loopback':
 					action.flexbe_state.on_exit(userdata)
