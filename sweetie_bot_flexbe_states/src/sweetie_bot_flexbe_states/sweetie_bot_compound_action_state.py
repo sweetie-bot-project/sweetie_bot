@@ -178,7 +178,7 @@ class SweetieBotCompoundAction(EventState):
 			if action.state == 'RUNNING':
 				is_finished = False
 				# execute state
-				outcome = action.flexbe_state.execute(userdata)
+				outcome = action.flexbe_state._EventState__execute(userdata)
 				# check outcome
 				if outcome and outcome != 'loopback':
 					action.flexbe_state.on_exit(userdata)
@@ -188,7 +188,6 @@ class SweetieBotCompoundAction(EventState):
 					if outcome != action.success_outcome:
 						is_failed = True
 					Logger.loginfo('CompoundAction t = %f: finish action: "%s" outcome: %s' % (t, action.description, outcome))
-
 		# check results
 		if is_finished:
 			return 'success'
