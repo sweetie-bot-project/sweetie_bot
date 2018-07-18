@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="Galacon2018Presentation">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.galacon2018presentation_sm" class="Galacon2018PresentationSM" />
+	<tagstring>galacon, 2018, sweetiebot, presentation</tagstring>
+	<author>mutronics</author>
+	<date>Mon Jul 16 2018</date>
+	<description>
+		Galacon 2018 Presentation
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+
+</behavior>
