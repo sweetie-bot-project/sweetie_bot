@@ -1,5 +1,3 @@
-
-=======
 Sweetie Bot software repository 
 ===================================
 
@@ -18,7 +16,7 @@ Sweetie Bot software support two modes: real and virtual.
 Current version of Sweetie Bot software provides following functionality:
 1. Joint level control using [`joint_state_publisher`](http://wiki.ros.org/joint_state_publisher).
 2. The control in Cartesian space (for the limbs and the body) using [pose markers](hmi/sweetie_bot_rviz_interactions) and [MoveIt!](https://moveit.ros.org/) integration.
-3. Movements creation (See [TrjectoryEditor](hmi/sweetie_bot_trajectory_editor))
+3. Movements creation (See [TrjectoryEditor](hmi/sweetie_bot_joint_trajectory_editor))
 4. High-level control based on [FlexBe](http://philserver.bplaced.net/fbe/) hybrid finite state machines via external repository [`sweetie_bot_flexbe_behaviors`](https://gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors).
 
 <!-- Watch the Software demonstration video [here](https://www.youtube.com/watch?v=FTKn_fK0Puo): -->
@@ -34,7 +32,7 @@ This repository contains all necessary software components to run the Sweetie Bo
 	* `sweetie_bot_proto2_deploy` --- robot-specific parameters and launch files for Proto2 Sweetie Bot robot.
 	* `sweetie_bot_proto2_description` --- URDF model of Proto2 (git submodule).
 	* `sweetie_bot_proto2_moveit_config` --- MoveIt! configuration for Proto2.
-* [`rt_control`](rt_control) --- OROCOS-based motion control subsystem (git submodule).
+* [`rt_control`](sweetie_bot_rt_control) --- OROCOS-based motion control subsystem (git submodule).
 * [`hardware`](hardware) --- hardware-depended components.
     * `sweetie_bot_eyes` --- eyes visualization.
 * [`behavior`](behavior) --- high-level control subsystem (not implemented yet).
@@ -75,7 +73,10 @@ External dependencies:
     * [`rttlua_completion`](https://github.com/orocos-toolchain/rttlua_completion), рекомендуется модифицированная версия [отсюда](https://github.com/disRecord)
     * `rtt_tf2_msgs`,`rtt_control_msgs` typekit packages can be generated with [`rtt_roscom`](https://github.com/orocos/rtt_ros_integration/tree/toolchain-2.9/rtt_roscomm)
 * [Rigid Body Bynamics Library 2.5](https://rbdl.bitbucket.io/). Note that 2.6 version is not supported.
-* [FlexBe](http://philserver.bplaced.net/fbe/) behavior framework and [`felexbe_general_states`](https://github.com/FlexBE/generic_flexbe_states).
+* [FlexBe](http://philserver.bplaced.net/fbe/) behavior framework.
+	* [`flexbe_behavior_engine`](https://github.com/team-vigir/flexbe_behavior_engine/tree/feature/flexbe_app), specifically `feature/flexbe_app` branch for `felxbe_app` support.
+	* [`flexbe_app`](https://github.com/FlexBE/flexbe_app).
+    * [`felexbe_general_states`](https://github.com/FlexBE/generic_flexbe_states).
 
 ### Installation from binary packages
 
@@ -99,29 +100,70 @@ Install binary packages
 $ sudo apt-get update
 $ sudo apt-get install ros-lunar-sweetie-bot ros-lunar-sweetie-bot-base
 ```
-Note this `ros-lunar-sweetie-bot-base` conflicts with installed ROS packages with OROCOS toolchain.
-Sweetie Bot specific software is installed in `/opt/ros/sweetie_bot` directory. Launch corresponding `setup.bash` script to setup ROS environment.
+Note that `ros-lunar-sweetie-bot-base` package conflicts with OROCOS toolchain ROS packages.
+Sweetie Bot specific software is installed in `/opt/ros/sweetie_bot` directory. 
 
-After installation you may want to install `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_flexbe_behaviors` in ROS overlay in your home directory to modify them and create new behaviors.
+Install `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_flexbe_behaviors`: 
+```
+$ mkdir -p ~/ros/sweetie_bot/src
+$ cd ~/ros/sweetie_bot/src
+$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
+$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
+$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
+$ git clone https://github.com/lucasw/rviz_textured_quads.git inc/rviz_textured_quads
+$ cd ~/ros/sweetie_bot
+$ source /opt/ros/lunar/setup.bash
+$ catkin_make
+```
+Due to bug (quads are always black) it is recommended to install `rviz_textured_quads` in Sweetie Bot workspace.
+
+Setup ROS environment 
+```
+$ source /opt/ros/sweetie_bot/setup.bash
+```
+and launch Sweetie Bot control software.
 
 ### Installation from sources
 
-Your may compile Sweetie Bot manually in ROS overlay. This method does not conflicts with installation from binary packages due to ROS overlay mechanism.
-Assume all build requirements are satisfied (you may install `ros-lunar-sweetie-base` package on build them manually).
+Your may compile Sweetie Bot manually in ROS workspace. This method does not conflicts with installation from binary packages due to ROS overlay mechanism.
+Let's assume that all build requirements are satisfied. You may install `ros-lunar-sweetie-base` package or build them manually in the same or different ROS workspace.
 
+Create ROS workspace:
 ```
-mkdir -p ~/ros/sweetie_bot/src
-cd ~/ros/sweetie_bot/src
-git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
-git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
-git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
-git clone https://github.com/lucasw/rviz_textured_quads.git
+$ mkdir -p ~/ros/sweetie_bot/src 
+```
+
+Clone dependencies if necessary and generate typekit packages if they not installed. 
+If you are using `ros-lunar-sweetie-bot-base` package only FlexBe and `rviz_textured_quads` are needed.
+```
+$ cd ~/ros/sweetie_bot/src; mkdir inc; cd inc
+$ git clone https://github.com/lucasw/rviz_textured_quads.git inc/rviz_textured_quads
+$ rosrun rtt_roscomm create_rtt_msgs control_msgs
+$ rosrun rtt_roscomm create_rtt_msgs tf2_msgs
+git clone -b feature/flexbe_app https://github.com/team-vigir/flexbe_behavior_engine.git inc/flexbe_behavior_engine
+git clone https://github.com/FlexBE/flexbe_app.git
+```
+Due to the bug (quads are always black) it is recommended to install `rviz_textured_quads` in Sweetie Bot workspace.
+
+Clone SweetieBot sources:
+```
+$ cd ~/ros/sweetie_bot/src
+$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
+$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
+$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
+```
+Compile:
+```
+source /opt/ros/lunar/setup.bash
 cd ~/ros/sweetie_bot
-source /opt/ros/sweetie_bot/setup.bash
 catkin_make
+``` 
+Set ROS environment
+```
+source ~/ros/sweetie_bot/devel/setup.bash
 ```
 
-### Installing from source
+### Installation with  dependencies from source
 
 Use this [repository](https://github.com/slavanap/ros-build) and this Docker images [here](https://hub.docker.com/r/slavanap/ros-build/tags/).
 
