@@ -48,7 +48,6 @@ catkin_install_python(PROGRAMS nodes/voice
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 install(DIRECTORY 
-	sounds 
 	launch
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
