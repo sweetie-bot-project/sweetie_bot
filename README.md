@@ -32,7 +32,7 @@ This repository contains all necessary software components to run the Sweetie Bo
 	* `sweetie_bot_proto2_deploy` --- robot-specific parameters and launch files for Proto2 Sweetie Bot robot.
 	* `sweetie_bot_proto2_description` --- URDF model of Proto2 (git submodule).
 	* `sweetie_bot_proto2_moveit_config` --- MoveIt! configuration for Proto2.
-* [`rt_control`](sweetie_bot_rt_control) --- OROCOS-based motion control subsystem (git submodule).
+* [`rt_control`](https://gitlab.com/sweetie-bot/sweetie_bot_rt_control) --- OROCOS-based motion control subsystem (git submodule).
 * [`hardware`](hardware) --- hardware-depended components.
     * `sweetie_bot_eyes` --- eyes visualization.
 * [`behavior`](behavior) --- high-level control subsystem (not implemented yet).
