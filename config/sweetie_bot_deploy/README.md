@@ -5,24 +5,26 @@ This package contains ROS launch files and OROCOS lua deployment scripts necessa
 It does not contain robot-specific configuration parameters. They are loaded from separate configuration package.
 It is the part of [Sweetie Bot project](sweetiebot.net). Full documentation is available in Russian [here](https://gitlab.com/sweetie-bot/sweetie_doc/wikis/deployment).
 
-OROCOS components are started by hierarchy of lua scripts. Components' properties are loaded from ROS Parameter Server.
-Mapping from components names to parameters names is quite direct. Part of configuration is stored in OROCOS .cpf files. 
-To start ROS nodes roslaunch files are used.
+ROS nodes are started in standard way by roslaunch files.
+
+[OROCOS](http://orocos.org) components are started by hierarchy of `lua` scripts. Components' properties are loaded from ROS Parameter Server.
+Mapping from ROS parameters to component properties is quite direct: parameters' namespace has the same name as OROCOS component.  
+Part of configuration is stored in OROCOS `.cpf` files but they also may be loaded via ROS parameter server.
 
 ### Scripts
 
 * `store` and `store-joint-trajectories` (moved to robot-specific package) are used to load and save movements from/to Parameter Server to/from json files.
-* `sweetie-bot-core` rttlua envelop to launch SweetieBot OROCOS components.
+* `sweetie-bot-core` [rttlua](http://www.orocos.org/wiki/orocos/toolchain/luacookbook) envelop to launch SweetieBot OROCOS components.
 
 ### Namespace structure
 
-Sweetie Bot is using following namespace structure. Namespaces are marked by caps, the topics and parameters have topic: and param: prefixes prefix.
+Sweetie Bot software is using following namespace structure. Namespaces are marked by caps, the topics and parameters have `topic:` and `param:` prefixes.
 
     /
     |- param: robot_description --- URDF model
     |- param: robot_description_semantic --- MoveIt configuration
     |
-    |- CONF_FILE --- OROCOS configuration files parameters (.cpf, .log4cpp)
+    |- CONF_FILE --- OROCOS configuration files parameters (.cpf, .log4cpp). 
     |- JOINT_TRAJECTORY --- parameters with joint trajectories.
     |
     |- MOTION --- OROCOS rt control node and configuration. Note that ROS see all OROCOS component as a one node with 'motion' name.
@@ -43,6 +45,7 @@ Sweetie Bot is using following namespace structure. Namespaces are marked by cap
     |    |- kinematics_fwd --- provides robot limbs positons in cartesian space
     |    |- odometry_ref --- base_link odometry
     |    |- dynamics_inv --- robot balace and servo efforts calculation
+    |    |- aggregator_real --- provides robot real pose in joint space 
     |    ...
     |
     |- topic: joint_states, tf
@@ -64,6 +67,19 @@ Sweetie Bot is using following namespace structure. Namespaces are marked by cap
         |- rviz 
         \- pose_markers
 
+#### OROCOS and ROS integration
+
+[`rtt_ros_integration` package](https://github.com/orocos/rtt_ros_integration) allows to map ROS topics on OROCOS ports transparently. Also it gives OROCOS components access to ROS parameter server. 
+ROS sees all OROCOS subsystem as one node with name `motion`. OROCOS components advertise their interface in corresponding namespace. For example, `controller/stance` component provides 
+actionlib server under `motion/controller/stance` to activate it and listen to the `motion/controller/in_base_ref` topic. The controller get properties from `motion/controller/stance` namespace.
+
+Some parameters of OROCOS components has special meaning: 
+ * `period` is set to the main timer period (control cycle duration) which defined in `timer` component configuration.
+ * `services` is list of OROCOS subservices to be loaded into component, 
+ * `priority` is linux RT priority.
+
+You can access and view ROS nodes, topics and parameters using standard ROS tools. OROCOS components interface can be access via [`rttlua` console](http://www.orocos.org/wiki/orocos/toolchain/luacookbook).
+It is started with OROCOS control node. Note that OROCOS component interface is self-documented you can browse `controller/stance` interface using command `= controller.stance`. 
 
 ### Launch files
 
@@ -82,12 +98,13 @@ High-level launch files takes following parameters:
 The most important launch files:
 
 * `load_param.launch` --- load parameters to ROS Parameter Server.
-* `robot_module.launch` --- robot-specific ROS nodes and parameters. 
-* `joint_space_control.launch` --- robot deployment script. It starts basic motion control configuration.
+* `joint_space_control.launch` --- robot deployment script. It starts basic motion control configuration. 
 * `flexbe_control.launch` --- robot deployment script. It starts basic motion control configuration and high level control nodes (eyes and voice).
 * `flexbe.launch` --- FlexBe core and user interface module. Starts GUI to control robot high-level behavior.
 * `joint_trajectory_editor.launch` --- start GUI tool to create new movements.
 For more information see description and parameter documentation inside files.
+
+`joint_space_control.launch` and `flexbe_control.launch` starts OROCOS node which provides `rttlua` console.
 
 ### Configuration profile
 
@@ -102,17 +119,13 @@ Typical robot profile directory contains following files:
 * `kinematics_inv_joint_limits.cpf` --- joint limits for `kinematics_inv_trac_ik` component.
 * `herkulex_feedback.yaml` --- hardware interface configuration.
 * `motion.yaml` --- motion core parameters.
-
-Some parameters of OROCOS components has special meaning: 
-`period` is set to the main timer period (control cycle duration).
-`services` is list of OROCOS subservices to be loaded into component, 
-`priority` is linux RT priority.
+* `hmi.yaml` --- visualization configuration.
 
 See `sweetie_bot_proto2_deploy` for example.
 
 ### Host and robot on-board computer relations 
 
-* All parameters (including .cpf files, and trajectories) can be loaded into ROS Pearameter Server. So any changes performed on host affects on-board subsystem.
+* All parameters (including .cpf files, and trajectories) can be loaded into ROS Parameter Server. So any changes performed on host affects on-board subsystem.
     Note that the actual list of  configuration files loaded into pareamter server is defined in `load_param.launch`
 * `.launch` scripts support `machine` tag so if configuration is right host is able to start all necessary nodes on on-board computer via ssh.
     But note that even remote deplyment procedure uses local `.lua` scritpts. If deployment is not remote then local launch file is used.
