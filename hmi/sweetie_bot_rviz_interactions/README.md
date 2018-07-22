@@ -5,8 +5,8 @@ HMI nodes for rviz
 ------------------
 
 This node adds 6-DOF `InteractiveMarker` publishes to rviz and publishes pose as `geometry_msg::PoseStamped` message.
-Also it able to manage corresponding motion controller using context menu. Internally it `SetOperational` action to 
-activate and deactivate controller.
+Also the context menu of the marker allows to manage corresponding motion controllers which implement `SetOperational` action interface.
+User can activate or deactivate controller ("OPERATIONAL" menu entry), change controlled resources set, move marker to predefined frames.
 
 ### ROS interface
 
@@ -27,9 +27,12 @@ activate and deactivate controller.
 
 #### Parameters
 
-* `scale` (`double`) --- marker scale.
-* `resources` (`string[]`) --- set of resources (kinematic chains) to display in context menu.
-* `resources_select_only_one` (`bool`) --- only one resource can be active at time.
-* `marker_home_frame` (`string`) --- frame where marker should be placed before activation.
-* `normalized_z_level` (`double`) --- if user select `Normalize pose` in context menu marker is oriented parallel XY plane and placed at `normalized_z_level` along Z axis.
+* `~scale` (`double`) --- marker scale. Default: `1`. Original marker is a 16cm x 8cm x 3cm size box.
+* `~resources` (`string[]`) --- the set of resources (kinematic chains) to display in context menu. 
+    Default: `['leg1', 'leg2', 'leg3', 'leg4']`
+* `~frames` (`string[]`) --- the list of frames to be displayed in "Move to" context submenu. User can easily move marker to any of it. 
+    Default: `['bone15', 'bone25', 'bone35', 'bone45', 'bone54', 'base_link']`
+* `~resources_select_only_one` (`bool`) --- only one resource can be active at time. Default: `false`.
+* `~marker_home_frame` (`string`) --- frame where marker should be automatically placed before activation. Empty string means no automatic placement. Default: `''`.
+* `~normalized_z_level` (`double`) --- if user select `Normalize pose` in context menu marker is oriented parallel XY plane and placed at `normalized_z_level` along Z axis. Default: 0.0.
 

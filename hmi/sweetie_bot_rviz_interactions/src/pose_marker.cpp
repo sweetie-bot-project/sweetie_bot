@@ -37,7 +37,9 @@ std::string node_name;
 // marker sacle parameter
 double scale = 1.0;
 // resources list: corresponding menu items will be displayed in context menu
-std::vector<std::string> resources = { "leg1", "leg2", "leg3", "leg4" };
+std::vector<std::string> resources = { "leg1", "leg2", "leg3", "leg4", "head" };
+// frame list: user can place marker to any of provided frames using menu
+std::vector<std::string> frames = { "bone15", "bone25", "bone35", "bone45", "bone55", "base_link" };
 // allow select only one resource
 bool resources_select_only_one = false;
 // Home frame to place marker on start operation. Leave empty to 
@@ -256,6 +258,36 @@ void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPt
 	server->applyChanges();
 }
 
+void processMoveToFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback )
+{
+	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
+		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
+			<< " / control '" << feedback->control_name << "': menu \"move to\" select, entry id = " << feedback->menu_entry_id );
+
+		std::string frame_id;
+		if (menu_handler.getTitle(feedback->menu_entry_id, frame_id)) { 
+			try {
+				// get transform
+				geometry_msgs::TransformStamped T;
+				T = tf_buffer.lookupTransform("odom_combined", frame_id, ros::Time(0));
+				// convert to pose
+				geometry_msgs::Pose pose;
+				pose.position.x = T.transform.translation.x;
+				pose.position.y = T.transform.translation.y;
+				pose.position.z = T.transform.translation.z;
+				pose.orientation = T.transform.rotation;
+				// set pose
+				server->setPose(node_name, pose);
+			}
+			catch (tf2::TransformException &ex) {
+				ROS_WARN("lookupTransform: %s", ex.what());
+			}
+
+			menu_handler.reApply(*server);
+			server->applyChanges();
+		}
+	}
+}
 
 // Display platform shape as controlled body
 Marker makeBody()
@@ -347,6 +379,7 @@ int main(int argc, char** argv)
 	// get parameters
 	ros::param::get("~scale", scale);
 	ros::param::get("~resources", resources);
+	ros::param::get("~frames", frames);
 	ros::param::get("~resources_select_only_one", resources_select_only_one);
 	ros::param::get("~marker_home_frame", marker_home_frame);
 	ros::param::get("~normalized_z_level", normalized_z_level);
@@ -373,6 +406,10 @@ int main(int argc, char** argv)
 	menu_entries.normalize_pose = menu_handler.insert( "Normalize pose", &processFeedback );
 	menu_entries.publish_pose = menu_handler.insert( "Publish pose", &processFeedback );
 	menu_handler.setCheckState(menu_entries.publish_pose, MenuHandler::CHECKED); publish_pose = true;
+	MenuHandler::EntryHandle frames_submenu = menu_handler.insert("Move to frame");
+	for ( const std::string& frame : frames ) {
+		menu_handler.insert(frames_submenu, frame, &processMoveToFrame);
+	}
 
 	// create marker
 	make6DofMarker();
