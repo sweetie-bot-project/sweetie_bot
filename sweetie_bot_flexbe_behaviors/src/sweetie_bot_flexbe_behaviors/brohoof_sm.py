@@ -68,9 +68,9 @@ Robot is assumed to be standing on four legs.
 
 
 	def create(self):
-		# x:228 y:396, x:331 y:223, x:1010 y:659
+		# x:228 y:396, x:383 y:303, x:1010 y:659
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'unreachable', 'failed'], input_keys=['pose'])
-		_state_machine.userdata.pose = PoseStamped(Header(frame_id = 'base_link'), Pose(Point(-0.3, -0.40, 0.25), Quaternion(0, 0, 0, 1)))
+		_state_machine.userdata.pose = PoseStamped(Header(frame_id = 'base_link'), Pose(Point(0.4, 0.0, -0.05), Quaternion(0, 0, 0, 1)))
 		_state_machine.userdata.joint53_pose = [ self.neck_angle ]
 		_state_machine.userdata.is_simplified = self.is_simplified
 
@@ -81,17 +81,17 @@ Robot is assumed to be standing on four legs.
 
 
 		with _state_machine:
-			# x:69 y:120
+			# x:41 y:331
 			OperatableStateMachine.add('CalculateTargetPose',
 										CalculationState(calculation=self.calculateTargetPoseFunc2),
 										transitions={'done': 'CheckNone'},
 										autonomy={'done': Autonomy.Off},
 										remapping={'input_value': 'pose', 'output_value': 'pose'})
 
-			# x:286 y:54
+			# x:177 y:25
 			OperatableStateMachine.add('CheckReacibility',
 										MoveitToPose(move_group='leg1', plan_only=True, position_tolerance=0.001, orientation_tolerance=0.001),
-										transitions={'reached': 'GetHeadPose', 'planning_failed': 'unreachable', 'control_failed': 'failed'},
+										transitions={'reached': 'GetHeadPose', 'planning_failed': 'CheckSimplified_2', 'control_failed': 'failed'},
 										autonomy={'reached': Autonomy.High, 'planning_failed': Autonomy.High, 'control_failed': Autonomy.Off},
 										remapping={'pose': 'pose'})
 
@@ -163,7 +163,7 @@ Robot is assumed to be standing on four legs.
 										autonomy={'done': Autonomy.Off},
 										remapping={'input_value': 'head_pose', 'output_value': 'head_pose'})
 
-			# x:84 y:245
+			# x:105 y:163
 			OperatableStateMachine.add('CheckNone',
 										DecisionState(outcomes=['good','none'], conditions=lambda x: 'good' if x else 'none'),
 										transitions={'good': 'CheckReacibility', 'none': 'unreachable'},
@@ -211,6 +211,13 @@ Robot is assumed to be standing on four legs.
 										transitions={'success': 'finished', 'partial_movement': 'ReturnLeg', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
+
+			# x:274 y:138
+			OperatableStateMachine.add('CheckSimplified_2',
+										DecisionState(outcomes=['simple', 'complex'], conditions=lambda x: 'simple' if x else 'complex'),
+										transitions={'simple': 'GetHeadPose', 'complex': 'unreachable'},
+										autonomy={'simple': Autonomy.Off, 'complex': Autonomy.Off},
+										remapping={'input_value': 'is_simplified'})
 
 
 		return _state_machine
@@ -270,10 +277,10 @@ Robot is assumed to be standing on four legs.
 	            output_pose.pose.orientation = Quaternion(0, -0.70711, 0, 0.70711)
 	        # Set target position
 	        # Check if boundarie is sane
-	        if pos.z > self.brohof_upper_limit or pos.z < 0.10: 
+	        if pos.z > self.brohof_upper_limit or pos.z < -0.15: 
 	            # too high or to low
 	            return None
-	        if pos.x < -0.25:
+	        if pos.x < 0.25:
 	            # too close
                     return None
                 # Move to shoulder1 point
