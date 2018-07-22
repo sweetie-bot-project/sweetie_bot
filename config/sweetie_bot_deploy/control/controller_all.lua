@@ -27,7 +27,8 @@ end
 -- reporting.add_filereporter("aggregator", {  { name = "aggregator_ref" ,  ports= {"out_joints_sorted"} } }, dir .. "aggregator.out", true)
 
 -- make robot to stand on four legs
-set_support(1234)
+debug.reset_platform_pose(0.223)
+debug.set_support(1234)
 timer.timer:wait(0, 0.2) -- wait 200 ms
 
 -- start default controller

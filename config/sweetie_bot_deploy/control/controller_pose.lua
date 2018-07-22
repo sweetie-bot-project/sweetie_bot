@@ -48,10 +48,9 @@ controller.pose:provides("rosservice"):connect("rosSetOperational", config.node_
 controller.pose:configure()
 
 
----
---- helper function for setting controlled limb
----
-function set_pose_controlled_limb(limb)
+--- Helper function for setting controlled limb
+-- @param limb String with kinematic chain name.
+function debug.set_pose_controlled_limb(limb)
 	--- reconfigure controller
 	controller.pose:stop()
 	controller.pose:getProperty("controlled_chain"):set(limb)

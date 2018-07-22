@@ -58,11 +58,11 @@ controller.stance:provides("rosservice"):connect("rosSetOperational", config.nod
 assert(controller.stance:configure(), "ERROR: Unable to configure controller/stance.")
 
 
----
---- helper function for setting stance support legs
---- 123 means leg1, leg2, leg3
----
-function set_stance(val)
+--- Helper function for setting stance support legs
+--
+-- @param val support legs code: 123 means leg1, leg2, leg3
+--
+function debug.set_stance(val)
 	--- determine new support limbs
 	list = {}
 	while val >= 1 do
@@ -81,29 +81,4 @@ function set_stance(val)
 		return true
 	end
 end
-
-
---
--- debug pose messages and pose control port
--- TODO: move somewhere (write tests).
---
-p1 = rtt.Variable("geometry_msgs.PoseStamped")
-p1.pose.orientation.w = 1
-p1.pose.position.x = 0.00
-p1.pose.position.z = 0.22
-
-p2 = rtt.Variable("geometry_msgs.PoseStamped")
-p2.pose.orientation.z = -0.094577
-p2.pose.orientation.w = 0.9955
-p2.pose.position.x = 0.00
-p2.pose.position.z = 0.22
-
-p3 = rtt.Variable("geometry_msgs.PoseStamped")
-p3.pose.orientation.z = 0.0
-p3.pose.orientation.w = 1.0
-p3.pose.position.x = 0.10
-p3.pose.position.z = 0.22
-
-base_ref_port = rttlib.port_clone_conn( controller.stance:getPort("in_base_ref") )
-base_ref_port:write( p1 )
 

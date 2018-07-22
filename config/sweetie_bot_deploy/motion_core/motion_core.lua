@@ -133,21 +133,35 @@ assert(aggregator_ref:start(), "ERROR: Unable to start aggregator_ref.")
 assert(kinematics_fwd:start(), "ERROR: Unable to start kinematics_fwd.")
 assert(odometry_ref:start(), "ERROR: Unable to start odometry_ref.") 
 
----
---- helper function for setting support
---- 123 means leg1, leg2, leg3
----
-function set_support(val)
-	list = {}
+--- Helper function for setting support
+-- @param val Support legs code: 123 means leg1, leg2, leg3
+--
+function debug.set_support(val)
+	local list = {}
 	while val >= 1 do
 		table.insert(list, "leg" .. tostring(val % 10))
 		val = math.floor(val / 10)
 	end
-	limbs = rtt.Variable("strings")
+	local limbs = rtt.Variable("strings")
 	limbs:fromtab(list)
 	aggregator_ref:setSupportState(limbs)
 end
 
+
+--- Helper function for resetting base_link pose to identity.
+-- @param z base_link new z coordinate (use 0.223 for proto2)
+function debug.reset_platform_pose(z)
+	-- default platform pose
+	local p = rtt.Variable("sweetie_bot_kinematics_msgs.RigidBodyState")
+	p.name:resize(1)
+	p.name[0] = "base_link"
+	p.frame:resize(1)
+	p.frame[0].p.Z = z
+	p.wrench:resize(1)
+	-- override odometry
+    local override_odometry_port = rttlib.port_clone_conn( odometry_ref:getPort("in_base") )
+	override_odometry_port:write( p )
+end
 
 -- 
 -- Dynamics

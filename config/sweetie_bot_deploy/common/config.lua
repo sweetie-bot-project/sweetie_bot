@@ -11,7 +11,10 @@ depl = tc:getPeer("Deployer")
 depl:import("rtt_ros")
 ros = rtt.provides("ros")
 
-config = {}
+-- table for deployment-related function and variables
+config = {} 
+-- table for robot debug/testing code, filled in modules.
+debug = {} 
 
 -- 0. Simplify access to OROCOS facilities in children scripts
 
@@ -132,7 +135,7 @@ require "config_extra"
 
 --- Find configuration file and return full path to it. Return nul on failure
 --
--- First of all tries to find parameter with the same name on ROS parameter server.
+-- First of all it tries to find parameter with the same name on ROS parameter server.
 -- If path is relative  "conf_file/" namespace is assumed. If parameter does not exists then 
 -- search for configuration file under defined overlays. 
 --
