@@ -22,13 +22,15 @@ class SweetieBotRandHeadMovements(EventState):
     -- max2356      float[4]        Max values for joint52, joint53, eyes_pitch, eyes_yaw.
     -- min2356      float[4]        Min values for joint52, joint53, eyes_pitch, eyes_yaw.
 
+    ># config       dict            Dictionary with keys 'duration', 'interval', 'max2356', 'min2356' to override default configuration. dict or key values can be set to None to use default value from parameters.
+
     <= done 	                    Finished.
     <= failed 	                    Failed to activate FollowJointState controller.
 
     '''
 
     def __init__(self, controller = 'joint_state_head', duration = 120, interval = [3, 5], max2356 = [0.3, 0.3, 1.5, 1.5], min2356 = [-0.3, -0.3, -1.5, -1.5]):
-        super(SweetieBotRandHeadMovements, self).__init__(outcomes = ['done', 'failed'])
+        super(SweetieBotRandHeadMovements, self).__init__(outcomes = ['done', 'failed'], input_keys = ['config'])
 
         # Store topic parameter for later use.
         self._controller = 'motion/controller/' + controller 
@@ -43,6 +45,12 @@ class SweetieBotRandHeadMovements(EventState):
         self._movement_duration = Duration()
 
         # user input
+        self.set_movement_parameters(duration, interval, min2356, max2356)
+
+        # error in enter hook
+        self._error = False
+
+    def set_movement_parameters(self, duration, interval, min2356, max2356):
         if not isinstance(duration, (int, float)) or duration < 0:
             raise ValueError("Duration must be nonegative number.")
         if len(interval) != 2 or any([ not isinstance(t, (int, float)) for t in interval])or any([ t < 0 for t in interval]) or interval[0] > interval[1]:
@@ -53,15 +61,27 @@ class SweetieBotRandHeadMovements(EventState):
             raise ValueError("max2356: list of four numbers was expected.")
         self._duration = Duration.from_sec(duration)
         self._interval = interval
-        self._max2356 = max2356
         self._min2356 = min2356
-
-        # error in enter hook
-        self._error = False
+        self._max2356 = max2356
     
     def on_enter(self, userdata):
         self._error = False
 
+        # override configuration if necessary
+        try:
+            if userdata.config != None:
+                # process dict
+                duration = userdata.config.get("duration", self._duration.to_sec())
+                interval = userdata.config.get("interval", self._interval)
+                min2356 = userdata.config.get("min2356", self._min2356)
+                max2356 = userdata.config.get("max2356", self._max2356)
+                # check parameters
+                self.set_movement_parameters(duration, interval, min2356, max2356)
+        except Exception as e:
+            Logger.logwarn('Failed to process `config` input key:\n%s' % str(e))
+            self._error = True
+            return
+            
         # activate head controller
         try: 
             res = self._set_operational_caller.call(self._controller + '/set_operational', True)
