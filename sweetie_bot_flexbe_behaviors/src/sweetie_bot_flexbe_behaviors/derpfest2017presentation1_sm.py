@@ -54,7 +54,7 @@ class Derpfest2017Presentation1SM(Behavior):
 		control_topic = 'control'
 		voice_topic = 'control'
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
-		joy_topic = 'hmi/joystick'
+		joy_topic = '/hmi/joystick'
 		moveit_action = 'move_group'
 		storage = 'joint_trajectory'
 		# x:157 y:271, x:501 y:342

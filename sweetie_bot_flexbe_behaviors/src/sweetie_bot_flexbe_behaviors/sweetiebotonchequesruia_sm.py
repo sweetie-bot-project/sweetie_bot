@@ -65,10 +65,10 @@ class SweetieBotOnChequesruiaSM(Behavior):
 
 
 	def create(self):
-		leap_topic = 'hmi/leap_motion/data'
+		leap_topic = '/hmi/leap_motion/data'
 		eyes_cmd_topic = 'control'
 		voice_topic = 'control'
-		leap_pose_topic = 'hmi/leap_motion/pose'
+		leap_pose_topic = '/hmi/leap_motion/pose'
 		# x:286 y:634, x:989 y:651
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 		_state_machine.userdata.be_evil = False

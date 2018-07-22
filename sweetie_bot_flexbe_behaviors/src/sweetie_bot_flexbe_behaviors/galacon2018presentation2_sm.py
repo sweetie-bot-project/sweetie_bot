@@ -64,6 +64,7 @@ class Galacon2018Presentation2SM(Behavior):
 
 
 	def create(self):
+		joy_topic = '/hmi/joystick'
 		# x:410 y:173, x:436 y:319
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 		_state_machine.userdata.head_pose_joints = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -71,12 +72,7 @@ class Galacon2018Presentation2SM(Behavior):
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
-                control_topic = 'control'
-                voice_topic = 'control'
-                joint_trajectory_action = 'motion/controller/joint_trajectory'
-                joy_topic = '/hmi/joystick'
-                moveit_action = 'move_group'
-                storage = '/sweetie_bot/joint_trajectory'
+
 		# [/MANUAL_CREATE]
 
 

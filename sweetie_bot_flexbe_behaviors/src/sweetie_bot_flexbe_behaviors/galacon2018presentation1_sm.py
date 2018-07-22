@@ -47,7 +47,7 @@ class Galacon2018Presentation1SM(Behavior):
 
 
 	def create(self):
-		joy_topic = 'hmi/joystick'
+		joy_topic = '/hmi/joystick'
 		# x:164 y:331, x:436 y:319
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 		_state_machine.userdata.head_pose_joints = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]

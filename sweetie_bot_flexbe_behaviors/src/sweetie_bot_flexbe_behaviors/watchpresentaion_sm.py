@@ -68,7 +68,7 @@ class WatchPresentaionSM(Behavior):
 		with _sm_randheadwaitkey_0:
 			# x:136 y:116
 			OperatableStateMachine.add('WaitKey',
-										WaitForMessageState(topic=joy_topic, condition=lambda x: any(x.buttons), buffered=False, clear=False),
+										WaitForMessageState(topic=joy_topic, condition=lambda x: x.buttons[12], buffered=False, clear=False),
 										transitions={'received': 'finished', 'unavailable': 'failed'},
 										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
 										remapping={'message': 'message'})
