@@ -110,7 +110,7 @@ class SweetieBotFollowHeadPoseSmart(EventState):
                     fp = self._ik._tf.transformPoint('bone54', focus_point).point
                     # distance and direction angle
                     dist = math.sqrt(fp.x**2 + fp.y**2 + fp.z**2)
-                    angle = math.acos(fp.z / dist)
+                    angle = math.acos(fp.x / dist)
                     # Logger.loginfo('SweetieBotFollowHeadLeapMotion: dist: %s, angle: %s' % (str(dist), str(angle)))
                     # check comfort distance
                     if angle < math.pi/4:
