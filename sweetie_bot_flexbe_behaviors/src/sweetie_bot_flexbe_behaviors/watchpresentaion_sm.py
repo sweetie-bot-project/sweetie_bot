@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 ###########################################################
 #               WARNING: Generated code!                  #
 #              **************************                 #
@@ -46,9 +47,10 @@ class WatchPresentaionSM(Behavior):
 	def create(self):
 		joy_topic = '/hmi/joystick'
 		moveit_action = 'move_group'
-		# x:98 y:374, x:414 y:365
-		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['head_pose_joints'])
+		# x:57 y:300, x:603 y:211
+		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'], input_keys=['head_pose_joints', 'rand_head_config'])
 		_state_machine.userdata.head_pose_joints = [ 0.0, 0.6, 0.0, 0.0, 0.0, 0.0 ]
+		_state_machine.userdata.rand_head_config = None
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -56,7 +58,7 @@ class WatchPresentaionSM(Behavior):
 		# [/MANUAL_CREATE]
 
 		# x:30 y:353, x:130 y:353, x:230 y:353, x:330 y:353, x:430 y:353, x:530 y:353
-		_sm_randheadwaitkey_0 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
+		_sm_randheadwaitkey_0 = ConcurrencyContainer(outcomes=['finished', 'failed'], input_keys=['rand_head_config'], conditions=[
 										('failed', [('WaitKey', 'unavailable')]),
 										('finished', [('WaitKey', 'received')]),
 										('failed', [('RandHeadMovements', 'failed')]),
@@ -75,7 +77,8 @@ class WatchPresentaionSM(Behavior):
 			OperatableStateMachine.add('RandHeadMovements',
 										SweetieBotRandHeadMovements(controller='joint_state_head', duration=600, interval=[1,4], max2356=[0.7,0.3,1,1], min2356=[0.5,0.1,-1,-1]),
 										transitions={'done': 'finished', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off},
+										remapping={'config': 'rand_head_config'})
 
 
 
@@ -84,12 +87,20 @@ class WatchPresentaionSM(Behavior):
 			OperatableStateMachine.add('RandHeadWaitKey',
 										_sm_randheadwaitkey_0,
 										transitions={'finished': 'PlaceHead1', 'failed': 'failed'},
-										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
+										remapping={'rand_head_config': 'rand_head_config'})
 
-			# x:177 y:227
+			# x:193 y:217
 			OperatableStateMachine.add('PlaceHead1',
-										MoveitToJointsState(move_group='head', joint_names=['joint51','joint52','joint53', 'joint54'], action_topic='move_group'),
-										transitions={'reached': 'finished', 'planning_failed': 'PlaceHead1', 'control_failed': 'PlaceHead1'},
+										MoveitToJointsState(move_group='head', joint_names=['joint51','joint52','joint53', 'joint54'], action_topic=moveit_action),
+										transitions={'reached': 'finished', 'planning_failed': 'PlaceHead2', 'control_failed': 'PlaceHead2'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off},
+										remapping={'joint_config': 'head_pose_joints'})
+
+			# x:189 y:370
+			OperatableStateMachine.add('PlaceHead2',
+										MoveitToJointsState(move_group='head', joint_names=['joint51','joint52','joint53', 'joint54'], action_topic=moveit_action),
+										transitions={'reached': 'finished', 'planning_failed': 'failed', 'control_failed': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off},
 										remapping={'joint_config': 'head_pose_joints'})
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 ###########################################################
 #               WARNING: Generated code!                  #
 #              **************************                 #
@@ -64,14 +65,15 @@ class SweetieBotOnChequesruiaSM(Behavior):
 
 
 	def create(self):
-		leap_topic = '/hmi/leap_motion/data'
+		leap_topic = 'hmi/leap_motion/data'
 		eyes_cmd_topic = 'control'
 		voice_topic = 'control'
-		leap_pose_topic = '/hmi/leap_motion/pose'
+		leap_pose_topic = 'hmi/leap_motion/pose'
 		# x:286 y:634, x:989 y:651
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 		_state_machine.userdata.be_evil = False
 		_state_machine.userdata.pose = PoseStamped()
+		_state_machine.userdata.unused = None
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -79,7 +81,7 @@ class SweetieBotOnChequesruiaSM(Behavior):
 		# [/MANUAL_CREATE]
 
 		# x:30 y:353, x:343 y:356, x:209 y:349, x:843 y:453, x:473 y:355, x:638 y:361, x:907 y:552
-		_sm_randheadmovements_0 = ConcurrencyContainer(outcomes=['object_detected', 'failed'], conditions=[
+		_sm_randheadmovements_0 = ConcurrencyContainer(outcomes=['object_detected', 'failed'], input_keys=['unused'], conditions=[
 										('object_detected', [('WaitUntlObject', 'still_object')]),
 										('object_detected', [('WaitUntlObject', 'moving_object')]),
 										('failed', [('WaitUntlObject', 'no_object')]),
@@ -99,7 +101,8 @@ class SweetieBotOnChequesruiaSM(Behavior):
 			OperatableStateMachine.add('RandHeadMoveme',
 										SweetieBotRandHeadMovements(controller='joint_state_head', duration=120, interval=[1,4], max2356=[0.3,0.5,1,1], min2356=[-0.3,-0.1,-1,-1]),
 										transitions={'done': 'object_detected', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off},
+										remapping={'config': 'unused'})
 
 
 		# x:30 y:353, x:357 y:355, x:671 y:353, x:140 y:353, x:237 y:356, x:530 y:353, x:742 y:441, x:730 y:353, x:452 y:353, x:732 y:406
@@ -258,7 +261,8 @@ class SweetieBotOnChequesruiaSM(Behavior):
 			OperatableStateMachine.add('RandHeadMovements',
 										_sm_randheadmovements_0,
 										transitions={'object_detected': 'SwitchEvil', 'failed': 'failed'},
-										autonomy={'object_detected': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+										autonomy={'object_detected': Autonomy.Inherit, 'failed': Autonomy.Inherit},
+										remapping={'unused': 'unused'})
 
 
 		return _state_machine

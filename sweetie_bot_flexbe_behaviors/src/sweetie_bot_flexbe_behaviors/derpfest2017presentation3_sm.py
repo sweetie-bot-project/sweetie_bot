@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 ###########################################################
 #               WARNING: Generated code!                  #
 #              **************************                 #
@@ -6,7 +7,6 @@
 # Only code inside the [MANUAL] tags will be kept.        #
 ###########################################################
 
-import roslib; roslib.load_manifest('behavior_derpfest2017presentation3')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
@@ -119,10 +119,10 @@ class Derpfest2017Presentation3SM(Behavior):
 
 			# x:297 y:596
 			OperatableStateMachine.add('WatchPresentaion',
-										self.use_behavior(WatchPresentaionSM, 'WatchPresentaion'),
+										self.use_behavior(WatchPresentaionSM, 'WatchPresentaion', default_keys=['rand_head_config']),
 										transitions={'finished': 'IsEnd', 'failed': 'failed'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
-										remapping={'head_pose_joints': 'head_normal_joints'})
+										remapping={'head_pose_joints': 'head_normal_joints', 'rand_head_config': 'rand_head_config'})
 
 			# x:65 y:572
 			OperatableStateMachine.add('IsEnd',

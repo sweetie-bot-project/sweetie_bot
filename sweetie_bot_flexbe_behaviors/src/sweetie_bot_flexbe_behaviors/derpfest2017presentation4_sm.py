@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 ###########################################################
 #               WARNING: Generated code!                  #
 #              **************************                 #
@@ -6,7 +7,6 @@
 # Only code inside the [MANUAL] tags will be kept.        #
 ###########################################################
 
-import roslib; roslib.load_manifest('behavior_derpfest2017presentation4')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.wait_for_message_state import WaitForMessageState
 from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
@@ -52,6 +52,7 @@ class Derpfest2017Presentation4SM(Behavior):
 		moveit_action = 'move_group'
 		# x:68 y:631, x:130 y:353
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
+		_state_machine.userdata.unused = None
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -59,7 +60,7 @@ class Derpfest2017Presentation4SM(Behavior):
 		# [/MANUAL_CREATE]
 
 		# x:414 y:360, x:130 y:353, x:506 y:357, x:233 y:351, x:720 y:363, x:715 y:411
-		_sm_randmovements_0 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
+		_sm_randmovements_0 = ConcurrencyContainer(outcomes=['finished', 'failed'], input_keys=['unused'], conditions=[
 										('failed', [('WaitKey', 'unavailable')]),
 										('finished', [('RandMovements', 'done')]),
 										('finished', [('WaitKey', 'received')]),
@@ -78,7 +79,8 @@ class Derpfest2017Presentation4SM(Behavior):
 			OperatableStateMachine.add('RandMovements',
 										SweetieBotRandHeadMovements(controller='joint_state_head', duration=120, interval=[3,5], max2356=[0.3,0.3,1.5,1.5], min2356=[-0.3,-0.3,-1.5,-1.5]),
 										transitions={'done': 'finished', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off},
+										remapping={'config': 'unused'})
 
 
 
@@ -87,7 +89,8 @@ class Derpfest2017Presentation4SM(Behavior):
 			OperatableStateMachine.add('RandMovements',
 										_sm_randmovements_0,
 										transitions={'finished': 'HeadBasic', 'failed': 'failed'},
-										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
+										remapping={'unused': 'unused'})
 
 			# x:351 y:150
 			OperatableStateMachine.add('HeadBasic',
@@ -106,7 +109,8 @@ class Derpfest2017Presentation4SM(Behavior):
 			OperatableStateMachine.add('RandMovements2',
 										SweetieBotRandHeadMovements(controller='joint_state_head', duration=120, interval=[3,5], max2356=[0.3,0.3,1.5,1.5], min2356=[-0.3,-0.3,-1.5,-1.5]),
 										transitions={'done': 'finished', 'failed': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off},
+										remapping={'config': 'unused'})
 
 			# x:319 y:387
 			OperatableStateMachine.add('Bow',

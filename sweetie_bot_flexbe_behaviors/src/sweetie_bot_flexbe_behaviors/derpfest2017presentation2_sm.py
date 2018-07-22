@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 ###########################################################
 #               WARNING: Generated code!                  #
 #              **************************                 #
@@ -6,7 +7,6 @@
 # Only code inside the [MANUAL] tags will be kept.        #
 ###########################################################
 
-import roslib; roslib.load_manifest('behavior_derpfest2017presentation2')
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_manipulation_states.moveit_to_joints_state import MoveitToJointsState
 from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
@@ -50,7 +50,7 @@ class Derpfest2017Presentation2SM(Behavior):
 
 
 	def create(self):
-		joy_topic = '/hmi/joystick'
+		joy_topic = 'hmi/joystick'
 		joint_trajectory_action = 'motion/controller/joint_trajectory'
 		# x:44 y:403, x:375 y:319
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
@@ -64,7 +64,7 @@ class Derpfest2017Presentation2SM(Behavior):
 
 
 		with _state_machine:
-			# x:34 y:156
+			# x:71 y:228
 			OperatableStateMachine.add('PlaceHead',
 										MoveitToJointsState(move_group='head', joint_names=['joint51', 'joint52', 'joint53', 'joint54'], action_topic='move_group'),
 										transitions={'reached': 'WatchPresentaion', 'planning_failed': 'PlaceHead', 'control_failed': 'finished'},
@@ -85,17 +85,17 @@ class Derpfest2017Presentation2SM(Behavior):
 
 			# x:674 y:329
 			OperatableStateMachine.add('WatchPresentaion_3',
-										self.use_behavior(WatchPresentaionSM, 'WatchPresentaion_3'),
+										self.use_behavior(WatchPresentaionSM, 'WatchPresentaion_3', default_keys=['rand_head_config']),
 										transitions={'finished': 'DoNotUndestandAnything', 'failed': 'failed'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
-										remapping={'head_pose_joints': 'head_forward_joints'})
+										remapping={'head_pose_joints': 'head_forward_joints', 'rand_head_config': 'rand_head_config'})
 
 			# x:672 y:574
 			OperatableStateMachine.add('WatchPresentaion_4',
-										self.use_behavior(WatchPresentaionSM, 'WatchPresentaion_4'),
+										self.use_behavior(WatchPresentaionSM, 'WatchPresentaion_4', default_keys=['rand_head_config']),
 										transitions={'finished': 'AskToContinue ', 'failed': 'failed'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
-										remapping={'head_pose_joints': 'head_turned_right_joints'})
+										remapping={'head_pose_joints': 'head_turned_right_joints', 'rand_head_config': 'rand_head_config'})
 
 			# x:439 y:569
 			OperatableStateMachine.add('AskToContinue ',
@@ -123,17 +123,17 @@ class Derpfest2017Presentation2SM(Behavior):
 
 			# x:211 y:42
 			OperatableStateMachine.add('WatchPresentaion',
-										self.use_behavior(WatchPresentaionSM, 'WatchPresentaion'),
+										self.use_behavior(WatchPresentaionSM, 'WatchPresentaion', default_keys=['rand_head_config']),
 										transitions={'finished': 'SupprisedByProto3', 'failed': 'failed'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
-										remapping={'head_pose_joints': 'head_turned_right_joints'})
+										remapping={'head_pose_joints': 'head_turned_right_joints', 'rand_head_config': 'rand_head_config'})
 
 			# x:667 y:64
 			OperatableStateMachine.add('WatchPresentaion_2',
-										self.use_behavior(WatchPresentaionSM, 'WatchPresentaion_2'),
+										self.use_behavior(WatchPresentaionSM, 'WatchPresentaion_2', default_keys=['rand_head_config']),
 										transitions={'finished': 'ILikeMyMane', 'failed': 'failed'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
-										remapping={'head_pose_joints': 'head_turned_right_joints'})
+										remapping={'head_pose_joints': 'head_turned_right_joints', 'rand_head_config': 'rand_head_config'})
 
 
 		return _state_machine
