@@ -31,22 +31,28 @@ from geometry_msgs.msg import PoseStamped
 Created on Wed Aug 02 2017
 @author: disRecord
 '''
-class SweetieBotOnChequesruiaSM(Behavior):
+class LeapMotionControlSM(Behavior):
 	'''
-	SweetieBot beahavior for Cheqestria 2017. 
-1. Watch after moving hand.
-2. Give leg for brohoof or perform Greeting if hand is still.
-3. Perform random action and fall back to random head movements if no object.
+	Human interaction behavior for conventions. 
+
+Place LeapMotion sensor in 30 cm before Sweetie bot
+You need to run leap_motion node as follow: roslaunch sweetie_bot_deploy leap_motion.launch run_real:=true.
+
+When behavior is active Sweetie
+1. looks on moving hand;
+2. gives leg for brohoof or perform Greeting if hand is still;
+3. performs random action and fall back to random head movements if no object is detected.
+
+
 	'''
 
 
 	def __init__(self):
-		super(SweetieBotOnChequesruiaSM, self).__init__()
-		self.name = 'SweetieBotOnChequesruia'
+		super(LeapMotionControlSM, self).__init__()
+		self.name = 'LeapMotionControl'
 
 		# parameters of this behavior
-		self.add_parameter('hoof_shift', 0)
-		self.add_parameter('play_timeout', 12)
+		self.add_parameter('play_timeout', 6)
 
 		# references to used behaviors
 		self.add_behavior(BrohoofSM, 'Brohoof')
