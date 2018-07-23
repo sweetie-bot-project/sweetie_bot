@@ -36,6 +36,7 @@
 			<remap from="joint_state_accel" to="$(arg robot_ns)/motion/dynamics_inv/out_joints_accel_sorted"/>
 			<remap from="balance" to="$(arg robot_ns)/motion/dynamics_inv/out_balance"/>
 			<remap from="wrenches" to="$(arg robot_ns)/motion/dynamics_inv/out_wrenches_fixed"/> 
+			<remap from="base" to="$(arg robot_ns)/motion/odometry_ref/out_base"/> 
 			<!-- <remap from="wrenches" to="$(arg robot_ns)/motion/kinematics_fwd/out_limbs"/> -->
 			<remap from="supports" to="$(arg robot_ns)/motion/aggregator_ref/out_supports_sorted"/>
 		</node>
