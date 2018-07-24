@@ -19,8 +19,6 @@ Current version of Sweetie Bot software provides following functionality:
 3. Movements creation (See [TrjectoryEditor](hmi/sweetie_bot_joint_trajectory_editor))
 4. High-level control based on [FlexBe](http://philserver.bplaced.net/fbe/) hybrid finite state machines via external repository [`sweetie_bot_flexbe_behaviors`](https://gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors).
 
-<!-- Watch the Software demonstration video [here](https://www.youtube.com/watch?v=FTKn_fK0Puo): -->
-
 ## Repository content
 
 This repository contains all necessary software components to run the Sweetie Bot robots except for movements, sounds and actual behaviors which are stored in separate repositories
@@ -38,47 +36,9 @@ This repository contains all necessary software components to run the Sweetie Bo
 * [`behavior`](behavior) --- high-level control subsystem (not implemented yet).
 * [`hmi`](hmi) --- operator interface components, intended to be running on the host computer.
 
-## Usage
-
-To start basic control framework use 
-
-    roslaunch sweetie_bot_deploy joint_space_control.launch
-
-Following command starts MoveIt! `move_group` and FlexBe subsystem (your need `sweetie_bot_flexbe_behaviors` package which provides behaviors and states).
-
-    roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
-
-For more details see [`sweetie_bot_deploy` package](config/sweetie_bot_deploy).
-
 ## Installation
 
-### Project dependencies
-
-Internal dependencies:
-* [`sweetie_bot_proto2_movements`](https://gitlab.com/sweetie-bot/sweetie_bot_proto2_movements), 
-* [`sweetie_bot_sounds`](https://gitlab.com/sweetie-bot/sweetie_bot_sounds)
-
-External dependencies:
-
-* [ROS Kinetic Kame](http://wiki.ros.org/kinetic/Installation) or later. We need following packages:
-    * `ros_base` --- basic ROS installation.
-	* MoveIt! packages.
-	* `orocos_kdl` and `track_ik` kinematics.
-	* [`rospy_message_converter`](https://github.com/baalexander/rospy_message_converter)
-	* [`rviz_textured_quads`](https://github.com/lucasw/rviz_textured_quads)
-* [OROCOS 2.9](https://github.com/orocos-toolchain/orocos_toolchain), it is recommended slightly modified version from [here](https://github.com/disRecord) with improved lua completion. Also ROS package may be used but it may have some limitation. 
-* Additional ROS packages
-    * [`rtt-ros-integration` 2.9](https://github.com/orocos/rtt_ros_integration) (You may use ROS packages).
-    * [`kdl_msgs`](https://github.com/orocos/kdl_msgs), [rtt_kdl_msgs](https://github.com/orocos/rtt_kdl_msgs), [`rtt_geometry`](https://github.com/orocos/rtt_geometry).
-    * [`rttlua_completion`](https://github.com/orocos-toolchain/rttlua_completion), рекомендуется модифицированная версия [отсюда](https://github.com/disRecord)
-    * `rtt_tf2_msgs`,`rtt_control_msgs` typekit packages can be generated with [`rtt_roscom`](https://github.com/orocos/rtt_ros_integration/tree/toolchain-2.9/rtt_roscomm)
-* [Rigid Body Bynamics Library 2.5](https://rbdl.bitbucket.io/). Note that 2.6 version is not supported.
-* [FlexBe](http://philserver.bplaced.net/fbe/) behavior framework.
-	* [`flexbe_behavior_engine`](https://github.com/team-vigir/flexbe_behavior_engine/tree/feature/flexbe_app), specifically `feature/flexbe_app` branch for `felxbe_app` support.
-	* [`flexbe_app`](https://github.com/FlexBE/flexbe_app).
-    * [`felexbe_general_states`](https://github.com/FlexBE/generic_flexbe_states).
-
-### Installation from binary packages
+### Installation from binary packages (recomended)
 
 We have repository with binary packages for Ubuntu 16.04, Debian 9 Stretch and Raspbian. 
 
@@ -103,7 +63,7 @@ $ sudo apt-get install ros-lunar-sweetie-bot ros-lunar-sweetie-bot-base
 Note that `ros-lunar-sweetie-bot-base` package conflicts with OROCOS toolchain ROS packages.
 Sweetie Bot specific software is installed in `/opt/ros/sweetie_bot` directory. 
 
-Install `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_flexbe_behaviors`: 
+Install additional dependencies `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_flexbe_behaviors`: 
 ```
 $ mkdir -p ~/ros/sweetie_bot/src
 $ cd ~/ros/sweetie_bot/src
@@ -125,8 +85,39 @@ and launch Sweetie Bot control software.
 
 ### Installation from sources
 
+Full installation from sources can be tricky, this software uses a lot of external depenties.
+See this [repository](https://github.com/slavanap/ros-build) and Docker images [here](https://hub.docker.com/r/slavanap/ros-build/tags/).
+
+#### Project dependencies
+
+Additional dependencies:
+
+* [`sweetie_bot_proto2_movements`](https://gitlab.com/sweetie-bot/sweetie_bot_proto2_movements), 
+* [`sweetie_bot_sounds`](https://gitlab.com/sweetie-bot/sweetie_bot_sounds)
+
+External dependencies:
+
+* [ROS Kinetic Kame](http://wiki.ros.org/kinetic/Installation) or later. We need following packages:
+    * `ros_base` --- basic ROS installation.
+	* MoveIt! packages.
+	* `orocos_kdl` and `trac_ik` kinematics.
+	* [`rospy_message_converter`](https://github.com/baalexander/rospy_message_converter)
+	* [`rviz_textured_quads`](https://github.com/lucasw/rviz_textured_quads)
+* [OROCOS 2.9](https://github.com/orocos-toolchain/orocos_toolchain), it is recommended slightly modified version from [here](https://github.com/disRecord) with improved lua completion. Also ROS package may be used but it may have some limitation. 
+* Additional ROS packages
+    * [`rtt-ros-integration` 2.9](https://github.com/orocos/rtt_ros_integration) (You may use ROS packages).
+    * [`kdl_msgs`](https://github.com/orocos/kdl_msgs), [rtt_kdl_msgs](https://github.com/orocos/rtt_kdl_msgs), [`rtt_geometry`](https://github.com/orocos/rtt_geometry).
+    * [`rttlua_completion`](https://github.com/orocos-toolchain/rttlua_completion), рекомендуется модифицированная версия [отсюда](https://github.com/disRecord)
+    * `rtt_tf2_msgs`,`rtt_control_msgs` typekit packages can be generated with [`rtt_roscom`](https://github.com/orocos/rtt_ros_integration/tree/toolchain-2.9/rtt_roscomm)
+* [Rigid Body Bynamics Library 2.5](https://rbdl.bitbucket.io/). Note that 2.6 version is not supported.
+* [FlexBe](http://philserver.bplaced.net/fbe/) behavior framework.
+	* [`flexbe_behavior_engine`](https://github.com/team-vigir/flexbe_behavior_engine/tree/feature/flexbe_app), specifically `feature/flexbe_app` branch for `felxbe_app` support.
+	* [`flexbe_app`](https://github.com/FlexBE/flexbe_app).
+    * [`felexbe_general_states`](https://github.com/FlexBE/generic_flexbe_states).
+
+
 Your may compile Sweetie Bot manually in ROS workspace. This method does not conflicts with installation from binary packages due to ROS overlay mechanism.
-Let's assume that all build requirements are satisfied. You may install `ros-lunar-sweetie-base` package or build them manually in the same or different ROS workspace.
+Let's assume that all build requirements are satisfied. Or you can install them from binary package `ros-lunar-sweetie-bot-base`.
 
 Create ROS workspace:
 ```
@@ -163,9 +154,18 @@ Set ROS environment
 source ~/ros/sweetie_bot/devel/setup.bash
 ```
 
-### Installation with  dependencies from source
+## Usage
 
-Use this [repository](https://github.com/slavanap/ros-build) and this Docker images [here](https://hub.docker.com/r/slavanap/ros-build/tags/).
+To start basic control framework use 
+
+    roslaunch sweetie_bot_deploy joint_space_control.launch
+
+Following command starts MoveIt! `move_group` and FlexBe subsystem (your need `sweetie_bot_flexbe_behaviors` package which provides behaviors and states).
+
+    roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
+
+For more details see [`sweetie_bot_deploy` package](config/sweetie_bot_deploy).
+
 
 ### Build status
 
