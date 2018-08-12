@@ -133,6 +133,11 @@ class SweetieBotRandHeadMovements(EventState):
                 Logger.logwarn('Failed to send JointState message `' + self._topic + '`:\n%s' % str(e))
 
     def on_exit(self, userdata):
+        try: 
+            res = self._set_operational_caller.call(self._controller + '/set_operational', False)
+        except Exception as e:
+            Logger.logwarn('Failed to deactivate `' + self._controller + '` controller:\n%s' % str(e))
+            return
         Logger.loginfo('Done random pose generation for eyes and head.')
  
 
