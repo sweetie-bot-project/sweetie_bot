@@ -72,16 +72,12 @@ $ git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
 $ git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
 $ git clone https://github.com/lucasw/rviz_textured_quads.git inc/rviz_textured_quads
 $ cd ~/ros/sweetie_bot
-$ source /opt/ros/lunar/setup.bash
+$ source /opt/ros/sweetie_bot/setup.bash
 $ catkin_make
 ```
 Due to bug (quads are always black) it is recommended to install `rviz_textured_quads` in Sweetie Bot workspace.
 
-Setup ROS environment 
-```
-$ source /opt/ros/sweetie_bot/setup.bash
-```
-and launch Sweetie Bot control software.
+See `Usage` for instructions how to launch Sweetie Bot control software.
 
 ### Installation from sources
 
@@ -149,12 +145,13 @@ source /opt/ros/lunar/setup.bash
 cd ~/ros/sweetie_bot
 catkin_make
 ``` 
+
+## Usage
+
 Set ROS environment
 ```
 source ~/ros/sweetie_bot/devel/setup.bash
 ```
-
-## Usage
 
 To start basic control framework use 
 
