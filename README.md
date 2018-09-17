@@ -44,36 +44,35 @@ We have repository with binary packages for Ubuntu 16.04, Debian 9 Stretch and R
 
 Add apt keys
 ```
-$ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5523BAEEB01FA116
-$ wget -O - https://raw.githubusercontent.com/slavanap/ros-build/master/slavanap.key | sudo apt-key add -
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5523BAEEB01FA116
+wget -O - https://raw.githubusercontent.com/slavanap/ros-build/master/slavanap.key | sudo apt-key add -
 ```
 
 Add ROS and Sweetie Bot repositories
 ```
-$ sudo -i
-# echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list
-# echo "deb http://sweetie.bot/apt $(lsb_release -sc) main" > /etc/apt/sources.list.d/sweetie-bot.list
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+sudo sh -c 'echo "deb http://sweetie.bot/apt $(lsb_release -sc) main" > /etc/apt/sources.list.d/sweetie-bot.list
 ```
 
 Install binary packages
 ```
-$ sudo apt-get update
-$ sudo apt-get install ros-lunar-sweetie-bot ros-lunar-sweetie-bot-base
+sudo apt-get update
+sudo apt-get install ros-lunar-sweetie-bot ros-lunar-sweetie-bot-base
 ```
 Note that `ros-lunar-sweetie-bot-base` package conflicts with OROCOS toolchain ROS packages.
 Sweetie Bot specific software is installed in `/opt/ros/sweetie_bot` directory. 
 
 Install additional dependencies `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_flexbe_behaviors`: 
 ```
-$ mkdir -p ~/ros/sweetie_bot/src
-$ cd ~/ros/sweetie_bot/src
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
-$ git clone https://github.com/lucasw/rviz_textured_quads.git inc/rviz_textured_quads
-$ cd ~/ros/sweetie_bot
-$ source /opt/ros/sweetie_bot/setup.bash
-$ catkin_make
+mkdir -p ~/ros/sweetie_bot/src
+cd ~/ros/sweetie_bot/src
+git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
+git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
+git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
+git clone https://github.com/lucasw/rviz_textured_quads.git inc/rviz_textured_quads
+cd ~/ros/sweetie_bot
+source /opt/ros/sweetie_bot/setup.bash
+catkin_make
 ```
 Due to bug (quads are always black) it is recommended to install `rviz_textured_quads` in Sweetie Bot workspace.
 
@@ -97,6 +96,9 @@ External dependencies:
     * `ros_base` --- basic ROS installation.
 	* MoveIt! packages.
 	* `orocos_kdl` and `trac_ik` kinematics.
+    * qtbase5-dev
+    * libalglib-dev
+    * eigen-conversions tf-conversions
 	* [`rospy_message_converter`](https://github.com/baalexander/rospy_message_converter)
 	* [`rviz_textured_quads`](https://github.com/lucasw/rviz_textured_quads)
 * [OROCOS 2.9](https://github.com/orocos-toolchain/orocos_toolchain), it is recommended slightly modified version from [here](https://github.com/disRecord) with improved lua completion. Also ROS package may be used but it may have some limitation. 
@@ -105,7 +107,7 @@ External dependencies:
     * [`kdl_msgs`](https://github.com/orocos/kdl_msgs), [rtt_kdl_msgs](https://github.com/orocos/rtt_kdl_msgs), [`rtt_geometry`](https://github.com/orocos/rtt_geometry).
     * [`rttlua_completion`](https://github.com/orocos-toolchain/rttlua_completion), рекомендуется модифицированная версия [отсюда](https://github.com/disRecord)
     * `rtt_tf2_msgs`,`rtt_control_msgs` typekit packages can be generated with [`rtt_roscom`](https://github.com/orocos/rtt_ros_integration/tree/toolchain-2.9/rtt_roscomm)
-* [Rigid Body Bynamics Library 2.5](https://rbdl.bitbucket.io/). Note that 2.6 version is not supported.
+* [Rigid Body Bynamics Library 2.5](https://rbdl.bitbucket.io/) with [this line](https://gitlab.com/snippets/1754726) commented. Note that 2.6 version is not supported.
 * [FlexBe](http://philserver.bplaced.net/fbe/) behavior framework.
 	* [`flexbe_behavior_engine`](https://github.com/team-vigir/flexbe_behavior_engine/tree/feature/flexbe_app), specifically `feature/flexbe_app` branch for `felxbe_app` support.
 	* [`flexbe_app`](https://github.com/FlexBE/flexbe_app).
@@ -117,27 +119,32 @@ Let's assume that all build requirements are satisfied. Or you can install them 
 
 Create ROS workspace:
 ```
-$ mkdir -p ~/ros/sweetie_bot/src 
+mkdir -p ~/ros/sweetie_bot/src 
 ```
 
 Clone dependencies if necessary and generate typekit packages if they not installed. 
 If you are using `ros-lunar-sweetie-bot-base` package only FlexBe and `rviz_textured_quads` are needed.
 ```
-$ cd ~/ros/sweetie_bot/src; mkdir inc; cd inc
-$ git clone https://github.com/lucasw/rviz_textured_quads.git inc/rviz_textured_quads
-$ rosrun rtt_roscomm create_rtt_msgs control_msgs
-$ rosrun rtt_roscomm create_rtt_msgs tf2_msgs
-git clone -b feature/flexbe_app https://github.com/team-vigir/flexbe_behavior_engine.git inc/flexbe_behavior_engine
+cd ~/ros/sweetie_bot/src; mkdir inc; cd inc
+git clone https://github.com/lucasw/rviz_textured_quads.git
+git clone -b feature/flexbe_app https://github.com/team-vigir/flexbe_behavior_engine.git
 git clone https://github.com/FlexBE/flexbe_app.git
 ```
 Due to the bug (quads are always black) it is recommended to install `rviz_textured_quads` in Sweetie Bot workspace.
 
 Clone SweetieBot sources:
 ```
-$ cd ~/ros/sweetie_bot/src
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
+cd ~/ros/sweetie_bot/src
+git clone -b devel --recursive git@gitlab.com:sweetie-bot/sweetie_bot.git
+git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
+git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
+git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
+mkdir msgs; cd msgs;
+git clone https://github.com/orocos/rtt_kdl_msgs
+git clone https://github.com/orocos/kdl_msgs.git
+git clone https://github.com/orocos/rtt_geometry.git
+rosrun rtt_roscomm create_rtt_msgs control_msgs
+rosrun rtt_roscomm create_rtt_msgs tf2_msgs
 ```
 Compile:
 ```
