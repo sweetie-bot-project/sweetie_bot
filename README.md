@@ -98,7 +98,7 @@ External dependencies:
 	* `orocos_kdl` and `trac_ik` kinematics.
     * qtbase5-dev
     * libalglib-dev
-    * eigen-conversions tf-conversions
+    * eigen-conversions tf-conversions interactive-markers
 	* [`rospy_message_converter`](https://github.com/baalexander/rospy_message_converter)
 	* [`rviz_textured_quads`](https://github.com/lucasw/rviz_textured_quads)
 * [OROCOS 2.9](https://github.com/orocos-toolchain/orocos_toolchain), it is recommended slightly modified version from [here](https://github.com/disRecord) with improved lua completion. Also ROS package may be used but it may have some limitation. 
