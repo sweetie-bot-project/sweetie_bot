@@ -1,48 +1,44 @@
-before_script:
-  - git submodule sync --recursive
-  - git submodule update --init --recursive
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
 
-.script_parts:
-  - &prep_environment |
-    mkdir /tmp/build && ln -s "$PWD" /tmp/build/src && cd /tmp/build
-    source "/opt/ros/$ROS_DISTRO/setup.bash"
-  - &build_deb |
-    source "/tmp/repo/buildpkg.bash"
-    export BASE_VERSION="$DEB_VERSION"
-    export DEB_VERSION="${DEB_VERSION%~*}-${CI_JOB_ID}~${DEB_VERSION#*~}"
-    export DEB_FILE="sweetie-bot$PKG_SUFFIX"
-    export DEB_NAME="ros-${ROS_DISTRO}-${DEB_FILE}"
-    export DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO" DEB_HOMEPAGE="http://sweetiebot.net/"
-    buildpkg "/opt/ros/sweetie_bot" "${DEB_FILE}.deb" "ros-${ROS_DISTRO}-sweetie-bot-base$PKG_SUFFIX (=${BASE_VERSION})" || echo "ret code $?"
-    mv "${DEB_FILE}.deb" "$CI_PROJECT_DIR/${CI_JOB_NAME}.deb"
-
-desktop-xenial: &job_template
-  image: slavanap/ros-build:lunar-xenial
+stretch-amd64: &desktop_template
+  image: slavanap/ros-build:stretch-amd64
   stage: build
   tags:
     - docker
   script:
-    - *prep_environment
-    - catkin_make_isolated --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout $PACKAGES
-    - *build_deb
+    - &prep_environment |
+      mkdir /tmp/build && ln -s "$PWD" /tmp/build/src && cd /tmp/build
+      source "/opt/ros/$ROS_DISTRO/setup.bash"
+    - catkin_make_isolated --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
+    - &buildpkg |
+      source "/tmp/repo/buildpkg.bash"
+      export BASE_VERSION="$DEB_VERSION"
+      export DEB_VERSION="${DEB_VERSION%~*}-${CI_JOB_ID}~${DEB_VERSION#*~}"
+      export DEB_NAME="ros-${ROS_DISTRO}-sweetie-bot$PKG_SUFFIX"
+      export DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO" \
+        DEB_HOMEPAGE="http://sweetiebot.net/"
+      buildpkg "/opt/ros/sweetie_bot" "sweetie-bot.deb" "ros-${ROS_DISTRO}-sweetie-bot-base$PKG_SUFFIX (=${BASE_VERSION})" || echo "ret code $?"
+      mv "sweetie-bot.deb" "$CI_PROJECT_DIR/sweetie-bot-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
   artifacts:
-    name: "${CI_JOB_NAME}.deb"
+    name: "deb package"
     expire_in: 3 weeks
     paths:
-      - "${CI_JOB_NAME}.deb"
+      - "sweetie-bot-*.deb"
 
-desktop-stretch:
-  <<: *job_template
-  image: slavanap/ros-build:lunar-stretch
+xenial-amd64:
+  <<: *desktop_template
+  image: slavanap/ros-build:xenial-amd64
 
-rpi3-stretch:
-  <<: *job_template
-  image: slavanap/ros-build:lunar-stretch-rpi3
-  tags:
-    - docker-armhf
+stretch-rpi3: &robot_template
+  <<: *desktop_template
+  image: slavanap/ros-build:stretch-rpi3
   script:
     - touch hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE behavior/sweetie_bot_voice/CATKIN_IGNORE
     - *prep_environment
-    - >
-      catkin_make_isolated --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
-    - *build_deb
+    - catkin_make_isolated $CMAKE_TOOLCHAIN --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
+    - *buildpkg
+
+xenial-tinker:
+  <<: *robot_template
+  image: slavanap/ros-build:xenial-tinker
