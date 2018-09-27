@@ -8,8 +8,6 @@ rttlib.color = true
 
 tc = rtt.getTC()
 depl = tc:getPeer("Deployer")
-depl:import("rtt_ros")
-ros = rtt.provides("ros")
 
 -- table for deployment-related function and variables
 config = {} 
@@ -98,7 +96,7 @@ package.path = lua_path .. string.gsub(package.path, "^;*%./%?%.lua;*", "")
 -- if ros additional functions are supported 
 if ros.getNodeName then
 	config.node_fullname = ros:getNodeName()
-	config.node_namespace = ros:getNodeNamespace()
+	config.node_namespace = ros:getNamespace()
 else
 	-- otherwise: use args
 	config.node_fullname = config.node_fullname or "motion"
