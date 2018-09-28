@@ -12,3 +12,6 @@
 [submodule "behavior/sweetie_bot_flexbe_behaviors"]
 	path = behavior/sweetie_bot_flexbe_behaviors
 	url = ../sweetie_bot_flexbe_behaviors.git
+[submodule "config/sweetie_bot_proto3_description"]
+	path = config/sweetie_bot_proto3_description
+	url = ../sweetie_bot_proto3_description.git
