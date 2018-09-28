@@ -1,0 +1,14 @@
+#!/bin/sh
+if [ -z $1 ]; then
+	echo "Usage:"
+	echo "    $ `basename $0` load|save"
+	echo 
+	echo "Load joint trajectories from sweetie_bot_proto3_movements package to /sweetie_bot/joint_trajectory namespace."
+	echo "or"
+	echo "save joint trajectories from /sweetie_bot/joint_trajectory namespace to sweetie_bot_proto3_movements package."
+	echo
+	exit 0
+fi
+
+#echo "Invoke: rosrun sweetie_bot_deploy store $1 /sweetie_bot/joint_trajectory \`rospack find sweetie_bot_proto3_movements\`/joint_trajectories"
+rosrun sweetie_bot_deploy store $1 /sweetie_bot/joint_trajectory "`rospack find sweetie_bot_proto3_movements`/joint_trajectories"

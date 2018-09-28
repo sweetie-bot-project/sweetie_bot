@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "cpf.dtd">
+<properties>
+  <struct name="chains" type="PropertyBag">
+    <description>Kinematics chains.</description>
+	<struct name="leg1" type="PropertyBag">
+		<description>Leg1 kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>base_link</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>leg1_link6</value>
+		</simple>
+		<simple name="last_link_virtual" type="string">
+			<description>Last  chain element.</description>
+			<value>leg1_link7</value>
+		</simple>
+		<simple name="default_contact" type="string">
+			<description>Default contact name.</description>
+			<value>hoof_center</value>
+		</simple>
+	</struct>
+	<struct name="leg3" type="PropertyBag">
+		<description>Leg3 kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>base_link</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>leg3_link6</value>
+		</simple>
+		<simple name="last_link_virtual" type="string">
+			<description>Last  chain element.</description>
+			<value>leg3_link7</value>
+		</simple>
+		<simple name="default_contact" type="string">
+			<description>Default contact name.</description>
+			<value>hoof_center</value>
+		</simple>
+	</struct>
+	<struct name="leg4" type="PropertyBag">
+		<description>Leg4 kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>base_link</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>leg4_link6</value>
+		</simple>
+		<simple name="last_link_virtual" type="string">
+			<description>Last  chain element.</description>
+			<value>leg4_link7</value>
+		</simple>
+		<simple name="default_contact" type="string">
+			<description>Default contact name.</description>
+			<value>hoof_center</value>
+		</simple>
+	</struct>
+	<struct name="leg2" type="PropertyBag">
+		<description>Leg2 kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>base_link</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>leg2_link6</value>
+		</simple>
+		<simple name="last_link_virtual" type="string">
+			<description>Last  chain element.</description>
+			<value>leg2_link7</value>
+		</simple>
+		<simple name="default_contact" type="string">
+			<description>Default contact name.</description>
+			<value>hoof_center</value>
+		</simple>
+	</struct>
+	<struct name="head" type="PropertyBag">
+		<description>Head kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>base_link</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>head_link4</value>
+		</simple>
+		<simple name="last_link_virtual" type="string">
+			<description>Last  chain element.</description>
+			<value>head_link6</value>
+		</simple>
+	</struct>
+	<struct name="eyes" type="PropertyBag">
+		<description>Eyes pseudo kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>head_link4</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>eyes_link_yaw</value>
+		</simple>
+	</struct>
+	<struct name="ear_l" type="PropertyBag">
+		<description>Eyes pseudo kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>head_link4</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>ear_l_link</value>
+		</simple>
+    </struct>
+	<struct name="ear_r" type="PropertyBag">
+		<description>Eyes pseudo kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>head_link4</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>ear_r_link</value>
+		</simple>
+    </struct>
+	<struct name="mouth" type="PropertyBag">
+		<description>Eyes pseudo kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>head_link4</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>mouth_link</value>
+		</simple>
+    </struct>
+  </struct>
+  <struct name="contacts" type="PropertyBag">
+    <description>Contacts.</description>
+	<struct name="hoof_flat" type="PropertyBag">
+		<description>Hoof placed on ground flatly. One degree of freedom around vertical axis.</description>
+		<struct name="points" type="KDL.Vector[]">
+			<description>Equivalent set of fixed points.</description>
+			<struct name="Element0" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.03</value></simple>
+			</struct>
+			<struct name="Element1" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.05</value></simple>
+			</struct>
+		</struct>
+	</struct>
+	<struct name="hoof_center" type="PropertyBag">
+		<description>Hoof placed on ground flatly. One degree of freedom around vertical axis.</description>
+		<struct name="points" type="KDL.Vector[]">
+			<description>Equivalent set of fixed points.</description>
+			<struct name="Element0" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.035</value></simple>
+			</struct>
+		</struct>
+	</struct>
+	<struct name="hoof_fixed" type="PropertyBag">
+		<description>Hoof is fixed. No degrees of freedom.</description>
+		<struct name="points" type="KDL.Vector[]">
+			<description>Equivalent set of fixed points.</description>
+			<struct name="Element0" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.035</value></simple>
+			</struct>
+			<struct name="Element1" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.055</value></simple>
+			</struct>
+			<struct name="Element2" type="KDL.Vector">
+				<description>Item</description>
+				<simple name="X" type="double"><value>0.02</value></simple>
+				<simple name="Y" type="double"><value>0</value></simple>
+				<simple name="Z" type="double"><value>-0.035</value></simple>
+			</struct>
+		</struct>
+	</struct>
+  </struct>
+</properties>

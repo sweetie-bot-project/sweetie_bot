@@ -1,0 +1,50 @@
+controller:
+    joint_state:
+        priority: 20
+        controlled_chains: [ leg1, leg2, leg3, leg4, head, eyes, ear_l, ear_r, mouth ]
+        activation_delay: 2
+        publish_supports: true
+        services: [ filter_joint_state_exp ]
+        filter_joint_state_exp:
+            transient_time: 1
+    joint_state_head:
+        priority: 20
+        controlled_chains: [ head, eyes, ear_l, ear_r, mouth ]
+        activation_delay: 2
+        publish_supports: true
+        services: [ filter_joint_state_exp_individual ]
+        filter_joint_state_exp_individual:
+            transient_time: 1
+            joints_override: [ eyes_pitch, eyes_yaw ]
+            transient_time_override: [ 0.3, 0.3 ]
+    joint_trajectory: 
+        priority: 20
+        services: [ transient_joint_state_exp ]
+        transient_joint_state_exp:
+            transient_time: 0.5
+    torque_off: 
+        priority: 20
+        velocity_zeroing: true
+    stance: 
+        priority: 20
+        services: [ filter_rigid_body_state_pd ]
+        support_legs: [ leg1, leg2, leg3, leg4 ]
+        override_odometry: false # deployment parameter: discard odometry results if stance is active
+        use_kinematics_inv_port: false # deployment parameter: do not connect stance to kinematics_inv IK service, use port interface instead
+        pose_feedback: false
+        activation_delay: 4
+        check_balance: true
+        keep_balance: false
+        keep_balance_safe_z_min: 0.16
+        keep_balance_safe_z_max: 0.21
+        filter_rigid_body_state_pd:
+            Kp: 9
+            Kd: 6
+    pose: 
+        priority: 20
+        services: [ filter_rigid_body_state_pd ]
+        controlled_chains: [ leg1 ]
+        use_kinematics_inv_port: false # deployment parameter: do not connect stance to kinematics_inv IK service, use port interface instead
+        filter_rigid_body_state_pd:
+            Kp: 25
+            Kd: 10

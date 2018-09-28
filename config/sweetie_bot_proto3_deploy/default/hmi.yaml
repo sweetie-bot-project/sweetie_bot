@@ -1,0 +1,17 @@
+joint_state_ref:
+    num_rows: 7
+dynamics_visualizer:
+    robot_model_namespace: "/motion"
+    display_twist: true
+stance_pose_marker:
+    normalized_z_level: 0.03
+    scale: 1.0
+    resources: [leg1, leg2, leg3, leg4 ]
+    frames: [ base_link, leg1_link6, leg2_link6, leg3_link6, leg4_link6, head_link5 ]
+    marker_home_frame: base_link
+    normalized_z_level: 0.2335
+limb_pose_marker:
+    normalized_z_level: 0.03
+    scale: 0.5
+    resources: [leg1, leg2, leg3, leg4, head ]
+    frames: [ base_link, leg1_link6, leg2_link6, leg3_link6, leg4_link6, head_link5 ]
