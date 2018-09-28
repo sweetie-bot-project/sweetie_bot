@@ -15,7 +15,7 @@ controller:
         services: [ filter_joint_state_exp_individual ]
         filter_joint_state_exp_individual:
             transient_time: 1
-            joints_override: [ joint55, joint56 ]
+            joints_override: [ eyes_pitch, eyes_yaw ]
             transient_time_override: [ 0.3, 0.3 ]
     joint_trajectory: 
         priority: 20
