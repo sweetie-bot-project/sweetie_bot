@@ -1,3 +1,5 @@
+joint_state_ref:
+    num_rows: 6
 dynamics_visualizer:
     robot_model_namespace: "/motion"
     display_twist: true
@@ -5,9 +7,11 @@ stance_pose_marker:
     normalized_z_level: 0.03
     scale: 1.0
     resources: [leg1, leg2, leg3, leg4 ]
+    frames: [ bone15, bone25, bone35, bone45, bone55, base_link ]
     marker_home_frame: base_link
     normalized_z_level: 0.2335
 limb_pose_marker:
     normalized_z_level: 0.03
     scale: 0.5
     resources: [leg1, leg2, leg3, leg4, head ]
+    frames: [ bone15, bone25, bone35, bone45, bone55, base_link ]

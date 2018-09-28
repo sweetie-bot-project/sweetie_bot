@@ -13,7 +13,6 @@
 			<param name="use_gui" value="true"/>
 			<rosparam param="source_list">["joint_states_reset"]</rosparam>
 			<param name="rate" value="5"/>
-			<param name="num_rows" value="6"/>
 			<remap from="joint_states" to="$(arg robot_ns)/motion/controller/joint_state/in_joints_ref"/>
 			<remap from="joint_states_reset" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset"/>
 		</node>
