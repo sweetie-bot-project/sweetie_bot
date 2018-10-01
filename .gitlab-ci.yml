@@ -43,3 +43,7 @@ stretch-rpi3: &robot_template
 xenial-tinker:
   <<: *robot_template
   image: slavanap/ros-build:xenial-tinker
+
+xenial-xeon:
+  <<: *desktop_template
+  image: slavanap/ros-build:xenial-xeon
