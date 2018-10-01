@@ -5,6 +5,11 @@ This repository contains software framework for the [Sweetie Bot Proto2 robot](h
 
 ![](doc/figures/control-system.png)
 
+Build status               | master branch  | devel branch
+---------------------------|----------------|----------------
+ros-lunar-sweetie-bot-base | [![Build Status](https://gitlab.com/slavanap/ros-build/badges/master/build.svg)](https://gitlab.com/slavanap/ros-build/pipelines) | 
+ros-lunar-sweetie-bot      | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/master/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/master) | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/devel/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/devel)
+
 ## Overview
 
 Sweetie Bot software is based on [Robot Operating System (ROS)](http://wiki.ros.org/ROS/Introduction). Also it uses [OROCOS](http://www.orocos.org/wiki/orocos/toolchain/getting-started) middleware to implement real-time motion control subsystem. See [`sweetie_bot_deploy`](config/sweetie_bot_deploy) and  [`rt_control`](rt_control) for more details (namespaces, nodes, configuration parameters).
@@ -70,25 +75,27 @@ External dependencies:
 
 ### Installation from binary packages
 
-We have repository with binary packages for Ubuntu 16.04, Debian 9 Stretch and Raspbian. 
+Binary artifacts available from [pipelines](https://gitlab.com/sweetie-bot/sweetie_bot/pipelines).
 
-Add apt keys
+First, add ROS APT repository:
 ```
-$ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5523BAEEB01FA116
-$ wget -O - https://raw.githubusercontent.com/slavanap/ros-build/master/slavanap.key | sudo apt-key add -
-```
-
-Add ROS and Sweetie Bot repositories
-```
-$ sudo -i
-# echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list
-# echo "deb http://sweetie.bot/apt $(lsb_release -sc) main" > /etc/apt/sources.list.d/sweetie-bot.list
-```
-Install binary packages
-```
+$ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+$ echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/ros-latest.list
 $ sudo apt-get update
-$ sudo apt-get install ros-lunar-sweetie-bot ros-lunar-sweetie-bot-base
 ```
+
+Next, download latest artifacts for your system
+(quick links for [Debian Stretch](https://gitlab.com/sweetie-bot/sweetie_bot/-/jobs/artifacts/master/download?job=stretch-amd64)
+and [Ubuntu Xenial](https://gitlab.com/sweetie-bot/sweetie_bot/-/jobs/artifacts/master/download?job=stretch-amd64)
+artifacts).
+
+Unpack *.zip archive install packages from it with dependencies:
+```
+$ cd /path/to/unpacked/zip/archive
+$ sudo dpkg -i *.deb
+$ sudo apt-get install -f
+```
+
 Note that `ros-lunar-sweetie-bot-base` package conflicts with OROCOS toolchain ROS packages.
 Sweetie Bot specific software is installed in `/opt/ros/sweetie_bot` directory. 
 
@@ -121,6 +128,7 @@ and launch Sweetie Bot control software as described in Usage section.
 ### Installation from sources
 
 Your may compile Sweetie Bot manually in ROS workspace. This method does not conflicts with installation from binary packages due to ROS overlay mechanism.
+
 Let's assume that all build requirements are satisfied. Or you can install them from binary package `ros-lunar-sweetie-bot-base`.
 
 Create ROS workspace:
@@ -158,10 +166,6 @@ source /opt/ros/lunar/setup.bash
 cd ~/ros/sweetie_bot
 catkin_make
 ``` 
-### Full installation from sources 
-
-On some platforms ROS and OROCOS are not available, so almost all dependencies should be compiled and installed manulally.
-Use this [repository](https://github.com/slavanap/ros-build) and this Docker images [here](https://hub.docker.com/r/slavanap/ros-build/tags/).
 
 ## Usage
 
@@ -179,18 +183,3 @@ Following command starts MoveIt! `move_group` and FlexBe subsystem (your need `s
     roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
 
 For more details see [`sweetie_bot_deploy` package](config/sweetie_bot_deploy).
-
-
-### Build status
-
-#### Base package
-
-Platform        | Status
-----------------|--------------
-Desktop         | [![Build Status](https://travis-ci.org/slavanap/ros-build.svg?branch=master)](https://travis-ci.org/slavanap/ros-build)
-Raspberry Pi 3  | [![Build Status](https://travis-ci.org/slavanap/ros-build.svg?branch=rpi3)](https://travis-ci.org/slavanap/ros-build/branches)
-
-#### Main package
-
-[![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/devel/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/pipelines)
-
