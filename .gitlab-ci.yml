@@ -1,8 +1,8 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
-stretch-amd64: &desktop_template
-  image: slavanap/ros-build:stretch-amd64
+.stretch-amd64: &desktop_template
+  image: registry.gitlab.com/slavanap/ros-build:stretch-amd64
   stage: build
   tags:
     - docker
@@ -22,28 +22,49 @@ stretch-amd64: &desktop_template
       mv "sweetie-bot.deb" "$CI_PROJECT_DIR/sweetie-bot-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
       mv /tmp/repo/sweetie-bot-base.deb "$CI_PROJECT_DIR/sweetie-bot-base-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
   artifacts:
-    name: "deb package"
+    name: sweetie-bot-${CI_JOB_NAME}
     expire_in: 3 weeks
     paths:
       - "sweetie-bot-*.deb"
 
 xenial-amd64:
   <<: *desktop_template
-  image: slavanap/ros-build:xenial-amd64
+  image: registry.gitlab.com/slavanap/ros-build:xenial-amd64
 
-stretch-rpi3: &robot_template
+.stretch-rpi3: &robot_template
   <<: *desktop_template
-  image: slavanap/ros-build:stretch-rpi3
+  image: registry.gitlab.com/slavanap/ros-build:stretch-rpi3
   script:
     - touch hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE behavior/sweetie_bot_voice/CATKIN_IGNORE
     - *prep_environment
     - catkin_make_isolated $CMAKE_TOOLCHAIN --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
     - *buildpkg
 
-xenial-tinker:
+.xenial-tinker:
   <<: *robot_template
-  image: slavanap/ros-build:xenial-tinker
+  image: registry.gitlab.com/slavanap/ros-build:xenial-tinker
 
-xenial-xeon:
-  <<: *desktop_template
-  image: slavanap/ros-build:xenial-xeon
+xenial-amd64-test:
+  image: docker:stable-git
+  services:
+    - docker:dind
+  stage: test
+  dependencies:
+    - xenial-amd64
+  variables:
+    CONTAINER_IMAGE: registry.gitlab.com/$CI_PROJECT_PATH
+    DOCKER_HOST: tcp://docker:2375/
+  script:
+    - ls -la
+    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git .gitlab-ci/sweetie_bot_flexbe_behaviors
+    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git .gitlab-ci/sweetie_bot_proto2_movements
+    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_sounds.git .gitlab-ci/sweetie_bot_sounds
+    - docker build -t test -f .gitlab-ci/test.dockerfile .
+    - docker create --name temp test
+    - docker cp temp:/home/dev/screenshot.png .
+    - docker cp temp:/home/dev/.ros/log ./__log
+  artifacts:
+    expire_in: 3 weeks
+    paths:
+      - screenshot.png
+      - __log/

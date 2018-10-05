@@ -6,9 +6,3 @@
 	path = rt_control
 	url = ../sweetie_bot_rt_control.git
 	branch = devel
-[submodule "behavior/sweetie_bot_sounds"]
-	path = behavior/sweetie_bot_sounds
-	url = ../sweetie_bot_sounds.git
-[submodule "behavior/sweetie_bot_flexbe_behaviors"]
-	path = behavior/sweetie_bot_flexbe_behaviors
-	url = ../sweetie_bot_flexbe_behaviors.git
