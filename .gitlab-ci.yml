@@ -1,11 +1,10 @@
-variables:
-  GIT_SUBMODULE_STRATEGY: recursive
-
-.stretch-amd64: &desktop_template
-  image: registry.gitlab.com/slavanap/ros-build:stretch-amd64
+stretch-amd64: &desktop_template
   stage: build
+  image: registry.gitlab.com/slavanap/ros-build:stretch-amd64
   tags:
     - docker
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
   script:
     - &prep_environment |
       mkdir /tmp/build && ln -s "$PWD" /tmp/build/src && cd /tmp/build
@@ -31,7 +30,7 @@ xenial-amd64:
   <<: *desktop_template
   image: registry.gitlab.com/slavanap/ros-build:xenial-amd64
 
-.stretch-rpi3: &robot_template
+stretch-rpi3: &robot_template
   <<: *desktop_template
   image: registry.gitlab.com/slavanap/ros-build:stretch-rpi3
   script:
@@ -40,26 +39,30 @@ xenial-amd64:
     - catkin_make_isolated $CMAKE_TOOLCHAIN --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
     - *buildpkg
 
-.xenial-tinker:
+xenial-tinker:
   <<: *robot_template
   image: registry.gitlab.com/slavanap/ros-build:xenial-tinker
 
-xenial-amd64-test:
+xenial-amd64-test: &test_template
+  stage: test
   image: docker:stable-git
   services:
     - docker:dind
-  stage: test
+  tags:
+    - docker
+    - linux
   dependencies:
     - xenial-amd64
-  variables:
+  variables: &test_vars
     CONTAINER_IMAGE: registry.gitlab.com/$CI_PROJECT_PATH
     DOCKER_HOST: tcp://docker:2375/
+    IMAGE_SOURCE: ubuntu:xenial
   script:
     - ls -la
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git .gitlab-ci/sweetie_bot_flexbe_behaviors
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git .gitlab-ci/sweetie_bot_proto2_movements
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_sounds.git .gitlab-ci/sweetie_bot_sounds
-    - docker build -t test -f .gitlab-ci/test.dockerfile .
+    - docker build -t test --build-arg IMAGE_SOURCE="$IMAGE_SOURCE" -f .gitlab-ci/test.dockerfile .
     - docker create --name temp test
     - docker cp temp:/home/dev/screenshot.png .
     - docker cp temp:/home/dev/.ros/log ./__log
@@ -68,3 +71,11 @@ xenial-amd64-test:
     paths:
       - screenshot.png
       - __log/
+
+stretch-amd64-test:
+  <<: *test_template
+  dependencies:
+    - stretch-amd64
+  variables:
+    <<: *test_vars
+    IMAGE_SOURCE: debian:stretch

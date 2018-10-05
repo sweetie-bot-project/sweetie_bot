@@ -1,4 +1,5 @@
-FROM ubuntu:xenial
+ARG IMAGE_SOURCE="ubuntu:xenial"
+FROM $IMAGE_SOURCE
 
 RUN apt-get update -qq && apt-get upgrade -qq && \
     apt-get install -qq --no-install-recommends dirmngr gnupg2 lsb-release && \
@@ -32,14 +33,10 @@ RUN apt-get install -qq --no-install-recommends sudo && \
 # Virtual display support
 RUN apt-get install -qq xvfb scrot
 
-# SSH access
-#RUN apt-get install -qq openssh-server xauth && \
-#    echo "AddressFamily inet" >> /etc/ssh/sshd_config
-#EXPOSE 22
-
 USER dev
 
 RUN sudo rosdep init && rosdep update
+
 
 # Build workspace
 RUN bash -c 'set -e;\
@@ -47,13 +44,20 @@ RUN bash -c 'set -e;\
     catkin_make;\
 '
 
-# Entrypoint to start ROS core
-ENTRYPOINT exec bash -c 'sudo /etc/init.d/ssh start; source devel/setup.bash; roslaunch sweetie_bot_deploy load_param.launch'
-
-# TODO: set "dev" passwd
-# TODO: emulate dummy display
-# docker run -it -p 22:22 --name tt5 test
-# source devel/setup.bash; roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
-
+# Automated testing
 COPY .gitlab-ci/test.bash .
 RUN ./test.bash
+
+
+# For manual testing:
+# 1. Uncomment section below
+
+#RUN apt-get install -qq openssh-server xauth && \
+#    echo "AddressFamily inet" >> /etc/ssh/sshd_config
+#EXPOSE 22
+#ENTRYPOINT exec bash -c 'sudo /etc/init.d/ssh start; source devel/setup.bash; roslaunch sweetie_bot_deploy load_param.launch'
+
+# 2. After container launch, execute bash into docker container and change password of user 'dev':
+#    docker exec -it container sudo passwd dev
+# 3. Connect via SSH to docker container with X11 forwarding enabled and launch:
+#    source devel/setup.bash; roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
