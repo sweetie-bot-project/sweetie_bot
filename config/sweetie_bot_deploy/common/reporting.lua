@@ -2,8 +2,6 @@
 --
 -- Simplify logger initialization.
 
-require 'config'
-
 -- get Deployer
 local depl = rtt.getTC():getPeer("Deployer")
 
