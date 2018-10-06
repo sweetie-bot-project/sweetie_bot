@@ -33,11 +33,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>649</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg1_joint2" type="PropertyBag">
@@ -48,11 +48,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>774</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg1_joint3" type="PropertyBag">
@@ -63,11 +63,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>770</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg1_joint4" type="PropertyBag">
@@ -78,11 +78,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>374</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg1_joint5" type="PropertyBag">
@@ -93,7 +93,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>547</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -108,11 +108,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>520</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg2_joint1" type="PropertyBag">
@@ -123,7 +123,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>402</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -138,11 +138,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>548</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg2_joint3" type="PropertyBag">
@@ -153,7 +153,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>273</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -168,7 +168,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>548</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -183,11 +183,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>492</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg2_joint6" type="PropertyBag">
@@ -198,11 +198,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>501</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg3_joint1" type="PropertyBag">
@@ -213,11 +213,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>587</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg3_joint2" type="PropertyBag">
@@ -228,11 +228,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>432</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg3_joint3" type="PropertyBag">
@@ -243,7 +243,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>696</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -258,11 +258,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>659</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg3_joint5" type="PropertyBag">
@@ -273,7 +273,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>447</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -288,7 +288,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>484</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -318,11 +318,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>533</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg4_joint3" type="PropertyBag">
@@ -333,11 +333,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>347</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg4_joint4" type="PropertyBag">
@@ -348,7 +348,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>341</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -363,11 +363,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>375</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="leg4_joint6" type="PropertyBag">
@@ -378,7 +378,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>527</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -393,7 +393,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>926</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -408,11 +408,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>831</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="head_joint3" type="PropertyBag">
@@ -423,11 +423,11 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>498</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="head_joint4" type="PropertyBag">
@@ -438,7 +438,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>486</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -449,26 +449,26 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>61</value>
+            <value>55</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>294</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>0</value>
+            <value>1</value>
         </simple>
     </struct>
     <struct name="ear_r_joint" type="PropertyBag">
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>62</value>
+            <value>56</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>624</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -479,11 +479,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>71</value>
+            <value>57</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>595</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
