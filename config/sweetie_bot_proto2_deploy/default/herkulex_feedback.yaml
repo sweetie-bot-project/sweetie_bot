@@ -1,5 +1,5 @@
 herkulex:
-    groups: [ all ]
+    groups: [ leg12, leg34, head ]
     all:
         driver:
             port_name: '/dev/ttyS0'
@@ -18,7 +18,7 @@ herkulex:
             poll_round_size: 6
     leg12:
         driver:
-            port_name: '/dev/ttyS4'
+            port_name: '/dev/ttyS2'
             baudrate: 115200
         array:
             timeout: 0.060
