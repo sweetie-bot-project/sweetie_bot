@@ -91,7 +91,7 @@ artifacts).
 
 Unpack *.zip archive install packages from it with dependencies:
 ```
-$ cd /path/to/unpacked/zip/archive
+$ unzip *.zip
 $ sudo dpkg -i *.deb
 $ sudo apt-get install -f
 ```

@@ -50,27 +50,46 @@ xenial-amd64-test: &test_template
     - docker:dind
   tags:
     - docker
-    - linux
   dependencies:
     - xenial-amd64
   variables: &test_vars
-    CONTAINER_IMAGE: registry.gitlab.com/$CI_PROJECT_PATH
+    CONTAINER_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_JOB_NAME}-cache
     DOCKER_HOST: tcp://docker:2375/
     IMAGE_SOURCE: ubuntu:xenial
   script:
     - ls -la
+    - docker login -u gitlab-ci-token -p "$CI_JOB_TOKEN" registry.gitlab.com
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git .gitlab-ci/sweetie_bot_flexbe_behaviors
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git .gitlab-ci/sweetie_bot_proto2_movements
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_sounds.git .gitlab-ci/sweetie_bot_sounds
-    - docker build -t test --build-arg IMAGE_SOURCE="$IMAGE_SOURCE" -f .gitlab-ci/test.dockerfile .
+
+    - |
+      if ( docker pull "$CONTAINER_IMAGE" && \
+        docker run -i --name prev "$CONTAINER_IMAGE" sh -c 'mv sweetie-bot-base*.deb prev.deb' && \
+        docker cp prev:/home/dev/prev.deb . && \
+        cmp prev.deb sweetie-bot-base*.deb )
+      then
+        rm prev.deb; docker rm prev
+        docker build -t "$CONTAINER_IMAGE" --build-arg IMAGE_SOURCE="$CONTAINER_IMAGE" -f .gitlab-ci/test-fromcache.dockerfile .
+      else
+        rm prev.deb || true; docker rm prev || true
+        docker build -t "$CONTAINER_IMAGE" --build-arg IMAGE_SOURCE="$IMAGE_SOURCE" -f .gitlab-ci/test-init.dockerfile .
+        docker push "$CONTAINER_IMAGE"
+      fi      
+    - docker build -t test --build-arg IMAGE_SOURCE="$CONTAINER_IMAGE" -f .gitlab-ci/test.dockerfile .
     - docker create --name temp test
-    - docker cp temp:/home/dev/screenshot.png .
-    - docker cp temp:/home/dev/.ros/log ./__log
+    - docker cp temp:/home/dev/retcode .
+    - docker cp temp:/home/dev/screenshot.png . || true
+    - docker cp temp:/home/dev/diff.png . || true
+    - docker cp temp:/home/dev/.ros/log ./__log || true
+    - ( exit $(cat ./retcode || echo 42) )
   artifacts:
     expire_in: 3 weeks
     paths:
       - screenshot.png
+      - diff.png
       - __log/
+    when: always
 
 stretch-amd64-test:
   <<: *test_template
