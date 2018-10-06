@@ -86,7 +86,7 @@ $ sudo apt-get update
 
 Next, download latest artifacts for your system
 (quick links for [Debian Stretch](https://gitlab.com/sweetie-bot/sweetie_bot/-/jobs/artifacts/master/download?job=stretch-amd64)
-and [Ubuntu Xenial](https://gitlab.com/sweetie-bot/sweetie_bot/-/jobs/artifacts/master/download?job=stretch-amd64)
+and [Ubuntu Xenial](https://gitlab.com/sweetie-bot/sweetie_bot/-/jobs/artifacts/master/download?job=xenial-amd64)
 artifacts).
 
 Unpack *.zip archive install packages from it with dependencies:
