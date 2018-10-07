@@ -92,6 +92,14 @@ local function setup_herkulex_subsystem(herkulex, group, servos_description_cpf)
 	return success
 end
 
+-- print all servo positions for given herkulex array
+function debug.herkulex_print_position(herk_array)
+    local servos = herk_array:listServos():totab()
+	for i, servo in pairs(servos) do
+		print(servo, herk_array:getRegisterRAM(servo, "absolute_position"))
+	end
+end
+
 -- load herkulex groups
 herkulex = {}
 
