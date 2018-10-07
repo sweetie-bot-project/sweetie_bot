@@ -1,4 +1,4 @@
-#/usr/bin/perl
+#!/usr/bin/perl
 print(
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <!DOCTYPE properties SYSTEM \"cpf.dtd\">
