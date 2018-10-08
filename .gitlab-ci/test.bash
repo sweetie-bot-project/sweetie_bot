@@ -29,7 +29,7 @@ roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true 2>&1 > app.l
 APP=$!
 
 # Wait until full init and capture screenshot
-sleep 60
+sleep 100
 scrot screenshot.png
 
 kill -SIGINT $APP

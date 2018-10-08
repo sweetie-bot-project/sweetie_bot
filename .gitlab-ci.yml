@@ -70,13 +70,15 @@ xenial-amd64-test: &test_template
         cmp prev.deb sweetie-bot-base*.deb )
       then
         rm prev.deb; docker rm prev
-        docker build -t "$CONTAINER_IMAGE" --build-arg IMAGE_SOURCE="$CONTAINER_IMAGE" -f .gitlab-ci/test-fromcache.dockerfile .
+        export TEST_SOURCE=temp
+        docker build -t "$TEST_SOURCE" --build-arg IMAGE_SOURCE="$CONTAINER_IMAGE" -f .gitlab-ci/test-fromcache.dockerfile .
       else
         rm prev.deb || true; docker rm prev || true
         docker build -t "$CONTAINER_IMAGE" --build-arg IMAGE_SOURCE="$IMAGE_SOURCE" -f .gitlab-ci/test-init.dockerfile .
         docker push "$CONTAINER_IMAGE"
+        export TEST_SOURCE="$CONTAINER_IMAGE"
       fi      
-    - docker build -t test --build-arg IMAGE_SOURCE="$CONTAINER_IMAGE" -f .gitlab-ci/test.dockerfile .
+    - docker build -t test --build-arg IMAGE_SOURCE="$TEST_SOURCE" -f .gitlab-ci/test.dockerfile .
     - docker create --name temp test
     - docker cp temp:/home/dev/retcode .
     - docker cp temp:/home/dev/screenshot.png . || true
