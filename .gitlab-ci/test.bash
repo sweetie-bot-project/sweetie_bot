@@ -47,4 +47,14 @@ EXIT_VIRT_DISPLAY=$?
 log $EXIT_CORE ros_core.log "roslaunch sweetie_bot_deploy load_param.launch"
 log $EXIT_APP app.log "roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true"
 
-exit $(( $EXIT_APP + $EXIT_CORE + $EXIT_VIRT_DISPLAY ))
+EXIT="$(( $EXIT_APP + $EXIT_CORE + $EXIT_VIRT_DISPLAY ))"
+if [[ "$EXIT" > 0 ]]; then
+	exit "$EXIT"
+fi
+
+convert screenshot.png -crop 1011x887+607+87 +repage cropped_screenshot.png
+ERROR=$( compare -metric MSE reference.png cropped_screenshot.png diff.png 2>&1 | cut -f1 -d' ' | cut -f1 -d. )
+echo "Image comparison score: $ERROR"
+if [[ "$ERROR" > 60 ]]; then
+	exit 4
+fi
