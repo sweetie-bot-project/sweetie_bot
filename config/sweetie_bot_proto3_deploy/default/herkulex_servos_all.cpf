@@ -414,6 +414,14 @@
             <description>Reverse direction flag.</description>
             <value>1</value>
         </simple>
+        <simple name="position_kp" type="ulong">
+            <description>Position KP</description>
+            <value>64</value>
+        </simple>
+        <simple name="position_kd" type="ulong">
+            <description>Position Kd</description>
+            <value>1500</value>
+        </simple>
     </struct>
     <struct name="head_joint3" type="PropertyBag">
         <description>Servo description.</description>
@@ -429,6 +437,14 @@
             <description>Reverse direction flag.</description>
             <value>1</value>
         </simple>
+        <simple name="position_kp" type="ulong">
+            <description>Position KP</description>
+            <value>64</value>
+        </simple>
+        <simple name="position_kd" type="ulong">
+            <description>Position Kd</description>
+            <value>1500</value>
+        </simple>
     </struct>
     <struct name="head_joint4" type="PropertyBag">
         <description>Servo description.</description>
@@ -443,6 +459,14 @@
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
             <value>0</value>
+        </simple>
+        <simple name="position_kp" type="ulong">
+            <description>Position KP</description>
+            <value>64</value>
+        </simple>
+        <simple name="position_kd" type="ulong">
+            <description>Position Kd</description>
+            <value>1500</value>
         </simple>
     </struct>
     <struct name="ear_l_joint" type="PropertyBag">
