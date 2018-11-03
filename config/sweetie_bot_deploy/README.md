@@ -85,7 +85,7 @@ It is started with OROCOS control node. Note that OROCOS component interface is 
 
 High-level launch files takes following parameters:
 
-* `run_real` (boolean) --- Run on real robot. Try to launch robot components on `pi@sweetiebot`. Starts hardware interface components. (Default: false).
+* `run_real` (boolean) --- Run on real robot. Try to launch robot components on `sweetie@sweetiebot`. Starts hardware interface components. (Default: false).
 * `host` (boolean) --- Launch components which meant to be run on host side (default: true).
 * `robot` (boolean) --- Launch components which meant to be run on robot side (default: false).
 * `robot_name` (string) --- Robot-specific configuration packages prefix (e.g. set `sweetie_bot_proto2` for `sweetie_bot_proto2_description`, `sweetie_bot_proto2_moveit_config`, `sweetie_bot_proto2_deploy` packages). (Default: `sweetie_bot_proto2`).

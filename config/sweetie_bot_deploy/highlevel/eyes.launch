@@ -9,7 +9,7 @@
 	<arg name="robot_ns" default="/" doc="Namespace where to run robot components "/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
-	<machine name="sweetiebot" address="sweetie" user="pi" default="never"/>
+	<machine name="sweetiebot" address="sweetie" user="sweetie" default="never"/>
 
 	<group ns="$(arg robot_ns)">
 		<!-- eyes: start eyes with other robot-specific node -->
