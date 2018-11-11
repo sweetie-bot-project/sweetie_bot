@@ -43,6 +43,48 @@ This repository contains all necessary software components to run the Sweetie Bo
 
 ## Installation
 
+### Installation from binary packages
+
+```
+$ wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/install.bash | sudo bash
+```
+
+You also can download deb packages manually from [here](https://gitlab.com/sweetie-bot/sweetie_bot/pipelines).
+
+
+Note,
+
+* `ros-lunar-sweetie-bot-base` package conflicts with OROCOS toolchain ROS packages.
+* Sweetie Bot specific software is installed in `/opt/ros/sweetie_bot` directory. 
+
+
+Install `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_flexbe_behaviors`: 
+```
+$ mkdir -p ~/ros/sweetie_bot/src
+$ cd ~/ros/sweetie_bot/src
+$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
+$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
+$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
+```
+Due to software bugs `flexbe_app` and `rviz_textured_quads` should be also installed in workspace:
+```
+$ git clone https://github.com/lucasw/rviz_textured_quads.git inc/rviz_textured_quads
+$ git clone https://github.com/FlexBE/flexbe_app.git
+```
+Compile workspace
+```
+$ cd ~/ros/sweetie_bot
+$ source /opt/ros/sweetie_bot/setup.bash
+$ catkin_make
+```
+
+Then in another console setup ROS environment 
+```
+$ source /opt/ros/sweetie_bot/setup.bash
+```
+and launch Sweetie Bot control software as described in Usage section, e.g. `roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true`
+
+
 #### Project dependencies
 
 Internal dependencies:
@@ -73,57 +115,6 @@ External dependencies:
     * [`felexbe_general_states`](https://github.com/FlexBE/generic_flexbe_states).
 * QT5 development packages (`libqt5-dev`).
 
-### Installation from binary packages
-
-Binary artifacts available from [pipelines](https://gitlab.com/sweetie-bot/sweetie_bot/pipelines).
-
-First, add ROS APT repository:
-```
-$ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
-$ echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/ros-latest.list
-$ sudo apt-get update
-```
-
-Next, download latest artifacts for your system
-(quick links for [Debian Stretch](https://gitlab.com/sweetie-bot/sweetie_bot/-/jobs/artifacts/master/download?job=stretch-amd64)
-and [Ubuntu Xenial](https://gitlab.com/sweetie-bot/sweetie_bot/-/jobs/artifacts/master/download?job=xenial-amd64)
-artifacts).
-
-Unpack *.zip archive install packages from it with dependencies:
-```
-$ unzip *.zip
-$ sudo dpkg -i *.deb
-$ sudo apt-get install -f
-```
-
-Note that `ros-lunar-sweetie-bot-base` package conflicts with OROCOS toolchain ROS packages.
-Sweetie Bot specific software is installed in `/opt/ros/sweetie_bot` directory. 
-
-Install `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_flexbe_behaviors`: 
-```
-$ mkdir -p ~/ros/sweetie_bot/src
-$ cd ~/ros/sweetie_bot/src
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
-```
-Due to software bugs `flexbe_app` and `rviz_textured_quads` should be also installed in workspace:
-```
-$ git clone https://github.com/lucasw/rviz_textured_quads.git inc/rviz_textured_quads
-$ git clone https://github.com/FlexBE/flexbe_app.git
-```
-Compile workspace
-```
-$ cd ~/ros/sweetie_bot
-$ source /opt/ros/sweetie_bot/setup.bash
-$ catkin_make
-```
-
-Then in another console setup ROS environment 
-```
-$ source /opt/ros/sweetie_bot/setup.bash
-```
-and launch Sweetie Bot control software as described in Usage section.
 
 ### Installation from sources
 
