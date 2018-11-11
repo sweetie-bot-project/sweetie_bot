@@ -1,3 +1,4 @@
+
 stretch-amd64: &desktop_template
   stage: build
   image: registry.gitlab.com/slavanap/ros-build:stretch-amd64
@@ -43,6 +44,8 @@ xenial-tinker:
   <<: *robot_template
   image: registry.gitlab.com/slavanap/ros-build:xenial-tinker
 
+
+
 xenial-amd64-test: &test_template
   stage: test
   image: docker:stable-git
@@ -58,31 +61,18 @@ xenial-amd64-test: &test_template
     IMAGE_SOURCE: ubuntu:xenial
   script:
     - ls -la
-    - docker login -u gitlab-ci-token -p "$CI_JOB_TOKEN" registry.gitlab.com
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git .gitlab-ci/sweetie_bot_flexbe_behaviors
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git .gitlab-ci/sweetie_bot_proto2_movements
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_sounds.git .gitlab-ci/sweetie_bot_sounds
 
-    - |
-      if ( docker pull "$CONTAINER_IMAGE" && \
-        docker run -i --name prev "$CONTAINER_IMAGE" sh -c 'mv sweetie-bot-base*.deb prev.deb' && \
-        docker cp prev:/home/dev/prev.deb . && \
-        cmp prev.deb sweetie-bot-base*.deb )
-      then
-        rm prev.deb; docker rm prev
-        docker build -t "$CONTAINER_IMAGE" --build-arg IMAGE_SOURCE="$CONTAINER_IMAGE" -f .gitlab-ci/test-fromcache.dockerfile .
-      else
-        rm prev.deb || true; docker rm prev || true
-        docker build -t "$CONTAINER_IMAGE" --build-arg IMAGE_SOURCE="$IMAGE_SOURCE" -f .gitlab-ci/test-init.dockerfile .
-        docker push "$CONTAINER_IMAGE"
-      fi      
-    - docker build -t test --build-arg IMAGE_SOURCE="$CONTAINER_IMAGE" -f .gitlab-ci/test.dockerfile .
+    - docker build -t test --build-arg IMAGE_SOURCE="$IMAGE_SOURCE" -f .gitlab-ci/test.dockerfile .
     - docker create --name temp test
     - docker cp temp:/home/dev/retcode .
     - docker cp temp:/home/dev/screenshot.png . || true
     - docker cp temp:/home/dev/diff.png . || true
     - docker cp temp:/home/dev/.ros/log ./__log || true
     - ( exit $(cat ./retcode || echo 42) )
+
   artifacts:
     expire_in: 3 weeks
     paths:
@@ -98,3 +88,51 @@ stretch-amd64-test:
   variables:
     <<: *test_vars
     IMAGE_SOURCE: debian:stretch
+
+
+
+pages:
+  stage: deploy
+  image: ubuntu:xenial
+  dependencies:
+    - stretch-amd64
+    - xenial-amd64
+    - stretch-rpi3
+    - xenial-tinker
+  only:
+    - master
+  artifacts:
+    paths:
+      - public
+  script:
+    - apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends reprepro
+    - gpg --passphrase $SINGING_PASSPHRASE -o priv.asc -d .gitlab-ci/priv.asc.gpg && gpg --import priv.asc; rm priv.asc
+    - |
+      mkdir -p public/conf || true
+      cd public
+      cp ../repository.key ../install.bash .
+      touch conf/options
+    - |
+      cat > conf/distributions <<EOF
+      Origin: $CI_PROJECT_NAMESPACE.gitlab.io
+      Codename: stretch
+      Architectures: armhf amd64
+      Components: main
+      Description: no description
+      SignWith: yes
+
+      Origin: $CI_PROJECT_NAMESPACE.gitlab.io
+      Codename: xenial
+      Architectures: armhf amd64
+      Components: main
+      Description: no description
+      SignWith: yes
+      EOF
+    - |
+      for dist in stretch xenial; do
+        shopt -s nullglob
+        for f in $CI_PROJECT_DIR/*${dist}*.deb; do
+          reprepro -S utils includedeb "$dist" "$f"
+        done
+      done
+    - rm -rf ~/.gnupg
