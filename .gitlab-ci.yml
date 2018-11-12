@@ -56,7 +56,6 @@ xenial-amd64-test: &test_template
   dependencies:
     - xenial-amd64
   variables: &test_vars
-    CONTAINER_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_JOB_NAME}-cache
     DOCKER_HOST: tcp://docker:2375/
     IMAGE_SOURCE: ubuntu:xenial
   script:
