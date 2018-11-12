@@ -102,6 +102,7 @@ pages:
   only:
     - master
   artifacts:
+    expire_in: 1 day
     paths:
       - public
   script:
