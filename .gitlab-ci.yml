@@ -106,7 +106,7 @@ pages:
       - public
   script:
     - apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends reprepro
-    - gpg --passphrase $SINGING_PASSPHRASE -o priv.asc -d .gitlab-ci/priv.asc.gpg && gpg --import priv.asc; rm priv.asc
+    - gpg --passphrase "$SINGING_PASSPHRASE" -o priv.asc -d .gitlab-ci/priv.asc.gpg && gpg --import priv.asc; rm priv.asc
     - |
       mkdir -p public/conf || true
       cd public
