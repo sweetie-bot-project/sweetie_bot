@@ -61,7 +61,7 @@ class MoveitToPose(EventState):
 				self._end_effector = ee.attrib['parent_link']
 				break
 		if not self._end_effector:
-                    Logger.logerror('MoveitToPose: Unable to determine end effector for group `%s`.' % self._move_group)
+                    Logger.logerr('MoveitToPose: Unable to determine end effector for group `%s`.' % self._move_group)
                     raise RuntimeError('Unable to determine end effector for group `%s`.' % self._move_group)
 
 		self._planning_failed = False
