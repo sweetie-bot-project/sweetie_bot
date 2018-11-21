@@ -29,11 +29,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>16</value>
+            <value>31</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>498</value>
+            <value>500</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -44,11 +44,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>17</value>
+            <value>32</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>516</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -59,11 +59,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>18</value>
+            <value>33</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>506</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -74,11 +74,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>19</value>
+            <value>34</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>518</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -89,11 +89,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>20</value>
+            <value>35</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>509</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -104,11 +104,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>21</value>
+            <value>41</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>510</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -119,11 +119,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>22</value>
+            <value>42</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>510</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -134,11 +134,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>23</value>
+            <value>43</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>510</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -149,11 +149,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>24</value>
+            <value>44</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>515</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -164,11 +164,11 @@
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
-            <value>25</value>
+            <value>45</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>512</value>
+            <value>509</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>

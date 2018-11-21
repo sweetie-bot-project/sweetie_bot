@@ -1,0 +1,324 @@
+<?xml version="1.0" ?>
+<!--This does not replace URDF, and is not an extension of URDF.
+    This is a format for representing semantic information about the robot structure.
+    A URDF file must exist for this robot as well, where the joints and the links that are referenced are defined
+-->
+<robot name="sweetie_bot_proto3">
+    <!--GROUPS: Representation of a set of joints and links. This can be useful for specifying DOF to plan for, defining arms, end effectors, etc-->
+    <!--LINKS: When a link is specified, the parent joint of that link (if it exists) is automatically included-->
+    <!--JOINTS: When a joint is specified, the child link of that joint (which will always exist) is automatically included-->
+    <!--CHAINS: When a chain is specified, all the links along the chain (including endpoints) are included in the group. Additionally, all the joints that are parents to included links are also included. This means that joints along the chain and the parent joint of the base link are included in the group-->
+    <!--SUBGROUPS: Groups can also be formed by referencing to already defined group names-->
+    <group name="leg1">
+        <link name="leg1_link1" />
+        <link name="leg1_link2" />
+        <link name="leg1_link3" />
+        <link name="leg1_link4" />
+        <link name="leg1_link5" />
+        <link name="leg1_link6" />
+        <link name="leg1_link7" />
+        <joint name="leg1_joint1" />
+        <joint name="leg1_joint2" />
+        <joint name="leg1_joint3" />
+        <joint name="leg1_joint4" />
+        <joint name="leg1_joint5" />
+        <joint name="leg1_joint6" />
+        <joint name="leg1_joint7" />
+        <chain base_link="base_link" tip_link="leg1_link7" />
+    </group>
+    <group name="leg2">
+        <link name="leg2_link1" />
+        <link name="leg2_link2" />
+        <link name="leg2_link3" />
+        <link name="leg2_link4" />
+        <link name="leg2_link5" />
+        <link name="leg2_link6" />
+        <link name="leg2_link7" />
+        <joint name="leg2_joint1" />
+        <joint name="leg2_joint2" />
+        <joint name="leg2_joint3" />
+        <joint name="leg2_joint4" />
+        <joint name="leg2_joint5" />
+        <joint name="leg2_joint6" />
+        <joint name="leg2_joint7" />
+        <chain base_link="base_link" tip_link="leg2_link7" />
+    </group>
+    <group name="leg3">
+        <link name="leg3_link1" />
+        <link name="leg3_link2" />
+        <link name="leg3_link3" />
+        <link name="leg3_link4" />
+        <link name="leg3_link5" />
+        <link name="leg3_link6" />
+        <link name="leg3_link7" />
+        <joint name="leg3_joint1" />
+        <joint name="leg3_joint2" />
+        <joint name="leg3_joint3" />
+        <joint name="leg3_joint4" />
+        <joint name="leg3_joint5" />
+        <joint name="leg3_joint6" />
+        <joint name="leg3_joint7" />
+        <chain base_link="base_link" tip_link="leg3_link7" />
+    </group>
+    <group name="leg4">
+        <link name="leg4_link1" />
+        <link name="leg4_link2" />
+        <link name="leg4_link3" />
+        <link name="leg4_link4" />
+        <link name="leg4_link5" />
+        <link name="leg4_link6" />
+        <link name="leg4_link7" />
+        <joint name="leg4_joint1" />
+        <joint name="leg4_joint2" />
+        <joint name="leg4_joint3" />
+        <joint name="leg4_joint4" />
+        <joint name="leg4_joint5" />
+        <joint name="leg4_joint6" />
+        <joint name="leg4_joint7" />
+        <chain base_link="base_link" tip_link="leg4_link7" />
+    </group>
+    <group name="head">
+        <link name="head_link1" />
+        <link name="head_link2" />
+        <link name="head_link3" />
+        <link name="head_link4" />
+        <link name="head_link5" />
+        <link name="head_link6" />
+        <joint name="head_joint1" />
+        <joint name="head_joint2" />
+        <joint name="head_joint3" />
+        <joint name="head_joint4" />
+        <joint name="head_joint5" />
+        <joint name="head_joint6" />
+        <chain base_link="base_link" tip_link="head_link6" />
+    </group>
+    <group name="legs">
+        <group name="leg1" />
+        <group name="leg2" />
+        <group name="leg3" />
+        <group name="leg4" />
+    </group>
+    <group name="all">
+        <group name="leg1" />
+        <group name="leg2" />
+        <group name="leg3" />
+        <group name="leg4" />
+        <group name="head" />
+    </group>
+    <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
+    <end_effector name="hoof1" parent_link="leg1_link7" group="leg1" />
+    <end_effector name="hoof2" parent_link="leg2_link7" group="leg2" />
+    <end_effector name="hoof3" parent_link="leg3_link7" group="leg3" />
+    <end_effector name="hoof4" parent_link="leg4_link7" group="leg4" />
+    <end_effector name="nose" parent_link="head_link6" group="head" />
+    <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
+    <virtual_joint name="floating_base" type="floating" parent_frame="odom_combined" child_link="base_link" />
+    <!--PASSIVE JOINT: Purpose: this element is used to mark joints that are not actuated-->
+    <passive_joint name="leg1_joint7" />
+    <passive_joint name="leg2_joint7" />
+    <passive_joint name="leg3_joint7" />
+    <passive_joint name="leg4_joint7" />
+    <passive_joint name="head_joint5" />
+    <passive_joint name="head_joint6" />
+    <passive_joint name="floating_base" />
+    <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
+    <disable_collisions link1="base_link" link2="head_link1" reason="Adjacent" />
+    <disable_collisions link1="base_link" link2="leg1_link1" reason="Adjacent" />
+    <disable_collisions link1="base_link" link2="leg2_link1" reason="Adjacent" />
+    <disable_collisions link1="base_link" link2="leg3_link1" reason="Adjacent" />
+    <disable_collisions link1="base_link" link2="leg3_link3" reason="Never" />
+    <disable_collisions link1="base_link" link2="leg3_link4" reason="Never" />
+    <disable_collisions link1="base_link" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="base_link" link2="leg4_link1" reason="Adjacent" />
+    <disable_collisions link1="base_link" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="base_link" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="camera_link" link2="ear_l_link" reason="Never" />
+    <disable_collisions link1="camera_link" link2="ear_r_link" reason="Never" />
+    <disable_collisions link1="camera_link" link2="eye_l_link" reason="Never" />
+    <disable_collisions link1="camera_link" link2="eye_r_link" reason="Never" />
+    <disable_collisions link1="camera_link" link2="head_link1" reason="Never" />
+    <disable_collisions link1="camera_link" link2="head_link2" reason="Never" />
+    <disable_collisions link1="camera_link" link2="head_link3" reason="Never" />
+    <disable_collisions link1="camera_link" link2="head_link4" reason="Adjacent" />
+    <disable_collisions link1="camera_link" link2="leg1_link1" reason="Never" />
+    <disable_collisions link1="camera_link" link2="leg2_link1" reason="Never" />
+    <disable_collisions link1="camera_link" link2="leg2_link2" reason="Never" />
+    <disable_collisions link1="camera_link" link2="leg3_link1" reason="Never" />
+    <disable_collisions link1="camera_link" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="camera_link" link2="mouth_link" reason="Never" />
+    <disable_collisions link1="ear_l_link" link2="ear_r_link" reason="Never" />
+    <disable_collisions link1="ear_l_link" link2="eye_l_link" reason="Never" />
+    <disable_collisions link1="ear_l_link" link2="eye_r_link" reason="Never" />
+    <disable_collisions link1="ear_l_link" link2="head_link2" reason="Never" />
+    <disable_collisions link1="ear_l_link" link2="head_link3" reason="Never" />
+    <disable_collisions link1="ear_l_link" link2="head_link4" reason="Adjacent" />
+    <disable_collisions link1="ear_l_link" link2="leg2_link1" reason="Never" />
+    <disable_collisions link1="ear_l_link" link2="mouth_link" reason="Never" />
+    <disable_collisions link1="ear_r_link" link2="eye_l_link" reason="Never" />
+    <disable_collisions link1="ear_r_link" link2="eye_r_link" reason="Never" />
+    <disable_collisions link1="ear_r_link" link2="head_link2" reason="Never" />
+    <disable_collisions link1="ear_r_link" link2="head_link3" reason="Never" />
+    <disable_collisions link1="ear_r_link" link2="head_link4" reason="Adjacent" />
+    <disable_collisions link1="ear_r_link" link2="mouth_link" reason="Never" />
+    <disable_collisions link1="eye_l_link" link2="eye_r_link" reason="Never" />
+    <disable_collisions link1="eye_l_link" link2="head_link2" reason="Never" />
+    <disable_collisions link1="eye_l_link" link2="head_link3" reason="Never" />
+    <disable_collisions link1="eye_l_link" link2="head_link4" reason="Adjacent" />
+    <disable_collisions link1="eye_l_link" link2="leg2_link1" reason="Never" />
+    <disable_collisions link1="eye_l_link" link2="leg2_link2" reason="Never" />
+    <disable_collisions link1="eye_l_link" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="eye_l_link" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="eye_l_link" link2="mouth_link" reason="Never" />
+    <disable_collisions link1="eye_r_link" link2="head_link2" reason="Never" />
+    <disable_collisions link1="eye_r_link" link2="head_link3" reason="Never" />
+    <disable_collisions link1="eye_r_link" link2="head_link4" reason="Adjacent" />
+    <disable_collisions link1="eye_r_link" link2="leg1_link1" reason="Never" />
+    <disable_collisions link1="eye_r_link" link2="leg1_link2" reason="Never" />
+    <disable_collisions link1="eye_r_link" link2="leg3_link1" reason="Never" />
+    <disable_collisions link1="eye_r_link" link2="leg3_link4" reason="Never" />
+    <disable_collisions link1="eye_r_link" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="eye_r_link" link2="mouth_link" reason="Never" />
+    <disable_collisions link1="head_link1" link2="head_link2" reason="Adjacent" />
+    <disable_collisions link1="head_link1" link2="head_link3" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg1_link1" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg2_link1" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg3_link1" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg3_link2" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg3_link3" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg3_link4" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg3_link6" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg4_link4" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="head_link1" link2="leg4_link6" reason="Never" />
+    <disable_collisions link1="head_link2" link2="head_link3" reason="Adjacent" />
+    <disable_collisions link1="head_link2" link2="leg1_link1" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg1_link2" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg2_link1" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg2_link2" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg3_link1" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg3_link2" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg3_link3" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg3_link4" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg3_link6" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg4_link4" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="head_link2" link2="leg4_link6" reason="Never" />
+    <disable_collisions link1="head_link2" link2="mouth_link" reason="Never" />
+    <disable_collisions link1="head_link3" link2="head_link4" reason="Adjacent" />
+    <disable_collisions link1="head_link3" link2="leg1_link1" reason="Never" />
+    <disable_collisions link1="head_link3" link2="leg1_link2" reason="Never" />
+    <disable_collisions link1="head_link3" link2="leg2_link1" reason="Never" />
+    <disable_collisions link1="head_link3" link2="leg2_link2" reason="Never" />
+    <disable_collisions link1="head_link3" link2="leg3_link3" reason="Never" />
+    <disable_collisions link1="head_link3" link2="leg3_link4" reason="Never" />
+    <disable_collisions link1="head_link3" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="head_link3" link2="leg3_link6" reason="Never" />
+    <disable_collisions link1="head_link3" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="head_link3" link2="mouth_link" reason="Never" />
+    <disable_collisions link1="head_link4" link2="mouth_link" reason="Adjacent" />
+    <disable_collisions link1="leg1_link1" link2="leg1_link2" reason="Adjacent" />
+    <disable_collisions link1="leg1_link1" link2="leg2_link1" reason="Never" />
+    <disable_collisions link1="leg1_link1" link2="leg3_link1" reason="Never" />
+    <disable_collisions link1="leg1_link1" link2="leg3_link2" reason="Never" />
+    <disable_collisions link1="leg1_link1" link2="leg3_link3" reason="Never" />
+    <disable_collisions link1="leg1_link1" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="leg1_link1" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="leg1_link1" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="leg1_link1" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="leg1_link1" link2="leg4_link4" reason="Never" />
+    <disable_collisions link1="leg1_link1" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="leg1_link1" link2="leg4_link6" reason="Never" />
+    <disable_collisions link1="leg1_link2" link2="leg1_link3" reason="Adjacent" />
+    <disable_collisions link1="leg1_link2" link2="leg3_link1" reason="Never" />
+    <disable_collisions link1="leg1_link2" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="leg1_link2" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="leg1_link2" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="leg1_link2" link2="leg4_link4" reason="Never" />
+    <disable_collisions link1="leg1_link2" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="leg1_link2" link2="leg4_link6" reason="Never" />
+    <disable_collisions link1="leg1_link3" link2="leg1_link4" reason="Adjacent" />
+    <disable_collisions link1="leg1_link3" link2="leg1_link5" reason="Never" />
+    <disable_collisions link1="leg1_link3" link2="leg1_link6" reason="Never" />
+    <disable_collisions link1="leg1_link4" link2="leg1_link5" reason="Adjacent" />
+    <disable_collisions link1="leg1_link5" link2="leg1_link6" reason="Adjacent" />
+    <disable_collisions link1="leg2_link1" link2="leg2_link2" reason="Adjacent" />
+    <disable_collisions link1="leg2_link1" link2="leg3_link1" reason="Never" />
+    <disable_collisions link1="leg2_link1" link2="leg3_link2" reason="Never" />
+    <disable_collisions link1="leg2_link1" link2="leg3_link3" reason="Never" />
+    <disable_collisions link1="leg2_link1" link2="leg3_link4" reason="Never" />
+    <disable_collisions link1="leg2_link1" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="leg2_link1" link2="leg3_link6" reason="Never" />
+    <disable_collisions link1="leg2_link1" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="leg2_link1" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="leg2_link1" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="leg2_link2" link2="leg2_link3" reason="Adjacent" />
+    <disable_collisions link1="leg2_link2" link2="leg3_link1" reason="Never" />
+    <disable_collisions link1="leg2_link2" link2="leg3_link2" reason="Never" />
+    <disable_collisions link1="leg2_link2" link2="leg3_link3" reason="Never" />
+    <disable_collisions link1="leg2_link2" link2="leg3_link4" reason="Never" />
+    <disable_collisions link1="leg2_link2" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="leg2_link2" link2="leg3_link6" reason="Never" />
+    <disable_collisions link1="leg2_link2" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="leg2_link3" link2="leg2_link4" reason="Adjacent" />
+    <disable_collisions link1="leg2_link3" link2="leg2_link5" reason="Never" />
+    <disable_collisions link1="leg2_link3" link2="leg2_link6" reason="Never" />
+    <disable_collisions link1="leg2_link4" link2="leg2_link5" reason="Adjacent" />
+    <disable_collisions link1="leg2_link5" link2="leg2_link6" reason="Adjacent" />
+    <disable_collisions link1="leg3_link1" link2="leg3_link2" reason="Adjacent" />
+    <disable_collisions link1="leg3_link1" link2="leg3_link3" reason="Never" />
+    <disable_collisions link1="leg3_link1" link2="leg3_link4" reason="Never" />
+    <disable_collisions link1="leg3_link1" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="leg3_link1" link2="leg3_link6" reason="Never" />
+    <disable_collisions link1="leg3_link1" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="leg3_link1" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="leg3_link1" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="leg3_link1" link2="leg4_link4" reason="Never" />
+    <disable_collisions link1="leg3_link1" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="leg3_link1" link2="leg4_link6" reason="Never" />
+    <disable_collisions link1="leg3_link2" link2="leg3_link3" reason="Adjacent" />
+    <disable_collisions link1="leg3_link2" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="leg3_link2" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="leg3_link2" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="leg3_link2" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="leg3_link2" link2="leg4_link4" reason="Never" />
+    <disable_collisions link1="leg3_link2" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="leg3_link2" link2="leg4_link6" reason="Never" />
+    <disable_collisions link1="leg3_link3" link2="leg3_link4" reason="Adjacent" />
+    <disable_collisions link1="leg3_link3" link2="leg3_link5" reason="Never" />
+    <disable_collisions link1="leg3_link3" link2="leg3_link6" reason="Never" />
+    <disable_collisions link1="leg3_link3" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="leg3_link3" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="leg3_link3" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="leg3_link3" link2="leg4_link4" reason="Never" />
+    <disable_collisions link1="leg3_link3" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="leg3_link3" link2="leg4_link6" reason="Never" />
+    <disable_collisions link1="leg3_link4" link2="leg3_link5" reason="Adjacent" />
+    <disable_collisions link1="leg3_link4" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="leg3_link4" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="leg3_link4" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="leg3_link5" link2="leg3_link6" reason="Adjacent" />
+    <disable_collisions link1="leg3_link5" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="leg3_link5" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="leg3_link5" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="leg3_link6" link2="leg4_link1" reason="Never" />
+    <disable_collisions link1="leg3_link6" link2="leg4_link2" reason="Never" />
+    <disable_collisions link1="leg3_link6" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="leg4_link1" link2="leg4_link2" reason="Adjacent" />
+    <disable_collisions link1="leg4_link1" link2="leg4_link3" reason="Never" />
+    <disable_collisions link1="leg4_link1" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="leg4_link1" link2="leg4_link6" reason="Never" />
+    <disable_collisions link1="leg4_link2" link2="leg4_link3" reason="Adjacent" />
+    <disable_collisions link1="leg4_link2" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="leg4_link3" link2="leg4_link4" reason="Adjacent" />
+    <disable_collisions link1="leg4_link3" link2="leg4_link5" reason="Never" />
+    <disable_collisions link1="leg4_link4" link2="leg4_link5" reason="Adjacent" />
+    <disable_collisions link1="leg4_link5" link2="leg4_link6" reason="Adjacent" />
+</robot>

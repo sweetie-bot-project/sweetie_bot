@@ -1,4 +1,4 @@
 reporting:
-    directory: '/tmp'
+    directory: '~'
     herkulex_statistics:
         WriteHeader: false

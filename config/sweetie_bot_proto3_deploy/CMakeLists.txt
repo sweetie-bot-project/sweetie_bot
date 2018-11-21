@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sweetie_bot_proto2_deploy)
+project(sweetie_bot_proto3_deploy)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -27,7 +27,7 @@ catkin_package(
 #############
 
 # Scripts installation
-install(DIRECTORY default torque_control rpi
+install(DIRECTORY default 
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 # bash script
 install(PROGRAMS scripts/store-joint-trajectories

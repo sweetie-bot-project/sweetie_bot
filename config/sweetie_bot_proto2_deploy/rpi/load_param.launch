@@ -1,0 +1,24 @@
+<!-- MODULE: Load default params to run joint space controllers -->
+<launch>
+    <!-- robot urdf model-->
+	<param name="robot_description" textfile="$(find sweetie_bot_proto2_description)/urdf/sweetie_bot_proto2_description.urdf"></param>
+	<param name="robot_description_dynamics" textfile="$(find sweetie_bot_proto2_description)/urdf/sweetie_bot_proto2_description_dynamics.urdf"></param>
+    <!-- components' configuration-->
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto2_deploy)/default/motion.yaml" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto2_deploy)/rpi/herkulex_feedback.yaml" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto2_deploy)/default/controller.yaml" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto2_deploy)/default/reporting.yaml" ></rosparam> 
+    <!-- trajectories -->
+	<node name="store" pkg="sweetie_bot_deploy" type="store" args=" load joint_trajectory $(find sweetie_bot_proto2_movements)/joint_trajectories"></node>
+    <!-- OROCOS cpf file configuration: replace not valid charcters with "_"  -->
+	<param name="conf_file/logger_log4cpp" textfile="$(find sweetie_bot_proto2_deploy)/default/logger.log4cpp" ></param>
+	<param name="conf_file/kinematic_chains_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/kinematic_chains.cpf" ></param>
+	<param name="conf_file/kinematics_inv_joint_limits_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/kinematics_inv_joint_limits.cpf" ></param>
+	<param name="conf_file/herkulex_servos_all_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/herkulex_servos_all.cpf" ></param>
+	<param name="conf_file/herkulex_servos_head_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/herkulex_servos_head.cpf" ></param>
+	<param name="conf_file/herkulex_servos_leg12_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/herkulex_servos_leg12.cpf" ></param>
+	<param name="conf_file/herkulex_servos_leg34_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/herkulex_servos_leg34.cpf" ></param>
+	<!-- other configuraton -->
+	<rosparam command="load" ns="hmi" file="$(find sweetie_bot_proto2_deploy)/default/hmi.yaml" ></rosparam> 
+	<rosparam command="load" ns="voice" file="$(find sweetie_bot_proto2_deploy)/default/voice.yaml" ></rosparam> 
+</launch>

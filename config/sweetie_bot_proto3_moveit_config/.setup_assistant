@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: sweetie_bot_proto3_description
+    relative_path: urdf/sweetie_bot_proto3_description.urdf
+    xacro_args: "--inorder "
+  SRDF:
+    relative_path: config/sweetie_bot_proto3_description.srdf
+  CONFIG:
+    author_name: disRecord
+    author_email: goncharovoi@yandex.ru
+    generated_timestamp: 1538093369

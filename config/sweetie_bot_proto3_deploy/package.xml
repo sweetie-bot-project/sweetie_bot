@@ -1,7 +1,7 @@
 <package format="2">
-  <name>sweetie_bot_proto2_deploy</name>
+  <name>sweetie_bot_proto3_deploy</name>
   <version>1.0.0</version>
-  <description>SweetoeBot proto2 specific deployment configuration.</description>
+  <description>SweetoeBot proto3 specific deployment configuration.</description>
   <maintainer email="goncharovoi@yandex.ru">Oleg Goncharov (disRecord)</maintainer>
 
   <license>BSD</license>
@@ -18,8 +18,8 @@
   <!-- ROS and OROCOS datatypes -->
   <!-- SWEETIEBOT packages -->
   <depend>sweetie_bot_deploy</depend>
-  <depend>sweetie_bot_deploy_proto2_description</depend>
-  <depend>sweetie_bot_deploy_proto2_movements</depend>
+  <depend>sweetie_bot_deploy_proto3_description</depend>
+  <depend>sweetie_bot_deploy_proto3_movements</depend>
   <!-- SWEETIEBOT datatypes -->
 
   <export>

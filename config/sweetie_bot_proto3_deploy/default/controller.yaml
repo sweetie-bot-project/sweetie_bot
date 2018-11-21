@@ -1,7 +1,7 @@
 controller:
     joint_state:
         priority: 20
-        controlled_chains: [ leg1, leg2, leg3, leg4, head, eyes, eyes_focus ]
+        controlled_chains: [ leg1, leg2, leg3, leg4, head, eyes, ear_l, ear_r, mouth ]
         activation_delay: 2
         publish_supports: true
         services: [ filter_joint_state_exp ]
@@ -9,7 +9,7 @@ controller:
             transient_time: 1
     joint_state_head:
         priority: 20
-        controlled_chains: [ head, eyes, eyes_focus ]
+        controlled_chains: [ head, eyes, ear_l, ear_r, mouth ]
         activation_delay: 2
         publish_supports: true
         services: [ filter_joint_state_exp_individual ]
