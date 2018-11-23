@@ -13,7 +13,6 @@ from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieB
 from sweetie_bot_flexbe_states.wait_for_message_state import WaitForMessageState
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
-from flexbe_states.wait_state import WaitState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -101,7 +100,7 @@ class RBC18Part1SM(Behavior):
 			# x:634 y:65
 			OperatableStateMachine.add('FakeApoplogy',
 										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='a_tochno_sboi_pamayati', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised', t3=[0,2.8], type3='motion/joint_trajectory', cmd3='head_node', t4=[0,6.5], type4='motion/joint_trajectory', cmd4='hoof_knock'),
-										transitions={'success': 'Wait', 'failure': 'failed'},
+										transitions={'success': 'WaitKey3', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:467 y:314
@@ -175,11 +174,12 @@ class RBC18Part1SM(Behavior):
 										transitions={'success': 'FakeApologyAndMenace', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
-			# x:649 y:170
-			OperatableStateMachine.add('Wait',
-										WaitState(wait_time=3),
-										transitions={'done': 'HelloGoodThenEvil'},
-										autonomy={'done': Autonomy.Off})
+			# x:628 y:165
+			OperatableStateMachine.add('WaitKey3',
+										WaitForMessageState(topic=joy_topic, condition=lambda x: x.buttons[action_button], buffered=False, clear=False),
+										transitions={'received': 'HelloGoodThenEvil', 'unavailable': 'failed'},
+										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
+										remapping={'message': 'message'})
 
 
 		return _state_machine
