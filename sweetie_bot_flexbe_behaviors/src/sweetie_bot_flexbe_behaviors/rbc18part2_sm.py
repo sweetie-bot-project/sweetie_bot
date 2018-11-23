@@ -62,7 +62,7 @@ class RBC18Part2SM(Behavior):
 										autonomy={'received': Autonomy.Off, 'unavailable': Autonomy.Off},
 										remapping={'message': 'message'})
 
-			# x:196 y:177
+			# x:179 y:106
 			OperatableStateMachine.add('SpasiboMut',
 										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='spasibo_mut_tvoyo_uporstvo_vsegda_radovalo_menya', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey2', 'failure': 'failed'},
@@ -87,7 +87,7 @@ class RBC18Part2SM(Behavior):
 										transitions={'success': 'WaitKey3', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
-			# x:308 y:46
+			# x:370 y:44
 			OperatableStateMachine.add('WaitKey2',
 										WaitForMessageState(topic=joy_topic, condition=lambda x: x.buttons[12], buffered=False, clear=False),
 										transitions={'received': 'SpasiboStefanShiron', 'unavailable': 'failed'},
