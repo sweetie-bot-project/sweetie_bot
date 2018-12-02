@@ -13,7 +13,7 @@
 	<arg name="run_flexbe" default="false" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
-	<machine name="sweetiebot" address="sweetie" user="sweetie" default="never"/>
+	<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
