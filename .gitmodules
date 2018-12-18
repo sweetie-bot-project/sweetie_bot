@@ -5,7 +5,8 @@
 [submodule "rt_control"]
 	path = rt_control
 	url = ../sweetie_bot_rt_control.git
-	branch = devel
+	branch = master
 [submodule "config/sweetie_bot_proto3_description"]
 	path = config/sweetie_bot_proto3_description
 	url = ../sweetie_bot_proto3_description.git
+	branch = master
