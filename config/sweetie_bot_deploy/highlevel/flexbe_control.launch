@@ -50,7 +50,6 @@
 			</include>
 			<!-- voice  -->
 			<group ns="voice">
-				<param name="sounds_path" value="$(find sweetie_bot_sounds)/sounds" />
 				<!-- voice node  -->
 				<node pkg="sweetie_bot_voice" type="voice" name="voice_node">
 					<remap from="control" to="$(arg robot_ns)/control" />
