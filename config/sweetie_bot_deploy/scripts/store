@@ -49,7 +49,7 @@ def load(param, path, replace_existing = False):
 			elif not isinstance(param_value, dict):
 				raise KeyError, 'Load directory failed: target ROS parameter is not namespace or Binary.'
 	else:
-		raise KeyError, 'Load failed: target path is neither file o directory.'
+		raise KeyError, 'Load failed: target path is neither file nor directory.'
 
 	if not load_namespace:
             if replace_existing or not rospy.has_param(param):
