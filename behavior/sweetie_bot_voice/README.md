@@ -7,6 +7,11 @@ Sweetie Bot voice package
 This node listen to `TextCommand` mesages on `control` topic and performs voice-related commands.
 It may play sound using ROS `sound_play` node or by invoking system command.
 
+Prerecorded files should be located in so-called sound packages in `sounds/<lang_prefix>` directories.
+The list of sound packages, lang prefixes and their precedence is controlled by `~sound_packages` and `lang`
+parameters.
+
+
 ### Supported `TextCommand` commands types
 
 * `voice/play_wav` --- play corresponding `.wav` or `.ogg` file. You should specify only basename in `command` filed.
@@ -26,10 +31,10 @@ It may play sound using ROS `sound_play` node or by invoking system command.
 
 * Client: `sound_play` (`sound_play::SoundRequestAction`)
 
-$### Parameters
+### Parameters
 
-* `~playback_command` --- if set use provided system command to play sound files.
-* `lang`, (`string`, default "ru,en") --- use provided language prefixes. `voice` search sounds files in corresponding subdirs under `sound_path`. 
-    First prefix has precedence over the last.
-* `sounds_path` (`string`) --- sounds location (full path).
+* `~playback_command` (`string`, default None) --- if set use provided system command to play sound files.
+* `~sound_packages` (`strings`, default []) --- ROS packages with sounds. First elements have precedence over lasts. 
+    Sound files should be located in `<package_path>/sound/<lang_prefix>` directories. `sweetie_bot_voice` package is always appended to this list.
+* `lang`, (`string`, default "ru,en") --- use provided language prefixes.  First prefix has precedence over the last.
 
