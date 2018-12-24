@@ -1,0 +1,482 @@
+{
+    "goal_time_tolerance": {
+        "secs": 0, 
+        "nsecs": 0
+    }, 
+    "trajectory": {
+        "header": {
+            "stamp": {
+                "secs": 1532262837, 
+                "nsecs": 12962758
+            }, 
+            "frame_id": "", 
+            "seq": 0
+        }, 
+        "joint_names": [
+            "eyes_pitch", 
+            "eyes_yaw", 
+            "joint11", 
+            "joint12", 
+            "joint13", 
+            "joint14", 
+            "joint15", 
+            "joint16", 
+            "joint21", 
+            "joint22", 
+            "joint23", 
+            "joint24", 
+            "joint25", 
+            "joint26", 
+            "joint31", 
+            "joint32", 
+            "joint33", 
+            "joint34", 
+            "joint35", 
+            "joint36", 
+            "joint41", 
+            "joint42", 
+            "joint43", 
+            "joint44", 
+            "joint45", 
+            "joint46", 
+            "joint51", 
+            "joint52", 
+            "joint53", 
+            "joint54", 
+            "joint55", 
+            "joint56", 
+            "joint_eyes_focus_x", 
+            "joint_eyes_focus_y", 
+            "joint_eyes_focus_z", 
+            "support/leg1", 
+            "support/leg2", 
+            "support/leg3", 
+            "support/leg4"
+        ], 
+        "points": []
+    }, 
+    "path_tolerance": [
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "eyes_pitch", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "eyes_yaw", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint11", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint12", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint13", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint14", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint15", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint16", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint21", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint22", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint23", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint24", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint25", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint26", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint31", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint32", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint33", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint34", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint35", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint36", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint41", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint42", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint43", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint44", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint45", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint46", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint51", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint52", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint53", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint54", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint55", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint56", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint_eyes_focus_x", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint_eyes_focus_y", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.522, 
+            "name": "joint_eyes_focus_z", 
+            "velocity": 0.0
+        }
+    ], 
+    "goal_tolerance": [
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "eyes_pitch", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "eyes_yaw", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint11", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint12", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint13", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint14", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint15", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint16", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint21", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint22", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint23", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint24", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint25", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint26", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint31", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint32", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint33", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint34", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint35", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint36", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint41", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint42", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint43", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint44", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint45", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint46", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint51", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint52", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint53", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint54", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint55", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint56", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint_eyes_focus_x", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint_eyes_focus_y", 
+            "velocity": 0.0
+        }, 
+        {
+            "acceleration": 0.0, 
+            "position": 0.174, 
+            "name": "joint_eyes_focus_z", 
+            "velocity": 0.0
+        }
+    ]
+}
