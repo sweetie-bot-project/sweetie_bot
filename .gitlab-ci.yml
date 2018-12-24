@@ -37,7 +37,7 @@ stretch-rpi3: &robot_template
   script:
     - touch hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE behavior/sweetie_bot_voice/CATKIN_IGNORE
     - *prep_environment
-    - catkin_make_isolated $CMAKE_TOOLCHAIN --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
+    - catkin_make_isolated $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
     - *buildpkg
 
 xenial-tinker:
@@ -56,7 +56,6 @@ xenial-amd64-test: &test_template
   dependencies:
     - xenial-amd64
   variables: &test_vars
-    CONTAINER_IMAGE: registry.gitlab.com/${CI_PROJECT_PATH}:${CI_JOB_NAME}-cache
     DOCKER_HOST: tcp://docker:2375/
     IMAGE_SOURCE: ubuntu:xenial
   script:
@@ -102,11 +101,12 @@ pages:
   only:
     - master
   artifacts:
+    expire_in: 1 day
     paths:
       - public
   script:
     - apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends reprepro
-    - gpg --passphrase $SINGING_PASSPHRASE -o priv.asc -d .gitlab-ci/priv.asc.gpg && gpg --import priv.asc; rm priv.asc
+    - gpg --passphrase "$SINGING_PASSPHRASE" -o priv.asc -d .gitlab-ci/priv.asc.gpg && gpg --import priv.asc; rm priv.asc
     - |
       mkdir -p public/conf || true
       cd public

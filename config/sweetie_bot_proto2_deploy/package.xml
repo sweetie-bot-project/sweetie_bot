@@ -18,8 +18,8 @@
   <!-- ROS and OROCOS datatypes -->
   <!-- SWEETIEBOT packages -->
   <depend>sweetie_bot_deploy</depend>
-  <depend>sweetie_bot_deploy_proto2_description</depend>
-  <depend>sweetie_bot_deploy_proto2_movements</depend>
+  <depend>sweetie_bot_proto2_description</depend>
+  <depend>sweetie_bot_proto2_moveit_config</depend>
   <!-- SWEETIEBOT datatypes -->
 
   <export>

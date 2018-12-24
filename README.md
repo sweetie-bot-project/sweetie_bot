@@ -82,7 +82,9 @@ Then in another console setup ROS environment
 ```
 $ source /opt/ros/sweetie_bot/setup.bash
 ```
-and launch Sweetie Bot control software as described in Usage section, e.g. `roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true`
+and launch Sweetie Bot control software as described in Usage section, e.g.
+
+`roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true`
 
 
 #### Project dependencies
