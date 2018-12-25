@@ -32,6 +32,7 @@
   <exec_depend>visualization_msgs</exec_depend>
   <exec_depend>sweetie_bot_resource_control_msgs</exec_depend>
   <exec_depend>actionlib</exec_depend>
+  <exec_depend>rviz</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
