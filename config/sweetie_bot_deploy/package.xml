@@ -12,6 +12,8 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>lua-filesystem</depend>
+
   <!-- ROS and OROCOS packages -->
   <depend>rtt</depend>
   <depend>ocl</depend>
