@@ -24,12 +24,12 @@ typedef actionlib::SimpleClientGoalState GoalState;
 
 // CONNECTIONS
 // action server 
-std::shared_ptr<ActionClient> action_client;
+std::unique_ptr<ActionClient> action_client;
 // publisers 
 ros::Publisher pose_pub;
 // tf listener
 tf2_ros::Buffer tf_buffer;
-std::shared_ptr<tf2_ros::TransformListener> tf_listener;
+std::unique_ptr<tf2_ros::TransformListener> tf_listener;
 
 // PARAMETERS
 // node name 
@@ -49,7 +49,7 @@ double normalized_z_level = 0.0;
 
 // COMPONENT STATE
 // interactive marker server
-std::shared_ptr<InteractiveMarkerServer> server;
+std::unique_ptr<InteractiveMarkerServer> server;
 // menu
 MenuHandler menu_handler;
 // menu index
