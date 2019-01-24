@@ -5,7 +5,7 @@ project(sweetie_bot_rviz_interactions)
 add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
-find_package(catkin REQUIRED COMPONENTS geometry_msgs roscpp visualization_msgs tf interactive_markers sweetie_bot_resource_control_msgs actionlib)
+find_package(catkin REQUIRED COMPONENTS geometry_msgs roscpp visualization_msgs tf interactive_markers sweetie_bot_control_msgs actionlib)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -20,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS geometry_msgs roscpp visualization_msgs 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sweetie_bot_rviz_interactions
-  CATKIN_DEPENDS geometry_msgs roscpp visualization_msgs tf interactive_markers sweetie_bot_resource_control_msgs actionlib
+  CATKIN_DEPENDS geometry_msgs roscpp visualization_msgs tf interactive_markers sweetie_bot_control_msgs actionlib
 #  DEPENDS system_lib
 )
 

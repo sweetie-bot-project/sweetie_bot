@@ -9,15 +9,15 @@
 #include <interactive_markers/menu_handler.h>
 
 #include <actionlib/client/simple_action_client.h>
-#include <sweetie_bot_resource_control_msgs/SetOperationalAction.h>
+#include <sweetie_bot_control_msgs/SetOperationalAction.h>
 
 using namespace visualization_msgs;
 using namespace interactive_markers;
 
 
 // Action type definitions
-ACTION_DEFINITION(sweetie_bot_resource_control_msgs::SetOperationalAction);	
-typedef actionlib::SimpleActionClient<sweetie_bot_resource_control_msgs::SetOperationalAction> ActionClient;
+ACTION_DEFINITION(sweetie_bot_control_msgs::SetOperationalAction);	
+typedef actionlib::SimpleActionClient<sweetie_bot_control_msgs::SetOperationalAction> ActionClient;
 typedef actionlib::SimpleClientGoalState GoalState;
 
 // COMPONENT INTERFACE
