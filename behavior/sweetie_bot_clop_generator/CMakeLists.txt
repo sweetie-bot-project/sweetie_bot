@@ -1,0 +1,132 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(sweetie_bot_clop_generator)
+
+## Compile as C++11, supported in ROS Kinetic and newer
+# add_compile_options(-std=c++11)
+
+## Find catkin macros and libraries
+find_package(catkin REQUIRED COMPONENTS 
+	roscpp
+	rosbag
+	actionlib
+	tf2
+	tf2_geometry_msgs
+	tf2_ros
+	orocos_kdl
+	kdl_parser
+	kdl_conversions 
+	eigen_conversions 
+	xpp_states
+	xpp_msgs
+	sensor_msgs
+	towr
+	towr_ros
+	sweetie_bot_control_msgs 
+	sweetie_bot_orocos_misc
+)
+
+## System dependencies are found with CMake's conventions
+
+################################################
+
+
+###################################
+## catkin specific configuration ##
+###################################
+## The catkin_package macro generates cmake config files for your package
+## Declare things to be passed to dependent projects
+## INCLUDE_DIRS: uncomment this if your package contains header files
+## LIBRARIES: libraries you create in this project that dependent projects also need
+## CATKIN_DEPENDS: catkin_packages dependent projects also need
+## DEPENDS: system dependencies of this project that dependent projects also need
+catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES sweetie_bot_gait_towr
+  CATKIN_DEPENDS 
+	roscpp
+	rosbag
+	actionlib
+	tf2
+	tf2_geometry_msgs
+	tf2_ros
+	kdl_parser
+	kdl_conversions 
+	eigen_conversions 
+	xpp_states
+	xpp_msgs
+	sensor_msgs
+	towr_ros
+	sweetie_bot_control_msgs 
+	sweetie_bot_orocos_misc
+  DEPENDS 
+    towr 
+	orocos_kdl
+)
+
+###########
+## Build ##
+###########
+
+include_directories(
+	# include
+	${catkin_INCLUDE_DIRS}
+)
+
+
+## Declare a C++ library
+
+## Declare a C++ executable
+add_executable(towr_clop_generator src/gait_generator.cpp src/general_kinematic_model.cc src/towr_trajectory_visualizer.cpp src/rigid_body_inertia_calculator.cpp)
+target_link_libraries(towr_clop_generator ${catkin_LIBRARIES})
+add_dependencies(towr_clop_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Rename C++ executable without prefix
+# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
+
+#############
+## Install ##
+#############
+
+# all install targets should use catkin DESTINATION variables
+# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
+
+## Mark executable scripts (Python etc.) for installation
+## in contrast to setup.py, you can choose the destination
+# install(PROGRAMS
+#   scripts/my_python_script
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+
+## Mark executables and/or libraries for installation
+install(TARGETS towr_clop_generator
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+## Mark cpp header files for installation
+# install(DIRECTORY include/${PROJECT_NAME}/
+#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#   FILES_MATCHING PATTERN "*.h"
+#   PATTERN ".svn" EXCLUDE
+# )
+
+## Mark other files for installation (e.g. launch and bag files, etc.)
+# install(FILES
+#   # myfile1
+#   # myfile2
+#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+# )
+
+#############
+## Testing ##
+#############
+
+# Add gtest based cpp test target and link libraries
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_sweetie_bot_gait_towr.cpp)
+# if(TARGET ${PROJECT_NAME}-test)
+#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+# endif()
+
+## Add folders to be run by python nosetests
+# catkin_add_nosetests(test)
