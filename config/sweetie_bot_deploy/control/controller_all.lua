@@ -15,6 +15,8 @@ require "controller_stance"
 
 require "controller_pose"
 
+require "controller_step_sequence"
+
 if (aggregator_real and herkulex) then
 	require "controller_torque_off"
 end
