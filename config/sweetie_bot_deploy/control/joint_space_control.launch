@@ -31,6 +31,14 @@
 		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch" />
 	</group>
 	
+	<!-- host components -->
+	<group if="$(arg host)">
+		<!-- gait generator -->
+		<node name="clop_generator" pkg="sweetie_bot_clop_generator" type="towr_clop_generator" output="screen">
+			<remap from="step_sequence" to="motion/controller/step_sequence" />     
+		</node>
+	</group>
+
 	<!-- launch operator GUI -->
 	<group if="$(arg host)">
 		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
