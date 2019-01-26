@@ -329,7 +329,7 @@ bool ClopGenerator::checkInitalPose()
 	// extract base transformation in form (R,p)
 	Vector3d rpy = formulation.initial_base_.ang.at(towr::kPos);
 	KDL::Rotation rot_kdl( KDL::Rotation::RPY(rpy.x(), rpy.y(), rpy.z()) );
-	Eigen::Map<Eigen::Matrix3d, Eigen::RowMajor> R(rot_kdl.data);
+	Eigen::Map< Eigen::Matrix<double,3,3,Eigen::RowMajor> > R(rot_kdl.data);
 	Vector3d p = formulation.initial_base_.lin.at(kPos);
 	// get bounding box
 	auto nominal_stance_B = formulation.model_.kinematic_model_->GetNominalStanceInBase();
