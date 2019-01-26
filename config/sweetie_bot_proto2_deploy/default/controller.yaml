@@ -48,3 +48,6 @@ controller:
         filter_rigid_body_state_pd:
             Kp: 25
             Kd: 10
+    step_sequence:
+        priority: 20
+        override_odometry: true

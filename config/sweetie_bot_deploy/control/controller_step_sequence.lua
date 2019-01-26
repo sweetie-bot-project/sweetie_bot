@@ -27,6 +27,10 @@ depl:connect("controller/step_sequence.out_supports", "aggregator_ref.in_support
 -- data flow: controller -> aggregator_ref
 depl:connect("controller/step_sequence.out_limbs_ref", "kinematics_inv.in_limbs", rtt.Variable("ConnPolicy"))
 -- data flow: controller <-> odometry_ref
+if config.get_rosparam("~controller/step_sequence/override_odometry", "bool") then
+	-- odometry results are overrided with controller/step_sequence.out_base_ref port
+	depl:connect("controller/step_sequence.out_base_ref", "odometry_ref.in_base", rtt.Variable("ConnPolicy"))
+end
 depl:connect("controller/step_sequence.in_base", "odometry_ref.out_base", rtt.Variable("ConnPolicy"))
 -- data flow: controller <- kinematics_fwd
 depl:connect("controller/step_sequence.in_limbs_fixed", "kinematics_fwd.out_limbs_fixed", rtt.Variable("ConnPolicy"))
