@@ -19,7 +19,7 @@
 		</simple>
 		<simple name="default_contact" type="string">
 			<description>Default contact name.</description>
-			<value>hoof_center</value>
+			<value>hoof_flat</value>
 		</simple>
 	</struct>
 	<struct name="leg3" type="PropertyBag">
@@ -38,7 +38,7 @@
 		</simple>
 		<simple name="default_contact" type="string">
 			<description>Default contact name.</description>
-			<value>hoof_center</value>
+			<value>hoof_flat</value>
 		</simple>
 	</struct>
 	<struct name="leg4" type="PropertyBag">
@@ -57,7 +57,7 @@
 		</simple>
 		<simple name="default_contact" type="string">
 			<description>Default contact name.</description>
-			<value>hoof_center</value>
+			<value>hoof_flat</value>
 		</simple>
 	</struct>
 	<struct name="leg2" type="PropertyBag">
@@ -76,7 +76,7 @@
 		</simple>
 		<simple name="default_contact" type="string">
 			<description>Default contact name.</description>
-			<value>hoof_center</value>
+			<value>hoof_flat</value>
 		</simple>
 	</struct>
 	<struct name="head" type="PropertyBag">
