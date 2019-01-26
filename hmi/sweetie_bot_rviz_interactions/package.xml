@@ -21,6 +21,7 @@
   <build_depend>interactive_markers</build_depend>
   <build_depend>visualization_msgs</build_depend>
   <build_depend>sweetie_bot_resource_control_msgs</build_depend>
+  <build_depend>moveit_ros_visualization</build_depend>
   <build_export_depend>geometry_msgs</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>visualization_msgs</build_export_depend>
@@ -32,6 +33,13 @@
   <exec_depend>visualization_msgs</exec_depend>
   <exec_depend>sweetie_bot_resource_control_msgs</exec_depend>
   <exec_depend>actionlib</exec_depend>
+  <exec_depend>rviz</exec_depend>
+
+  <exec_depend>moveit_ros_move_group</exec_depend>
+  <exec_depend>moveit_fake_controller_manager</exec_depend>
+  <exec_depend>moveit_kinematics</exec_depend>
+  <exec_depend>moveit_planners_ompl</exec_depend>
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

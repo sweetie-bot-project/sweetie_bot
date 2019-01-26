@@ -20,7 +20,7 @@
 		<!-- NOTE: rviz is lauched in root namespace due to problems with moveit plugin.
 			 If rviz is lauched in /hmi and move_group  is deployed in / rviz plugin uable to find necessary topics.
 			 If move_group is startd inside /moveit/ namespace rviz plugin has problems with finding necessary parameters.  -->
-		<node if="$(arg run_rviz)" ns="/" name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)">
+		<node if="$(arg run_rviz)" ns="/" name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)" output="screen" >
 			<remap from="/clicked_point" to="$(arg robot_ns)/hmi/clicked_point"/>
 			<remap from="/move_base_simple/goal" to="$(arg robot_ns)/hmi/move_base_simple/goal"/>
 			<remap from="/initialpose" to="$(arg robot_ns)/hmi/initialpose"/>
