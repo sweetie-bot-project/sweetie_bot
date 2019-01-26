@@ -111,12 +111,10 @@ install(TARGETS towr_clop_generator
 #   PATTERN ".svn" EXCLUDE
 # )
 
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+## Test scripts for gait_generator.
+install(DIRECTORY scripts
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+	USE_SOURCE_PERMISSIONS)
 
 #############
 ## Testing ##
