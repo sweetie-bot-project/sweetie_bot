@@ -26,6 +26,8 @@ stretch-amd64: &desktop_template
     expire_in: 3 weeks
     paths:
       - "sweetie-bot-*.deb"
+  except:
+    - devel
 
 xenial-amd64:
   <<: *desktop_template
@@ -79,6 +81,8 @@ xenial-amd64-test: &test_template
       - diff.png
       - __log/
     when: always
+  except:
+    - devel
 
 stretch-amd64-test:
   <<: *test_template
