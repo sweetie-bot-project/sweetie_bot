@@ -301,7 +301,7 @@ bool ClopGenerator::setInitialStateFromTF()
 			formulation.initial_base_.lin.at(towr::kVel).setZero();
 			formulation.initial_base_.ang.at(towr::kVel).setZero();
 
-			//ROS_DEBUG_STREAM("Initial BASE pose from TF: p = (" << formulation.initial_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.initial_base_.ang.at(kPos).transpose() << ")");
+			ROS_DEBUG_STREAM("Initial BASE pose from TF: p = (" << formulation.initial_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.initial_base_.ang.at(kPos).transpose() << ")");
 		}
 		// get end effector position
 		// NOTE: ignore orientation
@@ -314,7 +314,7 @@ bool ClopGenerator::setInitialStateFromTF()
 				// TODO add hoof height --- introduce hoof frame or access contact description in robot_model
 				tf::vectorMsgToEigen(T.transform.translation, formulation.initial_ee_W_[ee_info.second.towr_index]);
 
-				//ROS_DEBUG_STREAM("Initial EE '" << ee_info.first << "' (" << ee_info.second.towr_index << ") pose from TF: (" << formulation.initial_ee_W_[ee_info.second.towr_index].transpose() << ")");
+				ROS_DEBUG_STREAM("Initial EE '" << ee_info.first << "' (" << ee_info.second.towr_index << ") pose from TF: (" << formulation.initial_ee_W_[ee_info.second.towr_index].transpose() << ")");
 		}
 	/*}
 	catch (tf2::TransformException &ex) {
@@ -338,9 +338,8 @@ bool ClopGenerator::checkInitalPose()
 	for(int i = 0; i < formulation.initial_ee_W_.size(); i++) {
 		Vector3d ee_pos_B = R.transpose() * (formulation.initial_ee_W_[i] - p);
 
-		ROS_INFO_STREAM("Check initial pose: EE " << i << " deviation from bounding box center : (" << (ee_pos_B - nominal_stance_B[i]).transpose() << ")");
-
 		if ( (Eigen::abs((ee_pos_B - nominal_stance_B[i]).array()) > max_dev_from_nominal_B.array()).any() ) { 
+			ROS_WARN_STREAM("Check initial pose: EE " << i << " deviation from bounding box center : (" << (ee_pos_B - nominal_stance_B[i]).transpose() << ")");
 			return false;
 		}
 	}
@@ -373,7 +372,7 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 	formulation.final_base_.lin.at(kVel).setZero();
 	formulation.final_base_.ang.at(kVel).setZero();
 
-	//ROS_DEBUG_STREAM("Goal BASE pose from msg: p = (" << formulation.final_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.final_base_.ang.at(kPos).transpose() << ")");
+	ROS_DEBUG_STREAM("Goal BASE pose from msg: p = (" << formulation.final_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.final_base_.ang.at(kPos).transpose() << ")");
 }
 		
 void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg) 
@@ -481,9 +480,9 @@ void ClopGenerator::callbackExecuteMoveBase(const sweetie_bot_control_msgs::Move
     for (auto c : formulation.GetConstraints(solution)) nlp.AddConstraintSet(c);
     for (auto c : formulation.GetCosts()) nlp.AddCostSet(c);
 
-	nlp.PrintCurrent();
-
     solver->Solve(nlp);
+
+	nlp.PrintCurrent();
 
 	//TODO check if optimization succesed
 
