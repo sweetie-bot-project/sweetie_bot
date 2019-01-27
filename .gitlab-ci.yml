@@ -58,7 +58,11 @@ bionic-amd64:
   <<: *desktop_template
   image: registry.gitlab.com/slavanap/ros-build:stretch-rpi3-melodic
   script:
-    - touch hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE behavior/sweetie_bot_voice/CATKIN_IGNORE
+    - >
+      touch \
+        hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE \
+        hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE \
+        behavior/sweetie_bot_voice/CATKIN_IGNORE
     - *cmd_prep_environment
     - *cmd_build
     - *cmd_buildpkg
@@ -114,7 +118,7 @@ bionic-amd64-test:
 
 
 
-.pages:
+pages:
   stage: deploy
   image: ubuntu:bionic
   dependencies:
