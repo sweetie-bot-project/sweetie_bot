@@ -7,28 +7,37 @@
   cache:
     key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
     paths:
-      - .build/build_isolated
-      - .build/devel_isolated
+      - build.tar
   script:
     - &prep_environment |
+      ls -la
       ./.gitlab-ci/recover-ts.sh '' HEAD
-      if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then
-        rm -rf .build
+      echo "fixed:"
+      ls -la
+      if [[ "$CI_COMMIT_REF_NAME" != "master" ]] && [[ -f build.tar ]]; then
+        tar xvf build.tar
+        rm build.tar
+      else
+        mkdir .build
+        ln -s .. .build/src
       fi
-      (mkdir .build 2>/dev/null || true) && cd .build && ln -s "$CI_PROJECT_DIR" ./src
+      cd .build
       source "/opt/ros/$ROS_DISTRO/setup.bash"
     - catkin_make_isolated --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
-    - &buildpkg |  # export BASE_VERSION="$DEB_VERSION"
+    - &buildpkg |
       source /src/base/buildpkg.bash
-      export BASE_VERSION=0.3~stretch-amd64
-      export DEB_VERSION="${BASE_VERSION%~*}-${CI_JOB_ID}~${BASE_VERSION#*~}"
-      export DEB_NAME="ros-${ROS_DISTRO}-sweetie-bot$PKG_SUFFIX"
-      export DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO" \
-        DEB_HOMEPAGE="http://sweetiebot.net/"
+      BASE_VERSION="$DEB_VERSION"
+      DEB_VERSION="${BASE_VERSION%~*}-${CI_JOB_ID}~${BASE_VERSION#*~}"
+      DEB_NAME="ros-${ROS_DISTRO}-sweetie-bot$PKG_SUFFIX"
+      DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO"
+      DEB_HOMEPAGE="http://sweetiebot.net/"
       buildpkg "/opt/ros/sweetie_bot" "sweetie-bot.deb" "ros-${ROS_DISTRO}-sweetie-bot-base$PKG_SUFFIX (=${BASE_VERSION})" || echo "ret code $?"
       mv sweetie-bot.deb "$CI_PROJECT_DIR/sweetie-bot-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
       cp -a /src/base/sweetie-bot-base.deb "$CI_PROJECT_DIR/sweetie-bot-base-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
-      rm ./src
+      cd "$CI_PROJECT_DIR"
+      if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then
+        tar cf build.tar .build
+      fi
   artifacts:
     name: sweetie-bot-${CI_JOB_NAME}
     expire_in: 3 weeks
@@ -95,7 +104,7 @@ bionic-amd64:
       - __log/
     when: always
 
-bionic-amd64-test:
+.bionic-amd64-test:
   <<: *test_template
   dependencies:
     - bionic-amd64
