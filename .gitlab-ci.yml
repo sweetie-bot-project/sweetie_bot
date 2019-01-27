@@ -1,7 +1,7 @@
 
 stretch-amd64: &desktop_template
   stage: build
-  image: registry.gitlab.com/slavanap/ros-build:stretch-amd64-melodic
+  image: registry.gitlab.com/slavanap/ros-build:stretch-amd64
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
   cache:
@@ -48,15 +48,15 @@ stretch-amd64: &desktop_template
 # deprecated
 xenial-amd64:
   <<: *desktop_template
-  image: registry.gitlab.com/slavanap/ros-build:xenial-amd64-melodic
+  image: registry.gitlab.com/slavanap/ros-build:xenial-amd64
 
 bionic-amd64:
   <<: *desktop_template
-  image: registry.gitlab.com/slavanap/ros-build:bionic-amd64-melodic
+  image: registry.gitlab.com/slavanap/ros-build:bionic-amd64
 
 .stretch-rpi3: &robot_template
   <<: *desktop_template
-  image: registry.gitlab.com/slavanap/ros-build:stretch-rpi3-melodic
+  image: registry.gitlab.com/slavanap/ros-build:stretch-rpi3
   script:
     - >
       touch \
@@ -69,11 +69,11 @@ bionic-amd64:
 
 bionic-tinker:
   <<: *robot_template
-  image: registry.gitlab.com/slavanap/ros-build:bionic-tinker-melodic
+  image: registry.gitlab.com/slavanap/ros-build:bionic-tinker
 
 bionic-orangepi:
   <<: *robot_template
-  image: registry.gitlab.com/slavanap/ros-build:bionic-orangepi-melodic
+  image: registry.gitlab.com/slavanap/ros-build:bionic-orangepi
 
 
 
