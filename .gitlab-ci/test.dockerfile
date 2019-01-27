@@ -12,7 +12,7 @@ RUN apt-get update -qq && apt-get upgrade -qqy \
 
 # Install packages and their dependencies
 COPY *.deb ./
-RUN dpkg -i *.deb; apt-get install -qqy -f && rm *.deb
+RUN dpkg -i *.deb 2>/dev/null; apt-get install -qqy -f && rm *.deb
 
 # image comparison & virtual display support & user
 RUN apt-get install -qqy --no-install-recommends imagemagick sudo git python-rosdep xvfb scrot \

@@ -1,5 +1,5 @@
 
-.stretch-amd64: &desktop_template
+stretch-amd64: &desktop_template
   stage: build
   image: registry.gitlab.com/slavanap/ros-build:stretch-amd64-melodic
   variables:
@@ -46,7 +46,7 @@
       - "sweetie-bot-*.deb"
 
 # deprecated
-.xenial-amd64:
+xenial-amd64:
   <<: *desktop_template
   image: registry.gitlab.com/slavanap/ros-build:xenial-amd64-melodic
 
@@ -63,17 +63,17 @@ bionic-amd64:
     - *cmd_build
     - *cmd_buildpkg
 
-.bionic-tinker:
+bionic-tinker:
   <<: *robot_template
   image: registry.gitlab.com/slavanap/ros-build:bionic-tinker-melodic
 
-.bionic-orangepi:
+bionic-orangepi:
   <<: *robot_template
   image: registry.gitlab.com/slavanap/ros-build:bionic-orangepi-melodic
 
 
 
-.stretch-amd64-test: &test_template
+stretch-amd64-test: &test_template
   stage: test
   image: docker:stable-git
   services:
@@ -84,7 +84,6 @@ bionic-amd64:
     DOCKER_HOST: tcp://docker:2375/
     IMAGE_SOURCE: debian:stretch
   script:
-    - ls -la
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git .gitlab-ci/sweetie_bot_flexbe_behaviors
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git .gitlab-ci/sweetie_bot_proto2_movements
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_sounds.git .gitlab-ci/sweetie_bot_sounds
@@ -122,7 +121,7 @@ bionic-amd64-test:
     - stretch-amd64
     - xenial-amd64  # deprecated
     - bionic-amd64
-#    - stretch-rpi3
+    #- stretch-rpi3
     - bionic-tinker
     - bionic-orangepi
   only:
