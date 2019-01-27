@@ -1,76 +1,104 @@
 
 stretch-amd64: &desktop_template
   stage: build
-  image: registry.gitlab.com/slavanap/ros-build:stretch-amd64
-  tags:
-    - docker
+  image: registry.gitlab.com/slavanap/ros-build:stretch-amd64-melodic
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
+  cache:
+    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    paths:
+      - build.tar
   script:
-    - &prep_environment |
-      mkdir /tmp/build && ln -s "$PWD" /tmp/build/src && cd /tmp/build
+    - &cmd_prep_environment |
+      "$CI_PROJECT_DIR/.gitlab-ci/recover-ts.sh" '' HEAD
+      git submodule foreach --recursive "$CI_PROJECT_DIR/.gitlab-ci/recover-ts.sh" '' HEAD
+      if [[ "$CI_COMMIT_REF_NAME" != "master" ]] && [[ -f build.tar ]]; then
+        tar xf build.tar
+        rm build.tar
+      else
+        mkdir .build
+        ln -s .. .build/src
+      fi
+      cd .build
       source "/opt/ros/$ROS_DISTRO/setup.bash"
-    - catkin_make_isolated --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
-    - &buildpkg |
-      source "/tmp/repo/buildpkg.bash"
-      export BASE_VERSION="$DEB_VERSION"
-      export DEB_VERSION="${DEB_VERSION%~*}-${CI_JOB_ID}~${DEB_VERSION#*~}"
-      export DEB_NAME="ros-${ROS_DISTRO}-sweetie-bot$PKG_SUFFIX"
-      export DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO" \
-        DEB_HOMEPAGE="http://sweetiebot.net/"
+      rosdep check --from-paths src --ignore-src --rosdistro "$ROS_DISTRO" 2>roscheck.tmp \
+        cat roscheck.tmp >&2 && ! grep ERROR roscheck.tmp >/dev/null && rm roscheck.tmp
+    - &cmd_build |
+      catkin_make_isolated $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
+    - &cmd_buildpkg |
+      source /src/base/buildpkg.bash
+      BASE_VERSION="$DEB_VERSION"
+      DEB_VERSION="${BASE_VERSION%~*}-${CI_JOB_ID}~${BASE_VERSION#*~}"
+      DEB_NAME="ros-${ROS_DISTRO}-sweetie-bot$PKG_SUFFIX"
+      DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO"
+      DEB_HOMEPAGE="http://sweetiebot.net/"
       buildpkg "/opt/ros/sweetie_bot" "sweetie-bot.deb" "ros-${ROS_DISTRO}-sweetie-bot-base$PKG_SUFFIX (=${BASE_VERSION})" || echo "ret code $?"
-      mv "sweetie-bot.deb" "$CI_PROJECT_DIR/sweetie-bot-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
-      mv /tmp/repo/sweetie-bot-base.deb "$CI_PROJECT_DIR/sweetie-bot-base-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
+      mv sweetie-bot.deb "$CI_PROJECT_DIR/sweetie-bot-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
+      cp -a /src/base/sweetie-bot-base.deb "$CI_PROJECT_DIR/sweetie-bot-base-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
+      cd "$CI_PROJECT_DIR"
+      if [[ "$CI_COMMIT_REF_NAME" != "master" ]]; then
+        tar cf build.tar .build
+      fi
   artifacts:
     name: sweetie-bot-${CI_JOB_NAME}
     expire_in: 3 weeks
     paths:
       - "sweetie-bot-*.deb"
 
+# deprecated
 xenial-amd64:
   <<: *desktop_template
-  image: registry.gitlab.com/slavanap/ros-build:xenial-amd64
+  image: registry.gitlab.com/slavanap/ros-build:xenial-amd64-melodic
 
-stretch-rpi3: &robot_template
+bionic-amd64:
   <<: *desktop_template
-  image: registry.gitlab.com/slavanap/ros-build:stretch-rpi3
+  image: registry.gitlab.com/slavanap/ros-build:bionic-amd64-melodic
+
+.stretch-rpi3: &robot_template
+  <<: *desktop_template
+  image: registry.gitlab.com/slavanap/ros-build:stretch-rpi3-melodic
   script:
-    - touch hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE behavior/sweetie_bot_voice/CATKIN_IGNORE
-    - *prep_environment
-    - catkin_make_isolated $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
-    - *buildpkg
+    - >
+      touch \
+        hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE \
+        hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE \
+        behavior/sweetie_bot_voice/CATKIN_IGNORE
+    - *cmd_prep_environment
+    - *cmd_build
+    - *cmd_buildpkg
 
-xenial-tinker:
+bionic-tinker:
   <<: *robot_template
-  image: registry.gitlab.com/slavanap/ros-build:xenial-tinker
+  image: registry.gitlab.com/slavanap/ros-build:bionic-tinker-melodic
+
+bionic-orangepi:
+  <<: *robot_template
+  image: registry.gitlab.com/slavanap/ros-build:bionic-orangepi-melodic
 
 
 
-xenial-amd64-test: &test_template
+stretch-amd64-test: &test_template
   stage: test
   image: docker:stable-git
   services:
-    - docker:dind
-  tags:
-    - docker
+    - docker:stable-dind
   dependencies:
-    - xenial-amd64
+    - stretch-amd64
   variables: &test_vars
     DOCKER_HOST: tcp://docker:2375/
-    IMAGE_SOURCE: ubuntu:xenial
+    IMAGE_SOURCE: debian:stretch
   script:
-    - ls -la
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git .gitlab-ci/sweetie_bot_flexbe_behaviors
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git .gitlab-ci/sweetie_bot_proto2_movements
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_sounds.git .gitlab-ci/sweetie_bot_sounds
 
-    - docker build -t test --build-arg IMAGE_SOURCE="$IMAGE_SOURCE" -f .gitlab-ci/test.dockerfile .
+    - docker build -t test --build-arg image="$IMAGE_SOURCE" -f .gitlab-ci/test.dockerfile .
     - docker create --name temp test
-    - docker cp temp:/home/dev/retcode .
+    - docker cp temp:/home/dev/.ros/log ./__log || true
     - docker cp temp:/home/dev/screenshot.png . || true
     - docker cp temp:/home/dev/diff.png . || true
-    - docker cp temp:/home/dev/.ros/log ./__log || true
-    - ( exit $(cat ./retcode || echo 42) )
+    - docker cp temp:/home/dev/retcode . && cat ./retcode
+    - exit $(cat ./retcode)
 
   artifacts:
     expire_in: 3 weeks
@@ -80,24 +108,26 @@ xenial-amd64-test: &test_template
       - __log/
     when: always
 
-stretch-amd64-test:
+bionic-amd64-test:
   <<: *test_template
   dependencies:
-    - stretch-amd64
+    - bionic-amd64
   variables:
     <<: *test_vars
-    IMAGE_SOURCE: debian:stretch
+    IMAGE_SOURCE: ubuntu:bionic
 
 
 
 pages:
   stage: deploy
-  image: ubuntu:xenial
+  image: ubuntu:bionic
   dependencies:
     - stretch-amd64
-    - xenial-amd64
-    - stretch-rpi3
-    - xenial-tinker
+    - xenial-amd64  # deprecated
+    - bionic-amd64
+    #- stretch-rpi3
+    - bionic-tinker
+    - bionic-orangepi
   only:
     - master
   artifacts:
@@ -123,13 +153,20 @@ pages:
 
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: xenial
+      Architectures: amd64
+      Components: main
+      Description: no description
+      SignWith: yes
+
+      Origin: $CI_PROJECT_NAMESPACE.gitlab.io
+      Codename: bionic
       Architectures: armhf amd64
       Components: main
       Description: no description
       SignWith: yes
       EOF
     - |
-      for dist in stretch xenial; do
+      for dist in stretch xenial bionic; do
         shopt -s nullglob
         for f in $CI_PROJECT_DIR/*${dist}*.deb; do
           reprepro -S utils includedeb "$dist" "$f"
