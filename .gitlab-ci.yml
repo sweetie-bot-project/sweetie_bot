@@ -10,12 +10,10 @@
       - build.tar
   script:
     - &prep_environment |
-      ls -la
-      ./.gitlab-ci/recover-ts.sh '' HEAD
-      echo "fixed:"
-      ls -la
+      "$CI_PROJECT_DIR/.gitlab-ci/recover-ts.sh" '' HEAD
+      git submodule foreach --recursive "$CI_PROJECT_DIR/.gitlab-ci/recover-ts.sh" '' HEAD
       if [[ "$CI_COMMIT_REF_NAME" != "master" ]] && [[ -f build.tar ]]; then
-        tar xvf build.tar
+        tar xf build.tar
         rm build.tar
       else
         mkdir .build
