@@ -9,7 +9,7 @@
     paths:
       - build.tar
   script:
-    - &prep_environment |
+    - &cmd_prep_environment |
       "$CI_PROJECT_DIR/.gitlab-ci/recover-ts.sh" '' HEAD
       git submodule foreach --recursive "$CI_PROJECT_DIR/.gitlab-ci/recover-ts.sh" '' HEAD
       if [[ "$CI_COMMIT_REF_NAME" != "master" ]] && [[ -f build.tar ]]; then
@@ -21,8 +21,11 @@
       fi
       cd .build
       source "/opt/ros/$ROS_DISTRO/setup.bash"
-    - catkin_make_isolated --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
-    - &buildpkg |
+      rosdep check --from-paths src --ignore-src --rosdistro "$ROS_DISTRO" 2>roscheck.tmp \
+        cat roscheck.tmp >&2 && ! grep ERROR roscheck.tmp >/dev/null && rm roscheck.tmp
+    - &cmd_build |
+      catkin_make_isolated $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
+    - &cmd_buildpkg |
       source /src/base/buildpkg.bash
       BASE_VERSION="$DEB_VERSION"
       DEB_VERSION="${BASE_VERSION%~*}-${CI_JOB_ID}~${BASE_VERSION#*~}"
@@ -56,9 +59,9 @@ bionic-amd64:
   image: registry.gitlab.com/slavanap/ros-build:stretch-rpi3-melodic
   script:
     - rm -rf hmi/sweetie_bot_rviz_interactions hmi/sweetie_bot_joint_trajectory_editor behavior/sweetie_bot_voice
-    - *prep_environment
-    - catkin_make_isolated $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
-    - *buildpkg
+    - *cmd_prep_environment
+    - *cmd_build
+    - *cmd_buildpkg
 
 .bionic-tinker:
   <<: *robot_template
@@ -88,11 +91,11 @@ bionic-amd64:
 
     - docker build -t test --build-arg image="$IMAGE_SOURCE" -f .gitlab-ci/test.dockerfile .
     - docker create --name temp test
-    - docker cp temp:/home/dev/retcode .
+    - docker cp temp:/home/dev/.ros/log ./__log || true
     - docker cp temp:/home/dev/screenshot.png . || true
     - docker cp temp:/home/dev/diff.png . || true
-    - docker cp temp:/home/dev/.ros/log ./__log || true
-    - ( exit $(cat ./retcode || echo 42) )
+    - docker cp temp:/home/dev/retcode . && cat ./retcode
+    - exit $(cat ./retcode)
 
   artifacts:
     expire_in: 3 weeks
@@ -102,7 +105,7 @@ bionic-amd64:
       - __log/
     when: always
 
-.bionic-amd64-test:
+bionic-amd64-test:
   <<: *test_template
   dependencies:
     - bionic-amd64
