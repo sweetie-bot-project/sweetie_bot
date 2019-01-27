@@ -11,6 +11,7 @@
       - .build/devel_isolated
   script:
     - &prep_environment |
+      ./.gitlab-ci/recover-ts.sh '' HEAD
       if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then
         rm -rf .build
       fi
