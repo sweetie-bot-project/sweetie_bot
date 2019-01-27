@@ -25,16 +25,13 @@ USER dev
 WORKDIR /home/dev
 
 # Install workspace packages
-RUN mkdir src/thirdparty \
- && git clone https://github.com/lucasw/rviz_textured_quads.git src/thirdparty/rviz_textured_quads \
- && git clone https://github.com/FlexBE/flexbe_app.git src/thirdparty/flexbe_app \
- && rosdep update
 COPY --chown=dev:dev .gitlab-ci/sweetie_bot_flexbe_behaviors  ./src/sweetie_bot_flexbe_behaviors
 COPY --chown=dev:dev .gitlab-ci/sweetie_bot_proto2_movements  ./src/sweetie_bot_proto2_movements
+COPY --chown=dev:dev .gitlab-ci/sweetie_bot_proto3_movements  ./src/sweetie_bot_proto3_movements
 COPY --chown=dev:dev .gitlab-ci/sweetie_bot_sounds            ./src/sweetie_bot_sounds
 
 # Build workspace
-RUN bash -c 'set -e;\
+RUN rosdep update && bash -c 'set -e;\
     source /opt/ros/sweetie_bot/setup.bash;\
     catkin_make;\
 '

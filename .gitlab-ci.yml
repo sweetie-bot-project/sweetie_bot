@@ -90,6 +90,7 @@ stretch-amd64-test: &test_template
   script:
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git .gitlab-ci/sweetie_bot_flexbe_behaviors
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git .gitlab-ci/sweetie_bot_proto2_movements
+    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_proto3_movements.git .gitlab-ci/sweetie_bot_proto3_movements
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_sounds.git .gitlab-ci/sweetie_bot_sounds
 
     - docker build -t test --build-arg image="$IMAGE_SOURCE" -f .gitlab-ci/test.dockerfile .
@@ -136,7 +137,7 @@ pages:
       - public
   script:
     - apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends reprepro
-    - gpg --passphrase "$SINGING_PASSPHRASE" -o priv.asc -d .gitlab-ci/priv.asc.gpg && gpg --import priv.asc; rm priv.asc
+    - gpg --batch --passphrase "$SINGING_PASSPHRASE" -o priv.asc -d .gitlab-ci/priv.asc.gpg && gpg --import priv.asc; rm priv.asc
     - |
       mkdir -p public/conf || true
       cd public
