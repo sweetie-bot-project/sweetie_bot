@@ -25,7 +25,7 @@ USER dev
 WORKDIR /home/dev
 
 # Install workspace packages
-RUN mkdir src/thirdparty
+RUN mkdir src/thirdparty \
  && git clone https://github.com/lucasw/rviz_textured_quads.git src/thirdparty/rviz_textured_quads \
  && git clone https://github.com/FlexBE/flexbe_app.git src/thirdparty/flexbe_app \
  && rosdep update

@@ -1,24 +1,33 @@
 
-stretch-amd64: &desktop_template
+.stretch-amd64: &desktop_template
   stage: build
   image: registry.gitlab.com/slavanap/ros-build:stretch-amd64-melodic
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
+  cache:
+    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .build/build_isolated
+      - .build/devel_isolated
   script:
     - &prep_environment |
-      mkdir /src/base/sweetie_bot && cd /src/base/sweetie_bot && ln -s "$CI_PROJECT_DIR" ./src
+      if [[ "$CI_COMMIT_REF_NAME" == "master" ]]; then
+        rm -rf .build
+      fi
+      (mkdir .build 2>/dev/null || true) && cd .build && ln -s "$CI_PROJECT_DIR" ./src
       source "/opt/ros/$ROS_DISTRO/setup.bash"
     - catkin_make_isolated --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
-    - &buildpkg |
-      source ../buildpkg.bash
-      export BASE_VERSION="$DEB_VERSION"
-      export DEB_VERSION="${DEB_VERSION%~*}-${CI_JOB_ID}~${DEB_VERSION#*~}"
+    - &buildpkg |  # export BASE_VERSION="$DEB_VERSION"
+      source /src/base/buildpkg.bash
+      export BASE_VERSION=0.3~stretch-amd64
+      export DEB_VERSION="${BASE_VERSION%~*}-${CI_JOB_ID}~${BASE_VERSION#*~}"
       export DEB_NAME="ros-${ROS_DISTRO}-sweetie-bot$PKG_SUFFIX"
       export DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO" \
         DEB_HOMEPAGE="http://sweetiebot.net/"
       buildpkg "/opt/ros/sweetie_bot" "sweetie-bot.deb" "ros-${ROS_DISTRO}-sweetie-bot-base$PKG_SUFFIX (=${BASE_VERSION})" || echo "ret code $?"
       mv sweetie-bot.deb "$CI_PROJECT_DIR/sweetie-bot-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
-      mv ../sweetie-bot-base.deb "$CI_PROJECT_DIR/sweetie-bot-base-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
+      cp -a /src/base/sweetie-bot-base.deb "$CI_PROJECT_DIR/sweetie-bot-base-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
+      rm ./src
   artifacts:
     name: sweetie-bot-${CI_JOB_NAME}
     expire_in: 3 weeks
@@ -26,7 +35,7 @@ stretch-amd64: &desktop_template
       - "sweetie-bot-*.deb"
 
 # deprecated
-xenial-amd64:
+.xenial-amd64:
   <<: *desktop_template
   image: registry.gitlab.com/slavanap/ros-build:xenial-amd64-melodic
 
@@ -43,17 +52,17 @@ bionic-amd64:
     - catkin_make_isolated $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout
     - *buildpkg
 
-bionic-tinker:
+.bionic-tinker:
   <<: *robot_template
   image: registry.gitlab.com/slavanap/ros-build:bionic-tinker-melodic
 
-bionic-orangepi:
+.bionic-orangepi:
   <<: *robot_template
   image: registry.gitlab.com/slavanap/ros-build:bionic-orangepi-melodic
 
 
 
-stretch-amd64-test: &test_template
+.stretch-amd64-test: &test_template
   stage: test
   image: docker:stable-git
   services:
@@ -95,7 +104,7 @@ bionic-amd64-test:
 
 
 
-pages:
+.pages:
   stage: deploy
   image: ubuntu:bionic
   dependencies:
