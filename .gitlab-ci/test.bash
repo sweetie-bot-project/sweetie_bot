@@ -25,7 +25,7 @@ export DISPLAY=:99
 VIRT_DISPLAY=$!
 
 # Launch actual application
-roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true 2>&1 > app.log &
+roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=false 2>&1 > app.log &
 APP=$!
 
 # Wait until full init and capture screenshot
