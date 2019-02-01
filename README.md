@@ -7,8 +7,8 @@ This repository contains software framework for the [Sweetie Bot Proto2 robot](h
 
 Build status               | master branch  | devel branch
 ---------------------------|----------------|----------------
-ros-lunar-sweetie-bot-base | [![Build Status](https://gitlab.com/slavanap/ros-build/badges/master/build.svg)](https://gitlab.com/slavanap/ros-build/pipelines) | 
-ros-lunar-sweetie-bot      | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/master/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/master) | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/devel/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/devel)
+ros-melodic-sweetie-bot-base | [![Build Status](https://gitlab.com/slavanap/ros-build/badges/master/build.svg)](https://gitlab.com/slavanap/ros-build/pipelines) | 
+ros-melodic-sweetie-bot      | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/master/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/master) | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/devel/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/devel)
 
 ## Overview
 
@@ -54,7 +54,7 @@ You also can download deb packages manually from [here](https://gitlab.com/sweet
 
 Note,
 
-* `ros-lunar-sweetie-bot-base` package conflicts with OROCOS toolchain ROS packages.
+* `ros-melodic-sweetie-bot-base` package conflicts with OROCOS toolchain ROS packages.
 * Sweetie Bot specific software is installed in `/opt/ros/sweetie_bot` directory. 
 
 
@@ -122,7 +122,7 @@ External dependencies:
 
 Your may compile Sweetie Bot manually in ROS workspace. This method does not conflicts with installation from binary packages due to ROS overlay mechanism.
 
-Let's assume that all build requirements are satisfied. Or you can install them from binary package `ros-lunar-sweetie-bot-base`.
+Let's assume that all build requirements are satisfied. Or you can install them from binary package `ros-melodic-sweetie-bot-base`.
 
 Create ROS workspace:
 ```
@@ -130,7 +130,7 @@ mkdir -p ~/ros/sweetie_bot/src
 ```
 
 Clone dependencies if necessary and generate typekit packages if they not installed. 
-If you are using `ros-lunar-sweetie-bot-base` package only FlexBe and `rviz_textured_quads` are needed.
+If you are using `ros-melodic-sweetie-bot-base` package only FlexBe and `rviz_textured_quads` are needed.
 ```
 cd ~/ros/sweetie_bot/src; mkdir inc; cd inc
 git clone https://github.com/lucasw/rviz_textured_quads.git
@@ -155,7 +155,7 @@ rosrun rtt_roscomm create_rtt_msgs tf2_msgs
 ```
 Compile:
 ```
-source /opt/ros/lunar/setup.bash
+source /opt/ros/melodic/setup.bash
 cd ~/ros/sweetie_bot
 catkin_make
 ``` 
