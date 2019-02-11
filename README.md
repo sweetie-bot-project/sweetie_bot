@@ -43,7 +43,7 @@ This repository contains all necessary software components to run the Sweetie Bo
 
 ## Installation
 
-The following instruction describes the installation process from binary packages. If you want to compile the whole project yourself see [`CONTRIBUTING`](CONTRIBUTING.md) page.
+The following instruction describes the installation process from binary packages. If you want to compile the whole project yourself see [`DEVELOPERS`](DEVELOPERS.md) page.
 
 ### System requirements
 
