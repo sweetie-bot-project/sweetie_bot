@@ -199,6 +199,7 @@ install(DIRECTORY
   launch
   scripts
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  USE_SOURCE_PERMISSIONS
 )
 
 #############
