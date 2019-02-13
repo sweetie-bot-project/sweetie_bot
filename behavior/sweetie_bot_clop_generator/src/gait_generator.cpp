@@ -185,7 +185,7 @@ bool ClopGenerator::configureRobotModel()
 	}
 	// get urdf model
 	std::string urdf_model;
-	if (!ros::param::get("/robot_description", urdf_model)) {
+	if (!ros::param::get("robot_description", urdf_model)) {
 		ROS_ERROR("Parameter 'robot_description' is empty.");
 		return false;
 	}
