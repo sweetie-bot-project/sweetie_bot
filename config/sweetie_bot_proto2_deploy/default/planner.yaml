@@ -21,6 +21,17 @@ clop_generator:
             frame_id: "hoof4"
             nominal_stance: [ -0.08, -0.038, -0.1675 ]
             bounding_box: [ -0.05, -0.025, -0.2075, -0.145, -0.08, -0.1575 ]
+    towr_parameters: # see towr::Parameteres for desciption
+        duration_base_polynomial: 0.25
+        dt_constraint_dynamic: 0.25
+        dt_constraint_range_of_motion: 0.2
+        dt_constraint_base_motion: 0.0625
+        ee_polynomials_per_swing_phase: 2
+        force_polynomials_per_stance_phase: 3
+        optimize_phase_durations: false
+        bound_phase_duration_min: 0.4
+        bound_phase_duration_max: 2.0
+        use_swing_constraint: true
     ipopt_solver_parameters:
         linear_solver: "mumps"
         jacobian_approximation: "exact"

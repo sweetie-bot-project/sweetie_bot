@@ -66,7 +66,6 @@ class ClopGenerator
 		bool configure();
 		bool configureSolver();
 		bool configureRobotModel();
-		void SetIpoptParameters();
 
 		void setInitialStateFromNominal(double ground_z);
 		bool setInitialStateFromTF();
@@ -74,7 +73,6 @@ class ClopGenerator
 
 		void setGoalPoseFromMsg(const MoveBaseGoal& msg);
 		void setGaitFromGoalMsg(const MoveBaseGoal& msg);
-		towr::Parameters GetTowrParameters(int n_ee) const;
 
 		void abortGoal(const std::string& where, int error_code, const std::string& error_string);
 		void succeedGoal(int error_code, const std::string& error_string);

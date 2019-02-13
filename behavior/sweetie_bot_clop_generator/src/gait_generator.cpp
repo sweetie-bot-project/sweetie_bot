@@ -23,7 +23,7 @@ using namespace towr;
 
 namespace sweetie_bot {
 
-void DebugPrintFormulation(const NlpFormulation& formulation) 
+static void DebugPrintFormulation(const NlpFormulation& formulation)
 {
 	int n_ee = formulation.model_.kinematic_model_->GetNumberOfEndeffectors();
 
@@ -53,6 +53,17 @@ void DebugPrintFormulation(const NlpFormulation& formulation)
 		ROS_INFO_STREAM("EE (" << ee << ") phases: contact at start " << formulation.params_.ee_in_contact_at_start_[ee] << " phases (" 
 				<< Eigen::Map<const Eigen::VectorXd>(formulation.params_.ee_phase_durations_[ee].data(), formulation.params_.ee_phase_durations_[ee].size()).transpose() << ")");
 	}
+
+	ROS_INFO_STREAM("GAIT PARAMETERS");
+	ROS_INFO_STREAM("duration_base_polynomial: " << formulation.params_.duration_base_polynomial_);
+	ROS_INFO_STREAM("dt_constraint_base_motion: " << formulation.params_.dt_constraint_base_motion_);
+	ROS_INFO_STREAM("dt_constraint_range_of_motion: " << formulation.params_.dt_constraint_range_of_motion_);
+	ROS_INFO_STREAM("dt_constraint_dynamic: " << formulation.params_.dt_constraint_dynamic_);
+	ROS_INFO_STREAM("bound_phase_duration_min: " << formulation.params_.bound_phase_duration_.first);
+	ROS_INFO_STREAM("bound_phase_duration_max: " << formulation.params_.bound_phase_duration_.second);
+	ROS_INFO_STREAM("ee_polynomials_per_swing_phase: " << formulation.params_.ee_polynomials_per_swing_phase_);
+	ROS_INFO_STREAM("force_polynomials_per_stance_phase: " << formulation.params_.force_polynomials_per_stance_phase_);
+	ROS_INFO_STREAM("force_limit_in_normal_direction: " << formulation.params_.force_limit_in_normal_direction_);
 }
 
 
@@ -172,7 +183,7 @@ bool ClopGenerator::configureRobotModel()
 	if (!ros::param::get("~towr_model_namespace", towr_model_ns)) {
 		towr_model_ns = "~towr_model";
 	}
-	// get towr model location
+	// get urdf model
 	std::string urdf_model;
 	if (!ros::param::get("/robot_description", urdf_model)) {
 		ROS_ERROR("Parameter 'robot_description' is empty.");
@@ -374,52 +385,129 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 
 	ROS_DEBUG_STREAM("Goal BASE pose from msg: p = (" << formulation.final_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.final_base_.ang.at(kPos).transpose() << ")");
 }
-		
-void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg) 
-{
-	auto gait_gen = GaitGenerator::MakeGaitGenerator(end_effector_index.size());
-	int n_steps = 5;
 
-	// select gait combo (duration edit is not possble)
-	// TODO manula combo assigments
-	if (msg.gait_type == "walk_overlap") {
-		gait_gen->SetCombo(GaitGenerator::C0);
+void getTowrParametersFromRos(towr::Parameters& params, std::string ns, double time_scale = 1.0)
+{
+	// get cached parameters: double
+	double dvalue;
+	if (ros::param::getCached(ns + "/duration_base_polynomial", dvalue)) {
+		params.duration_base_polynomial_ = dvalue*time_scale;
 	}
-	else if (msg.gait_type == "trot_fly") {
-		gait_gen->SetCombo(GaitGenerator::C1);
+	if (ros::param::getCached(ns + "/dt_constraint_base_motion", dvalue)) {
+		params.dt_constraint_base_motion_ = dvalue*time_scale;
 	}
-	else if (msg.gait_type == "pace") {
-		gait_gen->SetCombo(GaitGenerator::C2);
+	if (ros::param::getCached(ns + "/dt_constraint_range_of_motion", dvalue)) {
+		params.dt_constraint_range_of_motion_ = dvalue*time_scale;
 	}
-	else if (msg.gait_type == "bound") {
-		gait_gen->SetCombo(GaitGenerator::C3);
+	if (ros::param::getCached(ns + "/dt_constraint_dynamic", dvalue)) {
+		params.dt_constraint_dynamic_ = dvalue*time_scale;
 	}
-	else if (msg.gait_type == "gallop") {
-		gait_gen->SetCombo(GaitGenerator::C4);
+	if (ros::param::getCached(ns + "/bound_phase_duration_min", dvalue)) {
+		params.bound_phase_duration_.first = dvalue*time_scale;
+	}
+	if (ros::param::getCached(ns + "/bound_phase_duration_max", dvalue)) {
+		params.bound_phase_duration_.second = dvalue*time_scale;
+	}
+	if (params.bound_phase_duration_.first < 0.0 || params.bound_phase_duration_.first > params.bound_phase_duration_.second) {
+		throw std::invalid_argument("getTowrParametersFromRos: `bound_phase_duration_` interval is incorrect");
+	}
+	// get cached parameters: int
+	int ivalue;
+	if (ros::param::getCached(ns + "/ee_polynomials_per_swing_phase", ivalue)) {
+		params.ee_polynomials_per_swing_phase_ = ivalue;
+	}
+	if (ros::param::getCached(ns + "/force_polynomials_per_stance_phase", ivalue)) {
+		params.force_polynomials_per_stance_phase_ = ivalue;
+	}
+}
+
+std::vector<towr::GaitGenerator::Gaits> MakeGaitsCombo(const std::string gait_type, int n_steps)
+{
+	// create necessary movment combo
+	std::vector<towr::GaitGenerator::Gaits> combo;
+	if (gait_type == "stand") {
+		// NOTE: ignore n_steps
+		combo.push_back(towr::GaitGenerator::Stand);
 	}
 	else {
-		throw std::invalid_argument("Unknown gait type: " + msg.gait_type);
-	}
-	// check step_sduration
-	if (msg.duration <= 0.0) throw std::invalid_argument("Movement duration must be positive");
+		// check provided message: number of steps must be positive
+		if (n_steps <= 0 && gait_type != "stand") throw std::invalid_argument("Number of steps must be positive");
 
-	// assign formulation parameters
-	//formulation.params_ = towr::Parameters();
+		// generate combo with prescribed number of steps
+		combo.push_back(towr::GaitGenerator::Stand);
+		if (gait_type == "walk") {
+			combo.insert(combo.end(), n_steps, towr::GaitGenerator::Walk1);
+		}
+		else if (gait_type == "walk_overlap") {
+			combo.insert(combo.end(), n_steps-1, towr::GaitGenerator::Walk2);
+			combo.push_back(towr::GaitGenerator::Walk2E);
+		}
+		else if (gait_type == "trot") {
+			combo.insert(combo.end(), n_steps, towr::GaitGenerator::Run1);
+		}
+		else if (gait_type == "trot_fly") {
+			combo.insert(combo.end(), n_steps-1, towr::GaitGenerator::Run2);
+			combo.push_back(towr::GaitGenerator::Run2E);
+		}
+		else if (gait_type == "pace") {
+			combo.insert(combo.end(), n_steps-1, towr::GaitGenerator::Run3);
+			combo.push_back(towr::GaitGenerator::Run3E);
+		}
+		else if (gait_type == "bound") {
+			combo.insert(combo.end(), n_steps-1, towr::GaitGenerator::Hop1);
+			combo.push_back(towr::GaitGenerator::Hop1E);
+		}
+		else if (gait_type == "gallop") {
+			combo.insert(combo.end(), n_steps-1, towr::GaitGenerator::Hop3);
+			combo.push_back(towr::GaitGenerator::Hop3E);
+		}
+		else {
+			throw std::invalid_argument("Unknown gait type: " + gait_type);
+		}
+		combo.push_back(towr::GaitGenerator::Stand);
+	}
+	return combo;
+}
+
+
+void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
+{
+	// check provided message: duration must be positive
+	if (msg.duration <= 0.0) throw std::invalid_argument("MoveBaseGoal: step sequence duration must be positive.");
+
+	// create gait genarator and assign combo
+	int n_ee = end_effector_index.size();
+	std::shared_ptr<towr::GaitGenerator> gait_gen = GaitGenerator::MakeGaitGenerator(n_ee);
+	gait_gen->SetGaits( MakeGaitsCombo(msg.gait_type, msg.n_steps) );
+
+	// formulation parameters: default vaules
 	towr::Parameters params;
-    for (int ee = 0; ee < end_effector_index.size(); ++ee) {
+
+	// load parameters from namespace "~towr_paramters" with step-based timescale
+	// TODO merge towr_model, towr_parameters and ipopt_options namespaces
+	getTowrParametersFromRos(params, "~towr_parameters/", msg.duration / gait_gen->GetUnscaledTotalDuration());
+
+	// now construct add phases
+    for (int ee = 0; ee < n_ee; ++ee) {
 		params.ee_phase_durations_.push_back(gait_gen->GetPhaseDurations(msg.duration, ee));
 		params.ee_in_contact_at_start_.push_back(gait_gen->IsInContactAtStart(ee));
 
 		ROS_DEBUG_STREAM("EE (" << ee << ") phases: contact at start " << params.ee_in_contact_at_start_.back() << " phases (" 
 				<< Eigen::Map<Eigen::VectorXd>(params.ee_phase_durations_.back().data(), params.ee_phase_durations_.back().size()).transpose() << ")");
     }
-    // Here you can also add other constraints or values.
-    // creates smoother swing motions, not absolutely required.
-    params.SetSwingConstraint();
 
-    // increases optimization time, but sometimes helps find a solution for
-    // more difficult terrain.
-    if (false) params.OptimizePhaseDurations();
+	// Additional settings
+	// TODO fix Z coordinate of final pose
+
+    // Creates smoother swing motions, not absolutely required.
+	bool use_swing_constraint = true;
+	ros::param::get("~towr_parameters/use_swing_constraint", use_swing_constraint);
+	if (use_swing_constraint) params.SetSwingConstraint();
+
+    // increases optimization time, but sometimes helps find a solution for more difficult terrain.
+	bool optimize_phase_durations = false;
+	ros::param::get("~towr_parameters/optimize_phase_durations", optimize_phase_durations);
+    if (optimize_phase_durations) params.OptimizePhaseDurations();
 
 	formulation.params_ = params;
 }
