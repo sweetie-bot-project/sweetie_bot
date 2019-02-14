@@ -29,6 +29,14 @@ catkin_package(
 # Scripts installation
 install(DIRECTORY default torque_control rpi
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+	
+# Set rviz configs writable from user account
+install(
+    FILES default/joint_space_control.rviz default/moveit_control.rviz
+    PERMISSIONS OWNER_WRITE OWNER_READ GROUP_WRITE GROUP_READ WORLD_WRITE WORLD_READ
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/default
+)
+
 # bash script
 install(PROGRAMS scripts/store-joint-trajectories
 	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
