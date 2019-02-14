@@ -49,9 +49,9 @@ The following instruction describes the installation process from binary package
 
 Check your system before install:
 
-* OS: Ubuntu Bionic (18.04), Debian Stretch
+* OS: Ubuntu Bionic (18.04) or Debian Stretch. Windows users can try [WSL](https://janbernloehr.de/2017/06/10/ros-windows) but it is less supported method.
 * CPU: x86-64 2 GHz dual core processor or better
-* MEM: 6 GB system memory
+* RAM: 6 GB system memory
 * GPU: Almost any modern GPU with OpenGL 2.1 hardware acceleration support
 * HDD: 3 GB of free hard drive space
 * WAN: Internet access
