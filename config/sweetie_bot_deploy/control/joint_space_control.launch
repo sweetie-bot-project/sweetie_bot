@@ -9,7 +9,7 @@
 	<arg name="robot_ns" default="/" doc="Namespace where to run robot components "/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" />
-	<machine name="sweetiebot" address="sweetie" user="pi" default="never"/>
+	<machine name="sweetiebot" address="sweetie" user="sweetie" default="never"/>
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
