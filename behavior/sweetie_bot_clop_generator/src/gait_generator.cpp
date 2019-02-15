@@ -497,16 +497,14 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
     }
 
 	// Additional settings
-	// TODO fix Z coordinate of final pose
-
-    // Creates smoother swing motions, not absolutely required.
-	bool use_swing_constraint = true;
-	ros::param::get("~towr_parameters/use_swing_constraint", use_swing_constraint);
-	if (use_swing_constraint) params.SetSwingConstraint();
+	// fix fianl base postion
+	params.bounds_final_lin_pos_ = {X,Y,Z};
+	// set final EE velocity to zero
+	params.ee_bounds_final_lin_vel_ = {X,Y,Z};
 
     // increases optimization time, but sometimes helps find a solution for more difficult terrain.
 	bool optimize_phase_durations = false;
-	ros::param::get("~towr_parameters/optimize_phase_durations", optimize_phase_durations);
+	ros::param::getCached("~towr_parameters/optimize_phase_durations", optimize_phase_durations);
     if (optimize_phase_durations) params.OptimizePhaseDurations();
 
 	formulation.params_ = params;
@@ -617,7 +615,8 @@ void ClopGenerator::callbackExecuteMoveBase(const sweetie_bot_control_msgs::Move
 void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& msg)
 {
 	int n_ee = end_effector_index.size();
-	int n_samples = (solution.base_linear_->GetTotalTime()+1e-5) / period;
+	double t_total = solution.base_linear_->GetTotalTime();
+	int n_samples = std::ceil(t_total / period) + 1; // we need addition point to include t_total
 	towr::EulerConverter base_angular(solution.base_angular_);
 
 	// clear buffers, allocate memory 
@@ -636,7 +635,7 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 
 	// now fill trajectories
 	for(int k = 0; k < n_samples; k++) {
-		double t = period * k;
+		double t = std::min(period * k, t_total);
 		// assign time vector
 		msg.time_from_start.push_back(t);
 
@@ -654,8 +653,8 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 		Eigen::Quaterniond base_quat = base_angular.GetQuaternionBaseToWorld(t);
 		tf::quaternionEigenToKDL(base_quat, base_frame.M);
 		tf::quaternionEigenToMsg(base_quat, point.pose.orientation);
-		tf::vectorEigenToKDL(base_angular.GetAngularVelocityInWorld(t), point.twist.vel);
-		tf::vectorEigenToKDL(base_angular.GetAngularAccelerationInWorld(t), point.accel.vel);
+		tf::vectorEigenToKDL(base_angular.GetAngularVelocityInWorld(t), point.twist.rot);
+		tf::vectorEigenToKDL(base_angular.GetAngularAccelerationInWorld(t), point.accel.rot);
 		// now point contain pose twist, change reference point to produce screw twists
 		point.twist = point.twist.RefPoint(-base_frame.p);
 		point.accel = point.accel.RefPoint(-base_frame.p); //TODO check this conversion!
