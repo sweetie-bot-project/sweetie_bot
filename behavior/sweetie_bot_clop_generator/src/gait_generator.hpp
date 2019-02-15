@@ -51,6 +51,7 @@ class ClopGenerator
 
 		// COMPONENT STATE
 		double period;
+		double contact_height_tolerance; /**< Is used during contact detection and initial pose check [m] */
 		std::map<std::string, EndEffectorInfo> end_effector_index;
 		towr::NlpFormulation formulation;
 		ifopt::IpoptSolver::Ptr solver;

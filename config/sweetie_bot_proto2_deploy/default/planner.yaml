@@ -1,5 +1,6 @@
 clop_generator:
     period: 0.056
+    contact_height_tolerance: 0.003
     towr_model:
         LF:
             name: "leg1"
@@ -31,7 +32,6 @@ clop_generator:
         optimize_phase_durations: false
         bound_phase_duration_min: 0.4
         bound_phase_duration_max: 2.0
-        use_swing_constraint: true
     ipopt_solver_parameters:
         linear_solver: "mumps"
         jacobian_approximation: "exact"

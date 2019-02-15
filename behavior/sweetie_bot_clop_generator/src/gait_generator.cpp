@@ -97,6 +97,9 @@ bool ClopGenerator::configure()
 	if (!ros::param::get("~period", period)) {
 		period = 0.056;
 	}
+	if (!ros::param::get("~contact_height_tolerance", contact_height_tolerance)) {
+		contact_height_tolerance = 1e-4;
+	}
 
 	// init this->solver
 	if (!configureSolver()) {
@@ -334,7 +337,6 @@ bool ClopGenerator::setInitialStateFromTF()
 	}*/
 }
 
-// TODO corresponding add method to KinematicModel
 bool ClopGenerator::checkInitalPose() 
 {
 	// extract base transformation in form (R,p)
@@ -345,13 +347,24 @@ bool ClopGenerator::checkInitalPose()
 	// get bounding box
 	auto nominal_stance_B = formulation.model_.kinematic_model_->GetNominalStanceInBase();
 	auto max_dev_from_nominal_B = formulation.model_.kinematic_model_->GetMaximumDeviationFromNominal();
-	// check bounding box
+	// check bounding box and terrain conditions
 	for(int i = 0; i < formulation.initial_ee_W_.size(); i++) {
-		Vector3d ee_pos_B = R.transpose() * (formulation.initial_ee_W_[i] - p);
+		const Vector3d& ee_pos_W = formulation.initial_ee_W_[i];
+		Vector3d ee_pos_B = R.transpose() * (ee_pos_W - p);
 
 		if ( (Eigen::abs((ee_pos_B - nominal_stance_B[i]).array()) > max_dev_from_nominal_B.array()).any() ) { 
-			ROS_WARN_STREAM("Check initial pose: EE " << i << " deviation from bounding box center : (" << (ee_pos_B - nominal_stance_B[i]).transpose() << ")");
+			ROS_ERROR_STREAM("Check initial pose: EE " << i << " deviation from bounding box center : (" << (ee_pos_B - nominal_stance_B[i]).transpose() << ")");
 			return false;
+		}
+
+		double height = ee_pos_W.z() - formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y());
+		if (height < -contact_height_tolerance) {
+			ROS_ERROR_STREAM("Check initial pose: EE " << i << " terrain constraint is violated, height = " << height);
+			return false;
+		}
+		else if (std::abs(height) <= contact_height_tolerance) {
+			// fix height
+			formulation.initial_ee_W_[i].z() = formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y());
 		}
 	}
 	return true;
