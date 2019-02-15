@@ -554,7 +554,7 @@ void ClopGenerator::callbackExecuteMoveBase(const sweetie_bot_control_msgs::Move
 		setGoalPoseFromMsg(*msg);
 		// check pose
 		if (!checkInitalPose()) {
-			abortGoal("message processing", MoveBaseResult::INTERNAL_ERROR, "invalid initial pose");
+			abortGoal("message processing", MoveBaseResult::INVALID_INITIAL_POSE, "invalid initial pose");
 			return;
 		}
 		// set gait
@@ -569,8 +569,6 @@ void ClopGenerator::callbackExecuteMoveBase(const sweetie_bot_control_msgs::Move
 		return;
 	}
 
-	//setInitialStateFromNominal(0.0);
-	
 	DebugPrintFormulation(formulation);
 
 	// no we have correct formulataion so solve NL problem
@@ -579,15 +577,25 @@ void ClopGenerator::callbackExecuteMoveBase(const sweetie_bot_control_msgs::Move
     for (auto c : formulation.GetConstraints(solution)) nlp.AddConstraintSet(c);
     for (auto c : formulation.GetCosts()) nlp.AddCostSet(c);
 
-    solver->Solve(nlp);
+    bool success = solver->Solve(nlp);
+	if (!success) nlp.PrintCurrent(); // print additional information if solver has not successed.
 
-	nlp.PrintCurrent();
+    // xpp visualization: always perform visualization
+	if (msg->visualize_only) {
+		TowrSolutionVisualizer visualizer(period);
+		visualizer.PlayTrajectory(formulation, solution, 1.0);
+	}
 
-	//TODO check if optimization succesed
+	// check if solution is valid
+	if (!success) {
+		abortGoal("nlp optimization", MoveBaseResult::SOLUTION_NOT_FOUND, "Ipopt exit status: " + std::to_string(solver->GetIpoptExitStatus()));
+		return;
+	}
 
-	//TODO visualize trajectory with xpp
-	TowrSolutionVisualizer visualizer(period);
-	visualizer.PlayTrajectory(formulation, solution, 1.0);
+	if (msg->visualize_only) {
+		succeedGoal(MoveBaseResult::SUCCESS, "visualized");
+		return;
+	}
 
 	// execute trajectory
 	
@@ -618,10 +626,10 @@ void ClopGenerator::callbackExecuteMoveBase(const sweetie_bot_control_msgs::Move
 		ROS_INFO_STREAM("FollowStepSequence result: " << state.toString() << " (" << state.getText() << ")");
 	}
 	if (state == actionlib::SimpleClientGoalState::SUCCEEDED) {
-		succeedGoal(MoveBaseResult::SUCCESS, "movement executed");
+		succeedGoal(MoveBaseResult::SUCCESS, "executed");
 	}
 	else {
-		abortGoal("execution", MoveBaseResult::INTERNAL_ERROR, "execution failed"); // TODO be more verbose?
+		abortGoal("execution", MoveBaseResult::EXECUTION_FAILED, "execution failed");
 	}
 };
 
