@@ -93,12 +93,21 @@ ClopGenerator::ClopGenerator(const std::string& name)
 
 bool ClopGenerator::configure()
 {
+	// get towr parameters location
+	if (!ros::param::get("~towr_parameters_namespace", towr_parameters_ns)) {
+		towr_parameters_ns = "~";
+	}
+	else {
+		// add trailing '/' if necessary
+		if (towr_parameters_ns.back() != '/' && towr_parameters_ns.back() != '~') towr_parameters_ns.append(1, '/');
+	}
+
 	// configure persistent variables
-	if (!ros::param::get("~period", period)) {
+	if (!ros::param::get(towr_parameters_ns + "period", period)) {
 		period = 0.056;
 	}
-	if (!ros::param::get("~contact_height_tolerance", contact_height_tolerance)) {
-		contact_height_tolerance = 1e-4;
+	if (!ros::param::get(towr_parameters_ns + "contact_height_tolerance", contact_height_tolerance)) {
+		contact_height_tolerance = 0.005;
 	}
 
 	// init this->solver
@@ -127,7 +136,7 @@ bool ClopGenerator::configureSolver()
 	try {
 		//parse solver parameters 
 		XmlRpcValue solver_params;
-		ros::param::get("~ipopt_solver_parameters", solver_params);
+		ros::param::get(towr_parameters_ns + "ipopt_solver_parameters", solver_params);
 		if (solver_params.getType() != XmlRpcValue::TypeStruct) throw std::string("'ipopt_solver_parameters' parameter must be structure");
 
 		// now process individual parameters
@@ -181,11 +190,6 @@ bool ClopGenerator::configureRobotModel()
 
 	std::shared_ptr<towr::GeneralKinematicModel> kinematic_model( new towr::GeneralKinematicModel(4) );
 
-	// get towr model location
-	std::string towr_model_ns;
-	if (!ros::param::get("~towr_model_namespace", towr_model_ns)) {
-		towr_model_ns = "~towr_model";
-	}
 	// get urdf model
 	std::string urdf_model;
 	if (!ros::param::get("robot_description", urdf_model)) {
@@ -196,7 +200,7 @@ bool ClopGenerator::configureRobotModel()
 	// parse towr model
 	try {
 		XmlRpcValue towr_model;
-		ros::param::get(towr_model_ns, towr_model);
+		ros::param::get(towr_parameters_ns + "towr_model", towr_model);
 		if (towr_model.getType() != XmlRpcValue::TypeStruct) throw std::string("'towr_model' parameter must be structure");
 		// process base 
 		/* XmlRpcValue& base_param = towr_model["base_link"];
@@ -399,8 +403,12 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 	ROS_DEBUG_STREAM("Goal BASE pose from msg: p = (" << formulation.final_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.final_base_.ang.at(kPos).transpose() << ")");
 }
 
-void getTowrParametersFromRos(towr::Parameters& params, std::string ns, double time_scale = 1.0)
+void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, double time_scale = 1.0)
 {
+	bool do_scale;
+	if (ros::param::getCached(ns + "/scale_per_step", do_scale)) {
+		if (!do_scale) time_scale = 1.0;
+	}
 	// get cached parameters: double
 	double dvalue;
 	if (ros::param::getCached(ns + "/duration_base_polynomial", dvalue)) {
@@ -498,7 +506,7 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 
 	// load parameters from namespace "~towr_paramters" with step-based timescale
 	// TODO merge towr_model, towr_parameters and ipopt_options namespaces
-	getTowrParametersFromRos(params, "~towr_parameters/", msg.duration / gait_gen->GetUnscaledTotalDuration());
+	getTowrParametersFromRos(params, towr_parameters_ns + "towr_parameters", msg.duration / gait_gen->GetUnscaledTotalDuration());
 
 	// now construct add phases
     for (int ee = 0; ee < n_ee; ++ee) {
@@ -517,7 +525,7 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 
     // increases optimization time, but sometimes helps find a solution for more difficult terrain.
 	bool optimize_phase_durations = false;
-	ros::param::getCached("~towr_parameters/optimize_phase_durations", optimize_phase_durations);
+	ros::param::getCached(towr_parameters_ns + "towr_parameters/optimize_phase_durations", optimize_phase_durations);
     if (optimize_phase_durations) params.OptimizePhaseDurations();
 
 	formulation.params_ = params;

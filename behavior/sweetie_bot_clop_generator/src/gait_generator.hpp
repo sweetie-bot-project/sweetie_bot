@@ -46,12 +46,13 @@ class ClopGenerator
 		std::unique_ptr< actionlib::SimpleActionServer<MoveBaseAction> > move_base_as;
 
 		// PARAMETERS
+		double period;
+		double contact_height_tolerance; /**< Is used during contact detection and initial pose check [m] */
+		std::string towr_parameters_ns;
 
 		// BUFFERS
 
 		// COMPONENT STATE
-		double period;
-		double contact_height_tolerance; /**< Is used during contact detection and initial pose check [m] */
 		std::map<std::string, EndEffectorInfo> end_effector_index;
 		towr::NlpFormulation formulation;
 		ifopt::IpoptSolver::Ptr solver;
