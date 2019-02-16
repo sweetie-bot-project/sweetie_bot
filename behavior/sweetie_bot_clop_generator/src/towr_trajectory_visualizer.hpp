@@ -22,22 +22,33 @@ class TowrSolutionVisualizer
 
 	protected:
 		double period;
+		std::string world_frame_id_;
+		std::string xpp_namespace_;
 
-	protected:
-		XppVec GetTrajectory(const towr::SplineHolder& solution) const;
-		void AddTrajectoryToRosbag(rosbag::Bag& bag, const towr::NlpFormulation& formulation, const towr::SplineHolder& solution, const std::string& topic) const;
+		ros::Publisher terrain_pub_;
+		ros::Publisher robot_parameters_pub_;
+		ros::Publisher robot_state_pub_;
+		ros::Publisher terrain_info_pub_;
 
 	public:
+		TowrSolutionVisualizer(ros::NodeHandle& nh, double period, const std::string& world_frame_id, const std::string& xpp_namespace);
 
-		TowrSolutionVisualizer(double _period) : period(_period) {}
-
+		xpp_msgs::RobotStateCartesian GetRobotStateCartesianMsg(const towr::SplineHolder& solution, double t) const;
+		xpp_msgs::RobotStateCartesianTrajectory GetRobotStateCartesianTrajectoryMsg(const towr::SplineHolder& solution) const;
 		xpp_msgs::RobotParameters GetRobotParametersMsg(const towr::RobotModel& model) const;
-		xpp_msgs::RobotStateCartesianTrajectory GetRobotCartesianTrajectoryMsg(const towr::SplineHolder& solution) const;
-		visualization_msgs::MarkerArray GetTerrainMsg(const towr::HeightMap& terrain) const;
+		xpp_msgs::TerrainInfo TowrSolutionVisualizer::GetTerrainInfoMsg(const towr::Terrain& terrain, const std::vector<xpp_msgs::LinState3D>& ee_states) const;
+		visualization_msgs::MarkerArray GetTerrainMsg(const towr::HeightMap& terrain) const
 
-		void SaveOptimizationAsRosbag(const std::string& bag_name, const towr::NlpFormulation& formulation, const towr::SplineHolder& solution/*, bool include_iterations*/) const;
+		void SaveOptimizationAsRosbag(const std::string& bag_name, const towr::NlpFormulation& formulation, const towr::SplineHolder& solution, ros::Time t0 = ros::Time(1e-6)) const;  // zero causes ROS exception
 
-		void PlayTrajectory(const towr::NlpFormulation& formulation, const towr::SplineHolder& solution, double replay_speed) const;
+		void PublishPersistentTopics(const towr::NlpFormulation& formulation);
+		void PublishSolution(const towr::NlpFormulation& formulation, const towr::SplineHolder& solution, double t);
+		void PublishState(const BaseState& base_state, const towr::NlpFormulation::EEPos& ee_state);
+
+	protected:
+		xpp_msgs::RobotStateCartesian GetRobotStateCartesianMsg_impl(const towr::SplineHolder& solution, const towr::EulerConverter& base_angular, double t) const;
+		void AddTrajectoryToRosbag (rosbag::Bag& bag, const towr::NlpFormulation& formulation, const towr::SplineHolder& solution) const;
+
 };
 
 
