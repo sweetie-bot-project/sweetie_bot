@@ -116,10 +116,11 @@ void MainWindow::rosSpin()
     ros::spinOnce();
 }
 
-void MainWindow::PublishImage() {
+void MainWindow::PublishImage() 
+{
     QPixmap pixmap(this->size());
     this->render(&pixmap);
-    QImage image = pixmap.toImage().convertToFormat(QImage::Format_RGBA8888).mirrored(false, true);
+    QImage image = pixmap.toImage().convertToFormat(QImage::Format_RGBA8888);
     sensor_msgs::Image img;
     img.header.stamp = ros::Time::now();
     img.width = image.width();
