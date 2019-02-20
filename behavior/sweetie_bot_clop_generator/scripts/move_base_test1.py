@@ -26,6 +26,7 @@ if __name__ == '__main__':
     goal.header.stamp = rospy.Time.now()
     goal.header.frame_id = "base_link_path"
     goal.duration = 3.0;
+    goal.n_steps = 4;
     goal.gait_type = "walk_overlap"
     # goal.gait_type = "pace"
     goal.base_goal = geometry_msgs.msg.Pose()
