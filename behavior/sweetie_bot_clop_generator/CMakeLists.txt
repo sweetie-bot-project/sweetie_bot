@@ -67,10 +67,7 @@ catkin_package(
 ## Build ##
 ###########
 
-include_directories(
-	# include
-	${catkin_INCLUDE_DIRS}
-)
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 
 ## Declare a C++ library

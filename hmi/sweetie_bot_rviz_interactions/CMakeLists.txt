@@ -29,10 +29,7 @@ catkin_package(
 ###########
 
 ## Specify additional locations of header files
-include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

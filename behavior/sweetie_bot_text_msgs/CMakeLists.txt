@@ -54,7 +54,5 @@ catkin_package(CATKIN_DEPENDS message_runtime std_msgs)
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
