@@ -1,24 +1,24 @@
 Sweetie Bot software repository 
 ===================================
 
-This repository contains software framework for the [Sweetie Bot Proto2 robot](http://sweetie.bot).
+This repository contains software framework for the [Sweetie Bot robot](http://sweetie.bot).
 
 ![](doc/figures/control-system.png)
 
-Build status               | master branch  | devel branch
----------------------------|----------------|----------------
+Build status               | master branch  |
+---------------------------|----------------|
 ros-melodic-sweetie-bot-base | [![Build Status](https://gitlab.com/slavanap/ros-build/badges/master/build.svg)](https://gitlab.com/slavanap/ros-build/pipelines) | 
-ros-melodic-sweetie-bot      | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/master/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/master) | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/devel/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/devel)
+ros-melodic-sweetie-bot      | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/master/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/master) | 
 
 ## Overview
 
-Sweetie Bot software is based on [Robot Operating System (ROS)](http://wiki.ros.org/ROS/Introduction). Also it uses [OROCOS](http://www.orocos.org/wiki/orocos/toolchain/getting-started) middleware to implement real-time motion control subsystem. See [`sweetie_bot_deploy`](config/sweetie_bot_deploy) and  [`rt_control`](rt_control) for more details (namespaces, nodes, configuration parameters).
+Sweetie Bot control software is based on [Robot Operating System (ROS)](http://wiki.ros.org/ROS/Introduction). Also, it uses [OROCOS](http://www.orocos.org/wiki/orocos/toolchain/getting-started) middleware to implement real-time motion control subsystem. See [`sweetie_bot_deploy`](config/sweetie_bot_deploy) and  [`rt_control`](rt_control) for more details (namespaces, nodes, configuration parameters).
 
 Sweetie Bot software support two modes: real and virtual. 
-1. In a virtual mode it runs completely on the host computer. The real robot is not needed. You can program robot behaviors in a virtual enviroment (3d model). 
+1. In a virtual mode it runs completely on the host computer. The real robot is not needed. You can program robot behaviors in a virtual environment (3d model). 
 2. In a real mode it controls the real robot. One part of software runs the host computer and another part works the on-board computer. 
 
-Current version of Sweetie Bot software provides following functionality:
+Current version of Sweetie Bot control software provides following functionality:
 1. Joint level control using [`joint_state_publisher`](http://wiki.ros.org/joint_state_publisher).
 2. The control in Cartesian space (for the limbs and the body) using [pose markers](hmi/sweetie_bot_rviz_interactions) and [MoveIt!](https://moveit.ros.org/) integration.
 3. Movements creation (See [TrjectoryEditor](hmi/sweetie_bot_joint_trajectory_editor))
@@ -43,20 +43,59 @@ This repository contains all necessary software components to run the Sweetie Bo
 
 ## Installation
 
-### Installation from binary packages
+The following instruction describes the installation process from binary packages. If you want to compile the whole project yourself see [`DEVELOPERS`](DEVELOPERS.md) page.
+
+### System requirements
+
+Check your system before install:
+
+* OS: Ubuntu Bionic (18.04) or Debian Stretch. Windows users can try [WSL](https://janbernloehr.de/2017/06/10/ros-windows) but it is less supported method.
+* CPU: x86-64 2 GHz dual core processor or better
+* RAM: 6 GB system memory
+* GPU: Almost any modern GPU with OpenGL 2.1 hardware acceleration support
+* HDD: 3 GB of free hard drive space
+* WAN: Internet access
+
+#### Install apt repositories with the all necessary dependencies
+
+There are three ways to install control software from a binary packages:
+
+1. Automatic script (recommended)
+
+Run the script in your terminal, it will automatically install apt repositories with the all necessary dependencies:
 
 ```
-$ wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/install.bash | sudo bash
+# wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/install.bash | sudo bash
 ```
 
-You also can download deb packages manually from [here](https://gitlab.com/sweetie-bot/sweetie_bot/pipelines).
+2. Add apt repositories manually 
 
+Alternatively you can install the ROS Melodic repository as listed in official ['ROS instruction'](http://wiki.ros.org/melodic/Installation/Ubuntu) and Sweetie Bot repository.
 
-Note,
+```
+# sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+# sudo sh -c 'echo deb http://sweetie-bot.gitlab.io/sweetie_bot $(lsb_release -sc) main > /etc/apt/sources.list.d/sweetie-bot.list
+```
 
-* `ros-melodic-sweetie-bot-base` package conflicts with OROCOS toolchain ROS packages.
-* Sweetie Bot specific software is installed in `/opt/ros/sweetie_bot` directory. 
+Next you have to set up your keys:
+```
+# sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+# wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/repository.key | sudo apt-key add -
+```
 
+3. Download packages manually
+
+You also can download deb packages manually from [here](../pipelines).
+
+#### Upgrade and install software packages
+```
+# sudo apt update && sudo apt upgrade
+# sudo apt install ros-melodic-sweetie-bot
+```
+
+#### Setup workspace
+
+User editable part of sweetie bot software must be installed to the home directory of current user.
 
 Install `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_flexbe_behaviors`: 
 ```
@@ -66,113 +105,38 @@ $ git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
 $ git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
 $ git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
 ```
-Due to software bugs `flexbe_app` and `rviz_textured_quads` should be also installed in workspace:
-```
-$ git clone https://github.com/lucasw/rviz_textured_quads.git inc/rviz_textured_quads
-$ git clone https://github.com/FlexBE/flexbe_app.git
-```
-Compile workspace
+Build workspace
 ```
 $ cd ~/ros/sweetie_bot
 $ source /opt/ros/sweetie_bot/setup.bash
 $ catkin_make
 ```
 
-Then in another console setup ROS environment 
+**Note:** Run this to supress priority warnings `Forcing priority (20)`:
+
 ```
-$ source /opt/ros/sweetie_bot/setup.bash
+# echo -e "@realtime   -  rtprio     99\n@realtime   -  memlock    unlimited" | sudo tee -a /etc/security/limits.d/99-realtime.conf
+# sudo groupadd realtime
+# sudo usermod -a -G realtime $USER
 ```
-and launch Sweetie Bot control software as described in Usage section, e.g.
-
-`roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true`
-
-
-#### Project dependencies
-
-Internal dependencies:
-
-* [`sweetie_bot_proto2_movements`](https://gitlab.com/sweetie-bot/sweetie_bot_proto2_movements) --- stored movements for Proto2,
-* [`sweetie_bot_sounds`](https://gitlab.com/sweetie-bot/sweetie_bot_sounds) --- sound package.
-
-External dependencies:
-
-* [ROS Kinetic Kame](http://wiki.ros.org/kinetic/Installation) or later. We need following packages:
-    * `ros_base` --- basic ROS installation.
-	* MoveIt! packages.
-    * `eigen-conversions`, `tf-conversions`, `interactive-markers`.
-	* `orocos_kdl` and `track_ik` kinematics packages.
-	* [`rospy_message_converter`](https://github.com/baalexander/rospy_message_converter)
-	* [`rviz_textured_quads`](https://github.com/lucasw/rviz_textured_quads)
-* [OROCOS 2.9](https://github.com/orocos-toolchain/orocos_toolchain), it is recommended slightly modified version from [here](https://github.com/disRecord) with improved lua completion. Also ROS package may be used but it may have some limitation. 
-* Additional ROS packages
-    * [`rtt-ros-integration` 2.9](https://github.com/orocos/rtt_ros_integration) (You may use ROS packages).
-    * [`kdl_msgs`](https://github.com/orocos/kdl_msgs), [rtt_kdl_msgs](https://github.com/orocos/rtt_kdl_msgs), [`rtt_geometry`](https://github.com/orocos/rtt_geometry).
-    * [`rttlua_completion`](https://github.com/orocos-toolchain/rttlua_completion), рекомендуется модифицированная версия [отсюда](https://github.com/disRecord)
-    * `rtt_tf2_msgs`,`rtt_control_msgs` typekit packages can be generated with [`rtt_roscom`](https://github.com/orocos/rtt_ros_integration/tree/toolchain-2.9/rtt_roscomm)
-* [Rigid Body Bynamics Library 2.5](https://rbdl.bitbucket.io/). Note that 2.6 version is not supported due changed quaternion semantic.
-* [ALGLIB library](http://www.alglib.net) you may use package `libalglib-dev`)
-* [FlexBe](http://philserver.bplaced.net/fbe/) behavior framework.
-	* [`flexbe_behavior_engine`](https://github.com/team-vigir/flexbe_behavior_engine/tree/feature/flexbe_app), specifically `feature/flexbe_app` branch for `felxbe_app` support.
-	* [`flexbe_app`](https://github.com/FlexBE/flexbe_app).
-    * [`felexbe_general_states`](https://github.com/FlexBE/generic_flexbe_states).
-* QT5 development packages (`libqt5-dev`).
-
-
-### Installation from sources
-
-Your may compile Sweetie Bot manually in ROS workspace. This method does not conflicts with installation from binary packages due to ROS overlay mechanism.
-
-Let's assume that all build requirements are satisfied. Or you can install them from binary package `ros-melodic-sweetie-bot-base`.
-
-Create ROS workspace:
-```
-mkdir -p ~/ros/sweetie_bot/src 
-```
-
-Clone dependencies if necessary and generate typekit packages if they not installed. 
-If you are using `ros-melodic-sweetie-bot-base` package only FlexBe and `rviz_textured_quads` are needed.
-```
-cd ~/ros/sweetie_bot/src; mkdir inc; cd inc
-git clone https://github.com/lucasw/rviz_textured_quads.git
-git clone -b feature/flexbe_app https://github.com/team-vigir/flexbe_behavior_engine.git
-git clone https://github.com/FlexBE/flexbe_app.git
-```
-Due to the bug (quads are always black) it is recommended to install `rviz_textured_quads` in Sweetie Bot workspace.
-
-Clone SweetieBot sources:
-```
-cd ~/ros/sweetie_bot/src
-git clone -b devel --recursive git@gitlab.com:sweetie-bot/sweetie_bot.git
-git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
-git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
-git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
-mkdir msgs; cd msgs;
-git clone https://github.com/orocos/rtt_kdl_msgs
-git clone https://github.com/orocos/kdl_msgs.git
-git clone https://github.com/orocos/rtt_geometry.git
-rosrun rtt_roscomm create_rtt_msgs control_msgs
-rosrun rtt_roscomm create_rtt_msgs tf2_msgs
-```
-Compile:
-```
-source /opt/ros/melodic/setup.bash
-cd ~/ros/sweetie_bot
-catkin_make
-``` 
 
 ## Usage
 
-Set ROS environment
+Set ROS environment once in the every terminal before you start any of the following commands:
 ```
-source ~/ros/sweetie_bot/devel/setup.bash
+$ source ~/ros/sweetie_bot/devel/setup.bash
 ```
 
-To start basic control framework use 
+To start basic control framework:
 
-    roslaunch sweetie_bot_deploy joint_space_control.launch
+```
+$ roslaunch sweetie_bot_deploy joint_space_control.launch
+```
 
-Following command starts MoveIt! `move_group` and FlexBe subsystem (your need `sweetie_bot_flexbe_behaviors` package which provides behaviors and states).
+Following command starts MoveIt! `move_group` and FlexBe subsystem:
 
-    roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
+```
+$ roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
+```
 
 For more details see [`sweetie_bot_deploy` package](config/sweetie_bot_deploy).

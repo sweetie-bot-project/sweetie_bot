@@ -24,7 +24,9 @@ stretch-amd64: &desktop_template
       rosdep check --from-paths src --ignore-src --rosdistro "$ROS_DISTRO" 2>roscheck.tmp \
         cat roscheck.tmp >&2 && ! grep ERROR roscheck.tmp >/dev/null && rm roscheck.tmp
     - &cmd_build |
-      catkin_make_isolated $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" \
+      CFLAGS="$CFLAGS -Wall" CXXFLAGS="$CXXFLAGS -Wall" \
+      catkin_make_isolated -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wconversion" -DCMAKE_C_FLAGS="-Wall -Wextra -Wconversion" \
+        $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" \
         -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout -DCMAKE_CXX_STANDARD=11
     - &cmd_buildpkg |
       source /src/base/buildpkg.bash
@@ -149,21 +151,21 @@ pages:
       cat > conf/distributions <<EOF
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: stretch
-      Architectures: armhf amd64
+      Architectures: armhf i386 amd64
       Components: main
       Description: no description
       SignWith: yes
 
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: xenial
-      Architectures: amd64
+      Architectures: i386 amd64
       Components: main
       Description: no description
       SignWith: yes
 
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: bionic
-      Architectures: armhf amd64
+      Architectures: armhf i386 amd64
       Components: main
       Description: no description
       SignWith: yes
