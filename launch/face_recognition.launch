@@ -1,0 +1,24 @@
+<!-- Start the face recognition JSON bridge for OpenMV -->
+<launch>
+  <!-- Face recognition JSON bridge (output on the screen) -->
+  <node pkg="face_recognition" type="face_recognition_node.py" name="face_recognition" output="screen" respawn="true">
+    <!-- Topics prefix -->
+    <param name="prefix" type="str" value="face_recognition" />
+    <!-- Interval to check ROS node shutdown in the blocking mode -->
+    <param name="read_timeout" type="double" value="1" />
+    <!-- OpenMV serial port -->
+    <param name="serial_port" type="str" value="/dev/ttyS4" />
+    <!-- Serial port baudrate -->
+    <param name="serial_baudrate" type="int" value="115200" />
+    <!-- Serial port parity (none, even, odd, mark, space) ('N', 'E', 'O', 'M', 'S') -->
+    <param name="serial_parity" type="str" value="N" />
+    <!-- Serial port stop bits -->
+    <param name="serial_stopbits" type="int" value="1" />
+    <!-- Serial port byte size -->
+    <param name="serial_bytesize" type="int" value="8" />
+    <!-- Serial port XON/XOFF -->
+    <param name="serial_xonxoff" type="bool" value="false" />
+    <!-- Serial port RTS/CTS -->
+    <param name="serial_rtscts" type="bool" value="false" />
+  </node>
+</launch>
