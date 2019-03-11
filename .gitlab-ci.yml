@@ -75,6 +75,8 @@ stretch-amd64: &desktop_template
 xenial-amd64:
   <<: *desktop_template
   image: registry.gitlab.com/slavanap/ros-build:xenial-amd64
+  before_script:
+    - mkdir -p /opt/ros/sweetie_bot && cp /opt/ros/melodic/setup.sh /opt/ros/melodic/env.sh /opt/ros/sweetie_bot/
 
 bionic-amd64:
   <<: *desktop_template
