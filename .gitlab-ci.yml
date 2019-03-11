@@ -9,25 +9,34 @@ stretch-amd64: &desktop_template
     paths:
       - build.tar
   script:
-    - &cmd_prep_environment |
+    - &cmd_build_1 |
       "$CI_PROJECT_DIR/.gitlab-ci/recover-ts.sh" '' HEAD
       git submodule foreach --recursive "$CI_PROJECT_DIR/.gitlab-ci/recover-ts.sh" '' HEAD
       if [[ "$CI_COMMIT_REF_NAME" != "master" ]] && [[ -f build.tar ]]; then
         tar xf build.tar
         rm build.tar
+        ( cd .build/extra/src/towr && git pull origin )
+        ( cd .build/extra/src/ifopt && git pull origin )
       else
-        mkdir .build
-        ln -s .. .build/src
+        mkdir -p .build/main .build/extra/src
+        ln -s "$(pwd)" .build/main/src
+        git clone https://github.com/sweetie-bot-project/towr .build/extra/src/towr
+        git clone https://github.com/sweetie-bot-project/ifopt .build/extra/src/ifopt
       fi
-      cd .build
       source "/opt/ros/$ROS_DISTRO/setup.bash"
+      pushd .build/extra
+    - &cmd_build_2 |
       rosdep check --from-paths src --ignore-src --rosdistro "$ROS_DISTRO" 2>roscheck.tmp \
         cat roscheck.tmp >&2 && ! grep ERROR roscheck.tmp >/dev/null && rm roscheck.tmp
-    - &cmd_build |
-      CFLAGS="$CFLAGS -Wall" CXXFLAGS="$CXXFLAGS -Wall" \
       catkin_make_isolated -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wconversion" -DCMAKE_C_FLAGS="-Wall -Wextra -Wconversion" \
         $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" \
         -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout -DCMAKE_CXX_STANDARD=11
+    - &cmd_build_3 |
+      popd
+      pushd .build/main
+    - *cmd_build_2
+    - &cmd_build_4 |
+      popd
     - &cmd_buildpkg |
       source /src/base/buildpkg.bash
       BASE_VERSION="$DEB_VERSION"
@@ -67,8 +76,11 @@ bionic-amd64:
         hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE \
         behavior/sweetie_bot_voice/CATKIN_IGNORE \
         behavior/sweetie_bot_clop_generator/CATKIN_IGNORE
-    - *cmd_prep_environment
-    - *cmd_build
+    - *cmd_build_1
+    - *cmd_build_2
+    - *cmd_build_3
+    - *cmd_build_2
+    - *cmd_build_4
     - *cmd_buildpkg
 
 bionic-tinker:
@@ -90,6 +102,7 @@ stretch-amd64-test: &test_template
     - stretch-amd64
   variables: &test_vars
     DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
     IMAGE_SOURCE: debian:stretch
   script:
     - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git .gitlab-ci/sweetie_bot_flexbe_behaviors
