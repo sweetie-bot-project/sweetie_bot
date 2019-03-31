@@ -488,14 +488,14 @@ Visualization Manager:
     - Class: rviz_textured_quads/MeshDisplayCustom
       Enabled: true
       Image Topic: /hmi/eye_image_left
-      Meters per pixel: 0.00019999999494757503
+      Meters per pixel: 0.000188
       Name: EyeLeft
       Quad Frame: screen_left
       Value: true
     - Class: rviz_textured_quads/MeshDisplayCustom
       Enabled: true
       Image Topic: /hmi/eye_image_right
-      Meters per pixel: 0.00019999999494757503
+      Meters per pixel: 0.000188
       Name: EyeRight
       Quad Frame: screen_right
       Value: true
