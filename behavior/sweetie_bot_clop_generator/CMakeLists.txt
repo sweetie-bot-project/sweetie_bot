@@ -6,6 +6,7 @@ project(sweetie_bot_clop_generator)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS 
+	message_generation
 	roscpp
 	rosbag
 	actionlib
@@ -19,13 +20,28 @@ find_package(catkin REQUIRED COMPONENTS
 	xpp_states
 	xpp_msgs
 	sensor_msgs
+	geometry_msgs
+	actionlib_msgs
 	towr
 	towr_ros
 	sweetie_bot_control_msgs 
 	sweetie_bot_orocos_misc
 )
 
-## System dependencies are found with CMake's conventions
+## Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  EndEffectorGoal.msg
+)
+
+# Generate actions in the 'action' folder
+add_action_files(
+  FILES
+  MoveBase.action
+)
+
+# Actually generate the language-specific message and service files
+generate_messages(DEPENDENCIES std_msgs geometry_msgs actionlib_msgs)
 
 ################################################
 
@@ -55,6 +71,8 @@ catkin_package(
 	xpp_states
 	xpp_msgs
 	sensor_msgs
+	geometry_msgs
+	actionlib_msgs
 	towr_ros
 	sweetie_bot_control_msgs 
 	sweetie_bot_orocos_misc
@@ -68,7 +86,6 @@ catkin_package(
 ###########
 
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
-
 
 ## Declare a C++ library
 

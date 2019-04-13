@@ -6,7 +6,7 @@
 #include <towr/nlp_formulation.h>
 #include <ifopt/ipopt_solver.h>
 
-#include <sweetie_bot_control_msgs/MoveBaseAction.h>
+#include <sweetie_bot_clop_generator/MoveBaseAction.h>
 #include <sweetie_bot_control_msgs/FollowStepSequenceAction.h>
 
 namespace sweetie_bot {
@@ -14,16 +14,19 @@ namespace sweetie_bot {
 class ClopGenerator 
 {
 	protected:
-		typedef sweetie_bot_control_msgs::MoveBaseAction MoveBaseAction;
-		typedef sweetie_bot_control_msgs::MoveBaseGoal MoveBaseGoal;
-		typedef sweetie_bot_control_msgs::MoveBaseResult MoveBaseResult;
+		typedef sweetie_bot_clop_generator::EndEffectorGoal MovementGoal;
+
+		typedef sweetie_bot_clop_generator::MoveBaseAction MoveBaseAction;
+		typedef sweetie_bot_clop_generator::MoveBaseGoal MoveBaseGoal;
+		typedef sweetie_bot_clop_generator::MoveBaseResult MoveBaseResult;
+		typedef sweetie_bot_clop_generator::MoveBaseGoalConstPtr MoveBaseGoalConstPtr;
+		
 		// typedef actionlib::ServerGoalHandle< MoveBaseAction > MoveBaseGoalHandle;
 
 		typedef sweetie_bot_control_msgs::FollowStepSequenceAction FollowStepSequenceAction;
 		typedef sweetie_bot_control_msgs::FollowStepSequenceGoal FollowStepSequenceGoal;
 		typedef sweetie_bot_control_msgs::FollowStepSequenceResult FollowStepSequenceResult;
 
-		typedef sweetie_bot_control_msgs::EndEffectorGoal MovementGoal;
 	
 	protected:
 		struct EndEffectorInfo {
@@ -79,7 +82,7 @@ class ClopGenerator
 		void abortGoal(const std::string& where, int error_code, const std::string& error_string);
 		void succeedGoal(int error_code, const std::string& error_string);
 
-		void callbackExecuteMoveBase(const sweetie_bot_control_msgs::MoveBaseGoalConstPtr& msg);
+		void callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg);
 };
 
 } // namespace sweetie_bot

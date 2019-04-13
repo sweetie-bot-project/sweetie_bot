@@ -550,7 +550,7 @@ void ClopGenerator::succeedGoal(int error_code, const std::string& error_string)
 	ROS_INFO_STREAM("MoveBase goal achived: "<< error_string);
 }
 
-void ClopGenerator::callbackExecuteMoveBase(const sweetie_bot_control_msgs::MoveBaseGoalConstPtr& msg) 
+void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg) 
 {
 	ROS_INFO("New MoveBase goal received");
 
