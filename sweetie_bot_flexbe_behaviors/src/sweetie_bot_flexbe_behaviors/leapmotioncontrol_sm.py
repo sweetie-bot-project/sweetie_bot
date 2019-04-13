@@ -42,8 +42,6 @@ When behavior is active Sweetie
 1. looks on moving hand;
 2. gives leg for brohoof or perform Greeting if hand is still;
 3. performs random action and fall back to random head movements if no object is detected.
-
-
 	'''
 
 
@@ -53,6 +51,8 @@ When behavior is active Sweetie
 
 		# parameters of this behavior
 		self.add_parameter('play_timeout', 6)
+		self.add_parameter('good_to_evil_switch_probability', 0.2)
+		self.add_parameter('evil_to_good_switch_probability', 0.8)
 
 		# references to used behaviors
 		self.add_behavior(BrohoofSM, 'Brohoof')
@@ -179,14 +179,14 @@ When behavior is active Sweetie
 
 			# x:423 y:54
 			OperatableStateMachine.add('NewState1',
-										CalculationState(calculation=lambda x: random.random() < 0.8),
+										CalculationState(calculation=lambda x: not random.random() < self.evil_to_good_switch_probability),
 										transitions={'done': 'SwitchEvilMode'},
 										autonomy={'done': Autonomy.Off},
 										remapping={'input_value': 'be_evil', 'output_value': 'new_be_evil'})
 
 			# x:425 y:159
 			OperatableStateMachine.add('NewState2',
-										CalculationState(calculation=lambda x: random.random() < 0.2),
+										CalculationState(calculation=lambda x: random.random() < self.good_to_evil_switch_probability),
 										transitions={'done': 'SwitchEvilMode'},
 										autonomy={'done': Autonomy.Off},
 										remapping={'input_value': 'be_evil', 'output_value': 'new_be_evil'})
