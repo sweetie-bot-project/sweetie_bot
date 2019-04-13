@@ -1,11 +1,11 @@
 moveit_setup_assistant_config:
   URDF:
     package: sweetie_bot_proto2_description
-    relative_path: urdf/sweetie_bot_proto2_description_stl.urdf
+    relative_path: urdf/sweetie_bot_proto2_description.urdf
     xacro_args: ""
   SRDF:
     relative_path: config/sweetie_bot_proto2_description.srdf
   CONFIG:
     author_name: disrecord
     author_email: goncharovoi@yandex.ru
-    generated_timestamp: 1530368507
+    generated_timestamp: 1555148170
