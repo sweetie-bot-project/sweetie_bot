@@ -7,8 +7,8 @@ aggregator_ref:
 servo_inv:
     priority: 20
     lead: 0.056
-    gear_joints: [ leg1_joint3, leg1_joint5, leg2_joint3, leg2_joint5, leg3_joint5, leg4_joint5, head_joint1 ]
-    gear_ratios: [ 1.54, 1.29, 1.54, 1.29, 1.41, 1.41, 2.155 ]
+    #gear_joints: [ leg1_joint3, leg1_joint5, leg2_joint3, leg2_joint5, leg3_joint5, leg4_joint5, head_joint1 ]
+    #gear_ratios: [ 1.54, 1.29, 1.54, 1.29, 1.41, 1.41, 2.155 ]
 aggregator_real:
     priority: 20
 kinematics_inv:
