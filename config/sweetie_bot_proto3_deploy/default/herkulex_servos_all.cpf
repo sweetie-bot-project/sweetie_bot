@@ -27,6 +27,10 @@
 				<description>calibration difference</description>
 				<value>0</value>
 			</simple>
+			<simple name="alarm_led_policy" type="ulong">
+				<description>Blink with led if coresponding status error bit set.</description>
+				<value>119</value>
+			</simple>
 		</struct>
 	</struct>
     <struct name="leg1_joint1" type="PropertyBag">

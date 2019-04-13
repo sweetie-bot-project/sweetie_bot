@@ -23,6 +23,10 @@
 				<description>Servo opertional state: ON=96, BRAKE=64, FREE=0</description>
 				<value>96</value>
 			</simple>
+			<simple name="alarm_led_policy" type="ulong">
+				<description>Blink with led if coresponding status error bit set.</description>
+				<value>119</value>
+			</simple>
 		</struct>
 	</struct>
     <struct name="joint11" type="PropertyBag">
