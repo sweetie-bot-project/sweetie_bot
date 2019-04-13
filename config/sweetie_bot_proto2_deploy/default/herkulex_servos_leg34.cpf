@@ -23,6 +23,10 @@
 				<description>Servo opertional state: ON=96, BRAKE=64, FREE=0</description>
 				<value>96</value>
 			</simple>
+                        <simple name="calibration_difference" type="ulong">
+                                <description>calibration difference</description>
+                                <value>0</value>
+                        </simple>
 		</struct>
 	</struct>
     <struct name="joint31" type="PropertyBag">
@@ -48,7 +52,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>516</value>
+            <value>482</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -63,7 +67,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>506</value>
+            <value>513</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -123,7 +127,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>510</value>
+            <value>473</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -138,7 +142,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>510</value>
+            <value>517</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
