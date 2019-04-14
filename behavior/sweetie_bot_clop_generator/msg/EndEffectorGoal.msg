@@ -8,12 +8,13 @@
 #
 string name
 uint32 frame_type
-geometry_msgs/Pose pose
+geometry_msgs/Point position
 bool contact
 
-int32 WORLD = 0	# unmovable coordinate system
-int32 BASE_INTIAL = 1
-int32 BASE_FINAL = 2
-int32 PATH_INITIAL = 3
-int32 PATH_FINAL = 4
-int32 IGNORE_POSE = 5
+int32 IGNORE_POSE = 0
+int32 NOMINAL_POSE = 1
+int32 BASE_INITIAL = 2
+int32 BASE_FINAL = 3
+int32 PATH_INITIAL = 4
+int32 PATH_FINAL = 5
+int32 WORLD = 6	# unmovable coordinate system

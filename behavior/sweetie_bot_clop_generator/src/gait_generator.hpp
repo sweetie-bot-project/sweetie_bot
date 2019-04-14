@@ -14,7 +14,7 @@ namespace sweetie_bot {
 class ClopGenerator 
 {
 	protected:
-		typedef sweetie_bot_clop_generator::EndEffectorGoal MovementGoal;
+		typedef sweetie_bot_clop_generator::EndEffectorGoal EndEffectorGoal;
 
 		typedef sweetie_bot_clop_generator::MoveBaseAction MoveBaseAction;
 		typedef sweetie_bot_clop_generator::MoveBaseGoal MoveBaseGoal;
@@ -72,9 +72,11 @@ class ClopGenerator
 		bool configureSolver();
 		bool configureRobotModel();
 
+		KDL::Frame convertTFToPathTF(const KDL::Frame& T);
+		bool checkPose(const towr::BaseState& base_pose, const towr::NlpFormulation::EEPos& ee_pose, bool fix_contact_height);
+
 		void setInitialStateFromNominal(double ground_z);
 		bool setInitialStateFromTF();
-		bool checkInitalPose();
 
 		void setGoalPoseFromMsg(const MoveBaseGoal& msg);
 		void setGaitFromGoalMsg(const MoveBaseGoal& msg);

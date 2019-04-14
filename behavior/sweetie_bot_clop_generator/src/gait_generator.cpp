@@ -40,15 +40,19 @@ static void DebugPrintFormulation(const NlpFormulation& formulation)
 	ROS_INFO_STREAM("INITIAL_STATE");
 	ROS_INFO_STREAM("Initial BASE pose: p = (" << formulation.initial_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.initial_base_.ang.at(kPos).transpose() << ")");
 	ROS_INFO_STREAM("Initial BASE pose: p = (" << formulation.initial_base_.lin.at(kVel).transpose() << "), RPY = (" << formulation.initial_base_.ang.at(kVel).transpose() << ")");
-	for(int ee = 0; ee < n_ee; ee++) {
+	for(int ee = 0; ee < formulation.initial_ee_W_.size(); ee++) {
 		ROS_INFO_STREAM("Initial EE (" << ee << ") pose: p = (" << formulation.initial_ee_W_[ee].transpose() << ")");
 	}
 
 	ROS_INFO_STREAM("FINAL_STATE");
 	ROS_INFO_STREAM("Goal BASE pose: p = (" << formulation.final_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.final_base_.ang.at(kPos).transpose() << ")");
 	ROS_INFO_STREAM("Goal BASE pose: p = (" << formulation.final_base_.lin.at(kVel).transpose() << "), RPY = (" << formulation.final_base_.ang.at(kVel).transpose() << ")");
+	for(int ee = 0; ee < formulation.final_ee_W_.size(); ee++) {
+		ROS_INFO_STREAM("Goal EE (" << ee << ") pose: p = (" << formulation.final_ee_W_[ee].transpose() << ")");
+	}
 
 	ROS_INFO_STREAM("GAIT PHASES");
+	n_ee = std::min(formulation.params_.ee_phase_durations_.size(), formulation.params_.ee_in_contact_at_start_.size());
 	for(int ee = 0; ee < n_ee; ee++) {
 		ROS_INFO_STREAM("EE (" << ee << ") phases: contact at start " << formulation.params_.ee_in_contact_at_start_[ee] << " phases (" 
 				<< Eigen::Map<const Eigen::VectorXd>(formulation.params_.ee_phase_durations_[ee].data(), formulation.params_.ee_phase_durations_[ee].size()).transpose() << ")");
@@ -341,37 +345,53 @@ bool ClopGenerator::setInitialStateFromTF()
 	}*/
 }
 
-bool ClopGenerator::checkInitalPose() 
+bool ClopGenerator::checkPose(const towr::BaseState& base_pose, const towr::NlpFormulation::EEPos& ee_pose, bool fix_contact_height) 
 {
 	// extract base transformation in form (R,p)
-	Vector3d rpy = formulation.initial_base_.ang.at(towr::kPos);
+	Vector3d rpy = base_pose.ang.at(towr::kPos);
 	KDL::Rotation rot_kdl( KDL::Rotation::RPY(rpy.x(), rpy.y(), rpy.z()) );
 	Eigen::Map< Eigen::Matrix<double,3,3,Eigen::RowMajor> > R(rot_kdl.data);
-	Vector3d p = formulation.initial_base_.lin.at(kPos);
+	Vector3d p = base_pose.lin.at(kPos);
 	// get bounding box
 	auto nominal_stance_B = formulation.model_.kinematic_model_->GetNominalStanceInBase();
 	auto max_dev_from_nominal_B = formulation.model_.kinematic_model_->GetMaximumDeviationFromNominal();
 	// check bounding box and terrain conditions
-	for(int i = 0; i < formulation.initial_ee_W_.size(); i++) {
-		const Vector3d& ee_pos_W = formulation.initial_ee_W_[i];
+	for(int i = 0; i < ee_pose.size(); i++) {
+		const Vector3d& ee_pos_W = ee_pose[i];
 		Vector3d ee_pos_B = R.transpose() * (ee_pos_W - p);
 
 		if ( (Eigen::abs((ee_pos_B - nominal_stance_B[i]).array()) > max_dev_from_nominal_B.array()).any() ) { 
-			ROS_ERROR_STREAM("Check initial pose: EE " << i << " deviation from bounding box center : (" << (ee_pos_B - nominal_stance_B[i]).transpose() << ")");
+			ROS_ERROR_STREAM("Check pose: EE " << i << " deviation from bounding box center : (" << (ee_pos_B - nominal_stance_B[i]).transpose() << ")");
 			return false;
 		}
 
 		double height = ee_pos_W.z() - formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y());
 		if (height < -contact_height_tolerance) {
-			ROS_ERROR_STREAM("Check initial pose: EE " << i << " terrain constraint is violated, height = " << height);
+			ROS_ERROR_STREAM("Check pose: EE " << i << " terrain constraint is violated, height = " << height);
 			return false;
 		}
 		else if (std::abs(height) <= contact_height_tolerance) {
 			// fix height
 			formulation.initial_ee_W_[i].z() = formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y());
+			if (std::abs(height) > 0.001) {
+				ROS_WARN_STREAM("Fix height: EE " << i << " height = " << height << " is assumed in terrain level, set height to zero.");
+			}
 		}
 	}
 	return true;
+}
+
+KDL::Frame ClopGenerator::convertTFToPathTF(const KDL::Frame& T) 
+{
+	KDL::Frame TP;
+	// calculate rotation
+	Eigen::Quaterniond q;
+	T.M.GetQuaternion(q.x(), q.y(), q.z(), q.w());
+	q.normalize();
+	TP.M = KDL::Rotation::Quaternion(q.x(), q.y(), q.z(), q.w());
+	// calculate position
+	TP.p = KDL::Vector(T.p.x(), T.p.y(), formulation.terrain_->GetHeight(T.p.x(), T.p.y()));
+	return TP;
 }
 
 void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg) 
@@ -388,19 +408,86 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 	}
 
 	Eigen::Vector3d tmp;
-	// set position 
+	KDL::Frame initial_pose, final_pose;
+
+	// get initial base pose
+	tf::vectorEigenToKDL(formulation.initial_base_.lin.at(kPos), initial_pose.p);
+	tmp = formulation.initial_base_.ang.at(kPos);
+	initial_pose.M = KDL::Rotation::RPY(tmp.x(), tmp.y(), tmp.z());
+
+	// set final position
 	tf::pointMsgToEigen(goal_pose.pose.position, tmp);
 	formulation.final_base_.lin.at(kPos) = tmp;
-	// set orientation
-	KDL::Rotation rot;
-	tf::quaternionMsgToKDL(goal_pose.pose.orientation, rot);
-	rot.GetRPY(tmp.x(), tmp.y(), tmp.z());
+	tf::vectorEigenToKDL(tmp, final_pose.p);
+	// set final orientation
+	tf::quaternionMsgToKDL(goal_pose.pose.orientation, final_pose.M);
+	final_pose.M.GetRPY(tmp.x(), tmp.y(), tmp.z());
 	formulation.final_base_.ang.at(kPos) = tmp;
 	// set speed to zero
 	formulation.final_base_.lin.at(kVel).setZero();
 	formulation.final_base_.ang.at(kVel).setZero();
+	// set final bounds
+	formulation.params_.bounds_final_lin_pos_ = {X,Y,Z};
+	formulation.params_.bounds_final_lin_vel_ = {X,Y,Z};
 
 	ROS_DEBUG_STREAM("Goal BASE pose from msg: p = (" << formulation.final_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.final_base_.ang.at(kPos).transpose() << ")");
+
+	// Process end effectors
+	int n_ee = end_effector_index.size();
+	// init EE final poses with default (nominal) position
+	formulation.final_ee_W_.clear();
+	for(int ee = 0; ee < n_ee; ee++) {
+		KDL::Vector ee_nominal_pos_B;
+		tf::vectorEigenToKDL(formulation.model_.kinematic_model_->GetNominalStanceInBase().at(ee), ee_nominal_pos_B);
+		formulation.final_ee_W_.emplace_back();
+		tf::vectorKDLToEigen(final_pose * ee_nominal_pos_B, formulation.final_ee_W_.back());
+	}
+	// remove all final bounds for end effectors
+	formulation.params_.ee_bounds_final_lin_pos_.assign(n_ee, towr::DimSet()); // by default no restriction on EE positions
+	formulation.params_.ee_bounds_final_lin_vel_.assign(n_ee, {X,Y,Z}); // effectively set velocity to zero
+
+	// now reassign EE poses according to EndEffectorGoal structure
+	for (const EndEffectorGoal& ee_goal : msg.ee_goal) {
+		// find EE in index
+		auto it = end_effector_index.find(ee_goal.name);
+		if (it == end_effector_index.end()) throw std::invalid_argument("Unknown end effector: " + ee_goal.name);
+		int towr_index = it->second.towr_index;
+
+		// add EE final bound
+		formulation.params_.ee_bounds_final_lin_pos_[towr_index] = {X,Y};
+
+		// set final pose for end effector
+		KDL::Vector ee_pos;
+		tf::pointMsgToKDL(ee_goal.position, ee_pos);
+		switch (ee_goal.frame_type) {
+			case EndEffectorGoal::PATH_FINAL:
+				tf::vectorKDLToEigen(final_pose * ee_pos, formulation.final_ee_W_[towr_index]);
+				break;
+			case EndEffectorGoal::BASE_FINAL:
+				tf::vectorKDLToEigen( convertTFToPathTF(final_pose) * ee_pos, formulation.final_ee_W_[towr_index]);
+				break;
+			case EndEffectorGoal::BASE_INITIAL:
+				tf::vectorKDLToEigen( initial_pose * ee_pos, formulation.final_ee_W_[towr_index]);
+				break;
+			case EndEffectorGoal::PATH_INITIAL:
+				tf::vectorKDLToEigen( convertTFToPathTF(initial_pose) * ee_pos, formulation.final_ee_W_[towr_index]);
+				break;
+			case EndEffectorGoal::IGNORE_POSE:
+				formulation.params_.ee_bounds_final_lin_pos_[towr_index].clear();
+				break;
+			case EndEffectorGoal::NOMINAL_POSE:
+				break;
+			default:
+				throw std::invalid_argument("Unknown end effector frame type: " + std::to_string(ee_goal.frame_type));
+		}
+
+		ROS_DEBUG_STREAM("Goal EE '" << it->first << "' (" << towr_index << ") pose final: (" << formulation.final_ee_W_[towr_index].transpose() << ")");
+	}
+
+	// check if final pose is correct
+	if (!checkPose(formulation.final_base_, formulation.final_ee_W_, true)) { // TODO respect bounds
+		throw std::invalid_argument("Infeasible final pose.");
+	}
 }
 
 void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, double time_scale = 1.0)
@@ -502,7 +589,7 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 	gait_gen->SetGaits( MakeGaitsCombo(msg.gait_type, msg.n_steps) );
 
 	// formulation parameters: default vaules
-	towr::Parameters params;
+	towr::Parameters params;;
 
 	// load parameters from namespace "~towr_paramters" with step-based timescale
 	// TODO merge towr_model, towr_parameters and ipopt_options namespaces
@@ -518,10 +605,15 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
     }
 
 	// Additional settings
-	// fix fianl base postion
-	params.bounds_final_lin_pos_ = {X,Y,Z};
 	// set final EE velocity to zero
-	params.ee_bounds_final_lin_vel_ = {X,Y,Z};
+	// TODO modify towr to divide actual parameter and final pose specification
+	// TODO now simply copy bounds from formulation.params_ to params
+	// base final bounds
+	params.bounds_final_lin_pos_ = formulation.params_.bounds_final_lin_pos_;
+	params.bounds_final_lin_vel_ = formulation.params_.bounds_final_lin_vel_;
+	// end effectors final bounds
+	params.ee_bounds_final_lin_pos_ = formulation.params_.ee_bounds_final_lin_pos_;
+	params.ee_bounds_final_lin_vel_ = formulation.params_.ee_bounds_final_lin_vel_;
 
     // increases optimization time, but sometimes helps find a solution for more difficult terrain.
 	bool optimize_phase_durations = false;
@@ -561,7 +653,7 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 		// assign goal
 		setGoalPoseFromMsg(*msg);
 		// check pose
-		if (!checkInitalPose()) {
+		if (!checkPose(formulation.initial_base_, formulation.initial_ee_W_, true)) {
 			abortGoal("message processing", MoveBaseResult::INVALID_INITIAL_POSE, "invalid initial pose");
 			return;
 		}
