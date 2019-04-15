@@ -28,6 +28,9 @@ find_package(catkin REQUIRED COMPONENTS
 	sweetie_bot_orocos_misc
 )
 
+# Python setup
+catkin_python_setup()
+
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
@@ -42,9 +45,6 @@ add_action_files(
 
 # Actually generate the language-specific message and service files
 generate_messages(DEPENDENCIES std_msgs geometry_msgs actionlib_msgs)
-
-################################################
-
 
 ###################################
 ## catkin specific configuration ##
@@ -129,6 +129,7 @@ install(TARGETS towr_clop_generator
 install(DIRECTORY scripts
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 	USE_SOURCE_PERMISSIONS)
+
 
 #############
 ## Testing ##
