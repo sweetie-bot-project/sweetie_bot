@@ -130,6 +130,20 @@ install(DIRECTORY scripts
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 	USE_SOURCE_PERMISSIONS)
 
+## Install python scripts
+catkin_install_python(
+	PROGRAMS
+	    scripts/walk
+#		scripts/trot_forward.py
+#		scripts/walk_forward.py
+#		scripts/turn_left.py
+#		scripts/walk_forward_free.py
+#		scripts/shift_left.py
+#		scripts/walk_forward2.py
+#		scripts/walk_backward.py
+#		scripts/turn_right.py
+	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 
 #############
 ## Testing ##
