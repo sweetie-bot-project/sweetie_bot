@@ -92,7 +92,22 @@ class MoveBaseGoal(MoveBaseGoalBase):
             ee_goal = EndEffectorGoal()
             ee_goal.name = name
             ee_goal.frame_type = frame_type
+            ee_goal.contact = True
             self.ee_goal.append(ee_goal)
+
+    def setEndEffectorTargetPose(self, ee_name, position, contact = None, frame_type = None):
+        for ee_goal in self.ee_goal:
+            if ee_goal.name == ee_name:
+                if position != None:
+                    ee_goal.position.x = position[0]
+                    ee_goal.position.y = position[1]
+                    ee_goal.position.z = position[2]
+                if contact != None:
+                    ee_goal.contact = contact
+                if frame_type != None:
+                    ee_goal.frame_type = frame_type
+                return
+        raise AttributeError
 
 class Clopper:
     """sweetie_bot_clop_generator MoveBase aclionlib client."""
