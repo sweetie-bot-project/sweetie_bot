@@ -1,5 +1,6 @@
 #include "gait_generator.hpp"
 
+#include <algorithm>
 #include <xmlrpcpp/XmlRpcException.h>
 
 #include <towr/models/endeffector_mappings.h>
@@ -76,6 +77,7 @@ ClopGenerator::ClopGenerator(const std::string& name)
 	// publish topics
 	//xpp_trajectory_pub = node_handler.advertise<RobotStateCartesianTrajectory>("xpp_trajectory", 1);
 	//xpp_robot_pram_pub = node_handler.advertise<RobotParameters>("xpp_robot_parameters", 1);	
+	// subscribe topics
 	// tf listener
 	tf_listener.reset( new tf2_ros::TransformListener(tf_buffer) );
 	// action server
@@ -345,7 +347,7 @@ bool ClopGenerator::setInitialStateFromTF()
 	}*/
 }
 
-bool ClopGenerator::checkPose(const towr::BaseState& base_pose, const towr::NlpFormulation::EEPos& ee_pose, bool fix_contact_height) 
+bool ClopGenerator::checkEERangeConditions(const towr::BaseState& base_pose, const towr::NlpFormulation::EEPos& ee_pose) 
 {
 	// extract base transformation in form (R,p)
 	Vector3d rpy = base_pose.ang.at(towr::kPos);
@@ -364,20 +366,8 @@ bool ClopGenerator::checkPose(const towr::BaseState& base_pose, const towr::NlpF
 			ROS_ERROR_STREAM("Check pose: EE " << i << " deviation from bounding box center : (" << (ee_pos_B - nominal_stance_B[i]).transpose() << ")");
 			return false;
 		}
-
-		double height = ee_pos_W.z() - formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y());
-		if (height < -contact_height_tolerance) {
-			ROS_ERROR_STREAM("Check pose: EE " << i << " terrain constraint is violated, height = " << height);
-			return false;
-		}
-		else if (std::abs(height) <= contact_height_tolerance) {
-			// fix height
-			formulation.initial_ee_W_[i].z() = formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y());
-			if (std::abs(height) > 0.001) {
-				ROS_WARN_STREAM("Fix height: EE " << i << " height = " << height << " is assumed in terrain level, set height to zero.");
-			}
-		}
 	}
+
 	return true;
 }
 
@@ -460,11 +450,11 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 		KDL::Vector ee_pos;
 		tf::pointMsgToKDL(ee_goal.position, ee_pos);
 		switch (ee_goal.frame_type) {
-			case EndEffectorGoal::PATH_FINAL:
-				tf::vectorKDLToEigen(final_pose * ee_pos, formulation.final_ee_W_[towr_index]);
-				break;
 			case EndEffectorGoal::BASE_FINAL:
-				tf::vectorKDLToEigen( convertTFToPathTF(final_pose) * ee_pos, formulation.final_ee_W_[towr_index]);
+				tf::vectorKDLToEigen( final_pose * ee_pos, formulation.final_ee_W_[towr_index]);
+				break;
+			case EndEffectorGoal::PATH_FINAL:
+				tf::vectorKDLToEigen( convertTFToPathTF(final_pose)  * ee_pos, formulation.final_ee_W_[towr_index]);
 				break;
 			case EndEffectorGoal::BASE_INITIAL:
 				tf::vectorKDLToEigen( initial_pose * ee_pos, formulation.final_ee_W_[towr_index]);
@@ -485,7 +475,7 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 	}
 
 	// check if final pose is correct
-	if (!checkPose(formulation.final_base_, formulation.final_ee_W_, true)) { // TODO respect bounds
+	if (!checkEERangeConditions(formulation.final_base_, formulation.final_ee_W_)) {
 		throw std::invalid_argument("Infeasible final pose.");
 	}
 }
@@ -578,31 +568,150 @@ std::vector<towr::GaitGenerator::Gaits> MakeGaitsCombo(const std::string gait_ty
 }
 
 
+void ClopGenerator::setFreeMovementsPhasesFromGoalMsg(towr::Parameters& params, const MoveBaseGoal& msg)
+{
+	// free mode: assign phase manually, according to robot state and goal specification
+	const double move_phase_duration = 0.3;
+	const double stand_phase_duration = 0.1;
+	double total_unscaled_duration = 0.0;
+	bool all_ee_in_contact;
+	int n_ee = end_effector_index.size();
+	std::vector<bool> ee_is_in_contact_at_end(n_ee, true);
+
+	// clear phase durations
+	params.ee_in_contact_at_start_.clear();
+	params.ee_phase_durations_.resize(n_ee);
+	for(int ee = 0; ee < n_ee; ee++) params.ee_phase_durations_[ee].clear();
+
+	// guess contact state
+	// TODO use contact_state
+	all_ee_in_contact = true; // for initial state
+	for(int ee = 0; ee < n_ee; ee++) {
+		Vector3d ee_pos_W = formulation.initial_ee_W_[ee];
+		double height = ee_pos_W.z() - formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y());
+		if ( height < contact_height_tolerance ) { 
+			params.ee_in_contact_at_start_.push_back(true);
+		}
+		else {
+			params.ee_in_contact_at_start_.push_back(false);
+			all_ee_in_contact = false;
+		}
+	}
+	// if leg is in air then place it on the ground
+	if (!all_ee_in_contact) {
+		// add two phases for legs in air and one phase for support legs
+		// so robot can place all legs on ground and then adjust it center of mass
+		for(int ee = 0; ee < n_ee; ee++) {
+			if (!params.ee_in_contact_at_start_[ee]) {
+				// place leg on ground
+				params.ee_phase_durations_[ee].push_back(move_phase_duration); 
+				params.ee_phase_durations_[ee].push_back(stand_phase_duration);
+			}
+			else params.ee_phase_durations_[ee].push_back(move_phase_duration + stand_phase_duration);
+		}
+		total_unscaled_duration += move_phase_duration + stand_phase_duration;
+	}
+	else {
+		// starting phase when all legs are on ground
+		for(int ee = 0; ee < n_ee; ee++) params.ee_phase_durations_[ee].push_back(stand_phase_duration);
+		total_unscaled_duration += stand_phase_duration;
+	}
+	// Now move each leg in order defined in GoalMsg
+	all_ee_in_contact = true; // for final state
+	for(const EndEffectorGoal& ee_goal : msg.ee_goal) {
+		auto it = end_effector_index.find(ee_goal.name);
+		if (it != end_effector_index.end()) {
+			// save contact state
+			ee_is_in_contact_at_end[it->second.towr_index] = ee_goal.contact;
+			// move only legs that are in contact at start and at the end of the motion
+			if (ee_goal.contact && params.ee_in_contact_at_start_[it->second.towr_index]) {
+				for(int ee = 0; ee < n_ee; ee++) {
+					if (ee == it->second.towr_index) {
+						params.ee_phase_durations_[ee].push_back(move_phase_duration);
+						params.ee_phase_durations_[ee].push_back(stand_phase_duration);
+					}
+					else params.ee_phase_durations_[ee].back() += move_phase_duration + stand_phase_duration;
+				}
+				total_unscaled_duration += move_phase_duration + stand_phase_duration;
+			}
+			else {
+				all_ee_in_contact = false;
+			}
+		}
+	}
+	// Final stage: rise legs that should be free at the end
+	if (!all_ee_in_contact) {
+		for(int ee = 0; ee < n_ee; ee++) {
+			if (!ee_is_in_contact_at_end[ee]) {
+				params.ee_phase_durations_[ee].push_back(move_phase_duration);
+			}
+			else params.ee_phase_durations_[ee].back() += move_phase_duration;
+		}
+		total_unscaled_duration += move_phase_duration;
+	}
+	// Now normalize movement duration
+	for (int ee = 0; ee < n_ee; ee++) {
+		std::transform(params.ee_phase_durations_[ee].begin(), params.ee_phase_durations_[ee].end(), params.ee_phase_durations_[ee].begin(), 
+				[&msg, total_unscaled_duration](double phase_duration) { 
+					return phase_duration * msg.duration/total_unscaled_duration; 
+				});
+	}
+}
+
 void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 {
 	// check provided message: duration must be positive
 	if (msg.duration <= 0.0) throw std::invalid_argument("MoveBaseGoal: step sequence duration must be positive.");
 
-	// create gait genarator and assign combo
-	int n_ee = end_effector_index.size();
-	std::shared_ptr<towr::GaitGenerator> gait_gen = GaitGenerator::MakeGaitGenerator(n_ee);
-	gait_gen->SetGaits( MakeGaitsCombo(msg.gait_type, msg.n_steps) );
-
 	// formulation parameters: default vaules
-	towr::Parameters params;;
+	towr::Parameters params;
+	int n_ee = end_effector_index.size();
 
-	// load parameters from namespace "~towr_paramters" with step-based timescale
-	// TODO merge towr_model, towr_parameters and ipopt_options namespaces
-	getTowrParametersFromRos(params, towr_parameters_ns + "towr_parameters", msg.duration / gait_gen->GetUnscaledTotalDuration());
+	// now generate gait 
+	if (msg.gait_type == "free") {
+		// generate gait phases according to goal message
+		setFreeMovementsPhasesFromGoalMsg(params, msg);
+		getTowrParametersFromRos(params, towr_parameters_ns + "towr_parameters", msg.duration / 1.0);
+	}
+	else {
+		// create gait genarator and assign combo
+		std::shared_ptr<towr::GaitGenerator> gait_gen = GaitGenerator::MakeGaitGenerator(n_ee);
+		gait_gen->SetGaits( MakeGaitsCombo(msg.gait_type, msg.n_steps) );
 
-	// now construct add phases
-    for (int ee = 0; ee < n_ee; ++ee) {
-		params.ee_phase_durations_.push_back(gait_gen->GetPhaseDurations(msg.duration, ee));
-		params.ee_in_contact_at_start_.push_back(gait_gen->IsInContactAtStart(ee));
+		// load parameters from namespace "~towr_paramters" with step-based timescale
+		// TODO merge towr_model, towr_parameters and ipopt_options namespaces
+		getTowrParametersFromRos(params, towr_parameters_ns + "towr_parameters", msg.duration / gait_gen->GetUnscaledTotalDuration());
 
-		ROS_DEBUG_STREAM("EE (" << ee << ") phases: contact at start " << params.ee_in_contact_at_start_.back() << " phases (" 
-				<< Eigen::Map<Eigen::VectorXd>(params.ee_phase_durations_.back().data(), params.ee_phase_durations_.back().size()).transpose() << ")");
-    }
+		// now construct add phases
+		for (int ee = 0; ee < n_ee; ++ee) {
+			params.ee_phase_durations_.push_back(gait_gen->GetPhaseDurations(msg.duration, ee));
+			params.ee_in_contact_at_start_.push_back(gait_gen->IsInContactAtStart(ee));
+		}
+	}
+	// debug output
+	for (int ee = 0; ee < n_ee; ++ee) {
+		ROS_DEBUG_STREAM("EE (" << ee << ") phases: contact at start " << params.ee_in_contact_at_start_[ee] << " phases (" 
+				<< Eigen::Map<Eigen::VectorXd>(params.ee_phase_durations_[ee].data(), params.ee_phase_durations_[ee].size()).transpose() << ")");
+	}
+
+	// check contact conditions for initial pose and final pose
+	for(int ee = 0; ee < n_ee; ee++) {
+		// check contact conditions for initial pose
+		Vector3d ee_pos_W = formulation.initial_ee_W_[ee];
+		double height = ee_pos_W.z() - formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y());
+		if (params.ee_in_contact_at_start_[ee] && height > contact_height_tolerance || height < -contact_height_tolerance) {
+			ROS_ERROR_STREAM("Check intital pose: EE " << ee << " terrain constraint is violated, height = " << height);
+			throw std::invalid_argument("Terrain constraints violated for initial pose.");
+		}
+		// fix height 
+		if (params.ee_in_contact_at_start_[ee]) formulation.initial_ee_W_[ee].z() -= height;
+		// check contact conditions for final pose
+		ee_pos_W = formulation.final_ee_W_[ee];
+		if (ee_pos_W.z() < formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y())) {
+			ROS_ERROR_STREAM("Check pose: EE " << ee << " terrain constraint is violated, height < 0");
+			throw std::invalid_argument("Terrain constraints violated for final pose.");
+		}
+	}
 
 	// Additional settings
 	// set final EE velocity to zero
@@ -653,7 +762,7 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 		// assign goal
 		setGoalPoseFromMsg(*msg);
 		// check pose
-		if (!checkPose(formulation.initial_base_, formulation.initial_ee_W_, true)) {
+		if (!checkEERangeConditions(formulation.initial_base_, formulation.initial_ee_W_)) {
 			abortGoal("message processing", MoveBaseResult::INVALID_INITIAL_POSE, "invalid initial pose");
 			return;
 		}

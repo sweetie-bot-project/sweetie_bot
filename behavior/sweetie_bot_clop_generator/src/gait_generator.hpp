@@ -73,13 +73,14 @@ class ClopGenerator
 		bool configureRobotModel();
 
 		KDL::Frame convertTFToPathTF(const KDL::Frame& T);
-		bool checkPose(const towr::BaseState& base_pose, const towr::NlpFormulation::EEPos& ee_pose, bool fix_contact_height);
+		bool checkEERangeConditions(const towr::BaseState& base_pose, const towr::NlpFormulation::EEPos& ee_pose);
 
 		void setInitialStateFromNominal(double ground_z);
 		bool setInitialStateFromTF();
 
 		void setGoalPoseFromMsg(const MoveBaseGoal& msg);
 		void setGaitFromGoalMsg(const MoveBaseGoal& msg);
+		void setFreeMovementsPhasesFromGoalMsg(towr::Parameters& param, const MoveBaseGoal& msg);
 
 		void abortGoal(const std::string& where, int error_code, const std::string& error_string);
 		void succeedGoal(int error_code, const std::string& error_string);
