@@ -10,3 +10,9 @@
 	path = config/sweetie_bot_proto3_description
 	url = ../sweetie_bot_proto3_description.git
 	branch = master
+[submodule "inc/towr"]
+	path = inc/towr
+	url = https://github.com/sweetie-bot-project/towr
+[submodule "inc/ifopt"]
+	path = inc/ifopt
+	url = https://github.com/sweetie-bot-project/ifopt

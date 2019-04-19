@@ -17,17 +17,9 @@ stretch-amd64: &desktop_template
       if [[ "$CI_COMMIT_REF_NAME" != "master" ]] && [[ -f build.tar ]]; then
         tar xf build.tar
         rm build.tar
-        if [[ "$ROBOT" != "true" ]]; then
-          ( cd .build/extra/src/towr && git pull origin )
-          ( cd .build/extra/src/ifopt && git pull origin )
-        fi
       else
         mkdir -p .build/main .build/extra/src
         ln -s "$(pwd)" .build/main/src
-        if [[ "$ROBOT" != "true" ]]; then
-          git clone https://github.com/sweetie-bot-project/towr .build/extra/src/towr
-          git clone https://github.com/sweetie-bot-project/ifopt .build/extra/src/ifopt
-        fi
       fi
       source "/opt/ros/$ROS_DISTRO/setup.bash"
     - |
@@ -46,7 +38,13 @@ stretch-amd64: &desktop_template
           hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE \
           hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE \
           behavior/sweetie_bot_voice/CATKIN_IGNORE \
-          behavior/sweetie_bot_clop_generator/CATKIN_IGNORE
+          behavior/sweetie_bot_clop_generator/CATKIN_IGNORE \
+          inc/ifopt/CATKIN_IGNORE \
+          inc/ifopt/ifopt_core/CATKIN_IGNORE \
+          inc/ifopt/ifopt_ipopt/CATKIN_IGNORE \
+          inc/ifopt/ifopt_snopt/CATKIN_IGNORE \
+          inc/towr/towr/CATKIN_IGNORE \
+          inc/towr/towr_ros/CATKIN_IGNORE
       fi
       pushd .build/main
     - *cmd_catkin_build
