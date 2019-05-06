@@ -93,19 +93,38 @@ class MoveBaseGoal(MoveBaseGoalBase):
             ee_goal.name = name
             ee_goal.frame_type = frame_type
             ee_goal.contact = True
+            ee_goal.position_bounds = EndEffectorGoal.POSITION_FREE_Z
             self.ee_goal.append(ee_goal)
 
-    def setEndEffectorTargetPose(self, ee_name, position, contact = None, frame_type = None):
+    def setEndEffectorTargetPose(self, ee_name, position, position_bounds = None, contact = None, frame_type = None):
+        """Set end effector traget position.
+
+        If coresponding argument is None it value is not changed.
+
+        Keyword arguments:
+        ee_names -- names of end effectors (default: ["leg1", "leg2", "leg3", "leg4"])
+        position -- target position, array of floats in form [X, Y, Z].
+        position_bounds --- which coordinates of final pose are fixed ore free. 
+           Zero bits means that coresponding coordinate is fixed. The order of coordinates is (X,Y,Z) from low bit to high.
+        contact --- set true if at the end of motion leg is in contact.
+        frame_type -- how gait generator should interpret target position,
+            see sweetie_bot_clop_generator.msg.EndEffectorGoal, default: NOMINAL_POSE
+
+        """
         for ee_goal in self.ee_goal:
             if ee_goal.name == ee_name:
                 if position != None:
                     ee_goal.position.x = position[0]
                     ee_goal.position.y = position[1]
                     ee_goal.position.z = position[2]
+                if position_bounds != None:
+                    ee_goal.position_bounds = position_bounds
                 if contact != None:
                     ee_goal.contact = contact
                 if frame_type != None:
                     ee_goal.frame_type = frame_type
+                if position_bounds != None:
+                    ee_goal.position_bounds = position_bounds
                 return
         raise AttributeError
 

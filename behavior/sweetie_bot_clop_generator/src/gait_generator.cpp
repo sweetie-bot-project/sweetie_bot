@@ -417,8 +417,17 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 	formulation.final_base_.lin.at(kVel).setZero();
 	formulation.final_base_.ang.at(kVel).setZero();
 	// set final bounds
-	formulation.params_.bounds_final_lin_pos_ = {X,Y,Z};
+	formulation.params_.bounds_final_lin_pos_.clear();
+	for(unsigned int dim = LX; dim <= LZ; dim++) {
+		if (! (msg.base_goal_bounds & (1u << dim))) formulation.params_.bounds_final_lin_pos_.push_back(dim);
+	}
+	formulation.params_.bounds_final_ang_pos_.clear();
+	for(unsigned int dim = AX; dim <= AZ; dim++) {
+		if (! (msg.base_goal_bounds & (1u << dim))) formulation.params_.bounds_final_ang_pos_.push_back(dim);
+	}
+	// speed
 	formulation.params_.bounds_final_lin_vel_ = {X,Y,Z};
+	formulation.params_.bounds_final_ang_vel_ = {X,Y,Z};
 
 	ROS_DEBUG_STREAM("Goal BASE pose from msg: p = (" << formulation.final_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.final_base_.ang.at(kPos).transpose() << ")");
 
@@ -444,7 +453,9 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 		int towr_index = it->second.towr_index;
 
 		// add EE final bound
-		formulation.params_.ee_bounds_final_lin_pos_[towr_index] = {X,Y};
+		for(unsigned int dim = X; dim <= Z; dim++) {
+			if (!(ee_goal.position_bounds & (1u << dim))) formulation.params_.ee_bounds_final_lin_pos_[towr_index].push_back(dim); // zero means that coresponding dimension is fixed
+		}
 
 		// set final pose for end effector
 		KDL::Vector ee_pos;
@@ -461,9 +472,6 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 				break;
 			case EndEffectorGoal::PATH_INITIAL:
 				tf::vectorKDLToEigen( convertTFToPathTF(initial_pose) * ee_pos, formulation.final_ee_W_[towr_index]);
-				break;
-			case EndEffectorGoal::IGNORE_POSE:
-				formulation.params_.ee_bounds_final_lin_pos_[towr_index].clear();
 				break;
 			case EndEffectorGoal::NOMINAL_POSE:
 				break;
