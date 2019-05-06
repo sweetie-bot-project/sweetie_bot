@@ -13,7 +13,7 @@ from sweetie_bot_clop_generator.msg import EndEffectorGoal
 
 if __name__ == '__main__':
     # create message
-    msg = MoveBaseGoal(gait_type = "free", n_steps = 0, duration = 2.0)
+    msg = MoveBaseGoal(gait_type = "free", n_steps = 0, duration = 3.0)
     msg.setTargetBaseShift(x = 0.0, y = 0.0, angle = 0.0) 
     msg.addEndEffectorsTargets(["leg1","leg2","leg3","leg4"], EndEffectorGoal.PATH_FINAL) 
     msg.setEndEffectorTargetPose("leg1", [0.080425, 0.0386, 0.0]) 
