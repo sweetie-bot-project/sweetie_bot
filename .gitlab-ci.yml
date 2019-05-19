@@ -18,22 +18,10 @@ stretch-amd64: &desktop_template
         tar xf build.tar
         rm build.tar
       else
-        mkdir -p .build/main .build/extra/src
+        mkdir -p .build/main
         ln -s "$(pwd)" .build/main/src
       fi
-      source "/opt/ros/$ROS_DISTRO/setup.bash"
-    - |
-      if [[ "$ROBOT" != "true" ]]; then
-        pushd .build/extra
-    - &cmd_catkin_build |
-        rosdep check --from-paths src --ignore-src --rosdistro "$ROS_DISTRO" 2>roscheck.tmp \
-          cat roscheck.tmp >&2 && ! grep ERROR roscheck.tmp >/dev/null && rm roscheck.tmp
-        catkin_make_isolated \
-          $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" \
-          -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout -DCMAKE_CXX_STANDARD=11
-    - |
-      popd
-      else
+      if [[ "$ROBOT" == "true" ]]; then
         touch \
           hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE \
           hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE \
@@ -46,9 +34,15 @@ stretch-amd64: &desktop_template
           inc/towr/towr/CATKIN_IGNORE \
           inc/towr/towr_ros/CATKIN_IGNORE
       fi
+    - |
+      source "/opt/ros/$ROS_DISTRO/setup.bash"
       pushd .build/main
-    - *cmd_catkin_build
-    - popd
+      rosdep check --from-paths src --ignore-src --rosdistro "$ROS_DISTRO" 2>roscheck.tmp \
+        cat roscheck.tmp >&2 && ! grep ERROR roscheck.tmp >/dev/null && rm roscheck.tmp
+      catkin_make_isolated \
+        $CMAKE_TOOLCHAIN_ARG --install --install-space "/opt/ros/sweetie_bot" \
+        -DCMAKE_BUILD_TYPE=Release -DLOGGER_DEFAULT=LoggerRosout -DCMAKE_CXX_STANDARD=11
+      popd
     - |
       source /src/base/buildpkg.bash
       BASE_VERSION="$DEB_VERSION"
