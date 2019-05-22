@@ -190,9 +190,10 @@ bool ClopGenerator::configureRobotModel()
 	const std::map<const std::string, const int> end_effector_mapper = { {"LF", towr::LF}, {"RF", towr::RF}, {"LH", towr::LH}, {"RH", towr::RH} };
 
 	// clear robot model
-	end_effector_index.clear();
-	formulation.model_.kinematic_model_.reset();		
-	formulation.model_.dynamic_model_.reset();		
+	this->base_frame_id = "";
+	this->end_effector_index.clear();
+	this->formulation.model_.kinematic_model_.reset();		
+	this->formulation.model_.dynamic_model_.reset();		
 
 	std::shared_ptr<towr::GeneralKinematicModel> kinematic_model( new towr::GeneralKinematicModel(4) );
 
@@ -205,7 +206,6 @@ bool ClopGenerator::configureRobotModel()
 
 	// temporary variables
 	std::vector<std::string> base_links; // robot links
-	std::string base_frame_id;
 	// parse towr model
 	try {
 		XmlRpcValue towr_model;
@@ -218,7 +218,7 @@ bool ClopGenerator::configureRobotModel()
 			// get frame
 			XmlRpcValue& frame_id = base_param["frame_id"];
 			if (frame_id.getType() != XmlRpcValue::TypeString) throw std::string("end effector description must contain 'frame_id' string");
-			base_frame_id = static_cast<std::string>(frame_id);
+			this->base_frame_id = static_cast<std::string>(frame_id);
 			// get links list for dynamic model calculation
 			XmlRpcValue& base_links_param = base_param["links"];
 			if (base_links_param.valid()) {
@@ -298,8 +298,8 @@ bool ClopGenerator::configureRobotModel()
 		ROS_INFO_STREAM("SingleRigidBodyDynamics: mass = " << I.getMass() << " CoM = (" << Eigen::Map<Eigen::Vector3d>(I.getCOG().data).transpose() << "), I = " << std::endl << Ir);
 		
 		// save models
-		formulation.model_.kinematic_model_ = kinematic_model;
-		formulation.model_.dynamic_model_ = dynamic_model;
+		this->formulation.model_.kinematic_model_ = kinematic_model;
+		this->formulation.model_.dynamic_model_ = dynamic_model;
 	}
 	catch (std::invalid_argument& e) {
 		ROS_ERROR_STREAM("'towr_model' processing error: " << e.what());
@@ -338,7 +338,7 @@ bool ClopGenerator::setInitialStateFromTF()
 			geometry_msgs::TransformStamped T;
 			Vector3d tmp;
 
-			T = tf_buffer.lookupTransform("odom_combined", "base_link", ros::Time(0));
+			T = tf_buffer.lookupTransform("odom_combined", base_frame_id, ros::Time(0));
 			// set position 
 			tf::vectorMsgToEigen(T.transform.translation, tmp);
 			formulation.initial_base_.lin.at(kPos) = tmp;
@@ -747,9 +747,18 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 		if (params.ee_in_contact_at_start_[ee]) formulation.initial_ee_W_[ee].z() -= height;
 		// check contact conditions for final pose
 		ee_pos_W = formulation.final_ee_W_[ee];
-		if (ee_pos_W.z() < formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y())) {
-			ROS_ERROR_STREAM("Check pose: EE " << ee << " terrain constraint is violated, height < 0");
-			throw std::invalid_argument("Terrain constraints violated for final pose.");
+		// check if is in contact contact at end
+		bool contact_at_end = params.ee_in_contact_at_start_[ee];
+		if (params.ee_phase_durations_[ee].size() % 2 == 0) contact_at_end = !contact_at_end;
+		// check if Z-ccordinate is fixed 
+		towr::DimSet& ee_bounds = formulation.params_.ee_bounds_final_lin_pos_[ee];
+		auto it = std::find(ee_bounds.begin(), ee_bounds.end(), Z);
+		// final height if leg is free and Z coordinate is fixed
+		if (!contact_at_end && it != ee_bounds.end()) {
+			if (ee_pos_W.z() < formulation.terrain_->GetHeight(ee_pos_W.x(), ee_pos_W.y())) {
+				ROS_ERROR_STREAM("Check pose: EE " << ee << " terrain constraint is violated, height < 0");
+				throw std::invalid_argument("Terrain constraints violated for final pose.");
+			}
 		}
 	}
 
@@ -900,7 +909,7 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 		msg.ee_motion[ee].points.reserve(n_samples);
 	}
 	// assign persistent fields
-	msg.base_motion.name = "base_link";
+	msg.base_motion.name = base_frame_id;
 	for(auto it = end_effector_index.begin(); it != end_effector_index.end(); it++) msg.ee_motion[it->second.towr_index].name = it->first;
 
 	// now fill trajectories

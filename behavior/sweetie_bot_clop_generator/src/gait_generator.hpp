@@ -56,6 +56,7 @@ class ClopGenerator
 		// BUFFERS
 
 		// COMPONENT STATE
+		std::string base_frame_id;
 		std::map<std::string, EndEffectorInfo> end_effector_index;
 		towr::NlpFormulation formulation;
 		ifopt::IpoptSolver::Ptr solver;
