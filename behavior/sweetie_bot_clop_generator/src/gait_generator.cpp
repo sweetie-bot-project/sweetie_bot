@@ -203,18 +203,42 @@ bool ClopGenerator::configureRobotModel()
 		return false;
 	}
 
+	// temporary variables
+	std::vector<std::string> base_links; // robot links
+	std::string base_frame_id;
 	// parse towr model
 	try {
 		XmlRpcValue towr_model;
 		ros::param::get(towr_parameters_ns + "towr_model", towr_model);
 		if (towr_model.getType() != XmlRpcValue::TypeStruct) throw std::string("'towr_model' parameter must be structure");
-		// process base 
-		/* XmlRpcValue& base_param = towr_model["base_link"];
-		if (base_param.getType() != XmlRpcValue::TypeStruct) throw std::string("towr_model must contain 'base_link' subtree"); */
+		// process base
+		{
+			XmlRpcValue& base_param = towr_model["base"];
+			if (base_param.getType() != XmlRpcValue::TypeStruct) throw std::string("towr_model must contain 'base' subtree"); 
+			// get frame
+			XmlRpcValue& frame_id = base_param["frame_id"];
+			if (frame_id.getType() != XmlRpcValue::TypeString) throw std::string("end effector description must contain 'frame_id' string");
+			base_frame_id = static_cast<std::string>(frame_id);
+			// get links list for dynamic model calculation
+			XmlRpcValue& base_links_param = base_param["links"];
+			if (base_links_param.valid()) {
+				// links array supplied
+				if (base_links_param.getType() != XmlRpcValue::TypeArray || base_links_param.size() < 1 || base_links_param[0].getType() != XmlRpcValue::TypeString) {
+					throw std::string("base description must contain non-empty array of strings 'links' ");
+				}
+				base_links.reserve(base_links_param.size());
+				for (int i = 0; i < base_links_param.size(); i++) base_links.push_back( static_cast<std::string>(base_links_param[i]) );
+			}
+			else {
+				// links array is not supplied, leave links list empty
+				base_links.clear();
+			}
+		}
+		
 		// process end effectors
 		for(auto ee_it = end_effector_mapper.begin(); ee_it != end_effector_mapper.end(); ee_it++) {
 			XmlRpcValue& leg_param = towr_model[ee_it->first];
-			if (towr_model.getType() != XmlRpcValue::TypeStruct) throw std::string("'towr_model' parameter must contain '" + ee_it->first + "' subtree");
+			if (leg_param.getType() != XmlRpcValue::TypeStruct) throw std::string("'towr_model' parameter must contain '" + ee_it->first + "' subtree");
 
 			// Setup end effector index
 			EndEffectorInfo ee_info;
@@ -261,18 +285,26 @@ bool ClopGenerator::configureRobotModel()
 		return false;
 	};
 
-	// init dynamic model
-	RigidBodyInertiaCalculator kdl_inertia_calculator(urdf_model);
-	KDL::RigidBodyInertia I = kdl_inertia_calculator.getInertiaTotal();
-	Eigen::Matrix3d Ir(I.RefPoint(I.getCOG()).getRotationalInertia().data);
-	Eigen::Vector3d cog(I.getCOG().data);
-	
-	std::shared_ptr<towr::SingleRigidBodyDynamics> dynamic_model( new towr::SingleRigidBodyDynamics(I.getMass(), Ir , end_effector_index.size()) );
-	ROS_INFO_STREAM("SingleRigidBodyDynamics: mass = " << I.getMass() << " CoM = (" << Eigen::Map<Eigen::Vector3d>(I.getCOG().data).transpose() << "), I = " << std::endl << Ir);
-	
-	// save models
-	formulation.model_.kinematic_model_ = kinematic_model;
-	formulation.model_.dynamic_model_ = dynamic_model;
+	try {
+		// init dynamic model
+		RigidBodyInertiaCalculator kdl_inertia_calculator(urdf_model);
+		KDL::RigidBodyInertia I;
+		if (base_links.size() > 0) I = kdl_inertia_calculator.getInertia(base_frame_id, base_links);
+		else I = kdl_inertia_calculator.getInertiaTotal();
+		Eigen::Matrix3d Ir(I.RefPoint(I.getCOG()).getRotationalInertia().data);
+		Eigen::Vector3d cog(I.getCOG().data);
+		
+		std::shared_ptr<towr::SingleRigidBodyDynamics> dynamic_model( new towr::SingleRigidBodyDynamics(I.getMass(), Ir , end_effector_index.size()) );
+		ROS_INFO_STREAM("SingleRigidBodyDynamics: mass = " << I.getMass() << " CoM = (" << Eigen::Map<Eigen::Vector3d>(I.getCOG().data).transpose() << "), I = " << std::endl << Ir);
+		
+		// save models
+		formulation.model_.kinematic_model_ = kinematic_model;
+		formulation.model_.dynamic_model_ = dynamic_model;
+	}
+	catch (std::invalid_argument& e) {
+		ROS_ERROR_STREAM("'towr_model' processing error: " << e.what());
+		return false;
+	}
 
 	return true;
 }

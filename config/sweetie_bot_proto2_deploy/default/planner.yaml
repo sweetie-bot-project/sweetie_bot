@@ -2,6 +2,9 @@ clop_generator:
     period: 0.056
     contact_height_tolerance: 0.005
     towr_model:
+        base:
+            frame_id: "base_link"
+            links: ["base_link", "base_link_inertia", "bone11", "bone12", "bone21", "bone22", "bone31", "bone32", "bone41", "bone42", "bone51", "bone52", "bone53", "bone54", "screen_left", "screen_right" ]
         LF:
             name: "leg1"
             frame_id: "hoof1"
