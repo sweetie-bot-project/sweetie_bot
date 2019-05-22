@@ -22,6 +22,15 @@ using XmlRpc::XmlRpcException;
 using Eigen::Vector3d;
 using namespace towr;
 
+std::ostream& operator<<(std::ostream& out, const std::vector<int>& v) {
+	for(auto it = v.begin(); it != v.end(); it++) out << *it << " ";
+	return out;
+}
+std::ostream& operator<<(std::ostream& out, const std::vector<unsigned int>& v) {
+	for(auto it = v.begin(); it != v.end(); it++) out << *it << " ";
+	return out;
+}
+
 namespace sweetie_bot {
 
 static void DebugPrintFormulation(const NlpFormulation& formulation)
@@ -48,8 +57,9 @@ static void DebugPrintFormulation(const NlpFormulation& formulation)
 	ROS_INFO_STREAM("FINAL_STATE");
 	ROS_INFO_STREAM("Goal BASE pose: p = (" << formulation.final_base_.lin.at(kPos).transpose() << "), RPY = (" << formulation.final_base_.ang.at(kPos).transpose() << ")");
 	ROS_INFO_STREAM("Goal BASE pose: p = (" << formulation.final_base_.lin.at(kVel).transpose() << "), RPY = (" << formulation.final_base_.ang.at(kVel).transpose() << ")");
+	ROS_INFO_STREAM("Goal BASE bounds: lin_pos (" << formulation.params_.bounds_final_lin_pos_ << "), lin_vel (" << formulation.params_.bounds_final_lin_vel_ << "),  ang_pos (" << formulation.params_.bounds_final_ang_pos_ << "), ang_vel (" << formulation.params_.bounds_final_ang_pos_ << ")");
 	for(int ee = 0; ee < formulation.final_ee_W_.size(); ee++) {
-		ROS_INFO_STREAM("Goal EE (" << ee << ") pose: p = (" << formulation.final_ee_W_[ee].transpose() << ")");
+		ROS_INFO_STREAM("Goal EE (" << ee << ") pose: p = (" << formulation.final_ee_W_[ee].transpose() << "), bounds: pos = ("	<< formulation.params_.ee_bounds_final_lin_pos_[ee] << "), vel = (" << formulation.params_.ee_bounds_final_lin_vel_[ee] << ")");
 	}
 
 	ROS_INFO_STREAM("GAIT PHASES");
@@ -450,12 +460,12 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 	formulation.final_base_.ang.at(kVel).setZero();
 	// set final bounds
 	formulation.params_.bounds_final_lin_pos_.clear();
-	for(unsigned int dim = LX; dim <= LZ; dim++) {
+	for(unsigned int dim = X; dim <= Z; dim++) {
 		if (! (msg.base_goal_bounds & (1u << dim))) formulation.params_.bounds_final_lin_pos_.push_back(dim);
 	}
 	formulation.params_.bounds_final_ang_pos_.clear();
-	for(unsigned int dim = AX; dim <= AZ; dim++) {
-		if (! (msg.base_goal_bounds & (1u << dim))) formulation.params_.bounds_final_ang_pos_.push_back(dim);
+	for(unsigned int dim = X; dim <= Z; dim++) {
+		if (! (msg.base_goal_bounds & (8u << dim))) formulation.params_.bounds_final_ang_pos_.push_back(dim);
 	}
 	// speed
 	formulation.params_.bounds_final_lin_vel_ = {X,Y,Z};
@@ -486,7 +496,7 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 
 		// add EE final bound
 		for(unsigned int dim = X; dim <= Z; dim++) {
-			if (!(ee_goal.position_bounds & (1u << dim))) formulation.params_.ee_bounds_final_lin_pos_[towr_index].push_back(dim); // zero means that coresponding dimension is fixed
+			if (! (ee_goal.position_bounds & (1u << dim))) formulation.params_.ee_bounds_final_lin_pos_[towr_index].push_back(dim); // zero means that coresponding dimension is fixed
 		}
 
 		// set final pose for end effector
@@ -769,6 +779,8 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 	// base final bounds
 	params.bounds_final_lin_pos_ = formulation.params_.bounds_final_lin_pos_;
 	params.bounds_final_lin_vel_ = formulation.params_.bounds_final_lin_vel_;
+	params.bounds_final_ang_pos_ = formulation.params_.bounds_final_ang_pos_;
+	params.bounds_final_ang_vel_ = formulation.params_.bounds_final_ang_vel_;
 	// end effectors final bounds
 	params.ee_bounds_final_lin_pos_ = formulation.params_.ee_bounds_final_lin_pos_;
 	params.ee_bounds_final_lin_vel_ = formulation.params_.ee_bounds_final_lin_vel_;
