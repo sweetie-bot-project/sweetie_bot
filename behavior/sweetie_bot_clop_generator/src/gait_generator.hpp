@@ -52,12 +52,14 @@ class ClopGenerator
 		double period;
 		double contact_height_tolerance; /**< Is used during contact detection and initial pose check [m] */
 		std::string towr_parameters_ns;
+		std::string robot_model_ns;;
 
 		// BUFFERS
 
 		// COMPONENT STATE
 		std::string base_frame_id;
 		std::map<std::string, EndEffectorInfo> end_effector_index;
+		std::vector<KDL::Vector> end_effector_contact_point;
 		towr::NlpFormulation formulation;
 		ifopt::IpoptSolver::Ptr solver;
 		ifopt::Problem nlp;
@@ -73,6 +75,7 @@ class ClopGenerator
 		bool configureSolver();
 		bool configureRobotModel();
 
+		KDL::Vector getContactPointFromRobotModel(const std::string& contact);
 		KDL::Frame convertTFToPathTF(const KDL::Frame& T);
 		bool checkEERangeConditions(const towr::BaseState& base_pose, const towr::NlpFormulation::EEPos& ee_pose);
 

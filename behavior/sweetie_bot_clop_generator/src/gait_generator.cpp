@@ -109,13 +109,20 @@ ClopGenerator::ClopGenerator(const std::string& name)
 
 bool ClopGenerator::configure()
 {
-	// get towr parameters location
+	// get towr and robot_model parameters location
 	if (!ros::param::get("~towr_parameters_namespace", towr_parameters_ns)) {
 		towr_parameters_ns = "~";
 	}
 	else {
 		// add trailing '/' if necessary
 		if (towr_parameters_ns.back() != '/' && towr_parameters_ns.back() != '~') towr_parameters_ns.append(1, '/');
+	}
+	if (!ros::param::get("~robot_model_namespace", robot_model_ns)) {
+		robot_model_ns = "motion/robot_model/";
+	}
+	else {
+		// add trailing '/' if necessary
+		if (robot_model_ns.back() != '/' && robot_model_ns.back() != '~') robot_model_ns.append(1, '/');
 	}
 
 	// configure persistent variables
@@ -195,6 +202,21 @@ bool ClopGenerator::configureSolver()
 	return points;
 }*/
 
+KDL::Vector ClopGenerator::getContactPointFromRobotModel(const std::string& contact) {
+	XmlRpcValue contact_param;
+	if (!ros::param::get(robot_model_ns + "/contacts/" + contact, contact_param)) {
+		throw std::string("Unable to load model for contact " + contact);
+	}
+	try {
+	// OROCOS stores arrays as struct with field names Element1, Element2 and so on
+		XmlRpcValue contact_point = contact_param["points"]["Element0"];
+		return KDL::Vector(contact_point["X"], contact_point["Y"], contact_point["Z"]);
+	}
+	catch (XmlRpc::XmlRpcException& e) {
+		throw std::string("Incorrect model for contact " + contact);
+	};
+}
+
 bool ClopGenerator::configureRobotModel() 
 {
 	const std::map<const std::string, const int> end_effector_mapper = { {"LF", towr::LF}, {"RF", towr::RF}, {"LH", towr::LH}, {"RH", towr::RH} };
@@ -202,6 +224,7 @@ bool ClopGenerator::configureRobotModel()
 	// clear robot model
 	this->base_frame_id = "";
 	this->end_effector_index.clear();
+	this->end_effector_contact_point.assign(end_effector_mapper.size(), KDL::Vector::Zero());
 	this->formulation.model_.kinematic_model_.reset();		
 	this->formulation.model_.dynamic_model_.reset();		
 
@@ -279,6 +302,12 @@ bool ClopGenerator::configureRobotModel()
 			towr::KinematicModel::Vector3d bounding_box_p2(bounding_box[3], bounding_box[4], bounding_box[5]);
 			// configure end effector
 			kinematic_model->configureEndEffector(ee_info.towr_index, nominal_stance_p, bounding_box_p1, bounding_box_p2);
+
+			// Get information about contact
+			XmlRpcValue& contact = leg_param["contact"];
+			if (contact.getType() != XmlRpcValue::TypeString) throw std::string("end effector description must contain 'contact' string");
+			// get contact point
+			end_effector_contact_point[ee_info.towr_index] = getContactPointFromRobotModel(static_cast<std::string>(contact));
 			
 			ROS_INFO_STREAM("GeneralKinematicModel: " << ee_it->first << " (" << ee_info.frame_id << ", EE " << ee_info.towr_index << "): nominal_stance (" << nominal_stance_p.transpose() << 
 					"), bounding_box (" << bounding_box_p1.transpose() << ", " << bounding_box_p2.transpose() << ")");
@@ -374,11 +403,12 @@ bool ClopGenerator::setInitialStateFromTF()
 		formulation.initial_ee_W_.resize(end_effector_index.size());
 		for(const auto& ee_info : end_effector_index) {
 				// get transform
-				geometry_msgs::TransformStamped T;
-				T = tf_buffer.lookupTransform("odom_combined", ee_info.second.frame_id, ros::Time(0));
+				geometry_msgs::TransformStamped hoof_tf;
+				hoof_tf = tf_buffer.lookupTransform("odom_combined", ee_info.second.frame_id, ros::Time(0));
 				// get ee position
-				// TODO add hoof height --- introduce hoof frame or access contact description in robot_model
-				tf::vectorMsgToEigen(T.transform.translation, formulation.initial_ee_W_[ee_info.second.towr_index]);
+				KDL::Frame T;
+				tf::transformMsgToKDL(hoof_tf.transform, T);
+				tf::vectorKDLToEigen(T * end_effector_contact_point[ee_info.second.towr_index], formulation.initial_ee_W_[ee_info.second.towr_index]);
 
 				ROS_DEBUG_STREAM("Initial EE '" << ee_info.first << "' (" << ee_info.second.towr_index << ") pose from TF: (" << formulation.initial_ee_W_[ee_info.second.towr_index].transpose() << ")");
 		}
@@ -729,7 +759,6 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 		gait_gen->SetGaits( MakeGaitsCombo(msg.gait_type, msg.n_steps) );
 
 		// load parameters from namespace "~towr_paramters" with step-based timescale
-		// TODO merge towr_model, towr_parameters and ipopt_options namespaces
 		getTowrParametersFromRos(params, towr_parameters_ns + "towr_parameters", msg.duration / gait_gen->GetUnscaledTotalDuration());
 
 		// now construct add phases
@@ -959,6 +988,8 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 		// calculate end effector orientation in world frame
 		Eigen::Quaterniond ee_quat(point.pose.orientation.w, 0.0, 0.0, point.pose.orientation.z); // w, x, y, x
 		ee_quat.normalize();
+		KDL::Rotation ee_R;
+		tf::quaternionEigenToKDL(ee_quat, ee_R);
 
 		for(int ee = 0; ee < n_ee; ee++) {
 			msg.ee_motion[ee].points.emplace_back();
@@ -968,11 +999,11 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 			KDL::Vector p;
 
 			tf::vectorEigenToKDL(lin_state.at(kPos), p);
-			// position
-			p = p + KDL::Vector(0.0, 0.0, 0.03);  // TODO use contact point model! 
+			// position of EE frame
+			p = p - ee_R * end_effector_contact_point[ee];
 			tf::pointKDLToMsg(base_frame.Inverse(p), point.pose.position); // in base_link frame
 			tf::quaternionEigenToMsg(base_quat.conjugate() * ee_quat, point.pose.orientation); // in base_link frame
-			// velocity
+			// velocity of EE frame
 			tf::vectorEigenToKDL(lin_state.at(kVel), point.twist.vel);
 			point.twist.rot = KDL::Vector::Zero();
 			point.twist = base_frame.Inverse(point.twist - msg.base_motion.points[k].twist); // in base_link frame 
