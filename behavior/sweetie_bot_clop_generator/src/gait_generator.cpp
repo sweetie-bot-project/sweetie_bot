@@ -109,20 +109,13 @@ ClopGenerator::ClopGenerator(const std::string& name)
 
 bool ClopGenerator::configure()
 {
-	// get towr and robot_model parameters location
+	// get towr parameters location
 	if (!ros::param::get("~towr_parameters_namespace", towr_parameters_ns)) {
 		towr_parameters_ns = "~";
 	}
 	else {
 		// add trailing '/' if necessary
 		if (towr_parameters_ns.back() != '/' && towr_parameters_ns.back() != '~') towr_parameters_ns.append(1, '/');
-	}
-	if (!ros::param::get("~robot_model_namespace", robot_model_ns)) {
-		robot_model_ns = "motion/robot_model/";
-	}
-	else {
-		// add trailing '/' if necessary
-		if (robot_model_ns.back() != '/' && robot_model_ns.back() != '~') robot_model_ns.append(1, '/');
 	}
 
 	// configure persistent variables
@@ -191,30 +184,6 @@ bool ClopGenerator::configureSolver()
 		return false;
 	};
 	return true;
-}
-
-/*std::vector<Vector3d> getArrayOfVector(const XmlRpcValue& array) {
-	std::vector<Vector3d> points;
-	// OROCOS stores arrays as struct with field names Element1, Element2 and so on
-	for(auto it = array.begin(); it != array.end() it++) {
-		points.emplace_back(it->second["X"], it->second["Y"], it->second["Z"]);
-	}
-	return points;
-}*/
-
-KDL::Vector ClopGenerator::getContactPointFromRobotModel(const std::string& contact) {
-	XmlRpcValue contact_param;
-	if (!ros::param::get(robot_model_ns + "/contacts/" + contact, contact_param)) {
-		throw std::string("Unable to load model for contact " + contact);
-	}
-	try {
-	// OROCOS stores arrays as struct with field names Element1, Element2 and so on
-		XmlRpcValue contact_point = contact_param["points"]["Element0"];
-		return KDL::Vector(contact_point["X"], contact_point["Y"], contact_point["Z"]);
-	}
-	catch (XmlRpc::XmlRpcException& e) {
-		throw std::string("Incorrect model for contact " + contact);
-	};
 }
 
 bool ClopGenerator::configureRobotModel() 
@@ -304,10 +273,12 @@ bool ClopGenerator::configureRobotModel()
 			kinematic_model->configureEndEffector(ee_info.towr_index, nominal_stance_p, bounding_box_p1, bounding_box_p2);
 
 			// Get information about contact
-			XmlRpcValue& contact = leg_param["contact"];
-			if (contact.getType() != XmlRpcValue::TypeString) throw std::string("end effector description must contain 'contact' string");
-			// get contact point
-			end_effector_contact_point[ee_info.towr_index] = getContactPointFromRobotModel(static_cast<std::string>(contact));
+			XmlRpcValue& contact_point = leg_param["contact_point"];
+			if (contact_point.getType() != XmlRpcValue::TypeArray || contact_point.size() != 3 || contact_point[0].getType() != XmlRpcValue::TypeDouble) {
+				throw std::string("end effector description must contain 'contact_point' double[3]");
+			}
+			// get contact point coordinates
+			end_effector_contact_point[ee_info.towr_index] = KDL::Vector(contact_point[0], contact_point[1], contact_point[2]);
 			
 			ROS_INFO_STREAM("GeneralKinematicModel: " << ee_it->first << " (" << ee_info.frame_id << ", EE " << ee_info.towr_index << "): nominal_stance (" << nominal_stance_p.transpose() << 
 					"), bounding_box (" << bounding_box_p1.transpose() << ", " << bounding_box_p2.transpose() << ")");

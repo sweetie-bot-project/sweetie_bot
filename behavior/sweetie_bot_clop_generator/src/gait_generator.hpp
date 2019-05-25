@@ -52,7 +52,6 @@ class ClopGenerator
 		double period;
 		double contact_height_tolerance; /**< Is used during contact detection and initial pose check [m] */
 		std::string towr_parameters_ns;
-		std::string robot_model_ns;;
 
 		// BUFFERS
 

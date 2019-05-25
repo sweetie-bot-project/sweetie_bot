@@ -10,25 +10,25 @@ clop_generator:
             frame_id: "bone15"
             nominal_stance: [ 0.08, 0.038, -0.1675 ]
             bounding_box: [ 0.05, 0.025, -0.2075, 0.145, 0.08, -0.1575 ]
-            contact: "hoof_flat"
+            contact_point: [ 0.0, 0.0, -0.03 ]
         RF:
             name: "leg2"
             frame_id: "bone25"
             nominal_stance: [ 0.08, -0.038, -0.1675 ]
             bounding_box: [ 0.05, -0.025, -0.2075, 0.145, -0.08, -0.1575 ]
-            contact: "hoof_flat"
+            contact_point: [ 0.0, 0.0, -0.03 ]
         LH:
             name: "leg3"
             frame_id: "bone35"
             nominal_stance: [ -0.08, 0.038, -0.1675 ]
             bounding_box: [ -0.05, 0.025, -0.2075, -0.145, 0.08, -0.1575 ]
-            contact: "hoof_flat"
+            contact_point: [ 0.0, 0.0, -0.03 ]
         RH: 
             name: "leg4"
             frame_id: "bone45"
             nominal_stance: [ -0.08, -0.038, -0.1675 ]
             bounding_box: [ -0.05, -0.025, -0.2075, -0.145, -0.08, -0.1575 ]
-            contact: "hoof_flat"
+            contact_point: [ 0.0, 0.0, -0.03 ]
     towr_parameters: # see towr::Parameteres for desciption, are updated move request
         scale_per_step: false
         #duration_base_polynomial: 0.25
