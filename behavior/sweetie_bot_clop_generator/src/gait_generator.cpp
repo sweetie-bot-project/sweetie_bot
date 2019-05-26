@@ -5,6 +5,7 @@
 
 #include <towr/models/endeffector_mappings.h>
 #include <towr/models/single_rigid_body_dynamics.h>
+#include <towr/models/general_kinematic_model.h>
 #include <towr/initialization/quadruped_gait_generator.h>
 #include <towr/terrain/height_map.h>
 
@@ -13,7 +14,6 @@
 #include <tf_conversions/tf_kdl.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-#include "general_kinematic_model.h"
 #include "towr_trajectory_visualizer.hpp"
 #include "rigid_body_inertia_calculator.hpp"
 
@@ -31,6 +31,11 @@ std::ostream& operator<<(std::ostream& out, const std::vector<unsigned int>& v) 
 	return out;
 }
 
+std::ostream& operator<<(std::ostream& out, const Eigen::AlignedBox3d& box) {
+	out << box.min().transpose() << " - " << box.max().transpose();
+	return out;
+}
+
 namespace sweetie_bot {
 
 static void DebugPrintFormulation(const NlpFormulation& formulation)
@@ -38,11 +43,11 @@ static void DebugPrintFormulation(const NlpFormulation& formulation)
 	int n_ee = formulation.model_.kinematic_model_->GetNumberOfEndeffectors();
 
 	ROS_INFO_STREAM("KINEMATIC_MODEL");
-	auto nominal_stance_B = formulation.model_.kinematic_model_->GetNominalStanceInBase();
 	for(int ee = 0; ee < n_ee; ee++) {
-		ROS_INFO_STREAM("EE (" << ee << ") nominal_pose = (" << nominal_stance_B[ee].transpose() << ")");
+		auto nominal_stance_B = formulation.model_.kinematic_model_->GetNominalStanceInBase(ee);
+		ROS_INFO_STREAM("EE (" << ee << ") nominal_pose = (" << nominal_stance_B.transpose() << ")");
+		ROS_INFO_STREAM("EE (" << ee << ") bounding_box = (" << formulation.model_.kinematic_model_->GetBoundingBox(ee) << ")");
 	}
-	ROS_INFO_STREAM("EE max_deviation_from_nomianl = (" << formulation.model_.kinematic_model_->GetMaximumDeviationFromNominal().transpose() << ")");
 
 	ROS_INFO_STREAM("DYNAMIC_MODEL");
 	ROS_INFO_STREAM("mass = " << formulation.model_.dynamic_model_->m() << " g = " << formulation.model_.dynamic_model_->g() << " n_ee = " << formulation.model_.dynamic_model_->GetEECount());
@@ -267,10 +272,14 @@ bool ClopGenerator::configureRobotModel()
 			if (bounding_box.getType() != XmlRpcValue::TypeArray || bounding_box.size() != 6 || bounding_box[0].getType() != XmlRpcValue::TypeDouble) {
 				throw std::string("end effector description must contain 'bounding_box' double[6]");
 			}
-			towr::KinematicModel::Vector3d bounding_box_p1(bounding_box[0], bounding_box[1], bounding_box[2]);
-			towr::KinematicModel::Vector3d bounding_box_p2(bounding_box[3], bounding_box[4], bounding_box[5]);
+			Eigen::Vector3d bounding_box_p1(bounding_box[0], bounding_box[1], bounding_box[2]);
+			Eigen::Vector3d bounding_box_p2(bounding_box[3], bounding_box[4], bounding_box[5]);
+			// get bounding sphere
+			Eigen::Vector3d center;
+			center.setZero();
+			double radius = std::numeric_limits<double>::infinity();
 			// configure end effector
-			kinematic_model->configureEndEffector(ee_info.towr_index, nominal_stance_p, bounding_box_p1, bounding_box_p2);
+			kinematic_model->configureEndEffector(ee_info.towr_index, nominal_stance_p, Eigen::AlignedBox3d(bounding_box_p1, bounding_box_p2), towr::Sphere3d(center, radius) );
 
 			// Get information about contact
 			XmlRpcValue& contact_point = leg_param["contact_point"];
@@ -321,8 +330,11 @@ bool ClopGenerator::configureRobotModel()
 
 void ClopGenerator::setInitialStateFromNominal(double ground_z)
 {
+	int n_ee = end_effector_index.size();
 	// get nominal pose in base
-    formulation.initial_ee_W_ =  formulation.model_.kinematic_model_->GetNominalStanceInBase();
+	formulation.initial_ee_W_.resize(n_ee);
+	for(int ee = 0; ee < n_ee; ee++) formulation.initial_ee_W_[ee] =  formulation.model_.kinematic_model_->GetNominalStanceInBase(ee);
+	// get base heigh
 	double base_height = - formulation.initial_ee_W_.front().z();
 	// set base posiition
     formulation.initial_base_.lin.at(kPos).setZero();
@@ -397,16 +409,13 @@ bool ClopGenerator::checkEERangeConditions(const towr::BaseState& base_pose, con
 	KDL::Rotation rot_kdl( KDL::Rotation::RPY(rpy.x(), rpy.y(), rpy.z()) );
 	Eigen::Map< Eigen::Matrix<double,3,3,Eigen::RowMajor> > R(rot_kdl.data);
 	Vector3d p = base_pose.lin.at(kPos);
-	// get bounding box
-	auto nominal_stance_B = formulation.model_.kinematic_model_->GetNominalStanceInBase();
-	auto max_dev_from_nominal_B = formulation.model_.kinematic_model_->GetMaximumDeviationFromNominal();
-	// check bounding box and terrain conditions
+	// check bounding box
 	for(int i = 0; i < ee_pose.size(); i++) {
 		const Vector3d& ee_pos_W = ee_pose[i];
 		Vector3d ee_pos_B = R.transpose() * (ee_pos_W - p);
 
-		if ( (Eigen::abs((ee_pos_B - nominal_stance_B[i]).array()) > max_dev_from_nominal_B.array()).any() ) { 
-			ROS_ERROR_STREAM("Check pose: EE " << i << " deviation from bounding box center : (" << (ee_pos_B - nominal_stance_B[i]).transpose() << ")");
+		if ( ! formulation.model_.kinematic_model_->GetBoundingBox(i).contains(ee_pos_B) ) { 
+			ROS_ERROR_STREAM("Check pose: EE " << i << " (" << ee_pos_B.transpose() <<  ") outside bounding box (" << formulation.model_.kinematic_model_->GetBoundingBox(i) << ")");
 			return false;
 		}
 	}
@@ -480,7 +489,7 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 	formulation.final_ee_W_.clear();
 	for(int ee = 0; ee < n_ee; ee++) {
 		KDL::Vector ee_nominal_pos_B;
-		tf::vectorEigenToKDL(formulation.model_.kinematic_model_->GetNominalStanceInBase().at(ee), ee_nominal_pos_B);
+		tf::vectorEigenToKDL(formulation.model_.kinematic_model_->GetNominalStanceInBase(ee), ee_nominal_pos_B);
 		formulation.final_ee_W_.emplace_back();
 		tf::vectorKDLToEigen(final_pose * ee_nominal_pos_B, formulation.final_ee_W_.back());
 	}
@@ -1001,4 +1010,3 @@ int main(int argc, char **argv)
 
 	return 0;
 }
-

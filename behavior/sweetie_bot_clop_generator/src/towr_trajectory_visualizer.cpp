@@ -50,13 +50,12 @@ xpp_msgs::RobotStateCartesianTrajectory TowrSolutionVisualizer::GetRobotCartesia
 xpp_msgs::RobotParameters TowrSolutionVisualizer::GetRobotParametersMsg(const towr::RobotModel& model) const
 {
 	xpp_msgs::RobotParameters params_msg;
-	auto max_dev_xyz = model.kinematic_model_->GetMaximumDeviationFromNominal();
+	auto max_dev_xyz = Eigen::Vector3d::Zero();
 	params_msg.ee_max_dev = xpp::Convert::ToRos<geometry_msgs::Vector3>(max_dev_xyz);
 
-	auto nominal_B = model.kinematic_model_->GetNominalStanceInBase();
-	int n_ee = nominal_B.size();
+	int n_ee = model.kinematic_model_->GetNumberOfEndeffectors();
 	for (int ee_towr=0; ee_towr<n_ee; ++ee_towr) {
-		towr::KinematicModel::Vector3d pos = nominal_B.at(ee_towr);
+		towr::KinematicModel::Vector3d pos = model.kinematic_model_->GetNominalStanceInBase(ee_towr);
 		params_msg.nominal_ee_pos.push_back(xpp::Convert::ToRos<geometry_msgs::Point>(pos));
 		params_msg.ee_names.push_back(towr::ToXppEndeffector(n_ee, ee_towr).second);
 	}
