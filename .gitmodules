@@ -6,10 +6,6 @@
 	path = rt_control
 	url = ../sweetie_bot_rt_control.git
 	branch = master
-[submodule "config/sweetie_bot_proto3_description"]
-	path = config/sweetie_bot_proto3_description
-	url = ../sweetie_bot_proto3_description.git
-	branch = master
 [submodule "inc/towr"]
 	path = inc/towr
 	url = https://github.com/sweetie-bot-project/towr
