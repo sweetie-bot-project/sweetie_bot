@@ -3,6 +3,9 @@ Sweetie Bot software repository
 
 This repository contains software framework for the [Sweetie Bot robot](http://sweetie.bot).
 
+**Note:** We are hosting all our code on [gitlab.com](https://gitlab.com/sweetie-bot/). We also have a [github mirror](https://github.com/sweetie-bot-project/), but we do not accept pull requests there, plese use [primary source](https://gitlab.com/sweetie-bot/sweetie_bot).
+Also see [`CONTRIBUTING`](CONTRIBUTING.md) page for details.
+
 ![](doc/figures/control-system.png)
 
 Build status               | master branch  |
