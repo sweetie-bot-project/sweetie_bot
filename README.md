@@ -104,9 +104,9 @@ Install `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_fl
 ```
 $ mkdir -p ~/ros/sweetie_bot/src
 $ cd ~/ros/sweetie_bot/src
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
+$ git clone https://gitlab.com/sweetie-bot/sweetie_bot_sounds
+$ git clone https://gitlab.com/sweetie-bot/sweetie_bot_proto2_movements
+$ git clone https://gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors
 ```
 Build workspace
 ```
