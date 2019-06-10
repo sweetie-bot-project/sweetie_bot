@@ -971,7 +971,7 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 	for(int k = 0; k < n_samples; k++) {
 		double t = std::min(period * k, t_total);
 		// assign time vector
-		msg.time_from_start.push_back(t);
+		msg.time_from_start.push_back(period * k);
 
 		// BASE_LINK state
 		msg.base_motion.points.emplace_back();
