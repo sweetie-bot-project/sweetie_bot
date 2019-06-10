@@ -49,9 +49,11 @@ class ClopGenerator
 		std::unique_ptr< actionlib::SimpleActionServer<MoveBaseAction> > move_base_as;
 
 		// PARAMETERS
-		double period;
+		double period;  /**< ExecuteStepSequenceGoal period parameter. Must be compatible with period of ExecuteStepSequence controller. */
 		double contact_height_tolerance; /**< Is used during contact detection and initial pose check [m] */
-		std::string towr_parameters_ns;
+		std::string towr_parameters_ns; /**< Namespace where gait generator parameters tree is located. */
+		std::string world_frame; /**< Unmoving coordinate frame respect to which base movements are is published */
+		std::string planning_frame; /**< Planning frame in which trajectory planning is performed. */
 
 		// BUFFERS
 
@@ -59,13 +61,14 @@ class ClopGenerator
 		std::string base_frame_id;
 		std::map<std::string, EndEffectorInfo> end_effector_index;
 		std::vector<KDL::Vector> end_effector_contact_point;
+
 		towr::NlpFormulation formulation;
 		ifopt::IpoptSolver::Ptr solver;
 		ifopt::Problem nlp;
 		towr::SplineHolder solution;
 
 	protected:
-		void storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& msg);
+		void storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& msg, const KDL::Frame& wTp);
 
 	public:
 		ClopGenerator(const std::string& name);

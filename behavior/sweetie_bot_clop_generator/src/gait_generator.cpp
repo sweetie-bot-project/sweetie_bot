@@ -136,6 +136,12 @@ bool ClopGenerator::configure()
 	if (!ros::param::get(towr_parameters_ns + "contact_height_tolerance", contact_height_tolerance)) {
 		contact_height_tolerance = 0.005;
 	}
+	if (!ros::param::get(towr_parameters_ns + "world_frame", world_frame)) {
+		world_frame = "odom_combined";
+	}
+	if (!ros::param::get(towr_parameters_ns + "planning_frame", planning_frame)) {
+		planning_frame = "base_link_path";
+	}
 
 	// init this->solver
 	if (!configureSolver()) {
@@ -376,7 +382,7 @@ bool ClopGenerator::setInitialStateFromTF()
 			geometry_msgs::TransformStamped T;
 			Vector3d tmp;
 
-			T = tf_buffer.lookupTransform("odom_combined", base_frame_id, ros::Time(0));
+			T = tf_buffer.lookupTransform(planning_frame, base_frame_id, ros::Time(0));
 			// set position 
 			tf::vectorMsgToEigen(T.transform.translation, tmp);
 			formulation.initial_base_.lin.at(kPos) = tmp;
@@ -403,7 +409,7 @@ bool ClopGenerator::setInitialStateFromTF()
 		for(const auto& ee_info : end_effector_index) {
 				// get transform
 				geometry_msgs::TransformStamped hoof_tf;
-				hoof_tf = tf_buffer.lookupTransform("odom_combined", ee_info.second.frame_id, ros::Time(0));
+				hoof_tf = tf_buffer.lookupTransform(planning_frame, ee_info.second.frame_id, ros::Time(0));
 				// get ee position
 				KDL::Frame T;
 				tf::transformMsgToKDL(hoof_tf.transform, T);
@@ -465,7 +471,7 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 		goal_pose_origin.header = msg.header;
 
 		geometry_msgs::TransformStamped T;
-		T = tf_buffer.lookupTransform("odom_combined", msg.header.frame_id, ros::Time(0));
+		T = tf_buffer.lookupTransform(planning_frame, msg.header.frame_id, ros::Time(0));
 		tf2::doTransform(goal_pose_origin, goal_pose, T);
 	}
 
@@ -846,6 +852,12 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 {
 	ROS_INFO("New MoveBase goal received");
 
+	// setup planning frame
+	KDL::Frame wTp; // transform between planning and world frame
+	geometry_msgs::TransformStamped wTFp;
+	wTFp = tf_buffer.lookupTransform(world_frame, planning_frame, ros::Time(0));
+	tf::transformMsgToKDL(wTFp.transform, wTp);
+
 	// process goal message
 	try {
 		// initial pose 
@@ -903,11 +915,11 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 	// construct FollowStepSequenceGoal message
 	FollowStepSequenceGoal steps_msg;
 	steps_msg.header.stamp = ros::Time::now();
-	steps_msg.header.frame_id = "odom_combined";
+	steps_msg.header.frame_id = world_frame;
 	steps_msg.append = false;
 	steps_msg.position_tolerance = msg->position_tolerance;
 	steps_msg.orientation_tolerance = msg->orientation_tolerance;
-	storeSolutionInStepSequenceGoalMsg(steps_msg);
+	storeSolutionInStepSequenceGoalMsg(steps_msg, wTp);
 	ROS_DEBUG_STREAM("FollowStepSequenceGoal message" << std::endl << steps_msg);
 	// check if action server is available
 	if (!execute_step_sequence_ac->isServerConnected()) {
@@ -934,7 +946,7 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 	}
 };
 
-void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& msg)
+void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& msg, const KDL::Frame& wTp)
 {
 	int n_ee = end_effector_index.size();
 	double t_total = solution.base_linear_->GetTotalTime();
@@ -968,13 +980,11 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 		// linear position, velocity and acceleration
 		towr::State lin_state =	solution.base_linear_->GetPoint(t);
 		tf::vectorEigenToKDL(lin_state.at(kPos), base_frame.p);
-		tf::pointKDLToMsg(base_frame.p, point.pose.position);
 		tf::vectorEigenToKDL(lin_state.at(kVel), point.twist.vel);
 		tf::vectorEigenToKDL(lin_state.at(kAcc), point.accel.vel);
 		// angular position, velocity and acceleration
 		Eigen::Quaterniond base_quat = base_angular.GetQuaternionBaseToWorld(t);
 		tf::quaternionEigenToKDL(base_quat, base_frame.M);
-		tf::quaternionEigenToMsg(base_quat, point.pose.orientation);
 		tf::vectorEigenToKDL(base_angular.GetAngularVelocityInWorld(t), point.twist.rot);
 		tf::vectorEigenToKDL(base_angular.GetAngularAccelerationInWorld(t), point.accel.rot);
 		// now point contain pose twist, change reference point to produce screw twists
@@ -987,8 +997,8 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 		// we assume that end effector has no angular speed and have the same orientation as base_link in XY world plane.
 		// TODO end effector should be oriented along terrain normal?
 	
-		// calculate end effector orientation in world frame
-		Eigen::Quaterniond ee_quat(point.pose.orientation.w, 0.0, 0.0, point.pose.orientation.z); // w, x, y, x
+		// calculate end effector orientation planning frame
+		Eigen::Quaterniond ee_quat(base_quat.w(), 0.0, 0.0, base_quat.z()); // w, x, y, x
 		ee_quat.normalize();
 		KDL::Rotation ee_R;
 		tf::quaternionEigenToKDL(ee_quat, ee_R);
@@ -1016,6 +1026,12 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 			// contact
 			point.contact = solution.phase_durations_.at(ee)->IsContactPhase(t);
 		}
+
+		// convert base_link pose from planning frame to world frame
+		base_frame = wTp * base_frame;	
+		tf::poseKDLToMsg(base_frame, point.pose);
+		point.twist = wTp * point.twist;
+		point.accel = wTp * point.accel;
 	}
 }
 
