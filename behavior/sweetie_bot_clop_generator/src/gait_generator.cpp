@@ -32,7 +32,12 @@ std::ostream& operator<<(std::ostream& out, const std::vector<unsigned int>& v) 
 }
 
 std::ostream& operator<<(std::ostream& out, const Eigen::AlignedBox3d& box) {
-	out << box.min().transpose() << " - " << box.max().transpose();
+	out << "min: (" << box.min().transpose() << "), max: (" << box.max().transpose() << ")";
+	return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const towr::Sphere3d& sphere) {
+	out << "center: (" << sphere.center().transpose() << "), r: " << sphere.radius();
 	return out;
 }
 
@@ -47,6 +52,7 @@ static void DebugPrintFormulation(const NlpFormulation& formulation)
 		auto nominal_stance_B = formulation.model_.kinematic_model_->GetNominalStanceInBase(ee);
 		ROS_INFO_STREAM("EE (" << ee << ") nominal_pose = (" << nominal_stance_B.transpose() << ")");
 		ROS_INFO_STREAM("EE (" << ee << ") bounding_box = (" << formulation.model_.kinematic_model_->GetBoundingBox(ee) << ")");
+		ROS_INFO_STREAM("EE (" << ee << ") bounding_sphere = (" << formulation.model_.kinematic_model_->GetBoundingSphere(ee) << ")");
 	}
 
 	ROS_INFO_STREAM("DYNAMIC_MODEL");
@@ -245,17 +251,17 @@ bool ClopGenerator::configureRobotModel()
 		// process end effectors
 		for(auto ee_it = end_effector_mapper.begin(); ee_it != end_effector_mapper.end(); ee_it++) {
 			XmlRpcValue& leg_param = towr_model[ee_it->first];
-			if (leg_param.getType() != XmlRpcValue::TypeStruct) throw std::string("'towr_model' parameter must contain '" + ee_it->first + "' subtree");
+			if (leg_param.getType() != XmlRpcValue::TypeStruct) throw std::string(ee_it->first + ": 'towr_model' parameter must contain '" + ee_it->first + "' subtree");
 
 			// Setup end effector index
 			EndEffectorInfo ee_info;
 			ee_info.towr_index = ee_it->second;
 			// get name
 			XmlRpcValue& name = leg_param["name"];
-			if (name.getType() != XmlRpcValue::TypeString) throw std::string("end effector description must contain 'name' string");
+			if (name.getType() != XmlRpcValue::TypeString) throw std::string(ee_it->first + ": end effector description must contain 'name' string");
 			// get frame
 			XmlRpcValue& frame_id = leg_param["frame_id"];
-			if (frame_id.getType() != XmlRpcValue::TypeString) throw std::string("end effector description must contain 'frame_id' string");
+			if (frame_id.getType() != XmlRpcValue::TypeString) throw std::string(ee_it->first + " end effector description must contain 'frame_id' string");
 			ee_info.frame_id = static_cast<std::string>(frame_id);
 			// add end effctor to index
 			end_effector_index[name] = ee_info;
@@ -264,39 +270,49 @@ bool ClopGenerator::configureRobotModel()
 			// get nominal_stance
 			XmlRpcValue& nominal_stance = leg_param["nominal_stance"];
 			if (nominal_stance.getType() != XmlRpcValue::TypeArray || nominal_stance.size() != 3 || nominal_stance[0].getType() != XmlRpcValue::TypeDouble) {
-				throw std::string("end effector description must contain 'nominal_stance' double[3]");
+				throw std::string(ee_it->first + " end effector description must contain 'nominal_stance' double[3]");
 			}
 			towr::KinematicModel::Vector3d nominal_stance_p(nominal_stance[0], nominal_stance[1], nominal_stance[2]);
 			//get bounding box
 			XmlRpcValue& bounding_box = leg_param["bounding_box"];
 			if (bounding_box.getType() != XmlRpcValue::TypeArray || bounding_box.size() != 6 || bounding_box[0].getType() != XmlRpcValue::TypeDouble) {
-				throw std::string("end effector description must contain 'bounding_box' double[6]");
+				throw std::string(ee_it->first + " end effector description must contain 'bounding_box' double[6]");
 			}
 			Eigen::Vector3d bounding_box_p1(bounding_box[0], bounding_box[1], bounding_box[2]);
 			Eigen::Vector3d bounding_box_p2(bounding_box[3], bounding_box[4], bounding_box[5]);
+			if (Eigen::AlignedBox3d(bounding_box_p1, bounding_box_p2).isEmpty()) {
+				throw std::string(ee_it->first + " end effector bounding box is empty");
+			}
 			// get bounding sphere
-			Eigen::Vector3d center;
-			center.setZero();
-			double radius = std::numeric_limits<double>::infinity();
+			XmlRpcValue& bounding_sphere = leg_param["bounding_sphere"];
+			if (bounding_sphere.getType() != XmlRpcValue::TypeArray || bounding_sphere.size() != 4 || bounding_sphere[0].getType() != XmlRpcValue::TypeDouble) {
+				throw std::string(ee_it->first + " end effector description must contain 'bounding_sphere' double[4]");
+			}
+			Eigen::Vector3d center(bounding_sphere[0], bounding_sphere[1], bounding_sphere[2]);
+			double radius = bounding_sphere[3];
 			// configure end effector
 			kinematic_model->configureEndEffector(ee_info.towr_index, nominal_stance_p, Eigen::AlignedBox3d(bounding_box_p1, bounding_box_p2), towr::Sphere3d(center, radius) );
 
 			// Get information about contact
 			XmlRpcValue& contact_point = leg_param["contact_point"];
 			if (contact_point.getType() != XmlRpcValue::TypeArray || contact_point.size() != 3 || contact_point[0].getType() != XmlRpcValue::TypeDouble) {
-				throw std::string("end effector description must contain 'contact_point' double[3]");
+				throw std::string(ee_it->first + " end effector description must contain 'contact_point' double[3]");
 			}
 			// get contact point coordinates
 			end_effector_contact_point[ee_info.towr_index] = KDL::Vector(contact_point[0], contact_point[1], contact_point[2]);
 			
 			ROS_INFO_STREAM("GeneralKinematicModel: " << ee_it->first << " (" << ee_info.frame_id << ", EE " << ee_info.towr_index << "): nominal_stance (" << nominal_stance_p.transpose() << 
-					"), bounding_box (" << bounding_box_p1.transpose() << ", " << bounding_box_p2.transpose() << ")");
+					"), bounding_box (" << Eigen::AlignedBox3d(bounding_box_p1, bounding_box_p2) << "), bounding_sphere (" << towr::Sphere3d(center, radius) << ")" );
 		}
 		// this is impossible!
 		if (!kinematic_model->isConfigured()) throw std::string("not all end effectors present");
 	}
 	catch (std::string& e) {
 		ROS_ERROR_STREAM("'towr_model' parameter parse error: " << e);
+		return false;
+	}
+	catch (std::invalid_argument& e) {
+		ROS_ERROR_STREAM("'towr_model' parameter parse error: " << e.what());
 		return false;
 	}
 	catch (XmlRpc::XmlRpcException& e) {
@@ -416,6 +432,10 @@ bool ClopGenerator::checkEERangeConditions(const towr::BaseState& base_pose, con
 
 		if ( ! formulation.model_.kinematic_model_->GetBoundingBox(i).contains(ee_pos_B) ) { 
 			ROS_ERROR_STREAM("Check pose: EE " << i << " (" << ee_pos_B.transpose() <<  ") outside bounding box (" << formulation.model_.kinematic_model_->GetBoundingBox(i) << ")");
+			return false;
+		}
+		if ( ! formulation.model_.kinematic_model_->GetBoundingSphere(i).contains(ee_pos_B) ) { 
+			ROS_ERROR_STREAM("Check pose: EE " << i << " (" << ee_pos_B.transpose() <<  ") outside bounding box (" << formulation.model_.kinematic_model_->GetBoundingSphere(i) << ")");
 			return false;
 		}
 	}
@@ -782,6 +802,7 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 	}
 
 	// Additional settings
+	
 	// set final EE velocity to zero
 	// TODO modify towr to divide actual parameter and final pose specification
 	// TODO now simply copy bounds from formulation.params_ to params
@@ -866,6 +887,7 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 	}
 
 	// check if solution is valid
+	// TODO check if solution is valid if time exceeded.
 	if (!success) {
 		abortGoal("nlp optimization", MoveBaseResult::SOLUTION_NOT_FOUND, "Ipopt exit status: " + std::to_string(solver->GetIpoptExitStatus()));
 		return;
