@@ -49,13 +49,12 @@ log $EXIT_APP app.log "roslaunch sweetie_bot_deploy flexbe_control.launch run_fl
 
 EXIT="$(( $EXIT_APP + $EXIT_CORE + $EXIT_VIRT_DISPLAY ))"
 if [[ "$EXIT" > 0 ]]; then
-	exit "$EXIT"
+    exit "$EXIT"
 fi
 
-convert screenshot.png -crop 1011x887+607+87 +repage cropped_screenshot.png
+convert screenshot.png -crop 214x298+825+219 +repage cropped_screenshot.png
 ERROR=$( compare -metric MSE reference.png cropped_screenshot.png diff.png 2>&1 | cut -f1 -d' ' | cut -f1 -d. )
 echo "Image comparison score: $ERROR"
-if (( "$ERROR" > 160 )); then # original value was 60
-	:
-	#exit 4
+if (( "$ERROR" > 400 )); then
+    exit 4
 fi
