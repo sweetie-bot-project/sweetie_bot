@@ -16,6 +16,7 @@
 
 #include "towr_trajectory_visualizer.hpp"
 #include "rigid_body_inertia_calculator.hpp"
+#include "general_kinematic_model_non_com.h"
 
 using XmlRpc::XmlRpcValue;
 using XmlRpc::XmlRpcException;
@@ -42,6 +43,14 @@ std::ostream& operator<<(std::ostream& out, const towr::Sphere3d& sphere) {
 }
 
 namespace sweetie_bot {
+
+inline Eigen::Vector3d KDLToEigen(const KDL::Vector& v) {
+	return Eigen::Vector3d(v.x(), v.y(), v.z());
+}
+
+inline KDL::Vector EigenToKDL(const Eigen::Vector3d& v) {
+	return KDL::Vector(v.x(), v.y(), v.z());
+}
 
 static void DebugPrintFormulation(const NlpFormulation& formulation)
 {
@@ -147,7 +156,7 @@ bool ClopGenerator::configure()
 	if (!configureSolver()) {
 		return false;
 	}
-	// init this->formulation.robot_model_
+	// init this->formulation.model_
 	if (!configureRobotModel()) {
 		return false;
 	}
@@ -214,7 +223,7 @@ bool ClopGenerator::configureRobotModel()
 	this->formulation.model_.kinematic_model_.reset();		
 	this->formulation.model_.dynamic_model_.reset();		
 
-	std::shared_ptr<towr::GeneralKinematicModel> kinematic_model( new towr::GeneralKinematicModel(4) );
+	this->kinematic_model = std::make_shared<towr::GeneralKinematicModelNonCoM>(4);
 
 	// get urdf model
 	std::string urdf_model;
@@ -337,6 +346,9 @@ bool ClopGenerator::configureRobotModel()
 		
 		std::shared_ptr<towr::SingleRigidBodyDynamics> dynamic_model( new towr::SingleRigidBodyDynamics(I.getMass(), Ir , end_effector_index.size()) );
 		ROS_INFO_STREAM("SingleRigidBodyDynamics: mass = " << I.getMass() << " CoM = (" << Eigen::Map<Eigen::Vector3d>(I.getCOG().data).transpose() << "), I = " << std::endl << Ir);
+
+		// set CoM position
+		kinematic_model->SetCoM(cog);
 		
 		// save models
 		this->formulation.model_.kinematic_model_ = kinematic_model;
@@ -352,15 +364,15 @@ bool ClopGenerator::configureRobotModel()
 
 void ClopGenerator::setInitialStateFromNominal(double ground_z)
 {
+	Vector3d com = kinematic_model->GetCoM();
 	int n_ee = end_effector_index.size();
 	// get nominal pose in base
 	formulation.initial_ee_W_.resize(n_ee);
-	for(int ee = 0; ee < n_ee; ee++) formulation.initial_ee_W_[ee] =  formulation.model_.kinematic_model_->GetNominalStanceInBase(ee);
+	for(int ee = 0; ee < n_ee; ee++) formulation.initial_ee_W_[ee] =  formulation.model_.kinematic_model_->GetNominalStanceInBase(ee) + com;
 	// get base heigh
 	double base_height = - formulation.initial_ee_W_.front().z();
 	// set base posiition
-    formulation.initial_base_.lin.at(kPos).setZero();
-    formulation.initial_base_.lin.at(kPos).z() = base_height + ground_z;
+    formulation.initial_base_.lin.at(kPos) = Eigen::Vector3d(0.0f, 0.0f, base_height + ground_z) + com;
     formulation.initial_base_.ang.at(kPos).setZero();
 	// set base velocity
 	formulation.initial_base_.lin.at(kVel).setZero();
@@ -379,13 +391,11 @@ bool ClopGenerator::setInitialStateFromTF()
 	//try {
 		// get base position
 		{
+			Vector3d com = kinematic_model->GetCoM();
 			geometry_msgs::TransformStamped T;
 			Vector3d tmp;
 
 			T = tf_buffer.lookupTransform(planning_frame, base_frame_id, ros::Time(0));
-			// set position 
-			tf::vectorMsgToEigen(T.transform.translation, tmp);
-			formulation.initial_base_.lin.at(kPos) = tmp;
 			// set orientation
 			KDL::Rotation rot;
 			tf::quaternionMsgToKDL(T.transform.rotation, rot);
@@ -397,6 +407,10 @@ bool ClopGenerator::setInitialStateFromTF()
 		    tf::quaternionMsgToTF(msg, quat);
 			tf::Matrix3x3(quat).getRPY(tmp.x(), tmp.y(), tmp.z()); */
 			formulation.initial_base_.ang.at(towr::kPos) = tmp;
+			// set position 
+			tf::vectorMsgToEigen(T.transform.translation, tmp);
+			Eigen::Map< Eigen::Matrix<double,3,3,Eigen::RowMajor> > rot_eigen(rot.data);
+			formulation.initial_base_.lin.at(kPos) = tmp + rot_eigen * com;
 			// set velocities to zero
 			formulation.initial_base_.lin.at(towr::kVel).setZero();
 			formulation.initial_base_.ang.at(towr::kVel).setZero();
@@ -477,20 +491,22 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 
 	Eigen::Vector3d tmp;
 	KDL::Frame initial_pose, final_pose;
+	KDL::Vector com = EigenToKDL( kinematic_model->GetCoM() );
 
 	// get initial base pose
 	tf::vectorEigenToKDL(formulation.initial_base_.lin.at(kPos), initial_pose.p);
 	tmp = formulation.initial_base_.ang.at(kPos);
 	initial_pose.M = KDL::Rotation::RPY(tmp.x(), tmp.y(), tmp.z());
+	initial_pose.p -= initial_pose.M * com;
 
-	// set final position
-	tf::pointMsgToEigen(goal_pose.pose.position, tmp);
-	formulation.final_base_.lin.at(kPos) = tmp;
-	tf::vectorEigenToKDL(tmp, final_pose.p);
 	// set final orientation
 	tf::quaternionMsgToKDL(goal_pose.pose.orientation, final_pose.M);
 	final_pose.M.GetRPY(tmp.x(), tmp.y(), tmp.z());
 	formulation.final_base_.ang.at(kPos) = tmp;
+	// set final position
+	tf::pointMsgToEigen(goal_pose.pose.position, tmp);
+	formulation.final_base_.lin.at(kPos) = tmp + KDLToEigen(final_pose.M * com);
+	tf::vectorEigenToKDL(tmp, final_pose.p);
 	// set speed to zero
 	formulation.final_base_.lin.at(kVel).setZero();
 	formulation.final_base_.ang.at(kVel).setZero();
@@ -516,6 +532,7 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 	for(int ee = 0; ee < n_ee; ee++) {
 		KDL::Vector ee_nominal_pos_B;
 		tf::vectorEigenToKDL(formulation.model_.kinematic_model_->GetNominalStanceInBase(ee), ee_nominal_pos_B);
+		ee_nominal_pos_B += com;
 		formulation.final_ee_W_.emplace_back();
 		tf::vectorKDLToEigen(final_pose * ee_nominal_pos_B, formulation.final_ee_W_.back());
 	}
@@ -952,6 +969,7 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 	double t_total = solution.base_linear_->GetTotalTime();
 	int n_samples = std::ceil(t_total / period) + 1; // we need addition point to include t_total
 	towr::EulerConverter base_angular(solution.base_angular_);
+	KDL::Vector com = EigenToKDL( kinematic_model->GetCoM() );
 
 	// clear buffers, allocate memory 
 	msg.time_from_start.clear(); 
@@ -977,16 +995,18 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 		msg.base_motion.points.emplace_back();
 		sweetie_bot_control_msgs::RigidBodyTrajectoryPoint& point = msg.base_motion.points.back();
 		KDL::Frame base_frame;
-		// linear position, velocity and acceleration
-		towr::State lin_state =	solution.base_linear_->GetPoint(t);
-		tf::vectorEigenToKDL(lin_state.at(kPos), base_frame.p);
-		tf::vectorEigenToKDL(lin_state.at(kVel), point.twist.vel);
-		tf::vectorEigenToKDL(lin_state.at(kAcc), point.accel.vel);
 		// angular position, velocity and acceleration
 		Eigen::Quaterniond base_quat = base_angular.GetQuaternionBaseToWorld(t);
 		tf::quaternionEigenToKDL(base_quat, base_frame.M);
 		tf::vectorEigenToKDL(base_angular.GetAngularVelocityInWorld(t), point.twist.rot);
 		tf::vectorEigenToKDL(base_angular.GetAngularAccelerationInWorld(t), point.accel.rot);
+		// linear position, velocity and acceleration
+		towr::State lin_state =	solution.base_linear_->GetPoint(t);
+		tf::vectorEigenToKDL(lin_state.at(kPos), base_frame.p);
+		tf::vectorEigenToKDL(lin_state.at(kVel), point.twist.vel);
+		tf::vectorEigenToKDL(lin_state.at(kAcc), point.accel.vel);
+		// return to base frame from CoM frame
+		base_frame.p -= base_frame.M * com;
 		// now point contain pose twist, change reference point to produce screw twists
 		point.twist = point.twist.RefPoint(-base_frame.p);
 		point.accel = point.accel.RefPoint(-base_frame.p); //TODO check this conversion!
@@ -1027,7 +1047,7 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 			point.contact = solution.phase_durations_.at(ee)->IsContactPhase(t);
 		}
 
-		// convert base_link pose from planning frame to world frame
+		// convert base pose from planning frame to world frame
 		base_frame = wTp * base_frame;	
 		tf::poseKDLToMsg(base_frame, point.pose);
 		point.twist = wTp * point.twist;

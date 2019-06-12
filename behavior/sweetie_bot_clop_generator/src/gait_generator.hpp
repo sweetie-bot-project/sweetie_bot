@@ -9,6 +9,8 @@
 #include <sweetie_bot_clop_generator/MoveBaseAction.h>
 #include <sweetie_bot_control_msgs/FollowStepSequenceAction.h>
 
+#include "general_kinematic_model_non_com.h"
+
 namespace sweetie_bot {
 
 class ClopGenerator 
@@ -61,6 +63,7 @@ class ClopGenerator
 		std::string base_frame_id;
 		std::map<std::string, EndEffectorInfo> end_effector_index;
 		std::vector<KDL::Vector> end_effector_contact_point;
+		std::shared_ptr<towr::GeneralKinematicModelNonCoM> kinematic_model;
 
 		towr::NlpFormulation formulation;
 		ifopt::IpoptSolver::Ptr solver;
