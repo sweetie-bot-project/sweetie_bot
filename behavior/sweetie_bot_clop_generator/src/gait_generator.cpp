@@ -17,6 +17,7 @@
 #include "towr_trajectory_visualizer.hpp"
 #include "rigid_body_inertia_calculator.hpp"
 #include "general_kinematic_model_non_com.h"
+#include "single_rigid_body_with_point_ee_dynamics.h"
 
 using XmlRpc::XmlRpcValue;
 using XmlRpc::XmlRpcException;
@@ -28,6 +29,10 @@ std::ostream& operator<<(std::ostream& out, const std::vector<int>& v) {
 	return out;
 }
 std::ostream& operator<<(std::ostream& out, const std::vector<unsigned int>& v) {
+	for(auto it = v.begin(); it != v.end(); it++) out << *it << " ";
+	return out;
+}
+std::ostream& operator<<(std::ostream& out, const std::vector<double>& v) {
 	for(auto it = v.begin(); it != v.end(); it++) out << *it << " ";
 	return out;
 }
@@ -232,8 +237,11 @@ bool ClopGenerator::configureRobotModel()
 		return false;
 	}
 
-	// temporary variables
-	std::vector<std::string> base_links; // robot links
+	// init dynamic quantities calculator
+	RigidBodyInertiaCalculator kdl_inertia_calculator(urdf_model);
+	KDL::RigidBodyInertia base_inetria_tensor;
+	std::vector<double> ee_masses(end_effector_mapper.size(), 0.0);
+
 	// parse towr model
 	try {
 		XmlRpcValue towr_model;
@@ -245,21 +253,24 @@ bool ClopGenerator::configureRobotModel()
 			if (base_param.getType() != XmlRpcValue::TypeStruct) throw std::string("towr_model must contain 'base' subtree"); 
 			// get frame
 			XmlRpcValue& frame_id = base_param["frame_id"];
-			if (frame_id.getType() != XmlRpcValue::TypeString) throw std::string("end effector description must contain 'frame_id' string");
+			if (frame_id.getType() != XmlRpcValue::TypeString) throw std::string("base description must contain 'frame_id' string");
 			this->base_frame_id = static_cast<std::string>(frame_id);
 			// get links list for dynamic model calculation
 			XmlRpcValue& base_links_param = base_param["links"];
 			if (base_links_param.valid()) {
-				// links array supplied
+				std::vector<std::string> base_links;
+				// links array supplied, get it as vector of strings to calculate base inertia and mass
 				if (base_links_param.getType() != XmlRpcValue::TypeArray || base_links_param.size() < 1 || base_links_param[0].getType() != XmlRpcValue::TypeString) {
 					throw std::string("base description must contain non-empty array of strings 'links' ");
 				}
 				base_links.reserve(base_links_param.size());
 				for (int i = 0; i < base_links_param.size(); i++) base_links.push_back( static_cast<std::string>(base_links_param[i]) );
+				// calculate base inertia tensor
+				base_inetria_tensor = kdl_inertia_calculator.getInertia(base_frame_id, base_links);
 			}
 			else {
-				// links array is not supplied, leave links list empty
-				base_links.clear();
+				// links array is not supplied, assume that base is massive
+				base_inetria_tensor = kdl_inertia_calculator.getInertiaTotal();
 			}
 		}
 		
@@ -314,7 +325,21 @@ bool ClopGenerator::configureRobotModel()
 				throw std::string(ee_it->first + " end effector description must contain 'contact_point' double[3]");
 			}
 			// get contact point coordinates
-			end_effector_contact_point[ee_info.towr_index] = KDL::Vector(contact_point[0], contact_point[1], contact_point[2]);
+			end_effector_contact_point.at(ee_info.towr_index) = KDL::Vector(contact_point[0], contact_point[1], contact_point[2]);
+
+			// get links list (if supplied)
+			XmlRpcValue& leg_links_param = leg_param["links"];
+			if (leg_links_param.valid()) {
+				std::vector<std::string> leg_links;
+				// links array supplied, get it as vector of strings to calculate base inertia and mass
+				if (leg_links_param.getType() != XmlRpcValue::TypeArray || leg_links_param.size() < 1 || leg_links_param[0].getType() != XmlRpcValue::TypeString) {
+					throw std::string("end effector 'links' must be non-empty array of strings ");
+				}
+				leg_links.reserve(leg_links_param.size());
+				for (int i = 0; i < leg_links_param.size(); i++) leg_links.push_back( static_cast<std::string>(leg_links_param[i]) );
+				// calculate leg inertia tensor
+				ee_masses.at(ee_info.towr_index) = kdl_inertia_calculator.getInertia(base_frame_id, leg_links).getMass();
+			}
 			
 			ROS_INFO_STREAM("GeneralKinematicModel: " << ee_it->first << " (" << ee_info.frame_id << ", EE " << ee_info.towr_index << "): nominal_stance (" << nominal_stance_p.transpose() << 
 					"), bounding_box (" << Eigen::AlignedBox3d(bounding_box_p1, bounding_box_p2) << "), bounding_sphere (" << towr::Sphere3d(center, radius) << ")" );
@@ -337,15 +362,19 @@ bool ClopGenerator::configureRobotModel()
 
 	try {
 		// init dynamic model
-		RigidBodyInertiaCalculator kdl_inertia_calculator(urdf_model);
-		KDL::RigidBodyInertia I;
-		if (base_links.size() > 0) I = kdl_inertia_calculator.getInertia(base_frame_id, base_links);
-		else I = kdl_inertia_calculator.getInertiaTotal();
-		Eigen::Matrix3d Ir(I.RefPoint(I.getCOG()).getRotationalInertia().data);
-		Eigen::Vector3d cog(I.getCOG().data);
-		
-		std::shared_ptr<towr::SingleRigidBodyDynamics> dynamic_model( new towr::SingleRigidBodyDynamics(I.getMass(), Ir , end_effector_index.size()) );
-		ROS_INFO_STREAM("SingleRigidBodyDynamics: mass = " << I.getMass() << " CoM = (" << Eigen::Map<Eigen::Vector3d>(I.getCOG().data).transpose() << "), I = " << std::endl << Ir);
+		double M = base_inetria_tensor.getMass();
+		Eigen::Matrix3d Icog(base_inetria_tensor.RefPoint( base_inetria_tensor.getCOG() ).getRotationalInertia().data);
+		Eigen::Vector3d cog(base_inetria_tensor.getCOG().data);
+
+		std::shared_ptr<towr::DynamicModel> dynamic_model;
+		if (std::any_of(ee_masses.begin(), ee_masses.end(), [](double m) { return m != 0.0; } )) {
+			dynamic_model.reset( new towr::SingleRigidBodyWithPointEEDynamics(M, Icog , ee_masses) );
+		}
+		else {
+			dynamic_model.reset( new towr::SingleRigidBodyDynamics(M, Icog , ee_masses.size()) );
+		}
+
+		ROS_INFO_STREAM("SingleRigidBodyDynamics: mass = " << M << " CoM = (" << cog.transpose() << "), I = " << std::endl << Icog  << std::endl << "ee_masses = " << ee_masses << std::endl);
 
 		// set CoM position
 		kinematic_model->SetCoM(cog);

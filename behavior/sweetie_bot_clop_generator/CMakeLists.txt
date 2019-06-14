@@ -90,7 +90,8 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 ## Declare a C++ library
 
 ## Declare a C++ executable
-add_executable(towr_clop_generator src/gait_generator.cpp src/towr_trajectory_visualizer.cpp src/rigid_body_inertia_calculator.cpp src/general_kinematic_model_non_com.cc)
+     
+add_executable(towr_clop_generator src/gait_generator.cpp src/towr_trajectory_visualizer.cpp src/rigid_body_inertia_calculator.cpp src/general_kinematic_model_non_com.cc src/single_rigid_body_with_point_ee_dynamics.cc)
 target_link_libraries(towr_clop_generator ${catkin_LIBRARIES})
 add_dependencies(towr_clop_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
