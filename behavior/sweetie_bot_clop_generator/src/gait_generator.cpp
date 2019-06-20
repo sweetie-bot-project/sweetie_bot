@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <xmlrpcpp/XmlRpcException.h>
 
+#include <coin/IpReturnCodes.hpp>
+
 #include <towr/models/endeffector_mappings.h>
 #include <towr/models/single_rigid_body_dynamics.h>
 #include <towr/models/general_kinematic_model.h>
@@ -936,6 +938,37 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
     for (auto c : formulation.GetCosts()) nlp.AddCostSet(c);
 
     bool success = solver->Solve(nlp);
+
+	if (!success) {
+		int status = solver->GetIpoptExitStatus();
+		std::cout << "IOPT EXIT STATUS " << status << std::endl;
+
+		// check if feasible solution but not optimal solution is found
+		if (nlp.HasCostTerms()) {
+			if ( status == Ipopt::Maximum_Iterations_Exceeded || status == Ipopt::Maximum_CpuTime_Exceeded) {
+				Eigen::VectorXd constraints_values = nlp.GetConstraintsValues();
+				ifopt::Problem::VecBound bounds = nlp.GetBoundsOnConstraints();
+
+				success = true;
+				for(int k = 0; k < bounds.size(); k++) {
+					if (! bounds[k].contains( constraints_values[k], 0.001 ) ) {
+						success = false;
+						std::cout << "Constraint violated " << k << std::endl;
+						break;
+					}
+				}
+
+				if (success) ROS_INFO("nlp: Feasible posible non-optimal solution is found");
+			}
+		}
+
+		// check for alternative success codes
+		if ( status == Ipopt::Solved_To_Acceptable_Level || status == Ipopt::Feasible_Point_Found ) {
+			success = true;
+			ROS_INFO("nlp: Feasible solution is found");
+		}
+	}
+
 	if (!success) nlp.PrintCurrent(); // print additional information if solver has not successed.
 
     // xpp visualization: always perform visualization
