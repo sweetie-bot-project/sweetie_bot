@@ -651,6 +651,16 @@ void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, d
 	if (ros::param::getCached(ns + "/force_polynomials_per_stance_phase", ivalue)) {
 		params.force_polynomials_per_stance_phase_ = ivalue;
 	}
+	// get cost settings
+	if (ros::param::getCached(ns + "/costs/base_lin_motion", dvalue)) {
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseLinMotionCostID, dvalue) );
+	}
+	if (ros::param::getCached(ns + "/costs/base_ang_motion", dvalue)) {
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseAngMotionCostID, dvalue) );
+	}
+	if (ros::param::getCached(ns + "/costs/ee_motion", dvalue)) {
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::EEMotionCostID, dvalue) );
+	}
 }
 
 std::vector<towr::GaitGenerator::Gaits> MakeGaitsCombo(const std::string gait_type, int n_steps)

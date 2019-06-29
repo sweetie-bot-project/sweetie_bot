@@ -56,6 +56,10 @@ clop_generator:
         optimize_phase_durations: false
         bound_phase_duration_min: 0.4
         bound_phase_duration_max: 2.0
+        costs:
+            base_lin_motion: 0.001
+            base_ang_motion: 0.01
+            ee_motion: 0.00025
     ipopt_solver_parameters:
         linear_solver: "mumps"
         jacobian_approximation: "exact"
