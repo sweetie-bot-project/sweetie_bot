@@ -35,6 +35,9 @@ class MoveBaseGoal(MoveBaseGoalBase):
         self.base_goal.orientation.z = 0.0
         self.base_goal.orientation.w = 1.0
 
+        self.visualize_only = False
+        self.execute_only = False
+
         self.position_tolerance = 0.07
         self.orientation_tolerance = 0.50
 
