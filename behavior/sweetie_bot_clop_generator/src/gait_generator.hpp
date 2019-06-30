@@ -7,6 +7,7 @@
 #include <ifopt/ipopt_solver.h>
 
 #include <sweetie_bot_clop_generator/MoveBaseAction.h>
+#include <sweetie_bot_clop_generator/SaveTrajectory.h>
 #include <sweetie_bot_control_msgs/FollowStepSequenceAction.h>
 
 #include "general_kinematic_model_non_com.h"
@@ -16,19 +17,22 @@ namespace sweetie_bot {
 class ClopGenerator 
 {
 	protected:
+		// MoveBase action server typdefs
 		typedef sweetie_bot_clop_generator::EndEffectorGoal EndEffectorGoal;
 
 		typedef sweetie_bot_clop_generator::MoveBaseAction MoveBaseAction;
 		typedef sweetie_bot_clop_generator::MoveBaseGoal MoveBaseGoal;
 		typedef sweetie_bot_clop_generator::MoveBaseResult MoveBaseResult;
 		typedef sweetie_bot_clop_generator::MoveBaseGoalConstPtr MoveBaseGoalConstPtr;
-		
-		// typedef actionlib::ServerGoalHandle< MoveBaseAction > MoveBaseGoalHandle;
 
+		// FollowStepSequence action server typdefs
 		typedef sweetie_bot_control_msgs::FollowStepSequenceAction FollowStepSequenceAction;
 		typedef sweetie_bot_control_msgs::FollowStepSequenceGoal FollowStepSequenceGoal;
 		typedef sweetie_bot_control_msgs::FollowStepSequenceResult FollowStepSequenceResult;
 
+		// SaveTrajectory service
+		typedef sweetie_bot_clop_generator::SaveTrajectory::Response SaveTrajectoryResponse;
+		typedef sweetie_bot_clop_generator::SaveTrajectory::Request SaveTrajectoryRequest;
 	
 	protected:
 		struct EndEffectorInfo {
@@ -42,6 +46,8 @@ class ClopGenerator
 		ros::NodeHandle node_handler;
 		// publisers
 		// subscribers
+		// service servers
+		ros::ServiceServer save_trajectory_service;
 		// tf
 		tf2_ros::Buffer tf_buffer;
 		std::unique_ptr<tf2_ros::TransformListener> tf_listener;
@@ -56,19 +62,24 @@ class ClopGenerator
 		std::string towr_parameters_ns; /**< Namespace where gait generator parameters tree is located. */
 		std::string world_frame; /**< Unmoving coordinate frame respect to which base movements are is published */
 		std::string planning_frame; /**< Planning frame in which trajectory planning is performed. */
+		std::string step_sequence_ns; /**< Default namespace for saving StepSequenceGoal messages. */
 
 		// BUFFERS
 
 		// COMPONENT STATE
+		// persisent state
 		std::string base_frame_id;
 		std::map<std::string, EndEffectorInfo> end_effector_index;
 		std::vector<KDL::Vector> end_effector_contact_point;
 		std::shared_ptr<towr::GeneralKinematicModelNonCoM> kinematic_model;
-
+		// NLP formulation and its solution
 		towr::NlpFormulation formulation;
 		ifopt::IpoptSolver::Ptr solver;
 		ifopt::Problem nlp;
 		towr::SplineHolder solution;
+		// information about last planning request
+		bool last_request_successed;
+		MoveBaseGoal last_request_goal;
 
 	protected:
 		void storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& msg, const KDL::Frame& wTp);
@@ -95,6 +106,7 @@ class ClopGenerator
 		void succeedGoal(int error_code, const std::string& error_string);
 
 		void callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg);
+		bool callbackSaveTrajectory(SaveTrajectoryRequest& req, SaveTrajectoryResponse& resp);
 };
 
 } // namespace sweetie_bot

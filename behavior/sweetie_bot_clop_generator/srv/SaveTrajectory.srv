@@ -1,0 +1,5 @@
+# Save StepSequenceGoal message on Paramer Server.
+#    * name Parameter to save trajectory message. If path is realtive 
+#           default namespace is used.
+string name
+---

@@ -115,6 +115,9 @@ ClopGenerator::ClopGenerator(const std::string& name)
 	//xpp_trajectory_pub = node_handler.advertise<RobotStateCartesianTrajectory>("xpp_trajectory", 1);
 	//xpp_robot_pram_pub = node_handler.advertise<RobotParameters>("xpp_robot_parameters", 1);	
 	// subscribe topics
+	// advertise servises
+	ros::NodeHandle node_handler_private("~");
+	save_trajectory_service = node_handler_private.advertiseService("save_trajectory", &ClopGenerator::callbackSaveTrajectory, this);
 	// tf listener
 	tf_listener.reset( new tf2_ros::TransformListener(tf_buffer) );
 	// action server
@@ -157,6 +160,9 @@ bool ClopGenerator::configure()
 	}
 	if (!ros::param::get(towr_parameters_ns + "planning_frame", planning_frame)) {
 		planning_frame = "base_link_path";
+	}
+	if (!ros::param::get("~step_sequence_storage_namespace", step_sequence_ns)) {
+		step_sequence_ns = "/step_sequence";
 	}
 
 	// init this->solver
@@ -909,6 +915,8 @@ void ClopGenerator::succeedGoal(int error_code, const std::string& error_string)
 void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg) 
 {
 	ROS_INFO("New MoveBase goal received");
+	last_request_goal = *msg;
+	last_request_successed = false;
 
 	// setup planning frame
 	KDL::Frame wTp; // transform between planning and world frame
@@ -980,6 +988,7 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 	}
 
 	if (!success) nlp.PrintCurrent(); // print additional information if solver has not successed.
+	last_request_successed = success;
 
     // xpp visualization: always perform visualization
 	if (msg->visualize_only) {
@@ -1034,6 +1043,47 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 		abortGoal("execution", MoveBaseResult::EXECUTION_FAILED, "execution failed");
 	}
 };
+
+bool ClopGenerator::callbackSaveTrajectory(SaveTrajectoryRequest& req, SaveTrajectoryResponse& resp)
+{
+	if (!last_request_successed) {
+		ROS_ERROR_STREAM("SaveTrajectoryService: last planning request has failed, no valid message to save.");
+		return false;
+	}
+	// derive parameter absolute path
+	std::string param_name; 
+	if (req.name.empty()) {
+		ROS_ERROR_STREAM("SaveTrajectoryService: parameter name must be nonempty.");
+		return false;
+	}
+	if (req.name[0] != '/') param_name = step_sequence_ns + "/" + req.name; // default namespace for non-absolute path
+	else param_name = req.name;
+
+	ROS_INFO_STREAM("Saving FollowStepSequenceGoal message to " << param_name);
+	// create FollowStepSequence goal in planning frame
+	FollowStepSequenceGoal steps_msg;
+	steps_msg.header.stamp = ros::Time::now();
+	steps_msg.header.frame_id = planning_frame;
+	steps_msg.append = false;
+	steps_msg.position_tolerance = last_request_goal.position_tolerance;
+	steps_msg.orientation_tolerance = last_request_goal.orientation_tolerance;
+	storeSolutionInStepSequenceGoalMsg(steps_msg, KDL::Frame::Identity());
+	// save result message in parameter
+	uint32_t serial_size = ros::serialization::serializationLength(steps_msg);
+	boost::shared_array<unsigned char> buffer(new unsigned char[serial_size]);
+	ros::serialization::OStream ostream(buffer.get(), serial_size);
+	ros::serialization::serialize(ostream, steps_msg);
+	XmlRpc::XmlRpcValue param((unsigned char*)&buffer[0], serial_size);
+    // write parameter to Parameter server
+	try {
+		node_handler.setParam(param_name, param);
+	}
+	catch (ros::InvalidNameException& e) {
+		ROS_ERROR_STREAM("SaveTrajectoryService: ros graph name is not valid '" << param_name <<"'");
+		return false;
+	}
+	return true;
+}
 
 void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& msg, const KDL::Frame& wTp)
 {
