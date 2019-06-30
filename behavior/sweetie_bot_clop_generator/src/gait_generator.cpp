@@ -179,6 +179,9 @@ bool ClopGenerator::configure()
 	// terrain_
 	formulation.terrain_ = towr::HeightMap::MakeTerrain(towr::HeightMap::FlatID);
 
+	// reset trajectory cache
+	last_request_successed = false;
+
 	ROS_INFO("ClopGenerator configured!");
 	return true;
 };
@@ -912,52 +915,20 @@ void ClopGenerator::succeedGoal(int error_code, const std::string& error_string)
 	ROS_INFO_STREAM("MoveBase goal achived: "<< error_string);
 }
 
-void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg) 
+bool ClopGenerator::performMotionPlanning() 
 {
-	ROS_INFO("New MoveBase goal received");
-	last_request_goal = *msg;
-	last_request_successed = false;
-
-	// setup planning frame
-	KDL::Frame wTp; // transform between planning and world frame
-	geometry_msgs::TransformStamped wTFp;
-	wTFp = tf_buffer.lookupTransform(world_frame, planning_frame, ros::Time(0));
-	tf::transformMsgToKDL(wTFp.transform, wTp);
-
-	// process goal message
-	try {
-		// initial pose 
-		setInitialStateFromTF();
-		// assign goal
-		setGoalPoseFromMsg(*msg);
-		// check pose
-		if (!checkEERangeConditions(formulation.initial_base_, formulation.initial_ee_W_)) {
-			abortGoal("message processing", MoveBaseResult::INVALID_INITIAL_POSE, "invalid initial pose");
-			return;
-		}
-		// set gait
-		setGaitFromGoalMsg(*msg);
-	}
-	catch (tf2::TransformException& e) {
-		abortGoal("message processing", MoveBaseResult::INTERNAL_ERROR, e.what());
-		return;
-	}
-	catch (std::invalid_argument& e) {
-		abortGoal("message processing", MoveBaseResult::INVALID_GOAL, e.what());
-		return;
-	}
-
 	DebugPrintFormulation(formulation);
 
 	// no we have correct formulataion so solve NL problem
-    nlp = ifopt::Problem();
-    for (auto c : formulation.GetVariableSets(solution)) nlp.AddVariableSet(c);
-    for (auto c : formulation.GetConstraints(solution)) nlp.AddConstraintSet(c);
-    for (auto c : formulation.GetCosts()) nlp.AddCostSet(c);
+	nlp = ifopt::Problem();
+	for (auto c : formulation.GetVariableSets(solution)) nlp.AddVariableSet(c);
+	for (auto c : formulation.GetConstraints(solution)) nlp.AddConstraintSet(c);
+	for (auto c : formulation.GetCosts()) nlp.AddCostSet(c);
 
-    bool success = solver->Solve(nlp);
+	bool success = solver->Solve(nlp);
 
 	if (!success) {
+		// inspect return code more closely
 		int status = solver->GetIpoptExitStatus();
 		std::cout << "IOPT EXIT STATUS " << status << std::endl;
 
@@ -971,7 +942,6 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 				for(int k = 0; k < bounds.size(); k++) {
 					if (! bounds[k].contains( constraints_values[k], 0.001 ) ) {
 						success = false;
-						std::cout << "Constraint violated " << k << std::endl;
 						break;
 					}
 				}
@@ -987,8 +957,62 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 		}
 	}
 
-	if (!success) nlp.PrintCurrent(); // print additional information if solver has not successed.
-	last_request_successed = success;
+	return success;
+}
+
+void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg) 
+{
+	ROS_INFO("New MoveBase goal received");
+
+	// setup planning frame
+	KDL::Frame wTp; // transform between planning and world frame
+	geometry_msgs::TransformStamped wTFp;
+	wTFp = tf_buffer.lookupTransform(world_frame, planning_frame, ros::Time(0));
+	tf::transformMsgToKDL(wTFp.transform, wTp);
+
+	// PLAN MOTION
+	if (msg->execute_only) {
+		// execute the last succesfully planned motion
+		if (!last_request_successed) {
+			abortGoal("execute preplanned motion ", MoveBaseResult::SOLUTION_NOT_FOUND, "valid solution is not available");
+			return;
+		}
+	}
+	else {
+		// process goal message
+		try {
+			// initial pose 
+			setInitialStateFromTF();
+			// assign goal
+			setGoalPoseFromMsg(*msg);
+			// check pose
+			if (!checkEERangeConditions(formulation.initial_base_, formulation.initial_ee_W_)) {
+				abortGoal("message processing", MoveBaseResult::INVALID_INITIAL_POSE, "invalid initial pose");
+				return;
+			}
+			// set gait
+			setGaitFromGoalMsg(*msg);
+		}
+		catch (tf2::TransformException& e) {
+			abortGoal("message processing", MoveBaseResult::INTERNAL_ERROR, e.what());
+			return;
+		}
+		catch (std::invalid_argument& e) {
+			abortGoal("message processing", MoveBaseResult::INVALID_GOAL, e.what());
+			return;
+		}
+
+		// perform planning
+		last_request_goal = *msg;
+		last_request_successed = performMotionPlanning();
+	
+		if (!last_request_successed) {
+			// planning failed
+			nlp.PrintCurrent(); // print additional information if solver has not successed.
+			abortGoal("nlp optimization", MoveBaseResult::SOLUTION_NOT_FOUND, "Ipopt exit status: " + std::to_string(solver->GetIpoptExitStatus()));
+			return;
+		}
+	}
 
     // xpp visualization: always perform visualization
 	if (msg->visualize_only) {
@@ -996,19 +1020,12 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 		visualizer.PlayTrajectory(formulation, solution, 1.0);
 	}
 
-	// check if solution is valid
-	// TODO check if solution is valid if time exceeded.
-	if (!success) {
-		abortGoal("nlp optimization", MoveBaseResult::SOLUTION_NOT_FOUND, "Ipopt exit status: " + std::to_string(solver->GetIpoptExitStatus()));
-		return;
-	}
-
 	if (msg->visualize_only) {
 		succeedGoal(MoveBaseResult::SUCCESS, "visualized");
 		return;
 	}
 
-	// execute trajectory
+	// EXECUTE TRAJECTORY
 	
 	// construct FollowStepSequenceGoal message
 	FollowStepSequenceGoal steps_msg;

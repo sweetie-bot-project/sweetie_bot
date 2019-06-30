@@ -9,6 +9,8 @@
 # * ee_goal --- goal poses for end effector. For free gait their order defines step sequece.
 # * position_tolerance --- admissable position error.
 # * orientation_tolerance  --- admissable orientaton error.
+# * visualize_only --- plan movement but do not execute it.
+# * execute_only --- execute last planned movement (supplied goal ignored except for tolerances).
 #
 Header header
 
@@ -24,6 +26,7 @@ float64 position_tolerance
 float64 orientation_tolerance
 
 bool visualize_only
+bool execute_only
 
 uint32 POSE_FIXED = 0
 uint32 POSE_FREE_XY = 3

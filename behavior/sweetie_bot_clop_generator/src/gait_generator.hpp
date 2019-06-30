@@ -105,6 +105,7 @@ class ClopGenerator
 		void abortGoal(const std::string& where, int error_code, const std::string& error_string);
 		void succeedGoal(int error_code, const std::string& error_string);
 
+		bool performMotionPlanning();
 		void callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg);
 		bool callbackSaveTrajectory(SaveTrajectoryRequest& req, SaveTrajectoryResponse& resp);
 };
