@@ -27,7 +27,7 @@ WORKDIR /home/dev
 # Install workspace packages
 COPY --chown=dev:dev .gitlab-ci/sweetie_bot_flexbe_behaviors  ./src/sweetie_bot_flexbe_behaviors
 COPY --chown=dev:dev .gitlab-ci/sweetie_bot_proto2_movements  ./src/sweetie_bot_proto2_movements
-COPY --chown=dev:dev .gitlab-ci/sweetie_bot_proto3_movements  ./src/sweetie_bot_proto3_movements
+#COPY --chown=dev:dev .gitlab-ci/sweetie_bot_proto3_movements  ./src/sweetie_bot_proto3_movements
 COPY --chown=dev:dev .gitlab-ci/sweetie_bot_sounds            ./src/sweetie_bot_sounds
 
 # Build workspace
