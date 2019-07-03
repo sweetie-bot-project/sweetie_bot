@@ -18,7 +18,7 @@ herkulex:
             poll_round_size: 6
     leg12:
         driver:
-            port_name: '/dev/ttyS2'
+            port_name: '/dev/ttyS3'
             baudrate: 115200
         array:
             timeout: 0.060
@@ -34,7 +34,7 @@ herkulex:
             poll_round_size: 5
     leg34:
         driver:
-            port_name: '/dev/ttyS1'
+            port_name: '/dev/ttyS4'
             baudrate: 115200
         array:
             timeout: 0.060
@@ -50,7 +50,7 @@ herkulex:
             poll_round_size: 5
     head:
         driver:
-            port_name: '/dev/ttyS3'
+            port_name: '/dev/ttyS1'
             baudrate: 115200
         array:
             timeout: 0.060
