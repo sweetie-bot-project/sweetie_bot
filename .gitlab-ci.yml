@@ -117,8 +117,8 @@ stretch-amd64-test: &test_template
   artifacts:
     expire_in: 3 weeks
     paths:
-      - screenshot.png
-      - diff.png
+      - screenshot*.png
+      - diff*.png
       - __log/
     when: always
 
