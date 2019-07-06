@@ -104,7 +104,6 @@ static void DebugPrintFormulation(const NlpFormulation& formulation)
 	ROS_INFO_STREAM("bound_phase_duration_min: " << formulation.params_.bound_phase_duration_.first);
 	ROS_INFO_STREAM("bound_phase_duration_max: " << formulation.params_.bound_phase_duration_.second);
 	ROS_INFO_STREAM("ee_polynomials_per_swing_phase: " << formulation.params_.ee_polynomials_per_swing_phase_);
-	ROS_INFO_STREAM("force_polynomials_per_stance_phase: " << formulation.params_.force_polynomials_per_stance_phase_);
 	ROS_INFO_STREAM("force_limit_in_normal_direction: " << formulation.params_.force_limit_in_normal_direction_);
 }
 
@@ -652,6 +651,9 @@ void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, d
 	if (params.bound_phase_duration_.first < 0.0 || params.bound_phase_duration_.first > params.bound_phase_duration_.second) {
 		throw std::invalid_argument("getTowrParametersFromRos: `bound_phase_duration_` interval is incorrect");
 	}
+	if (ros::param::getCached(ns + "/force_limit_in_normal_direction", dvalue)) {
+		params.force_limit_in_normal_direction_ = dvalue;
+	}
 	// get cached parameters: int
 	int ivalue;
 	if (ros::param::getCached(ns + "/ee_polynomials_per_swing_phase", ivalue)) {
@@ -662,13 +664,13 @@ void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, d
 	}
 	// get cost settings
 	if (ros::param::getCached(ns + "/costs/base_lin_motion", dvalue)) {
-		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseLinMotionCostID, dvalue) );
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseLinAccCostID, dvalue) );
 	}
 	if (ros::param::getCached(ns + "/costs/base_ang_motion", dvalue)) {
-		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseAngMotionCostID, dvalue) );
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseAngAccCostID, dvalue) );
 	}
 	if (ros::param::getCached(ns + "/costs/ee_motion", dvalue)) {
-		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::EEMotionCostID, dvalue) );
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::EEAccCostID, dvalue) );
 	}
 }
 
@@ -875,6 +877,11 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 	}
 
 	// Additional settings
+	//auto it = std::find(params.constraints_.begin(), params.constraints_.end(), Parameters::BaseAcc);
+	//if (it != params.constraints_.end()) params.constraints_.erase(it);
+	auto it = std::find(params.constraints_.begin(), params.constraints_.end(), Parameters::Swing);
+	if (it != params.constraints_.end()) params.constraints_.erase(it);
+	
 	
 	// set final EE velocity to zero
 	// TODO modify towr to divide actual parameter and final pose specification
@@ -923,7 +930,7 @@ bool ClopGenerator::performMotionPlanning()
 	nlp = ifopt::Problem();
 	for (auto c : formulation.GetVariableSets(solution)) nlp.AddVariableSet(c);
 	for (auto c : formulation.GetConstraints(solution)) nlp.AddConstraintSet(c);
-	for (auto c : formulation.GetCosts()) nlp.AddCostSet(c);
+	for (auto c : formulation.GetCosts(solution)) nlp.AddCostSet(c);
 
 	bool success = solver->Solve(nlp);
 

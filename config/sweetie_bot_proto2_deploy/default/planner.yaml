@@ -55,15 +55,19 @@ clop_generator:
         optimize_phase_durations: false
         bound_phase_duration_min: 0.4
         bound_phase_duration_max: 2.0
-        costs:
-            base_lin_motion: 0.001
-            base_ang_motion: 0.01
-            ee_motion: 0.00025
+        costs: # better for on-line synthesis
+            base_lin_motion: 0.00001
+            base_ang_motion: 0.0001
+            ee_motion: 0.000025
+        #costs: # better for synthesis for saving motions
+            #base_lin_motion: 0.0001
+            #base_ang_motion: 0.001
+            #ee_motion: 0.00025
     ipopt_solver_parameters:
         linear_solver: "mumps"
         jacobian_approximation: "exact"
         derivative_test: "none"  # BEWARE! Test "first-order" breaks optimization process! 
-        max_cpu_time: 10.0
+        max_cpu_time: 15.0
         print_level: 5
         max_iter: 300
 
