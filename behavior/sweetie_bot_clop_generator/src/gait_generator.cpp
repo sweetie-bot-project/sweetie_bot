@@ -105,6 +105,7 @@ static void DebugPrintFormulation(const NlpFormulation& formulation)
 	ROS_INFO_STREAM("bound_phase_duration_max: " << formulation.params_.bound_phase_duration_.second);
 	ROS_INFO_STREAM("ee_polynomials_per_swing_phase: " << formulation.params_.ee_polynomials_per_swing_phase_);
 	ROS_INFO_STREAM("force_limit_in_normal_direction: " << formulation.params_.force_limit_in_normal_direction_);
+	ROS_INFO_STREAM("min_swing_height: " << formulation.params_.min_swing_height_);
 }
 
 
@@ -653,6 +654,9 @@ void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, d
 	}
 	if (ros::param::getCached(ns + "/force_limit_in_normal_direction", dvalue)) {
 		params.force_limit_in_normal_direction_ = dvalue;
+	}
+	if (ros::param::getCached(ns + "/min_swing_height", dvalue)) {
+		params.min_swing_height_ = dvalue;
 	}
 	// get cached parameters: int
 	int ivalue;
