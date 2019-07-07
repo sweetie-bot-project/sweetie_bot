@@ -10,7 +10,7 @@ clop_generator:
             frame_id: "bone15"
             nominal_stance: [ 0.08, 0.038, -0.1675 ]
             #bounding_box: [ 0.05, 0.025, -1.2075, 0.145, 0.08, -0.1575 ]
-            bounding_box: [ 0.05, 0.025, -1.2075, 1.145, 1.08, -0.1575 ]
+            bounding_box: [ 0.05, 0.025, -1.2075, 1.145, 0.08, -0.1575 ]
             bounding_sphere: [ 0.08, 0.037, -0.0575, 0.17 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone13", "bone14", "bone15"]
@@ -19,7 +19,7 @@ clop_generator:
             frame_id: "bone25"
             nominal_stance: [ 0.08, -0.038, -0.1675 ]
             #bounding_box: [ 0.05, -0.08, -1.2075, 0.145, -0.025, -0.1575 ]
-            bounding_box: [ 0.05, -1.08, -1.2075, 1.145, -0.025, -0.1575 ]
+            bounding_box: [ 0.05, -0.08, -1.2075, 1.145, -0.025, -0.1575 ]
             bounding_sphere: [ 0.08, -0.037, -0.0575, 0.17 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone23", "bone24", "bone25"]
@@ -28,7 +28,7 @@ clop_generator:
             frame_id: "bone35"
             nominal_stance: [ -0.08, 0.038, -0.1675 ]
             #bounding_box: [ -0.145, 0.025, -1.2075, -0.05, 0.08, -0.1575 ]
-            bounding_box: [ -1.145, 0.025, -1.2075, -0.05, 1.08, -0.1575 ]
+            bounding_box: [ -1.145, 0.025, -1.2075, -0.05, 0.08, -0.1575 ]
             bounding_sphere: [ -0.08, 0.037, -0.0575, 0.17 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone33", "bone34", "bone35"]
@@ -37,7 +37,7 @@ clop_generator:
             frame_id: "bone45"
             nominal_stance: [ -0.08, -0.038, -0.1675 ]
             #bounding_box: [ -0.145, -0.08, -1.2075, -0.05, -0.025, -0.1575 ]
-            bounding_box: [ -1.145, -1.08, -1.2075, -0.05, -0.025, -0.1575 ]
+            bounding_box: [ -1.145, -0.08, -1.2075, -0.05, -0.025, -0.1575 ]
             bounding_sphere: [ -0.08, -0.037, -0.0575, 0.17 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone43", "bone44", "bone45"]
@@ -55,10 +55,14 @@ clop_generator:
         optimize_phase_durations: false
         bound_phase_duration_min: 0.4
         bound_phase_duration_max: 2.0
-        costs: # better for on-line synthesis
-            base_lin_motion: 0.00001
-            base_ang_motion: 0.0001
-            ee_motion: 0.000025
+        costs: # turn costs off
+            costbase_lin_motion: 0.0
+            costbase_ang_motion: 0.0
+            costee_motion: 0.0
+        #costs: # better for on-line synthesis
+            #costbase_lin_motion: 0.00001
+            #costbase_ang_motion: 0.0001
+            #costee_motion: 0.000025
         #costs: # better for synthesis for saving motions
             #base_lin_motion: 0.0001
             #base_ang_motion: 0.001
