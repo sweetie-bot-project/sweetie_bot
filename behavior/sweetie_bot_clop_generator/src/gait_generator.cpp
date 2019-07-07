@@ -106,6 +106,11 @@ static void DebugPrintFormulation(const NlpFormulation& formulation)
 	ROS_INFO_STREAM("ee_polynomials_per_swing_phase: " << formulation.params_.ee_polynomials_per_swing_phase_);
 	ROS_INFO_STREAM("force_limit_in_normal_direction: " << formulation.params_.force_limit_in_normal_direction_);
 	ROS_INFO_STREAM("min_swing_height: " << formulation.params_.min_swing_height_);
+
+	ROS_INFO_STREAM("COSTS");
+	for(auto& cost_pair : formulation.params_.costs_) {
+		ROS_INFO_STREAM("Cost Term (" << cost_pair.first << ") weight: " << cost_pair.second);
+	}
 }
 
 

@@ -1,6 +1,9 @@
 clop_generator:
     period: 0.056
     contact_height_tolerance: 0.005
+    world_frame: "odom_combined"
+    planning_frame: "base_link_path"
+    step_sequence_storage_namespace: "saved_msgs/step_sequence"
     towr_model:
         base:
             frame_id: "base_link"
@@ -55,14 +58,15 @@ clop_generator:
         optimize_phase_durations: false
         bound_phase_duration_min: 0.4
         bound_phase_duration_max: 2.0
-        costs: # turn costs off
-            costbase_lin_motion: 0.0
-            costbase_ang_motion: 0.0
-            costee_motion: 0.0
-        #costs: # better for on-line synthesis
-            #costbase_lin_motion: 0.00001
-            #costbase_ang_motion: 0.0001
-            #costee_motion: 0.000025
+        min_swing_height: 0.02
+        costs: # better for on-line synthesis
+            base_lin_motion: 0.00001
+            base_ang_motion: 0.0001
+            ee_motion: 0.000025
+        #costs: # turn costs off
+        #    costbase_lin_motion: 0.0
+        #    costbase_ang_motion: 0.0
+        #    costee_motion: 0.0
         #costs: # better for synthesis for saving motions
             #base_lin_motion: 0.0001
             #base_ang_motion: 0.001
