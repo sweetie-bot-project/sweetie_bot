@@ -39,7 +39,7 @@ if not config.get_rosparam("~controller/stance/use_kinematics_inv_port", "bool")
 	depl:connectOperations("controller/stance.poseToJointStatePublish", "kinematics_inv.poseToJointStatePublish");
 end
 -- ROS redirect
-depl:stream("controller/stance.in_base_ref", ros:topic("~controller/stance/in_base_ref"))
+depl:stream("controller/stance.in_base_ref", ros:topic("~controller/stance/in_pose_ref"))
 -- ROS redirect: debug
 -- depl:stream("controller/stance.out_limbs_ref", ros:topic("~controller/stance/out_limbs_ref"))
 -- depl:stream("controller/stance.out_base_ref", ros:topic("~controller/stance/out_base_ref"))

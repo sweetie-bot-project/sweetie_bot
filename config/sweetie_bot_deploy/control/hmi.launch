@@ -41,7 +41,7 @@
 		</node>
 		<!-- robot pose control -->
 		<node name="stance_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-			<remap from="pose" to="$(arg robot_ns)/motion/controller/stance/in_base_ref"/>
+			<remap from="pose" to="$(arg robot_ns)/motion/controller/stance/in_pose_ref"/>
 			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/stance"/>
 			<param name="resources_select_only_one" value="false"/>
 		</node>
