@@ -5,30 +5,34 @@ import rospy, os, sys
 import xmlrpclib
 import json
 import StringIO
+from importlib import import_module
 
 from rospy_message_converter import json_message_converter
 from control_msgs.msg import FollowJointTrajectoryGoal
 
-def xmlrpc_to_file(xml_rpc_value, filename):
-	msg = FollowJointTrajectoryGoal()
+def xmlrpc_to_file(xml_rpc_value, filename, msg_type):
+        (module_name, msg_name) = msg_type.split('/')
+        module = import_module(module_name + '.msg')
+        msg = getattr(module, msg_name)()
+	#msg = FollowJointTrajectoryGoal()
 	msg.deserialize(xml_rpc_value.data)
 	# save message to json
 	json_str = json_message_converter.convert_ros_message_to_json(msg)
 	json_str = json.dumps(json.loads(json_str), indent=4, sort_keys=False)
 	with open(filename, 'w') as f:
-		f.write(json_str)
+	    f.write(json_str)
 
-def xmlrpc_from_file(filename):
+def xmlrpc_from_file(filename, msg_type):
 	# read message fron json file
 	with open(filename, 'r') as f:
-		msg = json_message_converter.convert_json_to_ros_message('control_msgs/FollowJointTrajectoryGoal', f.read())
+            msg = json_message_converter.convert_json_to_ros_message(msg_type, f.read())
 	# convert it to binary format
 	buf = StringIO.StringIO()
 	msg.serialize(buf)
 	# store to dict
 	return xmlrpclib.Binary(buf.getvalue())
 
-def load(param, path, replace_existing = False):
+def load(param, path, msg_type, replace_existing = False):
 	# determine what we are loading: namespace or regular parameter
 	if os.path.isfile(path):
 		# check if target parameter stores message
@@ -49,13 +53,13 @@ def load(param, path, replace_existing = False):
 			elif not isinstance(param_value, dict):
 				raise KeyError, 'Load directory failed: target ROS parameter is not namespace or Binary.'
 	else:
-		raise KeyError, 'Load failed: target path is neither file nor directory.'
+            raise KeyError, 'Load failed: target path is neither file nor directory: ' + path
 
 	if not load_namespace:
             if replace_existing or not rospy.has_param(param):
                 # create or replace existing parameter
 		print 'Loading file `{}` as parameter `{}`.'.format(path, param)
-		value = xmlrpc_from_file(path)
+		value = xmlrpc_from_file(path, msg_type)
 		rospy.set_param(param, value)
             else:
                 # do not touch existing parameter
@@ -73,7 +77,7 @@ def load(param, path, replace_existing = False):
 		    basename, extension = os.path.splitext(f)
                     if extension.endswith('json'):
                         if basename not in values:
-                            values[basename] = xmlrpc_from_file(os.path.join(path, f))
+                            values[basename] = xmlrpc_from_file(os.path.join(path, f), msg_type)
                             n_loaded += 1
                         else:
                             n_skipped += 1
@@ -96,7 +100,7 @@ def save(param, path):
 				name = name[1:]
 			path = os.path.join(path, name + '.json')
 		print 'Saving parameter `{0}` as file `{1}`.'.format(param, path)
-		xmlrpc_to_file(value, path)
+		xmlrpc_to_file(value, path, msg_type)
 	elif isinstance(value, dict):
 		# save namespace
 		if not os.path.isdir(path):
@@ -104,15 +108,17 @@ def save(param, path):
 		print 'Saving namespace `{0}` to direcotry `{1}`.'.format(param, path)
 		for name, val in value.iteritems():
 			if isinstance(val, xmlrpclib.Binary):
-				xmlrpc_to_file(val, os.path.join(path, name + '.json'))
+				xmlrpc_to_file(val, os.path.join(path, name + '.json', msg_type))
 
 def print_help():
-	print 'Usage: {} load|load_overwrite|save PARAM PATH'.format(sys.argv[0])
+	print 'Usage: {} load|load_overwrite|save [TYPE] PARAM PATH'.format(sys.argv[0])
 	print '''
 Load/save  ROS messages to/from Parameter Server in binary format from/to JSON files.
 `load` mode does not change existing parameteres, `load_overwrite` overwrites existing.
-On Parameter Server messages are stored in serilized form as binary data.  Currently only 
-control_msgs/FollowJointTrajectoryGoal type are supported.
+On Parameter Server messages are stored in serilized form as binary data.  
+
+TYPE specifies message type (e.g. `sensor_msgs/JointState'). Following abbrevations are supported: 
+FollowJointTrajectory (FJT), FollowStepSequence (FSS), MoveBase (MB), JointState (JS).
 
 PARAM is parameter or namespace name, PATH is target directory or file.
 If PARAM is a binary parameter and PATH is regular file, then parameter is stored in or loaded fron file.
@@ -122,20 +128,37 @@ If PARAM is a binary parameter and PATH is directory then name of JSON file is a
 '''
 	sys.exit(0)
 
+# parse command line arguments
 if len(sys.argv) < 4:
 	print_help()
 
-cmd = sys.argv[1]
-param = sys.argv[2]
-path = sys.argv[3]
+if len(sys.argv) == 4:
+    cmd = sys.argv[1]
+    msg_type = 'FollowJointTrajectory'
+    param = sys.argv[2]
+    path = sys.argv[3]
+else:
+    cmd = sys.argv[1]
+    msg_type = sys.argv[2]
+    param = sys.argv[3]
+    path = sys.argv[4]
+
+if msg_type in ('FollowStepSequence', 'FSS'):
+    msg_type = 'sweetie_bot_control_msgs/FollowStepSequenceGoal'
+elif msg_type in ('FollowJointTrajectory', 'FJT'):
+    msg_type = 'control_msgs/FollowJointTrajectoryGoal'
+elif msg_type in ('MoveBase', 'MB'):
+    msg_type = 'sweetie_bot_clop_generator/MoveBaseGoal'
+elif msg_type in ('JointState', 'JS'):
+    msg_type = 'sensor_msgs/JointState'
 
 if cmd == 'load':
-	load(param, path)
+    load(param, path, msg_type)
 elif cmd == 'load_overwrite':
-	load(param, path, True)
+    load(param, path, msg_type, True)
 elif cmd == 'save':  
-	save(param, path)
+    save(param, path)
 else:
-	print_help()
+    print_help()
 
 sys.exit(0)
