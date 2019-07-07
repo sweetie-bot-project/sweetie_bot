@@ -883,8 +883,10 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 	// Additional settings
 	//auto it = std::find(params.constraints_.begin(), params.constraints_.end(), Parameters::BaseAcc);
 	//if (it != params.constraints_.end()) params.constraints_.erase(it);
-	auto it = std::find(params.constraints_.begin(), params.constraints_.end(), Parameters::Swing);
-	if (it != params.constraints_.end()) params.constraints_.erase(it);
+	if (params.costs_.size() != 0) {
+		auto it = std::find(params.constraints_.begin(), params.constraints_.end(), Parameters::Swing);
+		if (it != params.constraints_.end()) params.constraints_.erase(it);
+	}
 	
 	
 	// set final EE velocity to zero
