@@ -1,0 +1,39 @@
+#!/bin/sh
+PKG=sweetie_bot_proto2_movements
+NS=saved_msgs
+
+if [ -z $1 ]; then
+	echo "Usage:"
+	echo "    $ `basename $0` load|save"
+	echo 
+	echo "Load saved messages from '$PKG' package to 'saved_msgs' namespace."
+	echo "or"
+	echo "save saved messages from 'saved_msgs' namespace to '$PKG' package."
+	echo
+	echo "Currently four types of messages loaded/saved: FollowJointTrajectory (joint_trajectory),"
+	echo "FollowStepSequence (step_sequence), MoveBase (move_base), JointState (joint_state). "
+	echo
+	exit 0
+fi
+
+# find package
+PKG_PATH=`rospack find $PKG`
+if [ $? -ne 0 ]; then
+	echo "$0: Unable to find '$PKG' package."
+	exit 1
+fi
+
+# load saved messages
+if [ -d $PKG_PATH/joint_trajectories ]; then
+	rosrun sweetie_bot_deploy store $1 FollowJointTrajectory $NS/joint_trajectory $PKG_PATH/joint_trajectories
+fi
+if [ -d $PKG_PATH/step_sequence ]; then
+	rosrun sweetie_bot_deploy store $1 FollowStepSequence $NS/step_sequence $PKG_PATH/step_sequence
+fi
+if [ -d $PKG_PATH/move_base ]; then
+	rosrun sweetie_bot_deploy store $1 MoveBase $NS/move_base $PKG_PATH/move_base
+fi
+if [ -d $PKG_PATH/joint_state ]; then
+	rosrun sweetie_bot_deploy store $1 JointState $NS/joint_state $PKG_PATH/joint_state
+fi
+
