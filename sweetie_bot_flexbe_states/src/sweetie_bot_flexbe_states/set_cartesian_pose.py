@@ -111,6 +111,8 @@ class SetCartesianPose(EventState):
             return
         # set start timestamp
         self._timestamp = Time.now()
+        # Clear pose buffer to force target pose recalculation
+        self._pose_world = None
 
         Logger.loginfo('SetCartesianPose started.')
 
