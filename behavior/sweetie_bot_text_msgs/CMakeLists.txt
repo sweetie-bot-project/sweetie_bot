@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   TextCommand.msg
+  CompoundActionElement.msg
+  CompoundAction.msg
 )
 
 ## Generate services in the 'srv' folder
