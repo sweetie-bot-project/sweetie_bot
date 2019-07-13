@@ -166,8 +166,8 @@ bool ClopGenerator::configure()
 	if (!ros::param::get(towr_parameters_ns + "planning_frame", planning_frame)) {
 		planning_frame = "base_link_path";
 	}
-	if (!ros::param::get("~step_sequence_storage_namespace", step_sequence_ns)) {
-		step_sequence_ns = "/step_sequence";
+	if (!ros::param::get("~storage_namespace", storage_ns)) {
+		storage_ns = "";
 	}
 
 	// init this->solver
@@ -1079,22 +1079,46 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 	}
 };
 
+template<class MsgType> static bool saveMessage(ros::NodeHandle& node_handler, const MsgType& msg, const std::string& param_name) {
+	uint32_t serial_size = ros::serialization::serializationLength(msg);
+	boost::shared_array<unsigned char> buffer(new unsigned char[serial_size]);
+	ros::serialization::OStream ostream(buffer.get(), serial_size);
+	ros::serialization::serialize(ostream, msg);
+	XmlRpc::XmlRpcValue param((unsigned char*)&buffer[0], serial_size);
+    // write parameter to Parameter server
+	try {
+		node_handler.setParam(param_name, param);
+	}
+	catch (ros::InvalidNameException& e) {
+		ROS_ERROR_STREAM("SaveTrajectoryService: ros graph name is not valid '" << param_name << "'");
+		return false;
+	}
+	return true;
+}
+
 bool ClopGenerator::callbackSaveTrajectory(SaveTrajectoryRequest& req, SaveTrajectoryResponse& resp)
 {
 	if (!last_request_successed) {
 		ROS_ERROR_STREAM("SaveTrajectoryService: last planning request has failed, no valid message to save.");
 		return false;
 	}
-	// derive parameter absolute path
-	std::string param_name; 
+	// derive parameters absolute path
+	std::string step_sequence_param_name, move_base_param_name; 
 	if (req.name.empty()) {
 		ROS_ERROR_STREAM("SaveTrajectoryService: parameter name must be nonempty.");
 		return false;
 	}
-	if (req.name[0] != '/') param_name = step_sequence_ns + "/" + req.name; // default namespace for non-absolute path
-	else param_name = req.name;
+	if (req.name[0] != '/') {
+		// use relative path inside storage namespace
+		step_sequence_param_name = storage_ns + "/step_sequence/" + req.name; // default namespace for non-absolute path
+		move_base_param_name = storage_ns + "/move_base/" + req.name; // default namespace for non-absolute path
+	}
+	else {
+		// add _request prefix to parameter name
+		step_sequence_param_name = req.name; 
+		move_base_param_name = req.name + "_request";
+	}
 
-	ROS_INFO_STREAM("Saving FollowStepSequenceGoal message to " << param_name);
 	// create FollowStepSequence goal in planning frame
 	FollowStepSequenceGoal steps_msg;
 	steps_msg.header.stamp = ros::Time::now();
@@ -1103,20 +1127,9 @@ bool ClopGenerator::callbackSaveTrajectory(SaveTrajectoryRequest& req, SaveTraje
 	steps_msg.position_tolerance = last_request_goal.position_tolerance;
 	steps_msg.orientation_tolerance = last_request_goal.orientation_tolerance;
 	storeSolutionInStepSequenceGoalMsg(steps_msg, KDL::Frame::Identity());
-	// save result message in parameter
-	uint32_t serial_size = ros::serialization::serializationLength(steps_msg);
-	boost::shared_array<unsigned char> buffer(new unsigned char[serial_size]);
-	ros::serialization::OStream ostream(buffer.get(), serial_size);
-	ros::serialization::serialize(ostream, steps_msg);
-	XmlRpc::XmlRpcValue param((unsigned char*)&buffer[0], serial_size);
-    // write parameter to Parameter server
-	try {
-		node_handler.setParam(param_name, param);
-	}
-	catch (ros::InvalidNameException& e) {
-		ROS_ERROR_STREAM("SaveTrajectoryService: ros graph name is not valid '" << param_name <<"'");
-		return false;
-	}
+
+	ROS_INFO_STREAM("Saving messages: FollowStepSequenceGoal to " << step_sequence_param_name << " and MoveBaseGoal to " << move_base_param_name);
+	bool success = saveMessage(node_handler, last_request_goal, move_base_param_name) && saveMessage(node_handler, steps_msg, step_sequence_param_name);
 	return true;
 }
 

@@ -3,7 +3,7 @@ clop_generator:
     contact_height_tolerance: 0.005
     world_frame: "odom_combined"
     planning_frame: "base_link_path"
-    step_sequence_storage_namespace: "saved_msgs/step_sequence"
+    storage_namespace: "saved_msgs"
     towr_model:
         base:
             frame_id: "base_link"

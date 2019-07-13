@@ -62,7 +62,7 @@ class ClopGenerator
 		std::string towr_parameters_ns; /**< Namespace where gait generator parameters tree is located. */
 		std::string world_frame; /**< Unmoving coordinate frame respect to which base movements are is published */
 		std::string planning_frame; /**< Planning frame in which trajectory planning is performed. */
-		std::string step_sequence_ns; /**< Default namespace for saving StepSequenceGoal messages. */
+		std::string storage_ns; /**< Default namespace for saving StepSequenceGoal messages. */
 
 		// BUFFERS
 
