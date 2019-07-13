@@ -13,12 +13,14 @@ from std_msgs.msg import Header
 from control_msgs.msg import FollowJointTrajectoryAction
 from control_msgs.msg import FollowJointTrajectoryGoal
 from control_msgs.msg import FollowJointTrajectoryResult
-from actionlib_msgs.msg import *
+from actionlib_msgs.msg import GoalStatus
 #import trajectory_msgs.msg
 
 
 class ExecuteStoredJointTrajectoryState(EventState):
     '''
+    DEPRECATED: Use ExecuteJointTrajectory instead.
+
     Execute stored control_msgs::FollowJointTrajectoryAction. Goal is stored on ROS parameter server in serialized form.
 
     -- action_topic        string    Action server to execute action.
