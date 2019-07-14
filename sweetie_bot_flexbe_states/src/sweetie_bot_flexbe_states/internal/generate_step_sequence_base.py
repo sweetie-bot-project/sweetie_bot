@@ -33,7 +33,7 @@ class GenerateStepSequenceBase(Dummy):
 
     '''
 
-    def __init__(self, controller = 'clop_generator', outcomes = ['success', 'solution_not_found', 'partial_movement', 'invalid_pose', 'failed'], *args, **kwargs):
+    def __init__(self, controller = 'clop_generator', outcomes = ['success', 'solution_not_found', 'partial_movement', 'invalid_pose', 'failure'], *args, **kwargs):
         # Declare outcomes and output keys
 	super(GenerateStepSequenceBase, self).__init__(outcomes = outcomes, *args, **kwargs)
 

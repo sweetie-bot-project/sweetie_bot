@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
+# modules
 import rospy
+import actionlib
+import xmlrpclib
 
+# flexbe
 from flexbe_core import EventState as Dummy
 from flexbe_core import Logger
 from flexbe_core.proxy import ProxyActionClient
 
+# messages types
 from sweetie_bot_text_msgs.msg import TextCommand, CompoundAction as CompoundActionMsg, CompoundActionElement
 from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from sweetie_bot_flexbe_states.execute_step_sequence import ExecuteStepSequence
@@ -82,7 +87,7 @@ class CompoundActionBase(Dummy):
             raise TypeError, "CompoundAction ROS parameter '" + action_param + "' is not a binary data."
         # deserialize
         msg = CompoundActionMsg()
-        msg.deserialize(goal_raw.data)
+        msg.deserialize(msg_raw.data)
         return msg
 
 
@@ -114,7 +119,7 @@ class CompoundActionBase(Dummy):
                     outcome_map = {'success': 'success', 'invalid_pose':'invalid_pose', 'partial_movement':'invalid_pose'}
                 elif p.cmd.type == 'set/joint_state':
                     flexbe_state = SetJointState(pose_param = p.cmd.command)
-                    outcome_map = {'success': 'success', 'timeout':'invalid_pose'}
+                    outcome_map = {'done':'success', 'timeout':'invalid_pose'}
                 elif p.cmd.type == 'generate/step_sequence':
                     flexbe_state = GenerateStepSequence(trajectory_param = p.cmd.command)
                     outcome_map = {'success': 'success', 'invalid_pose':'invalid_pose', 'partial_movement':'invalid_pose'}
