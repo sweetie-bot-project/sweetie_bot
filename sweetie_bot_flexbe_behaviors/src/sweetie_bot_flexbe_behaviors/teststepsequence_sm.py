@@ -14,6 +14,7 @@ from sweetie_bot_flexbe_states.set_joint_state import SetJointState
 from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from sweetie_bot_flexbe_states.compound_action import CompoundAction
 from sweetie_bot_flexbe_states.generate_step_sequence import GenerateStepSequence
+from sweetie_bot_flexbe_states.compound_action_param import CompoundActionParam
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -86,7 +87,7 @@ class TestStepSequenceSM(Behavior):
 			# x:671 y:447
 			OperatableStateMachine.add('CompoundCrouchAndWalk',
 										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='crouch_begin', t2=[1,0.0], type2='motion/step_sequence', cmd2='walk_fwd_40', t3=[2,0.0], type3='generate/step_sequence', cmd3='to_nominal', t4=[3,0.0], type4='set/joint_state', cmd4='nominal'),
-										transitions={'success': 'finished', 'invalid_pose': 'failed', 'failure': 'failed'},
+										transitions={'success': 'ComponudActionFromParam', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:498 y:89
@@ -94,6 +95,12 @@ class TestStepSequenceSM(Behavior):
 										GenerateStepSequence(controller='clop_generator', trajectory_param='turn_left_45', trajectory_ns='saved_msgs/move_base'),
 										transitions={'success': 'EndWalk', 'solution_not_found': 'failed', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'solution_not_found': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
+
+			# x:507 y:546
+			OperatableStateMachine.add('ComponudActionFromParam',
+										CompoundActionParam(action_param='brohoof', action_ns='saved_msgs/compound_action'),
+										transitions={'success': 'finished', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 
 		return _state_machine
