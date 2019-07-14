@@ -21,14 +21,18 @@ Created on 13.10.2017
 
 class SweetieBotCompoundAction(EventState):
 	'''
+        DEPRECATED: use CompoundAction instead.
+
 	Compound action consists of several simple actions which are executed at specific time or after each other. 
 	Simple action is described by type, command filed (cmd) and start execution time label t. 
 
-	Actions are translated into other flexbe states. No ExecuteStoredJointTrajectoryState and TextCommandState are supported.
+        Actions are translated into other flexbe states:
+        * type 'motion/joint_trajectory' -> ExecuteJointTrajectory(trajectory_param=<cmd>)
+        * other types -> TextCommand(type=<type>, cmd=<cmd>)
 
 
 	-- t1			(int,float)			Time label of the first action. Time label is a tuple which contains two values: previous simple action reference and time delay (seconds). So `(2, 0.5)` means that action is started with 0.5 seconds delay after second action is finished. Zero coresponds to CompoundAction state start time.
-	-- type1		string				Type of the first action. None means no action. 'motion/joint_trajectory' maps to ExecuteStoredJointTrajectoryState( trajectory_param='joint_trajectory/'+cmd, action_topic='motion/controller/joint_trajectory') Other values are converted to TextCommandState( type=type, cmd=cmd, topic='control').
+	-- type1		string				Type of the first action. None means no action.  Other values are converted to TextCommandState( type=type, cmd=cmd, topic='control').
 	-- cmd1			string				  First action command.
 	-- t2			(int,float)		Time label of the second action.
 	-- type2		string				  Type of the second action.
@@ -85,7 +89,7 @@ class SweetieBotCompoundAction(EventState):
 					raise TypeError, 'Incorrect action type %d. Type must be string or None.' % i
 				# Select action
 				if p.type == 'motion/joint_trajectory':
-					flexbe_state = ExecuteStoredJointTrajectoryState(action_topic = 'motion/controller/joint_trajectory', trajectory_param = 'joint_trajectory/' +  p.cmd)
+					flexbe_state = ExecuteJointTrajectory(trajectory_param = p.cmd)
 					success_outcome = 'success'
 				else:
 					flexbe_state = TextCommandState(p.type, p.cmd, topic = 'control')
