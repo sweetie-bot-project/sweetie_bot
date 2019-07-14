@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="AutonomousBehavior">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.autonomousbehavior_sm" class="AutonomousBehaviorSM" />
+	<tagstring>autonomous</tagstring>
+	<author>mutronics</author>
+	<date>Sun Jul 14 2019</date>
+	<description>
+		Autonomous behavior
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+
+</behavior>
