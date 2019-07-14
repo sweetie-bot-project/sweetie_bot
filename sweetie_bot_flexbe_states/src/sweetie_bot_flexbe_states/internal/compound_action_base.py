@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # modules
 import rospy
 import actionlib
@@ -47,7 +46,7 @@ class CompoundActionBase(Dummy):
         def __init__(self, previous_action, delay, state, flexbe_state, outcome_map, finish_time, description):
             self.previous_action, self.delay, self.state, self.flexbe_state, self.outcome_map, self.finish_time, self.description = previous_action, delay, state, flexbe_state, outcome_map, finish_time, description
 
-    def __init__(self, compound_action_msg = None, outcomes = ['success', 'invalid_pose', 'failure']):
+    def __init__(self, compound_action_msg = None, outcomes = ['success', 'invalid_pose', 'failure'], input_keys = [], output_keys = []):
         ''' Init CompoundActionBase with given list of action specs. '''
         # parse supplied compound action
         if compound_action_msg:
@@ -66,8 +65,8 @@ class CompoundActionBase(Dummy):
 
         # instance superclass
         super(CompoundActionBase, self).__init__(outcomes=outcomes,
-                input_keys = list( set.union(*[ actions[n].flexbe_state._input_keys for n in range(len(actions)) ]) ),
-                output_keys = list( set.union(*[ actions[n].flexbe_state._output_keys for n in range(len(actions)) ]) ) )
+                input_keys = list( set.union( set(input_keys), *[ actions[n].flexbe_state._input_keys for n in range(len(actions)) ]) ),
+                output_keys = list( set.union( set(output_keys), *[ actions[n].flexbe_state._output_keys for n in range(len(actions)) ]) ) )
 
         # set class fields
         self._start_time = None

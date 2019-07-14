@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from flexbe_core import Logger
 from internal.compound_action_base import CompoundActionBase as EventState
 
 # Superclass is imported as EventState to allow to parse state definition FlexApp correctly.
@@ -20,9 +20,10 @@ class CompoundActionParamKey(EventState):
     '''
 
     def __init__(self, action_ns = 'saved_msgs/compound_action'):
-        # load stored message
-        super(CompoundActionParamKey, self).__init__(outcomes=['success', 'invalid_pose', 'failure'])
+        super(CompoundActionParamKey, self).__init__(outcomes=['success', 'invalid_pose', 'failure'], input_keys=['action_param'])
+
         self._error = False
+        self._action_ns = action_ns
 
     def on_enter(self, userdata):
         self._error = False
@@ -39,13 +40,19 @@ class CompoundActionParamKey(EventState):
         # proceed with actions execution
 
         # perform on_start()
-        super(CompoundActionParamKey, self).on_start(self)
+        super(CompoundActionParamKey, self).on_start()
         # perform on_enter()
-        super(CompoundActionParamKey, self).on_enter(self, userdata)
+        super(CompoundActionParamKey, self).on_enter(userdata)
 
     def execute(self, userdata):
         if self._error:
             return 'failure'
 
-        super(CompoundActionParamKey, self).execute(self, userdata)
+        return super(CompoundActionParamKey, self).execute(userdata)
+
+    def on_exit(self, userdata):
+        # perform on_stop()
+        super(CompoundActionParamKey, self).on_stop()
+        # clear actions list
+        self._actions = []
         
