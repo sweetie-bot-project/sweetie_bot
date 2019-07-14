@@ -6,7 +6,7 @@ from flexbe_core import EventState, Logger
 
 from flexbe_core.proxy import ProxySubscriberCached
 
-#Dirty hack to make CromeApp be able to see documentation
+# Superclass is imported as EventState to allow to parse state definition FlexApp correctly.
 from flexbe_states.subscriber_state import SubscriberState as EventState
 
 '''

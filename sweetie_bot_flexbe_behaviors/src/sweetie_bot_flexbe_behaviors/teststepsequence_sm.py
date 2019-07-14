@@ -10,7 +10,10 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.set_cartesian_pose import SetCartesianPose
 from sweetie_bot_flexbe_states.execute_step_sequence import ExecuteStepSequence
-from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.set_joint_state import SetJointState
+from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
+from sweetie_bot_flexbe_states.compound_action import CompoundAction
+from sweetie_bot_flexbe_states.generate_step_sequence import GenerateStepSequence
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -45,9 +48,9 @@ class TestStepSequenceSM(Behavior):
 
 
 	def create(self):
-		# x:365 y:575, x:163 y:383
+		# x:821 y:618, x:163 y:383
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
-		_state_machine.userdata.trajectory_param = None
+		_state_machine.userdata.unused = None
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -56,48 +59,41 @@ class TestStepSequenceSM(Behavior):
 
 
 		with _state_machine:
-			# x:135 y:91
+			# x:88 y:87
 			OperatableStateMachine.add('PrepareToWalk',
 										SetCartesianPose(controller='motion/controller/stance', pose=[0.0,0.0,0.2085,0.0,0.0,0.0], frame_id='base_link_path', frame_is_moving=False, resources=['leg1','leg2','leg3','leg4'], actuator_frame_id='base_link', tolerance_lin=0.001, tolerance_ang=0.0085, timeout=10.0),
 										transitions={'done': 'WalkFwd', 'failed': 'failed', 'timeout': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
 
-			# x:286 y:172
+			# x:319 y:31
 			OperatableStateMachine.add('WalkFwd',
 										ExecuteStepSequence(controller='motion/controller/step_sequence', trajectory_param='walk_fwd_40', trajectory_ns='saved_msgs/step_sequence'),
-										transitions={'success': 'EndWalk', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										transitions={'success': 'GenerateTurnLeft', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
-			# x:479 y:36
+			# x:461 y:256
 			OperatableStateMachine.add('EndWalk',
-										SetCartesianPose(controller='motion/controller/stance', pose=[0.0,0.0,0.233,0.0,0.0,0.0], frame_id='base_link_path', frame_is_moving=False, resources=['leg1','leg2','leg3','leg4'], actuator_frame_id='base_link', tolerance_lin=0.001, tolerance_ang=0.0085, timeout=10.0),
+										SetJointState(controller='motion/controller/joint_state_head', pose_param='nominal', pose_ns='saved_msgs/joint_state', tolerance=0.017, timeout=10.0, joint_topic="joint_states"),
 										transitions={'done': 'Greeting', 'failed': 'failed', 'timeout': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
 
-			# x:670 y:144
+			# x:654 y:319
 			OperatableStateMachine.add('Greeting',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='/saved_msgs/joint_trajectory/greeting'),
-										transitions={'success': 'PrepareToWalk2', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
-										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
-										remapping={'result': 'result'})
-
-			# x:932 y:428
-			OperatableStateMachine.add('Turn45',
-										ExecuteStepSequence(controller='motion/controller/step_sequence', trajectory_param='turn_left_45', trajectory_ns='saved_msgs/step_sequence'),
-										transitions={'success': 'EndWalk2', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='greeting', trajectory_ns='saved_msgs/joint_trajectory'),
+										transitions={'success': 'CompoundCrouchAndWalk', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
-			# x:792 y:546
-			OperatableStateMachine.add('EndWalk2',
-										SetCartesianPose(controller='motion/controller/stance', pose=[0.0,0.0,0.2085,0.0,0.0,0.0], frame_id='base_link_path', frame_is_moving=False, resources=['leg1','leg2','leg3','leg4'], actuator_frame_id='base_link', tolerance_lin=0.001, tolerance_ang=0.0085, timeout=10.0),
-										transitions={'done': 'WalkFwd', 'failed': 'failed', 'timeout': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
+			# x:671 y:447
+			OperatableStateMachine.add('CompoundCrouchAndWalk',
+										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='crouch_begin', t2=[1,0.0], type2='motion/step_sequence', cmd2='walk_fwd_40', t3=[2,0.0], type3='generate/step_sequence', cmd3='to_nominal', t4=[3,0.0], type4='set/joint_state', cmd4='nominal'),
+										transitions={'success': 'finished', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
-			# x:741 y:286
-			OperatableStateMachine.add('PrepareToWalk2',
-										SetCartesianPose(controller='motion/controller/stance', pose=[0.0,0.0,0.2085,0.0,0.0,0.0], frame_id='base_link_path', frame_is_moving=False, resources=['leg1','leg2','leg3','leg4'], actuator_frame_id='base_link', tolerance_lin=0.001, tolerance_ang=0.0085, timeout=10.0),
-										transitions={'done': 'Turn45', 'failed': 'failed', 'timeout': 'failed'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
+			# x:498 y:89
+			OperatableStateMachine.add('GenerateTurnLeft',
+										GenerateStepSequence(controller='clop_generator', trajectory_param='turn_left_45', trajectory_ns='saved_msgs/move_base'),
+										transitions={'success': 'EndWalk', 'solution_not_found': 'failed', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'solution_not_found': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 
 		return _state_machine
