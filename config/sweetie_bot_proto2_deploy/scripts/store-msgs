@@ -36,4 +36,7 @@ fi
 if [ -d $PKG_PATH/joint_state ]; then
 	rosrun sweetie_bot_deploy store $1 JointState $NS/joint_state $PKG_PATH/joint_state
 fi
+if [ -d $PKG_PATH/compound_action ]; then
+	rosrun sweetie_bot_deploy store $1 CompoundAction $NS/compound_action $PKG_PATH/compound_action
+fi
 
