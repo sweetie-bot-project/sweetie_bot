@@ -1,1 +1,1 @@
-sweetie_bot_text_msgs/CompoundActionElement action_list
+sweetie_bot_text_msgs/CompoundActionElement[] action_list
