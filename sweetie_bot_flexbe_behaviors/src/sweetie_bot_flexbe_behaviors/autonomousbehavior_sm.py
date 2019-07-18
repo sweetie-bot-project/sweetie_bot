@@ -80,7 +80,7 @@ class AutonomousBehaviorSM(Behavior):
 
 			# x:595 y:275
 			OperatableStateMachine.add('Right_right_fwd2',
-										CompoundAction(t1=[0,0.0], type1='motion/step_sequence', cmd1='walk_fwd_40', t2=[1,0.0], type2='motion/step_sequence', cmd2='turn_right_20_20_90', t3=[2,0.0], type3='motion/step_sequence', cmd3='turn_left_45', t4=[3,0.0], type4='motion/step_sequence', cmd4='turn_left_45'),
+										CompoundAction(t1=[0,0.0], type1='motion/step_sequence', cmd1='walk_fwd_40', t2=[1,0.0], type2='motion/step_sequence', cmd2='turn_left_20_20_90', t3=[2,0.0], type3='motion/step_sequence', cmd3='turn_left_90', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'Right_right1', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
