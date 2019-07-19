@@ -48,6 +48,10 @@
 				<arg name="robot_ns" value="$(arg robot_ns)" /> 
 				<arg name="robot_name" value="$(arg robot_name)" /> 
 			</include>
+			<!-- gait generator -->
+			<node name="clop_generator" pkg="sweetie_bot_clop_generator" type="towr_clop_generator" output="screen">
+				<remap from="step_sequence" to="motion/controller/step_sequence" />     
+			</node>
 			<!-- voice  -->
 			<group ns="voice">
 				<!-- voice node  -->
