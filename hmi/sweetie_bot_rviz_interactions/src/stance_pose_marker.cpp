@@ -216,6 +216,8 @@ void StancePoseMarker::makeMenu()
 	normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &StancePoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
 	publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback);
 	menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED); publish_pose = true;
+	enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &StancePoseMarker::processEnable6DOF, this, _1 ));
+	menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::UNCHECKED);
   if (!frames.empty()) {
     MenuHandler::EntryHandle frames_submenu = menu_handler.insert("Move to frame");
     for ( const std::string& frame : frames ) {

@@ -11,6 +11,28 @@ namespace hmi {
 
 PoseMarker::~PoseMarker() {}
 
+void PoseMarker::processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
+{
+  if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT)
+  {
+    ROS_INFO_STREAM("Feedback from marker '" << feedback->marker_name << "' "
+                    << " / control '" << feedback->control_name << "': menu \"Enable 6-DOF\"");
+
+    MenuHandler::CheckState check;
+    menu_handler.getCheckState(feedback->menu_entry_id, check);
+    switch (check) {
+    case MenuHandler::CHECKED:
+      menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
+      updateInteractiveMarker(false);
+      break;
+    case MenuHandler::UNCHECKED:
+      menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
+      updateInteractiveMarker(true);
+      break;
+    }
+  }
+}
+
 void PoseMarker::processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, const ros::Publisher& pose_pub, bool pose_publish )
 {
   if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT)
@@ -45,6 +67,42 @@ void PoseMarker::processMoveToFrame( const visualization_msgs::InteractiveMarker
 			server->applyChanges();
 		}
 	}
+}
+
+void PoseMarker::updateInteractiveMarker(bool is6DOF)
+{
+  InteractiveMarker int_marker;
+  server->get(name, int_marker);
+
+  if (is6DOF) {
+    InteractiveMarkerControl control;
+    std::vector<InteractiveMarkerControl> controls;
+    // Create controls with old axises orientations
+    for ( const auto& old_ctrl : int_marker.controls) {
+      if (old_ctrl.name.substr(0, 4) == "move") {
+        control.name = "rotate" + old_ctrl.name.substr(4);
+        control.orientation = old_ctrl.orientation;
+        control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
+        controls.push_back(control);
+      }
+    }
+    int_marker.controls.insert(int_marker.controls.end(), controls.begin(), controls.end());
+  }
+  else {
+    auto& controls = int_marker.controls;
+    controls.erase(std::remove_if(controls.begin(), controls.end(),
+                                  [](const InteractiveMarkerControl& control)
+                                  { return control.interaction_mode == InteractiveMarkerControl::ROTATE_AXIS; }), controls.end());
+  }
+
+  // remove old marker from server
+  server->erase(name);
+
+	// add new marker to server
+	server->insert(int_marker);
+
+  menu_handler.reApply(*server);
+  server->applyChanges();
 }
 
 void PoseMarker::makeInteractiveMarker(Marker (*makeMarkerBody)(double scale), const MenuHandler::FeedbackCallback& processFeedback, bool is6DOF)

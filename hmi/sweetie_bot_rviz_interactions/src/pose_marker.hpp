@@ -37,12 +37,14 @@ public:
   virtual ~PoseMarker() = 0;
 
 protected:
+  void processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
   void processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, const ros::Publisher& pose_pub, bool publish_pose);
   void processMoveToFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 
+  void updateInteractiveMarker(bool is6DOF);
   void makeInteractiveMarker(visualization_msgs::Marker (*makeMarkerBody)(double scale),
                              const MenuHandler::FeedbackCallback& processFeedback,
-                             bool is6DOF = true);
+                             bool is6DOF = false);
 
   virtual void makeMenu() = 0;
 
@@ -80,6 +82,7 @@ protected:
   MenuHandler menu_handler;
   // menu index
   MenuHandler::EntryHandle normalize_pose_entry;
+  MenuHandler::EntryHandle enable_6DOF_entry;
 };
 
 } // namespace hmi
