@@ -683,17 +683,33 @@ void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, d
 	}
 }
 
-std::vector<towr::GaitGenerator::Gaits> MakeGaitsCombo(const std::string gait_type, int n_steps)
+static bool compare_tail(const std::string& str, const std::string& tail) 
+{
+	if (str.size() < tail.size()) return false;
+	int pos = str.size() - tail.size();
+	return str.compare(pos, std::string::npos, tail) == 0;
+}
+
+static void SetGaitGeneratorCombo(towr::GaitGenerator& gait_gen, std::string gait_type, int n_steps)
 {
 	// create necessary movment combo
 	std::vector<towr::GaitGenerator::Gaits> combo;
+	bool fliplr_flag = false;
+
 	if (gait_type == "stand") {
 		// NOTE: ignore n_steps
 		combo.push_back(towr::GaitGenerator::Stand);
 	}
 	else {
 		// check provided message: number of steps must be positive
-		if (n_steps <= 0 && gait_type != "stand") throw std::invalid_argument("Number of steps must be positive");
+		if (n_steps <= 0) throw std::invalid_argument("Number of steps must be positive");
+
+		// check if left and right legs should be swapped
+		const std::string flip_postfix = "_right";
+		if (compare_tail(gait_type, flip_postfix)) {
+			gait_type.erase(gait_type.end() - flip_postfix.size(), gait_type.end());
+			fliplr_flag = true;
+		}
 
 		// generate combo with prescribed number of steps
 		combo.push_back(towr::GaitGenerator::Stand);
@@ -724,11 +740,13 @@ std::vector<towr::GaitGenerator::Gaits> MakeGaitsCombo(const std::string gait_ty
 			combo.push_back(towr::GaitGenerator::Hop3E);
 		}
 		else {
-			throw std::invalid_argument("Unknown gait type: " + gait_type);
+			throw std::invalid_argument("Unknown gait type: " + gait_type + (fliplr_flag ? flip_postfix : "") );
 		}
 		combo.push_back(towr::GaitGenerator::Stand);
 	}
-	return combo;
+	// assign combo to gait generator
+	gait_gen.SetGaits(combo);
+	if (fliplr_flag) gait_gen.FlipLeftRight();
 }
 
 
@@ -840,7 +858,7 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 	else {
 		// create gait genarator and assign combo
 		std::shared_ptr<towr::GaitGenerator> gait_gen = GaitGenerator::MakeGaitGenerator(n_ee);
-		gait_gen->SetGaits( MakeGaitsCombo(msg.gait_type, msg.n_steps) );
+		SetGaitGeneratorCombo(*gait_gen, msg.gait_type, msg.n_steps);
 
 		// load parameters from namespace "~towr_paramters" with step-based timescale
 		getTowrParametersFromRos(params, towr_parameters_ns + "towr_parameters", msg.duration / gait_gen->GetUnscaledTotalDuration());
