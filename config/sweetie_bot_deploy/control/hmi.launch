@@ -40,15 +40,11 @@
 			<remap from="supports" to="$(arg robot_ns)/motion/aggregator_ref/out_supports_sorted"/>
 		</node>
 		<!-- robot pose control -->
-		<node name="stance_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-			<remap from="pose" to="$(arg robot_ns)/motion/controller/stance/in_base_ref"/>
-			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/stance"/>
-			<param name="resources_select_only_one" value="false"/>
-		</node>
-		<node name="limb_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-			<remap from="pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/>
-			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/pose"/>
-			<param name="resources_select_only_one" value="true"/>
+		<node name="pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
+			<remap from="stance_pose" to="$(arg robot_ns)/motion/controller/stance/in_base_ref"/>
+			<remap from="stance_set_operational_action" to="$(arg robot_ns)/motion/controller/stance"/>
+      <remap from="limb_pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/>
+			<remap from="limb_set_operational_action" to="$(arg robot_ns)/motion/controller/pose"/>
 		</node>
 		<!-- eyes vizualization -->
 		<group>
