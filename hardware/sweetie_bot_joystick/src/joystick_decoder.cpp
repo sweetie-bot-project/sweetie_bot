@@ -240,10 +240,12 @@ void JointAxes::decodeKey(int key, double value, double dt)
 			joints_.position[ki.index] = (1.0-alpha)*ki.min + alpha*ki.max;
 		}
 		else {
-			double pos = joints_.position[ki.index] = ki.speed*dt;
-			if (pos < ki.min) pos = ki.min;
-			if (pos > ki.max) pos = ki.max;
-			joints_.position[ki.index] = pos;
+			if (value != 0.0) {
+				double pos = joints_.position[ki.index] + ki.speed*dt;
+				if (pos < ki.min) pos = ki.min;
+				if (pos > ki.max) pos = ki.max;
+				joints_.position[ki.index] = pos;
+			}
 		}
 	}
 }
