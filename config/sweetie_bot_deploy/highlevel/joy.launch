@@ -9,7 +9,8 @@
 		<param name="autorepeat_rate" value="5" />
 		<param name="coalesce_interval" value="0.0000" />
 	</node>
-	<!--<node pkg="diagnostic_aggregator" type="aggregator_node" name="diagnostic_aggregator" output="screen" >
-	<rosparam command="load" file="$(find ps3joy)/diagnostics.yaml" />
-	</node>-->
+	<node ns="$(arg robot_ns)/hmi" pkg="sweetie_bot_joystick" type="joystick_decoder" name="joy_decoder" output="screen" >
+		<remap from="~config" to="$(arg robot_ns)/conf_file/joystick_config_yaml" />
+		<remap from="~joystick" to="joystick" />
+	</node>
 </launch>

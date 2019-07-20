@@ -1,0 +1,39 @@
+KeyPressed:
+    enable_group: "buttons"
+    joy_topic: "joystick"
+    key_topic: "keys_pressed"
+    buttons:
+        0: "1"
+        1: "2"
+        2: "3"
+        3: "4"
+        4: "L1"
+        6: "L2"
+        5: "R1"
+        7: "R2"
+        8: "select"
+        9: "start"
+    axes_positive:
+        4: "right"
+        5: "down"
+    axes_negative:
+        4: "left"
+        5: "up"
+JointAxes:
+    enable_group: "head"
+    joy_topic: "joystick"
+    joints_topic: "joints_ref"
+    buttons: { }
+    axes:
+        2:
+            joint: "eyes_yaw"
+            speed: 0.0
+            min: -1.57
+            max: 1.57
+        3:
+            joint: "eyes_pitch"
+            speed: 0.0
+            min: -1.57
+            max: 1.57
+
+
