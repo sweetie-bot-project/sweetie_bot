@@ -15,6 +15,7 @@ class ExecuteStepSequenceKey(EventState):
     ># trajectory_param    string    ROS parameter in trajectory_ns which stores FollowStepSequence message.
 
     <= success              Indicate that goal is achived.
+    <= unavailable          Unable to load desired movement.
     <= partial_movement     Execution stopped in midway (path or goal tolerance error, obstacle, external cancel request).
     <= invalid_pose         Initial pose is invalid, movement cannot be started.
     <= failure              Any other failure. (Invalid joints, ActionServer unavailable and so on).
@@ -24,18 +25,18 @@ class ExecuteStepSequenceKey(EventState):
     def __init__(self, controller = 'motion/controller/step_sequence', trajectory_ns = 'saved_msgs/joint_trajectory'):
         # Declare outcomes and output keys
         # Actually constructor of ExecuteStepSequenceBase is called instead of constructor of EventState.
-        super(ExecuteStepSequenceKey, self).__init__(controller = controller, outcomes = ['success', 'partial_movement', 'invalid_pose', 'failure'], input_keys = ['trajectory_param'])
+        super(ExecuteStepSequenceKey, self).__init__(controller = controller, outcomes = ['success', 'unavailable', 'partial_movement', 'invalid_pose', 'failure'], input_keys = ['trajectory_param'])
 
         self._trajectory_ns = trajectory_ns
 
     def on_enter(self, userdata):
-        self._error = False
+        self._outcome = None
         # Load FollowStepSequenceGoal from Parameter Server
         try:
             goal = self.load_goal_msg(self._trajectory_ns, userdata.trajectory_param)
         except Exception as e:
             Logger.logwarn('ExecuteStepSequenceKey: unable to load trajectory from `%s/%s` parameter:\n%s' % (self._trajectory_ns, userdata.trajectory_param, str(e)) )
-            self._error = True
+            self._outcome = 'unavailable'
             return
 
         # send loaded goal

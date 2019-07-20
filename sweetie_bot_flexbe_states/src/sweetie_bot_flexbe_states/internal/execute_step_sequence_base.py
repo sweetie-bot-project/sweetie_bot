@@ -41,8 +41,8 @@ class ExecuteStepSequenceBase(Dummy):
         self._controller = controller
         self._client = ProxyActionClient({self._controller: FollowStepSequenceAction}) # pass required clients as dict (topic: type)
 
-        # It may happen that the action client fails to send the action goal.
-        self._error = False
+        # Pass outcome from on_enter() or on_resume()
+        self._outcome = None
 
         # log_once support
         self._logged = False
@@ -69,7 +69,7 @@ class ExecuteStepSequenceBase(Dummy):
             self._logged = True
 
     def send_goal(self, goal):
-        self._error = False
+        self._outcome = None
         self._logged = False
         # Remove odometry information from the goal message
         del goal.base_motion.points[:]
@@ -78,15 +78,15 @@ class ExecuteStepSequenceBase(Dummy):
             self._client.send_goal(self._controller, goal)
         except Exception as e:
             Logger.logwarn('ExecuteStepSequence: Failed to send the FollowStepSequence command:\n%s' % str(e))
-            self._error = True
+            self._outcome = 'failure'
 
 
     def execute(self, userdata):
         # While this state is active, check if the action has been finished and evaluate the result.
 
         # Check if the client failed to send the goal.
-        if self._error:
-            return 'failure'
+        if self._outcome:
+            return self._outcome
     
         # Check if the action has been finished
         if not self._client.is_active(self._controller):

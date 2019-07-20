@@ -29,7 +29,7 @@ class GenerateStepSequenceBase(Dummy):
     <= solution_not_found   Planner is unable to find solution.
     <= partial_movement     Execution stopped in midway (path or goal tolerance error, obstacle, external cancel request).
     <= invalid_pose         Initial pose is invalid, movement cannot be started.
-    <= failed              Any other failure. (Invalid joints, ActionServer unavailable and so on).
+    <= failure              Any other failure. (Invalid joints, ActionServer unavailable and so on).
 
     '''
 
@@ -41,8 +41,8 @@ class GenerateStepSequenceBase(Dummy):
         self._controller = controller
         self._client = ProxyActionClient({self._controller: MoveBaseAction}) # pass required clients as dict (topic: type)
 
-        # It may happen that the action client fails to send the action goal.
-        self._error = False
+        # It may happen that the action client fails to send the action goal, if _outcome is set then execute() exits immediately.
+        self._outcome = None
 
         # log_once support
         self._logged = False
@@ -69,22 +69,21 @@ class GenerateStepSequenceBase(Dummy):
             self._logged = True
 
     def send_goal(self, goal):
-        self._error = False
+        self._outcome = False
         self._logged = False
         # Send the goal
         try:
             self._client.send_goal(self._controller, goal)
         except Exception as e:
             Logger.logwarn('GenerateStepSequence: Failed to send the MoveBase command:\n%s' % str(e))
-            self._error = True
-
+            self._outcome = 'failure'
 
     def execute(self, userdata):
         # While this state is active, check if the action has been finished and evaluate the result.
 
         # Check if the client failed to send the goal.
-        if self._error:
-            return 'failed'
+        if self._outcome:
+            return self._outcome
     
         # Check if the action has been finished
         if self._client.has_result(self._controller):

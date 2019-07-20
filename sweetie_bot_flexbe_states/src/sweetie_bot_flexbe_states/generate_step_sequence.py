@@ -28,12 +28,7 @@ class GenerateStepSequence(EventState):
 	self._goal = self.loadGoalMsg(trajectory_ns, trajectory_param)
 
     def on_enter(self, userdata):
-        self._error = False
         # Send the goal
-        try:
-            self._client.send_goal(self._controller, self._goal)
-        except Exception as e:
-            Logger.logwarn('GenerateStepSequence: Failed to send the MoveBase command:\n%s' % str(e))
-            self._error = True
+        self.send_goal(self._goal)
 
 

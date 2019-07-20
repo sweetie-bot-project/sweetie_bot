@@ -29,13 +29,13 @@ class GenerateStepSequenceKey(EventState):
         self._trajectory_ns = trajectory_ns
 
     def on_enter(self, userdata):
-        self._error = False
+        self._outcome = None
         # Load MoveBaseGoal from Parameter Server
         try:
             goal = self.load_goal_msg(self._trajectory_ns, userdata.trajectory_param)
         except Exception as e:
             Logger.logwarn('GenerateStepSequenceKey: unable to load trajectory from `%s/%s` parameter:\n%s' % (self._trajectory_ns, userdata.trajectory_param, str(e)) )
-            self._error = True
+            self._outcome = 'failure'
             return
 
         # send loaded goal

@@ -39,8 +39,8 @@ class ExecuteJointTrajectoryBase(Dummy):
         self._controller = controller
         self._client = ProxyActionClient({self._controller: FollowJointTrajectoryAction}) # pass required clients as dict (topic: type)
 
-        # It may happen that the action client fails to send the action goal.
-        self._error = False
+        # It may happen that the action client fails to send the action goal, if _outcome is set then execute() exits immediately.
+        self._outcome = None
 
         # log_once support
         self._logged = False
@@ -67,22 +67,22 @@ class ExecuteJointTrajectoryBase(Dummy):
             self._logged = True
 
     def send_goal(self, goal):
-        self._error = False
+        self._outcome = None
         self._logged = False
         # Send the goal
         try:
             self._client.send_goal(self._controller, goal)
         except Exception as e:
             Logger.logwarn('ExecuteJointTrajectory: Failed to send the FollowJointTrajectory command:\n%s' % str(e))
-            self._error = True
+            self._outcome = 'failure'
 
 
     def execute(self, userdata):
         # While this state is active, check if the action has been finished and evaluate the result.
 
         # Check if the client failed to send the goal.
-        if self._error:
-            return 'failure'
+        if self._outcome:
+            return self._outcome
     
         # Check if the action has been finished
         if self._client.has_result(self._controller):
