@@ -14,15 +14,15 @@ KeyPressed:
         8: "select"
         9: "start"
     axes_positive:
-        4: "right"
-        5: "down"
-    axes_negative:
         4: "left"
         5: "up"
+    axes_negative:
+        4: "right"
+        5: "down"
 JointAxes:
-    enable_group: "head"
+    enable_group: "eyes"
     joy_topic: "joystick"
-    joints_topic: "joints_ref"
+    joints_topic: "eyes_joints_ref"
     buttons: { }
     axes:
         2:
@@ -35,5 +35,3 @@ JointAxes:
             speed: 0.0
             min: -1.57
             max: 1.57
-
-
