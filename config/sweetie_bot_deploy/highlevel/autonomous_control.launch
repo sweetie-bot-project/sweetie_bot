@@ -55,9 +55,16 @@
 			</include>
 		</group>
 		<!-- joystick -->
-		<include file="$(find sweetie_bot_deploy)/highlevel/joy.launch" >
-			<arg name="robot_ns" value="$(arg robot_ns)" />
-		</include>
+		<group if="$(eval not host and robot)">
+			<include file="$(find sweetie_bot_deploy)/highlevel/joy_embeded.launch" >
+				<arg name="robot_ns" value="$(arg robot_ns)" />
+			</include>
+		</group>
+		<group if="$(eval host and robot)">
+			<include file="$(find sweetie_bot_deploy)/highlevel/joy.launch" >
+				<arg name="robot_ns" value="$(arg robot_ns)" />
+			</include>
+		</group>
 	</group>
 
 	<!-- robot nodes on host side -->
