@@ -8,10 +8,10 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.set_joint_state import SetJointState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import random
@@ -61,21 +61,13 @@ class BadSM(Behavior):
 
 
 		with _state_machine:
-			# x:72 y:306
-			OperatableStateMachine.add('MovwStandPose',
-										SrdfStateToMoveit(config_name='head_basic', move_group='head', action_topic='move_group', robot_name=''),
-										transitions={'reached': 'CheckEvil', 'planning_failed': 'MoveStandPose2', 'control_failed': 'MoveStandPose2', 'param_error': 'failed'},
-										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
-										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
+			# x:45 y:143
+			OperatableStateMachine.add('SetHeadNominalPose',
+										SetJointState(controller='motion/controller/joint_state_head', pose_param='head_nominal', pose_ns='saved_msgs/joint_state', tolerance=0.017, timeout=10.0, joint_topic="joint_states"),
+										transitions={'done': 'CheckEvil', 'failed': 'failed', 'timeout': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
 
-			# x:320 y:143
-			OperatableStateMachine.add('RandomChoiceGood',
-										DecisionState(outcomes=['good1', 'good2'], conditions=lambda x: random.choice(['good1', 'good2'])),
-										transitions={'good1': 'SayOverflow', 'good2': 'SayDizzy'},
-										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low},
-										remapping={'input_value': 'be_evil'})
-
-			# x:416 y:537
+			# x:421 y:472
 			OperatableStateMachine.add('SayDoNotTouch',
 										TextCommandState(type='voice/play_wav', command='do_not_touch_me', topic=voice_topic),
 										transitions={'done': 'HoofStamp'},
@@ -121,12 +113,12 @@ class BadSM(Behavior):
 										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
-			# x:129 y:436
-			OperatableStateMachine.add('MoveStandPose2',
-										SrdfStateToMoveit(config_name='head_basic', move_group='head', action_topic='move_group', robot_name=''),
-										transitions={'reached': 'CheckEvil', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
-										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
-										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
+			# x:320 y:143
+			OperatableStateMachine.add('RandomChoiceGood',
+										DecisionState(outcomes=['good1', 'good2'], conditions=lambda x: random.choice(['good1', 'good2'])),
+										transitions={'good1': 'SayOverflow', 'good2': 'SayDizzy'},
+										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low},
+										remapping={'input_value': 'be_evil'})
 
 
 		return _state_machine

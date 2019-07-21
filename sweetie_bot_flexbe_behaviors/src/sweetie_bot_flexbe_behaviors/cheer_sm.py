@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 ###########################################################
 #               WARNING: Generated code!                  #
 #              **************************                 #
@@ -11,6 +12,8 @@ from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.wait_state import WaitState
+from sweetie_bot_flexbe_states.set_joint_state import SetJointState
+from sweetie_bot_flexbe_states.compound_action_param import CompoundActionParam
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import random
@@ -60,25 +63,11 @@ class CheerSM(Behavior):
 
 
 		with _state_machine:
-			# x:64 y:76
-			OperatableStateMachine.add('CheckEvil',
-										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'evil' if x else 'good'),
-										transitions={'good': 'SayMaximumFun', 'evil': 'RandomChoice'},
-										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
-										remapping={'input_value': 'be_evil'})
-
-			# x:504 y:79
-			OperatableStateMachine.add('Prance',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'prance'),
-										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
-										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
-										remapping={'result': 'result'})
-
-			# x:325 y:57
-			OperatableStateMachine.add('SayMaximumFun',
-										TextCommandState(type='voice/play_wav', command='fun_level', topic=voice_topic),
-										transitions={'done': 'Prance'},
-										autonomy={'done': Autonomy.Off})
+			# x:48 y:105
+			OperatableStateMachine.add('SetHeadNominalPose',
+										SetJointState(controller='motion/controller/joint_state_head', pose_param='head_nominal', pose_ns='saved_msgs/joint_state', tolerance=0.017, timeout=10.0, joint_topic="joint_states"),
+										transitions={'done': 'CheckEvil', 'failed': 'failed', 'timeout': 'finished'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
 
 			# x:579 y:498
 			OperatableStateMachine.add('HoofStamp',
@@ -87,16 +76,10 @@ class CheerSM(Behavior):
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
-			# x:309 y:437
-			OperatableStateMachine.add('SayDoNotTouch',
-										TextCommandState(type='voice/play_wav', command='05donottouch', topic=voice_topic),
-										transitions={'done': 'PointHoof'},
-										autonomy={'done': Autonomy.Off})
-
 			# x:88 y:447
 			OperatableStateMachine.add('RandomChoice',
 										DecisionState(outcomes=['evil1','evil2'], conditions=lambda x: random.choice(['evil1','evil2'])),
-										transitions={'evil1': 'SayDoNotTouch', 'evil2': 'SayWalk'},
+										transitions={'evil1': 'PointDoNotTouch', 'evil2': 'SayWalk'},
 										autonomy={'evil1': Autonomy.High, 'evil2': Autonomy.High},
 										remapping={'input_value': 'be_evil'})
 
@@ -112,12 +95,24 @@ class CheerSM(Behavior):
 										transitions={'done': 'HoofStamp'},
 										autonomy={'done': Autonomy.Off})
 
-			# x:574 y:414
-			OperatableStateMachine.add('PointHoof',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'begone3'),
-										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
-										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
-										remapping={'result': 'result'})
+			# x:497 y:102
+			OperatableStateMachine.add('PranceMaxFun',
+										CompoundActionParam(action_param='prance_maximum_fun', action_ns='saved_msgs/compound_action'),
+										transitions={'success': 'finished', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
+
+			# x:437 y:275
+			OperatableStateMachine.add('PointDoNotTouch',
+										CompoundActionParam(action_param='point_do_not_touch', action_ns='saved_msgs/compound_action'),
+										transitions={'success': 'finished', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
+
+			# x:140 y:251
+			OperatableStateMachine.add('CheckEvil',
+										DecisionState(outcomes=['good', 'evil'], conditions=lambda x: 'evil' if x else 'good'),
+										transitions={'good': 'PranceMaxFun', 'evil': 'RandomChoice'},
+										autonomy={'good': Autonomy.Off, 'evil': Autonomy.Off},
+										remapping={'input_value': 'be_evil'})
 
 
 		return _state_machine
