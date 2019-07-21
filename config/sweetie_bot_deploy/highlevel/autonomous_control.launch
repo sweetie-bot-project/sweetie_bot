@@ -11,6 +11,8 @@
 
 	<arg name="run_moveit" default="true" doc="Run move_group associated with robot."/>
 	<arg name="run_flexbe" default="true" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
+	<arg name="start_behavior" default="" doc="FlexBe behavior to start"/>
+	<arg name="start_behavior_delay" default="20" doc="Delay before FlexBe behavior started."/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
 	<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>
@@ -52,7 +54,10 @@
 				<arg name="flexbe_ns" value="$(arg robot_ns)/flexbe" />
 			</include>
 		</group>
-
+		<!-- joystick -->
+		<include file="$(find sweetie_bot_deploy)/highlevel/joy.launch" >
+			<arg name="robot_ns" value="$(arg robot_ns)" />
+		</include>
 	</group>
 
 	<!-- robot nodes on host side -->
@@ -87,5 +92,12 @@
 				<arg name="rviz_config" value="$(arg robot_profile_path)/joint_space_control.rviz" /> 
 			</include>
 		</group>
+	</group>
+
+	<!-- start flexbe behavior -->
+	<group if="$(eval start_behavior != '')">
+		<node ns="$(arg robot_ns)/flexbe" 
+			name="start_behavior" pkg="flexbe_widget" type="be_launcher" output="screen" args="-b '$(arg start_behavior)'" 
+			launch-prefix="bash -c 'sleep $(arg start_behavior_delay); $0 $@' " />
 	</group>
 </launch>
