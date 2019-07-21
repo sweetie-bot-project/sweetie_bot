@@ -106,7 +106,6 @@ class CompoundActionBase(Dummy):
                 previous_action = None if p.seq_num == 0 else actions[p.seq_num-1]
                 delay = p.seq_delay
                 description = p.cmd.type + ' ' + p.cmd.command
-                Logger.loginfo(description)
                 if not isinstance(p.cmd.type, str):
                     raise TypeError, 'CompoundAction: Incorrect action type %d. Type must be string or None.' % i
                 # Select action
