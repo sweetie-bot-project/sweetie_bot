@@ -123,28 +123,28 @@ class JoyAnimationSM(Behavior):
 
 
 		with _state_machine:
-			# x:182 y:141
+			# x:209 y:389
 			OperatableStateMachine.add('ProcessKeyPressed',
 										DecisionState(outcomes=['greet','play','cheer','bad','switch_evil','unknown','walk','start'], conditions=self.decision),
-										transitions={'greet': 'Greeting', 'play': 'Play', 'cheer': 'Cheer', 'bad': 'Bad', 'switch_evil': 'ToggleEvilMode', 'unknown': 'WaitKeyPressed', 'walk': 'unknown_keys', 'start': 'unknown_keys'},
+										transitions={'greet': 'Greeting', 'play': 'Play', 'cheer': 'Cheer', 'bad': 'Bad', 'switch_evil': 'WaitKeyPressed', 'unknown': 'WaitKeyPressed', 'walk': 'WaitKeyPressed', 'start': 'WaitKeyPressed'},
 										autonomy={'greet': Autonomy.Off, 'play': Autonomy.Off, 'cheer': Autonomy.Off, 'bad': Autonomy.Off, 'switch_evil': Autonomy.Off, 'unknown': Autonomy.Off, 'walk': Autonomy.Off, 'start': Autonomy.Off},
 										remapping={'input_value': 'key_pressed_msg'})
 
-			# x:500 y:257
+			# x:505 y:321
 			OperatableStateMachine.add('Play',
 										self.use_behavior(PlaySM, 'Play'),
 										transitions={'finished': 'EnableJoystick', 'failed': 'EnableJoystick2'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'be_evil': 'be_evil'})
 
-			# x:502 y:377
+			# x:504 y:441
 			OperatableStateMachine.add('Cheer',
 										self.use_behavior(CheerSM, 'Cheer'),
 										transitions={'finished': 'EnableJoystick', 'failed': 'EnableJoystick2'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'be_evil': 'be_evil'})
 
-			# x:504 y:500
+			# x:507 y:556
 			OperatableStateMachine.add('Bad',
 										self.use_behavior(BadSM, 'Bad'),
 										transitions={'finished': 'EnableJoystick', 'failed': 'EnableJoystick2'},
@@ -158,28 +158,28 @@ class JoyAnimationSM(Behavior):
 										autonomy={'key_pressed': Autonomy.Inherit, 'timeout': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'key_pressed_msg': 'key_pressed_msg'})
 
-			# x:498 y:164
+			# x:498 y:198
 			OperatableStateMachine.add('Greeting',
 										self.use_behavior(GreetingSM, 'Greeting'),
 										transitions={'finished': 'EnableJoystick', 'failed': 'EnableJoystick2'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'be_evil': 'be_evil'})
 
-			# x:201 y:276
+			# x:533 y:105
 			OperatableStateMachine.add('ToggleEvilMode',
 										_sm_toggleevilmode_0,
 										transitions={'done': 'WaitKeyPressed'},
 										autonomy={'done': Autonomy.Inherit},
 										remapping={'be_evil': 'be_evil'})
 
-			# x:524 y:14
+			# x:551 y:14
 			OperatableStateMachine.add('ProcessKeyPressed1',
-										DecisionState(outcomes=['known','unknown'], conditions=lambda x: 'unknown' if self.decision(x) == 'unknown' else 'known'),
-										transitions={'known': 'DisableJoystick', 'unknown': 'WaitKeyPressed'},
-										autonomy={'known': Autonomy.Off, 'unknown': Autonomy.Off},
+										DecisionState(outcomes=['greet','play','cheer','bad','switch_evil','unknown','walk','start'], conditions=self.decision),
+										transitions={'greet': 'DisableJoystick', 'play': 'DisableJoystick', 'cheer': 'DisableJoystick', 'bad': 'DisableJoystick', 'switch_evil': 'ToggleEvilMode', 'unknown': 'WaitKeyPressed', 'walk': 'unknown_keys', 'start': 'unknown_keys'},
+										autonomy={'greet': Autonomy.Off, 'play': Autonomy.Off, 'cheer': Autonomy.Off, 'bad': Autonomy.Off, 'switch_evil': Autonomy.Off, 'unknown': Autonomy.Off, 'walk': Autonomy.Off, 'start': Autonomy.Off},
 										remapping={'input_value': 'key_pressed_msg'})
 
-			# x:328 y:22
+			# x:193 y:124
 			OperatableStateMachine.add('DisableJoystick',
 										SetBoolState(service='motion/controller/joint_state/set_operational', value=False),
 										transitions={'true': 'ProcessKeyPressed', 'false': 'ProcessKeyPressed', 'failure': 'failed'},
