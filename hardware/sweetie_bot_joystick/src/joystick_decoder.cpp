@@ -108,11 +108,11 @@ KeyPressed::KeyPressed(ros::NodeHandle& nh, const YAML::Node& node) :
 	}
 	map_node = node["axes_positive"];
 	for(YAML::iterator it = map_node.begin(); it != map_node.end(); it++) {
-		addKey(paxis_map_, it->first.as<int>(), it->second.as<std::string>()); // axes are added as negative integers
+		addKey(paxis_map_, it->first.as<int>(), it->second.as<std::string>());
 	}
 	map_node = node["axes_negative"];
 	for(YAML::iterator it = map_node.begin(); it != map_node.end(); it++) {
-		addKey(naxis_map_, it->first.as<int>(), it->second.as<std::string>()); // axes are added as negative integers
+		addKey(naxis_map_, it->first.as<int>(), it->second.as<std::string>());
 	}
 	// get topic name
 	std::string topic = node["key_topic"].as<std::string>();
@@ -163,12 +163,13 @@ class JointAxes: public JoyDecoderBase
 
 	protected:
 		KeyMapping key_map_;
+		KeyMapping axis_map_;
 		sensor_msgs::JointState joints_;
 		ros::Publisher pub_;
 
 	protected:
-		void addKey(int key, const YAML::Node& node);
-		void decodeKey(int key, double value, double dt);
+		void addKey(KeyMapping& key_map, int key, const YAML::Node& node);
+		void decodeKey(KeyMapping& key_map, int key, double value, double dt);
 
 		void decodeHook(const sensor_msgs::Joy& msg) override;
 		void enableHook() override;
@@ -177,7 +178,7 @@ class JointAxes: public JoyDecoderBase
 };
 
 
-void JointAxes::addKey(int key, const YAML::Node& node) {
+void JointAxes::addKey(KeyMapping& key_map, int key, const YAML::Node& node) {
 	std::string joint_name = node["joint"].as<std::string>();
 	int joint_index;
 	// find index in PressedKeySet if it exists
@@ -195,7 +196,7 @@ void JointAxes::addKey(int key, const YAML::Node& node) {
 	key_info.min = node["min"].as<double>();
 	key_info.max = node["max"].as<double>();
 	bool success;
-	std::tie(std::ignore, success) = key_map_.insert( std::make_pair( key, key_info ) );
+	std::tie(std::ignore, success) = key_map.insert( std::make_pair( key, key_info ) );
 	if (!success) throw YAML::Exception(YAML::Mark::null_mark(), "Dublicate key");
 	// set position to default value
 	joints_.position[joint_index] = key_info.speed ? 0.5*(key_info.min + key_info.max) : key_info.min;
@@ -207,11 +208,11 @@ JointAxes::JointAxes(ros::NodeHandle& nh, const YAML::Node& node) :
 	// extract key_map and fill key_set
 	YAML::Node map_node = node["buttons"];
 	for(YAML::iterator it = map_node.begin(); it != map_node.end(); it++) {
-		addKey(it->first.as<int>(), it->second);
+		addKey(key_map_, it->first.as<int>(), it->second);
 	}
 	map_node = node["axes"];
 	for(YAML::iterator it = map_node.begin(); it != map_node.end(); it++) {
-		addKey(-it->first.as<int>(), it->second); // axes are added as negative integers
+		addKey(axis_map_, it->first.as<int>(), it->second); // axes are added as negative integers
 	}
 	// reset timestamp
 	joints_.header.stamp = ros::Time();
@@ -227,12 +228,13 @@ void JointAxes::enableHook()
 	joints_.header.stamp = ros::Time();
 	// reset position
 	for(auto& p : key_map_) joints_.position[p.second.index] = p.second.speed ? 0.5*(p.second.min + p.second.max) : p.second.min;
+	for(auto& p : axis_map_) joints_.position[p.second.index] = p.second.speed ? 0.5*(p.second.min + p.second.max) : p.second.min;
 }
 
-void JointAxes::decodeKey(int key, double value, double dt) 
+void JointAxes::decodeKey(KeyMapping& key_map, int key, double value, double dt) 
 {
-	auto it = key_map_.find(key);
-	if (it != key_map_.end()) {
+	auto it = key_map.find(key);
+	if (it != key_map.end()) {
 		const KeyInfo& ki = it->second;
 		// proceess KeyInfo
 		if (ki.speed == 0.0) {
@@ -260,9 +262,9 @@ void JointAxes::decodeHook(const sensor_msgs::Joy& msg) {
 	joints_.header.stamp = msg.header.stamp;
 	// now process axis and keys
 	// process keys
-	for(int k = 0; k < msg.buttons.size(); k++) decodeKey(k, msg.buttons[k], dt);
+	for(int k = 0; k < msg.buttons.size(); k++) decodeKey(key_map_, k, msg.buttons[k], dt);
 	// process axes
-	for(int k = 0; k < msg.axes.size(); k++) decodeKey(-k, msg.axes[k], dt);
+	for(int k = 0; k < msg.axes.size(); k++) decodeKey(axis_map_, k, msg.axes[k], dt);
 	// publish result
 	pub_.publish(joints_);
 }
