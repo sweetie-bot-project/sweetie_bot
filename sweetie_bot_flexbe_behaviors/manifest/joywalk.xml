@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="JoyWalk">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.joywalk_sm" class="JoyWalkSM" />
+	<tagstring>joystick, sweetie_bot</tagstring>
+	<author>disRecord</author>
+	<date>Sat Jul 20 2019</date>
+	<description>
+		Joystick controlled walk behavior. 
+
+Walking is controled by directions keys (left, right, up, down), L1 and L2 plays role of modifiers,
+eyes and head are controlled by sticks, other keys causes exit.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="timeout" default="10" label="timeout" hint="Timeout for leaving behavior (s).">
+			<min value="0" />
+			<max value="300" />
+		</param>
+
+	</params>
+
+
+</behavior>
