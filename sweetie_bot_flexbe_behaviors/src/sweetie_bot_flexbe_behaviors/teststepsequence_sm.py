@@ -15,6 +15,7 @@ from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTraje
 from sweetie_bot_flexbe_states.compound_action import CompoundAction
 from sweetie_bot_flexbe_states.generate_step_sequence import GenerateStepSequence
 from sweetie_bot_flexbe_states.compound_action_param import CompoundActionParam
+from sweetie_bot_flexbe_states.check_joint_state import CheckJointState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -63,10 +64,10 @@ class TestStepSequenceSM(Behavior):
 			# x:88 y:87
 			OperatableStateMachine.add('PrepareToWalk',
 										SetCartesianPose(controller='motion/controller/stance', pose=[0.0,0.0,0.2085,0.0,0.0,0.0], frame_id='base_link_path', frame_is_moving=False, resources=['leg1','leg2','leg3','leg4'], actuator_frame_id='base_link', tolerance_lin=0.001, tolerance_ang=0.0085, timeout=10.0),
-										transitions={'done': 'WalkFwd', 'failed': 'failed', 'timeout': 'failed'},
+										transitions={'done': 'CheckCrouched', 'failed': 'failed', 'timeout': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
 
-			# x:319 y:31
+			# x:583 y:31
 			OperatableStateMachine.add('WalkFwd',
 										ExecuteStepSequence(controller='motion/controller/step_sequence', trajectory_param='walk_fwd_40', trajectory_ns='saved_msgs/step_sequence'),
 										transitions={'success': 'GenerateTurnLeft', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
@@ -90,7 +91,7 @@ class TestStepSequenceSM(Behavior):
 										transitions={'success': 'ComponudActionFromParam', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
-			# x:498 y:89
+			# x:601 y:137
 			OperatableStateMachine.add('GenerateTurnLeft',
 										GenerateStepSequence(controller='clop_generator', trajectory_param='turn_left_45', trajectory_ns='saved_msgs/move_base'),
 										transitions={'success': 'EndWalk', 'solution_not_found': 'failed', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
@@ -101,6 +102,12 @@ class TestStepSequenceSM(Behavior):
 										CompoundActionParam(action_param='brohoof', action_ns='saved_msgs/compound_action'),
 										transitions={'success': 'finished', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
+
+			# x:298 y:42
+			OperatableStateMachine.add('CheckCrouched',
+										CheckJointState(outcomes=['body_nominal','body_lying','body_crouched','unknown'], pose_ns='saved_msgs/joint_state', tolerance=0.17, joint_topic="joint_states", timeout=1.0),
+										transitions={'body_nominal': 'failed', 'body_lying': 'failed', 'unknown': 'WalkFwd', 'body_crouched': 'WalkFwd'},
+										autonomy={'body_nominal': Autonomy.Off, 'body_lying': Autonomy.Off, 'unknown': Autonomy.Off, 'body_crouched': Autonomy.Off})
 
 
 		return _state_machine
