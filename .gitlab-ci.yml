@@ -22,6 +22,7 @@ stretch-amd64: &desktop_template
         ln -s "$(pwd)" .build/main/src
       fi
       if [[ "$ROBOT" == "true" ]]; then
+        apt-get install libyaml-cpp-dev -y # dirty fix for YAML-CPP installation
         touch \
           hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE \
           hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE \
