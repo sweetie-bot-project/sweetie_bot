@@ -48,8 +48,12 @@ protected:
 
   virtual void makeMenu() = 0;
 
+public:
+  void changeVisibility(bool isVisible);
   void moveToFrame(const std::string& frame);
   void normalize(geometry_msgs::PoseStamped pose_stamped);
+
+  std::string const & getMarkerHomeFrame() const { return marker_home_frame; }
 
 protected:
 
@@ -78,6 +82,14 @@ protected:
   // COMPONENT STATE
   // interactive marker server
   std::shared_ptr<interactive_markers::InteractiveMarkerServer> server;
+  // interactive marker itself
+  visualization_msgs::InteractiveMarker int_marker;
+  // dummy interactive marker for real marker replacement in changeVisibility()
+  visualization_msgs::InteractiveMarker dummy_marker;
+  // feedback
+  MenuHandler::FeedbackCallback processFeedback;
+  // flag, indicating "visibility" of interactive marker
+  bool is_visible = false;
   // menu
   MenuHandler menu_handler;
   // menu index

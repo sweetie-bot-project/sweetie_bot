@@ -69,11 +69,27 @@ int main(int argc, char **argv)
 
   // create markers
   StancePoseMarker stanceMarker(server, &makeCubeBody, "stance", scale, resources, frames, stance_home_frame, stance_normalized_z_level);
-  LimbPoseMarker frontLeft_limbMarker(server, &makeCubeBody, "leg_fl", 0.5*scale, resources, frames, frames[0], limbs_normalized_z_level);
-  LimbPoseMarker frontRight_limbMarker(server, &makeCubeBody, "leg_fr", 0.5*scale, resources, frames, frames[1], limbs_normalized_z_level);
-  LimbPoseMarker backLeft_limbMarker(server, &makeCubeBody, "leg_bl", 0.5*scale, resources, frames, frames[2], limbs_normalized_z_level);
-  LimbPoseMarker backRight_limbMarker(server, &makeCubeBody, "leg_br", 0.5*scale, resources, frames, frames[3], limbs_normalized_z_level);
-  LimbPoseMarker headMarker(server, &makeSphereBody, "head", 0.5*scale, resources, frames, frames[4], head_normalized_z_level);
+
+  try {
+    static const std::shared_ptr<LimbPoseMarker> rm_arr[] = {
+
+      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_fl", 0.5*scale, resources, frames, frames.at(0), limbs_normalized_z_level)),
+      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_fr", 0.5*scale, resources, frames, frames.at(1), limbs_normalized_z_level)),
+      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_bl", 0.5*scale, resources, frames, frames.at(2), limbs_normalized_z_level)),
+      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_br", 0.5*scale, resources, frames, frames.at(3), limbs_normalized_z_level)),
+      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeSphereBody, "head", 0.5*scale, resources, frames, frames.at(4), head_normalized_z_level))
+
+    };
+
+    std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers(rm_arr, rm_arr + sizeof(rm_arr) / sizeof(rm_arr[0]));
+    stanceMarker.setResourceMarkers(resource_markers);
+  }
+  catch (std::out_of_range ex)
+  {
+    ROS_ERROR("~frames ROS parameter specifies less than 5 frames needed for interactive markers");
+    return 1;
+  }
+
 
   ROS_INFO("pose_marker is started!");
 

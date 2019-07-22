@@ -175,15 +175,39 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
 				// check if user toggled resource
 				auto it_found = resources_entry_map.find(feedback->menu_entry_id);
 				if (it_found != resources_entry_map.end()) {
+          // calculate resource id
+          int resource_id = std::distance(resources_entry_map.begin(), it_found);
 					// toggle option
 					MenuHandler::CheckState check;
 					menu_handler.getCheckState(feedback->menu_entry_id, check);
 					switch (check) {
 						case MenuHandler::CHECKED:
+              if (resource_id < resource_markers.size()) {
+                std::shared_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
+                if (resource_id < resource_markers.size() - 1) {
+                  res_marker->changeVisibility(true); // show bounded leg marker
+                  res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
+                }
+                else {
+                  res_marker->changeVisibility(false); // or hide head marker
+                  res_marker->setOperational(false);
+                }
+              }
 							menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
 							break;
 						case MenuHandler::UNCHECKED:
-							menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
+              if (resource_id < resource_markers.size()) {
+                std::shared_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
+                if (resource_id < resource_markers.size() - 1) {
+                  res_marker->changeVisibility(false); // hide bounded leg marker
+                  res_marker->setOperational(false);
+                }
+                else {
+                  res_marker->changeVisibility(true); // or show head marker
+                  res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
+                }
+              }
+              menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
 							break;
 					}
 					// apply changes if controller is operational

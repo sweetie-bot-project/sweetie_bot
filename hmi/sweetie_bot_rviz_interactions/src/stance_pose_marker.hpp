@@ -2,6 +2,7 @@
 #define STANCE_POSE_MARKER
 
 #include "pose_marker.hpp"
+#include "limb_pose_marker.hpp"
 
 #include <actionlib/client/simple_action_client.h>
 #include <sweetie_bot_control_msgs/SetOperationalAction.h>
@@ -37,6 +38,8 @@ public:
 
   void makeMenu();
 
+  void setResourceMarkers(std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers) { this->resource_markers = resource_markers; }
+
 private:
 
   // COMPONENT INTERFACE
@@ -54,12 +57,12 @@ private:
   // COMPONENT STATE
   // menu index
   MenuHandler::EntryHandle set_operational_entry;
-  typedef std::map<MenuHandler::EntryHandle, std::string> entry_map; 
-  entry_map resources_entry_map;
+  std::map<MenuHandler::EntryHandle, std::string> resources_entry_map;
   MenuHandler::EntryHandle publish_pose_entry;
   // publish_pose flag
   bool publish_pose = true;
-
+  // resource markers vector
+  std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers;
 };
 
 } // namespace hmi

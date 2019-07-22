@@ -9,6 +9,7 @@ using namespace interactive_markers;
 namespace sweetie_bot {
 namespace hmi {
 
+
 PoseMarker::~PoseMarker() {}
 
 void PoseMarker::processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
@@ -71,7 +72,7 @@ void PoseMarker::processMoveToFrame( const visualization_msgs::InteractiveMarker
 
 void PoseMarker::updateInteractiveMarker(bool is6DOF)
 {
-  InteractiveMarker int_marker;
+  if (!is_visible) return;
   server->get(name, int_marker);
 
   if (is6DOF) {
@@ -107,7 +108,8 @@ void PoseMarker::updateInteractiveMarker(bool is6DOF)
 
 void PoseMarker::makeInteractiveMarker(Marker (*makeMarkerBody)(double scale), const MenuHandler::FeedbackCallback& processFeedback, bool is6DOF)
 {
-	InteractiveMarker int_marker;
+  if (is_visible) return;
+
 	//header setup
 	int_marker.header.frame_id = "odom_combined";
 	//int_marker.pose.position = ...;
@@ -124,6 +126,13 @@ void PoseMarker::makeInteractiveMarker(Marker (*makeMarkerBody)(double scale), c
 		control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D;
 		int_marker.controls.push_back( control );
 	}
+
+  // take a break and make dummy interactive marker for changeVisibility()
+  dummy_marker = int_marker;
+  dummy_marker.description = "";
+  dummy_marker.controls[0].markers[0].scale.x = 0.000001;
+  dummy_marker.controls[0].markers[0].scale.y = 0.000001;
+  dummy_marker.controls[0].markers[0].scale.z = 0.000001;
 
 	// add iteractive controls
 	{
@@ -169,6 +178,42 @@ void PoseMarker::makeInteractiveMarker(Marker (*makeMarkerBody)(double scale), c
 	server->insert(int_marker);
 	server->setCallback(int_marker.name, processFeedback);
 	menu_handler.apply( *server, int_marker.name );
+
+  is_visible = true;
+}
+
+void PoseMarker::changeVisibility(bool isVisible)
+{
+  if (!isVisible)
+  {
+    server->get(name, int_marker);
+
+    // Dirty hack we use because menu_handler.reApply() not working once marker erased from server.
+    // Point is to swap actual marker with dummy temporary marker with very small scale parameter
+    // before applying changes on server.
+    server->erase(name);
+    server->insert(dummy_marker);
+    is_visible = false;
+  }
+  else
+  {
+    if (!is_visible) {
+      InteractiveMarker tmp_marker;
+      server->get(name, tmp_marker);
+
+      // Save current marker position
+      int_marker.pose.position = tmp_marker.pose.position;
+
+      server->erase(name);
+      server->insert(int_marker);
+      is_visible = true;
+    }
+    else
+      ROS_DEBUG("Tried to show already visible marker");
+  }
+
+  menu_handler.reApply(*server);
+  server->applyChanges();
 }
 
 void PoseMarker::moveToFrame(const std::string& frame)

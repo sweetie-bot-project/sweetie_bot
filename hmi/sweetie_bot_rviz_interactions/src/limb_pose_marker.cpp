@@ -27,6 +27,9 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
     moveToFrame(marker_home_frame);
 
 	server->applyChanges();
+
+  // hide limb marker by default
+  changeVisibility(false);
 }
 
 LimbPoseMarker::~LimbPoseMarker()
