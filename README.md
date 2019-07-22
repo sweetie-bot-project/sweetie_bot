@@ -68,7 +68,7 @@ There are three ways to install control software from a binary packages:
 Run the script in your terminal, it will automatically install apt repositories with the all necessary dependencies:
 
 ```
-# wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/install.bash | sudo bash
+wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/install.bash | sudo bash
 ```
 
 2. Add apt repositories manually 
@@ -76,14 +76,14 @@ Run the script in your terminal, it will automatically install apt repositories 
 Alternatively you can install the ROS Melodic repository as listed in official ['ROS instruction'](http://wiki.ros.org/melodic/Installation/Ubuntu) and Sweetie Bot repository.
 
 ```
-# sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-# sudo sh -c 'echo deb http://sweetie-bot.gitlab.io/sweetie_bot $(lsb_release -sc) main > /etc/apt/sources.list.d/sweetie-bot.list
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+sudo sh -c 'echo deb http://sweetie-bot.gitlab.io/sweetie_bot $(lsb_release -sc) main > /etc/apt/sources.list.d/sweetie-bot.list
 ```
 
 Next you have to set up your keys:
 ```
-# sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
-# wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/repository.key | sudo apt-key add -
+sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/repository.key | sudo apt-key add -
 ```
 
 3. Download packages manually
@@ -92,8 +92,8 @@ You also can download deb packages manually from [here](../pipelines).
 
 #### Upgrade and install software packages
 ```
-# sudo apt update && sudo apt upgrade
-# sudo apt install ros-melodic-sweetie-bot
+sudo apt update && sudo apt upgrade
+sudo apt install ros-melodic-sweetie-bot
 ```
 
 #### Setup workspace
@@ -102,44 +102,44 @@ User editable part of sweetie bot software must be installed to the home directo
 
 Install `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_flexbe_behaviors`: 
 ```
-$ mkdir -p ~/ros/sweetie_bot/src
-$ cd ~/ros/sweetie_bot/src
-$ git clone https://gitlab.com/sweetie-bot/sweetie_bot_sounds
-$ git clone https://gitlab.com/sweetie-bot/sweetie_bot_proto2_movements
-$ git clone https://gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors
+mkdir -p ~/ros/sweetie_bot/src
+cd ~/ros/sweetie_bot/src
+git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
+git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
+git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
 ```
 Build workspace
 ```
-$ cd ~/ros/sweetie_bot
-$ source /opt/ros/sweetie_bot/setup.bash
-$ catkin_make
+cd ~/ros/sweetie_bot
+source /opt/ros/sweetie_bot/setup.bash
+catkin_make
 ```
 
 **Note:** Run this to supress priority warnings `Forcing priority (20)`:
 
 ```
-# echo -e "@realtime   -  rtprio     99\n@realtime   -  memlock    unlimited" | sudo tee -a /etc/security/limits.d/99-realtime.conf
-# sudo groupadd realtime
-# sudo usermod -a -G realtime $USER
+echo -e "@realtime   -  rtprio     99\n@realtime   -  memlock    unlimited" | sudo tee -a /etc/security/limits.d/99-realtime.conf
+sudo groupadd realtime
+sudo usermod -a -G realtime $USER
 ```
 
 ## Usage
 
 Set ROS environment once in the every terminal before you start any of the following commands:
 ```
-$ source ~/ros/sweetie_bot/devel/setup.bash
+source ~/ros/sweetie_bot/devel/setup.bash
 ```
 
 To start basic control framework:
 
 ```
-$ roslaunch sweetie_bot_deploy joint_space_control.launch
+roslaunch sweetie_bot_deploy joint_space_control.launch
 ```
 
 Following command starts MoveIt! `move_group` and FlexBe subsystem:
 
 ```
-$ roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
+roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
 ```
 
 For more details see [`sweetie_bot_deploy` package](config/sweetie_bot_deploy).

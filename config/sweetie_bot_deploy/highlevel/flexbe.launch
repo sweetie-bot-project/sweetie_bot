@@ -3,6 +3,8 @@
 	<arg name="flexbe_ns" default="/flexbe" doc="Location where flexbe user interface should be started."/>
 	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
 
+	<arg name="gui" default="true" doc="Run flexbe behaviour engine GUI"/>
+
 	<!-- run behavior node  in robot namespace -->
 	<node ns="$(arg robot_ns)" name="behavior" pkg="flexbe_onboard" type="start_behavior" respawn="true">
 		<!-- common remaps to current namespace -->
@@ -39,8 +41,11 @@
 		<remap from="flexbe/request_behavior"	to="$(arg flexbe_ns)/flexbe/request_behavior" />
 		<remap from="flexbe/ui_version"			to="$(arg flexbe_ns)/flexbe/ui_version" />
 	</node>
+	<!-- launch action server -->
+	<node ns="$(arg flexbe_ns)" name="action_server" pkg="flexbe_widget" type="be_action_server" />
 
-	<group ns="$(arg flexbe_ns)">
+	<!-- launch user interface -->
+	<group ns="$(arg flexbe_ns)" if="$(arg gui)">
 		<!-- operator interface nodes: flexbe_app -->
 		<include file="$(find flexbe_app)/launch/flexbe_ocs.launch" />
 		<!-- old operator interface nodes: launch flexbe_widget in browser -->

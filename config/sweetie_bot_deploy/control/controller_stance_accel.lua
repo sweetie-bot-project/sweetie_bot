@@ -28,7 +28,7 @@ depl:connect("controller/stance.in_joints_accel_sorted", "dynamics_inv.out_joint
 -- data flow: controller <- odometry_ref
 depl:connect("controller/stance.in_base", "odometry_ref.out_base", rtt.Variable("ConnPolicy"))
 -- ROS redirect
-depl:stream("controller/stance.in_base_ref", ros:topic("~controller/stance/in_base_ref"))
+depl:stream("controller/stance.in_base_ref", ros:topic("~controller/stance/in_pose_ref"))
 -- connect to RobotModel
 depl:connectServices("controller/stance", "aggregator_ref")
 -- advertise ROS operation

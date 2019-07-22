@@ -10,7 +10,9 @@
 	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto2_deploy)/default/reporting.yaml" ></rosparam> 
     <!-- trajectories -->
 	<node name="store" pkg="sweetie_bot_proto2_deploy" type="store-joint-trajectories" args="load"></node>
-	<node name="store2" pkg="sweetie_bot_deploy" type="store" args="load joint_trajectory $(find sweetie_bot_proto2_deploy)/joint_trajectories"></node>
+	<node name="store2" pkg="sweetie_bot_deploy" type="store" args="load FollowJointTrajectory joint_trajectory $(find sweetie_bot_proto2_deploy)/joint_trajectories"></node>
+	<node name="store3" pkg="sweetie_bot_proto2_deploy" type="store-msgs" args="load"></node>
+	<node name="store4" pkg="sweetie_bot_deploy" type="store" args="load FollowJointTrajectory saved_msgs/joint_trajectory $(find sweetie_bot_proto2_deploy)/joint_trajectories"></node>
     <!-- OROCOS cpf file configuration: replace not valid charcters with "_"  -->
 	<param name="conf_file/logger_log4cpp" textfile="$(find sweetie_bot_proto2_deploy)/default/logger.log4cpp" ></param>
 	<param name="conf_file/kinematic_chains_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/kinematic_chains.cpf" ></param>

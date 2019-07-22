@@ -12,7 +12,7 @@
 	<node ns="$(arg robot_ns)/hmi" pkg="sweetie_bot_joystick" type="joystick_decoder" name="joy_decoder" output="screen" >
 		<remap from="~config" to="$(arg robot_ns)/conf_file/joystick_config_yaml" />
 		<remap from="~joystick" to="joystick" />
-		<remap from="~eyes_joints_ref" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset" />
-		<remap from="~head_joints_ref" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset" />
+		<remap from="~eyes_joints_ref" to="$(arg robot_ns)/motion/controller/joint_state/in_joints_ref" />
+		<remap from="~head_joints_ref" to="$(arg robot_ns)/motion/controller/joint_state/in_joints_ref" />
 	</node>
 </launch>

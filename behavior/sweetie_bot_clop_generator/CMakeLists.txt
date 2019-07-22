@@ -37,6 +37,12 @@ add_message_files(
   EndEffectorGoal.msg
 )
 
+## Generate services in the 'srv' folder
+add_service_files(
+  FILES
+  SaveTrajectory.srv
+)
+
 # Generate actions in the 'action' folder
 add_action_files(
   FILES
@@ -90,7 +96,8 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 ## Declare a C++ library
 
 ## Declare a C++ executable
-add_executable(towr_clop_generator src/gait_generator.cpp src/general_kinematic_model.cc src/towr_trajectory_visualizer.cpp src/rigid_body_inertia_calculator.cpp)
+     
+add_executable(towr_clop_generator src/gait_generator.cpp src/towr_trajectory_visualizer.cpp src/rigid_body_inertia_calculator.cpp src/general_kinematic_model_non_com.cc src/single_rigid_body_with_point_ee_dynamics.cc)
 target_link_libraries(towr_clop_generator ${catkin_LIBRARIES})
 add_dependencies(towr_clop_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
@@ -131,9 +138,9 @@ install(DIRECTORY scripts
 	USE_SOURCE_PERMISSIONS)
 
 ## Install python scripts
-catkin_install_python(
-	PROGRAMS
-	    scripts/walk
+#catkin_install_python(
+#   PROGRAMS
+#		scripts/walk
 #		scripts/trot_forward.py
 #		scripts/walk_forward.py
 #		scripts/turn_left.py
@@ -142,7 +149,7 @@ catkin_install_python(
 #		scripts/walk_forward2.py
 #		scripts/walk_backward.py
 #		scripts/turn_right.py
-	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 
 #############

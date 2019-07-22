@@ -40,6 +40,12 @@ parser.add_argument('--free',
 parser.add_argument('-v', '--verbose', 
         dest='verbose', action='store_true',
         help='Display movement request.')
+parser.add_argument('-V', '--visualize-only',
+        dest='visualize_only', action='store_true',
+        help='Do not execute planned motion.')
+parser.add_argument('-R', '--repeat_motion',
+        dest='repeat_motion', action='store_true',
+        help='Execute motion planned in prevous request. Target position is ignored.')
 
 # parse command line argumants
 args = parser.parse_args()
@@ -49,6 +55,10 @@ msg = MoveBaseGoal(gait_type = args.gait_type, n_steps = args.n_steps, duration 
 msg.setTargetBaseShift(x = args.x[0], y = args.y[0], angle = pi/180*args.angle[0]) 
 if args.ee_target_nominal:
     msg.addEndEffectorsTargets(["leg1","leg2","leg3","leg4"]) 
+if args.visualize_only:
+    msg.visualize_only = True
+if args.repeat_motion:
+    msg.execute_only = True
 
 if args.verbose:
     print("MoveBaseGoal:")
