@@ -293,12 +293,7 @@ void StancePoseMarker::makeMenu()
 	menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED); publish_pose = true;
 	enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &StancePoseMarker::processEnable6DOF, this, _1 ));
 	menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::UNCHECKED);
-  if (!frames.empty()) {
-    MenuHandler::EntryHandle frames_submenu = menu_handler.insert("Move to frame");
-    for ( const std::string& frame : frames ) {
-      menu_handler.insert(frames_submenu, frame, boost::bind( &StancePoseMarker::processMoveToFrame, this, _1 ));
-    }
-  }
+  menu_handler.insert("Move to home frame", boost::bind( &StancePoseMarker::processMoveToHomeFrame, this, _1 ));
 }
 
 } // namespace hmi

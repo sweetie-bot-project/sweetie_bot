@@ -54,15 +54,14 @@ void PoseMarker::processNormalize( const visualization_msgs::InteractiveMarkerFe
   }
 }
 
-void PoseMarker::processMoveToFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
+void PoseMarker::processMoveToHomeFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
 {
 	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
 		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
-                     << " / control '" << feedback->control_name << "': menu \"move to\" select, entry id = " << feedback->menu_entry_id );
+                     << " / control '" << feedback->control_name << "': menu \"Move to home frame\" select, entry id = " << feedback->menu_entry_id );
 
-		std::string frame_id;
-		if (menu_handler.getTitle(feedback->menu_entry_id, frame_id)) {
-			moveToFrame(frame_id);
+		if (marker_home_frame != "") {
+			moveToFrame(marker_home_frame);
 
 			menu_handler.reApply(*server);
 			server->applyChanges();

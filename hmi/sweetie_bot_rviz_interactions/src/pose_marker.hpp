@@ -39,7 +39,7 @@ public:
 protected:
   void processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
   void processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, const ros::Publisher& pose_pub, bool publish_pose);
-  void processMoveToFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
+  void processMoveToHomeFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 
   void updateInteractiveMarker(bool is6DOF);
   void makeInteractiveMarker(visualization_msgs::Marker (*makeMarkerBody)(double scale),
