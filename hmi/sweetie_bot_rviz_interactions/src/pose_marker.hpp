@@ -51,7 +51,7 @@ protected:
 public:
   void changeVisibility(bool isVisible);
   void moveToFrame(const std::string& frame);
-  void normalize(geometry_msgs::PoseStamped pose_stamped);
+  void normalize(geometry_msgs::PoseStamped& pose_stamped);
 
   void reloadMarker() { if (is_visible) server->get(name, int_marker); }
 

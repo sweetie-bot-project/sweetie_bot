@@ -235,7 +235,7 @@ void PoseMarker::moveToFrame(const std::string& frame)
 	}
 }
 
-void PoseMarker::normalize(geometry_msgs::PoseStamped pose_stamped)
+void PoseMarker::normalize(geometry_msgs::PoseStamped& pose_stamped)
 {
   // normilize pose
   pose_stamped.pose.position.z = normalized_z_level;

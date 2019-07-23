@@ -230,17 +230,18 @@ void StancePoseMarker::processNormalizeLegs( const visualization_msgs::Interacti
 
     for (auto it=resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it)
     {
-      if ((*it)->isVisible())
+      auto marker_ptr = *it;
+      if (marker_ptr->isVisible())
       {
         geometry_msgs::PoseStamped pose_stamped;
         pose_stamped.header = feedback->header;
         // update marker pose
-        (*it)->reloadMarker();
-        pose_stamped.pose = (*it)->getInteractiveMarker().pose;
+        marker_ptr->reloadMarker();
+        pose_stamped.pose = marker_ptr->getInteractiveMarker().pose;
         // normalize marker
-        (*it)->normalize(pose_stamped);
+        marker_ptr->normalize(pose_stamped);
         // publish new pose
-        if (publish_pose) pose_pub.publish(pose_stamped);
+        if (marker_ptr->isPosePublishing()) marker_ptr->getPosePublisher().publish(pose_stamped);
       }
     }
 

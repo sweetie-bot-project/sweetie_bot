@@ -38,6 +38,9 @@ public:
 
   void makeMenu();
 
+  ros::Publisher const & getPosePublisher() const { return pose_pub; }
+  bool isPosePublishing() const { return publish_pose; }
+
 private:
 
   // COMPONENT INTERFACE
