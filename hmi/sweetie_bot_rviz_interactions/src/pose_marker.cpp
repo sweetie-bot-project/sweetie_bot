@@ -112,7 +112,6 @@ void PoseMarker::makeInteractiveMarker(Marker (*makeMarkerBody)(double scale), c
 
 	//header setup
 	int_marker.header.frame_id = "odom_combined";
-	//int_marker.pose.position = ...;
 	int_marker.scale = 0.15*std::min(scale, 1.0);
 	int_marker.name = name;
 	int_marker.description = name;

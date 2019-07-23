@@ -222,6 +222,50 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
 	server->applyChanges();
 }
 
+void StancePoseMarker::processNormalizeLegs( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback )
+{
+	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
+		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
+                     << " / control '" << feedback->control_name << "': menu \"move to\" select, entry id = " << feedback->menu_entry_id );
+
+    for (auto it=resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it)
+    {
+      if ((*it)->isVisible())
+      {
+        geometry_msgs::PoseStamped pose_stamped;
+        pose_stamped.header = feedback->header;
+        // update marker pose
+        (*it)->reloadMarker();
+        pose_stamped.pose = (*it)->getInteractiveMarker().pose;
+        // normalize marker
+        (*it)->normalize(pose_stamped);
+        // publish new pose
+        if (publish_pose) pose_pub.publish(pose_stamped);
+      }
+    }
+
+    server->applyChanges();
+  }
+}
+
+
+void StancePoseMarker::processMoveAllToHome( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback )
+{
+	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
+		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
+                     << " / control '" << feedback->control_name << "': menu \"move to\" select, entry id = " << feedback->menu_entry_id );
+
+    // move stance marker to home
+    moveToFrame(marker_home_frame);
+    // move limbs markers to home
+    for (auto& marker : resource_markers)
+    {
+      marker->moveToFrame(marker->getMarkerHomeFrame());
+    }
+
+    server->applyChanges();
+  }
+}
 void StancePoseMarker::makeMenu()
 {
   MenuHandler::FeedbackCallback processFeedback = boost::bind( &StancePoseMarker::processFeedback, this, _1 );
@@ -237,6 +281,8 @@ void StancePoseMarker::makeMenu()
       menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
 		resources_entry_map.emplace(handle, *it);
 	}
+	normalize_pose_entry = menu_handler.insert( "Move all to home", boost::bind( &StancePoseMarker::processMoveAllToHome, this, _1 ));
+	normalize_pose_entry = menu_handler.insert( "Normalize legs", boost::bind( &StancePoseMarker::processNormalizeLegs, this, _1 ));
 	normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &StancePoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
 	publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback);
 	menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED); publish_pose = true;

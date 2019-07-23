@@ -35,6 +35,8 @@ public:
 
   bool setOperational(bool is_operational);
   void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback );
+  void processNormalizeLegs( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback );
+  void processMoveAllToHome( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback );
 
   void makeMenu();
 
@@ -59,6 +61,8 @@ private:
   MenuHandler::EntryHandle set_operational_entry;
   std::map<MenuHandler::EntryHandle, std::string> resources_entry_map;
   MenuHandler::EntryHandle publish_pose_entry;
+  MenuHandler::EntryHandle move_all_to_home_etry;
+  MenuHandler::EntryHandle normalize_legs;
   // publish_pose flag
   bool publish_pose = true;
   // resource markers vector
