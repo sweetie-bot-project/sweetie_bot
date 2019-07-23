@@ -43,7 +43,8 @@ void LimbPoseMarker::actionDoneCallback(const GoalState& state, const ResultCons
 	ROS_INFO_STREAM("action client done: state: " << state.toString() << " state_text: " << state.getText()
                   << " error_code: " << result->error_code << " error_string: " << result->error_string);
 
-	action_client->cancelAllGoals();
+  is_operational = false;
+	//action_client->cancelAllGoals();
 
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
 	menu_handler.reApply(*server);
@@ -99,7 +100,8 @@ bool LimbPoseMarker::setOperational(bool is_operational)
 		action_client->sendGoal(goal, boost::bind( &LimbPoseMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &LimbPoseMarker::actionActiveCallback, this ));
 		// return true if goal is being processed
 		GoalState state = action_client->getState();
-		return !state.isDone();
+		this->is_operational = !state.isDone();
+		return this->is_operational;
 	}
 	else {
 		// assume that server is in operational state
@@ -108,7 +110,8 @@ bool LimbPoseMarker::setOperational(bool is_operational)
 		GoalState state = action_client->getState();
 		if (!state.isDone()) action_client->cancelGoal();
 
-		return false;
+    this->is_operational = false;
+		return this->is_operational;
 	}
 }
 
@@ -136,7 +139,7 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
 					<< "\nframe: " << feedback->header.frame_id
 					<< " time: " << feedback->header.stamp.sec << "sec, "
 					<< feedback->header.stamp.nsec << " nsec" );
-			if (publish_pose) {
+			if (publish_pose && is_operational) {
 				geometry_msgs::PoseStamped pose_stamped;
 
 				pose_stamped.header = feedback->header;
@@ -177,11 +180,13 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
 					case MenuHandler::UNCHECKED:
 						menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
 						publish_pose = true;
-						// publish current pose
-						geometry_msgs::PoseStamped pose_stamped;
-						pose_stamped.header = feedback->header;
-						pose_stamped.pose = feedback->pose;
-						pose_pub.publish(pose_stamped);
+            if (is_operational) {
+              // publish current pose
+              geometry_msgs::PoseStamped pose_stamped;
+              pose_stamped.header = feedback->header;
+              pose_stamped.pose = feedback->pose;
+              pose_pub.publish(pose_stamped);
+            }
 				}
 			}
 			break;

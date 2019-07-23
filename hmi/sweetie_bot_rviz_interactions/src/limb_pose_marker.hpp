@@ -40,6 +40,7 @@ public:
 
   ros::Publisher const & getPosePublisher() const { return pose_pub; }
   bool isPosePublishing() const { return publish_pose; }
+  bool isOperational() const { return is_operational; }
 
 private:
 
@@ -61,6 +62,8 @@ private:
   MenuHandler::EntryHandle publish_pose_entry;
   // publish_pose flag
   bool publish_pose = true;
+  // is_operational flag
+  bool is_operational = false;
 
 };
 

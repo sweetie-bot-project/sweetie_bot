@@ -40,7 +40,8 @@ void StancePoseMarker::actionDoneCallback(const GoalState& state, const ResultCo
 	ROS_INFO_STREAM("action client done: state: " << state.toString() << " state_text: " << state.getText()
                   << " error_code: " << result->error_code << " error_string: " << result->error_string);
 
-	action_client->cancelAllGoals();
+  is_operational = false;
+	//action_client->cancelAllGoals();
 
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
 	menu_handler.reApply(*server);
@@ -86,7 +87,8 @@ bool StancePoseMarker::setOperational(bool is_operational)
 		action_client->sendGoal(goal, boost::bind( &StancePoseMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &StancePoseMarker::actionActiveCallback, this ));
 		// return true if goal is being processed
 		GoalState state = action_client->getState();
-		return !state.isDone();
+		this->is_operational = !state.isDone();
+		return this->is_operational;
 	}
 	else {
 		// assume that server is in operational state
@@ -95,7 +97,8 @@ bool StancePoseMarker::setOperational(bool is_operational)
 		GoalState state = action_client->getState();
 		if (!state.isDone()) action_client->cancelGoal();
 
-		return false;
+    this->is_operational = false;
+		return this->is_operational;
 	}
 }
 
@@ -123,7 +126,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
 					<< "\nframe: " << feedback->header.frame_id
 					<< " time: " << feedback->header.stamp.sec << "sec, "
 					<< feedback->header.stamp.nsec << " nsec" );
-			if (publish_pose) {
+			if (publish_pose && is_operational) {
 				geometry_msgs::PoseStamped pose_stamped;
 
 				pose_stamped.header = feedback->header;
@@ -164,11 +167,13 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
 					case MenuHandler::UNCHECKED:
 						menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
 						publish_pose = true;
-						// publish current pose
-						geometry_msgs::PoseStamped pose_stamped;
-						pose_stamped.header = feedback->header;
-						pose_stamped.pose = feedback->pose;
-						pose_pub.publish(pose_stamped);
+            if (is_operational) {
+              // publish current pose
+              geometry_msgs::PoseStamped pose_stamped;
+              pose_stamped.header = feedback->header;
+              pose_stamped.pose = feedback->pose;
+              pose_pub.publish(pose_stamped);
+            }
 				}
       }
 			else {
@@ -226,13 +231,11 @@ void StancePoseMarker::processNormalizeLegs( const visualization_msgs::Interacti
 {
 	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
 		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
-                     << " / control '" << feedback->control_name << "': menu \"move to\" select, entry id = " << feedback->menu_entry_id );
+                     << " / control '" << feedback->control_name << "': menu \"Normalize legs\" select, entry id = " << feedback->menu_entry_id );
 
-    for (auto it=resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it)
-    {
+    for (auto it=resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it) {
       auto marker_ptr = *it;
-      if (marker_ptr->isVisible())
-      {
+      if (marker_ptr->isVisible()) {
         geometry_msgs::PoseStamped pose_stamped;
         pose_stamped.header = feedback->header;
         // update marker pose
@@ -241,7 +244,9 @@ void StancePoseMarker::processNormalizeLegs( const visualization_msgs::Interacti
         // normalize marker
         marker_ptr->normalize(pose_stamped);
         // publish new pose
-        if (marker_ptr->isPosePublishing()) marker_ptr->getPosePublisher().publish(pose_stamped);
+        if (marker_ptr->isPosePublishing() && marker_ptr->isOperational()) {
+          marker_ptr->getPosePublisher().publish(pose_stamped);
+        }
       }
     }
 
@@ -254,13 +259,12 @@ void StancePoseMarker::processMoveAllToHome( const visualization_msgs::Interacti
 {
 	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
 		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
-                     << " / control '" << feedback->control_name << "': menu \"move to\" select, entry id = " << feedback->menu_entry_id );
+                     << " / control '" << feedback->control_name << "': menu \"Move all to home\" select, entry id = " << feedback->menu_entry_id );
 
     // move stance marker to home
     moveToFrame(marker_home_frame);
     // move limbs markers to home
-    for (auto& marker : resource_markers)
-    {
+    for (auto& marker : resource_markers) {
       marker->moveToFrame(marker->getMarkerHomeFrame());
     }
 
