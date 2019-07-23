@@ -55,6 +55,6 @@ fi
 convert screenshot.png -crop 214x298+825+219 +repage cropped_screenshot.png
 ERROR=$( compare -metric MSE reference.png cropped_screenshot.png diff.png 2>&1 | cut -f1 -d' ' | cut -f1 -d. )
 echo "Image comparison score: $ERROR"
-if (( "$ERROR" > 400 )); then
+if (( "$ERROR" > 450 )); then
     exit 4
 fi
