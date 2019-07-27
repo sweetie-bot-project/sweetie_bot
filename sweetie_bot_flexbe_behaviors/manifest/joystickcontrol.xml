@@ -3,7 +3,7 @@
 <behavior name="JoystickControl">
 
 	<executable package_path="sweetie_bot_flexbe_behaviors.joystickcontrol_sm" class="JoystickControlSM" />
-	<tagstring>joystick</tagstring>
+	<tagstring>joystick, proto3</tagstring>
 	<author>disRecord</author>
 	<date>Sun Nov 18 2018</date>
 	<description>
