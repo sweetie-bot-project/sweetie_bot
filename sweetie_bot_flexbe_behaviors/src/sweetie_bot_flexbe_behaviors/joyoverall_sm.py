@@ -15,6 +15,7 @@ from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_behaviors.autonomousbehavior2_sm import AutonomousBehavior2SM
 from sweetie_bot_flexbe_states.wait_for_message_state import WaitForMessageState
 from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
+from sweetie_bot_flexbe_behaviors.autonomousbehavior_sm import AutonomousBehaviorSM
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 from sweetie_bot_joystick.msg import KeyPressed
@@ -42,6 +43,7 @@ class JoyOverallSM(Behavior):
 		self.add_behavior(JoyAnimationSM, 'JoyAnimation')
 		self.add_behavior(JoyWalkSM, 'JoyWalk')
 		self.add_behavior(AutonomousBehavior2SM, 'AutonomousBehavior2')
+		self.add_behavior(AutonomousBehaviorSM, 'AutonomousBehavior')
 
 		# Additional initialization code can be added inside the following tags
 		# [MANUAL_INIT]
@@ -113,11 +115,11 @@ class JoyOverallSM(Behavior):
 			# x:641 y:329
 			OperatableStateMachine.add('CheckKeys',
 										DecisionState(outcomes=['walk','animation','start', 'unknown'], conditions=self.decision),
-										transitions={'walk': 'JoyWalk', 'animation': 'JoyAnimation', 'start': 'AutonomousBehavior2', 'unknown': 'WaitKeyPressed'},
+										transitions={'walk': 'JoyWalk', 'animation': 'JoyAnimation', 'start': 'RandomChoice', 'unknown': 'WaitKeyPressed'},
 										autonomy={'walk': Autonomy.Off, 'animation': Autonomy.Off, 'start': Autonomy.Off, 'unknown': Autonomy.Off},
 										remapping={'input_value': 'key_pressed_msg'})
 
-			# x:576 y:469
+			# x:443 y:565
 			OperatableStateMachine.add('AutonomousBehavior2',
 										self.use_behavior(AutonomousBehavior2SM, 'AutonomousBehavior2'),
 										transitions={'finished': 'SetHeadPoseNominal', 'failed': 'failed'},
@@ -129,6 +131,19 @@ class JoyOverallSM(Behavior):
 										transitions={'pressed': 'JoyAnimation', 'timeout': 'finished', 'failed': 'failed'},
 										autonomy={'pressed': Autonomy.Inherit, 'timeout': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'key_pressed_msg': 'key_pressed_msg', 'config': 'config'})
+
+			# x:545 y:431
+			OperatableStateMachine.add('RandomChoice',
+										DecisionState(outcomes=['one','two'], conditions=lambda x: 'one' if random.random()<0.5 else 'two'),
+										transitions={'one': 'AutonomousBehavior2', 'two': 'AutonomousBehavior'},
+										autonomy={'one': Autonomy.Off, 'two': Autonomy.Off},
+										remapping={'input_value': 'config'})
+
+			# x:647 y:599
+			OperatableStateMachine.add('AutonomousBehavior',
+										self.use_behavior(AutonomousBehaviorSM, 'AutonomousBehavior'),
+										transitions={'finished': 'SetHeadPoseNominal', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
 
 		return _state_machine
