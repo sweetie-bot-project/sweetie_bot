@@ -128,7 +128,7 @@ class JoyOverallSM(Behavior):
 			# x:194 y:135
 			OperatableStateMachine.add('WaitKeyPressed',
 										_sm_waitkeypressed_0,
-										transitions={'pressed': 'JoyAnimation', 'timeout': 'finished', 'failed': 'failed'},
+										transitions={'pressed': 'JoyAnimation', 'timeout': 'RandomChoice', 'failed': 'failed'},
 										autonomy={'pressed': Autonomy.Inherit, 'timeout': Autonomy.Inherit, 'failed': Autonomy.Inherit},
 										remapping={'key_pressed_msg': 'key_pressed_msg', 'config': 'config'})
 
