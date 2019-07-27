@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="DoTricksWalk">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.dotrickswalk_sm" class="DoTricksWalkSM" />
+	<tagstring>protot2, autonomous</tagstring>
+	<author>disRecord</author>
+	<date>Sat Jul 27 2019</date>
+	<description>
+		Do trick during walking.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+	<contains name="Greeting" />
+	<contains name="Play" />
+	<contains name="Cheer" />
+
+	<!-- Available Parameters -->
+
+</behavior>
