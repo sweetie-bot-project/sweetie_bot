@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from internal.execute_joint_trajectory_base import ExecuteJointTrajectoryBase as EventState
+from flexbe_core import Logger
 
 # Superclass is imported as EventState to allow to parse state definition FlexApp correctly.
 class ExecuteJointTrajectoryKey(EventState):
