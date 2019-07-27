@@ -19,6 +19,7 @@ from sweetie_bot_flexbe_behaviors.autonomousbehavior_sm import AutonomousBehavio
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 from sweetie_bot_joystick.msg import KeyPressed
+import random
 # [/MANUAL_IMPORT]
 
 
