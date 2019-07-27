@@ -10,6 +10,7 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.set_cartesian_pose import SetCartesianPose
 from sweetie_bot_flexbe_states.compound_action import CompoundAction
+from sweetie_bot_flexbe_behaviors.dotrickswalk_sm import DoTricksWalkSM
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -33,6 +34,9 @@ class AutonomousBehavior2SM(Behavior):
 		# parameters of this behavior
 
 		# references to used behaviors
+		self.add_behavior(DoTricksWalkSM, 'DoTricksWalk')
+		self.add_behavior(DoTricksWalkSM, 'DoTricksWalk_2')
+		self.add_behavior(DoTricksWalkSM, 'DoTricksWalk_3')
 
 		# Additional initialization code can be added inside the following tags
 		# [MANUAL_INIT]
@@ -63,7 +67,7 @@ class AutonomousBehavior2SM(Behavior):
 			# x:289 y:24
 			OperatableStateMachine.add('Stage1',
 										CompoundAction(t1=[0,2.0], type1='motion/step_sequence', cmd1='turn_left_20_20_45', t2=[1,0.0], type2='motion/step_sequence', cmd2='turn_right_20_20_45', t3=[2,0.0], type3='motion/step_sequence', cmd3='turn_left_20_20_45', t4=[0,0.0], type4=None, cmd4=''),
-										transitions={'success': 'Stage2', 'invalid_pose': 'failed', 'failure': 'failed'},
+										transitions={'success': 'DoTricksWalk_3', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:464 y:25
@@ -81,7 +85,7 @@ class AutonomousBehavior2SM(Behavior):
 			# x:629 y:104
 			OperatableStateMachine.add('Stage4',
 										CompoundAction(t1=[0,0.5], type1='voice/play_wav', cmd1='reverse_beep', t2=[1,0.0], type2='motion/step_sequence', cmd2='walk_back_20', t3=[2,0.0], type3='motion/step_sequence', cmd3='backslide_left_20_20_80', t4=[0,0.0], type4=None, cmd4=''),
-										transitions={'success': 'Stage5', 'invalid_pose': 'failed', 'failure': 'failed'},
+										transitions={'success': 'DoTricksWalk_2', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:637 y:175
@@ -93,7 +97,7 @@ class AutonomousBehavior2SM(Behavior):
 			# x:636 y:243
 			OperatableStateMachine.add('Stage6',
 										CompoundAction(t1=[0,0.0], type1='motion/step_sequence', cmd1='walk_fwd_60', t2=[1,0.0], type2='motion/step_sequence', cmd2='turn_left_45', t3=[2,0.0], type3='motion/step_sequence', cmd3='turn_left_45', t4=[0,0.0], type4=None, cmd4=''),
-										transitions={'success': 'Stage7', 'invalid_pose': 'failed', 'failure': 'failed'},
+										transitions={'success': 'DoTricksWalk', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:636 y:319
@@ -102,11 +106,29 @@ class AutonomousBehavior2SM(Behavior):
 										transitions={'success': 'Stage8', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
-			# x:638 y:397
+			# x:635 y:399
 			OperatableStateMachine.add('Stage8',
 										CompoundAction(t1=[0,0.0], type1='motion/step_sequence', cmd1='turn_right_45', t2=[1,0.0], type2='motion/step_sequence', cmd2='turn_right_90', t3=[2,0.0], type3='motion/step_sequence', cmd3='turn_right_05_00_25', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'finished', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
+
+			# x:806 y:264
+			OperatableStateMachine.add('DoTricksWalk',
+										self.use_behavior(DoTricksWalkSM, 'DoTricksWalk'),
+										transitions={'finished': 'Stage7', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+
+			# x:801 y:113
+			OperatableStateMachine.add('DoTricksWalk_2',
+										self.use_behavior(DoTricksWalkSM, 'DoTricksWalk_2'),
+										transitions={'finished': 'Stage5', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+
+			# x:338 y:105
+			OperatableStateMachine.add('DoTricksWalk_3',
+										self.use_behavior(DoTricksWalkSM, 'DoTricksWalk_3'),
+										transitions={'finished': 'Stage2', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
 
 		return _state_machine

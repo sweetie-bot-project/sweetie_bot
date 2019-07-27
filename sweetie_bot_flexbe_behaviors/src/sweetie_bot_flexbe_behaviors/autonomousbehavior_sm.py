@@ -10,6 +10,7 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.set_cartesian_pose import SetCartesianPose
 from sweetie_bot_flexbe_states.compound_action import CompoundAction
+from sweetie_bot_flexbe_behaviors.dotrickswalk_sm import DoTricksWalkSM
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -33,6 +34,8 @@ class AutonomousBehaviorSM(Behavior):
 		# parameters of this behavior
 
 		# references to used behaviors
+		self.add_behavior(DoTricksWalkSM, 'DoTricksWalk')
+		self.add_behavior(DoTricksWalkSM, 'DoTricksWalk_2')
 
 		# Additional initialization code can be added inside the following tags
 		# [MANUAL_INIT]
@@ -60,7 +63,7 @@ class AutonomousBehaviorSM(Behavior):
 										transitions={'done': 'Fwd_Left_Say1', 'failed': 'failed', 'timeout': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
 
-			# x:88 y:103
+			# x:122 y:151
 			OperatableStateMachine.add('Fwd_Left_Say1',
 										CompoundAction(t1=[0,2.0], type1='motion/step_sequence', cmd1='turn_right_20_20_45', t2=[1,0.0], type2='motion/step_sequence', cmd2='turn_left_45', t3=[2,0.0], type3='voice/play_wav', cmd3='why_do_i_see_these_creatures', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'Right_right_fwd', 'invalid_pose': 'failed', 'failure': 'failed'},
@@ -75,13 +78,13 @@ class AutonomousBehaviorSM(Behavior):
 			# x:477 y:92
 			OperatableStateMachine.add('Right_right_fwd',
 										CompoundAction(t1=[0,0.0], type1='motion/step_sequence', cmd1='turn_left_20_20_45', t2=[1,0.0], type2='motion/step_sequence', cmd2='turn_right_45', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
-										transitions={'success': 'Backslide', 'invalid_pose': 'failed', 'failure': 'failed'},
+										transitions={'success': 'DoTricksWalk', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:595 y:275
 			OperatableStateMachine.add('Right_right_fwd2',
 										CompoundAction(t1=[0,0.0], type1='motion/step_sequence', cmd1='walk_fwd_40', t2=[1,0.0], type2='motion/step_sequence', cmd2='turn_left_20_20_90', t3=[2,0.0], type3='motion/step_sequence', cmd3='turn_left_90', t4=[0,0.0], type4=None, cmd4=''),
-										transitions={'success': 'Right_right1', 'invalid_pose': 'failed', 'failure': 'failed'},
+										transitions={'success': 'DoTricksWalk_2', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:532 y:459
@@ -90,11 +93,23 @@ class AutonomousBehaviorSM(Behavior):
 										transitions={'success': 'ZeroPose', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
-			# x:676 y:136
+			# x:875 y:193
 			OperatableStateMachine.add('Backslide',
 										CompoundAction(t1=[0,0.5], type1='voice/play_wav', cmd1='reverse_beep', t2=[1,0.0], type2='motion/step_sequence', cmd2='walk_back_20', t3=[2,0.0], type3='motion/step_sequence', cmd3='backslide_right_20_20_90', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'Right_right_fwd2', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
+
+			# x:702 y:59
+			OperatableStateMachine.add('DoTricksWalk',
+										self.use_behavior(DoTricksWalkSM, 'DoTricksWalk'),
+										transitions={'finished': 'Backslide', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+
+			# x:722 y:370
+			OperatableStateMachine.add('DoTricksWalk_2',
+										self.use_behavior(DoTricksWalkSM, 'DoTricksWalk_2'),
+										transitions={'finished': 'Right_right1', 'failed': 'failed'},
+										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
 
 		return _state_machine
