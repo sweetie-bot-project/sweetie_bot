@@ -54,7 +54,7 @@ class JoyProto3SM(Behavior):
 
 	def create(self):
 		joy_topic = '/hmi/joystick'
-		# x:30 y:365, x:1031 y:242
+		# x:30 y:365, x:846 y:376
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 		_state_machine.userdata.unused = None
 		_state_machine.userdata.joy_msg = Joy()
@@ -139,21 +139,20 @@ class JoyProto3SM(Behavior):
 
 
 		with _state_machine:
-			# x:52 y:63
-			OperatableStateMachine.add('RandMovements',
-										_sm_randmovements_2,
-										transitions={'failed': 'failed', 'timeout': 'RandomChoice', 'joy_msg': 'CheckButtonPressed', 'text_msg': 'ProcessTextMsg'},
-										autonomy={'failed': Autonomy.Inherit, 'timeout': Autonomy.Inherit, 'joy_msg': Autonomy.Inherit, 'text_msg': Autonomy.Inherit},
-										remapping={'unused': 'unused', 'joy_msg': 'joy_msg', 'text_msg': 'text_msg'})
+			# x:12 y:169
+			OperatableStateMachine.add('SetNominalPose',
+										SetJointState(controller='motion/controller/joint_state_head', pose_param='nominal', pose_ns='saved_msgs/joint_state', tolerance=0.017, timeout=10.0, joint_topic="joint_states"),
+										transitions={'done': 'RandMovements', 'failed': 'failed', 'timeout': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
 
-			# x:85 y:283
+			# x:127 y:370
 			OperatableStateMachine.add('JoystickMovements',
 										_sm_joystickmovements_1,
 										transitions={'failed': 'failed', 'button1234': 'ProcessButton', 'timeout': 'RandMovements'},
 										autonomy={'failed': Autonomy.Inherit, 'button1234': Autonomy.Inherit, 'timeout': Autonomy.Inherit},
 										remapping={'joy_msg': 'joy_msg'})
 
-			# x:198 y:176
+			# x:248 y:186
 			OperatableStateMachine.add('CheckButtonPressed',
 										DecisionState(outcomes=['button1234', 'other' ], conditions=lambda msg: 'button1234' if any(msg.buttons[0:4]) else 'other'),
 										transitions={'button1234': 'ProcessButton', 'other': 'JoystickMovements'},
@@ -187,7 +186,7 @@ class JoyProto3SM(Behavior):
 										autonomy={'done': Autonomy.Off},
 										remapping={'input_value': 'unused', 'output_value': 'action_name'})
 
-			# x:331 y:321
+			# x:383 y:325
 			OperatableStateMachine.add('ExecuteAction',
 										ExecuteJointTrajectoryKey(controller='motion/controller/joint_trajectory', trajectory_ns='saved_msgs/joint_trajectory'),
 										transitions={'success': 'JoystickMovements', 'unavalible': 'JoystickMovements', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
@@ -200,6 +199,13 @@ class JoyProto3SM(Behavior):
 										transitions={'move': 'RandomAction', 'continue': 'RandMovements'},
 										autonomy={'move': Autonomy.Off, 'continue': Autonomy.Off},
 										remapping={'input_value': 'unused'})
+
+			# x:117 y:39
+			OperatableStateMachine.add('RandMovements',
+										_sm_randmovements_2,
+										transitions={'failed': 'failed', 'timeout': 'RandomChoice', 'joy_msg': 'CheckButtonPressed', 'text_msg': 'ProcessTextMsg'},
+										autonomy={'failed': Autonomy.Inherit, 'timeout': Autonomy.Inherit, 'joy_msg': Autonomy.Inherit, 'text_msg': Autonomy.Inherit},
+										remapping={'unused': 'unused', 'joy_msg': 'joy_msg', 'text_msg': 'text_msg'})
 
 
 		return _state_machine
