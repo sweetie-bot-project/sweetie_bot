@@ -135,7 +135,7 @@ class JoyOverallSM(Behavior):
 
 			# x:545 y:431
 			OperatableStateMachine.add('RandomChoice',
-										DecisionState(outcomes=['one','two'], conditions=lambda x: 'one' if random.random()<0.5 else 'two'),
+										DecisionState(outcomes=['one','two'], conditions=lambda x: 'one' if random.random()<0.0 else 'two'),
 										transitions={'one': 'AutonomousBehavior2', 'two': 'AutonomousBehavior'},
 										autonomy={'one': Autonomy.Off, 'two': Autonomy.Off},
 										remapping={'input_value': 'config'})
