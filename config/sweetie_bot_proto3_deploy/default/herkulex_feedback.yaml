@@ -2,7 +2,7 @@ herkulex:
     groups: [ all ]
     all:
         driver:
-            port_name: '/dev/ttyS1'
+            port_name: '/dev/ttyS3'
             baudrate: 115200
         array:
             timeout: 0.060
@@ -10,9 +10,9 @@ herkulex:
         sched:
             priority: 40
             timeout: 0.005
-            period_RT_JOG: 0.018
-            period_RT_read: 0.026
-            period_CM: 0.001
+            period_RT_JOG: 0.020
+            period_RT_read: 0.021
+            period_CM: 0.002
             detailed_state: 0
-            poll_list: [ leg1_joint1, leg1_joint2, leg1_joint3, leg1_joint4, leg1_joint5, leg1_joint6, leg2_joint1, leg2_joint2, leg2_joint3, leg2_joint4, leg2_joint5, leg2_joint6, leg3_joint1, leg3_joint2, leg3_joint3, leg3_joint4, leg3_joint5, leg3_joint6, leg4_joint1, leg4_joint2, leg4_joint3, leg4_joint4, leg4_joint5, leg4_joint6, head_joint1, head_joint2, head_joint3, head_joint4,  ear_l_joint, ear_r_joint, mouth_joint ]
-            poll_round_size: 6
+            poll_list: [ leg1_joint1, leg1_joint2, leg1_joint3, leg1_joint4, leg1_joint5, leg1_joint6, leg2_joint1, leg2_joint2, leg2_joint3, leg2_joint4, leg2_joint5, leg2_joint6, leg3_joint1, leg3_joint2, leg3_joint3, leg3_joint4, leg3_joint5, leg3_joint6, leg4_joint1, leg4_joint2, leg4_joint3, leg4_joint4, leg4_joint5, leg4_joint6, head_joint1, head_joint2, head_joint3, head_joint4 ]
+            poll_round_size: 5

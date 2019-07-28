@@ -505,50 +505,5 @@
             <value>1500</value>
         </simple>
     </struct>
-    <struct name="ear_l_joint" type="PropertyBag">
-        <description>Servo description.</description>
-        <simple name="servo_id" type="ulong">
-            <description>Servo hardware ID.</description>
-            <value>55</value>
-        </simple>
-        <simple name="offset" type="ulong">
-            <description>Servo zero position offset (raw).</description>
-            <value>294</value>
-        </simple>
-        <simple name="reverse" type="boolean">
-            <description>Reverse direction flag.</description>
-            <value>1</value>
-        </simple>
-    </struct>
-    <struct name="ear_r_joint" type="PropertyBag">
-        <description>Servo description.</description>
-        <simple name="servo_id" type="ulong">
-            <description>Servo hardware ID.</description>
-            <value>56</value>
-        </simple>
-        <simple name="offset" type="ulong">
-            <description>Servo zero position offset (raw).</description>
-            <value>624</value>
-        </simple>
-        <simple name="reverse" type="boolean">
-            <description>Reverse direction flag.</description>
-            <value>0</value>
-        </simple>
-    </struct>
-    <struct name="mouth_joint" type="PropertyBag">
-        <description>Servo description.</description>
-        <simple name="servo_id" type="ulong">
-            <description>Servo hardware ID.</description>
-            <value>57</value>
-        </simple>
-        <simple name="offset" type="ulong">
-            <description>Servo zero position offset (raw).</description>
-            <value>595</value>
-        </simple>
-        <simple name="reverse" type="boolean">
-            <description>Reverse direction flag.</description>
-            <value>1</value>
-        </simple>
-    </struct>
   </struct>
 </properties>
