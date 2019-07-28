@@ -15,7 +15,7 @@
 	<arg name="start_behavior_delay" default="20" doc="Delay before FlexBe behavior started."/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
-	<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>
+	<machine name="sweetiebot" address="localhost" user="$(env USER)" default="true"/>
 
 	<!-- load parameters -->
 	<group if="$(arg robot)">
