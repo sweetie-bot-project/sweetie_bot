@@ -89,7 +89,7 @@ class ExecuteStepSequenceBase(Dummy):
             return self._outcome
     
         # Check if the action has been finished
-        if not self._client.is_active(self._controller):
+        if self._client.has_result(self._controller):
             state = self._client.get_state(self._controller)
             result = self._client.get_result(self._controller)
             
