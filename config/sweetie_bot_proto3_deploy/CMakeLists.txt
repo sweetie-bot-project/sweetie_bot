@@ -30,5 +30,5 @@ catkin_package(
 install(DIRECTORY default joint_trajectories
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 # bash script
-install(PROGRAMS scripts/store-joint-trajectories
+install(PROGRAMS scripts/store-joint-trajectories scripts/store-msgs
 	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
