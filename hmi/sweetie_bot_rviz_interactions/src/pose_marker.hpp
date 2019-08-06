@@ -90,8 +90,6 @@ protected:
   visualization_msgs::InteractiveMarker int_marker;
   // dummy interactive marker for real marker replacement in changeVisibility()
   visualization_msgs::InteractiveMarker dummy_marker;
-  // feedback
-  MenuHandler::FeedbackCallback processFeedback;
   // flag, indicating "visibility" of interactive marker
   bool is_visible = false;
   // menu
