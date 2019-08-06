@@ -52,9 +52,9 @@ The following instruction describes the installation process from binary package
 
 Check your system before install:
 
-* OS: Ubuntu Bionic (18.04) or Debian Stretch. Windows users can try [WSL](https://janbernloehr.de/2017/06/10/ros-windows) but it is less supported method.
+* OS: Ubuntu Bionic (18.04) or Debian Stretch. For Windows and Mac users we recommend virtual machine with linux installed in it. Windows users can try [WSL](https://janbernloehr.de/2017/06/10/ros-windows) but it is less supported method.
 * CPU: x86-64 2 GHz dual core processor or better
-* RAM: 6 GB system memory
+* RAM: 4 GB system memory
 * GPU: Almost any modern GPU with OpenGL 2.1 hardware acceleration support
 * HDD: 3 GB of free hard drive space
 * WAN: Internet access
@@ -69,6 +69,11 @@ Run the script in your terminal, it will automatically install apt repositories 
 
 ```
 wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/install.bash | sudo bash
+```
+
+Install software packages
+```
+sudo apt install ros-melodic-sweetie-bot
 ```
 
 2. Add apt repositories manually 
@@ -86,14 +91,26 @@ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C
 wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/repository.key | sudo apt-key add -
 ```
 
-3. Download packages manually
-
-You also can download deb packages manually from [here](../pipelines).
-
-#### Upgrade and install software packages
+Upgrade and install software packages
 ```
 sudo apt update && sudo apt upgrade
 sudo apt install ros-melodic-sweetie-bot
+```
+
+3. Download packages manually
+
+Alternatively you can download deb packages manually.
+
+First of all refer ['ROS Installation instruction'](http://wiki.ros.org/melodic/Installation/Ubuntu) manual to add official ROS repositary.
+
+Download zip from [here](https://gitlab.com/sweetie-bot/sweetie_bot/pipelines).
+Click on first green check mark ✓ and choose your OS, click "Download" at the next page.
+Unpack zip file and install both .deb packages included.
+
+```
+unzip sweetie-bot-bionic-amd64.zip
+sudo dpkg -i sweetie-bot-*.deb
+sudo apt install -f
 ```
 
 #### Setup workspace
@@ -118,7 +135,7 @@ catkin_make
 **Note:** Run this to supress priority warnings `Forcing priority (20)`:
 
 ```
-echo -e "@realtime   -  rtprio     99\n@realtime   -  memlock    unlimited" | sudo tee -a /etc/security/limits.d/99-realtime.conf
+echo -e "@realtime   -  rtprio     99\n@realtime   -  memlock    unlimited" | sudo tee /etc/security/limits.d/99-realtime.conf
 sudo groupadd realtime
 sudo usermod -a -G realtime $USER
 ```
@@ -143,3 +160,4 @@ roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
 ```
 
 For more details see [`sweetie_bot_deploy` package](config/sweetie_bot_deploy).
+
