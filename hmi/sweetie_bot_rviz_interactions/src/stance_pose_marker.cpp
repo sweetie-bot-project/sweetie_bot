@@ -192,6 +192,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
                 if (resource_id < resource_markers.size() - 1) {
                   res_marker->changeVisibility(true); // show bounded leg marker
                   res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
+                  res_marker->setOperational(true);
                 }
                 else {
                   res_marker->changeVisibility(false); // or hide head marker
@@ -210,6 +211,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
                 else {
                   res_marker->changeVisibility(true); // or show head marker
                   res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
+                  res_marker->setOperational(true);
                 }
               }
               menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
