@@ -25,16 +25,13 @@ export DISPLAY=:99
 VIRT_DISPLAY=$!
 
 # Launch actual application
-roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=false 2>&1 > app.log &
-APP=$!
+CMD_APP="roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=false"
+$CMD_APP 2>&1 > app.log & APP=$!; sleep 100; scrot screenshot.png
+kill -SIGINT $APP; wait $APP; EXIT_APP=$?; log $EXIT_APP app.log "$CMD_APP"
 
-# Wait until full init and capture screenshot
-sleep 100
-scrot screenshot.png
-
-kill -SIGINT $APP
-wait $APP
-EXIT_APP=$?
+CMD_APP="roslaunch sweetie_bot_deploy joint_space_control.launch"
+$CMD_APP 2>&1 > app.log & APP=$!; sleep 100; scrot screenshot-towr.png
+kill -SIGINT $APP; wait $APP; EXIT_APP_TOWR=$?; log $EXIT_APP_TOWR app.log "$CMD_APP"
 
 kill -SIGINT $ROS_CORE
 wait $ROS_CORE
@@ -45,9 +42,8 @@ wait $VIRT_DISPLAY
 EXIT_VIRT_DISPLAY=$?
 
 log $EXIT_CORE ros_core.log "roslaunch sweetie_bot_deploy load_param.launch"
-log $EXIT_APP app.log "roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true"
 
-EXIT="$(( $EXIT_APP + $EXIT_CORE + $EXIT_VIRT_DISPLAY ))"
+EXIT="$(( $EXIT_APP + $EXIT_APP_TOWR + $EXIT_CORE + $EXIT_VIRT_DISPLAY ))"
 if [[ "$EXIT" > 0 ]]; then
     exit "$EXIT"
 fi
@@ -56,5 +52,12 @@ convert screenshot.png -crop 214x298+825+219 +repage cropped_screenshot.png
 ERROR=$( compare -metric MSE reference.png cropped_screenshot.png diff.png 2>&1 | cut -f1 -d' ' | cut -f1 -d. )
 echo "Image comparison score: $ERROR"
 if (( "$ERROR" > 450 )); then
+    exit 4
+fi
+
+convert screenshot-towr.png -crop 214x298+825+219 +repage cropped_screenshot.png
+ERROR=$( compare -metric MSE reference.png cropped_screenshot.png diff-towr.png 2>&1 | cut -f1 -d' ' | cut -f1 -d. )
+echo "Image comparison score: $ERROR"
+if (( "$ERROR" > 560 )); then
     exit 4
 fi

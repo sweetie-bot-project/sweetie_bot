@@ -104,8 +104,13 @@ static void DebugPrintFormulation(const NlpFormulation& formulation)
 	ROS_INFO_STREAM("bound_phase_duration_min: " << formulation.params_.bound_phase_duration_.first);
 	ROS_INFO_STREAM("bound_phase_duration_max: " << formulation.params_.bound_phase_duration_.second);
 	ROS_INFO_STREAM("ee_polynomials_per_swing_phase: " << formulation.params_.ee_polynomials_per_swing_phase_);
-	ROS_INFO_STREAM("force_polynomials_per_stance_phase: " << formulation.params_.force_polynomials_per_stance_phase_);
 	ROS_INFO_STREAM("force_limit_in_normal_direction: " << formulation.params_.force_limit_in_normal_direction_);
+	ROS_INFO_STREAM("min_swing_height: " << formulation.params_.min_swing_height_);
+
+	ROS_INFO_STREAM("COSTS");
+	for(auto& cost_pair : formulation.params_.costs_) {
+		ROS_INFO_STREAM("Cost Term (" << cost_pair.first << ") weight: " << cost_pair.second);
+	}
 }
 
 
@@ -161,8 +166,8 @@ bool ClopGenerator::configure()
 	if (!ros::param::get(towr_parameters_ns + "planning_frame", planning_frame)) {
 		planning_frame = "base_link_path";
 	}
-	if (!ros::param::get("~step_sequence_storage_namespace", step_sequence_ns)) {
-		step_sequence_ns = "/step_sequence";
+	if (!ros::param::get("~storage_namespace", storage_ns)) {
+		storage_ns = "";
 	}
 
 	// init this->solver
@@ -652,6 +657,12 @@ void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, d
 	if (params.bound_phase_duration_.first < 0.0 || params.bound_phase_duration_.first > params.bound_phase_duration_.second) {
 		throw std::invalid_argument("getTowrParametersFromRos: `bound_phase_duration_` interval is incorrect");
 	}
+	if (ros::param::getCached(ns + "/force_limit_in_normal_direction", dvalue)) {
+		params.force_limit_in_normal_direction_ = dvalue;
+	}
+	if (ros::param::getCached(ns + "/min_swing_height", dvalue)) {
+		params.min_swing_height_ = dvalue;
+	}
 	// get cached parameters: int
 	int ivalue;
 	if (ros::param::getCached(ns + "/ee_polynomials_per_swing_phase", ivalue)) {
@@ -662,27 +673,43 @@ void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, d
 	}
 	// get cost settings
 	if (ros::param::getCached(ns + "/costs/base_lin_motion", dvalue)) {
-		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseLinMotionCostID, dvalue) );
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseLinAccCostID, dvalue) );
 	}
 	if (ros::param::getCached(ns + "/costs/base_ang_motion", dvalue)) {
-		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseAngMotionCostID, dvalue) );
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseAngAccCostID, dvalue) );
 	}
 	if (ros::param::getCached(ns + "/costs/ee_motion", dvalue)) {
-		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::EEMotionCostID, dvalue) );
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::EEAccCostID, dvalue) );
 	}
 }
 
-std::vector<towr::GaitGenerator::Gaits> MakeGaitsCombo(const std::string gait_type, int n_steps)
+static bool compare_tail(const std::string& str, const std::string& tail) 
+{
+	if (str.size() < tail.size()) return false;
+	int pos = str.size() - tail.size();
+	return str.compare(pos, std::string::npos, tail) == 0;
+}
+
+static void SetGaitGeneratorCombo(towr::GaitGenerator& gait_gen, std::string gait_type, int n_steps)
 {
 	// create necessary movment combo
 	std::vector<towr::GaitGenerator::Gaits> combo;
+	bool fliplr_flag = false;
+
 	if (gait_type == "stand") {
 		// NOTE: ignore n_steps
 		combo.push_back(towr::GaitGenerator::Stand);
 	}
 	else {
 		// check provided message: number of steps must be positive
-		if (n_steps <= 0 && gait_type != "stand") throw std::invalid_argument("Number of steps must be positive");
+		if (n_steps <= 0) throw std::invalid_argument("Number of steps must be positive");
+
+		// check if left and right legs should be swapped
+		const std::string flip_postfix = "_right";
+		if (compare_tail(gait_type, flip_postfix)) {
+			gait_type.erase(gait_type.end() - flip_postfix.size(), gait_type.end());
+			fliplr_flag = true;
+		}
 
 		// generate combo with prescribed number of steps
 		combo.push_back(towr::GaitGenerator::Stand);
@@ -713,11 +740,13 @@ std::vector<towr::GaitGenerator::Gaits> MakeGaitsCombo(const std::string gait_ty
 			combo.push_back(towr::GaitGenerator::Hop3E);
 		}
 		else {
-			throw std::invalid_argument("Unknown gait type: " + gait_type);
+			throw std::invalid_argument("Unknown gait type: " + gait_type + (fliplr_flag ? flip_postfix : "") );
 		}
 		combo.push_back(towr::GaitGenerator::Stand);
 	}
-	return combo;
+	// assign combo to gait generator
+	gait_gen.SetGaits(combo);
+	if (fliplr_flag) gait_gen.FlipLeftRight();
 }
 
 
@@ -829,7 +858,7 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 	else {
 		// create gait genarator and assign combo
 		std::shared_ptr<towr::GaitGenerator> gait_gen = GaitGenerator::MakeGaitGenerator(n_ee);
-		gait_gen->SetGaits( MakeGaitsCombo(msg.gait_type, msg.n_steps) );
+		SetGaitGeneratorCombo(*gait_gen, msg.gait_type, msg.n_steps);
 
 		// load parameters from namespace "~towr_paramters" with step-based timescale
 		getTowrParametersFromRos(params, towr_parameters_ns + "towr_parameters", msg.duration / gait_gen->GetUnscaledTotalDuration());
@@ -875,6 +904,13 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 	}
 
 	// Additional settings
+	//auto it = std::find(params.constraints_.begin(), params.constraints_.end(), Parameters::BaseAcc);
+	//if (it != params.constraints_.end()) params.constraints_.erase(it);
+	if (params.costs_.size() != 0) {
+		auto it = std::find(params.constraints_.begin(), params.constraints_.end(), Parameters::Swing);
+		if (it != params.constraints_.end()) params.constraints_.erase(it);
+	}
+	
 	
 	// set final EE velocity to zero
 	// TODO modify towr to divide actual parameter and final pose specification
@@ -923,7 +959,7 @@ bool ClopGenerator::performMotionPlanning()
 	nlp = ifopt::Problem();
 	for (auto c : formulation.GetVariableSets(solution)) nlp.AddVariableSet(c);
 	for (auto c : formulation.GetConstraints(solution)) nlp.AddConstraintSet(c);
-	for (auto c : formulation.GetCosts()) nlp.AddCostSet(c);
+	for (auto c : formulation.GetCosts(solution)) nlp.AddCostSet(c);
 
 	bool success = solver->Solve(nlp);
 
@@ -1061,22 +1097,46 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 	}
 };
 
+template<class MsgType> static bool saveMessage(ros::NodeHandle& node_handler, const MsgType& msg, const std::string& param_name) {
+	uint32_t serial_size = ros::serialization::serializationLength(msg);
+	boost::shared_array<unsigned char> buffer(new unsigned char[serial_size]);
+	ros::serialization::OStream ostream(buffer.get(), serial_size);
+	ros::serialization::serialize(ostream, msg);
+	XmlRpc::XmlRpcValue param((unsigned char*)&buffer[0], serial_size);
+    // write parameter to Parameter server
+	try {
+		node_handler.setParam(param_name, param);
+	}
+	catch (ros::InvalidNameException& e) {
+		ROS_ERROR_STREAM("SaveTrajectoryService: ros graph name is not valid '" << param_name << "'");
+		return false;
+	}
+	return true;
+}
+
 bool ClopGenerator::callbackSaveTrajectory(SaveTrajectoryRequest& req, SaveTrajectoryResponse& resp)
 {
 	if (!last_request_successed) {
 		ROS_ERROR_STREAM("SaveTrajectoryService: last planning request has failed, no valid message to save.");
 		return false;
 	}
-	// derive parameter absolute path
-	std::string param_name; 
+	// derive parameters absolute path
+	std::string step_sequence_param_name, move_base_param_name; 
 	if (req.name.empty()) {
 		ROS_ERROR_STREAM("SaveTrajectoryService: parameter name must be nonempty.");
 		return false;
 	}
-	if (req.name[0] != '/') param_name = step_sequence_ns + "/" + req.name; // default namespace for non-absolute path
-	else param_name = req.name;
+	if (req.name[0] != '/') {
+		// use relative path inside storage namespace
+		step_sequence_param_name = storage_ns + "/step_sequence/" + req.name; // default namespace for non-absolute path
+		move_base_param_name = storage_ns + "/move_base/" + req.name; // default namespace for non-absolute path
+	}
+	else {
+		// add _request prefix to parameter name
+		step_sequence_param_name = req.name; 
+		move_base_param_name = req.name + "_request";
+	}
 
-	ROS_INFO_STREAM("Saving FollowStepSequenceGoal message to " << param_name);
 	// create FollowStepSequence goal in planning frame
 	FollowStepSequenceGoal steps_msg;
 	steps_msg.header.stamp = ros::Time::now();
@@ -1085,20 +1145,9 @@ bool ClopGenerator::callbackSaveTrajectory(SaveTrajectoryRequest& req, SaveTraje
 	steps_msg.position_tolerance = last_request_goal.position_tolerance;
 	steps_msg.orientation_tolerance = last_request_goal.orientation_tolerance;
 	storeSolutionInStepSequenceGoalMsg(steps_msg, KDL::Frame::Identity());
-	// save result message in parameter
-	uint32_t serial_size = ros::serialization::serializationLength(steps_msg);
-	boost::shared_array<unsigned char> buffer(new unsigned char[serial_size]);
-	ros::serialization::OStream ostream(buffer.get(), serial_size);
-	ros::serialization::serialize(ostream, steps_msg);
-	XmlRpc::XmlRpcValue param((unsigned char*)&buffer[0], serial_size);
-    // write parameter to Parameter server
-	try {
-		node_handler.setParam(param_name, param);
-	}
-	catch (ros::InvalidNameException& e) {
-		ROS_ERROR_STREAM("SaveTrajectoryService: ros graph name is not valid '" << param_name <<"'");
-		return false;
-	}
+
+	ROS_INFO_STREAM("Saving messages: FollowStepSequenceGoal to " << step_sequence_param_name << " and MoveBaseGoal to " << move_base_param_name);
+	bool success = saveMessage(node_handler, last_request_goal, move_base_param_name) && saveMessage(node_handler, steps_msg, step_sequence_param_name);
 	return true;
 }
 

@@ -38,5 +38,5 @@ install(
 )
 
 # bash script
-install(PROGRAMS scripts/store-joint-trajectories
+install(PROGRAMS scripts/store-joint-trajectories scripts/store-msgs
 	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

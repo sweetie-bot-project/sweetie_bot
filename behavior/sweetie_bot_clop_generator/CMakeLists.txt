@@ -138,9 +138,9 @@ install(DIRECTORY scripts
 	USE_SOURCE_PERMISSIONS)
 
 ## Install python scripts
-catkin_install_python(
-	PROGRAMS
-	    scripts/walk
+#catkin_install_python(
+#   PROGRAMS
+#		scripts/walk
 #		scripts/trot_forward.py
 #		scripts/walk_forward.py
 #		scripts/turn_left.py
@@ -149,7 +149,7 @@ catkin_install_python(
 #		scripts/walk_forward2.py
 #		scripts/walk_backward.py
 #		scripts/turn_right.py
-	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 
 #############

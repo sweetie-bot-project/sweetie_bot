@@ -109,14 +109,16 @@ stretch-amd64-test: &test_template
     - docker cp temp:/home/dev/.ros/log ./__log || true
     - docker cp temp:/home/dev/screenshot.png . || true
     - docker cp temp:/home/dev/diff.png . || true
+    - docker cp temp:/home/dev/screenshot-towr.png . || true
+    - docker cp temp:/home/dev/diff-towr.png . || true
     - docker cp temp:/home/dev/retcode . && cat ./retcode
     - exit $(cat ./retcode)
 
   artifacts:
     expire_in: 3 weeks
     paths:
-      - screenshot.png
-      - diff.png
+      - screenshot*.png
+      - diff*.png
       - __log/
     when: always
 

@@ -3,6 +3,9 @@ Sweetie Bot software repository
 
 This repository contains software framework for the [Sweetie Bot robot](http://sweetie.bot).
 
+**Note:** We are hosting all our code on [gitlab.com](https://gitlab.com/sweetie-bot/). We also have a [github mirror](https://github.com/sweetie-bot-project/), but we do not accept pull requests there, plese use [primary source](https://gitlab.com/sweetie-bot/sweetie_bot).
+Also see [`CONTRIBUTING`](CONTRIBUTING.md) page for details.
+
 ![](doc/figures/control-system.png)
 
 Build status               | master branch  |
@@ -49,9 +52,9 @@ The following instruction describes the installation process from binary package
 
 Check your system before install:
 
-* OS: Ubuntu Bionic (18.04) or Debian Stretch. Windows users can try [WSL](https://janbernloehr.de/2017/06/10/ros-windows) but it is less supported method.
+* OS: Ubuntu Bionic (18.04) or Debian Stretch. For Windows and Mac users we recommend virtual machine with linux installed in it. Windows users can try [WSL](https://janbernloehr.de/2017/06/10/ros-windows) but it is less supported method.
 * CPU: x86-64 2 GHz dual core processor or better
-* RAM: 6 GB system memory
+* RAM: 4 GB system memory
 * GPU: Almost any modern GPU with OpenGL 2.1 hardware acceleration support
 * HDD: 3 GB of free hard drive space
 * WAN: Internet access
@@ -65,7 +68,12 @@ There are three ways to install control software from a binary packages:
 Run the script in your terminal, it will automatically install apt repositories with the all necessary dependencies:
 
 ```
-# wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/install.bash | sudo bash
+wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/install.bash | sudo bash
+```
+
+Install software packages
+```
+sudo apt install ros-melodic-sweetie-bot
 ```
 
 2. Add apt repositories manually 
@@ -73,24 +81,36 @@ Run the script in your terminal, it will automatically install apt repositories 
 Alternatively you can install the ROS Melodic repository as listed in official ['ROS instruction'](http://wiki.ros.org/melodic/Installation/Ubuntu) and Sweetie Bot repository.
 
 ```
-# sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-# sudo sh -c 'echo deb http://sweetie-bot.gitlab.io/sweetie_bot $(lsb_release -sc) main > /etc/apt/sources.list.d/sweetie-bot.list
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+sudo sh -c 'echo deb http://sweetie-bot.gitlab.io/sweetie_bot $(lsb_release -sc) main > /etc/apt/sources.list.d/sweetie-bot.list
 ```
 
 Next you have to set up your keys:
 ```
-# sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
-# wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/repository.key | sudo apt-key add -
+sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/repository.key | sudo apt-key add -
+```
+
+Upgrade and install software packages
+```
+sudo apt update && sudo apt upgrade
+sudo apt install ros-melodic-sweetie-bot
 ```
 
 3. Download packages manually
 
-You also can download deb packages manually from [here](../pipelines).
+Alternatively you can download deb packages manually.
 
-#### Upgrade and install software packages
+First of all refer ['ROS Installation instruction'](http://wiki.ros.org/melodic/Installation/Ubuntu) manual to add official ROS repositary.
+
+Download zip from [here](https://gitlab.com/sweetie-bot/sweetie_bot/pipelines).
+Click on first green check mark ✓ and choose your OS, click "Download" at the next page.
+Unpack zip file and install both .deb packages included.
+
 ```
-# sudo apt update && sudo apt upgrade
-# sudo apt install ros-melodic-sweetie-bot
+unzip sweetie-bot-bionic-amd64.zip
+sudo dpkg -i sweetie-bot-*.deb
+sudo apt install -f
 ```
 
 #### Setup workspace
@@ -99,44 +119,45 @@ User editable part of sweetie bot software must be installed to the home directo
 
 Install `sweetie_bot_sounds`, `sweetie_bot_proto2_movements` and `sweetie_bot_flexbe_behaviors`: 
 ```
-$ mkdir -p ~/ros/sweetie_bot/src
-$ cd ~/ros/sweetie_bot/src
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_sounds.git
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_proto2_movements.git
-$ git clone git@gitlab.com:sweetie-bot/sweetie_bot_flexbe_behaviors.git
+mkdir -p ~/ros/sweetie_bot/src
+cd ~/ros/sweetie_bot/src
+git clone https://gitlab.com/sweetie-bot/sweetie_bot_sounds.git
+git clone https://gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git
+git clone https://gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git
 ```
 Build workspace
 ```
-$ cd ~/ros/sweetie_bot
-$ source /opt/ros/sweetie_bot/setup.bash
-$ catkin_make
+cd ~/ros/sweetie_bot
+source /opt/ros/sweetie_bot/setup.bash
+catkin_make
 ```
 
 **Note:** Run this to supress priority warnings `Forcing priority (20)`:
 
 ```
-# echo -e "@realtime   -  rtprio     99\n@realtime   -  memlock    unlimited" | sudo tee -a /etc/security/limits.d/99-realtime.conf
-# sudo groupadd realtime
-# sudo usermod -a -G realtime $USER
+echo -e "@realtime   -  rtprio     99\n@realtime   -  memlock    unlimited" | sudo tee /etc/security/limits.d/99-realtime.conf
+sudo groupadd realtime
+sudo usermod -a -G realtime $USER
 ```
 
 ## Usage
 
 Set ROS environment once in the every terminal before you start any of the following commands:
 ```
-$ source ~/ros/sweetie_bot/devel/setup.bash
+source ~/ros/sweetie_bot/devel/setup.bash
 ```
 
 To start basic control framework:
 
 ```
-$ roslaunch sweetie_bot_deploy joint_space_control.launch
+roslaunch sweetie_bot_deploy joint_space_control.launch
 ```
 
 Following command starts MoveIt! `move_group` and FlexBe subsystem:
 
 ```
-$ roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
+roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
 ```
 
 For more details see [`sweetie_bot_deploy` package](config/sweetie_bot_deploy).
+

@@ -71,7 +71,7 @@ Sweetie Bot software is using following namespace structure. Namespaces are mark
 
 [`rtt_ros_integration` package](https://github.com/orocos/rtt_ros_integration) allows to map ROS topics on OROCOS ports transparently. Also it gives OROCOS components access to ROS parameter server. 
 ROS sees all OROCOS subsystem as one node with name `motion`. OROCOS components advertise their interface in corresponding namespace. For example, `controller/stance` component provides 
-actionlib server under `motion/controller/stance` to activate it and listen to the `motion/controller/in_base_ref` topic. The controller get properties from `motion/controller/stance` namespace.
+actionlib server under `motion/controller/stance` to activate it and listen to the `motion/controller/in_pose_ref` topic. The controller get properties from `motion/controller/stance` namespace.
 
 Some parameters of OROCOS components has special meaning: 
  * `period` is set to the main timer period (control cycle duration) which defined in `timer` component configuration.
