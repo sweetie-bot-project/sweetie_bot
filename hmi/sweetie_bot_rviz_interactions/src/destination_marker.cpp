@@ -47,6 +47,30 @@ void DestinationMarker::actionDoneCallback(const GoalState& state, const ResultC
                   << " error_code: " << result->error_code << " error_string: " << result->error_string);
 
 	action_client->cancelAllGoals();
+  // Pretty print error cause
+  switch (result->error_code) {
+  case sweetie_bot_clop_generator::MoveBaseResult::SUCCESS:
+    ROS_INFO_STREAM("Clop generator completed successfully");
+    break;
+  case sweetie_bot_clop_generator::MoveBaseResult::SOLUTION_NOT_FOUND:
+    ROS_ERROR_STREAM("Clop generator couldn't find a solution");
+    break;
+  case sweetie_bot_clop_generator::MoveBaseResult::INVALID_GOAL:
+    ROS_ERROR_STREAM("MoveBase goal message invalid");
+    break;
+  case sweetie_bot_clop_generator::MoveBaseResult::INTERNAL_ERROR:
+    ROS_ERROR_STREAM("Clop generator has stopped due to internal error");
+    break;
+  case sweetie_bot_clop_generator::MoveBaseResult::TOLERANCE_VIOLATED:
+    ROS_ERROR_STREAM("Clop generator has stopped due to violation of tolerance bounds");
+    break;
+  case sweetie_bot_clop_generator::MoveBaseResult::INVALID_INITIAL_POSE:
+    ROS_ERROR_STREAM("Initial robot pose invalid. For walk starting you need bended knees and legs in nominal positions");
+    break;
+  case sweetie_bot_clop_generator::MoveBaseResult::EXECUTION_FAILED:
+    ROS_ERROR_STREAM("Execution of generated movement failed");
+    break;
+  }
 }
 
 void DestinationMarker::actionActiveCallback()
