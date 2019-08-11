@@ -47,7 +47,7 @@ void PoseMarker::processNormalize( const visualization_msgs::InteractiveMarkerFe
     // normalize pose
     normalize(pose_stamped);
     // publish new pose
-    if (pose_publish) pose_pub.publish(pose_stamped);
+    if (pose_publish && is_operational) pose_pub.publish(pose_stamped);
 
     menu_handler.reApply(*server);
     server->applyChanges();

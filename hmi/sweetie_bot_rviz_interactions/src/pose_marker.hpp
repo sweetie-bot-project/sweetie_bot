@@ -92,6 +92,8 @@ protected:
   visualization_msgs::InteractiveMarker dummy_marker;
   // flag, indicating "visibility" of interactive marker
   bool is_visible = false;
+  // is_operational flag
+  bool is_operational = false;
   // menu
   MenuHandler menu_handler;
   // menu index

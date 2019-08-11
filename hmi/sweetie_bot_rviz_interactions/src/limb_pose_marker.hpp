@@ -62,9 +62,6 @@ private:
   MenuHandler::EntryHandle publish_pose_entry;
   // publish_pose flag
   bool publish_pose = true;
-  // is_operational flag
-  bool is_operational = false;
-
 };
 
 } // namespace hmi

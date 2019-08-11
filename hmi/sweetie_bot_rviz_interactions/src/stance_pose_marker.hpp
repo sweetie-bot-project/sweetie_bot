@@ -65,8 +65,6 @@ private:
   MenuHandler::EntryHandle normalize_legs;
   // publish_pose flag
   bool publish_pose = true;
-  // is_operational flag
-  bool is_operational = false;
   // resource markers vector
   std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers;
 };
