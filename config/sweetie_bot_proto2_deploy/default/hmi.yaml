@@ -8,9 +8,17 @@ pose_marker:
     # IMPORTANT! Order, in which resources specifies, must
     #            correspond order, in which frames represents resources, 
     #            for proper conversion of latter to former
+    # Also, only first four resources counts as legs
     resources: [ leg1, leg2, leg3, leg4, head ]
     frames: [ bone15, bone25, bone35, bone45, bone55, base_link ]
     stance_home_frame: base_link
     stance_normalized_z_level: 0.2335
     limbs_normalized_z_level: 0.03
     head_normalized_z_level: 0.3287
+destination_marker:
+    scale: 1.1
+    gait_type_options: [ walk_overlap, walk, trot ]
+    n_steps_options: [ 2, 3, 4, 5 ]
+    duration: 4.0
+    nominal_height: 0.1825
+    ee_names: [ leg1, leg2, leg3, leg4 ]
