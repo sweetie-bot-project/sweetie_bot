@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
 	ros::Duration(0.1).sleep();
 
   DestinationMarker destMarker(server, "destination_marker");
+  destMarker.setEndEffectorTargets();
 
   ROS_INFO("destination_marker has been started!");
 
