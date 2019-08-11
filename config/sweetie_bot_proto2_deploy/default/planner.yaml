@@ -63,7 +63,7 @@ clop_generator:
         linear_solver: "mumps"
         jacobian_approximation: "exact"
         derivative_test: "none"  # BEWARE! Test "first-order" breaks optimization process! 
-        max_cpu_time: 10.0
+        max_cpu_time: 15.0
         print_level: 5
         max_iter: 300
 
