@@ -13,5 +13,5 @@ stance_pose_marker:
 limb_pose_marker:
     normalized_z_level: 0.03
     scale: 0.5
-    resources: [leg1, leg2, leg3, leg4, head ]
-    frames: [ bone15, bone25, bone35, bone45, bone55, base_link ]
+    resources: [leg1, leg2, leg3, leg4, head, nose ]
+    frames: [ bone15, bone25, bone35, bone45, bone54, bone55, base_link ]
