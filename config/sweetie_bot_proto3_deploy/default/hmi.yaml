@@ -15,3 +15,8 @@ limb_pose_marker:
     scale: 0.75
     resources: [leg1, leg2, leg3, leg4, head, nose ]
     frames: [ base_link, leg1_link6, leg2_link6, leg3_link6, leg4_link6, head_link4, head_link5 ]
+head_target_marker:
+    normalized_z_level: 0.35
+    scale: 0.3
+    resources: [ head ]
+    frames: [ ]

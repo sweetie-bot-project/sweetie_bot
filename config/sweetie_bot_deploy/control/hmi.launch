@@ -50,6 +50,11 @@
 			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/pose"/>
 			<param name="resources_select_only_one" value="true"/>
 		</node>
+		<node name="head_target_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
+			<remap from="pose" to="$(arg robot_ns)/motion/controller/look_at/in_pose_ref"/>
+			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/look_at"/>
+			<param name="resources_select_only_one" value="true"/>
+		</node>
 		<!-- eyes vizualization -->
 		<group>
 			<remap from="joint_states" to="$(arg robot_ns)/joint_states"/>
