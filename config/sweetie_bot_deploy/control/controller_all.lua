@@ -15,6 +15,8 @@ require "controller_stance"
 
 require "controller_pose"
 
+require "controller_look_at"
+
 require "controller_step_sequence"
 
 if (aggregator_real and herkulex) then
