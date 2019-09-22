@@ -13,18 +13,19 @@ sensor.reset()
 sensor.set_contrast(1)
 sensor.set_gainceiling(16)
 sensor.set_framesize(sensor.HQVGA)
-sensor.set_pixformat(sensor.GRAYSCALE)
+sensor.set_pixformat(sensor.RGB565)
 
 # Load Haar Cascade
 # By default this will use all stages, lower satges is faster but less accurate.
 face_cascade = image.HaarCascade("frontalface", stages=25)
-print(face_cascade)
 
 # FPS clock
 clock = time.clock()
 
 # Setup UART
-uart = pyb.UART(3, 115200)
+uart = pyb.USB_VCP()
+pyb.enable_irq(True)
+uart.setinterrupt(3)
 
 while True:
     # Capture a snapshot
