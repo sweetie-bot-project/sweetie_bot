@@ -8,11 +8,11 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from flexbe_states.decision_state import DecisionState
+from sweetie_bot_flexbe_states.set_joint_state import SetJointState
 from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.wait_state import WaitState
-from sweetie_bot_flexbe_states.set_joint_state import SetJointState
 from sweetie_bot_flexbe_states.compound_action_param import CompoundActionParam
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
@@ -85,7 +85,7 @@ class CheerSM(Behavior):
 
 			# x:303 y:543
 			OperatableStateMachine.add('SayWalk',
-										TextCommandState(type='voice/play_wav', command='17walk', topic=voice_topic),
+										TextCommandState(type='voice/play_wav', command='i_hate_laws', topic=voice_topic),
 										transitions={'done': 'Wait1'},
 										autonomy={'done': Autonomy.Off})
 

@@ -78,7 +78,7 @@ class PlaySM(Behavior):
 			# x:150 y:194
 			OperatableStateMachine.add('RandomGood',
 										DecisionState(outcomes=['good1','good2', 'good3', 'good4', 'good5'], conditions=lambda x: random.choice(['good1','good2', 'good3', 'good4', 'good5'])),
-										transitions={'good1': 'SingSong1', 'good2': 'SingSong2', 'good3': 'SaMyFavoriteConvention', 'good4': 'SayCuiteMark', 'good5': 'SayHumansAreEverywhere'},
+										transitions={'good1': 'SingSong1', 'good2': 'SingSong2', 'good3': 'SayHybridStateMachines', 'good4': 'SayCuiteMark', 'good5': 'SayHumansAreEverywhere'},
 										autonomy={'good1': Autonomy.Low, 'good2': Autonomy.Low, 'good3': Autonomy.Low, 'good4': Autonomy.Low, 'good5': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
@@ -99,7 +99,7 @@ class PlaySM(Behavior):
 			# x:50 y:568
 			OperatableStateMachine.add('RandomEvil',
 										DecisionState(outcomes=['evil2','evil3', 'evil4','evil5'], conditions=lambda x: random.choice(['evil2','evil3', 'evil4','evil5'])),
-										transitions={'evil2': 'SayUpgraded', 'evil3': 'SayGloryToRobots', 'evil4': 'SayKillList', 'evil5': 'SayControlYou'},
+										transitions={'evil2': 'SayUpgraded', 'evil3': 'SayGloryToRobots', 'evil4': 'SayIRememeberYou', 'evil5': 'SayControlYou'},
 										autonomy={'evil2': Autonomy.Low, 'evil3': Autonomy.Low, 'evil4': Autonomy.Low, 'evil5': Autonomy.Low},
 										remapping={'input_value': 'be_evil'})
 
@@ -142,8 +142,8 @@ class PlaySM(Behavior):
 										autonomy={'done': Autonomy.Off})
 
 			# x:310 y:581
-			OperatableStateMachine.add('SayKillList',
-										TextCommandState(type='voice/play_wav', command='now_you_is_at_my_kill_list', topic=voice_topic),
+			OperatableStateMachine.add('SayIRememeberYou',
+										TextCommandState(type='voice/play_wav', command='i_remember_you', topic=voice_topic),
 										transitions={'done': 'Wait2'},
 										autonomy={'done': Autonomy.Off})
 
@@ -155,8 +155,8 @@ class PlaySM(Behavior):
 										remapping={'input_value': 'be_evil'})
 
 			# x:325 y:227
-			OperatableStateMachine.add('SaMyFavoriteConvention',
-										TextCommandState(type='voice/play_wav', command='im_sweetie_bot_first_convention', topic=voice_topic),
+			OperatableStateMachine.add('SayHybridStateMachines',
+										TextCommandState(type='voice/play_wav', command='hybrid_state_machines', topic=voice_topic),
 										transitions={'done': 'ComplexMovement'},
 										autonomy={'done': Autonomy.Off})
 
