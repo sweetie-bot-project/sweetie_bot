@@ -281,20 +281,8 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
         duration -= 0.1;
       }
 
-      menu_handler = MenuHandler(base_menu_handler); // Restore base menu handler without last entry
-      menu_handler.apply(*server, name);
-      // Add duration submenu again with new title
-      std::stringstream duration_ss;
-      duration_ss << "Duration: " << std::setprecision(1) << std::fixed << duration << "s";
-      MenuHandler::FeedbackCallback processFeedback = boost::bind( &DestinationMarker::processFeedback, this, _1 );
-      MenuHandler::EntryHandle duration_entry = menu_handler.insert(duration_ss.str());
-      increase_by_half_duration_entry = menu_handler.insert(duration_entry, "Increase by 0.5", processFeedback);
-      decrease_by_half_duration_entry = menu_handler.insert(duration_entry, "Decrease by 0.5", processFeedback);
-      increase_by_tenth_duration_entry = menu_handler.insert(duration_entry, "Increase by 0.1", processFeedback);
-      decrease_by_tenth_duration_entry = menu_handler.insert(duration_entry, "Decrease by 0.1", processFeedback);
-
-      menu_handler.reApply(*server);
-      server->applyChanges();
+      // Change value of duration in corresponding menu entry
+      rebuildMenu();
     }
   }
 }
@@ -343,28 +331,30 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
 {
   MenuHandler::FeedbackCallback processFeedback = boost::bind( &DestinationMarker::processFeedback, this, _1 );
 
-  start_walk_entry = menu_handler.insert("Start walk", processFeedback);
-  MenuHandler::EntryHandle gait_type_entry = menu_handler.insert("Gait type");
-  MenuHandler::FeedbackCallback processGaitType = boost::bind( &DestinationMarker::processGaitType, this, _1 );
-  for (auto gait_type_option : gait_type_options) {
-    MenuHandler::EntryHandle handle = menu_handler.insert(gait_type_entry, gait_type_option, processGaitType);
-    if (gait_type_option == gait_type)
-      menu_handler.setCheckState(handle, MenuHandler::CHECKED);
-    else
-      menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
-    gait_type_submenu.emplace(handle, gait_type_option);
+  if (!gait_type_options.empty() || !n_steps_options.empty()) {
+    start_walk_entry = menu_handler.insert("Start walk", processFeedback);
+    MenuHandler::EntryHandle gait_type_entry = menu_handler.insert("Gait type");
+    MenuHandler::FeedbackCallback processGaitType = boost::bind( &DestinationMarker::processGaitType, this, _1 );
+    for (auto gait_type_option : gait_type_options) {
+      MenuHandler::EntryHandle handle = menu_handler.insert(gait_type_entry, gait_type_option, processGaitType);
+      if (gait_type_option == gait_type)
+        menu_handler.setCheckState(handle, MenuHandler::CHECKED);
+      else
+        menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
+      gait_type_submenu.emplace(handle, gait_type_option);
+    }
+    MenuHandler::EntryHandle n_steps_entry = menu_handler.insert("Steps number");
+    MenuHandler::FeedbackCallback processStepsNum = boost::bind( &DestinationMarker::processStepsNum, this, _1 );
+    for (auto n_steps_option : n_steps_options) {
+      MenuHandler::EntryHandle handle = menu_handler.insert(n_steps_entry, std::to_string(n_steps_option), processStepsNum);
+      if (n_steps_option == n_steps)
+        menu_handler.setCheckState(handle, MenuHandler::CHECKED);
+      else
+        menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
+      n_steps_submenu.emplace(handle, n_steps_option);
+    }
+    base_menu_handler = menu_handler; // Save base menu handler without last entry
   }
-  MenuHandler::EntryHandle n_steps_entry = menu_handler.insert("Steps number");
-  MenuHandler::FeedbackCallback processStepsNum = boost::bind( &DestinationMarker::processStepsNum, this, _1 );
-  for (auto n_steps_option : n_steps_options) {
-    MenuHandler::EntryHandle handle = menu_handler.insert(n_steps_entry, std::to_string(n_steps_option), processStepsNum);
-    if (n_steps_option == n_steps)
-      menu_handler.setCheckState(handle, MenuHandler::CHECKED);
-    else
-      menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
-    n_steps_submenu.emplace(handle, n_steps_option);
-  }
-  base_menu_handler = menu_handler; // Save base menu handler without last entry
   std::stringstream duration_ss;
   duration_ss << "Duration: " << std::setprecision(1) << std::fixed << duration << "s";
   MenuHandler::EntryHandle duration_entry = menu_handler.insert(duration_ss.str());
@@ -372,6 +362,9 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
   decrease_by_half_duration_entry = menu_handler.insert(duration_entry, "Decrease by 0.5", processFeedback);
   increase_by_tenth_duration_entry = menu_handler.insert(duration_entry, "Increase by 0.1", processFeedback);
   decrease_by_tenth_duration_entry = menu_handler.insert(duration_entry, "Decrease by 0.1", processFeedback);
+
+  menu_handler.reApply(*server);
+  server->applyChanges();
 }
 
 } // namespace hmi

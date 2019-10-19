@@ -16,7 +16,7 @@ StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::Interact
                                    double normalized_z_level
                                   )
     : PoseMarker(server, name, scale, frames, marker_home_frame, normalized_z_level),
-      resources(resources),
+      resource_names(resources),
       pose_pub(node_handle.advertise<geometry_msgs::PoseStamped>("stance_pose", 1)),
       action_client( new ActionClient("stance_set_operational_action", false) )
 {
@@ -79,7 +79,7 @@ bool StancePoseMarker::setOperational(bool is_operational)
     for ( auto it = resources_entry_map.begin(); it != resources_entry_map.end(); ++it, ++counter ) {
       MenuHandler::CheckState check;
       menu_handler.getCheckState( it->first, check );
-      if (check == MenuHandler::CHECKED) goal.resources.push_back(it->second);
+      if (check == MenuHandler::UNCHECKED) goal.resources.push_back(it->second);
       if (counter >= 3) break; // We operate only on four first resources
     }
 
@@ -189,42 +189,31 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
 						case MenuHandler::CHECKED:
               if (resource_id < resource_markers.size()) {
                 std::shared_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
-                if (resource_id < resource_markers.size() - 1) {
-                  res_marker->changeVisibility(true); // show bounded leg marker
-                  res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
-                  res_marker->setOperational(true);
-                }
-                else {
-                  res_marker->changeVisibility(false); // or hide head marker
-                  res_marker->setOperational(false);
-                }
+                res_marker->changeVisibility(false); // hide bounded limb marker
+                res_marker->setOperational(false);
+                this->setOperational(false);
+                rebuildMenu();
               }
 							menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
 							break;
 						case MenuHandler::UNCHECKED:
               if (resource_id < resource_markers.size()) {
                 std::shared_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
-                if (resource_id < resource_markers.size() - 1) {
-                  res_marker->changeVisibility(false); // hide bounded leg marker
-                  res_marker->setOperational(false);
-                }
-                else {
-                  res_marker->changeVisibility(true); // or show head marker
-                  res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
-                  res_marker->setOperational(true);
-                }
+                res_marker->changeVisibility(true); // show bounded limb marker
+                res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
+                res_marker->setOperational(true);
+                this->setOperational(false);
+                rebuildMenu();
               }
               menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
 							break;
 					}
-					// apply changes if controller is operational
-					GoalState state = action_client->getState();
-					if (!state.isDone()) setOperational(true);
 				}
 			}
 			break;
 	}
 
+  // apply changes if controller is operational
 	menu_handler.reApply(*server);
 	server->applyChanges();
 }
@@ -279,14 +268,27 @@ void StancePoseMarker::makeMenu()
 
 	set_operational_entry = menu_handler.insert( "OPERATIONAL", processFeedback);
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
-  int counter = 0;
-	for ( auto it=resources.begin(); it != resources.end(); ++it, ++counter ) {
-		MenuHandler::EntryHandle handle = menu_handler.insert( "  " + *it, processFeedback);
-    if (counter < 4) // Checking only 4 first resources
+  int marker_idx = 0;
+  for (auto it=resource_markers.begin(); it != resource_markers.end(); ++it, ++marker_idx) {
+    MenuHandler::EntryHandle handle;
+    std::string state_msg = "(SUPPORT)";
+    auto marker_ptr = *it;
+    if (marker_idx < 4) {
+      if (marker_ptr->isOperational()) {
+        state_msg = "(FREE)";
+      } else {
+        state_msg = "(SUPPORT)";
+      }
+    } else {
+      state_msg = "";
+    }
+    handle = menu_handler.insert( "  " + resource_names[marker_idx] + " " + state_msg, processFeedback);
+    if (marker_ptr->isOperational()) {
       menu_handler.setCheckState(handle, MenuHandler::CHECKED);
-    else
+    } else {
       menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
-		resources_entry_map.emplace(handle, *it);
+    }
+		resources_entry_map.emplace(handle, resource_names[marker_idx]);
 	}
 	normalize_pose_entry = menu_handler.insert( "Move all to home", boost::bind( &StancePoseMarker::processMoveAllToHome, this, _1 ));
 	normalize_pose_entry = menu_handler.insert( "Normalize legs", boost::bind( &StancePoseMarker::processNormalizeLegs, this, _1 ));
@@ -296,6 +298,9 @@ void StancePoseMarker::makeMenu()
 	enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &StancePoseMarker::processEnable6DOF, this, _1 ));
 	menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::UNCHECKED);
   menu_handler.insert("Move to home frame", boost::bind( &StancePoseMarker::processMoveToHomeFrame, this, _1 ));
+
+  menu_handler.reApply(*server);
+  server->applyChanges();
 }
 
 } // namespace hmi

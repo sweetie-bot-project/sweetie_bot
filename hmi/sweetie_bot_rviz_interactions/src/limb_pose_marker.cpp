@@ -202,12 +202,15 @@ void LimbPoseMarker::makeMenu()
 
 	set_operational_entry = menu_handler.insert( "OPERATIONAL", processFeedback);
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
-	normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &LimbPoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
 	publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback);
 	menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED); publish_pose = true;
+	normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &LimbPoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
 	enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &LimbPoseMarker::processEnable6DOF, this, _1 ));
 	menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::UNCHECKED);
   menu_handler.insert("Move to home frame", boost::bind( &LimbPoseMarker::processMoveToHomeFrame, this, _1 ));
+
+	menu_handler.reApply(*server);
+	server->applyChanges();
 }
 
 } // namespace hmi

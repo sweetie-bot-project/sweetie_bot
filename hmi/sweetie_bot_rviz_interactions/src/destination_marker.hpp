@@ -46,6 +46,11 @@ private:
   visualization_msgs::Marker makeSphereMarker();
   visualization_msgs::Marker makeConeMarker();
   void makeMenu(const std::vector<std::string>& gait_type_options, const std::vector<unsigned>& n_steps_options);
+  void rebuildMenu() {
+    menu_handler = MenuHandler(base_menu_handler); // Restore base menu handler without last entry
+    menu_handler.apply(*server, name);
+    makeMenu(std::vector<std::string>(), std::vector<unsigned>()); // Remake menu
+  }
 
 private:
 

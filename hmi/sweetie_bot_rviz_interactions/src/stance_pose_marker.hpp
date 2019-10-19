@@ -39,8 +39,13 @@ public:
   void processMoveAllToHome( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback );
 
   void makeMenu();
+  void rebuildMenu() {
+    menu_handler = MenuHandler(); // Reset menu handler
+    menu_handler.apply(*server, name);
+    makeMenu(); // Remake menu
+  }
 
-  void setResourceMarkers(std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers) { this->resource_markers = resource_markers; }
+  void setResourceMarkers(std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers) { this->resource_markers = resource_markers; rebuildMenu(); }
 
 private:
 
@@ -53,8 +58,8 @@ private:
   ros::Publisher pose_pub;
 
   // PARAMETERS
-  // resources list: corresponding menu items will be displayed in context menu
-  std::vector<std::string> resources;
+  // resources name list: corresponding menu items will be displayed in context menu
+  std::vector<std::string> resource_names;
 
   // COMPONENT STATE
   // menu index
