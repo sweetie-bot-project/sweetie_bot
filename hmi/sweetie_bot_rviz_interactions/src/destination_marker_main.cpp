@@ -1,4 +1,5 @@
 #include "destination_marker.hpp"
+#include <QApplication>
 
 using namespace interactive_markers;
 using namespace sweetie_bot::hmi;
@@ -8,6 +9,8 @@ std::shared_ptr<InteractiveMarkerServer> server;
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "destination_marker");
+
+  QApplication a(argc, argv);
 
   double scale;
   std::vector<std::string> gait_type_options;

@@ -5,7 +5,19 @@ project(sweetie_bot_rviz_interactions)
 add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
-find_package(catkin REQUIRED COMPONENTS geometry_msgs roscpp visualization_msgs tf interactive_markers sweetie_bot_control_msgs sweetie_bot_clop_generator actionlib)
+find_package(catkin REQUIRED COMPONENTS
+  geometry_msgs
+  roscpp
+  visualization_msgs
+  tf
+  interactive_markers
+  sweetie_bot_control_msgs
+  sweetie_bot_clop_generator
+  actionlib
+)
+
+# QT packages
+find_package(Qt5Widgets REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -55,7 +67,7 @@ add_dependencies(${PROJECT_NAME}_destination_marker ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_pose_marker ${catkin_LIBRARIES})
-target_link_libraries(${PROJECT_NAME}_destination_marker ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_destination_marker ${catkin_LIBRARIES} ${Qt5Widgets_LIBRARIES})
 
 #############
 ## Install ##

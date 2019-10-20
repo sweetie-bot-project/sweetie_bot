@@ -12,6 +12,10 @@
 #include <sweetie_bot_clop_generator/MoveBaseGoal.h>
 #include <sweetie_bot_clop_generator/EndEffectorGoal.h>
 
+#include <QInputDialog>
+#include <QDesktopWidget>
+#include <QApplication>
+
 using namespace visualization_msgs;
 using namespace interactive_markers;
 
@@ -271,10 +275,19 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
     if (feedback->menu_entry_id == start_walk_entry) {
       invokeClopGenerator(feedback->pose);
     } else {
-      if (feedback->menu_entry_id == increase_by_half_duration_entry) {
-        duration += 0.5;
-      } else if (feedback->menu_entry_id == decrease_by_half_duration_entry) {
-        duration -= 0.5;
+      if (feedback->menu_entry_id == change_duration_entry) {
+        bool ok;
+        QWidget w(nullptr);
+        // Center parent widget
+        QRect screenGeometry = QApplication::desktop()->screenGeometry();
+        int x = (screenGeometry.width() - w.width()) / 2;
+        int y = (screenGeometry.height()- w.height()) / 2;
+        w.move(x, y);
+        duration = QInputDialog::getDouble(&w, QString("Change duration value"),
+                                           QString("Duration:"), duration, 0.0, 100.0,
+                                           1, &ok, Qt::WindowFlags());
+
+        if (!ok) return;
       } else if (feedback->menu_entry_id == increase_by_tenth_duration_entry) {
         duration += 0.1;
       } else if (feedback->menu_entry_id == decrease_by_tenth_duration_entry) {
@@ -358,8 +371,7 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
   std::stringstream duration_ss;
   duration_ss << "Duration: " << std::setprecision(1) << std::fixed << duration << "s";
   MenuHandler::EntryHandle duration_entry = menu_handler.insert(duration_ss.str());
-  increase_by_half_duration_entry = menu_handler.insert(duration_entry, "Increase by 0.5", processFeedback);
-  decrease_by_half_duration_entry = menu_handler.insert(duration_entry, "Decrease by 0.5", processFeedback);
+  change_duration_entry = menu_handler.insert(duration_entry, "Change value", processFeedback);
   increase_by_tenth_duration_entry = menu_handler.insert(duration_entry, "Increase by 0.1", processFeedback);
   decrease_by_tenth_duration_entry = menu_handler.insert(duration_entry, "Decrease by 0.1", processFeedback);
 
