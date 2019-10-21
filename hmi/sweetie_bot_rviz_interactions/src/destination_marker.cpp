@@ -61,7 +61,8 @@ void DestinationMarker::actionDoneCallback(const GoalState& state, const ResultC
       ROS_INFO_STREAM("Clop generator completed successfully");
 
       // Save executed trajectory
-      ros::ServiceClient client = node_handle.serviceClient<sweetie_bot_clop_generator::SaveTrajectory>("/clop_generator/save_trajectory");
+      ros::NodeHandle n;
+      ros::ServiceClient client = n.serviceClient<sweetie_bot_clop_generator::SaveTrajectory>("/clop_generator/save_trajectory");
       sweetie_bot_clop_generator::SaveTrajectory srv;
       srv.request.name = trajectory_name;
 
@@ -303,7 +304,7 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
       int y = (screenGeometry.height()- w.height()) / 2;
       w.move(x, y);
       QString qs_name = QInputDialog::getText(&w, QString("Change trajectory name"),
-                                              QString("Name of trajectory:"), QLineEdit::Normal, "", &ok);
+                                              QString("Name of trajectory:"), QLineEdit::Normal, QString::fromUtf8(trajectory_name.c_str()), &ok);
 
       if (!ok) return;
 
@@ -355,7 +356,7 @@ void DestinationMarker::processGaitType( const visualization_msgs::InteractiveMa
     auto it_found = gait_type_submenu.find(feedback->menu_entry_id);
     if (it_found != gait_type_submenu.end()) {
       // toggle option
-      for (auto entry: gait_type_submenu) {
+      for (auto& entry: gait_type_submenu) {
         menu_handler.setCheckState(entry.first, MenuHandler::UNCHECKED);
       }
       menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
@@ -375,7 +376,7 @@ void DestinationMarker::processStepsNum( const visualization_msgs::InteractiveMa
     auto it_found = n_steps_submenu.find(feedback->menu_entry_id);
     if (it_found != n_steps_submenu.end()) {
       // toggle option
-      for (auto entry: n_steps_submenu) {
+      for (auto& entry: n_steps_submenu) {
         menu_handler.setCheckState(entry.first, MenuHandler::UNCHECKED);
       }
       menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
@@ -395,7 +396,7 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
     start_walk_entry = menu_handler.insert("Start walk", processFeedback);
     MenuHandler::EntryHandle gait_type_entry = menu_handler.insert("Gait type");
     MenuHandler::FeedbackCallback processGaitType = boost::bind( &DestinationMarker::processGaitType, this, _1 );
-    for (auto gait_type_option : gait_type_options) {
+    for (auto& gait_type_option : gait_type_options) {
       MenuHandler::EntryHandle handle = menu_handler.insert(gait_type_entry, gait_type_option, processGaitType);
       if (gait_type_option == gait_type)
         menu_handler.setCheckState(handle, MenuHandler::CHECKED);
@@ -405,7 +406,7 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
     }
     MenuHandler::EntryHandle n_steps_entry = menu_handler.insert("Steps number");
     MenuHandler::FeedbackCallback processStepsNum = boost::bind( &DestinationMarker::processStepsNum, this, _1 );
-    for (auto n_steps_option : n_steps_options) {
+    for (auto& n_steps_option : n_steps_options) {
       MenuHandler::EntryHandle handle = menu_handler.insert(n_steps_entry, std::to_string(n_steps_option), processStepsNum);
       if (n_steps_option == n_steps)
         menu_handler.setCheckState(handle, MenuHandler::CHECKED);

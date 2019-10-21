@@ -48,15 +48,29 @@ private:
   void makeMenu(const std::vector<std::string>& gait_type_options, const std::vector<unsigned>& n_steps_options);
   void rebuildMenu() {
     menu_handler = MenuHandler(base_menu_handler); // Restore base menu handler without last entry
+
     menu_handler.apply(*server, name);
     makeMenu(std::vector<std::string>(), std::vector<unsigned>()); // Remake menu
-  }
+
+    // Restore original checkbox states
+    for (auto& entry: gait_type_submenu) {
+      if (entry.second == gait_type)
+        menu_handler.setCheckState(entry.first, MenuHandler::CHECKED);
+      else
+        menu_handler.setCheckState(entry.first, MenuHandler::UNCHECKED);
+    }
+    for (auto& entry: n_steps_submenu) {
+      if (entry.second == n_steps)
+        menu_handler.setCheckState(entry.first, MenuHandler::CHECKED);
+      else
+        menu_handler.setCheckState(entry.first, MenuHandler::UNCHECKED);
+    }
+
+    menu_handler.reApply(*server);
+    server->applyChanges();
+ }
 
 private:
-
-  // Node handle
-	ros::NodeHandle node_handle;
-
   // CONNECTION
   // action server
   std::unique_ptr<ActionClient> action_client;

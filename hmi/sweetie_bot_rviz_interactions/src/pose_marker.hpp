@@ -60,10 +60,6 @@ public:
   bool isVisible() const { return is_visible; }
 
 protected:
-
-  // Node handle
-	ros::NodeHandle node_handle;
-
   // COMPONENT INTERFACE
 
   // CONNECTIONS
@@ -94,6 +90,8 @@ protected:
   bool is_visible = false;
   // is_operational flag
   bool is_operational = false;
+  // is_6DOF flag
+  bool is_6DOF = false;
   // menu
   MenuHandler menu_handler;
   // menu index

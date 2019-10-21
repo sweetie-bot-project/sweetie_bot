@@ -17,7 +17,7 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
                                   )
     : PoseMarker(server, name, scale, frames, marker_home_frame, normalized_z_level),
       resources(resources),
-      pose_pub(node_handle.advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
+      pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
       action_client( new ActionClient("limb_set_operational_action", false) )
 {
   makeMenu();
@@ -203,7 +203,7 @@ void LimbPoseMarker::makeMenu()
 	set_operational_entry = menu_handler.insert( "OPERATIONAL", processFeedback);
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
 	publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback);
-	menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED); publish_pose = true;
+	menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
 	normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &LimbPoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
 	enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &LimbPoseMarker::processEnable6DOF, this, _1 ));
 	menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::UNCHECKED);

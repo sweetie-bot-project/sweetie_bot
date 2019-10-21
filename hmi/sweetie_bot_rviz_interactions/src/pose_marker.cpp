@@ -24,13 +24,15 @@ void PoseMarker::processEnable6DOF( const visualization_msgs::InteractiveMarkerF
     switch (check) {
     case MenuHandler::CHECKED:
       menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
-      updateInteractiveMarker(false);
+      is_6DOF = false;
       break;
     case MenuHandler::UNCHECKED:
       menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
-      updateInteractiveMarker(true);
+      is_6DOF = true;
       break;
     }
+
+    updateInteractiveMarker(is_6DOF);
   }
 }
 

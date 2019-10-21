@@ -41,9 +41,24 @@ public:
   void makeMenu();
   void rebuildMenu() {
     menu_handler = MenuHandler(); // Reset menu handler
+
     menu_handler.apply(*server, name);
     makeMenu(); // Remake menu
-  }
+
+    // Restore original checkbox states
+    if (publish_pose)
+      menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
+    else
+      menu_handler.setCheckState(publish_pose_entry, MenuHandler::UNCHECKED);
+
+    if (is_6DOF)
+      menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::CHECKED);
+    else
+      menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::UNCHECKED);
+
+    menu_handler.reApply(*server);
+    server->applyChanges();
+ }
 
   void setResourceMarkers(std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers) { this->resource_markers = resource_markers; rebuildMenu(); }
 
