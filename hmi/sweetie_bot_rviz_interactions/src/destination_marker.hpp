@@ -87,8 +87,8 @@ private:
   std::map<MenuHandler::EntryHandle, std::string> gait_type_submenu;
   std::map<MenuHandler::EntryHandle, unsigned> n_steps_submenu;
   MenuHandler::EntryHandle change_duration_entry;
-  MenuHandler::EntryHandle increase_by_tenth_duration_entry;
-  MenuHandler::EntryHandle decrease_by_tenth_duration_entry;
+  MenuHandler::EntryHandle increase_by_half_duration_entry;
+  MenuHandler::EntryHandle decrease_by_half_duration_entry;
   MenuHandler::EntryHandle change_trajectory_name_entry;
 
   // Name of trajectory for saving

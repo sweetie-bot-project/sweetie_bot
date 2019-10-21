@@ -335,10 +335,10 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
                                            1, &ok, Qt::WindowFlags());
 
         if (!ok) return;
-      } else if (feedback->menu_entry_id == increase_by_tenth_duration_entry) {
-        duration += 0.1;
-      } else if (feedback->menu_entry_id == decrease_by_tenth_duration_entry) {
-        duration -= 0.1;
+      } else if (feedback->menu_entry_id == increase_by_half_duration_entry) {
+        if ((duration + 0.5) <= 100) duration += 0.5;
+      } else if (feedback->menu_entry_id == decrease_by_half_duration_entry) {
+        if ((duration - 0.5) >= 0.0) duration -= 0.5;
       }
 
       // Change value of duration in corresponding menu entry
@@ -419,8 +419,8 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
   duration_ss << "Duration: " << std::setprecision(1) << std::fixed << duration << "s";
   MenuHandler::EntryHandle duration_entry = menu_handler.insert(duration_ss.str());
   change_duration_entry = menu_handler.insert(duration_entry, "Enter value", processFeedback);
-  increase_by_tenth_duration_entry = menu_handler.insert(duration_entry, "Increase by 0.1", processFeedback);
-  decrease_by_tenth_duration_entry = menu_handler.insert(duration_entry, "Decrease by 0.1", processFeedback);
+  increase_by_half_duration_entry = menu_handler.insert(duration_entry, "Increase by 0.5", processFeedback);
+  decrease_by_half_duration_entry = menu_handler.insert(duration_entry, "Decrease by 0.5", processFeedback);
   change_trajectory_name_entry = menu_handler.insert("Change trajectory name", processFeedback);
 
   menu_handler.reApply(*server);
