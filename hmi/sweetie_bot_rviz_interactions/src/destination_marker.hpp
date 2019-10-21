@@ -89,6 +89,10 @@ private:
   MenuHandler::EntryHandle change_duration_entry;
   MenuHandler::EntryHandle increase_by_tenth_duration_entry;
   MenuHandler::EntryHandle decrease_by_tenth_duration_entry;
+  MenuHandler::EntryHandle change_trajectory_name_entry;
+
+  // Name of trajectory for saving
+  std::string trajectory_name;
 };
 
 } // namespace hmi

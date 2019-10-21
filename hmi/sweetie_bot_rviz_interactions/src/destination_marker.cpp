@@ -4,6 +4,7 @@
 #include <boost/thread/mutex.hpp>
 #include <sstream>
 #include <math.h>
+#include <stdlib.h>
 
 #include <tf/tf.h>
 #include <geometry_msgs/Twist.h>
@@ -11,6 +12,7 @@
 
 #include <sweetie_bot_clop_generator/MoveBaseGoal.h>
 #include <sweetie_bot_clop_generator/EndEffectorGoal.h>
+#include <sweetie_bot_clop_generator/SaveTrajectory.h>
 
 #include <QInputDialog>
 #include <QDesktopWidget>
@@ -37,7 +39,8 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
     n_steps(4), // default value for n_steps
     duration(duration),
     nominal_height(nominal_height),
-    action_client( new ActionClient("move_base_action", false) )
+    action_client( new ActionClient("move_base_action", false) ),
+    trajectory_name("default_trajectory")
 {
   makeMenu(gait_type_options, n_steps_options);
   makeInteractiveMarker();
@@ -54,8 +57,25 @@ void DestinationMarker::actionDoneCallback(const GoalState& state, const ResultC
   // Pretty print error cause
   switch (result->error_code) {
   case sweetie_bot_clop_generator::MoveBaseResult::SUCCESS:
-    ROS_INFO_STREAM("Clop generator completed successfully");
-    break;
+    {
+      ROS_INFO_STREAM("Clop generator completed successfully");
+
+      // Save executed trajectory
+      ros::ServiceClient client = node_handle.serviceClient<sweetie_bot_clop_generator::SaveTrajectory>("/clop_generator/save_trajectory");
+      sweetie_bot_clop_generator::SaveTrajectory srv;
+      srv.request.name = trajectory_name;
+
+      if (!client.exists()) {
+        ROS_ERROR("save_trajectory service is unavailable.");
+        return;
+      }
+
+      if (!client.call(srv)) {
+        ROS_ERROR("Failed to save trajectory");
+        return;
+      }
+    }
+   break;
   case sweetie_bot_clop_generator::MoveBaseResult::SOLUTION_NOT_FOUND:
     ROS_ERROR_STREAM("Clop generator couldn't find a solution");
     break;
@@ -274,9 +294,36 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
     // check if user clicked on Start walk entry
     if (feedback->menu_entry_id == start_walk_entry) {
       invokeClopGenerator(feedback->pose);
-    } else {
+   } else if (feedback->menu_entry_id == change_trajectory_name_entry) {
+      bool ok = false;
+      QWidget w(nullptr);
+      // Center parent widget
+      QRect screenGeometry = QApplication::desktop()->screenGeometry();
+      int x = (screenGeometry.width() - w.width()) / 2;
+      int y = (screenGeometry.height()- w.height()) / 2;
+      w.move(x, y);
+      QString qs_name = QInputDialog::getText(&w, QString("Change trajectory name"),
+                                              QString("Name of trajectory:"), QLineEdit::Normal, "", &ok);
+
+      if (!ok) return;
+
+      std::string name = qs_name.toUtf8().constData();
+
+      if (name == "") {
+        ROS_ERROR("Trajectory name must be non-empty");
+        return;
+      }
+
+      if (std::find(name.begin(), name.end(), ' ') != name.end()) {
+        ROS_ERROR("Trajectory name could not contain spaces");
+        return;
+      }
+
+      trajectory_name = name;
+
+   } else {
       if (feedback->menu_entry_id == change_duration_entry) {
-        bool ok;
+        bool ok = false;
         QWidget w(nullptr);
         // Center parent widget
         QRect screenGeometry = QApplication::desktop()->screenGeometry();
@@ -371,9 +418,10 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
   std::stringstream duration_ss;
   duration_ss << "Duration: " << std::setprecision(1) << std::fixed << duration << "s";
   MenuHandler::EntryHandle duration_entry = menu_handler.insert(duration_ss.str());
-  change_duration_entry = menu_handler.insert(duration_entry, "Change value", processFeedback);
+  change_duration_entry = menu_handler.insert(duration_entry, "Enter value", processFeedback);
   increase_by_tenth_duration_entry = menu_handler.insert(duration_entry, "Increase by 0.1", processFeedback);
   decrease_by_tenth_duration_entry = menu_handler.insert(duration_entry, "Decrease by 0.1", processFeedback);
+  change_trajectory_name_entry = menu_handler.insert("Change trajectory name", processFeedback);
 
   menu_handler.reApply(*server);
   server->applyChanges();
