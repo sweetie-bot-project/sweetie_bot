@@ -74,7 +74,7 @@
      <simple name="Element5" type="double"><value>1.5708</value></simple>
   </struct>
   <struct name="head_tolerance" type="array">
-     <description>Upper joints limits</description>
+     <description>Head pose tolerance (x, y, z, rx, ry, rz)</description>
      <simple name="Element0" type="double"><value>0.0</value></simple>
      <simple name="Element1" type="double"><value>1.0</value></simple>
      <simple name="Element2" type="double"><value>1.0</value></simple>
