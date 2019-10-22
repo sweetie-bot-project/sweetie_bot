@@ -51,8 +51,9 @@ controller:
     look_at:
         priority: 20
         services: [ filter_rigid_body_state_pd ]
-        controlled_chains: [ head ]
+        controlled_chains: [ head, eyes ]
         use_kinematics_inv_port: false # deployment parameter: do not connect stance to kinematics_inv IK service, use port interface instead
         filter_rigid_body_state_pd:
             Kp: 25
             Kd: 10
+        pitch_yaw_joints: [ eyes_pitch, eyes_yaw ]

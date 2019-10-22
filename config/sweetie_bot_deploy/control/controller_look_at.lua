@@ -24,6 +24,7 @@ resource_control.register_controller(controller.look_at)
 depl:connect(timer.controller.port, "controller/look_at.sync", rtt.Variable("ConnPolicy"))
 -- data flow: controller -> aggregator_ref
 depl:connect("controller/look_at.out_supports", "aggregator_ref.in_supports", rtt.Variable("ConnPolicy"))
+depl:connect("controller/look_at.out_joints_ref", "aggregator_ref.in_joints", rtt.Variable("ConnPolicy"))
 -- data flow: controller -> kinematics_inv -> aggregator_ref
 depl:connect("controller/look_at.out_limbs_ref", "kinematics_inv.in_limbs", rtt.Variable("ConnPolicy"))
 if not config.get_rosparam("~controller/look_at/use_kinematics_inv_port", "bool") then
