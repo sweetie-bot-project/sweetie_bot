@@ -20,7 +20,6 @@ public:
   PoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
              const std::string& name,
              double scale = 1.0,
-             const std::vector<std::string>& frames = { "bone15", "bone25", "bone35", "bone45", "bone55", "base_link" },
              const std::string& marker_home_frame = "",
              double normalized_z_level = 0.0
             )
@@ -28,7 +27,6 @@ public:
       tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
       name(name + "_pose_marker"),
       scale(scale),
-      frames(frames),
       marker_home_frame(marker_home_frame),
       normalized_z_level(normalized_z_level)
   {
@@ -72,8 +70,6 @@ protected:
   std::string name;
   // marker sacle parameter
   double scale;
-  // frame list: user can place marker to any of provided frames using menu
-  std::vector<std::string> frames;
   // Home frame to place marker on start operation. Leave empty to ???
   std::string marker_home_frame;
   // Basic z level. When `Normilize pose` command is executed the marker is placed parallel Oxy plane on normalized_z_level heigh over it.

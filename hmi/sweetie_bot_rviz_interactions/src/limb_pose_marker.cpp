@@ -10,13 +10,12 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
                                    visualization_msgs::Marker (*makeMarkerBody)(double scale),
                                    const std::string& name,
                                    double scale,
-                                   const std::vector<std::string>& resources,
-                                   const std::vector<std::string>& frames,
+                                   const std::string& resource_name,
                                    const std::string& marker_home_frame,
                                    double normalized_z_level
                                   )
-    : PoseMarker(server, name, scale, frames, marker_home_frame, normalized_z_level),
-      resources(resources),
+    : PoseMarker(server, name, scale, marker_home_frame, normalized_z_level),
+      resource_name(resource_name),
       pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
       action_client( new ActionClient("limb_set_operational_action", false) )
 {
@@ -61,15 +60,6 @@ void LimbPoseMarker::actionActiveCallback()
 	server->applyChanges();
 }
 
-int LimbPoseMarker::frameNameToResourceId(const std::string& frame)
-{
-  int resource_id = std::distance(frames.begin(), std::find(frames.begin(), frames.end(), frame));
-  if (resource_id < resources.size())
-    return resource_id;
-  else
-    return -1;
-}
-
 bool LimbPoseMarker::setOperational(bool is_operational)
 {
 	// check connection
@@ -87,14 +77,7 @@ bool LimbPoseMarker::setOperational(bool is_operational)
 		// form goal message
 		Goal goal;
 		goal.operational = true;
-    int resource_id = frameNameToResourceId(marker_home_frame);
-    if (resource_id < 0) {
-      ROS_ERROR("SetOperation action cannot perform, because marker's home frame doesn't match any existing resource");
-      return false;
-    }
-    else {
-      goal.resources.push_back(resources[resource_id]);
-    }
+    goal.resources.push_back(resource_name);
 
 		// send goal to server
 		action_client->sendGoal(goal, boost::bind( &LimbPoseMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &LimbPoseMarker::actionActiveCallback, this ));

@@ -90,6 +90,8 @@ private:
   double nominal_height;
   // end effector goals
   std::vector<sweetie_bot_clop_generator::EndEffectorGoal> ee_goal;
+  // Name of trajectory for saving
+  std::string trajectory_name;
 
   // COMPONENT STATE
   // interactive marker server
@@ -105,8 +107,6 @@ private:
   MenuHandler::EntryHandle decrease_by_half_duration_entry;
   MenuHandler::EntryHandle change_trajectory_name_entry;
 
-  // Name of trajectory for saving
-  std::string trajectory_name;
 };
 
 } // namespace hmi

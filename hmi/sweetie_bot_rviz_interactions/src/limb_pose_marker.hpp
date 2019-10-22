@@ -22,8 +22,7 @@ public:
                  visualization_msgs::Marker (*makeMarkerBody)(double scale),
                  const std::string& name,
                  double scale = 1.0,
-                 const std::vector<std::string>& resources = { "leg1", "leg2", "leg3", "leg4" },
-                 const std::vector<std::string>& frames = { "bone15", "bone25", "bone35", "bone45", "bone55", "base_link" },
+                 const std::string& resource_name = "",
                  const std::string& marker_home_frame = "",
                  double normalized_z_level = 0.0
                 );
@@ -32,13 +31,13 @@ public:
   void actionDoneCallback(const GoalState& state, const ResultConstPtr& result);
   void actionActiveCallback();
 
-  int  frameNameToResourceId(const std::string& frame);
   bool setOperational(bool is_operational);
   void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 
   void makeMenu();
 
   ros::Publisher const & getPosePublisher() const { return pose_pub; }
+  std::string const & getResourceName() const { return resource_name; }
   bool isPosePublishing() const { return publish_pose; }
   bool isOperational() const { return is_operational; }
 
@@ -53,15 +52,15 @@ private:
   ros::Publisher pose_pub;
 
   // PARAMETERS
-  // resources list: corresponding menu items will be displayed in context menu
-  std::vector<std::string> resources;
+  // resource name bounded with marker
+  std::string resource_name;
+  // publish_pose flag
+  bool publish_pose = true;
 
   // COMPONENT STATE
   // menu index
   MenuHandler::EntryHandle set_operational_entry;
   MenuHandler::EntryHandle publish_pose_entry;
-  // publish_pose flag
-  bool publish_pose = true;
 };
 
 } // namespace hmi

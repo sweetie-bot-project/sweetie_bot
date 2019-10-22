@@ -10,13 +10,10 @@ StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::Interact
                                    visualization_msgs::Marker (*makeMarkerBody)(const double scale),
                                    const std::string& name,
                                    double scale,
-                                   const std::vector<std::string>& resources,
-                                   const std::vector<std::string>& frames,
                                    const std::string& marker_home_frame,
                                    double normalized_z_level
                                   )
-    : PoseMarker(server, name, scale, frames, marker_home_frame, normalized_z_level),
-      resource_names(resources),
+  : PoseMarker(server, name, scale, marker_home_frame, normalized_z_level),
       pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("stance_pose", 1)),
       action_client( new ActionClient("stance_set_operational_action", false) )
 {
@@ -224,6 +221,8 @@ void StancePoseMarker::processNormalizeLegs( const visualization_msgs::Interacti
 		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
                      << " / control '" << feedback->control_name << "': menu \"Normalize legs\" select, entry id = " << feedback->menu_entry_id );
 
+    if (resource_markers.empty()) return;
+
     for (auto it=resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it) {
       auto marker_ptr = *it;
       if (marker_ptr->isVisible()) {
@@ -282,13 +281,13 @@ void StancePoseMarker::makeMenu()
     } else {
       state_msg = "";
     }
-    handle = menu_handler.insert( "  " + resource_names[marker_idx] + " " + state_msg, processFeedback);
+    handle = menu_handler.insert( "  " + marker_ptr->getResourceName() + " " + state_msg, processFeedback);
     if (marker_ptr->isOperational()) {
       menu_handler.setCheckState(handle, MenuHandler::CHECKED);
     } else {
       menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
     }
-		resources_entry_map.emplace(handle, resource_names[marker_idx]);
+		resources_entry_map.emplace(handle, marker_ptr->getResourceName());
 	}
 	normalize_pose_entry = menu_handler.insert( "Move all to home", boost::bind( &StancePoseMarker::processMoveAllToHome, this, _1 ));
 	normalize_pose_entry = menu_handler.insert( "Normalize legs", boost::bind( &StancePoseMarker::processNormalizeLegs, this, _1 ));

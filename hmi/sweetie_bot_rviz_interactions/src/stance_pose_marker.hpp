@@ -23,8 +23,6 @@ public:
                    visualization_msgs::Marker (*makeMarkerBody)(double scale),
                    const std::string& name,
                    double scale = 1.0,
-                   const std::vector<std::string>& resources = { "leg1", "leg2", "leg3", "leg4", "head" },
-                   const std::vector<std::string>& frames = { "bone15", "bone25", "bone35", "bone45", "bone55", "base_link" },
                    const std::string& marker_home_frame = "base_link",
                    double normalized_z_level = 0.0
                   );
@@ -73,8 +71,10 @@ private:
   ros::Publisher pose_pub;
 
   // PARAMETERS
-  // resources name list: corresponding menu items will be displayed in context menu
-  std::vector<std::string> resource_names;
+  // resource markers vector
+  std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers;
+  // publish_pose flag
+  bool publish_pose = true;
 
   // COMPONENT STATE
   // menu index
@@ -83,10 +83,6 @@ private:
   MenuHandler::EntryHandle publish_pose_entry;
   MenuHandler::EntryHandle move_all_to_home_etry;
   MenuHandler::EntryHandle normalize_legs;
-  // publish_pose flag
-  bool publish_pose = true;
-  // resource markers vector
-  std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers;
 };
 
 } // namespace hmi
