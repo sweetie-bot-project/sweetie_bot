@@ -217,21 +217,19 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: false
         eye_right:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: false
         eyes_link_pitch:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: false
         eyes_link_yaw:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         hoof1:
           Alpha: 1
           Show Axes: false
@@ -248,27 +246,16 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        link_eyes_x:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        link_eyes_y:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        link_eyes_z:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
         screen_left:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: false
         screen_right:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: false
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
@@ -362,12 +349,6 @@ Visualization Manager:
           Value: true
         hoof4:
           Value: true
-        link_eyes_x:
-          Value: true
-        link_eyes_y:
-          Value: true
-        link_eyes_z:
-          Value: true
         odom_combined:
           Value: true
         screen_left:
@@ -433,13 +414,9 @@ Visualization Manager:
                       {}
                     eye_right:
                       {}
-                    eyes_link_pitch:
-                      eyes_link_yaw:
+                    eyes_link_yaw:
+                      eyes_link_pitch:
                         {}
-                    link_eyes_x:
-                      link_eyes_y:
-                        link_eyes_z:
-                          {}
                     screen_left:
                       {}
                     screen_right:
@@ -488,14 +465,14 @@ Visualization Manager:
     - Class: rviz_textured_quads/MeshDisplayCustom
       Enabled: true
       Image Topic: /hmi/eye_image_left
-      Meters per pixel: 0.000188
+      Meters per pixel: 0.0001880000054370612
       Name: EyeLeft
       Quad Frame: screen_left
       Value: true
     - Class: rviz_textured_quads/MeshDisplayCustom
       Enabled: true
       Image Topic: /hmi/eye_image_right
-      Meters per pixel: 0.000188
+      Meters per pixel: 0.0001880000054370612
       Name: EyeRight
       Quad Frame: screen_right
       Value: true
@@ -530,6 +507,84 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: false
+    - Alpha: 1
+      Class: rviz/Effort
+      Enabled: false
+      History Length: 1
+      Joints:
+        {}
+      Name: Joints Efforts
+      Robot Description: robot_description
+      Scale: 0.004999999888241291
+      TF Prefix: ""
+      Topic: /hmi/joint_efforts
+      Unreliable: false
+      Value: false
+      Width: 0.004999999888241291
+      eyes_pitch:
+        Value: true
+      eyes_yaw:
+        Value: true
+      joint11:
+        Value: true
+      joint12:
+        Value: true
+      joint13:
+        Value: true
+      joint14:
+        Value: true
+      joint15:
+        Value: true
+      joint16:
+        Value: true
+      joint21:
+        Value: true
+      joint22:
+        Value: true
+      joint23:
+        Value: true
+      joint24:
+        Value: true
+      joint25:
+        Value: true
+      joint26:
+        Value: true
+      joint31:
+        Value: true
+      joint32:
+        Value: true
+      joint33:
+        Value: true
+      joint34:
+        Value: true
+      joint35:
+        Value: true
+      joint36:
+        Value: true
+      joint41:
+        Value: true
+      joint42:
+        Value: true
+      joint43:
+        Value: true
+      joint44:
+        Value: true
+      joint45:
+        Value: true
+      joint46:
+        Value: true
+      joint51:
+        Value: true
+      joint52:
+        Value: true
+      joint53:
+        Value: true
+      joint54:
+        Value: true
+      joint55:
+        Value: true
+      joint56:
+        Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -555,7 +610,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.6606345176696777
+      Distance: 1.2859952449798584
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -570,10 +625,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.2803996205329895
+      Pitch: 0.08539974689483643
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.385402679443359
+      Yaw: 1.0772181749343872
     Saved: ~
 Window Geometry:
   Displays:
