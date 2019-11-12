@@ -9,7 +9,7 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.wait_for_message_state import WaitForMessageState
-from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
+from sweetie_bot_flexbe_states.compound_action_state import CompoundAction
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -64,7 +64,7 @@ class RBC18Part2SM(Behavior):
 
 			# x:179 y:106
 			OperatableStateMachine.add('SpasiboMut',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='spasibo_mut_tvoyo_uporstvo_vsegda_radovalo_menya', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='spasibo_mut_tvoyo_uporstvo_vsegda_radovalo_menya', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -77,13 +77,13 @@ class RBC18Part2SM(Behavior):
 
 			# x:123 y:441
 			OperatableStateMachine.add('SpasiboZuviel',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='prekrasno_chuvstvuete_kakaya_skrita_vo_mne_mosch', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='prekrasno_chuvstvuete_kakaya_skrita_vo_mne_mosch', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'finished', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:428 y:236
 			OperatableStateMachine.add('SpasiboStefanShiron',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='spasibo_ya_uslishala_vse_chto_hotela', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='spasibo_ya_uslishala_vse_chto_hotela', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey3', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 

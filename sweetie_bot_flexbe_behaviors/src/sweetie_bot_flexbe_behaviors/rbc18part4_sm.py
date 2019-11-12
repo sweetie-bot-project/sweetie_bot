@@ -8,7 +8,7 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
+from sweetie_bot_flexbe_states.compound_action_state import CompoundAction
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -55,13 +55,13 @@ class RBC18Part4SM(Behavior):
 		with _state_machine:
 			# x:239 y:71
 			OperatableStateMachine.add('ReturnToNormal',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='eyes/emotion', cmd1='normal', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_node', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='eyes/emotion', cmd1='normal', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_node', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'Goodbye', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:234 y:264
 			OperatableStateMachine.add('Goodbye',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='spasibo_za_vnimanie', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='introduce_herself_slow', t3=[0,8.0], type3='motion/joint_trajectory', cmd3='bow_begin', t4=[3,4.0], type4='motion/joint_trajectory', cmd4='bow_end'),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='spasibo_za_vnimanie', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='introduce_herself_slow', t3=[0,8.0], type3='motion/joint_trajectory', cmd3='bow_begin', t4=[3,4.0], type4='motion/joint_trajectory', cmd4='bow_end'),
 										transitions={'success': 'finished', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 

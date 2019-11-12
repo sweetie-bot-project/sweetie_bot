@@ -9,7 +9,7 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_manipulation_states.moveit_to_joints_state import MoveitToJointsState
-from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
+from sweetie_bot_flexbe_states.compound_action_state import CompoundAction
 from sweetie_bot_flexbe_behaviors.watchpresentaion_sm import WatchPresentaionSM
 from flexbe_states.wait_state import WaitState
 # Additional imports can be added inside the following tags
@@ -73,13 +73,13 @@ class Derpfest2017Presentation2SM(Behavior):
 
 			# x:433 y:67
 			OperatableStateMachine.add('SupprisedByProto3',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='do_i_really_be_same', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='do_i_really_be_same', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WatchPresentaion_2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:678 y:447
 			OperatableStateMachine.add('DoNotUndestandAnything',
-										SweetieBotCompoundAction(t1=[0,0.5], type1='voice/play_wav', cmd1='i_dont_understand', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_shake', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.5], type1='voice/play_wav', cmd1='i_dont_understand', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_shake', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WatchPresentaion_4', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -99,7 +99,7 @@ class Derpfest2017Presentation2SM(Behavior):
 
 			# x:439 y:569
 			OperatableStateMachine.add('AskToContinue ',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='what_else_intresting_can_you_tell', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='hoof_wave', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='what_else_intresting_can_you_tell', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='hoof_wave', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'Wait', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -111,13 +111,13 @@ class Derpfest2017Presentation2SM(Behavior):
 
 			# x:96 y:566
 			OperatableStateMachine.add('What',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='what_i_dont', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised_aborted', t3=[2,0.0], type3='eyes/emotion', cmd3='blank', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='what_i_dont', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised_aborted', t3=[2,0.0], type3='eyes/emotion', cmd3='blank', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'finished', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:667 y:202
 			OperatableStateMachine.add('ILikeMyMane',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='i_really_like_my_mane', t2=[0,0.5], type2='motion/joint_trajectory', cmd2='head_node', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='i_really_like_my_mane', t2=[0,0.5], type2='motion/joint_trajectory', cmd2='head_node', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WatchPresentaion_3', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 

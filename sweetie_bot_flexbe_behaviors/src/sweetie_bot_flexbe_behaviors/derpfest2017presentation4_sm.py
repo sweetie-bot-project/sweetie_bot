@@ -11,7 +11,7 @@ from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyC
 from sweetie_bot_flexbe_states.wait_for_message_state import WaitForMessageState
 from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
-from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
+from sweetie_bot_flexbe_states.compound_action_state import CompoundAction
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -101,7 +101,7 @@ class Derpfest2017Presentation4SM(Behavior):
 
 			# x:329 y:271
 			OperatableStateMachine.add('GoodBye',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='thank_you_for_attention_nopony_was_harmed', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='introduce_herself', t3=[2,2.0], type3='voice/play_wav', cmd3='am_i_really_a_good_actress', t4=[2,2.0], type4='motion/joint_trajectory', cmd4='head_suprised'),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='thank_you_for_attention_nopony_was_harmed', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='introduce_herself', t3=[2,2.0], type3='voice/play_wav', cmd3='am_i_really_a_good_actress', t4=[2,2.0], type4='motion/joint_trajectory', cmd4='head_suprised'),
 										transitions={'success': 'Bow', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -114,7 +114,7 @@ class Derpfest2017Presentation4SM(Behavior):
 
 			# x:319 y:387
 			OperatableStateMachine.add('Bow',
-										SweetieBotCompoundAction(t1=[0,2.0], type1='motion/joint_trajectory', cmd1='bow_begin', t2=[1,2.0], type2='motion/joint_trajectory', cmd2='bow_end', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,2.0], type1='motion/joint_trajectory', cmd1='bow_begin', t2=[1,2.0], type2='motion/joint_trajectory', cmd2='bow_end', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'RandMovements2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 

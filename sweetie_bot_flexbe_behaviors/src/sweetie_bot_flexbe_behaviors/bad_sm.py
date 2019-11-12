@@ -10,7 +10,7 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from sweetie_bot_flexbe_states.set_joint_state import SetJointState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
@@ -81,14 +81,14 @@ class BadSM(Behavior):
 
 			# x:747 y:153
 			OperatableStateMachine.add('Applause',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'applause'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='applause', trajectory_ns=storage),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
 			# x:745 y:226
 			OperatableStateMachine.add('NoHeadShake',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'head_shake'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='head_shake', trajectory_ns=storage),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -101,7 +101,7 @@ class BadSM(Behavior):
 
 			# x:648 y:466
 			OperatableStateMachine.add('HoofStamp',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'hoof_stamp'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='hoof_stamp', trajectory_ns=storage),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

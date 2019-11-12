@@ -12,7 +12,7 @@ from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.wait_state import WaitState
 from sweetie_bot_flexbe_states.publisher_state import PublisherState
 from sweetie_bot_flexbe_behaviors.dotricks_sm import DoTricksSM
-from sweetie_bot_flexbe_states.rand_head_movements_state import SweetieRandHeadMovementsState
+from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
 from flexbe_states.subscriber_state import SubscriberState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
@@ -94,7 +94,7 @@ class SweetieOnPoniRebrikSM(Behavior):
 		with _sm_idlebehavior_1:
 			# x:474 y:110
 			OperatableStateMachine.add('RandomHeadMovements',
-										SweetieRandHeadMovementsState(topic=joint_state_control_topic, duration=100, interval=[1, 4], max2356=[ 0.3, 0.3, 1, 1], min2356=[ -0.3, -0.3, -1, -1 ]),
+										SweetieBotRandHeadMovements(controller='joint_state_head', duration=100, interval=[1, 4], max2356=[ 0.3, 0.3, 1, 1], min2356=[ -0.3, -0.3, -1, -1 ]),
 										transitions={'done': 'finished'},
 										autonomy={'done': Autonomy.Off})
 

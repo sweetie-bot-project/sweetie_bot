@@ -9,7 +9,7 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
-from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
+from sweetie_bot_flexbe_states.compound_action_state import CompoundAction
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.wait_state import WaitState
 from sweetie_bot_flexbe_behaviors.watchpresentaion_sm import WatchPresentaionSM
@@ -77,19 +77,19 @@ class Derpfest2017Presentation3SM(Behavior):
 
 			# x:750 y:149
 			OperatableStateMachine.add('Menace',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='turn_right', t2=[0,0.0], type2='voice/play_wav', cmd2='you_can_not_imagine', t3=[1,0.0], type3='motion/joint_trajectory', cmd3='turn_right', t4=[3,0.0], type4='motion/joint_trajectory', cmd4='menace'),
+										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='turn_right', t2=[0,0.0], type2='voice/play_wav', cmd2='you_can_not_imagine', t3=[1,0.0], type3='motion/joint_trajectory', cmd3='turn_right', t4=[3,0.0], type4='motion/joint_trajectory', cmd4='menace'),
 										transitions={'success': 'EyesNormal', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Full, 'failure': Autonomy.Off})
 
 			# x:523 y:43
 			OperatableStateMachine.add('TurnRight1',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='i_will_not_tolerate', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='turn_right', t3=[2,0.0], type3='eyes/emotion', cmd3='red_eyes', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='i_will_not_tolerate', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='turn_right', t3=[2,0.0], type3='eyes/emotion', cmd3='red_eyes', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'HeadBasicPose2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:287 y:50
 			OperatableStateMachine.add('WakeUp',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='head_shake_emphasized', t2=[1,0.0], type2='motion/joint_trajectory', cmd2='head_turn_right', t3=[2,0.0], type3='voice/play_wav', cmd3='it_was_rude', t4=[2,1.6], type4=None, cmd4='i_will_not_tolearate'),
+										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='head_shake_emphasized', t2=[1,0.0], type2='motion/joint_trajectory', cmd2='head_turn_right', t3=[2,0.0], type3='voice/play_wav', cmd3='it_was_rude', t4=[2,1.6], type4=None, cmd4='i_will_not_tolearate'),
 										transitions={'success': 'TurnRight1', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -101,13 +101,13 @@ class Derpfest2017Presentation3SM(Behavior):
 
 			# x:714 y:453
 			OperatableStateMachine.add('MenaceCanceled',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='menace_canceled', t2=[1,0.0], type2='motion/joint_trajectory', cmd2='look_around', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='menace_canceled', t2=[1,0.0], type2='motion/joint_trajectory', cmd2='look_around', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'Wait', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:520 y:608
 			OperatableStateMachine.add('Hello',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='hello_im_sweetie_bot_presentation', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='introduce_herself', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='hello_im_sweetie_bot_presentation', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='introduce_herself', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WatchPresentaion', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -126,7 +126,7 @@ class Derpfest2017Presentation3SM(Behavior):
 
 			# x:65 y:572
 			OperatableStateMachine.add('IsEnd',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='is_it_over_you_promised_an_hour', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised', t3=[0,6.0], type3='voice/play_wav', cmd3='i_do_not_understand_anything', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='is_it_over_you_promised_an_hour', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised', t3=[0,6.0], type3='voice/play_wav', cmd3='i_do_not_understand_anything', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'HeadBasic3', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 

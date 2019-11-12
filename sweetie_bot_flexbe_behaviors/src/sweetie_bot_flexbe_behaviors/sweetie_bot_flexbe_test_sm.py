@@ -11,7 +11,7 @@ from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyC
 from flexbe_states.operator_decision_state import OperatorDecisionState
 from sweetie_bot_flexbe_states.set_bool_state import SetBoolState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from flexbe_states.decision_state import DecisionState
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
@@ -29,7 +29,7 @@ Created on Sun Mar 19 2017
 '''
 class sweetie_bot_flexbe_testSM(Behavior):
 	'''
-	Test behavior for ExecuteStoredJointTrajectoryState, TextCommandState, SetBoolState
+	Test behavior for ExecuteJointTrajectory, TextCommandState, SetBoolState
 	'''
 
 
@@ -84,7 +84,7 @@ class sweetie_bot_flexbe_testSM(Behavior):
 
 			# x:248 y:213
 			OperatableStateMachine.add('TestMovement',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='joint_trajectory/dance14'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='dance14', trajectory_param='/saved_msgs/joint_trajectory'),
 										transitions={'success': 'TurnOffJointStateController', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Low, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -98,7 +98,7 @@ class sweetie_bot_flexbe_testSM(Behavior):
 
 			# x:704 y:603
 			OperatableStateMachine.add('HeadShake',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param='joint_trajectory/head_shake'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='head_shake', trajectory_param='/saved_msgs/joint_trajectory'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

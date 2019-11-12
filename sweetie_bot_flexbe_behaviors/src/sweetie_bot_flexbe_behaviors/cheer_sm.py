@@ -9,7 +9,7 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.set_joint_state import SetJointState
-from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.wait_state import WaitState
@@ -71,7 +71,7 @@ class CheerSM(Behavior):
 
 			# x:579 y:498
 			OperatableStateMachine.add('HoofStamp',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'hoof_stamp'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='hoof_stamp', trajectory_ns=storage),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

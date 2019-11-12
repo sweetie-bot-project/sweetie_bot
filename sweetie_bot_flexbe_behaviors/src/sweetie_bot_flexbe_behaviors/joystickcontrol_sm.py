@@ -11,7 +11,7 @@ from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyC
 from sweetie_bot_flexbe_states.wait_for_message_state import WaitForMessageState
 from sweetie_bot_flexbe_states.rand_joints_movements import RandJointsMovements
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
-from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from sweetie_bot_flexbe_states.joystick_joint_control import JoystickJointControl
 from flexbe_states.decision_state import DecisionState
 from flexbe_states.wait_state import WaitState
@@ -124,7 +124,7 @@ class JoystickControlSM(Behavior):
 
 			# x:373 y:236
 			OperatableStateMachine.add('Greeting',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param='/joint_trajectory/greeting'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='greeting', trajectory_ns='/saved_msgs/joint_trajectory'),
 										transitions={'success': 'JoystickMovements', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -145,14 +145,14 @@ class JoystickControlSM(Behavior):
 
 			# x:412 y:317
 			OperatableStateMachine.add('HeadShake',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param='/joint_trajectory/head_shake'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='head_shake', trajectory_ns='/saved_msgs/joint_trajectory'),
 										transitions={'success': 'JoystickMovements', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
 			# x:472 y:404
 			OperatableStateMachine.add('GrownUp',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param='joint_trajectory/very_grown_up'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='very_grown_up', trajectory_ns='/saved_msgs/joint_trajectory'),
 										transitions={'success': 'JoystickMovements', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

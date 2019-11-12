@@ -10,11 +10,11 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.wait_for_message_state import WaitForMessageState
 from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
-from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
+from sweetie_bot_flexbe_states.compound_action_state import CompoundAction
 from flexbe_manipulation_states.moveit_to_joints_state import MoveitToJointsState
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from sweetie_bot_flexbe_behaviors.watchpresentaion_sm import WatchPresentaionSM
-from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -81,7 +81,7 @@ class Derpfest2017Presentation1SM(Behavior):
 
 			# x:466 y:69
 			OperatableStateMachine.add('TurnBody',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='turn_right', t2=[1,0.0], type2='motion/joint_trajectory', cmd2='turn_right', t3=[2,0.0], type3='motion/joint_trajectory', cmd3='turn_right', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='turn_right', t2=[1,0.0], type2='motion/joint_trajectory', cmd2='turn_right', t3=[2,0.0], type3='motion/joint_trajectory', cmd3='turn_right', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'finished', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -128,7 +128,7 @@ class Derpfest2017Presentation1SM(Behavior):
 
 			# x:785 y:172
 			OperatableStateMachine.add('AskAboutProto1',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='what_proto1', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised_slow', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='what_proto1', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised_slow', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -141,7 +141,7 @@ class Derpfest2017Presentation1SM(Behavior):
 
 			# x:797 y:379
 			OperatableStateMachine.add('AskAboutProto1Again',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='tell_me_more_about_proto1', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_lean_forward_begin', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='tell_me_more_about_proto1', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_lean_forward_begin', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey4', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -154,7 +154,7 @@ class Derpfest2017Presentation1SM(Behavior):
 
 			# x:603 y:600
 			OperatableStateMachine.add('AskWhatHappensToProto1',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='what_happened_with_proto1', t2=[0,1.2], type2='motion/joint_trajectory', cmd2='hoof_wave', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='what_happened_with_proto1', t2=[0,1.2], type2='motion/joint_trajectory', cmd2='hoof_wave', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey3', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -174,13 +174,13 @@ class Derpfest2017Presentation1SM(Behavior):
 
 			# x:81 y:597
 			OperatableStateMachine.add('SayItIsOk',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='head_lean_forward_end', t2=[0,0.0], type2='voice/play_wav', cmd2='yes_exactly_tell_me_more', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='head_lean_forward_end', t2=[0,0.0], type2='voice/play_wav', cmd2='yes_exactly_tell_me_more', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WatchPresentaion_2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:137 y:50
 			OperatableStateMachine.add('Hello',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='introduce_herself', t2=[0,0.0], type2='voice/play_wav', cmd2='hello_im_sweetie_bot_presentation', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='introduce_herself', t2=[0,0.0], type2='voice/play_wav', cmd2='hello_im_sweetie_bot_presentation', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -207,7 +207,7 @@ class Derpfest2017Presentation1SM(Behavior):
 
 			# x:73 y:332
 			OperatableStateMachine.add('Greeting',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param='joint_trajectory/greeting'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='greeting', trajectory_ns='/saved_msgs/joint_trajectory'),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

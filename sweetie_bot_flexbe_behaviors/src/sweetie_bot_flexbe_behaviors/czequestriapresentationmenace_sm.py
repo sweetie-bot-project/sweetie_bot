@@ -8,7 +8,7 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -62,21 +62,21 @@ class CZequestriaPresentationMenaceSM(Behavior):
 
 			# x:664 y:212
 			OperatableStateMachine.add('MoveMenace',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='menace', trajectory_ns=storage),
 										transitions={'success': 'EyesNormal', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Full, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
 			# x:28 y:114
 			OperatableStateMachine.add('MoveApplause',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'applause'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='applause', trajectory_ns=storage),
 										transitions={'success': 'MoveBuck', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
 			# x:326 y:36
 			OperatableStateMachine.add('MoveBuck',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'buck3'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='buck3', trajectory_ns=storage),
 										transitions={'success': 'SetRedEyes', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -95,14 +95,14 @@ class CZequestriaPresentationMenaceSM(Behavior):
 
 			# x:630 y:467
 			OperatableStateMachine.add('MoveMenaceCanceled',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace_canceled'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='menace_canceled', trajectory_ns=storage),
 										transitions={'success': 'MoveHeadShake', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
 			# x:340 y:480
 			OperatableStateMachine.add('MoveHeadShake',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'look_around'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='look_around', trajectory_ns=storage),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

@@ -9,7 +9,7 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_states.decision_state import DecisionState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from flexbe_states.calculation_state import CalculationState
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 # Additional imports can be added inside the following tags
@@ -87,7 +87,7 @@ class SwitchEvilModeSM(Behavior):
 
 			# x:737 y:30
 			OperatableStateMachine.add('Seizure',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'seizure_evil'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='seizure_evil', trajectory_ns=storage),
 										transitions={'success': 'SetEvil', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -120,7 +120,7 @@ class SwitchEvilModeSM(Behavior):
 
 			# x:613 y:321
 			OperatableStateMachine.add('ShakeHead',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'head_shake'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='head_shake', trajectory_ns=storage),
 										transitions={'success': 'LookAround', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -134,7 +134,7 @@ class SwitchEvilModeSM(Behavior):
 
 			# x:671 y:437
 			OperatableStateMachine.add('LookAround',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage+'look_around'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='look_around', trajectory_ns=storage),
 										transitions={'success': 'SetGood', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

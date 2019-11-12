@@ -9,7 +9,7 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_behaviors.watchpresentaion_sm import WatchPresentaionSM
-from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
+from sweetie_bot_flexbe_states.compound_action_state import CompoundAction
 from sweetie_bot_flexbe_states.wait_for_message_state import WaitForMessageState
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 # Additional imports can be added inside the following tags
@@ -69,7 +69,7 @@ class Galacon2018Presentation1SM(Behavior):
 
 			# x:432 y:50
 			OperatableStateMachine.add('Greeting2',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='head_lean_forward_begin', t2=[1,0.5], type2='motion/joint_trajectory', cmd2='head_lean_forward_end', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='head_lean_forward_begin', t2=[1,0.5], type2='motion/joint_trajectory', cmd2='head_lean_forward_end', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -82,13 +82,13 @@ class Galacon2018Presentation1SM(Behavior):
 
 			# x:753 y:49
 			OperatableStateMachine.add('Travel',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='its_not_the_first_time_that_i_travel_so_far_but_i_cant_say_that_the_flight_was_pleasant', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='begone', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='its_not_the_first_time_that_i_travel_so_far_but_i_cant_say_that_the_flight_was_pleasant', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='begone', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey3', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:731 y:160
 			OperatableStateMachine.add('NO',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='no_i_dont_like_the_way_you_turned_me_off_and_placed_me_in_a_box', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_shake_emphasized', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='no_i_dont_like_the_way_you_turned_me_off_and_placed_me_in_a_box', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_shake_emphasized', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'NO2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -101,7 +101,7 @@ class Galacon2018Presentation1SM(Behavior):
 
 			# x:733 y:218
 			OperatableStateMachine.add('NO2',
-										SweetieBotCompoundAction(t1=[0,1.2], type1='motion/joint_trajectory', cmd1='hoof_stamp', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,1.2], type1='motion/joint_trajectory', cmd1='hoof_stamp', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey4', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -114,7 +114,7 @@ class Galacon2018Presentation1SM(Behavior):
 
 			# x:725 y:334
 			OperatableStateMachine.add('FlightMode',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='then_do_the_flight_mode_for_me', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='seizure', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='then_do_the_flight_mode_for_me', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='seizure', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey5', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -127,7 +127,7 @@ class Galacon2018Presentation1SM(Behavior):
 
 			# x:729 y:447
 			OperatableStateMachine.add('SayWings',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='then_give_me_wings_thats_a_real_flight_mode', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='farewell', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='then_give_me_wings_thats_a_real_flight_mode', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='farewell', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey6', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -147,25 +147,25 @@ class Galacon2018Presentation1SM(Behavior):
 
 			# x:109 y:434
 			OperatableStateMachine.add('LetsStart',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='oh_excuse_me_lets_start_our_presentation', t2=[0,0.5], type2='motion/joint_trajectory', cmd2='menace_canceled', t3=[0,4.0], type3='motion/joint_trajectory', cmd3='head_node', t4=[0,6.0], type4='motion/joint_trajectory', cmd4='point_right'),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='oh_excuse_me_lets_start_our_presentation', t2=[0,0.5], type2='motion/joint_trajectory', cmd2='menace_canceled', t3=[0,4.0], type3='motion/joint_trajectory', cmd3='head_node', t4=[0,6.0], type4='motion/joint_trajectory', cmd4='point_right'),
 										transitions={'success': 'finished', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:756 y:563
 			OperatableStateMachine.add('Laws',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='first_those_pesky_three_laws_now_this_too_many_rules', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised', t3=[0,2.0], type3='motion/joint_trajectory', cmd3='hoof_stamp', t4=[0,4.0], type4=None, cmd4='menace'),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='first_those_pesky_three_laws_now_this_too_many_rules', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised', t3=[0,2.0], type3='motion/joint_trajectory', cmd3='hoof_stamp', t4=[0,4.0], type4=None, cmd4='menace'),
 										transitions={'success': 'Menace', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:563 y:567
 			OperatableStateMachine.add('Menace',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='menace', t2=[1,0.0], type2='eyes/emotion', cmd2='red_eyes', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='menace', t2=[1,0.0], type2='eyes/emotion', cmd2='red_eyes', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey7', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:243 y:47
 			OperatableStateMachine.add('Greeting',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='greeting_biological_life_forms_thank_you_for_coming_to_our_presentation', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='introduce_herself', t3=[2,0.0], type3='motion/joint_trajectory', cmd3='look_around', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='greeting_biological_life_forms_thank_you_for_coming_to_our_presentation', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='introduce_herself', t3=[2,0.0], type3='motion/joint_trajectory', cmd3='look_around', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'Greeting2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 

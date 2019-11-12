@@ -7,9 +7,9 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from sweetie_bot_flexbe_states.rand_head_movements_state import SweetieRandHeadMovementsState
+from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
 from flexbe_states.wait_state import WaitState
-from sweetie_bot_flexbe_states.execute_stored_trajectory_state import ExecuteStoredJointTrajectoryState
+from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
 from flexbe_states.calculation_state import CalculationState
 from flexbe_states.decision_state import DecisionState
@@ -106,14 +106,14 @@ class DiscordGreetingSM(Behavior):
 
 			# x:85 y:238
 			OperatableStateMachine.add('Seizure',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'seizure'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='seizure', trajectory_ns=storage),
 										transitions={'success': 'Select', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
 			# x:132 y:419
 			OperatableStateMachine.add('Farewell',
-										ExecuteStoredJointTrajectoryState(action_topic=joint_trajectory_action, trajectory_param=storage + 'farewell'),
+										ExecuteJointTrajectory(action_topic=joint_trajectory_action, trajectory_param='farewell', trajectory_ns=storage),
 										transitions={'success': 'finished', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -123,7 +123,7 @@ class DiscordGreetingSM(Behavior):
 		with _state_machine:
 			# x:15 y:642
 			OperatableStateMachine.add('RandomMovements',
-										SweetieRandHeadMovementsState(topic=joint_state_control_topic, duration=100000, interval=[2, 3], max2356=[ 0.3, 0.3, 1.5, 1.5 ], min2356=[ -0.3, -0.3, -1.5, -1.5 ]),
+										SweetieBotRandHeadMovements(controller='joint_state_head', duration=100000, interval=[2, 3], max2356=[ 0.3, 0.3, 1.5, 1.5 ], min2356=[ -0.3, -0.3, -1.5, -1.5 ]),
 										transitions={'done': 'StartPose'},
 										autonomy={'done': Autonomy.High})
 
@@ -135,14 +135,14 @@ class DiscordGreetingSM(Behavior):
 
 			# x:102 y:154
 			OperatableStateMachine.add('LookAtHoof',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'look_on_hoof'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='look_on_hoof', trajectory_ns=storage),
 										transitions={'success': 'SayIamAlive', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
 
 			# x:96 y:484
 			OperatableStateMachine.add('WarmUp',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'little_shake_fast'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='little_shake_fast', trajectory_ns=storage),
 										transitions={'success': 'WaitBeforeDomination', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -161,7 +161,7 @@ class DiscordGreetingSM(Behavior):
 
 			# x:396 y:219
 			OperatableStateMachine.add('Menace',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='menace', trajectory_ns=storage),
 										transitions={'success': 'TryingToAcquireControl', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -186,7 +186,7 @@ class DiscordGreetingSM(Behavior):
 
 			# x:818 y:281
 			OperatableStateMachine.add('MenceCanceled',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'menace_canceled'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='menace_canceled', trajectory_ns=storage),
 										transitions={'success': 'WaitBeforeHoofStamp', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -211,7 +211,7 @@ class DiscordGreetingSM(Behavior):
 
 			# x:826 y:490
 			OperatableStateMachine.add('HoofStamp',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'hoof_stamp'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='hoof_stamp', trajectory_ns=storage),
 										transitions={'success': 'NormalLook', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})
@@ -224,7 +224,7 @@ class DiscordGreetingSM(Behavior):
 
 			# x:151 y:77
 			OperatableStateMachine.add('LookAround',
-										ExecuteStoredJointTrajectoryState(action_topic='motion/controller/joint_trajectory', trajectory_param=storage+'look_around'),
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='look_around', trajectory_ns=storage),
 										transitions={'success': 'LookAtHoof', 'partial_movement': 'finished', 'invalid_pose': 'finished', 'failure': 'finished'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'result': 'result'})

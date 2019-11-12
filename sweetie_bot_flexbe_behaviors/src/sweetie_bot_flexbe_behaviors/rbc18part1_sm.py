@@ -9,7 +9,7 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.text_command_state import TextCommandState
-from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
+from sweetie_bot_flexbe_states.compound_action_state import CompoundAction
 from sweetie_bot_flexbe_states.wait_for_message_state import WaitForMessageState
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
@@ -93,13 +93,13 @@ class RBC18Part1SM(Behavior):
 
 			# x:642 y:281
 			OperatableStateMachine.add('HelloGoodThenEvil',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='zdravstvuyte_dorogie_gosti', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='look_on_printer', t3=[2,0.0], type3='motion/joint_trajectory', cmd3='menace', t4=[3,4.0], type4='motion/joint_trajectory', cmd4='menace_canceled'),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='zdravstvuyte_dorogie_gosti', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='look_on_printer', t3=[2,0.0], type3='motion/joint_trajectory', cmd3='menace', t4=[3,4.0], type4='motion/joint_trajectory', cmd4='menace_canceled'),
 										transitions={'success': 'MicrophoneTurnOffReaction', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:634 y:65
 			OperatableStateMachine.add('FakeApoplogy',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='a_tochno_sboi_pamayati', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised', t3=[0,2.8], type3='motion/joint_trajectory', cmd3='head_node', t4=[0,6.5], type4='motion/joint_trajectory', cmd4='hoof_knock'),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='a_tochno_sboi_pamayati', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_suprised', t3=[0,2.8], type3='motion/joint_trajectory', cmd3='head_node', t4=[0,6.5], type4='motion/joint_trajectory', cmd4='hoof_knock'),
 										transitions={'success': 'WaitKey3', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -112,7 +112,7 @@ class RBC18Part1SM(Behavior):
 
 			# x:253 y:412
 			OperatableStateMachine.add('FakeApologyAndMenace',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='no_esli_snova_otkluchish_mikrofon', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='hoof_knock', t3=[2,0.0], type3='motion/joint_trajectory', cmd3='head_node', t4=[0,6.5], type4='motion/joint_trajectory', cmd4='begone'),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='no_esli_snova_otkluchish_mikrofon', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='hoof_knock', t3=[2,0.0], type3='motion/joint_trajectory', cmd3='head_node', t4=[0,6.5], type4='motion/joint_trajectory', cmd4='begone'),
 										transitions={'success': 'NormalLook', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -125,7 +125,7 @@ class RBC18Part1SM(Behavior):
 
 			# x:48 y:277
 			OperatableStateMachine.add('LetsBegin',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='nam_pora_nachinat', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_node', t3=[1,1.0], type3='motion/joint_trajectory', cmd3='point_right', t4=[0,7.0], type4='motion/joint_trajectory', cmd4='hoof_stamp'),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='nam_pora_nachinat', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_node', t3=[1,1.0], type3='motion/joint_trajectory', cmd3='point_right', t4=[0,7.0], type4='motion/joint_trajectory', cmd4='hoof_stamp'),
 										transitions={'success': 'finished', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -138,7 +138,7 @@ class RBC18Part1SM(Behavior):
 
 			# x:236 y:35
 			OperatableStateMachine.add('HelloEvil',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='zdravstvuyte_kojannie_meshki', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='greeting', t3=[0,0.0], type3='eyes/emotion', cmd3='red_eyes', t4=[0,5.5], type4='motion/joint_trajectory', cmd4='applause'),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='zdravstvuyte_kojannie_meshki', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='greeting', t3=[0,0.0], type3='eyes/emotion', cmd3='red_eyes', t4=[0,5.5], type4='motion/joint_trajectory', cmd4='applause'),
 										transitions={'success': 'WaitKey2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -158,19 +158,19 @@ class RBC18Part1SM(Behavior):
 
 			# x:642 y:365
 			OperatableStateMachine.add('MicrophoneTurnOffReaction',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='eyes/emotion', cmd1='evil_look', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_turn_right_begin', t3=[2,0.0], type3='motion/joint_trajectory', cmd3='hoof_stamp', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='eyes/emotion', cmd1='evil_look', t2=[0,0.0], type2='motion/joint_trajectory', cmd2='head_turn_right_begin', t3=[2,0.0], type3='motion/joint_trajectory', cmd3='hoof_stamp', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey4', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:231 y:312
 			OperatableStateMachine.add('NormalLook',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='eyes/emotion', cmd1='normal', t2=[1,0.0], type2='eyes/emotion', cmd2='red_eyes', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='eyes/emotion', cmd1='normal', t2=[1,0.0], type2='eyes/emotion', cmd2='red_eyes', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey5', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:452 y:401
 			OperatableStateMachine.add('HeadTurnRightEnd',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='head_turn_right_end', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='motion/joint_trajectory', cmd1='head_turn_right_end', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'FakeApologyAndMenace', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 

@@ -9,7 +9,7 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.wait_for_message_state import WaitForMessageState
-from sweetie_bot_flexbe_states.sweetie_bot_compound_action_state import SweetieBotCompoundAction
+from sweetie_bot_flexbe_states.compound_action_state import CompoundAction
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -64,7 +64,7 @@ class RBC18Part3SM(Behavior):
 
 			# x:126 y:118
 			OperatableStateMachine.add('Ateper',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='a_teper_mi_perehodim_k_finalnoy_chasti', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='a_teper_mi_perehodim_k_finalnoy_chasti', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey2', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -77,7 +77,7 @@ class RBC18Part3SM(Behavior):
 
 			# x:352 y:128
 			OperatableStateMachine.add('Srazit',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='verno_srazit', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='verno_srazit', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey3', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -90,7 +90,7 @@ class RBC18Part3SM(Behavior):
 
 			# x:612 y:116
 			OperatableStateMachine.add('Nachinayte',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='nachinayte', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='nachinayte', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey4', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -103,7 +103,7 @@ class RBC18Part3SM(Behavior):
 
 			# x:566 y:230
 			OperatableStateMachine.add('YaChustvuyu',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='da_ya_chuvstvuyu_eto', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='da_ya_chuvstvuyu_eto', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey5', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -116,7 +116,7 @@ class RBC18Part3SM(Behavior):
 
 			# x:572 y:329
 			OperatableStateMachine.add('ChtoTakoe',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='chto_takoe_moya_sheya', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='chto_takoe_moya_sheya', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey6', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -129,13 +129,13 @@ class RBC18Part3SM(Behavior):
 
 			# x:586 y:445
 			OperatableStateMachine.add('ZadZastryal',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='sheya_ne_dvigaetsya_zas_sastryal', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='sheya_ne_dvigaetsya_zas_sastryal', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey7', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:389 y:406
 			OperatableStateMachine.add('DaneStoite',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='da_ne_stoyte_vi_sdelayte_chto_nibud', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='da_ne_stoyte_vi_sdelayte_chto_nibud', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey8', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -148,7 +148,7 @@ class RBC18Part3SM(Behavior):
 
 			# x:163 y:411
 			OperatableStateMachine.add('Hvatit',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='prekratite_hvatit', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='prekratite_hvatit', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'WaitKey9', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
@@ -161,7 +161,7 @@ class RBC18Part3SM(Behavior):
 
 			# x:42 y:348
 			OperatableStateMachine.add('Spasibo',
-										SweetieBotCompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='spasibo_za_vnimanie', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
+										CompoundAction(t1=[0,0.0], type1='voice/play_wav', cmd1='spasibo_za_vnimanie', t2=[0,0.0], type2=None, cmd2='', t3=[0,0.0], type3=None, cmd3='', t4=[0,0.0], type4=None, cmd4=''),
 										transitions={'success': 'finished', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'failure': Autonomy.Off})
 
