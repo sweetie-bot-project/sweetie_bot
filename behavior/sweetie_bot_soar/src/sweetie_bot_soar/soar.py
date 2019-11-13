@@ -25,6 +25,12 @@ class Soar:
         self.output_modules_map = dict()
         self.active_output_modules = set()
 
+    def __del__(self):
+        # remove all output modules
+        del self.input_modules[:]
+        self.output_modules_map.clear()
+        self.active_output_modules.clear()
+
     def reconfigure(self):
         """
             Reset SOAR and reload input and putput modules. 
