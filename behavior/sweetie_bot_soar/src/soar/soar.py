@@ -4,11 +4,13 @@ import input_modules, output_modules
 
 import os, sys
 import rospy, rospkg
+from std_srvs.srv import Trigger, TriggerResponse
+from std_srvs.srv import SetBool, SetBoolResponse
 
 def soarPrintCallback(mid, user_data, agent, message):
     rospy.loginfo("SOAR log: " + message.strip())
 
-class SoarNode:
+class Soar:
     def __init__(self):
         # create SOAR kernel and agent
         self.kernel = sml.Kernel.CreateKernelInNewThread()
@@ -57,7 +59,7 @@ class SoarNode:
             rospy.logerr("SOAR configuration: input/output link initialization failed: " + str(e))
             return False
     
-        # load reasoninig rules
+        # load reasoning rules
         agent_pkg = rospy.get_param("~agent_package", None)
         agent_path = None
         if agent_pkg:
@@ -157,15 +159,82 @@ class SoarNode:
             if module.isRunning():
                 self.active_output_modules.add(module)
 
+class SoarNode:
+    def __init__(self, node_name):
+        rospy.init_node(node_name)
+        self.configured = False
+        # create node interface 
+        self.reconfigure_srv = rospy.Service('~reconfigure', Trigger, self.reconfigureCallback)
+        self.reload_prod_srv = rospy.Service('~reload_prod', Trigger, self.reloadProdCallback)
+        self.set_operational_srv = rospy.Service('~set_operational', SetBool, self.setOperationalCallback)
+        self.step_srv = rospy.Service('~step', Trigger, self.stepCallback)
+        # create SOAR envelopment
+        self.soar = Soar()
+        self.timer = None
+        self.period = 1.0
+        # configure node
+        self.reconfigure()
+
+    def reconfigureCallback(self, req):
+        success = self.reconfigure()
+        return TriggerResponse(success = success)
+
+    def reloadProdCallback(self, req):
+        rospy.logerr('reload_prod service not implemented yet.')
+        return TriggerResponse(success = False, message = 'Service is not implemented.')
+
+    def setOperationalCallback(self, req):
+        if self.configured:
+            # start/stop timer
+            if req.data:
+                # timer must be running
+                if not self.timer:
+                    self.timer = rospy.Timer(rospy.Duration(self.period), lambda event: self.soar.step())
+            else:
+                # kill timer
+                if self.timer:
+                    self.timer.shutdown()
+                    self.timer = None
+            # success
+            return SetBoolResponse(success = True)
+        else:
+            # not configured
+            return SetBoolResponse(success = False, message = 'Node is not configured.')
+
+    def stepCallback(self, req):
+        if self.configured:
+            self.soar.step()
+            return TriggerResponse(success = True)
+        else:
+            return TriggerResponse(success = False, message = 'Node is not configured.')
+        
+
+    def reconfigure(self):
+        # reset configuration
+        self.configured = False
+        self.timer = None
+        # read timer parameters
+        self.period = rospy.get_param("soar_period", 1.0)
+        if not isinstance(self.period, (int,float)) or self.period < 0:
+            rospy.logerr("`soar_period` parameter must be positive float number.")
+            return False
+        autostart = rospy.get_param("autostart", True)
+        if not isinstance(autostart, bool):
+            rospy.logerr("`autostart` parameter must be boolean.")
+            return False
+        # reconfigure SOAR
+        if not self.soar.reconfigure():
+            rospy.logerr("SOAR configuration failed.")
+            return False
+        # if everything OK start timer
+        if autostart:
+            self.timer = rospy.Timer(rospy.Duration(self.period), lambda event: self.soar.step())
+        # configuration is finished
+        self.configured = True
+        return True
+
 def main():
-    rospy.init_node("soar")
-
     # SOAR initialization
-    soar = SoarNode()
-    if not soar.reconfigure():
-        rospy.logerr("SOAR configuration failed.")
-        sys.exit()
-    # start timer
-    timer = rospy.Timer(rospy.Duration(1), lambda event: soar.step())
-
+    soar_node = SoarNode("soar")
+    # ROS main loop
     rospy.spin()
