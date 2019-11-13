@@ -13,7 +13,7 @@ from leap_motion.msg import leapros
 from std_msgs.msg import Header
 from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
 
-from pose_vectorized import PoseVectorized
+from internal.pose_vectorized import PoseVectorized
 
 class LeapMotionMonitor(EventState):
     '''
