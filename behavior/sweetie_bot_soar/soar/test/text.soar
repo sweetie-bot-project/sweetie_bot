@@ -1,0 +1,46 @@
+sp {propose*say*hello
+	(state <s> ^name test)
+	(<s> ^io.input-link.clock.time <time-current>)
+	(<s> ^mem.next-say-time {<time-next> <time-current>})
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name say)
+   	(<o> ^time1 <time-current>)
+   	(<o> ^time2 <time-next>)
+}
+
+sp {apply*operator*say
+	(state <s> ^operator <op>)
+   	(<op> ^name say)
+	(<s> ^io.input-link.clock.time <time-current>)
+	(<s> ^io.input-link.random <rnd>)
+	(<s> ^io.output-link <ol>)
+	(<s> ^mem <m>)
+	(<m> ^next-say-time <old-value>)
+-->
+	(<m> ^next-say-time (+ <time-current> (* 100 <rnd>)))
+	(<m> ^next-say-time <old-value> -)
+	(<ol> ^textcmd <cmd>)
+	(<cmd> ^type |voice/play_wav|)
+	(<cmd> ^command |do_not_touch_me| +)
+	(write |say text command|)
+}
+
+sp {propose*check*result*say
+	(state <s> ^name test)
+	(<s> ^io.output-link.textcmd <cmd>)
+	(<cmd> ^status <st>)
+-->
+	(<s> ^operator <o> + > =)
+   	(<o> ^name check-result-say)
+   	(<o> ^textcmd <cmd>)
+}
+
+sp {apply*check*result*say
+	(state <s> ^operator <op>)
+   	(<op> ^name check-result-say ^textcmd <cmd>)
+	(<s> ^io.output-link <ol>)
+-->
+	(<ol> ^textcmd <cmd> -)
+	(write |remove say text command|)
+}

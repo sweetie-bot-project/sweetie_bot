@@ -1,0 +1,19 @@
+# ATTENTION: 
+#     1. controller/joint_space_head must be running to see actual robot motions.
+#     2. Test never ends. Use Cntr+C to stop it.
+#
+path: sweetie_bot_flexbe_states.sweetie_bot_follow_head_leap_motion
+class: SweetieBotFollowHeadLeapMotion
+
+import_only: false
+
+launch: '<launch>
+	<node pkg="rosbag" type="play" name="player" args="--clock $(find sweetie_bot_flexbe_states)/tests/bags/leap_motion_moving.bag" />
+</launch>'
+
+params:
+    leap_motion_topic: //leapmotion/data
+    focus_point_topic: //hmi/leap_motion/point
+    follow_joint_state_controller: joint_state_head
+
+outcome: 
