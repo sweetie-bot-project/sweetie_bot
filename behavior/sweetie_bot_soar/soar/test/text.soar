@@ -1,7 +1,7 @@
 sp {propose*say*hello
 	(state <s> ^name test)
 	(<s> ^io.input-link.clock.time <time-current>)
-	(<s> ^mem.next-say-time {<time-next> <time-current>})
+	(<s> ^mem.next-say-time {<time-next> < <time-current>})
 -->
 	(<s> ^operator <o> + =)
    	(<o> ^name say)
