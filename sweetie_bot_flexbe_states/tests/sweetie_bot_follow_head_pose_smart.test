@@ -1,0 +1,20 @@
+# ATTENTION: 
+#     1. `controller/joint_space_head` must be running to see actual robot motions. Run `sweetie_bot_deploy joint_space_control.launch`.
+#     2. Transform beetween `leap_motion` and `base_link` frame must be defined. Run `sweetie_bot_deploy leap_motion.launch run_real:=false`.
+#
+path: sweetie_bot_flexbe_states.sweetie_bot_follow_head_pose_smart
+class: SweetieBotFollowHeadPoseSmart
+
+import_only: false
+
+launch: '<launch>
+	<node pkg="rosbag" type="play" name="player" args="--clock $(find sweetie_bot_flexbe_states)/tests/bags/leap_motion_pose_still.bag" />
+</launch>'
+
+params:
+    pose_topic: //hmi/leap_motion/pose
+    follow_joint_state_controller: joint_state_head
+    discomfort_time: 1.0
+    neck_control_parameteres: [ -0.26, 0.3, 0.20, 0.2 ]
+
+outcome: too_close

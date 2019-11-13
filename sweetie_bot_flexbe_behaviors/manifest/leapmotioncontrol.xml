@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="LeapMotionControl">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.leapmotioncontrol_sm" class="LeapMotionControlSM" />
+	<tagstring>cheeqstria, leapmotion</tagstring>
+	<author>disRecord</author>
+	<date>Wed Aug 02 2017</date>
+	<description>
+		Human interaction behavior for conventions. 
+
+Place LeapMotion sensor in 30 cm before Sweetie bot
+You need to run leap_motion node as follow: roslaunch sweetie_bot_deploy leap_motion.launch run_real:=true.
+
+When behavior is active Sweetie
+1. looks on moving hand;
+2. gives leg for brohoof or perform Greeting if hand is still;
+3. performs random action and fall back to random head movements if no object is detected.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+	<contains name="Brohoof" />
+	<contains name="Greeting" />
+	<contains name="Play" />
+	<contains name="SwitchEvilMode" />
+	<contains name="Bad" />
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="play_timeout" default="6" label="play_timeout" hint="Timeout between play actions.">
+			<min value="0" />
+			<max value="120" />
+		</param>
+
+		<param type="numeric" name="good_to_evil_switch_probability" default="0.2" label="good_to_evil_switch_probability" hint="Probability of transition from good to evil mode.">
+			<min value="0" />
+			<max value="1" />
+		</param>
+
+		<param type="numeric" name="evil_to_good_switch_probability" default="0.8" label="evil_to_good_switch_probability" hint="Probability of transition from evil to good mode.">
+			<min value="0" />
+			<max value="1" />
+		</param>
+
+	</params>
+
+
+</behavior>

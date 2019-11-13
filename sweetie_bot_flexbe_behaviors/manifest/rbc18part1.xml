@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="RBC18Part1">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.rbc18part1_sm" class="RBC18Part1SM" />
+	<tagstring>rbc18, presentation</tagstring>
+	<author>mutronics</author>
+	<date>Tue Nov 20 2018</date>
+	<description>
+		RBC18 Presentation Part1
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+
+</behavior>

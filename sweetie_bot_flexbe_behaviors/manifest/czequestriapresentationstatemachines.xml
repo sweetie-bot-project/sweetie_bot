@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="CZequestriaPresentationStateMachines">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.czequestriapresentationstatemachines_sm" class="CZequestriaPresentationStateMachinesSM" />
+	<tagstring>sweetiebot, presentation</tagstring>
+	<author>mutronics</author>
+	<date>Thu Aug 17 2017</date>
+	<description>
+		State machines move for CZequestria presentation
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+
+</behavior>

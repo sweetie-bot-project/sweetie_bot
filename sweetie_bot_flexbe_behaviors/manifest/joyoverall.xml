@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="JoyOverall">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.joyoverall_sm" class="JoyOverallSM" />
+	<tagstring>SweetieBot, joystick, autonomous</tagstring>
+	<author>disRecord</author>
+	<date>Sun Jul 21 2019</date>
+	<description>
+		This behavior includes JoyWalk, JoyAnimaton and AutonomousBehavior2.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+	<contains name="JoyAnimation" />
+	<contains name="JoyWalk" />
+	<contains name="AutonomousBehavior2" />
+	<contains name="AutonomousBehavior" />
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="timeout" default="20" label="timeout" hint="Timeout before switching to autonomi.">
+			<min value="0" />
+			<max value="600" />
+		</param>
+
+	</params>
+
+
+</behavior>

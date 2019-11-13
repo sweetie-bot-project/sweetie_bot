@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="Cheer">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.cheer_sm" class="CheerSM" />
+	<tagstring>SweetieBot, cheer</tagstring>
+	<author>disRecord</author>
+	<date>Tue Mar 28 2017</date>
+	<description>
+		Sweetie cheering state.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="boolean" name="be_evil" default="False" label="be_evil" hint="Sets the be_evil" />
+
+	</params>
+
+
+</behavior>

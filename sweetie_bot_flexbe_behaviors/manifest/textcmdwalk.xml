@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="TextCmdWalk">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.textcmdwalk_sm" class="TextCmdWalkSM" />
+	<tagstring>walk, text command, sweetie bot</tagstring>
+	<author>disRecord</author>
+	<date>Fri Jul 19 2019</date>
+	<description>
+		Interperetator of 'motion/step_sequence' commands. Behavior executes commands received on topic '/control' or via input key. If timeout happens or unknown command is received exits immediately.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="timeout" default="10" label="Timeout before exit state if no commands are received." hint="10.0">
+			<min value="0" />
+			<max value="300" />
+		</param>
+
+	</params>
+
+
+</behavior>

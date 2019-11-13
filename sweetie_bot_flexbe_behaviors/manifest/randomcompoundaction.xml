@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="RandomCompoundAction">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.randomcompoundaction_sm" class="RandomCompoundActionSM" />
+	<tagstring>sweetie_bot, random</tagstring>
+	<author>disRecord</author>
+	<date>Mon Jul 15 2019</date>
+	<description>
+		Select and execute random action from list.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+
+</behavior>

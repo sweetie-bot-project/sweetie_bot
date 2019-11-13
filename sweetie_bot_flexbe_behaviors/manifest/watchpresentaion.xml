@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="WatchPresentaion">
+
+	<executable package_path="sweetie_bot_flexbe_behaviors.watchpresentaion_sm" class="WatchPresentaionSM" />
+	<tagstring>derpfest2017, sweetiebot, presentation</tagstring>
+	<author>disRecord</author>
+	<date>Sat Oct 21 2017</date>
+	<description>
+		SweetieBot watch Derpfest2017 presentation.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+
+</behavior>
