@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from soar import *
+from sweetie_bot_soar import *
 
 if __name__ == '__main__':
     main()
