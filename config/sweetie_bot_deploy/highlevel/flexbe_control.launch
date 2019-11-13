@@ -9,8 +9,8 @@
 	<arg name="robot_profile_path" default="$(eval find(arg('robot_name')+'_deploy') + '/' + arg('robot_profile'))" doc="Fully qualified path to configuration profile. By default 'robot_name' and 'robot_profile' parameters are sed to determine it."/>
 	<arg name="robot_ns" default="/" doc="Namespace where to run robot components "/>
 
-	<arg name="run_moveit" default="true" doc="Run move_group associated with robot."/>
-	<arg name="run_flexbe" default="false" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
+	<arg name="run_moveit" default="false" doc="Run move_group associated with robot."/>
+	<arg name="run_flexbe" default="true" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
 	<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>
