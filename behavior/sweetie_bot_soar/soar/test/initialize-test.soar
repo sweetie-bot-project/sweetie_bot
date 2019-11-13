@@ -1,0 +1,17 @@
+sp {propose*initialize-test
+   (state <s> ^superstate nil
+             -^name)
+-->
+   (<s> ^operator <o> +)
+   (<o> ^name initialize-test)
+}
+
+sp {apply*initialize-test
+   (state <s> ^operator <op>)
+   (<op> ^name initialize-test)
+-->
+	(<s> ^name test)
+	(<s> ^mem <m>)
+	(<m> ^next-say-time 0)
+	(write |Initialization completed.|)
+}
