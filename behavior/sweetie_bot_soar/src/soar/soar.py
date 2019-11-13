@@ -32,14 +32,14 @@ class Soar:
         # peform deconfiguration
         if self.configured:
             # destroy input and output modules
-            self.input_modules.clear()
+            del self.input_modules[:]
             self.output_modules_map.clear()
             self.active_output_modules.clear()
             # reset soar 
             self.agent.InitSoar()
             # clear production memory
             # TODO here?
-            self.agent.ExecutionCommandLine("production excise")
+            self.agent.ExecuteCommandLine("production excise")
             # finished
             self.configured = False
 
@@ -51,7 +51,6 @@ class Soar:
             # load output modules
             output_link_config = rospy.get_param("~output")
             self.output_modules_map = { m.getCommandName(): m for m in  output_modules.load_modules(output_link_config) }
-            print self.output_modules_map
         except RuntimeError as e:
             rospy.logerr("SOAR configuration: input/output link initialization failed: " + str(e))
             return False
@@ -123,7 +122,7 @@ class Soar:
                 return
 
             # debug output
-            print(self.agent.ExecuteCommandLine("print S1 --depth 4").strip())
+            # print(self.agent.ExecuteCommandLine("print S1 --depth 4").strip())
 
             # check for output
             if self.agent.GetNumberCommands() == 0:
@@ -134,8 +133,8 @@ class Soar:
                 # major step finished
                 break
 
-        #debug output
-        #print(self.agent.ExecuteCommandLine("print S1 --depth 4").strip())
+        # debug output
+        # print(self.agent.ExecuteCommandLine("print S1 --depth 4").strip())
 
         # process output link
         nop_del_list = []
@@ -214,11 +213,11 @@ class SoarNode:
         self.configured = False
         self.timer = None
         # read timer parameters
-        self.period = rospy.get_param("soar_period", 1.0)
+        self.period = rospy.get_param("~soar_period", 1.0)
         if not isinstance(self.period, (int,float)) or self.period < 0:
             rospy.logerr("`soar_period` parameter must be positive float number.")
             return False
-        autostart = rospy.get_param("autostart", True)
+        autostart = rospy.get_param("~autostart", True)
         if not isinstance(autostart, bool):
             rospy.logerr("`autostart` parameter must be boolean.")
             return False

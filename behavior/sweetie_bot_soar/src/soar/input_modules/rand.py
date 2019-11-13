@@ -15,6 +15,6 @@ class Rand:
 
     def __del__(self):
         # remove sensor wme
-        self._agent.DestroyWME(self.sensor_id)
+        self._agent.DestroyWME(self._sensor_id)
 
 input_module.register("rand", Rand)
