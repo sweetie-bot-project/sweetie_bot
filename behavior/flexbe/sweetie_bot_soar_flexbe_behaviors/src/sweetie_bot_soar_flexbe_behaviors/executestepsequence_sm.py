@@ -8,8 +8,9 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from sweetie_bot_flexbe_states.execute_step_sequence import ExecuteStepSequence
+from sweetie_bot_flexbe_states.check_joint_state import CheckJointState
 from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
+from sweetie_bot_flexbe_states.execute_step_sequence import ExecuteStepSequence
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -55,16 +56,22 @@ class ExecuteStepSequenceSM(Behavior):
 
 
 		with _state_machine:
-			# x:161 y:101
-			OperatableStateMachine.add('StepSequence',
-										ExecuteStepSequence(controller='motion/controller/step_sequence', trajectory_param=self.action_name, trajectory_ns='saved_msgs/step_sequence'),
-										transitions={'success': 'finished', 'partial_movement': 'invalid_pose', 'invalid_pose': 'Crouch', 'failure': 'failed'},
-										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
+			# x:324 y:50
+			OperatableStateMachine.add('CheckCrouched',
+										CheckJointState(outcomes=['body_crouched', 'unknown'], pose_ns='saved_msgs/joint_state', tolerance=0.17, joint_topic="joint_states", timeout=1.0),
+										transitions={'body_crouched': 'StepSequence', 'unknown': 'Crouch'},
+										autonomy={'body_crouched': Autonomy.Off, 'unknown': Autonomy.Off})
 
-			# x:413 y:104
+			# x:412 y:178
 			OperatableStateMachine.add('Crouch',
 										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='crouch_begin', trajectory_ns='saved_msgs/joint_trajectory'),
 										transitions={'success': 'StepSequence', 'partial_movement': 'invalid_pose', 'invalid_pose': 'invalid_pose', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
+
+			# x:127 y:182
+			OperatableStateMachine.add('StepSequence',
+										ExecuteStepSequence(controller='motion/controller/step_sequence', trajectory_param=self.action_name, trajectory_ns='saved_msgs/step_sequence'),
+										transitions={'success': 'finished', 'partial_movement': 'Crouch', 'invalid_pose': 'Crouch', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 
