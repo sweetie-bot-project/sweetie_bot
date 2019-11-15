@@ -102,15 +102,19 @@ class Soar:
         if self.agent.HadError():
             rospy.logerr("SOAR skip step: " + agent.GetLastErrorDescription())
             return
+        if self.agent.GetRunState() in [sml.sml_RUNSTATE_HALTED, sml.sml_RUNSTATE_INTERRUPTED]:
+            rospy.logerr("SOAR agent halted or interrupted!")
+            return
 
         rospy.loginfo("SOAR major step.")
 
         #start new major step: wait until output
         while True:
+            rospy.loginfo("SOAR minor step.")
+
             # update input link
             for m in self.input_modules:
                 m.update()
-            self.agent.Commit()
 
             # update output link
             output_link_id = self.agent.GetOutputLink()
@@ -121,10 +125,19 @@ class Soar:
                     remove_list.append(m)
             self.active_output_modules.difference_update( remove_list )
 
+            # commit changes
+            self.agent.Commit()
+
+            # debug output
+            # print(self.agent.ExecuteCommandLine("print S1 --depth 4").strip())
+
             # invoke SOAR for one step
             self.agent.RunSelf(1)
             if self.agent.HadError():
                 rospy.logerr("SOAR step: " + self.agent.GetLastErrorDescription())
+                return
+            if self.agent.GetRunState() in [sml.sml_RUNSTATE_HALTED, sml.sml_RUNSTATE_INTERRUPTED]:
+                rospy.logerr("SOAR agent halted or interrupted!")
                 return
 
             # debug output
@@ -133,20 +146,20 @@ class Soar:
             # check for output
             if self.agent.GetNumberCommands() == 0:
                 # new reason cycle
-                rospy.loginfo("SOAR minor step.")
                 continue
             else:
-                # major step finished
+                # minor step finished
                 break
 
         # debug output
         # print(self.agent.ExecuteCommandLine("print S1 --depth 4").strip())
 
         # process output link
-        nop_del_list = []
+        cmd_list = []
         for cmd_idx in range(self.agent.GetNumberCommands()):
             cmd_id = self.agent.GetCommand(cmd_idx)
             cmd_name = cmd_id.GetCommandName()
+            cmd_list.append(cmd_name)
             # select corresponding module
             module = self.output_modules_map.get(cmd_name)
             if not module:
@@ -163,6 +176,8 @@ class Soar:
             module.start(cmd_id)
             if module.isRunning():
                 self.active_output_modules.add(module)
+
+        rospy.loginfo("SOAR commands: %s " % str(cmd_list))
 
 class SoarNode:
     def __init__(self, node_name):
