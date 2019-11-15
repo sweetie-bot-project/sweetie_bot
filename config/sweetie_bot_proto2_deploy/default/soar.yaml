@@ -1,8 +1,8 @@
 soar:
-    soar_pariod: 1.0
+    soar_period: 1.0
     autostart: false
     agent_package: "sweetie_bot_soar"
-    agent_file: "soar/test.soar"
+    agent_file: "soar/walker.soar"
     input:
         rand:
             type: "rand"

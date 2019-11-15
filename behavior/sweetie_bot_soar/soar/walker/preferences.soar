@@ -1,0 +1,24 @@
+# PREFERENCES 
+
+# DRIVE BASED PREFERENCES
+
+# opertors with greater importance are better
+sp {prefer*operator*drive*importance
+   (state <s> ^operator <o1> +)
+   (<o1> ^drive.importance <i1>)
+   (<s> ^operator { <> <o1> <o2> } +)
+   (<o2> ^drive.importance { <i2> > <i1> } )
+-->
+   (<s> ^operator <o2> > <o1>)
+}
+
+# goal-related operators are better
+#sp {prefer*operator*goal*related
+#   (state <s> ^operator <o1> +)
+#   (<s> ^operator { <> <o1> <o2> } +)
+#   (<o1> ^drive.importance <level> - ^goal)
+#   (<o2> ^drive.importance <level> ^goal)
+#-->
+#   (<s> ^operator <o2> > <o1>)
+#}
+

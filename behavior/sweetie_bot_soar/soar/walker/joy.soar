@@ -1,0 +1,12 @@
+# JOYSTICK CONTROL
+
+sp {propose*joystik*control
+	(state <s> ^name walker)
+	(<s> ^io.input-link.joystick.pressed <key>)
+	(<s> ^drive <d>)
+	(<d> ^name obey)
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name flexbe ^drive <d>)
+   	(<o> ^behavior JoystickControl ^param <p>)
+}

@@ -1,0 +1,68 @@
+# OVERALL BEHAVIOR SELECTION
+
+# PROPOSE ANIMATION
+
+# Propose perform animation (no one around)
+sp {propose*walker*substate*animation*alone
+	(state <s> ^name walker ^drive <d>)
+	(<d> ^name movement)
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name animation-substate)
+   	(<o> ^drive <d>)
+   	(<o> ^tag alone)
+	(<o> ^substate select-action)
+}
+
+# PROPOSE WAIT
+
+# invoke RandHeadMovements for random timeout
+sp {propose*rand*head*movements
+	(state <s> ^name walker ^drive <d> ^io.output-link <ol>)
+	(<d> ^name movement)
+	(<ol> - ^flexbe)
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name flexbe ^drive <d>)
+   	(<o> ^behavior ExecuteRandHeadMovements ^param <p>)
+	(<p> ^timeout (+ 5 (rand-int 15)))
+}
+
+# WALKING
+
+# is active because corresponding goal is present in memory
+
+# Stop step-sequnce (walking) goal
+
+#sp {propose*walker*stop*goal*step-sequence
+#	(state <s> ^name walker ^mem.goal <g>)
+#	(<g> ^name step-sequence)
+#-->
+#	(<s> ^operator <o> + =)
+#   	(<o> ^name stop-goal-step-sequence ^goal <g>)
+#}
+#
+#sp {apply*walker*stop*goal*step-sequence
+#	(state <s> ^operator <o> ^mem <m>)
+#	(<o> ^name stop-goal-step-sequence ^goal <g>)
+#-->
+#	(<m> ^goal <g> -)
+#	(<m> ^stopped-goal <g>)
+#}
+#
+## Start step-sequnce goal
+#sp {propose*walker*start*goal*step-sequence
+#	(state <s> ^name walker ^mem.stopped-goal <g>)
+#	(<g> ^name step-sequence)
+#-->
+#	(<s> ^operator <o> + =)
+#   	(<o> ^name start-goal-step-sequence ^goal <g>)
+#}
+
+#sp {apply*walker*start*goal*step-sequence
+#	(state <s> ^operator <o> ^mem <m>)
+#	(<o> ^name start-goal-step-sequence ^goal <g>)
+#-->
+#	(<m> ^goal <g>)
+#	(<m> ^stopped-goal <g> -)
+#}

@@ -1,0 +1,46 @@
+# COMMON GOAL RULES
+
+# print information messages about goal linked with current operator
+sp {log*operator*goal
+	(state <s> ^operator <op>)
+   	(<op> ^goal.name <name>)
+-->
+	(write |Operator goal: | <name>)
+}
+
+# elaborate drive attribute for goal-related operator
+sp {elaborate*goal*operator*drive
+	(state <s> ^operator <o> +)
+	(<o> ^goal <g>)
+	(<g> ^drive <d>)
+-->
+	(<o> ^drive <d>)
+}
+
+# comleted goal handling hook: propose operator
+sp {propose*goal*completed*hook
+	(state <s> ^mem.completed-goal <g>)
+-->
+	(<s> ^operator <o> + >)
+   	(<o> ^name goal-completed <o> ^goal-completed <g>)
+}
+
+# comleted goal handling: remove goal entity
+sp {apply*goal*completed*hook*remove*goal
+	(state <s> ^operator <op> ^mem <m>)
+   	(<op> ^name goal-completed ^goal-completed <g>)
+	(<g> ^name <name>)
+-->
+	(<m> ^completed-goal <g> -)
+	(write |Complete goal: | <name>)
+}
+
+# completed goal handling: if goal have parent then make it in current goal
+sp {apply*goal*completed*hook*select*parent
+	(state <s> ^operator <op> ^mem <m>)
+   	(<op> ^name goal-completed ^goal-completed <g>)
+	(<g> ^parent <parent-goal>)
+-->
+	(<m> ^goal <parent-goal>)
+	(write |Complete goal: select parent|)
+}

@@ -1,0 +1,29 @@
+
+# SUBSTATE SUPPORT
+
+# substate name elaboration
+sp {elaborate*state*name
+	(state <s> ^superstate.operator <op>)
+	(<op> ^name <name> ^substate)
+-->
+	(<s> ^name <name>)
+}
+
+# for action substate copy relevant memory elements
+sp {elaborate*state*select-action
+	(state <s> ^superstate <ss>)
+	(<ss> ^operator <op> ^io <io> ^mem <mem>)
+	(<op> ^substate select-action ^drive <d>)
+-->
+	(<s> ^io <io>)
+	(<s> ^mem <mem>)
+	(<s> ^drive <d>)
+}
+
+# move opertor tag in substate
+sp {elaborate*state*tags
+	(state <s> ^superstate.operator <op>)
+	(<op> ^tag <tag> ^substate)
+-->
+	(<s> ^tag <tag>)
+}

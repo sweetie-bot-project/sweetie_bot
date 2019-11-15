@@ -1,0 +1,8 @@
+sp {remove*nop*cmd
+	:o-support
+	(state <s> ^io.output-link <ol>)
+   (<ol> ^nop <nop>)
+	(<nop> ^status completed)
+-->
+	(<ol> ^nop <nop> -)
+}

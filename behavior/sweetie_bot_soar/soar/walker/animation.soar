@@ -1,0 +1,16 @@
+# ANIMATION SUBSTATE
+
+# propose animations: select animation with corresponding tag
+sp {animation-substate*propose*flexbe*compound-action
+	(state <s> ^name animation-substate ^mem.compound-action <action> ^drive <d> ^tag <t> ^io.output-link <ol>)
+	(<action> ^name <action_name> ^tag <t>)
+	(<ol> - ^flexbe)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^drive <d>)
+   	(<o> ^name flexbe)
+	(<o> ^behavior ExecuteCompoundAction)
+	(<o> ^param <p>)
+	(<p> ^action_name <action_name>)
+}
+
