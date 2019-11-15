@@ -32,19 +32,21 @@ class FlexBe(OutputModule):
         goal.behavior_name = name_id.GetValueAsString()
         # extract parameteres
         params_id = cmd_id.FindByAttribute("param", 0)
-        if params_id:
+        if params_id and params_id.IsIdentifier():
+            params_id = params_id.ConvertToIdentifier()
             # parameters are present
             for i in range(params_id.GetNumberChildren()):
-                param_id = param_id.GetChild(i)
+                param_id = params_id.GetChild(i)
                 # add parameter and value pair to messsge
-                goal.arg_keys.append(param_id.GetAttribute())
+                goal.arg_keys.append('/' + param_id.GetAttribute())
                 goal.arg_values.append(param_id.GetValueAsString())
         # extract input keys
         input_keys_id = cmd_id.FindByAttribute("input", 0)
-        if input_keys_id:
+        if input_keys_id and input_keys_id.IsIdentifier():
+            input_keys_id = input_keys_id.ConvertToIdentifier()
             # parameters are present
             for i in range(input_keys_id.GetNumberChildren()):
-                input_key_id = keys_id.GetChild(i)
+                input_key_id = input_keys_id.GetChild(i)
                 # add parameter and value pair to messsge
                 goal.input_input_keys.append(key_id.GetAttribute())
                 goal.input_values.append(input_key_id.GetValueAsString())
