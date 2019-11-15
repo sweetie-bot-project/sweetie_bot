@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="ExecuteRandHeadMovements">
+
+	<executable package_path="sweetie_bot_soar_flexbe_behaviors.executerandheadmovements_sm" class="ExecuteRandHeadMovementsSM" />
+	<tagstring>soar, proto2</tagstring>
+	<author>disrRecord</author>
+	<date>Fri Nov 15 2019</date>
+	<description>
+		Move head in random directions
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="timeout" default="5" label="timeout" hint="Beahvior duration">
+			<min value="0" />
+			<max value="120" />
+		</param>
+
+	</params>
+
+
+</behavior>
