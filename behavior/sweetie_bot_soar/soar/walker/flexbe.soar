@@ -5,37 +5,20 @@
 # apply flexbe operator 
 sp {apply*operator*flexbe
 	(state <s> ^operator <op> ^io.output-link <ol>)
-   	(<op> ^name flexbe ^behavior <bh> ^param <p> ^drive <d> - ^goal)
+   	(<op> ^name flexbe ^behavior <bh> ^param <p> ^drive <d>)
 	(<ol> - ^flexbe)
 -->
 	(<ol> ^flexbe <cmd>)
 	(<cmd> ^name <bh>)
 	(<cmd> ^param (deep-copy <p>) )
-	(<cmd> ^operator <op1>)
-	(<op1> ^name flexbe)	
-	(<op1> ^drive <d>)	
-	(write |Flexbe: start behavior: | <bh>)
-}
-
-# apply flexbe operator for goal related opertor
-sp {apply*operator*flexbe*goal
-	(state <s> ^operator <op> ^io.output-link <ol>)
-   	(<op> ^name flexbe ^behavior <bh> ^param <p> ^drive <d> ^goal <g>)
-	(<ol> - ^flexbe)
--->
-	(<ol> ^flexbe <cmd>)
-	(<cmd> ^name <bh>)
-	(<cmd> ^param (deep-copy <p>) )
-	(<cmd> ^operator <op1>)
-	(<op1> ^name flexbe)	
-	(<op1> ^drive <d>)	
-	(<op1> ^goal <g>)	
-	(write |Flexbe: start behavior: | <bh>)
+	(<cmd> ^operator (copy-one-level <op>))
 }
 
 # WAIT BEHAVIOR
 
 # wait for flexbe behavior execution
+# prefere wait operator before any other execution operator with the same importance
+# but less then cognition opertaor
 sp {propose*flexbe*wait
 	(state <s> ^io.output-link.flexbe <cmd> ^io.input-link.clock.cycle <c>)
 	(<cmd> -^status ^operator.drive <d>)
