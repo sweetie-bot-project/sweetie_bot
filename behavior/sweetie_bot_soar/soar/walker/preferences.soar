@@ -2,23 +2,37 @@
 
 # DRIVE BASED PREFERENCES
 
+# elaborate importance from drive for default (execution) operators
+sp {elaborate*opertor*importance*drive*no-cognition
+	(state <s> ^operator <o> +)
+	(<o> ^drive.importance <i> -^type)
+-->
+	(<o> ^importance <i>)
+}
+
+# elaborate importance from drive for execution-wait operators
+sp {elaborate*opertor*importance*drive*wait-execution
+	(state <s> ^operator <o> +)
+	(<o> ^drive.importance <i> ^type wait-execution)
+-->
+	(<o> ^importance (+ <i> 0.1))
+}
+
+# elaborate importance from drive for cognitions
+sp {elaborate*opertor*importance*drive*cognition
+	(state <s> ^operator <o> +)
+	(<o> ^drive.importance <i> ^type cognition)
+-->
+	(<o> ^importance (+ <i> 0.5))
+}
+
+
 # opertors with greater importance are better
-sp {prefer*operator*drive*importance
-   (state <s> ^operator <o1> +)
-   (<o1> ^drive.importance <i1>)
-   (<s> ^operator { <> <o1> <o2> } +)
-   (<o2> ^drive.importance { <i2> > <i1> } )
+sp {prefer*operator*importance
+   (state <s> ^operator <o1> +  ^operator { <o2> <> <o1> } +)
+   (<o1> ^importance <i1>)
+   (<o2> ^importance { <i2> > <i1> })
 -->
    (<s> ^operator <o2> > <o1>)
 }
-
-# goal-related operators are better
-#sp {prefer*operator*goal*related
-#   (state <s> ^operator <o1> +)
-#   (<s> ^operator { <> <o1> <o2> } +)
-#   (<o1> ^drive.importance <level> - ^goal)
-#   (<o2> ^drive.importance <level> ^goal)
-#-->
-#   (<s> ^operator <o2> > <o1>)
-#}
 

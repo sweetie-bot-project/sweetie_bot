@@ -21,8 +21,8 @@ sp {elaborate*goal*operator*drive
 sp {propose*goal*completed*hook
 	(state <s> ^mem.completed-goal <g>)
 -->
-	(<s> ^operator <o> + >)
-   	(<o> ^name goal-completed <o> ^goal-completed <g>)
+	(<s> ^operator <o> +)
+   	(<o> ^name goal-completed <o> ^goal-completed <g> ^type cognition)
 }
 
 # comleted goal handling: remove goal entity

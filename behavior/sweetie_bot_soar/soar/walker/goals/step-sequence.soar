@@ -39,8 +39,8 @@ sp {propose*goal*step-sequence*select-next
 	(state <s> ^mem.goal <g>)
 	(<g> ^name step-sequence ^step-sequence.next <next-step-seq> ^state select-next-move)
 -->
-	(<s> ^operator <o> + >)
-   	(<o> ^name goal-step-sequence-select-next <o> ^goal <g> ^next <next-step-seq>)
+	(<s> ^operator <o> + =)
+   	(<o> ^name goal-step-sequence-select-next <o> ^goal <g> ^next <next-step-seq> ^type cognition)
 }
 
 # apply (select-next)
@@ -62,8 +62,8 @@ sp {propose*goal*step-sequence*complete
 	(<g> ^name step-sequence ^step-sequence <step-seq> ^state select-next-move)
 	(<step-seq> - ^next)
 -->
-	(<s> ^operator <o> + >)
-   	(<o> ^name goal-step-sequence-complete <o> ^goal <g>)
+	(<s> ^operator <o> + =)
+   	(<o> ^name goal-step-sequence-complete <o> ^goal <g> ^type cognition)
 }
 
 # apply (complete)
