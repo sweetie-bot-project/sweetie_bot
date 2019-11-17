@@ -69,7 +69,7 @@ sp {apply*initialization*mem*step-sequnces
 	(<d> ^name movement)
 -->
 	(<m> ^step-sequence <s1> <s2> <s3> <s4> <s5> <s6> <s7> <s8> <s9> <s10> <s11> <s12> <s13>)
-	(<s1> ^name turn_right_20_20_45 ^next <s2>)
+	(<s1> ^name turn_right_20_20_45 ^next <s2> ^enter-point yes)
 	(<s2> ^name turn_left_45 ^next <s3>)
 	(<s3> ^name turn_left_20_20_45 ^next <s4>)
 	(<s4> ^name turn_right_45 ^next <s5>)
@@ -82,8 +82,6 @@ sp {apply*initialization*mem*step-sequnces
 	(<s11> ^name backslide_right_10_00_45 ^next <s12>)
 	(<s12> ^name walk_back_20 ^next <s13>)
 	(<s13> ^name backslide_right_20_20_90 ^next <s1>)
-	(<m> ^goal <g>)
-	(<g> ^name step-sequence ^step-sequence <s1> ^drive <d> ^state move)
 }
 
 #

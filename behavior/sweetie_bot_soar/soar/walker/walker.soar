@@ -3,7 +3,7 @@
 # PROPOSE ANIMATION
 
 # Propose perform animation (no one around)
-sp {propose*walker*substate*animation*alone
+sp {walker*propose*substate*animation*alone
 	(state <s> ^name walker ^drive <d>)
 	(<d> ^name movement)
 -->
@@ -17,7 +17,7 @@ sp {propose*walker*substate*animation*alone
 # PROPOSE WAIT
 
 # invoke RandHeadMovements for random timeout
-sp {propose*rand*head*movements
+sp {walker*propose*rand*head*movements
 	(state <s> ^name walker ^drive <d> ^io.output-link <ol>)
 	(<d> ^name movement)
 	(<ol> - ^flexbe)
@@ -30,39 +30,24 @@ sp {propose*rand*head*movements
 
 # WALKING
 
-# is active because corresponding goal is present in memory
+# Install walking goal if one is missing. Then robot should walk sometime because goal-related rules are acive.
 
-# Stop step-sequnce (walking) goal
+sp {propose*walker*add*step-sequence*goal
+	(state <s> ^name walker ^drive <d> ^mem <m>)
+	(<d> ^name movement)
+	-(<m> ^goal.name step-sequence)
+	(<m> ^step-sequence <step-seq>)
+	(<step-seq> ^enter-point)
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name add-step-sequnce-goal ^drive <d> ^step-sequence <step-seq>)
+}
 
-#sp {propose*walker*stop*goal*step-sequence
-#	(state <s> ^name walker ^mem.goal <g>)
-#	(<g> ^name step-sequence)
-#-->
-#	(<s> ^operator <o> + =)
-#   	(<o> ^name stop-goal-step-sequence ^goal <g>)
-#}
-#
-#sp {apply*walker*stop*goal*step-sequence
-#	(state <s> ^operator <o> ^mem <m>)
-#	(<o> ^name stop-goal-step-sequence ^goal <g>)
-#-->
-#	(<m> ^goal <g> -)
-#	(<m> ^stopped-goal <g>)
-#}
-#
-## Start step-sequnce goal
-#sp {propose*walker*start*goal*step-sequence
-#	(state <s> ^name walker ^mem.stopped-goal <g>)
-#	(<g> ^name step-sequence)
-#-->
-#	(<s> ^operator <o> + =)
-#   	(<o> ^name start-goal-step-sequence ^goal <g>)
-#}
+sp {apply*walker*add*step-sequence*goal
+	(state <s> ^operator <o> ^mem <m>)
+	(<o> ^name add-step-sequnce-goal ^drive <d> ^step-sequence <step-seq>)
+-->
+   	(<m> ^goal <g>)
+   	(<g> ^name step-sequence ^drive <d> ^step-sequence <step-seq> ^state move)
+}
 
-#sp {apply*walker*start*goal*step-sequence
-#	(state <s> ^operator <o> ^mem <m>)
-#	(<o> ^name start-goal-step-sequence ^goal <g>)
-#-->
-#	(<m> ^goal <g>)
-#	(<m> ^stopped-goal <g> -)
-#}
