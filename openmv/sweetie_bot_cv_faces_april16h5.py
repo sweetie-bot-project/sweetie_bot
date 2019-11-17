@@ -10,10 +10,10 @@ import sensor, time, image, pyb, json
 sensor.reset()
 
 # Sensor settings
-sensor.set_contrast(1)
+sensor.set_contrast(3)
 sensor.set_gainceiling(16)
 sensor.set_framesize(sensor.HQVGA)
-sensor.set_pixformat(sensor.RGB565)
+sensor.set_pixformat(sensor.GRAYSCALE)
 
 # Load Haar Cascade
 # By default this will use all stages, lower satges is faster but less accurate.
@@ -31,69 +31,58 @@ while True:
     # Capture a snapshot
     img = sensor.snapshot()
 
+    # detect objects
     try:
         # Find a face
         # HINT: Lower scale factor scales-down the image more and detects smaller objects.
         # Higher threshold results in a higher detection rate, with more false positives.
-        objects = img.find_features(face_cascade, threshold=0.5, scale=1.5)
+        faces = img.find_features(face_cascade, threshold=0.75, scale=1.25)
     except MemoryError:
-        print('Out of memory during faces recognition!')
+        print('Out of memory during faces recnition!')
 
-    # Empty UART frame
-    frame = {}
 
-    faces = []
+    try:
+        # Recognize AprilTags
+        tags = img.find_apriltags(families=image.TAG16H5)
+    except MemoryError:
+        print('Out of memory during AprilTags recognition!')
 
+    # prepare and send data
+    frame = []
     # Enumerate faces
-    for face in objects:
+    for face in faces:
         img.draw_rectangle(face)
-
         # Form a face record
-        face_rect = {
+        face_obj = {
+            'type': 'face',
             'x': face[0],
             'y': face[1],
             'w': face[2],
             'h': face[3]
         }
-
         # Add a face record to the frame
-        faces.append(face_rect)
+        frame.append(face_obj)
 
-    if len(faces):
-        # Add faces to the dict
-        frame['faces'] = faces
-
-    try:
-        # Recognize AprilTags
-        objects = img.find_apriltags()
-    except MemoryError:
-        print('Out of memory during AprilTags recognition!')
-
-    april_tags = {}
-
-    # Enumerate tags
-    for tag in objects:
+    # Enumerate april tags
+    for tag in tags:
         img.draw_rectangle(tag.rect(), color=(0, 0, 0))
-
         # Form a tag record
-        tag_rect = {
+        tag_obj = {
+            'type': 'april',
             'id': tag.id(),
             'x': tag.x(),
             'y': tag.y(),
             'w': tag.w(),
             'h': tag.h()
         }
-
-        # Add a face record to the frame
-        april_tags[tag.id()] = tag_rect
-
-    if len(april_tags):
         # Add tags to the dict
-        frame['april_tags'] = list(april_tags.values())
+        frame.append(tag_obj)
+    # Send frame
+    # Convert to JSON
+    json.dump(frame, uart)
+    # Terminate the frame
+    uart.write('\n')
+    # clear send buffer
+    del frame[:]
 
-    # It's not an empty frame
-    if len(frame):
-        # Convert to JSON
-        json.dump(frame, uart)
-        # Terminate the frame
-        uart.write('\n')
+

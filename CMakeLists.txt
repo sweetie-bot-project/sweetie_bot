@@ -1,28 +1,15 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sweetiebot_cv_lite)
+project(sweetie_bot_openmv)
 
-find_package(catkin REQUIRED COMPONENTS rospy std_msgs message_generation)
+find_package(catkin REQUIRED COMPONENTS rospy geometry_msgs cob_object_detection_msgs)
 
-add_message_files(
-  FILES
-  Rect.msg
-  AprilTag.msg
-  Faces.msg
-  AprilTags.msg
-)
+catkin_python_setup()
 
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
+catkin_package(CATKIN_DEPENDS rospy geometry_msgs cob_object_detection_msgs)
 
-catkin_package(CATKIN_DEPENDS message_runtime rospy std_msgs)
-
-include_directories(include ${catkin_INCLUDE_DIRS})
-
-catkin_install_python(PROGRAMS scripts/bridge_node.py
+catkin_install_python(PROGRAMS scripts/openmv_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-install(DIRECTORY launch/
+install(DIRECTORY launch/ openmv/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
