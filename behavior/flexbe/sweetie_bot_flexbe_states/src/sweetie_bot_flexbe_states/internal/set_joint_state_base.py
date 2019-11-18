@@ -97,7 +97,7 @@ class SetJointStateBase(Dummy):
 
         # check if time elasped
         if Time.now() - self._timestamp > self._timeout:
-            Logger.loginfo('SetJointStateBase: controller was deactivated by external cause.')
+            Logger.loginfo('SetJointStateBase: timeout.')
             return 'timeout'
 
         # publish goal pose
