@@ -1,4 +1,5 @@
-<!-- DEPLOYMENT: control and visualize robot with joint space controllers and moveit-->
+<!-- DEPLOYMENT: high level contol system -->
+<!-- motion, camera, flexbe, joystick, soar -->
 <launch>
 	<arg name="run_real" default="false" doc="Run on real robot."/>
 	<arg name="robot" default="true" doc="Launch components which meant to be run on robot side."/>
@@ -11,6 +12,7 @@
 
 	<arg name="run_moveit" default="false" doc="Run move_group associated with robot."/>
 	<arg name="run_flexbe" default="true" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
+	<arg name="run_flexbe_gui" default="false" doc="Start flexbe gui."/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
 	<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>
@@ -61,25 +63,47 @@
 				<!-- sound_play server -->
 				<include file="$(find sound_play)/soundplay_node.launch" />
 			</group>
+			<!-- FLEXBE: control node and action server -->
+			<group if="$(arg run_flexbe)">
+				<include file="$(find sweetie_bot_deploy)/highlevel/flexbe.launch" >
+					<arg name="gui" value="false" />
+					<arg name="robot_ns" value="$(arg robot_ns)" />
+					<arg name="flexbe_ns" value="$(arg robot_ns)/flexbe" />
+				</include>
+			</group>
+			<!-- SOAR cognition system -->
+			<group if="$(arg run_flexbe)">
+				<node pkg="sweetie_bot_soar" type="soar" name="soar" />
+			</group>
 		</group>
 
-
-		<!-- FLEXBE: control node and gui -->
-
-		<group if="$(arg run_flexbe)">
-			<include file="$(find sweetie_bot_deploy)/highlevel/flexbe.launch" >
-				<arg name="robot_ns" value="$(arg robot_ns)" />
-				<arg name="flexbe_ns" value="$(arg robot_ns)/flexbe" />
-			</include>
+		<!-- SIMULATED HARDWARE -->
+			
+		<group unless="$(arg run_real)" ns="$(arg robot_ns)/hardware/simulated">
+			<!-- OpenMV camera node (in run_real mode it is started by hardware module) -->
+			<node pkg="sweetie_bot_openmv" type="openmv_node" name="openmv_node">
+				<remap from="detections" to="$(arg robot_ns)/detections" />
+				<remap from="markers" to="$(arg robot_ns)/hmi/detections" />
+				<param name="camera_frame" value="camera_link_simulation" />
+			</node>
 		</group>
 
 		<!-- HMI: launch operator GUI -->
 
-		<group>
-			<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
-				<arg name="robot_ns" value="$(arg robot_ns)" /> 
-				<arg name="rviz_config" value="$(arg robot_profile_path)/joint_space_control.rviz" /> 
+		<!-- joystick (should be connected to host) -->
+		<include file="$(find sweetie_bot_deploy)/highlevel/joy.launch">
+			<arg name="robot_ns" value="$(arg robot_ns)" /> 
+		</include>
+		<!-- operator interface nodes: flexbe_app -->
+		<group if="$(eval run_flexbe and run_flexbe_gui)">
+			<include file="$(find sweetie_bot_deploy)/highlevel/flexbe_gui.launch" >
+				<arg name="flexbe_ns" value="$(arg robot_ns)/flexbe" />
 			</include>
 		</group>
+		<!-- rviz and markers -->
+		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
+			<arg name="robot_ns" value="$(arg robot_ns)" /> 
+			<arg name="rviz_config" value="$(arg robot_profile_path)/joint_space_control.rviz" /> 
+		</include>
 	</group>
 </launch>
