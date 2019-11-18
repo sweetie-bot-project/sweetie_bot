@@ -25,7 +25,7 @@
 	<!-- ROBOT -->
 
 	<!-- start robot -->
-	<group ns="$(arg robot_ns)">
+	<group if="$(arg robot)" ns="$(arg robot_ns)">
 		<include file="$(find sweetie_bot_deploy)/motion_core/sweetie_bot_core.launch">
 			<arg name="run_real" value="$(arg run_real)" /> 
 			<arg name="host" value="$(arg host)" /> 
