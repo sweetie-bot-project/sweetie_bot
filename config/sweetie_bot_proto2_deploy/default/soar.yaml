@@ -11,6 +11,9 @@ soar:
         joystick:
             type: "joystick"
             topic: "/hmi/joy_decoder/keys_pressed"
+        camera:
+            type: "camera"
+            topic: "detections"
     output:
         nop: true
         textcmd: 

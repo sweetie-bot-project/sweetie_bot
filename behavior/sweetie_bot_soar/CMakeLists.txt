@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   flexbe_msgs
   sweetie_bot_control_msgs
   sweetie_bot_text_msgs
+  cob_object_detection_msgs 
   sweetie_bot_joystick
 )
 
@@ -128,10 +129,10 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
+#include_directories(
 # include
-  ${catkin_INCLUDE_DIRS}
-)
+#  ${catkin_INCLUDE_DIRS}
+#)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
