@@ -7,7 +7,7 @@ sp {walker*propose*substate*animation*alone
 	(state <s> ^name walker ^drive <d>)
 	(<d> ^name movement)
 -->
-	(<s> ^operator <o> + =)
+	(<s> ^operator <o> = 2 +)
    	(<o> ^name animation-substate)
    	(<o> ^drive <d>)
    	(<o> ^tag alone)
@@ -22,7 +22,7 @@ sp {walker*propose*rand*head*movements
 	(<d> ^name movement)
 	(<ol> - ^flexbe)
 -->
-	(<s> ^operator <o> + =)
+	(<s> ^operator <o> = 1 +)
    	(<o> ^name flexbe ^drive <d>)
    	(<o> ^behavior ExecuteRandHeadMovements ^param <p>)
 	(<p> ^timeout (+ 5 (rand-int 15)))
@@ -39,15 +39,15 @@ sp {propose*walker*add*step-sequence*goal
 	(<m> ^step-sequence <step-seq>)
 	(<step-seq> ^enter-point)
 -->
-	(<s> ^operator <o> + =)
-   	(<o> ^name add-step-sequnce-goal ^drive <d> ^step-sequence <step-seq>)
+	(<s> ^operator <o> = 2 +)
+	(<o> ^name add-step-sequence-goal ^drive <d> ^step-sequence <step-seq>)
 }
 
 sp {apply*walker*add*step-sequence*goal
 	(state <s> ^operator <o> ^mem <m>)
-	(<o> ^name add-step-sequnce-goal ^drive <d> ^step-sequence <step-seq>)
+	(<o> ^name add-step-sequence-goal ^drive <d> ^step-sequence <step-seq>)
 -->
    	(<m> ^goal <g>)
-   	(<g> ^name step-sequence ^drive <d> ^step-sequence <step-seq> ^state move)
+	(<g> ^name step-sequence ^drive <d> ^step-sequence <step-seq> ^state move ^num-preference 2)
 }
 

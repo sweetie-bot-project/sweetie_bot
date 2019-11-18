@@ -11,10 +11,17 @@ sp {log*operator*goal
 # elaborate drive attribute for goal-related operator
 sp {elaborate*goal*operator*drive
 	(state <s> ^operator <o> +)
-	(<o> ^goal <g>)
-	(<g> ^drive <d>)
+	(<o> ^goal.drive <d>)
 -->
 	(<o> ^drive <d>)
+}
+
+# elaborate numerical pref from goal
+sp {elaborate*opertor*num-preference*goal
+	(state <s> ^operator <o> +)
+	(<o> ^goal.num-preference <p>)
+-->
+	(<s> ^operator <o> = <p>)
 }
 
 # comleted goal handling hook: propose operator

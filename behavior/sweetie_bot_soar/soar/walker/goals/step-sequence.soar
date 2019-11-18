@@ -53,7 +53,7 @@ sp {apply*flexbe*step-sequence*select-next
 	(<g> ^state move)
 	(<g> ^step-sequence <step-seq> -)
 	(<g> ^step-sequence <next-step-seq>)
-	(write |Goal updated: next step-sequence|)
+	(write |Goal updated: next step-sequence. |)
 }
 
 # propose (complete)
@@ -76,5 +76,5 @@ sp {apply*flexbe*step-sequence*complete
 	(<g> ^state completed)
 	(<m> ^goal <g> -)
 	(<m> ^completed-goal <g>)
-	(write |Goal completed: step-sequence|)
+	(write |Goal completed: step-sequence. |)
 }
