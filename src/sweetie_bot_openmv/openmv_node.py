@@ -8,7 +8,9 @@ import numpy as np
 import rospy
 
 from cob_object_detection_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
-from geometry_msgs.msg import PoseStamped, Pose, Point
+from visualization_msgs.msg import MarkerArray, Marker
+from geometry_msgs.msg import PoseStamped, Pose, Point, Vector3
+from std_msgs.msg import ColorRGBA
 
 class Detection:
     def __init__(self, id = None, label = None, type = None, pose = None):
@@ -42,6 +44,29 @@ class Detection:
         msg.label = self.label if self.label else ''
         msg.detector = self.type
         msg.pose.pose.position = Point(x = self.pose[0], y = self.pose[1], z = self.pose[2])
+        return msg
+
+    def to_visualizaton_msg(self):
+        msg = Marker()
+        msg.ns = 'camera'
+        msg.id = self.id
+        msg.action = Marker.ADD
+        if self.type == 'face':
+            msg.type = Marker.SPHERE
+            msg.scale = Vector3(x=0.15, y=0.15, z=0.15)
+            msg.color = ColorRGBA(r=1.0, g=0.8, b=0.8, a=1.0)
+        elif self.type == 'april_tag':
+            msg.type=Marker.CUBE
+            msg.scale =Vector3(x=0.05, y=0.05, z=0.05)
+            msg.color = ColorRGBA(r=1.0, g=1.0, b=1.0, a=1.0)
+        else:
+            msg.type=Marker.CYLINDER
+            msg.scale =Vector3(x=0.05, y=0.05, z=0.05)
+            msg.color = ColorRGBA(r=1.0, g=0.0, b=0.0, a=1.0)
+        msg.lifetime = rospy.Duration(1.0)
+        msg.frame_locked = False
+        msg.text = '(%s, %s, %s)' % (self.id, self.label, self.type)
+        msg.pose.position = Point(x=self.pose[0], y=self.pose[1], z=self.pose[2])
         return msg
 
     def __repr__(self):
@@ -133,7 +158,8 @@ class OpenMVBridge:
         rospy.init_node('openmv_node')
         # COMPONENT INTERFACE
         # publish topics
-        self.detections_pub = rospy.Publisher('detection', DetectionArrayMsg, queue_size=5)
+        self.detections_pub = rospy.Publisher('detections', DetectionArrayMsg, queue_size=5)
+        self.markers_pub = rospy.Publisher('markers', MarkerArray, queue_size=5)
 
         # COMPONENT STATE
         self.ok = False
@@ -192,8 +218,8 @@ class OpenMVBridge:
         cx -= self.camera_matrix[0,2]
         cy -= self.camera_matrix[1,2]
         # calculate object position
-        x = z / self.camera_matrix[0,0] * cx
-        y = z / self.camera_matrix[1,1] * cy
+        x = - z / self.camera_matrix[0,0] * cx
+        y = - z / self.camera_matrix[1,1] * cy
         return np.array([x, y, z])
 
     def step(self):
@@ -239,17 +265,27 @@ class OpenMVBridge:
 
         rospy.logdebug("Filtered detections: %s" % detections)
 
+        stamp = rospy.Time.now()
         # create DetectionArray message
-        msg = DetectionArrayMsg()
-        msg.header.stamp = rospy.Time.now()
-        msg.header.frame_id = self.camera_frame
+        detections_msg = DetectionArrayMsg()
+        detections_msg.header.stamp = stamp
+        detections_msg.header.frame_id = self.camera_frame
         for detection in detections:
-            msg.detections.append(detection.to_msg())
-            msg.detections[-1].header = msg.header
+            detections_msg.detections.append(detection.to_msg())
+            detections_msg.detections[-1].header = detections_msg.header
+
+        # create MarkerArray
+        markers_msg = MarkerArray()
+        for detection in detections:
+            marker_msg = detection.to_visualizaton_msg()
+            marker_msg.header.stamp = stamp
+            marker_msg.header.frame_id = self.camera_frame
+            markers_msg.markers.append(marker_msg)
 
         # publish it
-        if len(msg.detections) > 0:
-            self.detections_pub.publish(msg)
+        if len(detections) > 0:
+            self.detections_pub.publish(detections_msg)
+            self.markers_pub.publish(markers_msg)
 
     def parse_openmv_frame(self, message_buffer):
         # parse OpenMV serial frame
