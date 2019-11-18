@@ -11,6 +11,7 @@ from cob_object_detection_msgs.msg import DetectionArray as DetectionArrayMsg, D
 from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import PoseStamped, Pose, Point, Vector3
 from std_msgs.msg import ColorRGBA
+from std_srvs.srv import Trigger, TriggerResponse
 
 class Detection:
     def __init__(self, id = None, label = None, type = None, pose = None):
@@ -161,6 +162,9 @@ class OpenMVBridge:
         self.detections_pub = rospy.Publisher('detections', DetectionArrayMsg, queue_size=5)
         self.markers_pub = rospy.Publisher('markers', MarkerArray, queue_size=5)
 
+        # services 
+        self.reconfigure_srv = rospy.Service('~reconfigure', Trigger, self.reconfigureCallback)
+
         # COMPONENT STATE
         self.ok = False
         self.openmv_port = None
@@ -175,9 +179,15 @@ class OpenMVBridge:
     def is_ok(self):
         return self.ok
 
+    def reconfigureCallback(self, req):
+        # TODO syncronization. It is dangerous not to use syncronization.
+        self.configure()
+        return TriggerResponse(success = self.ok)
+
     def configure(self):
         # reset state
         self.ok = False
+        self.openmv_port = None
         self.message_buffer = bytes()
         self.detection_filters = []
         self.detection_filter_params_cache = {}
@@ -445,16 +455,18 @@ class OpenMVBridge:
 
         return openmv_port
 
-
 # Main function
 def main():
     node = OpenMVBridge()
 
     while (True):
+        # check if node should be stopped
         if rospy.is_shutdown():
             break
+        # check if node properly configured
         if not node.is_ok():
-            break
+            rospy.sleep(rospy.Duration(1.0))
+            continue
 
         node.step()
 
