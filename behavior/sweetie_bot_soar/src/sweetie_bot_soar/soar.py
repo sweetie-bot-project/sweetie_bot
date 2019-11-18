@@ -91,69 +91,24 @@ class Soar:
         self.configured = True
         return True
 
-    def step(self):
-        """ Perform SOAR reasoning cycle. """
-        #check if soar is configured
-        if not self.configured:
-            rospy.logerr("SOAR step: attempt to execute unconfigured enviroment")
-            return
+    def _update_io_link(self):
+        # update input link
+        for m in self.input_modules:
+            m.update()
 
-        # check for error
-        if self.agent.HadError():
-            rospy.logerr("SOAR skip step: " + agent.GetLastErrorDescription())
-            return
-        if self.agent.GetRunState() in [sml.sml_RUNSTATE_HALTED, sml.sml_RUNSTATE_INTERRUPTED]:
-            rospy.logerr("SOAR agent halted or interrupted!")
-            return
+        # update output link
+        output_link_id = self.agent.GetOutputLink()
+        remove_list = []
+        for m in self.active_output_modules:
+            m.update(output_link_id)
+            if not m.isRunning():
+                remove_list.append(m)
+        self.active_output_modules.difference_update( remove_list )
 
-        rospy.loginfo("SOAR major step.")
+        # commit changes
+        self.agent.Commit()
 
-        #start new major step: wait until output
-        while True:
-            rospy.loginfo("SOAR minor step.")
-
-            # update input link
-            for m in self.input_modules:
-                m.update()
-
-            # update output link
-            output_link_id = self.agent.GetOutputLink()
-            remove_list = []
-            for m in self.active_output_modules:
-                m.update(output_link_id)
-                if not m.isRunning():
-                    remove_list.append(m)
-            self.active_output_modules.difference_update( remove_list )
-
-            # commit changes
-            self.agent.Commit()
-
-            # debug output
-            # print(self.agent.ExecuteCommandLine("print S1 --depth 4").strip())
-
-            # invoke SOAR for one step
-            self.agent.RunSelf(1)
-            if self.agent.HadError():
-                rospy.logerr("SOAR step: " + self.agent.GetLastErrorDescription())
-                return
-            if self.agent.GetRunState() in [sml.sml_RUNSTATE_HALTED, sml.sml_RUNSTATE_INTERRUPTED]:
-                rospy.logerr("SOAR agent halted or interrupted!")
-                return
-
-            # debug output
-            # print(self.agent.ExecuteCommandLine("print S1 --depth 4").strip())
-
-            # check for output
-            if self.agent.GetNumberCommands() == 0:
-                # new reason cycle
-                continue
-            else:
-                # minor step finished
-                break
-
-        # debug output
-        # print(self.agent.ExecuteCommandLine("print S1 --depth 4").strip())
-
+    def _process_output_commands(self):
         # process output link
         cmd_list = []
         for cmd_idx in range(self.agent.GetNumberCommands()):
@@ -176,8 +131,68 @@ class Soar:
             module.start(cmd_id)
             if module.isRunning():
                 self.active_output_modules.add(module)
-
+        # print executed commands list
         rospy.loginfo("SOAR commands: %s " % str(cmd_list))
+
+
+    def step_io_link_update(self):
+        """ Update input/output link. """
+        #check if soar is configured
+        if not self.configured:
+            rospy.logerr("SOAR step: attempt to execute unconfigured enviroment")
+            return False
+        # check if soar kernel is ok
+        if self.agent.HadError():
+            rospy.logerr("SOAR skip step: " + agent.GetLastErrorDescription())
+            return False
+        # update io-link
+        self._update_io_link()
+        # process command 
+        self._process_output_commands()
+
+
+    def step(self, minor_step = False):
+        """ Perform SOAR reasoning cycle. """
+        #check if soar is configured
+        if not self.configured:
+            rospy.logerr("SOAR step: attempt to execute unconfigured enviroment")
+            return False
+
+        #start new major step: wait until output
+        while True:
+            # check soar kernel
+            if self.agent.HadError():
+                rospy.logerr("SOAR skip step: " + agent.GetLastErrorDescription())
+                return False
+
+            # check agent state
+            if self.agent.GetRunState() in [sml.sml_RUNSTATE_HALTED, sml.sml_RUNSTATE_INTERRUPTED]:
+                rospy.logerr("SOAR agent halted or interrupted!")
+                return False
+
+            # update input link
+            self._update_io_link()
+
+            # invoke SOAR for one step
+            self.agent.RunSelf(1)
+
+            # check for output
+            if self.agent.GetNumberCommands() == 0:
+                # check if we should exit
+                if minor_step:
+                    return True
+                # new reason cycle
+                continue
+            else:
+                # minor step finished
+                break
+
+        # process output commands
+        self._process_output_commands()
+
+        # step finished succesfully
+        return True
+
 
 class SoarNode:
     def __init__(self, node_name):
@@ -188,6 +203,7 @@ class SoarNode:
         self.reload_prod_srv = rospy.Service('~reload_prod', Trigger, self.reloadProdCallback)
         self.set_operational_srv = rospy.Service('~set_operational', SetBool, self.setOperationalCallback)
         self.step_srv = rospy.Service('~step', Trigger, self.stepCallback)
+        self.step_srv = rospy.Service('~io_update', Trigger, self.ioUpdateCallback)
         # create SOAR envelopment
         self.soar = Soar()
         self.timer = None
@@ -204,35 +220,55 @@ class SoarNode:
         return TriggerResponse(success = False, message = 'Service is not implemented.')
 
     def setOperationalCallback(self, req):
-        if self.configured:
-            # start/stop timer
-            if req.data:
-                # timer must be running
-                if not self.timer:
-                    self.timer = rospy.Timer(rospy.Duration(self.period), lambda event: self.soar.step())
-            else:
-                # kill timer
-                if self.timer:
-                    self.timer.shutdown()
-                    self.timer = None
-            # success
-            return SetBoolResponse(success = True)
-        else:
-            # not configured
+        if not self.configured:
             return SetBoolResponse(success = False, message = 'Node is not configured.')
+        # start/stop timer
+        if req.data:
+            # timer must be running
+            if not self.timer:
+                self.timer = rospy.Timer(rospy.Duration(self.period), self.timerCallback)
+        else:
+            # kill timer
+            if self.timer:
+                self.timer.shutdown()
+                self.timer = None
+        # success
+        return SetBoolResponse(success = True)
+
+    def timerCallback(self, event):
+        success = self.soar.step()
+        if not success:
+            rospy.logerr('Soar cycle timer stopped due to error.')
+            self.timer.shutdown()
+            self.timer = None
 
     def stepCallback(self, req):
-        if self.configured:
-            self.soar.step()
+        if not self.configured:
+            return TriggerResponse(success = False, message = 'Node is not configured.')
+        if self.timer:
+            return TriggerResponse(success = False, message = 'Node is running.')
+        # invoke step
+        success = self.soar.step()
+        if success:
             return TriggerResponse(success = True)
         else:
+            return TriggerResponse(success = False, message = 'Errors during execution.')
+
+    def ioUpdateCallback(self, req):
+        if not self.configured:
             return TriggerResponse(success = False, message = 'Node is not configured.')
-        
+        if self.timer:
+            return TriggerResponse(success = False, message = 'Node is running.')
+        # update io-link
+        self.soar.step_io_link_update()
+        return TriggerResponse(success = True)
 
     def reconfigure(self):
         # reset configuration
         self.configured = False
-        self.timer = None
+        if self.timer:
+            self.timer.shutdown()
+            self.timer = None
         # read timer parameters
         self.period = rospy.get_param("~soar_period", 1.0)
         if not isinstance(self.period, (int,float)) or self.period < 0:
