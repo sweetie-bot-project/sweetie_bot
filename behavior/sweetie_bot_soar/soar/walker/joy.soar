@@ -8,5 +8,5 @@ sp {propose*joystik*control
 -->
 	(<s> ^operator <o> + =)
    	(<o> ^name flexbe ^drive <d>)
-   	(<o> ^behavior JoystickControl ^param <p>)
+   	(<o> ^behavior JoystickOverall ^param <p>)
 }
