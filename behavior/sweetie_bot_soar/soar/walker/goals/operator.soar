@@ -1,0 +1,28 @@
+# OPERAROR GOAL
+
+# Propese given operator.
+# 
+# goal example (executes move_fwd_40 two times): 
+#
+# (G1 ^name operator ^operator O1)
+#   (O1 ^name name ^drive ... ^type ...)
+#
+
+# propose operator execution
+sp {propose*goal*operator*execution
+	(state <s> ^mem.goal <g>)
+	(<g> ^name operator ^operator <o>)
+-->
+	(<s> ^operator <o> + =)
+}
+
+# goal is complete if corresponding operator is selected
+sp {apply*goal*operator*execution
+	(state <s> ^operator <op> ^mem <m>)
+	(<m> ^goal <g>)
+	(<g> ^name operator ^operator <op>)
+-->
+	(<m> ^goal <g> -)
+	(<m> ^completed-goal <g>)
+}
+
