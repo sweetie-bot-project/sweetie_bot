@@ -56,16 +56,27 @@ class FlexBe(OutputModule):
         return None
 
     def updateHook(self, cmd_id):
+        # check goal state
         status = self._action_client.get_state()
         if status in [ GoalStatus.ACTIVE, GoalStatus.PENDING ]:
+            # Goal is active. Check for abort request.
+            abort_id = cmd_id.FindByAttribute("abort", 0)
+            if abort_id:
+                if abort_id.GetValueAsString() == "hard":
+                    # cancel goal immediatelly
+                    self._action_client.cancel_goal()
             return None
+        # Goal is completed.
         if status == GoalStatus.SUCCEEDED:
             result = self._action_client.get_result()
             cmd_id.CreateStringWME("outcome", result.outcome)
             rospy.loginfo("flexbe output module: behavior outcome is %s.", result.outcome)
             return "completed"
-        if status in [ GoalStatus.RECALLED, GoalStatus.REJECTED, GoalStatus.PREEMPTED, GoalStatus.ABORTED ]:
-            rospy.loginfo("flexbe output module:  behavior execution has failed with goal status %s", status)
+        if status in [ GoalStatus.RECALLED, GoalStatus.PREEMPTED ]:
+            rospy.loginfo("flexbe output module:  behavior execution was preempted.", status)
+            return "preempted"
+        if status in [ GoalStatus.REJECTED, GoalStatus.ABORTED ]:
+            rospy.loginfo("flexbe output module:  behavior execution has failed with error.", status)
             return "error"
         else:
             rospy.loginfo("flexbe output module:  behavior execution has failed.", result.outcome)
