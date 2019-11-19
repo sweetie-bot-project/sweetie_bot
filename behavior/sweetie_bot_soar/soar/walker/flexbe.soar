@@ -24,7 +24,7 @@ sp {propose*flexbe*wait
 	(<cmd> -^status ^operator.drive <d>)
 -->
 	(<s> ^operator <o> + =)
-   	(<o> ^name flexbe-wait ^drive <d> ^type wait-execution)
+   	(<o> ^name flexbe-wait ^drive <d> ^type wait-resource)
 }
 
 sp {apply*flexbe*wait

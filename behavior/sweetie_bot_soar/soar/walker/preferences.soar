@@ -11,9 +11,17 @@ sp {elaborate*opertor*importance*drive*no-cognition
 }
 
 # elaborate importance from drive for execution-wait operators
-sp {elaborate*opertor*importance*drive*wait-execution
+sp {elaborate*opertor*importance*drive*wait-resource
 	(state <s> ^operator <o> +)
-	(<o> ^drive.importance <i> ^type wait-execution)
+	(<o> ^drive.importance <i> ^type wait-resource)
+-->
+	(<o> ^importance (+ <i> 0.2))
+}
+
+# elaborate importance from drive for next-action operators
+sp {elaborate*opertor*importance*drive*next-action
+	(state <s> ^operator <o> +)
+	(<o> ^drive.importance <i> ^type next-action)
 -->
 	(<o> ^importance (+ <i> 0.1))
 }

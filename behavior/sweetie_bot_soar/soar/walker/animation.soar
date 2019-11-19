@@ -1,15 +1,15 @@
-# ANIMATION SUBSTATE
+# ANIMATION SUBSTATE (NO GOAL)
 
 # propose animations: select animation with corresponding tag
 # its cognition action, because decision about animation is made beforehand
+#
 sp {animation-substate*propose*flexbe*compound-action
-	(state <s> ^name animation-substate ^mem.compound-action <action> ^drive <d> ^tag <t> ^io.output-link <ol>)
+	(state <s> ^name animation-substate ^superstate.operator <ss-op> ^mem.compound-action <action>)
+	(<ss-op> ^drive <d> -^goal ^tag <t>)
 	(<action> ^name <action_name> ^tag <t>)
-	(<ol> - ^flexbe)
 -->
 	(<s> ^operator <o> + =)
-	(<o> ^drive <d>)
-	(<o> ^name flexbe ^behavior ExecuteCompoundAction ^param <p> ^type cognition)
+	(<o> ^name flexbe ^behavior ExecuteCompoundAction ^param <p> ^type cognition ^drive <d>)
 	(<p> ^action_name <action_name>)
 }
 

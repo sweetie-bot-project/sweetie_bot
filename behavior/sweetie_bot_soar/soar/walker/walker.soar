@@ -18,9 +18,8 @@ sp {walker*propose*substate*animation*alone
 
 # invoke RandHeadMovements for random timeout
 sp {walker*propose*rand*head*movements
-	(state <s> ^name walker ^drive <d> ^io.output-link <ol>)
+	(state <s> ^name walker ^drive <d>)
 	(<d> ^name movement)
-	(<ol> - ^flexbe)
 -->
 	(<s> ^operator <o> = 1 +)
    	(<o> ^name flexbe ^drive <d>)

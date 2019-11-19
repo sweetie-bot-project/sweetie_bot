@@ -17,13 +17,5 @@ sp {elaborate*state*select-action
 -->
 	(<s> ^io <io>)
 	(<s> ^mem <mem>)
-	(<s> ^drive <d>)
 }
 
-# move opertor tag in substate
-sp {elaborate*state*tags
-	(state <s> ^superstate.operator <op>)
-	(<op> ^tag <tag> ^substate)
--->
-	(<s> ^tag <tag>)
-}
