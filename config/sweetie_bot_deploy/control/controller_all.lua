@@ -15,7 +15,7 @@ require "controller_stance"
 
 require "controller_pose"
 
-require "controller_look_at"
+require "controller_look_at_joints"
 
 require "controller_step_sequence"
 
