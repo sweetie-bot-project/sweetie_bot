@@ -73,10 +73,10 @@ int main(int argc, char **argv)
   try {
     static const std::shared_ptr<LimbPoseMarker> rm_arr[] = {
 
-      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_fl", 0.5*scale, resources.at(0), frames.at(0), limbs_normalized_z_level)),
-      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_fr", 0.5*scale, resources.at(1), frames.at(1), limbs_normalized_z_level)),
-      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_bl", 0.5*scale, resources.at(2), frames.at(2), limbs_normalized_z_level)),
-      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_br", 0.5*scale, resources.at(3), frames.at(3), limbs_normalized_z_level)),
+      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_fl", 0.5*scale, resources.at(0), frames.at(0), limbs_normalized_z_level, true)),
+      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_fr", 0.5*scale, resources.at(1), frames.at(1), limbs_normalized_z_level, true)),
+      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_bl", 0.5*scale, resources.at(2), frames.at(2), limbs_normalized_z_level, true)),
+      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_br", 0.5*scale, resources.at(3), frames.at(3), limbs_normalized_z_level, true)),
       std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeSphereBody, "head", 0.5*scale, resources.at(4), frames.at(4), head_normalized_z_level))
 
     };
