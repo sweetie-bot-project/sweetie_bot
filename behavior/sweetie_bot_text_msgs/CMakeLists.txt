@@ -7,6 +7,7 @@ project(sweetie_bot_text_msgs)
 find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
+  geometry_msgs
 )
 
 
@@ -16,6 +17,8 @@ add_message_files(
   TextCommand.msg
   CompoundActionElement.msg
   CompoundAction.msg
+  Detection.msg
+  DetectionArray.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -36,6 +39,7 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 ###################################
@@ -47,7 +51,7 @@ generate_messages(
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(CATKIN_DEPENDS message_runtime std_msgs)
+catkin_package(CATKIN_DEPENDS message_runtime std_msgs geometry_msgs)
 
 ###########
 ## Build ##
