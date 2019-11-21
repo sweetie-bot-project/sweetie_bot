@@ -34,7 +34,7 @@ sp {walker*propose*rand*head*movements
 sp {propose*walker*add*step-sequence*goal
 	(state <s> ^name walker ^drive <d> ^mem <m>)
 	(<d> ^name movement)
-	-(<m> ^goal.name step-sequence)
+	-(<s> ^goal.name step-sequence)
 	(<m> ^step-sequence <step-seq>)
 	(<step-seq> ^enter-point)
 -->
@@ -43,10 +43,10 @@ sp {propose*walker*add*step-sequence*goal
 }
 
 sp {apply*walker*add*step-sequence*goal
-	(state <s> ^operator <o> ^mem <m>)
+	(state <s> ^operator <o>)
 	(<o> ^name add-step-sequence-goal ^drive <d> ^step-sequence <step-seq>)
 -->
-   	(<m> ^goal <g>)
+	(<s> ^goal <g>)
 	(<g> ^name step-sequence ^drive <d> ^step-sequence <step-seq> ^state move ^num-preference 2)
 }
 

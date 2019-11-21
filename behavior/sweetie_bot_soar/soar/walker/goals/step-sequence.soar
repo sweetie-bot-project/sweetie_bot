@@ -13,7 +13,7 @@
 
 # propose execution (move)
 sp {propose*goal*step-sequence*execution
-	(state <s> ^mem.goal <g>)
+	(state <s> ^goal <g>)
 	(<g> ^name step-sequence ^step-sequence.name <step-seq-name> ^state move)
 -->
 	(<s> ^operator <o> + =)
@@ -35,7 +35,7 @@ sp {apply*flexbe*cmd*completed*hook*goal*step-sequence
 
 # propose (select-next)
 sp {propose*goal*step-sequence*select-next
-	(state <s> ^mem.goal <g>)
+	(state <s> ^goal <g>)
 	(<g> ^name step-sequence ^step-sequence.next <next-step-seq> ^state select-next-move)
 -->
 	(<s> ^operator <o> + =)
@@ -57,7 +57,7 @@ sp {apply*flexbe*step-sequence*select-next
 
 # propose (complete)
 sp {propose*goal*step-sequence*complete
-	(state <s> ^mem.goal <g>)
+	(state <s> ^goal <g>)
 	(<g> ^name step-sequence ^step-sequence <step-seq> ^state select-next-move)
 	(<step-seq> - ^next)
 -->
@@ -67,13 +67,13 @@ sp {propose*goal*step-sequence*complete
 
 # apply (complete)
 sp {apply*flexbe*step-sequence*complete
-	(state <s> ^operator <op> ^mem <m>)
+	(state <s> ^operator <op>)
    	(<op> ^name goal-step-sequence-complete ^goal <g>)
 	(<g> ^step-sequence <step-seq>)
 -->
 	(<g> ^state select-next-move -)
 	(<g> ^state completed)
-	(<m> ^goal <g> -)
-	(<m> ^completed-goal <g>)
+	(<s> ^goal <g> -)
+	(<s> ^completed-goal <g>)
 	(write |Goal completed: step-sequence. |)
 }

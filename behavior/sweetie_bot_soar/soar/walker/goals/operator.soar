@@ -10,7 +10,7 @@
 
 # propose operator execution
 sp {propose*goal*operator*execution
-	(state <s> ^mem.goal <g>)
+	(state <s> ^goal <g>)
 	(<g> ^name operator ^operator <o>)
 -->
 	(<s> ^operator <o> + =)
@@ -18,11 +18,11 @@ sp {propose*goal*operator*execution
 
 # goal is complete if corresponding operator is selected
 sp {apply*goal*operator*execution
-	(state <s> ^operator <op> ^mem <m>)
-	(<m> ^goal <g>)
+	(state <s> ^operator <op>)
+	(<s> ^goal <g>)
 	(<g> ^name operator ^operator <op>)
 -->
-	(<m> ^goal <g> -)
-	(<m> ^completed-goal <g>)
+	(<s> ^goal <g> -)
+	(<s> ^completed-goal <g>)
 }
 
