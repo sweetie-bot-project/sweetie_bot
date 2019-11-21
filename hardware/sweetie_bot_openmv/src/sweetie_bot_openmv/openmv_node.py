@@ -7,7 +7,7 @@ import json
 import numpy as np
 import rospy
 
-from cob_object_detection_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
+from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
 from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import PoseStamped, Pose, Point, Vector3
 from std_msgs.msg import ColorRGBA
@@ -43,8 +43,8 @@ class Detection:
         msg = DetectionMsg()
         msg.id = self.id
         msg.label = self.label if self.label else ''
-        msg.detector = self.type
-        msg.pose.pose.position = Point(x = self.pose[0], y = self.pose[1], z = self.pose[2])
+        msg.type = self.type
+        msg.pose.position = Point(x = self.pose[0], y = self.pose[1], z = self.pose[2])
         return msg
 
     def to_visualizaton_msg(self):
@@ -278,11 +278,11 @@ class OpenMVBridge:
         stamp = rospy.Time.now()
         # create DetectionArray message
         detections_msg = DetectionArrayMsg()
-        detections_msg.header.stamp = stamp
-        detections_msg.header.frame_id = self.camera_frame
         for detection in detections:
-            detections_msg.detections.append(detection.to_msg())
-            detections_msg.detections[-1].header = detections_msg.header
+            detection_msg = detection.to_msg()
+            detection_msg.header.frame_id = self.camera_frame
+            detection_msg.header.stamp = stamp
+            detections_msg.detections.append(detection_msg)
 
         # create MarkerArray
         markers_msg = MarkerArray()

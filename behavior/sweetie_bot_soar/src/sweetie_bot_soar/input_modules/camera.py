@@ -3,7 +3,7 @@ import input_module
 import rospy
 import tf
 
-from cob_object_detection_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
+from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
 
 class Camera:
     def __init__(self, agent, config):
@@ -35,7 +35,7 @@ class Camera:
         del_wme_map = self._detections_wme_map.copy()
         # iterate detected objects
         for detection_msg in self._detections_msg.detections:
-            key_tuple = (detection_msg.id, detection_msg.label, detection_msg.detector)
+            key_tuple = (detection_msg.id, detection_msg.label, detection_msg.type)
             # check if corrsponding wme exists
             wme_id = self._detections_wme_map.get(key_tuple)
             if wme_id:
@@ -49,7 +49,7 @@ class Camera:
                 # add attributes
                 wme_id.CreateIntWME("id", detection_msg.id)
                 wme_id.CreateStringWME("label", detection_msg.label)
-                wme_id.CreateStringWME("type", detection_msg.detector)
+                wme_id.CreateStringWME("type", detection_msg.type)
                 # register it in WMEs map
                 self._detections_wme_map[key_tuple] = wme_id
         # delete no longer visible objects

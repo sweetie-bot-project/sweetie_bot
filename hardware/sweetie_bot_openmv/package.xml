@@ -14,5 +14,5 @@
 
   <depend>rospy</depend>
   <depend>geometry_msgs</depend>
-  <depend>cob_object_detection_msgs</depend>
+  <depend>sweetie_bot_text_msgs</depend>
 </package>

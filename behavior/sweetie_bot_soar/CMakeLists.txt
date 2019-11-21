@@ -14,8 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   flexbe_msgs
   sweetie_bot_control_msgs
-  sweetie_bot_text_msgs
-  cob_object_detection_msgs 
   sweetie_bot_joystick
 )
 
