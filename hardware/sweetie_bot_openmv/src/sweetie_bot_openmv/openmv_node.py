@@ -293,8 +293,8 @@ class OpenMVBridge:
             markers_msg.markers.append(marker_msg)
 
         # publish it
+        self.detections_pub.publish(detections_msg)
         if len(detections) > 0:
-            self.detections_pub.publish(detections_msg)
             self.markers_pub.publish(markers_msg)
 
     def parse_openmv_frame(self, message_buffer):
