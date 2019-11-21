@@ -73,13 +73,13 @@ class FlexBe(OutputModule):
             rospy.loginfo("flexbe output module: behavior outcome is %s.", result.outcome)
             return "completed"
         if status in [ GoalStatus.RECALLED, GoalStatus.PREEMPTED ]:
-            rospy.loginfo("flexbe output module:  behavior execution was preempted.", status)
+            rospy.loginfo("flexbe output module:  behavior execution was preempted.")
             return "preempted"
         if status in [ GoalStatus.REJECTED, GoalStatus.ABORTED ]:
-            rospy.loginfo("flexbe output module:  behavior execution has failed with error.", status)
+            rospy.loginfo("flexbe output module:  behavior execution has failed with error.")
             return "error"
         else:
-            rospy.loginfo("flexbe output module:  behavior execution has failed.", result.outcome)
+            rospy.loginfo("flexbe output module:  behavior execution has failed: %s.", status)
             return "error"
         
 output_module.register("flexbe", FlexBe)
