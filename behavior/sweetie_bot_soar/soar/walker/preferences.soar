@@ -1,5 +1,12 @@
 # PREFERENCES 
 
+sp {elaborate*opertor*importance*cognition
+	(state <s> ^operator <o> +)
+	(<o> -^drive ^type cognition)
+-->
+	(<o> ^importance 100)
+}
+
 # DRIVE BASED PREFERENCES
 
 # elaborate importance from drive for default (execution) operators
