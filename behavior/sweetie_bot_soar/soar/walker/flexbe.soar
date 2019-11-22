@@ -12,6 +12,7 @@ sp {apply*operator*flexbe
 	(<cmd> ^name <bh>)
 	(<cmd> ^param (deep-copy <p>) )
 	(<cmd> ^operator (copy-one-level <op>))
+	(write |Execute FlexBe behavior | <bh> | |)
 }
 
 # WAIT BEHAVIOR

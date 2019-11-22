@@ -50,3 +50,15 @@ sp {apply*walker*add*step-sequence*goal
 	(<g> ^name step-sequence ^drive <d> ^step-sequence <step-seq> ^state move ^num-preference 2)
 }
 
+# JOYSTICK CONTROL
+
+sp {propose*joystik*control
+	(state <s> ^name walker)
+	(<s> ^io.input-link.joystick.pressed <key>)
+	(<s> ^drive <d>)
+	(<d> ^name obey)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name flexbe ^drive <d>)
+	(<o> ^behavior JoystickOverall ^param <p>)
+}
