@@ -4,7 +4,7 @@ import rospy, tf
 from flexbe_core import EventState, Logger
 from flexbe_core.proxy import ProxyPublisher, ProxySubscriberCached, ProxyTransformListener
 
-from cob_object_detection_msgs.msg import Detection, DetectionArray
+from sweetie_bot_text_msgs.msg import Detection, DetectionArray
 from geometry_msgs.msg import PoseStamped, Pose
 from std_msgs.msg import Header
 
@@ -100,7 +100,7 @@ class ObjectDetectionMonitor(EventState):
                 is_match = True
                 if self._label != '*' and detection.label != self._label:
                     is_match = False
-                if self._type != '*' and detection.detector != self._type:
+                if self._type != '*' and detection.type != self._type:
                     is_match = False
                 # register match
                 if is_match:
@@ -137,12 +137,10 @@ class ObjectDetectionMonitor(EventState):
             # publish 
             if self._pose_publisher:
                 # transform to frame_id
-                # add frame_id if it missing
-                match.pose.header = Header(frame_id = match.header.frame_id)
                 try:
                     # transform
-                    Logger.loginfo('transform')
-                    self._pose = self._tf_listener.transformPose(self._frame_id, match.pose)
+                    pose_stamped = PoseStamped(pose = match.pose, header = Header(frame_id = match.header.frame_id))
+                    self._pose = self._tf_listener.transformPose(self._frame_id, pose_stamped)
                 except tf.Exception as e:
                     Logger.logwarn('Unable to transform from %s to %s' % (match.pose.header.frame_id, self._frame_id))
                     return 'failure'
