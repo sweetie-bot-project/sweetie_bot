@@ -15,7 +15,8 @@
 	<arg name="run_flexbe_gui" default="false" doc="Start flexbe gui."/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
-	<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>
+	<machine name="sweetiebot" address="localhost" user="$(env USER)" default="true"/>
+	<!--<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>-->
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
@@ -36,7 +37,9 @@
 			<arg name="interactive" value="false" /> 
 		</include>
 		<!-- robot-specific ROS nodes -->
-		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch" />
+		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch">
+			<arg name="robot_ns" value="$(arg robot_ns)" /> 
+		</include>
 	</group>
 
 	<!-- robot nodes on host side -->
@@ -90,16 +93,18 @@
 
 		<!-- HMI: launch operator GUI -->
 
-		<!-- joystick (should be connected to host) -->
+		<!-- joystick (should connected to host) -->
 		<include file="$(find sweetie_bot_deploy)/highlevel/joy.launch">
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 		</include>
+
 		<!-- operator interface nodes: flexbe_app -->
 		<group if="$(eval run_flexbe and run_flexbe_gui)">
 			<include file="$(find sweetie_bot_deploy)/highlevel/flexbe_gui.launch" >
 				<arg name="flexbe_ns" value="$(arg robot_ns)/flexbe" />
 			</include>
 		</group>
+
 		<!-- rviz and markers -->
 		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 

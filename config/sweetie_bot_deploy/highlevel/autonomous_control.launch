@@ -36,7 +36,9 @@
 			<arg name="interactive" value="false" /> 
 		</include>
 		<!-- robot-specific ROS nodes -->
-		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch" />
+		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch">
+			<arg name="robot_ns" value="$(arg robot_ns)" /> 
+		</include>
 		<!-- voice  -->
 		<group ns="voice">
 			<!-- voice node  -->
@@ -60,11 +62,6 @@
 				<arg name="robot_ns" value="$(arg robot_ns)" />
 			</include>
 		</group>
-		<group if="$(eval host and robot)">
-			<include file="$(find sweetie_bot_deploy)/highlevel/joy.launch" >
-				<arg name="robot_ns" value="$(arg robot_ns)" />
-			</include>
-		</group>
 	</group>
 
 	<!-- robot nodes on host side -->
@@ -85,14 +82,13 @@
 			</node>
 		</group>
 
-
 		<!-- HMI: launch operator GUI -->
 
-		<group ns="$(arg robot_ns)/flexbe" if="$(arg run_flexbe)">
-			<!-- operator interface nodes: flexbe_app -->
-			<include file="$(find flexbe_app)/launch/flexbe_ocs.launch" />
-		</group>
-
+		<!-- joystick connected to the host -->
+		<include file="$(find sweetie_bot_deploy)/highlevel/joy.launch" >
+			<arg name="robot_ns" value="$(arg robot_ns)" />
+		</include>
+		<!-- rviz -->
 		<group>
 			<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
 				<arg name="robot_ns" value="$(arg robot_ns)" /> 
