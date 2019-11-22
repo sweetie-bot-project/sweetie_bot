@@ -184,7 +184,7 @@ class OpenMVBridge:
         self.configure()
         return TriggerResponse(success = self.ok)
 
-    def configure(self):
+    def configure(self, silent = False):
         # reset state
         self.ok = False
         self.openmv_port = None
@@ -213,10 +213,12 @@ class OpenMVBridge:
             # serial port configuration
             self.openmv_port = self.create_serial_connection()
         except EnvironmentError as e:
-            rospy.logerr('OpenMV node configuration failed: %s' % e)
+            if not silent:
+                rospy.logerr('OpenMV node configuration failed: %s' % e)
             return False
         except serial.serialutil.SerialException as e:
-            rospy.logerr('OpenMV node configuration failed: %s' % e)
+            if not silent:
+                rospy.logerr('OpenMV node configuration failed: %s' % e)
             return False
            
         # node is fully configured
@@ -465,7 +467,8 @@ def main():
             break
         # check if node properly configured
         if not node.is_ok():
-            rospy.sleep(rospy.Duration(1.0))
+            rospy.sleep(rospy.Duration(2.0))
+            node.configure(silent = True)
             continue
 
         node.step()
