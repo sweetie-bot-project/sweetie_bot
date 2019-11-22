@@ -2,7 +2,7 @@ soar:
     soar_period: 0.5
     autostart: false
     agent_package: "sweetie_bot_soar"
-    agent_file: "soar/walker.soar"
+    agent_file: "soar/talker.soar"
     input:
         rand:
             type: "rand"
@@ -13,7 +13,7 @@ soar:
             topic: "/hmi/joy_decoder/keys_pressed"
         camera:
             type: "camera"
-            timeout: 60
+            timeout: 15
             topic: "detections"
     output:
         nop: true
