@@ -20,6 +20,11 @@
 
 		<param type="text" name="type" default="*" label="type" hint="Sets the type" />
 
+		<param type="numeric" name="timeout" default="30" label="timeout" hint="If no objects detected for timeout second exit behavior.">
+			<min value="0" />
+			<max value="600" />
+		</param>
+
 	</params>
 
 

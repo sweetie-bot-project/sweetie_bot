@@ -33,6 +33,7 @@ class ExecuteLookAtSM(Behavior):
 		# parameters of this behavior
 		self.add_parameter('label', '*')
 		self.add_parameter('type', '*')
+		self.add_parameter('timeout', 30)
 
 		# references to used behaviors
 
@@ -54,11 +55,11 @@ class ExecuteLookAtSM(Behavior):
 		
 		# [/MANUAL_CREATE]
 
-		# x:30 y:353, x:130 y:353, x:230 y:353, x:330 y:353, x:668 y:305, x:548 y:337, x:418 y:344, x:793 y:299
+		# x:30 y:353, x:130 y:353, x:230 y:353, x:291 y:337, x:651 y:309, x:537 y:357, x:391 y:376, x:793 y:299
 		_sm_lookatcontainer_0 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
 										('finished', [('LookAtOperational', 'done')]),
 										('failed', [('LookAtOperational', 'failure')]),
-										('failed', [('ObjectMonitor', 'no_detections')]),
+										('finished', [('ObjectMonitor', 'no_detections')]),
 										('failed', [('ObjectMonitor', 'have_detections')]),
 										('failed', [('ObjectMonitor', 'detection_matches')]),
 										('failed', [('ObjectMonitor', 'failure')])
@@ -74,7 +75,7 @@ class ExecuteLookAtSM(Behavior):
 			# x:361 y:83
 			OperatableStateMachine.add('ObjectMonitor',
 										ObjectDetectionMonitor(detection_topic='detections', label=self.label, type=self.type, exit_states=['no_detections'], pose_topic='motion/controller/look_at/in_pose_ref', pose_frame_id='odom_combined', detection_period=30.0),
-										transitions={'no_detections': 'failed', 'have_detections': 'failed', 'detection_matches': 'failed', 'failure': 'failed'},
+										transitions={'no_detections': 'finished', 'have_detections': 'failed', 'detection_matches': 'failed', 'failure': 'failed'},
 										autonomy={'no_detections': Autonomy.Off, 'have_detections': Autonomy.Off, 'detection_matches': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'pose': 'pose'})
 
