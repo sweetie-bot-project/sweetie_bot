@@ -10,15 +10,15 @@ from std_msgs.msg import Header
 
 class ObjectDetectionMonitor(EventState):
     '''
-    Receive list of detected objects as cob_object_detection_msgs/DetectionArray messages and check if there is an object 
-    which matches given (label, type) pair. Based on present of this object classify situation in `no_detections` state, 
-    `have_detections` (there is objects but none of them matches give (label, type)),
-    `detection_matches` (desired object found). In the last case its pose bublished on given topic.
+    Receive list of detected objects as sweetie_bot_text_msgs/DetectionArray messages and check if there is an object 
+    which can be matches with given (label, type) pair. Based on presece of this object classify situation 
+    in `no_detections` state, `have_detections` (there are objects but none of them matches give (label, type)),
+    `detection_matches` (desired object found). In the last case its pose published on given topic.
     
     -- detection_topic                       string          DetectionArray message topic.
     -- label                                 string          Object label. Use '*' to match all labals.
     -- type                                  string          Object type. Use '*' to match all types.
-    -- detection_period                      float           Parameteres: detection_period (s), position_tolerance (m), orientation_tolerance (rad).
+    -- detection_period                      float           If nothing was detected during detection_period 'no_detections' outcome happens.
     -- exit_states                           string[]        Stop monitoring and return outcome if detected situation in this list.
     -- pose_topic                            string          Topic for publishing matched object pose (may be Empty).
     -- pose_frame_id                         string          Frame in which pose should be published.
@@ -33,7 +33,7 @@ class ObjectDetectionMonitor(EventState):
     '''
 
 
-    def __init__(self, detection_topic = 'detection', label = '*', type ='*', exit_states = ['no_detections'], pose_topic = '', pose_frame_id = 'odom_combined', detection_period = 1.0):
+    def __init__(self, detection_topic = 'detection', label = '*', type ='*', exit_states = ['no_detections'], pose_topic = '', pose_frame_id = 'odom_combined', detection_period = 15.0):
         super(ObjectDetectionMonitor, self).__init__(outcomes = ['no_detections', 'have_detections', 'detection_matches', 'failure'],
                                                                 output_keys = ['pose'])
 
