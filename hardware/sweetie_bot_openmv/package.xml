@@ -1,0 +1,18 @@
+<package format="2">
+  <name>sweetie_bot_openmv</name>
+  <version>0.0.1</version>
+  <description>
+    Simple SweetieBot CV based on the OpenMV camera.
+  </description>
+  <author>XDN</author>
+  <author>disRecord</author>
+  <maintainer email="xdnmail@gmail.com">XDN</maintainer>
+  <license>GPL</license>
+  <url></url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sweetie_bot_text_msgs</depend>
+</package>

@@ -1,0 +1,35 @@
+sp {propose*joy
+	(state <s> ^name test)
+	(<s> ^io.input-link.joystick.pressed <key>)
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name flexbe)
+   	(<o> ^behavior |Greeting|)
+}
+
+sp {apply*operator*flexbe
+	(state <s> ^operator <op> ^io.output-link <ol>)
+   	(<op> ^name flexbe ^behavior <bh>)
+	(<ol> - ^flexbe)
+-->
+	(<ol> ^flexbe <cmd>)
+	(<cmd> ^name <bh>)
+	(write |flexbe command|)
+}
+
+sp {propose*check*result*flexbe
+	(state <s> ^name test ^io.output-link.flexbe <cmd>)
+	(<cmd> ^status <st>)
+-->
+	(<s> ^operator <o> + > =)
+   	(<o> ^name check-result-flexbe)
+   	(<o> ^flexbe <cmd>)
+}
+
+sp {apply*check*result*flexbe
+	(state <s> ^operator <o> ^io.output-link <ol>)
+   	(<op> ^name check-result-flexbe ^flexbe <cmd>)
+-->
+	(<ol> ^flexbe <cmd> -)
+	(write |remove flexbe command|)
+}

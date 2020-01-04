@@ -1,0 +1,56 @@
+# FLEXBE ACTION SUPPPORT
+
+# START BEHAVIOR
+
+# apply flexbe operator 
+sp {apply*operator*flexbe
+	(state <s> ^operator <op> ^io.output-link <ol>)
+   	(<op> ^name flexbe ^behavior <bh> ^param <p> ^drive <d>)
+	(<ol> - ^flexbe)
+-->
+	(<ol> ^flexbe <cmd>)
+	(<cmd> ^name <bh>)
+	(<cmd> ^param (deep-copy <p>) )
+	(<cmd> ^operator (copy-one-level <op>))
+	(write |Execute FlexBe behavior | <bh> | |)
+}
+
+# WAIT BEHAVIOR
+
+# wait for flexbe behavior execution
+# prefere wait operator before any other execution operator with the same importance
+# but less then cognition opertaor
+sp {propose*flexbe*wait
+	(state <s> ^io.output-link.flexbe <cmd> ^io.input-link.clock.cycle <c>)
+	(<cmd> -^status ^operator.drive <d>)
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name flexbe-wait ^drive <d> ^type wait-resource)
+}
+
+sp {apply*flexbe*wait
+	(state <s> ^operator <op> ^io.output-link <ol>)
+   	(<op> ^name flexbe-wait)
+-->
+	(<ol> ^nop <cmd>)
+}
+
+# FINISH BEHAVIOR
+
+# when operator is finished remove cmd
+sp {propose*flexbe*cmd*completed*hook
+	(state <s> ^io.output-link.flexbe <cmd>)
+	(<cmd> ^status <status>)
+-->
+	(<s> ^operator <o> + > =)
+   	(<o> ^name flexbe-completed ^cmd <cmd>)
+}
+
+sp {apply*flexbe*cmd*completed*hook*remove*cmd
+	(state <s> ^operator <op> ^io.output-link <ol>)
+   	(<op> ^name flexbe-completed ^cmd <cmd>)
+-->
+	(<ol> ^flexbe <cmd> -)
+	(write |Flexbe: remove behavior cmd. |)
+}
+

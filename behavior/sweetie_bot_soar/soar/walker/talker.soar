@@ -1,0 +1,21 @@
+# OVERALL BEHAVIOR SELECTION
+
+
+sp {propose*walker*add*talk*goal
+	(state <s> ^name walker ^drive <d>)
+	(<d> ^name movement)
+	-(<s> ^goal)
+-->
+	(<s> ^operator <o> = +)
+	(<o> ^name add-talker-goal ^drive <d>)
+}
+
+sp {apply*walker*add*talk*goal
+	(state <s> ^operator <o> ^mem <m>)
+	(<o> ^name add-talker-goal ^drive <d>)
+-->
+	(<m> ^human <h>)
+   	(<s> ^goal <g>)
+	(<g> ^name conversation ^drive <d> ^conversation-name general ^enter-topic greeting ^human <h>)
+}
+

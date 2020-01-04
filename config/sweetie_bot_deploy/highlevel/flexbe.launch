@@ -45,13 +45,9 @@
 	<node ns="$(arg flexbe_ns)" name="action_server" pkg="flexbe_widget" type="be_action_server" />
 
 	<!-- launch user interface -->
-	<group ns="$(arg flexbe_ns)" if="$(arg gui)">
-		<!-- operator interface nodes: flexbe_app -->
-		<include file="$(find flexbe_app)/launch/flexbe_ocs.launch" />
-		<!-- old operator interface nodes: launch flexbe_widget in browser -->
-		<!-- <include file="$(find flexbe_widget)/launch/behavior_ocs.launch" >
-			<arg name="ns" value="$(arg robot_ns)" />
-			<arg name="behaviors_package" value="flexbe_behaviors" />
-		</include> -->
+	<group if="$(arg gui)">
+		<include file="$(find sweetie_bot_deploy)/highlevel/flexbe_gui.launch" >
+			<arg name="flexbe_ns" value="$(arg flexbe_ns)" />
+		</include>
 	</group>
 </launch>

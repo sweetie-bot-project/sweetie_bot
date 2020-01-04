@@ -1,0 +1,19 @@
+# agent initialization
+source initialization.soar
+# common elaboration rules
+source preferences.soar
+source elaborations.soar
+# cyclic o-support actions
+source cycle.soar
+# goal subsystem
+pushd goals
+source goals_source.soar
+popd
+# low lever actions
+source flexbe.soar
+# high level actions
+source animation.soar
+source joy.soar
+source talker.soar
+source genenral-talk.soar
+

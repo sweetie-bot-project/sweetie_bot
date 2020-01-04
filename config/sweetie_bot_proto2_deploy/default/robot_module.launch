@@ -1,6 +1,7 @@
 <!-- MODULE: init robot-specific nodes and ROS services. -->
 <!-- run_real and robot launch parameters are always assumed. -->
 <launch>
+	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
 	<!-- run eyes on fb device -->
 	<node machine="sweetiebot" name="eye_left"  pkg="sweetie_bot_eyes" type="eye" args="-l -platform linuxfb:fb=/dev/fb0"></node>
 	<node machine="sweetiebot" name="eye_rigth" pkg="sweetie_bot_eyes" type="eye" args="-r -platform linuxfb:fb=/dev/fb1"></node>

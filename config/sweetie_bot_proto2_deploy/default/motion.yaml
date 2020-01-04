@@ -16,6 +16,7 @@ kinematics_inv:
     timeout_pos: 0.003
     eps_vel: 0.01
     zero_vel_at_singularity: true
+    max_joint_velocity: 18.7 # 60 grad per discretization period
 kinematics_fwd:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]

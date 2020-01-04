@@ -1,0 +1,4 @@
+source common.soar
+source step-sequence.soar
+source operator.soar
+source animation.soar

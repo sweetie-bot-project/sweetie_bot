@@ -1,0 +1,30 @@
+<!-- MODULE: Load default params to run joint space controllers -->
+<launch>
+    <!-- robot urdf model-->
+	<param name="robot_description" textfile="$(find sweetie_bot_proto3_description)/urdf/sweetie_bot_proto3_description.urdf"></param>
+	<param name="robot_description_dynamics" textfile="$(find sweetie_bot_proto3_description)/urdf/sweetie_bot_proto3_description_dynamics.urdf"></param>
+    <!-- components' configuration-->
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto3_deploy)/default/motion.yaml" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto3_deploy)/rpi4/herkulex_feedback.yaml" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto3_deploy)/default/controller.yaml" ></rosparam> 
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto3_deploy)/default/reporting.yaml" ></rosparam> 
+    <!-- trajectories -->
+	<node name="store" pkg="sweetie_bot_proto3_deploy" type="store-joint-trajectories" args="load"></node>
+	<node name="store2" pkg="sweetie_bot_deploy" type="store" args="load FollowJointTrajectory joint_trajectory $(find sweetie_bot_proto3_deploy)/joint_trajectories"></node>
+	<node name="store3" pkg="sweetie_bot_proto3_deploy" type="store-msgs" args="load"></node>
+	<node name="store4" pkg="sweetie_bot_deploy" type="store" args="load FollowJointTrajectory saved_msgs/joint_trajectory $(find sweetie_bot_proto3_deploy)/joint_trajectories"></node>
+    <!-- OROCOS cpf file configuration: replace not valid charcters with "_"  -->
+	<param name="conf_file/logger_log4cpp" textfile="$(find sweetie_bot_proto3_deploy)/default/logger.log4cpp" ></param>
+	<param name="conf_file/kinematic_chains_cpf" textfile="$(find sweetie_bot_proto3_deploy)/default/kinematic_chains.cpf" ></param>
+	<param name="conf_file/kinematics_inv_joint_limits_cpf" textfile="$(find sweetie_bot_proto3_deploy)/default/kinematics_inv_joint_limits.cpf" ></param>
+	<!-- param name="conf_file/herkulex_servos_all_cpf" textfile="$(find sweetie_bot_proto3_deploy)/rpi4/herkulex_servos_all.cpf" ></param -->
+	<param name="conf_file/herkulex_servos_head_cpf" textfile="$(find sweetie_bot_proto3_deploy)/rpi4/herkulex_servos_head.cpf" ></param>
+	<param name="conf_file/herkulex_servos_leg12_cpf" textfile="$(find sweetie_bot_proto3_deploy)/rpi4/herkulex_servos_leg12.cpf" ></param>
+	<param name="conf_file/herkulex_servos_leg34_cpf" textfile="$(find sweetie_bot_proto3_deploy)/rpi4/herkulex_servos_leg34.cpf" ></param>
+	<!-- other configuraton -->
+	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/hardware.yaml" ></rosparam>
+	<rosparam command="load" ns="hmi" file="$(find sweetie_bot_proto3_deploy)/default/hmi.yaml" ></rosparam> 
+	<rosparam command="load" ns="voice" file="$(find sweetie_bot_proto3_deploy)/default/voice.yaml" ></rosparam> 
+	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/soar.yaml" ></rosparam>
+	<param name="conf_file/joystick_config_yaml" textfile="$(find sweetie_bot_proto3_deploy)/default/joystick_config.yaml" ></param>
+</launch>

@@ -1,0 +1,23 @@
+soar:
+    soar_period: 0.5
+    autostart: false
+    agent_package: "sweetie_bot_soar"
+    agent_file: "soar/walker.soar"
+    input:
+        rand:
+            type: "rand"
+        clock:
+            type: "clock"
+        joystick:
+            type: "joystick"
+            topic: "/hmi/joy_decoder/keys_pressed"
+        camera:
+            type: "camera"
+            timeout: 60
+            topic: "detections"
+    output:
+        nop: true
+        textcmd: 
+            topic: "control"
+        flexbe:
+            action_ns: "flexbe/flexbe/execute_behavior"

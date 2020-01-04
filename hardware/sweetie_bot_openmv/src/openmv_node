@@ -1,0 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from sweetie_bot_openmv.openmv_node import main
+main()

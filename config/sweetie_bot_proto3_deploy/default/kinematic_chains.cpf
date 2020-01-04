@@ -87,7 +87,7 @@
 		</simple>
 		<simple name="last_link" type="string">
 			<description>Last  chain element.</description>
-			<value>head_link4</value>
+			<value>head_base</value>
 		</simple>
 	</struct>
 	<struct name="nose" type="PropertyBag">
