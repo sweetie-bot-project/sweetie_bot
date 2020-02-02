@@ -15,5 +15,5 @@ source flexbe.soar
 source animation.soar
 source joy.soar
 source talker.soar
-source genenral-talk.soar
+source general-talk.soar
 
