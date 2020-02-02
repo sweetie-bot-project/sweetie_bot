@@ -77,12 +77,17 @@ assert(aggregator_real:start(), "ERROR: Unable to start aggregator_real.")
 -- data flow: herkulex_sched -> aggregator_real
 for name, group in pairs(herkulex) do
 	depl:connect("herkulex/"..name.."/sched.out_joints", "aggregator_real.in_joints", rtt.Variable("ConnPolicy"))
+	depl:stream("herkulex/"..name.."/sched.out_states", ros:topic("~herkulex/joint_states"))
+        depl:stream("herkulex/"..name.."/array.out_states", ros:topic("~herkulex/servo_states"))
+        array = depl:getPeer("herkulex/"..name.."/array")
+        array:setPeriod(0.057)
 end
 
---- start herkulex scheduler
+--- start herkulex scheduler and array
 for name, group in pairs(herkulex) do
 	if group.array:isConfigured() then
 		group.sched:start()
+		group.array:start()
 		print("herkulex."..name..".sched is started!")
 	else
 		print("WARNING: herkulex."..name..".array is not configured. herkulex."..name..".sched is not started.")
