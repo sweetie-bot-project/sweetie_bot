@@ -72,11 +72,12 @@ bool StancePoseMarker::setOperational(bool is_operational)
 		// form goal message
 		Goal goal;
 		goal.operational = true;
-    for (auto it=resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it) {
-      auto &limb_marker = *it;
-      if (limb_marker->getState() == LimbPoseMarker::LimbState::SUPPORT && limb_marker->isControlled()) {
-        goal.resources.push_back((*it)->getResourceName());
-      }
+    int counter = 0;
+    for ( auto it = resources_entry_map.begin(); it != resources_entry_map.end(); ++it, ++counter ) {
+      MenuHandler::CheckState check;
+      menu_handler.getCheckState( it->first, check );
+      if (check == MenuHandler::UNCHECKED) goal.resources.push_back(it->second);
+      if (counter >= 3) break; // We operate only on four first resources
     }
 
 		// send goal to server
@@ -173,49 +174,11 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
 				}
       }
 			else {
-				// check if user toggled resource control
-				auto it_found_control = resources_control_entry_map.find(feedback->menu_entry_id);
-				if (it_found_control != resources_control_entry_map.end()) {
+				// check if user toggled resource
+				auto it_found = resources_entry_map.find(feedback->menu_entry_id);
+				if (it_found != resources_entry_map.end()) {
           // calculate resource id
-          int resource_id = std::distance(resources_control_entry_map.begin(), it_found_control);
-					// toggle option
-					MenuHandler::CheckState check;
-					menu_handler.getCheckState(feedback->menu_entry_id, check);
-					switch (check) {
-						case MenuHandler::CHECKED:
-              if (resource_id < resource_markers.size()) {
-                std::shared_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
-                res_marker->setControlState(false);
-                this->setOperational(false);
-                if (resource_id >= 4) {
-                  // for all limbs exept legs we control markers visibility by controlled limb state
-                  res_marker->changeVisibility(false); // hide bounded limb marker
-                }
-                rebuildMenu();
-              }
-							menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
-							break;
-						case MenuHandler::UNCHECKED:
-              if (resource_id < resource_markers.size()) {
-                std::shared_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
-                res_marker->setControlState(true);
-                this->setOperational(false);
-                if (resource_id >= 4) {
-                  // for all limbs we control markers visibility by controlled limb state
-                  res_marker->changeVisibility(true); // show bounded limb marker
-                  res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
-                }
-                rebuildMenu();
-              }
-              menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
-							break;
-					}
-				}
-        // check if user toggled resource state
-				auto it_found_state = resources_state_entry_map.find(feedback->menu_entry_id);
-				if (it_found_state != resources_state_entry_map.end()) {
-          // calculate resource id
-          int resource_id = std::distance(resources_state_entry_map.begin(), it_found_state);
+          int resource_id = std::distance(resources_entry_map.begin(), it_found);
 					// toggle option
 					MenuHandler::CheckState check;
 					menu_handler.getCheckState(feedback->menu_entry_id, check);
@@ -224,7 +187,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
               if (resource_id < resource_markers.size()) {
                 std::shared_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
                 res_marker->changeVisibility(false); // hide bounded limb marker
-                res_marker->setState(LimbPoseMarker::LimbState::SUPPORT);
+                res_marker->setOperational(false);
                 this->setOperational(false);
                 rebuildMenu();
               }
@@ -235,7 +198,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
                 std::shared_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
                 res_marker->changeVisibility(true); // show bounded limb marker
                 res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
-                res_marker->setState(LimbPoseMarker::LimbState::FREE);
+                res_marker->setOperational(true);
                 this->setOperational(false);
                 rebuildMenu();
               }
@@ -307,37 +270,24 @@ void StancePoseMarker::makeMenu()
   int marker_idx = 0;
   for (auto it=resource_markers.begin(); it != resource_markers.end(); ++it, ++marker_idx) {
     MenuHandler::EntryHandle handle;
-    auto limb_marker_ptr = *it;
-
-    std::string control_marker_msg = "(CONTROLLED)";
-    if (limb_marker_ptr->isControlled()) {
-      control_marker_msg = "(CONTROLLED)";
+    std::string state_msg = "(SUPPORT)";
+    auto marker_ptr = *it;
+    if (marker_idx < 4) {
+      if (marker_ptr->isOperational()) {
+        state_msg = "(FREE)";
+      } else {
+        state_msg = "(SUPPORT)";
+      }
     } else {
-      control_marker_msg = "(UNCONTROLLED)";
+      state_msg = "";
     }
-    handle = menu_handler.insert( "  " + limb_marker_ptr->getResourceName() + " " + control_marker_msg, processFeedback);
-    if (limb_marker_ptr->isControlled()) {
+    handle = menu_handler.insert( "  " + marker_ptr->getResourceName() + " " + state_msg, processFeedback);
+    if (marker_ptr->isOperational()) {
       menu_handler.setCheckState(handle, MenuHandler::CHECKED);
     } else {
       menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
     }
-		resources_control_entry_map.emplace(handle, limb_marker_ptr->getResourceName());
-
-    if (marker_idx < 4) {
-      std::string resource_state_msg = "SUPPORT";
-      if (limb_marker_ptr->getState() == LimbPoseMarker::LimbState::FREE) {
-        resource_state_msg = "FREE";
-      } else {
-        resource_state_msg = "SUPPORT";
-      }
-      handle = menu_handler.insert( " -- limb state: " + resource_state_msg, processFeedback);
-      if (limb_marker_ptr->getState() == LimbPoseMarker::LimbState::FREE) {
-        menu_handler.setCheckState(handle, MenuHandler::CHECKED);
-      } else {
-        menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
-      }
-      resources_state_entry_map.emplace(handle, limb_marker_ptr->getResourceName());
-    }
+		resources_entry_map.emplace(handle, marker_ptr->getResourceName());
 	}
 	normalize_pose_entry = menu_handler.insert( "Move all to home", boost::bind( &StancePoseMarker::processMoveAllToHome, this, _1 ));
 	normalize_pose_entry = menu_handler.insert( "Normalize legs", boost::bind( &StancePoseMarker::processNormalizeLegs, this, _1 ));

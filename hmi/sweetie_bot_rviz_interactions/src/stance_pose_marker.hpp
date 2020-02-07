@@ -79,8 +79,7 @@ private:
   // COMPONENT STATE
   // menu index
   MenuHandler::EntryHandle set_operational_entry;
-  std::map<MenuHandler::EntryHandle, std::string> resources_state_entry_map;
-  std::map<MenuHandler::EntryHandle, std::string> resources_control_entry_map;
+  std::map<MenuHandler::EntryHandle, std::string> resources_entry_map;
   MenuHandler::EntryHandle publish_pose_entry;
   MenuHandler::EntryHandle move_all_to_home_etry;
   MenuHandler::EntryHandle normalize_legs;

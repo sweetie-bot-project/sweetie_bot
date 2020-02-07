@@ -12,13 +12,10 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
                                    double scale,
                                    const std::string& resource_name,
                                    const std::string& marker_home_frame,
-                                   double normalized_z_level,
-                                   bool is_support
+                                   double normalized_z_level
                                   )
     : PoseMarker(server, name, scale, marker_home_frame, normalized_z_level),
       resource_name(resource_name),
-      limb_state(is_support ? LimbState::SUPPORT : LimbState::FREE),
-      is_controlled(is_support),
       pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
       action_client( new ActionClient("limb_set_operational_action", false) )
 {
@@ -61,28 +58,6 @@ void LimbPoseMarker::actionActiveCallback()
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::CHECKED);
 	menu_handler.reApply(*server);
 	server->applyChanges();
-}
-
-void LimbPoseMarker::setControlState(bool is_controlled) {
-  if (is_controlled) {
-    if (limb_state == LimbState::FREE) setOperational(true);
-  } else {
-    setOperational(false);
-  }
-  this->is_controlled = is_controlled;
-}
-
-void LimbPoseMarker::setState(LimbState state) {
-  switch (state) {
-  case LimbState::FREE:
-    limb_state = LimbState::FREE;
-    if (is_controlled) this->setOperational(true);
-    break;
-  case LimbState::SUPPORT:
-    limb_state = LimbState::SUPPORT;
-    if (is_controlled) this->setOperational(false);
-    break;
-  }
 }
 
 bool LimbPoseMarker::setOperational(bool is_operational)
@@ -147,15 +122,13 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
 					<< "\nframe: " << feedback->header.frame_id
 					<< " time: " << feedback->header.stamp.sec << "sec, "
 					<< feedback->header.stamp.nsec << " nsec" );
-      if (is_controlled) {
-        if (publish_pose && is_operational) {
-          geometry_msgs::PoseStamped pose_stamped;
+			if (publish_pose && is_operational) {
+				geometry_msgs::PoseStamped pose_stamped;
 
-          pose_stamped.header = feedback->header;
-          pose_stamped.pose = feedback->pose;
-          pose_pub.publish(pose_stamped);
-        }
-      }
+				pose_stamped.header = feedback->header;
+				pose_stamped.pose = feedback->pose;
+				pose_pub.publish(pose_stamped);
+			}
 			break;
 
 		case visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT:
@@ -171,10 +144,10 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
 						moveToFrame(marker_home_frame);
 					}
           // and only after make it operational
-					setState(LimbState::FREE);
+					setOperational(true);
 				}
 				else {
-					setState(LimbState::SUPPORT);
+					setOperational(false);
 				}
 			}
 			// check user toggled publish pose meny entry
@@ -190,7 +163,7 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
 					case MenuHandler::UNCHECKED:
 						menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
 						publish_pose = true;
-            if (is_operational && is_controlled) {
+            if (is_operational) {
               // publish current pose
               geometry_msgs::PoseStamped pose_stamped;
               pose_stamped.header = feedback->header;
@@ -210,7 +183,7 @@ void LimbPoseMarker::makeMenu()
 {
   MenuHandler::FeedbackCallback processFeedback = boost::bind( &LimbPoseMarker::processFeedback, this, _1 );
 
-	//set_operational_entry = menu_handler.insert( "OPERATIONAL", processFeedback);
+	set_operational_entry = menu_handler.insert( "OPERATIONAL", processFeedback);
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
 	publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback);
 	menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
