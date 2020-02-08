@@ -25,23 +25,39 @@ namespace sweetie_bot {
 namespace hmi {
 
 DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                                     const std::string& name,
-                                     double scale,
-                                     const std::vector<std::string>& gait_type_options,
-                                     const std::vector<unsigned>& n_steps_options,
-                                     double duration,
-                                     double nominal_height
+                                     ros::NodeHandle node_handle
                                     )
-  : server(server),
-    name(name),
-    scale(scale),
-    gait_type(gait_type_options[0]), // default value for gait_type
-    n_steps(4), // default value for n_steps
-    duration(duration),
-    nominal_height(nominal_height),
-    action_client( new ActionClient("move_base_action", false) ),
-    trajectory_name("default_trajectory")
+  : action_client( new ActionClient("move_base_action", false) ),
+    name(""),
+    scale(1.0),
+    gait_type("walk_overlap"),
+    n_steps(4),
+    duration(4.0),
+    nominal_height(0.1825),
+    trajectory_name("recorded_trajectory"),
+    server(server)
 {
+  std::vector<std::string> gait_type_options;
+  std::vector<int> _n_steps_options;
+  std::vector<std::string> ee_names;
+
+  node_handle.getParam("name", name);
+  node_handle.getParam("scale", scale);
+  node_handle.getParam("gait_type_options", gait_type_options);
+
+  node_handle.getParam("n_steps_options", _n_steps_options);
+  std::vector<unsigned> n_steps_options(_n_steps_options.begin(), _n_steps_options.end());
+
+  node_handle.getParam("duration", duration);
+  node_handle.getParam("nominal_height", nominal_height);
+	node_handle.getParam("ee_names", ee_names);
+
+  gait_type = gait_type_options[0]; // default value for gait_type
+  n_steps = 4; // default value for n_steps
+
+  setEndEffectorTargets(ee_names);
+
+
   makeMenu(gait_type_options, n_steps_options);
   makeInteractiveMarker();
 

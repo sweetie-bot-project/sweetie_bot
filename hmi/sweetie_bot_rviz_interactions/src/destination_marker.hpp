@@ -21,17 +21,12 @@ public:
 
 public:
   DestinationMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                    const std::string& name,
-                    double scale = 1.0,
-                    const std::vector<std::string>& gait_type_options = { "walk_overlap", "walk", "trot" },
-                    const std::vector<unsigned>& n_steps_options = { 2, 3, 4, 5 },
-                    double duration = 4.0,
-                    double nominal_height = 0.1825
-                   );
-
-  void setEndEffectorTargets(const std::vector<std::string>& ee_names = { "leg1", "leg2", "leg3", "leg4" }, unsigned frame_type = sweetie_bot_clop_generator::EndEffectorGoal::NOMINAL_POSE);
+                    ros::NodeHandle node_handle
+                    );
 
 private:
+  void setEndEffectorTargets(const std::vector<std::string>& ee_names, unsigned frame_type = sweetie_bot_clop_generator::EndEffectorGoal::NOMINAL_POSE);
+
   void actionDoneCallback(const GoalState& state, const ResultConstPtr& result);
   void actionActiveCallback();
 
@@ -46,7 +41,7 @@ private:
   visualization_msgs::Marker makeSphereMarker();
   visualization_msgs::Marker makeConeMarker();
   void makeMenu(const std::vector<std::string>& gait_type_options, const std::vector<unsigned>& n_steps_options);
-  void rebuildMenu() {
+  inline void rebuildMenu() {
     menu_handler = MenuHandler(base_menu_handler); // Restore base menu handler without last entry
 
     menu_handler.apply(*server, name);

@@ -4,18 +4,33 @@ dynamics_visualizer:
     robot_model_namespace: "/motion"
     display_twist: true
 pose_marker:
+    name: "Stance Pose marker"
     scale: 1.0
-    # IMPORTANT! Order, in which resources specifies, must
-    #            correspond to the order, in which frames represents resources, 
-    #            for proper conversion of latter to former
-    # Also, only first four resources counts as legs
-    resources: [ leg1, leg2, leg3, leg4, head ]
-    frames: [ bone15, bone25, bone35, bone45, bone55, base_link ]
-    stance_home_frame: base_link
-    stance_normalized_z_level: 0.2335
-    limbs_normalized_z_level: 0.03
-    head_normalized_z_level: 0.3287
+    normalized_z_level: 0.2335
+    frame: base_link
+    inner_markers:
+      legs:
+        list:
+          leg1: { resource: leg1, frame: bone15 }
+          leg2: { resource: leg2, frame: bone25 }
+          leg3: { resource: leg3, frame: bone35 }
+          leg4: { resource: leg4, frame: bone45 }
+        normalized_z_level: 0.03
+        scale: 0.5
+      limbs:
+        # You can add limb marker by adding another entry in this list.
+        # Markers names must be different!!!
+        nose:
+          name: "Nose Pose marker"
+          is_sphere: true
+          scale: 0.5
+          normalized_z_level: 0.3287
+          frame: bone55
+          resource: head
+          controller: limb_pose
+          activator: limb_set_operational_action
 destination_marker:
+    name: "Destination Marker"
     scale: 1.1
     gait_type_options: [ walk_overlap, walk, trot ]
     n_steps_options: [ 2, 3, 4, 5 ]

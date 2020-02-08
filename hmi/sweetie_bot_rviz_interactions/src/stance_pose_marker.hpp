@@ -21,10 +21,7 @@ public:
 public:
   StancePoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
                    visualization_msgs::Marker (*makeMarkerBody)(double scale),
-                   const std::string& name,
-                   double scale = 1.0,
-                   const std::string& marker_home_frame = "base_link",
-                   double normalized_z_level = 0.0
+                   ros::NodeHandle node_handle
                   );
   ~StancePoseMarker();
 
@@ -37,7 +34,7 @@ public:
   void processMoveAllToHome( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback );
 
   void makeMenu();
-  void rebuildMenu() {
+  inline void rebuildMenu() {
     menu_handler = MenuHandler(); // Reset menu handler
 
     menu_handler.apply(*server, name);
@@ -58,7 +55,7 @@ public:
     server->applyChanges();
  }
 
-  void setResourceMarkers(std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers) { this->resource_markers = resource_markers; rebuildMenu(); }
+  void setResourceMarkers(std::vector< std::unique_ptr<LimbPoseMarker> >& resource_markers) { this->resource_markers = std::move(resource_markers); rebuildMenu(); }
 
 private:
 
@@ -72,7 +69,7 @@ private:
 
   // PARAMETERS
   // resource markers vector
-  std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers;
+  std::vector< std::unique_ptr<LimbPoseMarker> > resource_markers;
   // publish_pose flag
   bool publish_pose = true;
 

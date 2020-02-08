@@ -12,28 +12,13 @@ int main(int argc, char **argv) {
 
   QApplication a(argc, argv);
 
-  double scale;
-  std::vector<std::string> gait_type_options;
-  std::vector<int> _n_steps_options;
-  double duration;
-  double nominal_height;
-  std::vector<std::string> ee_names;
-
-	ros::param::get("~scale", scale);
-	ros::param::get("~gait_type_options", gait_type_options);
-	ros::param::get("~n_steps_options", _n_steps_options);
-	ros::param::get("~duration", duration);
-	ros::param::get("~nominal_height", nominal_height);
-	ros::param::get("~ee_names", ee_names);
+  ros::NodeHandle dest_marker_nh("~");
 
   // marker server
 	server.reset( new InteractiveMarkerServer(ros::this_node::getNamespace(),"",false) );
 	ros::Duration(0.1).sleep();
 
-  std::vector<unsigned> n_steps_options(_n_steps_options.begin(), _n_steps_options.end());
-
-  DestinationMarker destMarker(server, "destination_marker", scale, gait_type_options, n_steps_options, duration, nominal_height);
-  destMarker.setEndEffectorTargets(ee_names);
+  DestinationMarker destMarker(server, dest_marker_nh);
 
   ROS_INFO("destination_marker has been started!");
 

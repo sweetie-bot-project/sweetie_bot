@@ -25,11 +25,27 @@ public:
             )
     : server(server),
       tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
-      name(name + "_pose_marker"),
+      name(name),
       scale(scale),
       marker_home_frame(marker_home_frame),
       normalized_z_level(normalized_z_level)
   {
+  }
+
+  PoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
+             ros::NodeHandle node_handle
+             )
+    : server(server),
+      tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
+      name(""),
+      scale(1.0),
+      marker_home_frame(""),
+      normalized_z_level(0.0)
+  {
+    node_handle.getParam("name", name);
+    node_handle.getParam("scale", scale);
+    node_handle.getParam("frame", marker_home_frame);
+    node_handle.getParam("normalized_z_level", normalized_z_level);
   }
 
   virtual ~PoseMarker() = 0;

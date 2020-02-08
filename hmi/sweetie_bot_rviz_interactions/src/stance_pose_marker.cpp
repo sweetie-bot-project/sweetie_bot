@@ -8,14 +8,11 @@ namespace hmi {
 
 StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
                                    visualization_msgs::Marker (*makeMarkerBody)(const double scale),
-                                   const std::string& name,
-                                   double scale,
-                                   const std::string& marker_home_frame,
-                                   double normalized_z_level
+                                   ros::NodeHandle node_handle
                                   )
-  : PoseMarker(server, name, scale, marker_home_frame, normalized_z_level),
-      pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("stance_pose", 1)),
-      action_client( new ActionClient("stance_set_operational_action", false) )
+  : PoseMarker(server, node_handle),
+    action_client( new ActionClient("stance_set_operational_action", false) ),
+    pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("stance_pose", 1))
 {
   makeMenu();
   makeInteractiveMarker(makeMarkerBody, boost::bind( &StancePoseMarker::processFeedback, this, _1 ));
@@ -185,7 +182,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
 					switch (check) {
 						case MenuHandler::CHECKED:
               if (resource_id < resource_markers.size()) {
-                std::shared_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
+                std::unique_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
                 res_marker->changeVisibility(false); // hide bounded limb marker
                 res_marker->setOperational(false);
                 this->setOperational(false);
@@ -195,7 +192,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
 							break;
 						case MenuHandler::UNCHECKED:
               if (resource_id < resource_markers.size()) {
-                std::shared_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
+                std::unique_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
                 res_marker->changeVisibility(true); // show bounded limb marker
                 res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
                 res_marker->setOperational(true);
@@ -224,7 +221,7 @@ void StancePoseMarker::processNormalizeLegs( const visualization_msgs::Interacti
     if (resource_markers.empty()) return;
 
     for (auto it=resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it) {
-      auto marker_ptr = *it;
+      auto& marker_ptr = *it;
       if (marker_ptr->isVisible()) {
         geometry_msgs::PoseStamped pose_stamped;
         pose_stamped.header = feedback->header;
@@ -271,7 +268,7 @@ void StancePoseMarker::makeMenu()
   for (auto it=resource_markers.begin(); it != resource_markers.end(); ++it, ++marker_idx) {
     MenuHandler::EntryHandle handle;
     std::string state_msg = "(SUPPORT)";
-    auto marker_ptr = *it;
+    auto& marker_ptr = *it;
     if (marker_idx < 4) {
       if (marker_ptr->isOperational()) {
         state_msg = "(FREE)";

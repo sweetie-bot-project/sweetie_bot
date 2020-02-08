@@ -21,10 +21,12 @@ public:
   LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
                  visualization_msgs::Marker (*makeMarkerBody)(double scale),
                  const std::string& name,
-                 double scale = 1.0,
-                 const std::string& resource_name = "",
-                 const std::string& marker_home_frame = "",
-                 double normalized_z_level = 0.0
+                 ros::NodeHandle leg_node_handle,
+                 const std::string& leg_name
+                );
+  LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
+                 visualization_msgs::Marker (*makeMarkerBody)(double scale),
+                 ros::NodeHandle limb_node_handle
                 );
   ~LimbPoseMarker();
 
@@ -42,6 +44,8 @@ public:
   bool isOperational() const { return is_operational; }
 
 private:
+
+  void init(visualization_msgs::Marker (*makeMarkerBody)(double scale));
 
   // COMPONENT INTERFACE
 

@@ -42,55 +42,61 @@ Marker makeSphereBody(double scale)
 	return marker;
 }
 
+typedef visualization_msgs::Marker (*makeMarkerBody)(const double scale);
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "pose_marker");
 
-	// get node parameters
-  double scale;
-  std::vector<std::string> resources;
-  std::vector<std::string> frames;
-  std::string stance_home_frame;
-  double stance_normalized_z_level;
-  double limbs_normalized_z_level;
-  double head_normalized_z_level;
-
-	ros::param::get("~scale", scale);
-	ros::param::get("~resources", resources);
-	ros::param::get("~frames", frames);
-	ros::param::get("~stance_home_frame", stance_home_frame);
-	ros::param::get("~stance_normalized_z_level", stance_normalized_z_level);
-	ros::param::get("~limbs_normalized_z_level", limbs_normalized_z_level);
-	ros::param::get("~head_normalized_z_level", head_normalized_z_level);
+  ros::NodeHandle stance_nh("~");
+  ros::NodeHandle legs_nh("~inner_markers/legs/");
 
   // marker server
 	server.reset( new InteractiveMarkerServer(ros::this_node::getNamespace(),"",false) );
 	ros::Duration(0.1).sleep();
 
   // create markers
-  StancePoseMarker stanceMarker(server, &makeCubeBody, "stance", scale, stance_home_frame, stance_normalized_z_level);
+  StancePoseMarker stanceMarker(server, &makeCubeBody, stance_nh);
 
-  try {
-    static const std::shared_ptr<LimbPoseMarker> rm_arr[] = {
+  std::vector<std::unique_ptr<LimbPoseMarker>> resource_markers;
 
-      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_fl", 0.5*scale, resources.at(0), frames.at(0), limbs_normalized_z_level)),
-      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_fr", 0.5*scale, resources.at(1), frames.at(1), limbs_normalized_z_level)),
-      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_bl", 0.5*scale, resources.at(2), frames.at(2), limbs_normalized_z_level)),
-      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, "leg_br", 0.5*scale, resources.at(3), frames.at(3), limbs_normalized_z_level)),
-      std::shared_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeSphereBody, "head", 0.5*scale, resources.at(4), frames.at(4), head_normalized_z_level))
+  // add legs markers
+  static const std::string leg_names[4] = {
+    "Front-Left leg Pose marker",
+    "Front-Right leg Pose marker",
+    "Back-Left leg Pose marker",
+    "Back-Right leg Pose marker"
+  };
 
-    };
-
-    std::vector< std::shared_ptr<LimbPoseMarker> > resource_markers(rm_arr, rm_arr + sizeof(rm_arr) / sizeof(rm_arr[0]));
-    stanceMarker.setResourceMarkers(resource_markers);
-  }
-  catch (std::out_of_range ex)
-  {
-    ROS_ERROR("~frames ROS parameter specifies less than 5 frames or resources needed for interactive markers");
+  if (!(legs_nh.hasParam("list/leg1") &&
+        legs_nh.hasParam("list/leg2") &&
+        legs_nh.hasParam("list/leg3") &&
+        legs_nh.hasParam("list/leg4"))) {
+    ROS_FATAL("PoseMarker: Not all legs has defined in yaml file");
     return 1;
   }
 
+  resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[0], legs_nh, "leg1")));
+  resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[1], legs_nh, "leg2")));
+  resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[2], legs_nh, "leg3")));
+  resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[3], legs_nh, "leg4")));
 
+  // add limbs markers
+  if (stance_nh.hasParam("inner_markers/limbs/")) {
+    XmlRpc::XmlRpcValue limbs;
+    stance_nh.getParam("inner_markers/limbs/", limbs);
+
+    for (auto limb: limbs) {
+      ros::NodeHandle limb_nh("~inner_markers/limbs/" + limb.first);
+
+      bool is_sphere = limb_nh.param("is_sphere", true);
+      const makeMarkerBody& makeBody = is_sphere ? &makeSphereBody : &makeCubeBody;
+
+      resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, makeBody, limb_nh)));
+    }
+  }
+
+  stanceMarker.setResourceMarkers(resource_markers);
   ROS_INFO("pose_marker is started!");
 
 	// main loop()
