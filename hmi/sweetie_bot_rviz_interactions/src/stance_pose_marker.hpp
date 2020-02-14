@@ -28,7 +28,7 @@ public:
   void actionDoneCallback(const GoalState& state, const ResultConstPtr& result);
   void actionActiveCallback();
 
-  bool setOperational(bool is_operational);
+  void setOperational(bool is_operational);
   void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback );
   void processNormalizeLegs( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback );
   void processMoveAllToHome( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback );

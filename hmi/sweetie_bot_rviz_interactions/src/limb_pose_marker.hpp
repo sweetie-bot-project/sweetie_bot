@@ -17,6 +17,12 @@ public:
   typedef actionlib::SimpleActionClient<sweetie_bot_control_msgs::SetOperationalAction> ActionClient;
   typedef actionlib::SimpleClientGoalState GoalState;
 
+  typedef enum {
+    UNCONTROLLED,
+    FREE,
+    SUPPORT
+  } LimbState;
+
 public:
   LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
                  visualization_msgs::Marker (*makeMarkerBody)(double scale),
@@ -33,13 +39,16 @@ public:
   void actionDoneCallback(const GoalState& state, const ResultConstPtr& result);
   void actionActiveCallback();
 
-  bool setOperational(bool is_operational);
   void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 
   void makeMenu();
 
   ros::Publisher const & getPosePublisher() const { return pose_pub; }
   std::string const & getResourceName() const { return resource_name; }
+  LimbState const & getState() const { return limb_state; }
+
+  void setOperational(bool is_operational);
+
   bool isPosePublishing() const { return publish_pose; }
   bool isOperational() const { return is_operational; }
 
@@ -60,6 +69,10 @@ private:
   std::string resource_name;
   // publish_pose flag
   bool publish_pose = true;
+  // limb state
+  LimbState limb_state;
+  // is_leg flag
+  bool is_support;
 
   // COMPONENT STATE
   // menu index

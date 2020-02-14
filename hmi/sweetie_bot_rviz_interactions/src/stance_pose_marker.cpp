@@ -52,13 +52,13 @@ void StancePoseMarker::actionActiveCallback()
 	server->applyChanges();
 }
 
-bool StancePoseMarker::setOperational(bool is_operational)
+void StancePoseMarker::setOperational(bool is_operational)
 {
 	// check connection
 	if (!action_client->isServerConnected()) {
 		if (!action_client->waitForServer(ros::Duration(0.3, 0))) {
 			ROS_ERROR("SetOperational action server is unavailible");
-			return false;
+			return;
 		}
 	}
 
@@ -69,12 +69,12 @@ bool StancePoseMarker::setOperational(bool is_operational)
 		// form goal message
 		Goal goal;
 		goal.operational = true;
-    int counter = 0;
-    for ( auto it = resources_entry_map.begin(); it != resources_entry_map.end(); ++it, ++counter ) {
-      MenuHandler::CheckState check;
-      menu_handler.getCheckState( it->first, check );
-      if (check == MenuHandler::UNCHECKED) goal.resources.push_back(it->second);
-      if (counter >= 3) break; // We operate only on four first resources
+    for (auto it = resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it) {
+      auto &limb_marker = *it;
+
+      if (limb_marker->getState() == LimbPoseMarker::LimbState::SUPPORT) {
+        goal.resources.push_back((*it)->getResourceName());
+      }
     }
 
 		// send goal to server
@@ -82,7 +82,6 @@ bool StancePoseMarker::setOperational(bool is_operational)
 		// return true if goal is being processed
 		GoalState state = action_client->getState();
 		this->is_operational = !state.isDone();
-		return this->is_operational;
 	}
 	else {
 		// assume that server is in operational state
@@ -92,7 +91,6 @@ bool StancePoseMarker::setOperational(bool is_operational)
 		if (!state.isDone()) action_client->cancelGoal();
 
     this->is_operational = false;
-		return this->is_operational;
 	}
 }
 
@@ -270,16 +268,16 @@ void StancePoseMarker::makeMenu()
     std::string state_msg = "(SUPPORT)";
     auto& marker_ptr = *it;
     if (marker_idx < 4) {
-      if (marker_ptr->isOperational()) {
-        state_msg = "(FREE)";
-      } else {
+      if (marker_ptr->getState() == LimbPoseMarker::LimbState::SUPPORT) {
         state_msg = "(SUPPORT)";
+      } else {
+        state_msg = "(FREE)";
       }
     } else {
       state_msg = "";
     }
     handle = menu_handler.insert( "  " + marker_ptr->getResourceName() + " " + state_msg, processFeedback);
-    if (marker_ptr->isOperational()) {
+    if (marker_ptr->getState() == LimbPoseMarker::LimbState::FREE) {
       menu_handler.setCheckState(handle, MenuHandler::CHECKED);
     } else {
       menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);

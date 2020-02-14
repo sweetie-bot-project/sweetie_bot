@@ -15,14 +15,14 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
   : PoseMarker(server, name),
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
-    resource_name()
+    resource_name(),
+    is_support(true),
+    limb_state(LimbPoseMarker::LimbState::SUPPORT)
 {
   leg_node_handle.getParam("scale", scale);
   leg_node_handle.getParam("normalized_z_level", normalized_z_level);
   leg_node_handle.getParam("list/" + leg_name + "/frame", marker_home_frame);
   leg_node_handle.getParam("list/" + leg_name + "/resource", resource_name);
-
-
 
   init(makeMarkerBody);
 }
@@ -35,7 +35,9 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
   : PoseMarker(server, limb_node_handle),
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
-    resource_name()
+    resource_name(),
+    is_support(false),
+    limb_state(LimbPoseMarker::LimbState::UNCONTROLLED)
 {
   limb_node_handle.getParam("resource", resource_name);
 
@@ -97,13 +99,13 @@ void LimbPoseMarker::actionActiveCallback()
 	server->applyChanges();
 }
 
-bool LimbPoseMarker::setOperational(bool is_operational)
+void LimbPoseMarker::setOperational(bool is_operational)
 {
 	// check connection
 	if (!action_client->isServerConnected()) {
 		if (!action_client->waitForServer(ros::Duration(0.3, 0))) {
 			ROS_ERROR("SetOperational action server is unavailible");
-			return false;
+			return;
 		}
 	}
 
@@ -121,7 +123,8 @@ bool LimbPoseMarker::setOperational(bool is_operational)
 		// return true if goal is being processed
 		GoalState state = action_client->getState();
 		this->is_operational = !state.isDone();
-		return this->is_operational;
+
+    limb_state = LimbPoseMarker::LimbState::FREE;
 	}
 	else {
 		// assume that server is in operational state
@@ -131,7 +134,12 @@ bool LimbPoseMarker::setOperational(bool is_operational)
 		if (!state.isDone()) action_client->cancelGoal();
 
     this->is_operational = false;
-		return this->is_operational;
+
+    if (is_support) {
+      limb_state = LimbPoseMarker::LimbState::SUPPORT;
+    } else {
+      limb_state = LimbPoseMarker::LimbState::UNCONTROLLED;
+    }
 	}
 }
 
