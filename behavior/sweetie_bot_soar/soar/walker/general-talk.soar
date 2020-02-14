@@ -8,8 +8,8 @@ sp {general*conversation*propose*greet
 -->
 	(<s> ^operator <co> + =)
 	(<co> ^name phrase-choice ^say greet ^transition <tr> ^subgoal <o>)
-	(<o> ^name animation ^tag greet)
-	(<tr> ^hear greet ^timeout 2.0 ^next-topic main)
+	(<o> ^name animation ^tag greeting)
+	(<tr> ^hear greet ^timeout 30.0 ^next-topic main)
 }
 
 
@@ -23,13 +23,13 @@ sp {general*conversation*propose*main*ask*like*me
 	(<o> ^name flexbe ^behavior ExecuteCompoundAction ^param <p>)
 	(<p> ^action_name head_ask_about_sister)
 	(<tr1> ^hear yes ^hear no ^next-topic main)
-	(<tr2> ^timeout 2.0 ^next-topic main)
+	(<tr2> ^timeout 30.0 ^next-topic main)
 }
 
 sp {apply*flexbe*cmd*completed*hook*general*conversaton*ask*like*me
 	(state <s> ^operator <op>)
    	(<op> ^name flexbe-completed ^cmd.operator.goal.conversation <c>)
-	(<c> ^say do-you-like-me ^name general)
+	(<c> ^said do-you-like-me ^name general)
 -->
 	(<c> ^asked do-you-like-me)
 }
@@ -42,7 +42,7 @@ sp {general*conversation*propose*main*talk*normal
 	(<s> ^operator <co> + =)
 	(<co> ^name phrase-choice ^say talk ^transition <tr1> ^subgoal <o>)
 	(<o> ^name animation ^tag talk)
-	(<tr1> ^timeout 2.0 ^next-topic main)
+	(<tr1> ^timeout 30.0 ^next-topic main)
 }
 
 sp {general*conversation*propose*main*talk*angry
@@ -53,8 +53,9 @@ sp {general*conversation*propose*main*talk*angry
 	(<s> ^operator <co> + =)
 	(<co> ^name phrase-choice ^say angry-talk ^transition <tr1> ^subgoal <o>)
 	(<o> ^name animation ^tag angry)
-	(<tr1> ^timeout 2.0 ^next-topic main)
+	(<tr1> ^timeout 30.0 ^next-topic main)
 }
+
 
 # FACT ELABORATONS
 
