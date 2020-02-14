@@ -216,6 +216,23 @@ void PoseMarker::changeVisibility(bool isVisible)
   server->applyChanges();
 }
 
+
+void PoseMarker::changeColor(float r, float g, float b, float a)
+{
+  if (is_visible) {
+    server->get(name, int_marker);
+
+    int_marker.controls[0].markers[0].color.r = r;
+    int_marker.controls[0].markers[0].color.g = g;
+    int_marker.controls[0].markers[0].color.b = b;
+    int_marker.controls[0].markers[0].color.a = a;
+
+    server->erase(name);
+    server->insert(int_marker);
+    server->applyChanges();
+  }
+}
+
 void PoseMarker::moveToFrame(const std::string& frame)
 {
   try {

@@ -64,6 +64,7 @@ protected:
 
 public:
   void changeVisibility(bool isVisible);
+  void changeColor(float r, float g, float b, float a = 0.7);
   void moveToFrame(const std::string& frame);
   void normalize(geometry_msgs::PoseStamped& pose_stamped);
 

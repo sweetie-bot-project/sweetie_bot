@@ -82,6 +82,7 @@ void LimbPoseMarker::actionDoneCallback(const GoalState& state, const ResultCons
                   << " error_code: " << result->error_code << " error_string: " << result->error_string);
 
   is_operational = false;
+  this->changeColor(0.8f, 0.5f, 0.5f);
 	//action_client->cancelAllGoals();
 
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
@@ -125,6 +126,8 @@ void LimbPoseMarker::setOperational(bool is_operational)
 		this->is_operational = !state.isDone();
 
     limb_state = LimbPoseMarker::LimbState::FREE;
+
+    this->changeColor(0.0f, 0.39f, 0.0f);
 	}
 	else {
 		// assume that server is in operational state
@@ -140,6 +143,8 @@ void LimbPoseMarker::setOperational(bool is_operational)
     } else {
       limb_state = LimbPoseMarker::LimbState::UNCONTROLLED;
     }
+
+    this->changeColor(0.8f, 0.5f, 0.5f);
 	}
 }
 

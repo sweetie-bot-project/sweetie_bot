@@ -82,6 +82,8 @@ void StancePoseMarker::setOperational(bool is_operational)
 		// return true if goal is being processed
 		GoalState state = action_client->getState();
 		this->is_operational = !state.isDone();
+
+    this->changeColor(0.0f, 0.39f, 0.0f);
 	}
 	else {
 		// assume that server is in operational state
@@ -91,6 +93,8 @@ void StancePoseMarker::setOperational(bool is_operational)
 		if (!state.isDone()) action_client->cancelGoal();
 
     this->is_operational = false;
+
+    this->changeColor(0.8f, 0.5f, 0.5f);
 	}
 }
 
