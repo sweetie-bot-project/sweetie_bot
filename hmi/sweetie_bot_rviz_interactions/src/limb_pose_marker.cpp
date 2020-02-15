@@ -225,6 +225,12 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
 				}
 			}
 			break;
+
+  case visualization_msgs::InteractiveMarkerFeedback::MOUSE_DOWN:
+    if (!is_operational) {
+      setState(LimbState::OPERATIONAL);
+    }
+    break;
 	}
 
 	menu_handler.reApply(*server);
