@@ -18,9 +18,9 @@ public:
   typedef actionlib::SimpleClientGoalState GoalState;
 
   typedef enum {
-    UNCONTROLLED,
+    INACTIVE,
     FREE,
-    SUPPORT
+    OPERATIONAL
   } LimbState;
 
 public:
@@ -47,7 +47,7 @@ public:
   std::string const & getResourceName() const { return resource_name; }
   LimbState const & getState() const { return limb_state; }
 
-  void setOperational(bool is_operational);
+  void setState(LimbState state);
 
   bool isPosePublishing() const { return publish_pose; }
   bool isOperational() const { return is_operational; }
@@ -55,6 +55,8 @@ public:
 private:
 
   void init(visualization_msgs::Marker (*makeMarkerBody)(double scale));
+
+  void setOperational(bool is_operational);
 
   // COMPONENT INTERFACE
 
@@ -71,8 +73,6 @@ private:
   bool publish_pose = true;
   // limb state
   LimbState limb_state;
-  // is_leg flag
-  bool is_support;
 
   // COMPONENT STATE
   // menu index

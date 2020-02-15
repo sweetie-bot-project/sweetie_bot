@@ -16,8 +16,7 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
     resource_name(),
-    is_support(true),
-    limb_state(LimbPoseMarker::LimbState::SUPPORT)
+    limb_state(LimbPoseMarker::LimbState::INACTIVE)
 {
   leg_node_handle.getParam("scale", scale);
   leg_node_handle.getParam("normalized_z_level", normalized_z_level);
@@ -36,8 +35,7 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
     resource_name(),
-    is_support(false),
-    limb_state(LimbPoseMarker::LimbState::UNCONTROLLED)
+    limb_state(LimbPoseMarker::LimbState::INACTIVE)
 {
   limb_node_handle.getParam("resource", resource_name);
 
@@ -81,7 +79,7 @@ void LimbPoseMarker::actionDoneCallback(const GoalState& state, const ResultCons
 	ROS_INFO_STREAM("action client done: state: " << state.toString() << " state_text: " << state.getText()
                   << " error_code: " << result->error_code << " error_string: " << result->error_string);
 
-  is_operational = false;
+  setState(LimbState::FREE);
   this->changeColor(0.8f, 0.5f, 0.5f);
 	//action_client->cancelAllGoals();
 
@@ -98,6 +96,15 @@ void LimbPoseMarker::actionActiveCallback()
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::CHECKED);
 	menu_handler.reApply(*server);
 	server->applyChanges();
+}
+
+void LimbPoseMarker::setState(LimbState state) {
+  this->limb_state = state;
+  if (state == LimbPoseMarker::LimbState::OPERATIONAL) {
+    setOperational(true);
+  } else {
+    setOperational(false);
+  }
 }
 
 void LimbPoseMarker::setOperational(bool is_operational)
@@ -125,9 +132,9 @@ void LimbPoseMarker::setOperational(bool is_operational)
 		GoalState state = action_client->getState();
 		this->is_operational = !state.isDone();
 
-    limb_state = LimbPoseMarker::LimbState::FREE;
-
-    this->changeColor(0.0f, 0.39f, 0.0f);
+    if (this->is_operational) {
+      this->changeColor(0.0f, 0.39f, 0.0f);
+    }
 	}
 	else {
 		// assume that server is in operational state
@@ -137,12 +144,6 @@ void LimbPoseMarker::setOperational(bool is_operational)
 		if (!state.isDone()) action_client->cancelGoal();
 
     this->is_operational = false;
-
-    if (is_support) {
-      limb_state = LimbPoseMarker::LimbState::SUPPORT;
-    } else {
-      limb_state = LimbPoseMarker::LimbState::UNCONTROLLED;
-    }
 
     this->changeColor(0.8f, 0.5f, 0.5f);
 	}
@@ -172,6 +173,7 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
 					<< "\nframe: " << feedback->header.frame_id
 					<< " time: " << feedback->header.stamp.sec << "sec, "
 					<< feedback->header.stamp.nsec << " nsec" );
+
 			if (publish_pose && is_operational) {
 				geometry_msgs::PoseStamped pose_stamped;
 
@@ -194,10 +196,10 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
 						moveToFrame(marker_home_frame);
 					}
           // and only after make it operational
-					setOperational(true);
+					setState(LimbState::OPERATIONAL);
 				}
 				else {
-					setOperational(false);
+					setState(LimbState::FREE);
 				}
 			}
 			// check user toggled publish pose meny entry

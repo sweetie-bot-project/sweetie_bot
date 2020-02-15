@@ -35,6 +35,7 @@ void StancePoseMarker::actionDoneCallback(const GoalState& state, const ResultCo
                   << " error_code: " << result->error_code << " error_string: " << result->error_string);
 
   is_operational = false;
+  this->changeColor(0.8f, 0.5f, 0.5f);
 	//action_client->cancelAllGoals();
 
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
@@ -72,7 +73,7 @@ void StancePoseMarker::setOperational(bool is_operational)
     for (auto it = resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it) {
       auto &limb_marker = *it;
 
-      if (limb_marker->getState() == LimbPoseMarker::LimbState::SUPPORT) {
+      if (limb_marker->getState() == LimbPoseMarker::LimbState::INACTIVE) {
         goal.resources.push_back((*it)->getResourceName());
       }
     }
@@ -83,7 +84,9 @@ void StancePoseMarker::setOperational(bool is_operational)
 		GoalState state = action_client->getState();
 		this->is_operational = !state.isDone();
 
-    this->changeColor(0.0f, 0.39f, 0.0f);
+    if (this->is_operational) {
+      this->changeColor(0.0f, 0.39f, 0.0f);
+    }
 	}
 	else {
 		// assume that server is in operational state
@@ -186,7 +189,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
               if (resource_id < resource_markers.size()) {
                 std::unique_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
                 res_marker->changeVisibility(false); // hide bounded limb marker
-                res_marker->setOperational(false);
+                res_marker->setState(LimbPoseMarker::LimbState::INACTIVE);
                 this->setOperational(false);
                 rebuildMenu();
               }
@@ -197,7 +200,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
                 std::unique_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
                 res_marker->changeVisibility(true); // show bounded limb marker
                 res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
-                res_marker->setOperational(true);
+                res_marker->setState(LimbPoseMarker::LimbState::FREE);
                 this->setOperational(false);
                 rebuildMenu();
               }
@@ -272,7 +275,7 @@ void StancePoseMarker::makeMenu()
     std::string state_msg = "(SUPPORT)";
     auto& marker_ptr = *it;
     if (marker_idx < 4) {
-      if (marker_ptr->getState() == LimbPoseMarker::LimbState::SUPPORT) {
+      if (marker_ptr->getState() == LimbPoseMarker::LimbState::INACTIVE) {
         state_msg = "(SUPPORT)";
       } else {
         state_msg = "(FREE)";
@@ -281,10 +284,10 @@ void StancePoseMarker::makeMenu()
       state_msg = "";
     }
     handle = menu_handler.insert( "  " + marker_ptr->getResourceName() + " " + state_msg, processFeedback);
-    if (marker_ptr->getState() == LimbPoseMarker::LimbState::FREE) {
-      menu_handler.setCheckState(handle, MenuHandler::CHECKED);
-    } else {
+    if (marker_ptr->getState() == LimbPoseMarker::LimbState::INACTIVE) {
       menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
+    } else {
+      menu_handler.setCheckState(handle, MenuHandler::CHECKED);
     }
 		resources_entry_map.emplace(handle, marker_ptr->getResourceName());
 	}
