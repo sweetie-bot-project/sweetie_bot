@@ -19,7 +19,7 @@ pose_marker:
         scale: 0.5
       limbs:
         # You can add limb marker by adding another entry in this list.
-        # Markers names must be different!!!
+        # Markers name fields must be different!!!
         nose:
           name: "Nose Pose marker"
           is_sphere: true

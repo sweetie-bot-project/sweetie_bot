@@ -15,7 +15,7 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
   : PoseMarker(server, name),
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
-    resource_name(),
+    resource_name(""),
     limb_state(LimbPoseMarker::LimbState::INACTIVE)
 {
   leg_node_handle.getParam("scale", scale);
@@ -34,7 +34,7 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
   : PoseMarker(server, limb_node_handle),
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
-    resource_name(),
+    resource_name(""),
     limb_state(LimbPoseMarker::LimbState::INACTIVE)
 {
   limb_node_handle.getParam("resource", resource_name);

@@ -228,7 +228,8 @@ void StancePoseMarker::processNormalizeLegs( const visualization_msgs::Interacti
       auto& marker_ptr = *it;
       if (marker_ptr->isVisible()) {
         geometry_msgs::PoseStamped pose_stamped;
-        pose_stamped.header = feedback->header;
+        pose_stamped.header = std_msgs::Header();
+        pose_stamped.header.frame_id = "odom_combined";
         // update marker pose
         marker_ptr->reloadMarker();
         pose_stamped.pose = marker_ptr->getInteractiveMarker().pose;
