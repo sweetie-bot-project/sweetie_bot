@@ -79,8 +79,11 @@ void LimbPoseMarker::actionDoneCallback(const GoalState& state, const ResultCons
 	ROS_INFO_STREAM("action client done: state: " << state.toString() << " state_text: " << state.getText()
                   << " error_code: " << result->error_code << " error_string: " << result->error_string);
 
-  setState(LimbState::FREE);
-  this->changeColor(0.8f, 0.5f, 0.5f);
+  if (limb_state == LimbState::OPERATIONAL) {
+    setState(LimbState::FREE);
+  } else {
+    setOperational(false);
+  }
 	//action_client->cancelAllGoals();
 
 	menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
@@ -100,7 +103,7 @@ void LimbPoseMarker::actionActiveCallback()
 
 void LimbPoseMarker::setState(LimbState state) {
   this->limb_state = state;
-  if (state == LimbPoseMarker::LimbState::OPERATIONAL) {
+  if (state == LimbState::OPERATIONAL) {
     setOperational(true);
   } else {
     setOperational(false);
@@ -119,7 +122,7 @@ void LimbPoseMarker::setOperational(bool is_operational)
 
 	if (is_operational) {
 		// send new goal, old goal will be peempted
-		ROS_INFO("setOperational(true)");
+		ROS_DEBUG("setOperational(true)");
 
 		// form goal message
 		Goal goal;
@@ -138,7 +141,7 @@ void LimbPoseMarker::setOperational(bool is_operational)
 	}
 	else {
 		// assume that server is in operational state
-		ROS_INFO("setOperational(false)");
+		ROS_DEBUG("setOperational(false)");
 
 		GoalState state = action_client->getState();
 		if (!state.isDone()) action_client->cancelGoal();
