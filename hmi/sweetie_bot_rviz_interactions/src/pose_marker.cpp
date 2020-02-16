@@ -58,17 +58,17 @@ void PoseMarker::processNormalize( const visualization_msgs::InteractiveMarkerFe
 
 void PoseMarker::processMoveToHomeFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
 {
-	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
-		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
+  if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
+    ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
                      << " / control '" << feedback->control_name << "': menu \"Move to home frame\" select, entry id = " << feedback->menu_entry_id );
 
-		if (marker_home_frame != "") {
-			moveToFrame(marker_home_frame);
+    if (marker_home_frame != "") {
+      moveToFrame(marker_home_frame);
 
-			menu_handler.reApply(*server);
-			server->applyChanges();
-		}
-	}
+      menu_handler.reApply(*server);
+      server->applyChanges();
+    }
+  }
 }
 
 void PoseMarker::updateInteractiveMarker(bool is6DOF)
@@ -100,8 +100,8 @@ void PoseMarker::updateInteractiveMarker(bool is6DOF)
   // remove old marker from server
   server->erase(name);
 
-	// add new marker to server
-	server->insert(int_marker);
+  // add new marker to server
+  server->insert(int_marker);
 
   menu_handler.reApply(*server);
   server->applyChanges();
@@ -111,21 +111,21 @@ void PoseMarker::makeInteractiveMarker(Marker (*makeMarkerBody)(double scale), c
 {
   if (is_visible) return;
 
-	//header setup
-	int_marker.header.frame_id = "odom_combined";
-	int_marker.scale = 0.15*std::min(scale, 1.0);
-	int_marker.name = name;
-	int_marker.description = name;
+  //header setup
+  int_marker.header.frame_id = "odom_combined";
+  int_marker.scale = 0.15*std::min(scale, 1.0);
+  int_marker.name = name;
+  int_marker.description = name;
 
-	// insert base_link model
-	{
-		InteractiveMarkerControl control;
-		// TODO: with base mesh
-		control.always_visible = true;
-		control.markers.push_back( makeMarkerBody(scale) );
-		control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D;
-		int_marker.controls.push_back( control );
-	}
+  // insert base_link model
+  {
+    InteractiveMarkerControl control;
+    // TODO: with base mesh
+    control.always_visible = true;
+    control.markers.push_back( makeMarkerBody(scale) );
+    control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D;
+    int_marker.controls.push_back( control );
+  }
 
   // take a break and make dummy interactive marker for changeVisibility()
   dummy_marker = int_marker;
@@ -134,50 +134,50 @@ void PoseMarker::makeInteractiveMarker(Marker (*makeMarkerBody)(double scale), c
   dummy_marker.controls[0].markers[0].scale.y = 0.000001;
   dummy_marker.controls[0].markers[0].scale.z = 0.000001;
 
-	// add iteractive controls
-	{
-		InteractiveMarkerControl control;
-		tf::Quaternion orien(1.0, 0.0, 0.0, 1.0);
-		orien.normalize();
-		tf::quaternionTFToMsg(orien, control.orientation);
+  // add iteractive controls
+  {
+    InteractiveMarkerControl control;
+    tf::Quaternion orien(1.0, 0.0, 0.0, 1.0);
+    orien.normalize();
+    tf::quaternionTFToMsg(orien, control.orientation);
     if (is6DOF) {
       control.name = "rotate_x";
       control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
       int_marker.controls.push_back(control);
     }
-		control.name = "move_x";
-		control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
-		int_marker.controls.push_back(control);
+    control.name = "move_x";
+    control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+    int_marker.controls.push_back(control);
 
-		orien = tf::Quaternion(0.0, 1.0, 0.0, 1.0);
-		orien.normalize();
-		tf::quaternionTFToMsg(orien, control.orientation);
+    orien = tf::Quaternion(0.0, 1.0, 0.0, 1.0);
+    orien.normalize();
+    tf::quaternionTFToMsg(orien, control.orientation);
     if (is6DOF) {
       control.name = "rotate_z";
       control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
       int_marker.controls.push_back(control);
     }
-		control.name = "move_z";
-		control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
-		int_marker.controls.push_back(control);
+    control.name = "move_z";
+    control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+    int_marker.controls.push_back(control);
 
-		orien = tf::Quaternion(0.0, 0.0, 1.0, 1.0);
-		orien.normalize();
-		tf::quaternionTFToMsg(orien, control.orientation);
+    orien = tf::Quaternion(0.0, 0.0, 1.0, 1.0);
+    orien.normalize();
+    tf::quaternionTFToMsg(orien, control.orientation);
     if (is6DOF) {
       control.name = "rotate_y";
       control.interaction_mode = InteractiveMarkerControl::ROTATE_AXIS;
       int_marker.controls.push_back(control);
     }
-		control.name = "move_y";
-		control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
-		int_marker.controls.push_back(control);
-	}
+    control.name = "move_y";
+    control.interaction_mode = InteractiveMarkerControl::MOVE_AXIS;
+    int_marker.controls.push_back(control);
+  }
 
-	// add marker to server
-	server->insert(int_marker);
-	server->setCallback(int_marker.name, processFeedback);
-	menu_handler.apply( *server, int_marker.name );
+  // add marker to server
+  server->insert(int_marker);
+  server->setCallback(int_marker.name, processFeedback);
+  menu_handler.apply( *server, int_marker.name );
 
   is_visible = true;
 }
@@ -250,7 +250,7 @@ void PoseMarker::moveToFrame(const std::string& frame)
   }
   catch (tf2::TransformException &ex) {
     ROS_WARN("lookupTransform: %s", ex.what());
-	}
+  }
 }
 
 void PoseMarker::normalize(geometry_msgs::PoseStamped& pose_stamped)

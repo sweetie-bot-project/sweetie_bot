@@ -50,7 +50,7 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
 
   node_handle.getParam("duration", duration);
   node_handle.getParam("nominal_height", nominal_height);
-	node_handle.getParam("ee_names", ee_names);
+  node_handle.getParam("ee_names", ee_names);
 
   gait_type = gait_type_options[0]; // default value for gait_type
   n_steps = 4; // default value for n_steps
@@ -69,7 +69,7 @@ void DestinationMarker::actionDoneCallback(const GoalState& state, const ResultC
   ROS_INFO_STREAM("action client done: state: " << state.toString() << " state_text: " << state.getText()
                   << " error_code: " << result->error_code << " error_string: " << result->error_string);
 
-	action_client->cancelAllGoals();
+  action_client->cancelAllGoals();
   // Pretty print error cause
   switch (result->error_code) {
   case sweetie_bot_clop_generator::MoveBaseResult::SUCCESS:
@@ -212,15 +212,15 @@ Marker DestinationMarker::makeSphereMarker()
 {
   Marker marker;
 
-	marker.type = Marker::SPHERE;
+  marker.type = Marker::SPHERE;
   marker.pose.position.z = 0.19*scale;
-	marker.scale.x = 0.08*scale;
-	marker.scale.y = 0.08*scale;
-	marker.scale.z = 0.08*scale;
-	marker.color.r = 0.8;
-	marker.color.g = 0.5;
-	marker.color.b = 0.5;
-	marker.color.a = 1;
+  marker.scale.x = 0.08*scale;
+  marker.scale.y = 0.08*scale;
+  marker.scale.z = 0.08*scale;
+  marker.color.r = 0.8;
+  marker.color.g = 0.5;
+  marker.color.b = 0.5;
+  marker.color.a = 1;
 
   return marker;
 }
@@ -255,57 +255,57 @@ void DestinationMarker::makeInteractiveMarker()
   InteractiveMarker int_marker;
 
   //header setup
-	int_marker.header.frame_id = "odom_combined";
+  int_marker.header.frame_id = "odom_combined";
   int_marker.pose.position.x = 0.4;
-	int_marker.scale = 0.15*std::min(scale, 1.0);
-	int_marker.name = name;
-	int_marker.description = name;
+  int_marker.scale = 0.15*std::min(scale, 1.0);
+  int_marker.name = name;
+  int_marker.description = name;
 
   // insert base_link model
-	{
-		InteractiveMarkerControl control;
-		control.always_visible = true;
-		control.markers.push_back( makeSphereMarker() );
-		control.markers.push_back( makeConeMarker() );
-		control.markers.push_back( makeArrowMarker() );
-		control.markers.push_back( makePointMarker() );
-		tf::Quaternion orien(0.0, 1.0, 0.0, 1.0);
+  {
+    InteractiveMarkerControl control;
+    control.always_visible = true;
+    control.markers.push_back( makeSphereMarker() );
+    control.markers.push_back( makeConeMarker() );
+    control.markers.push_back( makeArrowMarker() );
+    control.markers.push_back( makePointMarker() );
+    tf::Quaternion orien(0.0, 1.0, 0.0, 1.0);
     orien.normalize();
-		tf::quaternionTFToMsg(orien, control.orientation);
-		control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_PLANE;
-		int_marker.controls.push_back( control );
-	}
+    tf::quaternionTFToMsg(orien, control.orientation);
+    control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_PLANE;
+    int_marker.controls.push_back( control );
+  }
 
   {
     InteractiveMarkerControl control;
-		tf::Quaternion orien(0.0, 1.0, 0.0, 1.0);
+    tf::Quaternion orien(0.0, 1.0, 0.0, 1.0);
     orien.normalize();
-		tf::quaternionTFToMsg(orien, control.orientation);
-		control.interaction_mode = visualization_msgs::InteractiveMarkerControl::ROTATE_AXIS;
-		int_marker.controls.push_back(control);
+    tf::quaternionTFToMsg(orien, control.orientation);
+    control.interaction_mode = visualization_msgs::InteractiveMarkerControl::ROTATE_AXIS;
+    int_marker.controls.push_back(control);
 
-		orien = tf::Quaternion(1.0, 0.0, 0.0, 1.0);
+    orien = tf::Quaternion(1.0, 0.0, 0.0, 1.0);
     orien.normalize();
-		tf::quaternionTFToMsg(orien, control.orientation);
-		control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_AXIS;
-		int_marker.controls.push_back(control);
+    tf::quaternionTFToMsg(orien, control.orientation);
+    control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_AXIS;
+    int_marker.controls.push_back(control);
 
-		orien = tf::Quaternion(0.0, 0.0, 1.0, 1.0);
+    orien = tf::Quaternion(0.0, 0.0, 1.0, 1.0);
     orien.normalize();
-		tf::quaternionTFToMsg(orien, control.orientation);
-		control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_AXIS;
-		int_marker.controls.push_back(control);
+    tf::quaternionTFToMsg(orien, control.orientation);
+    control.interaction_mode = visualization_msgs::InteractiveMarkerControl::MOVE_AXIS;
+    int_marker.controls.push_back(control);
   }
 
-	// add marker to server
-	server->insert(int_marker);
-	menu_handler.apply( *server, int_marker.name );
+  // add marker to server
+  server->insert(int_marker);
+  menu_handler.apply( *server, int_marker.name );
 }
 
 void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
 {
-	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
-		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
+  if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
+    ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
                      << " / control '" << feedback->control_name << "': entry id = " << feedback->menu_entry_id );
 
     // check if user clicked on Start walk entry
@@ -366,8 +366,8 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
 
 void DestinationMarker::processGaitType( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
 {
-	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
-		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
+  if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
+    ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
                      << " / control '" << feedback->control_name << "': submenu \"Gait type\" select, entry id = " << feedback->menu_entry_id );
     auto it_found = gait_type_submenu.find(feedback->menu_entry_id);
     if (it_found != gait_type_submenu.end()) {
@@ -386,8 +386,8 @@ void DestinationMarker::processGaitType( const visualization_msgs::InteractiveMa
 
 void DestinationMarker::processStepsNum( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
 {
-	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
-		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
+  if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
+    ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
                      << " / control '" << feedback->control_name << "': submenu \"Steps number\" select, entry id = " << feedback->menu_entry_id );
     auto it_found = n_steps_submenu.find(feedback->menu_entry_id);
     if (it_found != n_steps_submenu.end()) {

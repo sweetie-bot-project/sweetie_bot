@@ -15,8 +15,8 @@ int main(int argc, char **argv) {
   ros::NodeHandle dest_marker_nh("~");
 
   // marker server
-	server.reset( new InteractiveMarkerServer(ros::this_node::getNamespace(),"",false) );
-	ros::Duration(0.1).sleep();
+  server.reset( new InteractiveMarkerServer(ros::this_node::getNamespace(),"",false) );
+  ros::Duration(0.1).sleep();
 
   DestinationMarker destMarker(server, dest_marker_nh);
 

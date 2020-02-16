@@ -11,49 +11,49 @@ std::shared_ptr<InteractiveMarkerServer> server;
 // Display platform shape as controlled body
 Marker makeCubeBody(double scale)
 {
-	Marker marker;
+  Marker marker;
 
-	marker.type = Marker::CUBE;
-	marker.scale.x = 0.16*scale;
-	marker.scale.y = 0.08*scale;
-	marker.scale.z = 0.02*scale;
-	marker.color.r = 0.8;
-	marker.color.g = 0.5;
-	marker.color.b = 0.5;
-	marker.color.a = 0.7;
+  marker.type = Marker::CUBE;
+  marker.scale.x = 0.16*scale;
+  marker.scale.y = 0.08*scale;
+  marker.scale.z = 0.02*scale;
+  marker.color.r = 0.8;
+  marker.color.g = 0.5;
+  marker.color.b = 0.5;
+  marker.color.a = 0.7;
 
-	return marker;
+  return marker;
 }
 
 // Display sphere as controlled body
 Marker makeSphereBody(double scale)
 {
-	Marker marker;
+  Marker marker;
 
-	marker.type = Marker::SPHERE;
-	marker.scale.x = 0.08*scale;
-	marker.scale.y = 0.08*scale;
-	marker.scale.z = 0.08*scale;
-	marker.color.r = 0.8;
-	marker.color.g = 0.5;
-	marker.color.b = 0.5;
-	marker.color.a = 0.7;
+  marker.type = Marker::SPHERE;
+  marker.scale.x = 0.08*scale;
+  marker.scale.y = 0.08*scale;
+  marker.scale.z = 0.08*scale;
+  marker.color.r = 0.8;
+  marker.color.g = 0.5;
+  marker.color.b = 0.5;
+  marker.color.a = 0.7;
 
-	return marker;
+  return marker;
 }
 
 typedef visualization_msgs::Marker (*makeMarkerBody)(const double scale);
 
 int main(int argc, char **argv)
 {
-	ros::init(argc, argv, "pose_marker");
+  ros::init(argc, argv, "pose_marker");
 
   ros::NodeHandle stance_nh("~");
   ros::NodeHandle legs_nh("~inner_markers/legs/");
 
   // marker server
-	server.reset( new InteractiveMarkerServer(ros::this_node::getNamespace(),"",false) );
-	ros::Duration(0.1).sleep();
+  server.reset( new InteractiveMarkerServer(ros::this_node::getNamespace(),"",false) );
+  ros::Duration(0.1).sleep();
 
   // create markers
   StancePoseMarker stanceMarker(server, &makeCubeBody, stance_nh);
@@ -99,11 +99,11 @@ int main(int argc, char **argv)
   stanceMarker.setResourceMarkers(resource_markers);
   ROS_INFO("pose_marker is started!");
 
-	// main loop()
-	ros::spin();
+  // main loop()
+  ros::spin();
 
   // shutdown
-	server.reset();
+  server.reset();
 
   ROS_INFO("pose_marker is shutdown!");
 }
