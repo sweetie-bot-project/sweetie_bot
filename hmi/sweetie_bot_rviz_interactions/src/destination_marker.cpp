@@ -51,9 +51,31 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
   node_handle.getParam("duration", duration);
   node_handle.getParam("nominal_height", nominal_height);
   node_handle.getParam("ee_names", ee_names);
+  node_handle.getParam("recorded_trajectory_name", trajectory_name);
 
-  gait_type = gait_type_options[0]; // default value for gait_type
-  n_steps = 4; // default value for n_steps
+  {
+    int idx;
+    node_handle.param("gait_type_default_idx", idx, 0);
+
+    if (idx < 0 || idx >= gait_type_options.size()) {
+      ROS_FATAL("DestinationMarker: gait_type_default_idx parameter out of bounds");
+      exit(1);
+    }
+
+    gait_type = gait_type_options[idx];  // default value for gait_type
+  }
+
+  {
+    int idx;
+    node_handle.param("n_steps_default_idx", idx, 0);
+
+    if (idx < 0 || idx >= n_steps_options.size()) {
+      ROS_FATAL("DestinationMarker: gait_type_default_idx parameter out of bounds");
+      exit(1);
+    }
+
+    n_steps = n_steps_options[idx]; // default value for n_steps
+  }
 
   setEndEffectorTargets(ee_names);
 
@@ -188,7 +210,7 @@ Marker DestinationMarker::makeArrowMarker()
   Marker marker;
 
   marker.type = Marker::ARROW;
-  marker.pose.position.z = 0.27*scale;
+  marker.pose.position.z = 0.28*scale;
   marker.scale.x = 0.01;
   marker.scale.y = 0.02;
   marker.scale.z = 0.02;
@@ -208,7 +230,7 @@ Marker DestinationMarker::makeArrowMarker()
   return marker;
 }
 
-Marker DestinationMarker::makeSphereMarker()
+Marker DestinationMarker::makeSphereMarker(float r, float g, float b)
 {
   Marker marker;
 
@@ -217,39 +239,40 @@ Marker DestinationMarker::makeSphereMarker()
   marker.scale.x = 0.08*scale;
   marker.scale.y = 0.08*scale;
   marker.scale.z = 0.08*scale;
-  marker.color.r = 0.8;
-  marker.color.g = 0.5;
-  marker.color.b = 0.5;
+  marker.color.r = r;
+  marker.color.g = g;
+  marker.color.b = b;
   marker.color.a = 1;
 
   return marker;
 }
 
-Marker DestinationMarker::makeConeMarker()
+Marker DestinationMarker::makeConeMarker(float r, float g, float b, float scale, float z)
 {
   Marker marker;
 
   marker.type = Marker::ARROW;
-  marker.pose.position.z = 0.05*scale;
-  marker.scale.x = 0.08*scale;
-  marker.scale.y = 0.08*scale;
-  marker.scale.z = 0.13*scale;
-  marker.color.r = 0.8;
-  marker.color.g = 0.5;
-  marker.color.b = 0.5;
+  marker.pose.position.z = z*this->scale*scale;
+  marker.scale.x = 0.08*this->scale*scale;
+  marker.scale.y = 0.08*this->scale*scale;
+  marker.scale.z = (0.08 + z)*this->scale*scale;
+  marker.color.r = r;
+  marker.color.g = g;
+  marker.color.b = b;
   marker.color.a = 1;
 
   marker.points.resize(2);
   marker.points[0].x = 0.0f;
   marker.points[0].y = 0.0f;
-  marker.points[0].z = 0.14f*scale;
+  marker.points[0].z = (0.09 + z)*this->scale*scale;
   marker.points[1].x = 0.0f;
   marker.points[1].y = 0.0f;
-  marker.points[1].z = 0.0f;
+  marker.points[1].z = z - 0.05f;
 
   return marker;
 }
 
+static bool is_mod = false;
 void DestinationMarker::makeInteractiveMarker()
 {
   InteractiveMarker int_marker;
@@ -265,8 +288,14 @@ void DestinationMarker::makeInteractiveMarker()
   {
     InteractiveMarkerControl control;
     control.always_visible = true;
-    control.markers.push_back( makeSphereMarker() );
-    control.markers.push_back( makeConeMarker() );
+    if (!is_mod) {
+      control.markers.push_back( makeSphereMarker(0.8, 0.5, 0.5) );
+      control.markers.push_back( makeConeMarker(0.8, 0.5, 0.5, 1.0, 0.05) );
+    } else {
+      control.markers.push_back( makeSphereMarker(0.827f, 0.416f, 0.051f) );
+      control.markers.push_back( makeConeMarker(0.827f, 0.416f, 0.051f, 1.0f, 0.05f) );
+      control.markers.push_back( makeConeMarker(0.122f, 0.604f, 0.11f, 0.7f, 0.15f) );
+    }
     control.markers.push_back( makeArrowMarker() );
     control.markers.push_back( makePointMarker() );
     tf::Quaternion orien(0.0, 1.0, 0.0, 1.0);
@@ -329,6 +358,14 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
       if (name == "") {
         ROS_ERROR("Trajectory name must be non-empty");
         return;
+      }
+      // Don't mind that. It's just for some vegetables lover
+      const static char test[] = {0x63, 0x61, 0x72, 0x72, 0x6F, 0x74, 0x00};
+      if (name == test) {
+        is_mod = true;
+        server->erase(name);
+        makeInteractiveMarker();
+        server->applyChanges();
       }
 
       if (std::find(name.begin(), name.end(), ' ') != name.end()) {

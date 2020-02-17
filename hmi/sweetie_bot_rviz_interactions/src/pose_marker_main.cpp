@@ -89,7 +89,8 @@ int main(int argc, char **argv)
     for (auto limb: limbs) {
       ros::NodeHandle limb_nh("~inner_markers/limbs/" + limb.first);
 
-      bool is_sphere = limb_nh.param("is_sphere", true);
+      bool is_sphere;
+      limb_nh.param<bool>("is_sphere", is_sphere, true);
       const makeMarkerBody& makeBody = is_sphere ? &makeSphereBody : &makeCubeBody;
 
       resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, makeBody, limb_nh)));

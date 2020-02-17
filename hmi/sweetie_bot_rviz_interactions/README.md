@@ -62,7 +62,7 @@ Both limbs and legs markers described in `~inner_markers/` namespace:
 
 This node contains `InteractiveMarker` which invoke `MoveBase` action allowing you to control the gait generator (`clop_generator`) by publishing `sweetie_bot_clop_generator::MoveBaseGoal` message.
 Marker itself can be placed in desired gait target position. Arrow above the marker points in the direction of the robot gaze after it reaches the goal.
-Every time when gait gets executed, resulting trajectories has been recorded into `saved_msgs/step_sequence/recorded_trajectory` and `saved_msgs/move_base/recorded_trajectory` ROS parameters. It happens by calling `clop_generator/save_trajectory` service with `sweetie_bot_clop_generator::SaveTrajectory` message.
+Every time when gait gets executed, resulting trajectories recorded into `saved_msgs/step_sequence/recorded_trajectory` and `saved_msgs/move_base/recorded_trajectory` ROS parameters. It happens by calling `clop_generator/save_trajectory` service with `sweetie_bot_clop_generator::SaveTrajectory` message.
 Context menu contains `clop_generator` settings (type of gait, number of steps, gait duration), allows to change name of recorded trajectory, as well as invoke `clop_generator`.
 
 ### ROS interface
@@ -89,8 +89,11 @@ Context menu contains `clop_generator` settings (type of gait, number of steps, 
 * `~name` (`string`) --- displayed marker name. Default: `''`.
 * `~scale` (`double`) --- marker scale. Default: `1.0`.
 * `~gait_type_options` (`string[]`) --- list of the gait type options contained in corresponding submenu. No default value.
+* `~gait_type_default_idx` (`int`) --- gait type list index selectable by default. Default: `0`.
 * `~n_steps_options` (`int[]`) --- list of the gait steps number options contained in corresponding submenu. No default value.
+* `~n_steps_default_idx` (`int`) --- number of steps list index selectable by default. Default: `0`.
 * `~duration` (`double`) --- duration of the gait in seconds. User can change its value in context menu. Default: `4.0`.
 * `~nominal_height` (`double`) --- target height of the robot base after reaching the position. Default: `0.1825`.
+* `~recorded_trajectory_name` (`string`) --- default recorded trajectory name. Default: `'recorded_trajectory'`
 * `~ee_names` (`string[]`) --- the set of `clop_generator` end effector names.
     Default: `[]`

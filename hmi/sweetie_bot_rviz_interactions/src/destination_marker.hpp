@@ -38,8 +38,8 @@ private:
   void makeInteractiveMarker();
   visualization_msgs::Marker makePointMarker();
   visualization_msgs::Marker makeArrowMarker();
-  visualization_msgs::Marker makeSphereMarker();
-  visualization_msgs::Marker makeConeMarker();
+  visualization_msgs::Marker makeSphereMarker(float r, float g, float b);
+  visualization_msgs::Marker makeConeMarker(float r, float g, float b, float scale, float z);
   void makeMenu(const std::vector<std::string>& gait_type_options, const std::vector<unsigned>& n_steps_options);
   inline void rebuildMenu() {
     menu_handler = MenuHandler(base_menu_handler); // Restore base menu handler without last entry
