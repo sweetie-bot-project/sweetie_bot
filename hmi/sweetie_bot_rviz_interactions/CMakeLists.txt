@@ -5,7 +5,19 @@ project(sweetie_bot_rviz_interactions)
 add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
-find_package(catkin REQUIRED COMPONENTS geometry_msgs roscpp visualization_msgs tf interactive_markers sweetie_bot_control_msgs actionlib)
+find_package(catkin REQUIRED COMPONENTS
+  geometry_msgs
+  roscpp
+  visualization_msgs
+  tf
+  interactive_markers
+  sweetie_bot_control_msgs
+  sweetie_bot_clop_generator
+  actionlib
+)
+
+# QT packages
+find_package(Qt5Widgets REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -20,7 +32,7 @@ find_package(catkin REQUIRED COMPONENTS geometry_msgs roscpp visualization_msgs 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sweetie_bot_rviz_interactions
-  CATKIN_DEPENDS geometry_msgs roscpp visualization_msgs tf interactive_markers sweetie_bot_control_msgs actionlib
+  CATKIN_DEPENDS geometry_msgs roscpp visualization_msgs tf interactive_markers sweetie_bot_control_msgs sweetie_bot_clop_generator actionlib
 #  DEPENDS system_lib
 )
 
@@ -40,18 +52,22 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(${PROJECT_NAME}_pose_marker src/pose_marker.cpp)
+add_executable(${PROJECT_NAME}_pose_marker src/pose_marker_main.cpp src/pose_marker.cpp src/limb_pose_marker.cpp src/stance_pose_marker.cpp)
+add_executable(${PROJECT_NAME}_destination_marker src/destination_marker_main.cpp src/destination_marker.cpp)
 
 ## Rename C++ executable without prefix
 set_target_properties(${PROJECT_NAME}_pose_marker PROPERTIES OUTPUT_NAME pose_marker PREFIX "")
+set_target_properties(${PROJECT_NAME}_destination_marker PROPERTIES OUTPUT_NAME destination_marker PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_pose_marker ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_destination_marker ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_pose_marker ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_destination_marker ${catkin_LIBRARIES} ${Qt5Widgets_LIBRARIES})
 
 #############
 ## Install ##
@@ -70,7 +86,11 @@ install(TARGETS ${PROJECT_NAME}_pose_marker
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-
+install(TARGETS ${PROJECT_NAME}_destination_marker
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 ## Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/
 #   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

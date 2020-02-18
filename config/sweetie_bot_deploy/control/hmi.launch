@@ -40,21 +40,18 @@
 			<remap from="supports" to="$(arg robot_ns)/motion/aggregator_ref/out_supports_sorted"/>
 		</node>
 		<!-- robot pose control -->
-		<node name="stance_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-			<remap from="pose" to="$(arg robot_ns)/motion/controller/stance/in_pose_ref"/>
-			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/stance"/>
-			<param name="resources_select_only_one" value="false"/>
+		<node name="pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
+			<remap from="stance_pose" to="$(arg robot_ns)/motion/controller/stance/in_pose_ref"/>
+	    <remap from="stance_set_operational_action" to="$(arg robot_ns)/motion/controller/stance"/>
+	    <remap from="limb_pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/>
+	    <remap from="limb_set_operational_action" to="$(arg robot_ns)/motion/controller/pose"/>
+			<remap from="look_at_pose" to="$(arg robot_ns)/motion/controller/look_at/in_pose_ref"/>
+			<remap from="look_at_set_operational_action" to="$(arg robot_ns)/motion/controller/look_at"/>
 		</node>
-		<node name="limb_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-			<remap from="pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/>
-			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/pose"/>
-			<param name="resources_select_only_one" value="true"/>
-		</node>
-		<node name="head_target_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-			<remap from="pose" to="$(arg robot_ns)/motion/controller/look_at/in_pose_ref"/>
-			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/look_at"/>
-			<param name="resources_select_only_one" value="true"/>
-		</node>
+		<!-- robot position control -->
+	  <node name="destination_marker" pkg="sweetie_bot_rviz_interactions" type="destination_marker" >
+	    <remap from="move_base_action" to="$(arg robot_ns)/clop_generator"/>
+	  </node>
 		<!-- eyes vizualization -->
 		<group>
 			<remap from="joint_states" to="$(arg robot_ns)/joint_states"/>
