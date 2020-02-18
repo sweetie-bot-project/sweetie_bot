@@ -26,9 +26,18 @@ pose_marker:
           scale: 0.5
           normalized_z_level: 0.3287
           frame: bone55
-          resource: head
+          resource: nose
           controller: limb_pose
           activator: limb_set_operational_action
+        head:
+          name: "Look At marker"
+          is_sphere: true
+          scale: 0.5
+          normalized_z_level: 0.3287
+          frame: bone55
+          resource: head
+          controller: look_at_pose
+          activator: look_at_set_operational_action
 destination_marker:
     name: "Destination Marker"
     scale: 1.1
