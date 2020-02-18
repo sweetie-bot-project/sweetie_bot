@@ -43,9 +43,20 @@ public:
       normalized_z_level(0.0)
   {
     node_handle.getParam("name", name);
+
     node_handle.getParam("scale", scale);
+    if (scale < 0) {
+      ROS_FATAL("PoseMarker: scale parameter cannot be negative");
+      exit(1);
+    }
+
     node_handle.getParam("frame", marker_home_frame);
+
     node_handle.getParam("normalized_z_level", normalized_z_level);
+    if (normalized_z_level < 0) {
+      ROS_FATAL("PoseMarker: normalized_z_level parameter cannot be negative");
+      exit(1);
+    }
   }
 
   virtual ~PoseMarker() = 0;

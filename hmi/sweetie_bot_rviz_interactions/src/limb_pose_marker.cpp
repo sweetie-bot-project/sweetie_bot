@@ -19,7 +19,17 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
     limb_state(LimbPoseMarker::LimbState::INACTIVE)
 {
   leg_node_handle.getParam("scale", scale);
+  if (scale < 0) {
+    ROS_FATAL("LimbPoseMarker: scale parameter cannot be negative");
+    exit(1);
+  }
+
   leg_node_handle.getParam("normalized_z_level", normalized_z_level);
+  if (normalized_z_level < 0) {
+    ROS_FATAL("LimbPoseMarker: normalized_z_level parameter cannot be negative");
+    exit(1);
+  }
+
   leg_node_handle.getParam("list/" + leg_name + "/frame", marker_home_frame);
   leg_node_handle.getParam("list/" + leg_name + "/resource", resource_name);
 

@@ -42,14 +42,36 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
   std::vector<std::string> ee_names;
 
   node_handle.getParam("name", name);
+
   node_handle.getParam("scale", scale);
+  if (scale < 0) {
+    ROS_FATAL("DestinationMarker: scale parameter cannot be negative");
+    exit(1);
+  }
+
   node_handle.getParam("gait_type_options", gait_type_options);
 
   node_handle.getParam("n_steps_options", _n_steps_options);
+  for (auto& opt: _n_steps_options) {
+    if (opt < 0) {
+      ROS_FATAL("DestinationMarker: n_steps_options parameter cannot contain negative values");
+      exit(1);
+    }
+  }
   std::vector<unsigned> n_steps_options(_n_steps_options.begin(), _n_steps_options.end());
 
   node_handle.getParam("duration", duration);
+  if (duration < 0) {
+    ROS_FATAL("DestinationMarker: duration parameter cannot be negative");
+    exit(1);
+  }
+
   node_handle.getParam("nominal_height", nominal_height);
+  if (nominal_height < 0) {
+    ROS_FATAL("DestinationMarker: nominal_height parameter cannot be negative");
+    exit(1);
+  }
+
   node_handle.getParam("ee_names", ee_names);
   node_handle.getParam("recorded_trajectory_name", trajectory_name);
 
