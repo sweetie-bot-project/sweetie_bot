@@ -7,13 +7,10 @@
 	<simple name="kgear" type="double"><description>Part</description><value>1</value></simple>
 	<struct name="alpha" type="double">
 	   <description>Part</description>
-	   <simple name="Element0" type="double"><description>Sequence Element</description><value>47.6362</value></simple>
-	   <simple name="Element1" type="double"><description>Sequence Element</description><value>0.0</value></simple>
-	   <simple name="Element2" type="double"><description>Sequence Element</description><value>5.6982</value></simple>
-	   <simple name="Element3" type="double"><description>Sequence Element</description><value>10.7630</value></simple>
-	   <simple name="Element4" type="double"><description>Sequence Element</description><value>309.4697</value></simple>
+	   <simple name="Element0" type="double"><description>Sequence Element</description><value>5.6982</value></simple>
+	   <simple name="Element1" type="double"><description>Sequence Element</description><value>47.6362</value></simple>
+	   <simple name="Element2" type="double"><description>Sequence Element</description><value>10.7630</value></simple>
+	   <simple name="Element3" type="double"><description>Sequence Element</description><value>309.4697</value></simple>
 	</struct>
-	<simple name="qs" type="double"><description>Part</description><value>0.2999999999999999888977698</value></simple>
-	<simple name="delta" type="double"><description>Part</description><value>1</value></simple>
   </struct>
 </properties>

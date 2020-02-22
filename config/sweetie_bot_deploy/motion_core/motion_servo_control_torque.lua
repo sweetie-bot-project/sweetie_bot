@@ -5,8 +5,8 @@
 --
 -- It's second stage control schema. 
 --
--- dynamics_inv component provides desired torque, position, velocity and acceleration fo servos
--- servo_inv (ServoInv7Param) uses 7-parameter servo model (inertia, viscous friction, coulomb friction and stribeck friction) 
+-- dynamics_inv component provides desired torque, position, velocity and acceleration for servos
+-- servo_inv (ServoInvParam) uses parameterized servo model (inertia, viscous friction, coulomb friction)
 -- servo feedback coefficient Kp to calculates servo goals.
 -- 
 -- Servo feedback coeffitients are low enough to ensure compilance.
@@ -25,7 +25,7 @@ require "motion_core"
 
 ros:import("sweetie_bot_servo_inv");
 -- load component
-depl:loadComponent("servo_inv","sweetie_bot::motion::ServoInv7Param")
+depl:loadComponent("servo_inv","sweetie_bot::motion::ServoInvParam")
 servo_inv = depl:getPeer("servo_inv")
 -- load configuration from cpf
 servo_inv:loadService("marshalling")
@@ -36,7 +36,7 @@ config.get_peer_rosparams(servo_inv)
 -- data flow: dynamics_inv -> servo_inv -> herkulex_sched
 depl:connect("dynamics_inv.out_joints_accel_sorted", "servo_inv.in_joints_accel_fixed", rtt.Variable("ConnPolicy"));
 
-assert(servo_inv:start())
+-- assert(servo_inv:start())
 
 --
 -- herkulex subsystem
@@ -82,7 +82,7 @@ depl:connect("servo_ident.out_servo_models", "servo_inv.in_servo_models", rtt.Va
 -- timer syncronization: start of next control cycle
 depl:connect(timer.controller.port, "servo_ident.sync_step", rtt.Variable("ConnPolicy"));
 
-assert(servo_ident:start())
+-- assert(servo_ident:start())
 
 --- start herkulex scheduler
 for name, group in pairs(herkulex) do
