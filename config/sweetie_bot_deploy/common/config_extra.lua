@@ -109,3 +109,12 @@ function config.get_peer_rosparams(peer)
 	peer:provides("rosparam"):getAll();
 end
 
+-- Return number elements in table.
+--
+-- * @c t Table.
+--
+function config.table_getn(t)
+	local count = 0
+	for _ in pairs(t) do count = count + 1 end
+	return count
+end
