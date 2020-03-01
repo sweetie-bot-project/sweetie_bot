@@ -96,6 +96,11 @@ function config.get_peer_rosparams(peer)
 	if priority then
 		depl:setActivity(peer:getName(), 0, priority, rtt.globals.ORO_SCHED_RT)
 	end
+	-- use rosparam `activity_period` to set component period
+	local period = config.get_rosparam("~" .. peer:getName() .. "/activity_period", "float")
+	if period then
+		peer:setPeriod(period)
+	end
 	-- use rosparam `services` to load additionaol services
 	services = config.get_rosparam("~" .. peer:getName() .. "/services", "string[]")
 	if services then
