@@ -80,6 +80,9 @@ local function setup_herkulex_subsystem(herkulex, group, servos_description_cpf)
 
 	-- connect to timer
 	depl:connect(timer.herkulex.port, basename.."/sched.sync", rtt.Variable("ConnPolicy"));
+	-- publish servo states for ROS
+	depl:stream(basename.."/array.out_states", ros:topic("~herkulex/servo_states"))
+	depl:stream(basename.."/sched.out_states", ros:topic("~herkulex/out_joints_ext"))
 
 	-- START HERKULEX_* SUBSYSTEM (without scheduler)
 

@@ -8,6 +8,7 @@ herkulex:
             timeout: 0.060
             tryouts: 3
             detailed_state: false
+            activity_period: 0.057
         sched:
             priority: 40
             timeout: 0.005
