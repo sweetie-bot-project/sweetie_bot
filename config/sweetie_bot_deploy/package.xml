@@ -16,6 +16,7 @@
   <depend>rtt</depend>
   <depend>ocl</depend>
   <depend>rospy_message_converter</depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
   <!-- ROS and OROCOS datatypes -->
   <!-- SWEETIEBOT packages -->
   <!-- SWEETIEBOT datatypes -->

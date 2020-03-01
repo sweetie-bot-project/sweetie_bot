@@ -9,8 +9,7 @@
 		<remap from="robot_description" to="$(arg robot_ns)/robot_description"/>
 
 		<!-- manual joints control -->
-		<node name="joint_state_ref" pkg="joint_state_publisher" type="joint_state_publisher">
-			<param name="use_gui" value="true"/>
+		<node name="joint_state_ref" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
 			<rosparam param="source_list">["joint_states_reset"]</rosparam>
 			<param name="rate" value="5"/>
 			<remap from="joint_states" to="$(arg robot_ns)/motion/controller/joint_state/in_joints_ref"/>
