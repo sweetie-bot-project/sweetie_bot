@@ -1,7 +1,7 @@
 -- 
 -- SERVO TORQUE CONTROL MODULE
 --
--- Setup servo_inv, servo_ident and aggregator_real.
+-- Setup servo_inv, servo_ident.
 --
 -- It's second stage control schema. 
 --
@@ -72,11 +72,12 @@ servo_ident:provides("marshalling"):loadProperties(config.file("servo_models.cpf
 -- get ROS parameteres and services
 config.get_peer_rosparams(servo_ident)
 
--- data flow: herkulex_sched, dynamics_ident -> servo_ident
+-- data flow: herkulex_sched, dynamics_inv, servo_inv -> servo_ident
 for name, group in pairs(herkulex) do
 	depl:connect("herkulex/"..name.."/sched.out_joints", "servo_ident.in_joints_measured", rtt.Variable("ConnPolicy"))
 end
-depl:connect("dynamics_inv.out_joints_accel_sorted", "servo_ident.in_joints_accel_fixed", rtt.Variable("ConnPolicy"));
+depl:connect("dynamics_inv.out_joints_accel_sorted", "servo_ident.in_joints_accel_ref_fixed", rtt.Variable("ConnPolicy"));
+depl:connect("servo_inv.out_goals", "servo_ident.in_goals_fixed", rtt.Variable("ConnPolicy"));
 -- data flow: servo_ident -> servo_inv
 depl:connect("servo_ident.out_servo_models", "servo_inv.in_servo_models", rtt.Variable("ConnPolicy"));
 -- timer syncronization: start of next control cycle
