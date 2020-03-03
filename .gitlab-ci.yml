@@ -74,6 +74,9 @@ bionic-tinker:
 buster-arm64v8:
   extends: bionic-tinker
 
+bionic-arm64v8:
+  extends: bionic-tinker
+
 
 
 stretch-amd64-test:
@@ -123,6 +126,7 @@ pages:
     - bionic-amd64
     - bionic-tinker
     - buster-arm64v8
+    - bionic-arm64v8
   only:
     - master
   artifacts:
@@ -148,7 +152,7 @@ pages:
 
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: bionic
-      Architectures: armhf amd64
+      Architectures: armhf arm64 amd64
       Components: main
       Description: no description
       SignWith: yes
