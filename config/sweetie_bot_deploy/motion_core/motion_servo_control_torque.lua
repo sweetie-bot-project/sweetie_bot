@@ -33,10 +33,11 @@ servo_inv:provides("marshalling"):loadProperties(config.file("servo_models.cpf")
 -- get ROS parameteres and services
 config.get_peer_rosparams(servo_inv)
 
--- data flow: dynamics_inv -> servo_inv -> herkulex_sched
-depl:connect("dynamics_inv.out_joints_accel_sorted", "servo_inv.in_joints_accel_fixed", rtt.Variable("ConnPolicy"));
+-- data flow: dynamics_inv, battery -> servo_inv
+depl:connect("dynamics_inv.out_joints_accel_sorted", "servo_inv.in_joints_accel_fixed", rtt.Variable("ConnPolicy"))
+depl:stream("servo_inv.in_battery_state", ros:topic("~in_battery_state"))
 
--- assert(servo_inv:start())
+assert(servo_inv:start())
 
 --
 -- herkulex subsystem
@@ -78,6 +79,7 @@ for name, group in pairs(herkulex) do
 end
 depl:connect("dynamics_inv.out_joints_accel_sorted", "servo_ident.in_joints_accel_ref_fixed", rtt.Variable("ConnPolicy"));
 depl:connect("servo_inv.out_goals", "servo_ident.in_goals_fixed", rtt.Variable("ConnPolicy"));
+depl:stream("servo_ident.in_battery_state", ros:topic("~in_battery_state"))
 -- data flow: servo_ident -> servo_inv
 depl:connect("servo_ident.out_servo_models", "servo_inv.in_servo_models", rtt.Variable("ConnPolicy"));
 -- timer syncronization: start of next control cycle
