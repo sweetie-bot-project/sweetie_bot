@@ -1,14 +1,15 @@
 servo_inv:
     priority: 20
-    battery_voltage: 9.0
+    battery_voltage: 12
+    lead: 0.0
+    sign_dead_zone: 0.001
+    extrapolate_position: false
 servo_ident:
     priority: 10
-    control_delay: 1
-    threshold: 0.1
-    battery_voltage: 9.0
-    ignore_accel: true
-
-
-
-
+    control_delay: 0.0224
+    relaxation_factor: 0.995
+    error_averaging_time: 5.0
+    threshold: 0.01
+    battery_voltage: 12.0
+    sign_dead_zone: 0.001
 
