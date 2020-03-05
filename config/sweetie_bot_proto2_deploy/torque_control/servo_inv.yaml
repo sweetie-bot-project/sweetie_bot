@@ -3,6 +3,7 @@ servo_inv:
     battery_voltage: 12
     lead: 0.0
     sign_dead_zone: 0.001
+    extrapolate_position: false
 servo_ident:
     priority: 10
     control_delay: 0.0224

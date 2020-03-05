@@ -20,12 +20,12 @@ require "motion_core"
 
 ros:import("sweetie_bot_servo_inv");
 -- load component
-depl:loadComponent("servo_inv","sweetie_bot::motion::ServoInvLead")
+depl:loadComponent("servo_inv","sweetie_bot::motion::ServoInvExtrapolate")
 servo_inv = depl:getPeer("servo_inv")
 config.get_peer_rosparams(servo_inv)
 
 -- timer syncronization
-depl:connect(timer.aggregator.port, "servo_inv.sync_step", rtt.Variable("ConnPolicy"));
+-- depl:connect(timer.aggregator.port, "servo_inv.sync_step", rtt.Variable("ConnPolicy"));
 
 -- data flow: aggregator_ref -> servo_inv -> herkulex_sched
 depl:connect("aggregator_ref.out_joints_sorted", "servo_inv.in_joints_fixed", rtt.Variable("ConnPolicy"));
