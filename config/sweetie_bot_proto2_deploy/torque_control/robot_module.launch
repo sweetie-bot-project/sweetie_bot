@@ -4,6 +4,6 @@
 	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
 	<!-- link to default configuration -->
 	<include file="$(find sweetie_bot_proto2_deploy)/default/robot_module.launch" >
-		<arg name="robot_ns" value="$(arg robot_ns)" /> 
+		<arg name="robot_ns" value="$(arg robot_ns)" />
 	</include>
 </launch>

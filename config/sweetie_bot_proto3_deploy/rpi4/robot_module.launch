@@ -7,4 +7,8 @@
 		<remap from="detections" to="$(arg robot_ns)/detections" />
 		<remap from="markers" to="$(arg robot_ns)/hmi/detections" />
 	</node>
+	<!-- run battery monitor -->
+	<node ns="hardware" machine="sweetiebot" name="battery_monitor" pkg="sweetie_bot_battery_monitor" type="battery_monitor">
+		<remap from="battery_state" to="$(arg robot_ns)/battery_state" />
+	</node>
 </launch>

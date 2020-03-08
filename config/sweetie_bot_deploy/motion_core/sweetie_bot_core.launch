@@ -15,7 +15,8 @@
 	<group if="$(arg robot)">
 		<!-- REFERENCE POSE PUBLISHING: tf, joint_states -->
 		<!-- remaps -->
-		<remap from="motion/aggregator_ref/out_joints_sorted" to="joint_states" />
+		<remap from="motion/aggregator_ref/out_joints_sorted" to="$(arg robot_ns)/joint_states" />
+		<remap from="motion/in_battery_state" to="$(arg robot_ns)/battery_state" />
 		<!-- robot_state_publisher: reference robot pose: local publisher -->
 		<include file="$(find sweetie_bot_deploy)/motion_core/robot_state.launch">
 			<arg if="$(arg run_real)" name="machine" value="sweetiebot"/> 
