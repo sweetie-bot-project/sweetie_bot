@@ -75,8 +75,23 @@ def decode_battery_state(uevent):
 	state.power_supply_health = decode_power_supply_health(uevent.get('POWER_SUPPLY_HEALTH'))
 	state.power_supply_technology = decode_power_supply_technology(uevent.get('POWER_SUPPLY_TECHNOLOGY'))
 
-	# capacity: it can be supplied as energy in uW or as charge in uAh
-	if 'POWER_SUPPLY_ENERGY_NOW' in uevent:
+	# Charge and carerrent may present explicitly fc CHARGE and CURRENT values,
+	# or they can be calculated from ENERGY and POWER. We should choice one or another method,
+	# based in properties availiability.
+	if 'POWER_SUPPLY_CHARGE_NOW' in uevent and ('POWER_SUPPLY_CURRENT_NOW' in uevent or 'POWER_SUPPLY_POWER_NOW' not in uevent):
+		# battery module reporting capacity in uAh
+		state.charge = decode_float_noexcept( uevent.get('POWER_SUPPLY_CHARGE_NOW') )
+		state.capacity = decode_float_noexcept( uevent.get('POWER_SUPPLY_CHARGE_FULL') )
+		state.design_capacity = decode_float_noexcept( uevent.get('POWER_SUPPLY_CHARGE_FULL_DESIGN') )
+                # charge/discharge is rated in uA
+		current_now = decode_float_noexcept( uevent.get('POWER_SUPPLY_CURRENT_NOW') )
+		if state.power_supply_status == BatteryState.POWER_SUPPLY_STATUS_CHARGING:
+			state.current = abs(current_now)
+		elif state.power_supply_status == BatteryState.POWER_SUPPLY_STATUS_DISCHARGING:
+			state.current = - abs(current_now)
+		else:
+			state.current = 0
+	elif 'POWER_SUPPLY_ENERGY_NOW' in uevent:
 		# battery module reporting capacity as uW via energy properties
 		energy_now = decode_float_noexcept( uevent.get('POWER_SUPPLY_ENERGY_NOW') )
 		energy_full = decode_float_noexcept( uevent.get('POWER_SUPPLY_ENERGY_FULL') )
@@ -86,25 +101,12 @@ def decode_battery_state(uevent):
 		state.charge = energy_now / voltage_design
 		state.capacity = energy_full / voltage_design
 		state.design_capacity = energy_full_design / voltage_design
-		# charge/discharge rate
-		power_now = decode_float_noexcept( uevent.get('POWER_SUPPLY_POWER_NOW') )
+		# charge/discharge rate in uW
+                power_now = decode_float_noexcept( uevent['POWER_SUPPLY_POWER_NOW'] )
 		if state.power_supply_status == BatteryState.POWER_SUPPLY_STATUS_CHARGING:
-			state.current = power_now / voltage_design
+			state.current = abs(power_now) / voltage_design
 		elif state.power_supply_status == BatteryState.POWER_SUPPLY_STATUS_DISCHARGING:
-			state.current = - power_now / voltage_design
-		else:
-			state.current = 0
-	elif 'POWER_SUPPLY_CHARGE_NOW' in uevent:
-		# battery module reporting capacity in uAh
-		state.charge = decode_float_noexcept( uevent.get('POWER_SUPPLY_CHARGE_NOW') )
-		state.capacity = decode_float_noexcept( uevent.get('POWER_SUPPLY_CHARGE_FULL') )
-		state.design_capacity = decode_float_noexcept( uevent.get('POWER_SUPPLY_CHARGE_FULL_DESIGN') )
-		# charge/discharge rate
-		current_now = decode_float_noexcept( uevent.get('POWER_SUPPLY_POWER_NOW') )
-		if state.power_supply_status == BatteryState.POWER_SUPPLY_STATUS_CHARGING:
-			state.current = current_now
-		elif state.power_supply_status == BatteryState.POWER_SUPPLY_STATUS_DISCHARGING:
-			state.current = - current_now
+			state.current = - abs(power_now) / voltage_design
 		else:
 			state.current = 0
 	else:
@@ -113,6 +115,7 @@ def decode_battery_state(uevent):
 		state.design_capacity = float('NaN')
 		state.current = float('NaN')
 
+	# return battery state
 	return state
 
 
@@ -146,8 +149,8 @@ def main():
 	# node interface
 	state_pub = rospy.Publisher('battery_state', BatteryState, queue_size=1)
 
-	# internal timer
-	rate = rospy.Rate(period)
+	# internal timer (rate is set in Hz)
+	rate = rospy.Rate(1.0 / period)
 
 	# main cycle
 	while not rospy.is_shutdown():
