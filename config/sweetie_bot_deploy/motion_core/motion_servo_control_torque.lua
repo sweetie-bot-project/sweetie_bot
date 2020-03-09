@@ -36,6 +36,8 @@ config.get_peer_rosparams(servo_inv)
 -- data flow: dynamics_inv, battery -> servo_inv
 depl:connect("dynamics_inv.out_joints_accel_sorted", "servo_inv.in_joints_accel_fixed", rtt.Variable("ConnPolicy"))
 depl:stream("servo_inv.in_battery_state", ros:topic("~in_battery_state"))
+-- data flow: servo goal publication
+depl:stream("servo_inv.out_goals", ros:topic("~/servo_inv/out_goals"))
 
 assert(servo_inv:start())
 
