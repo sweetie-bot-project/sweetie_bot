@@ -37,7 +37,17 @@ kinematics_fwd_real:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
     virtual_links: false
+imu_real:
+    priority: 25
+    imu_frame: 'base_link'
+    odometry_frame: 'odom_combined'
+    tf_prefix: 'real'
+    compass_enable: true
 timer:
     priority: 45
     period: 0.056
+    imu_frame: 'base_link'
+    odometry_frame: 'odom_combined'
+    tf_prefix: 'real'
+    compass_enable: true
     herkulex_period: 0.056

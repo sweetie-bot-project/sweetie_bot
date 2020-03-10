@@ -148,7 +148,6 @@ function config.file(conf_file)
 		conf_file_param = "conf_file/" .. conf_file_param
 	end
 	-- try to get rosparam
-	print(conf_file_param)
 	local buffer = config.get_rosparam(conf_file_param, 'string')
 	if buffer then
 		print("config.file: use ROS parameter ", conf_file_param)

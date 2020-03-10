@@ -16,3 +16,7 @@ require "motion_core"
 --
 require "motion_servo_control_torque"
 
+-- 
+-- deploy imu based odometry
+--
+require "odometry_imu"
