@@ -35,9 +35,9 @@ assert(resource_control.arbiter:start(), "ERROR: Unable to start arbiter.")
 --
 require "timer"
 
---
--- load and start pose aggregator
---
+-------------------------------------------------------------
+--              REFERENCE POSE PROCESSING                  --
+-------------------------------------------------------------
 
 --
 -- aggregator for reference pose
@@ -68,31 +68,6 @@ depl:stream("aggregator_ref.out_joints_sorted", ros:topic("~aggregator_ref/out_j
 depl:stream("aggregator_ref.out_supports_sorted", ros:topic("~aggregator_ref/out_supports_sorted"))
 -- configure component
 aggregator_ref:configure()
-
---
--- aggregator for real pose
---
-
--- load component
-depl:loadComponent("aggregator_real", "sweetie_bot::motion::Aggregator");
-aggregator_real = depl:getPeer("aggregator_real")
-aggregator_real:loadService("marshalling")
-aggregator_real:loadService("rosparam")
---set properties: publish on event
-aggregator_real:getProperty("publish_on_timer"):set(false)
-aggregator_real:getProperty("publish_on_event"):set(true)
---set properties
-aggregator_real:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
-aggregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
-aggregator_real:provides("rosparam"):getParam("","robot_model")
---get other properties
-config.get_peer_rosparams(aggregator_real)
--- timer syncronization: publish at same time as controllers
-depl:connect(timer.controller.port, "aggregator_real.sync_step", rtt.Variable("ConnPolicy"));
--- publish pose to ROS
-depl:stream("aggregator_real.out_joints_sorted", ros:topic("~aggregator_real/out_joints_sorted"))
--- configure component
-aggregator_real:configure()
 
 -- 
 -- Forward kineamtics component
@@ -159,9 +134,100 @@ odometry_ref:configure()
 
 assert(kinematics_inv:start(), "ERROR: Unable to start kinematics_inv.")
 assert(aggregator_ref:start(), "ERROR: Unable to start aggregator_ref.") 
-assert(aggregator_real:start(), "ERROR: Unable to start aggregator_real.")
 assert(kinematics_fwd:start(), "ERROR: Unable to start kinematics_fwd.")
 assert(odometry_ref:start(), "ERROR: Unable to start odometry_ref.") 
+
+
+-------------------------------------------------------------
+--                  REAL POSE PROCESSING                   --
+-------------------------------------------------------------
+
+--
+-- Aggregator for real pose
+--
+
+-- load component
+depl:loadComponent("aggregator_real", "sweetie_bot::motion::Aggregator");
+aggregator_real = depl:getPeer("aggregator_real")
+aggregator_real:loadService("marshalling")
+aggregator_real:loadService("rosparam")
+--set properties: publish on event
+aggregator_real:getProperty("publish_on_timer"):set(false)
+aggregator_real:getProperty("publish_on_event"):set(true)
+--set properties
+aggregator_real:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
+aggregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
+aggregator_real:provides("rosparam"):getParam("","robot_model")
+--get other properties
+config.get_peer_rosparams(aggregator_real)
+-- timer syncronization: publish at same time as controllers
+depl:connect(timer.controller.port, "aggregator_real.sync_step", rtt.Variable("ConnPolicy"));
+-- publish pose to ROS
+depl:stream("aggregator_real.out_joints_sorted", ros:topic("~aggregator_real/out_joints_sorted"))
+-- configure component
+aggregator_real:configure()
+
+--
+-- Forward kinematics component for real robot pose
+--
+
+-- load component
+depl:loadComponent("kinematics_fwd_real","sweetie_bot::motion::KinematicsFwd")
+kinematics_fwd_real = depl:getPeer("kinematics_fwd_real")
+config.get_peer_rosparams(kinematics_fwd_real)
+-- data flow: aggregator_real -> kinemaitics_fwd_real
+depl:connect("aggregator_real.out_joints_sorted", "kinematics_fwd_real.in_joints_sorted", rtt.Variable("ConnPolicy"));
+-- connect to RobotModel
+depl:connectServices("kinematics_fwd_real", "aggregator_real")
+-- publish pose to ROS
+depl:stream("kinematics_fwd_real.out_limbs_fixed", ros:topic("~kinematics_fwd_real/out_limbs_fixed"))
+
+kinematics_fwd_real:configure()
+
+
+-- start components
+assert(aggregator_real:start(), "ERROR: Unable to start aggregator_real.")
+assert(kinematics_fwd_real:start(), "ERROR: Unable to start kinematics_fwd_real.")
+
+-------------------------------------------------------------
+--                  DYNAMICS                               --
+-------------------------------------------------------------
+
+-- 
+-- Dynamics
+--
+
+ros:import("sweetie_bot_dynamics");
+-- load component
+depl:loadComponent("dynamics_inv","sweetie_bot::motion::DynamicsInvSimple")
+dynamics_inv = depl:getPeer("dynamics_inv")
+-- load parameters
+dynamics_inv:loadService("rosparam")
+dynamics_inv:provides("rosparam"):getParam("robot_description_dynamics", "robot_description")
+config.get_peer_rosparams(dynamics_inv)
+
+-- data flow: aggregator_ref, kinematics_fwd, aggregator_real-> dynamics_inv
+depl:connect("aggregator_ref.out_joints_sorted", "dynamics_inv.in_joints_ref_sorted", rtt.Variable("ConnPolicy"));
+depl:connect("aggregator_ref.out_supports_sorted", "dynamics_inv.in_supports_sorted", rtt.Variable("ConnPolicy"));
+depl:connect("aggregator_real.out_joints_sorted", "dynamics_inv.in_joints_real_sorted", rtt.Variable("ConnPolicy"))
+depl:connect("odometry_ref.out_base", "dynamics_inv.in_base_ref", rtt.Variable("ConnPolicy"));
+depl:connect(timer.aggregator.port, "dynamics_inv.sync_step", rtt.Variable("ConnPolicy"));
+
+-- connect to RobotModel
+depl:connectServices("dynamics_inv", "aggregator_ref")
+-- publish tf to ROS
+depl:stream("dynamics_inv.out_balance", ros:topic("~dynamics_inv/out_balance"))
+depl:stream("dynamics_inv.out_wrenches_fixed", ros:topic("~dynamics_inv/out_wrenches_fixed"))
+depl:stream("dynamics_inv.out_joints_accel_sorted", ros:topic("~dynamics_inv/out_joints_accel_sorted"))
+
+dynamics_inv:configure()
+assert(dynamics_inv:start(), "ERROR: Unable to start dynamics_inv.")
+
+
+-------------------------------------------------------------
+--                  HELPER FUNCTIONS                       --
+-------------------------------------------------------------
+
 
 --- Helper function for setting support
 -- @param val Support legs code: 123 means leg1, leg2, leg3
@@ -193,32 +259,3 @@ function debug.reset_platform_pose(z)
 	override_odometry_port:write( p )
 end
 
--- 
--- Dynamics
---
-
-ros:import("sweetie_bot_dynamics");
--- load component
-depl:loadComponent("dynamics_inv","sweetie_bot::motion::DynamicsInvSimple")
-dynamics_inv = depl:getPeer("dynamics_inv")
--- load parameters
-dynamics_inv:loadService("rosparam")
-dynamics_inv:provides("rosparam"):getParam("robot_description_dynamics", "robot_description")
-config.get_peer_rosparams(dynamics_inv)
-
--- data flow: aggregator_ref, kinematics_fwd, aggregator_real-> dynamics_inv
-depl:connect("aggregator_ref.out_joints_sorted", "dynamics_inv.in_joints_ref_sorted", rtt.Variable("ConnPolicy"));
-depl:connect("aggregator_ref.out_supports_sorted", "dynamics_inv.in_supports_sorted", rtt.Variable("ConnPolicy"));
-depl:connect("aggregator_real.out_joints_sorted", "dynamics_inv.in_joints_real_sorted", rtt.Variable("ConnPolicy"))
-depl:connect("odometry_ref.out_base", "dynamics_inv.in_base_ref", rtt.Variable("ConnPolicy"));
-depl:connect(timer.aggregator.port, "dynamics_inv.sync_step", rtt.Variable("ConnPolicy"));
-
--- connect to RobotModel
-depl:connectServices("dynamics_inv", "aggregator_ref")
--- publish tf to ROS
-depl:stream("dynamics_inv.out_balance", ros:topic("~dynamics_inv/out_balance"))
-depl:stream("dynamics_inv.out_wrenches_fixed", ros:topic("~dynamics_inv/out_wrenches_fixed"))
-depl:stream("dynamics_inv.out_joints_accel_sorted", ros:topic("~dynamics_inv/out_joints_accel_sorted"))
-
-dynamics_inv:configure()
-assert(dynamics_inv:start(), "ERROR: Unable to start dynamics_inv.")

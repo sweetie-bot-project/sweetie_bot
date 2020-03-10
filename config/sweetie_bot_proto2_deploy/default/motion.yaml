@@ -4,12 +4,12 @@ resource_control:
         resources: [ leg1, leg2, leg3, leg4, head, eyes, tail ]
 aggregator_ref: 
     priority: 20
+    publish_on_timer: true
+    publish_on_event: false
 servo_inv:
     priority: 20
     lead: 0.056
     extrapolate_position: false
-aggregator_real:
-    priority: 20
 kinematics_inv:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
@@ -29,6 +29,14 @@ odometry_ref:
 dynamics_inv:
     priority: 20
     legs: [ leg1, leg3, leg4, leg2 ]
+aggregator_real:
+    priority: 20
+    publish_on_timer: false
+    publish_on_event: true
+kinematics_fwd_real:
+    priority: 20
+    kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
+    virtual_links: false
 timer:
     priority: 45
     period: 0.056

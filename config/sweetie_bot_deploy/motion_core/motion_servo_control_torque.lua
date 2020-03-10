@@ -58,9 +58,9 @@ for name, group in pairs(herkulex) do
 end
 
 -- data flow: herkulex_sched -> aggregator_real
-for name, group in pairs(herkulex) do
-	depl:connect("herkulex/"..name.."/sched.out_joints", "aggregator_real.in_joints", rtt.Variable("ConnPolicy"))
-end
+-- for name, group in pairs(herkulex) do
+-- 	depl:connect("herkulex/"..name.."/sched.out_joints", "aggregator_real.in_joints", rtt.Variable("ConnPolicy"))
+-- end
 
 -- 
 -- Servo identification component.
@@ -84,10 +84,12 @@ depl:connect("servo_inv.out_goals", "servo_ident.in_goals_fixed", rtt.Variable("
 depl:stream("servo_ident.in_battery_state", ros:topic("~in_battery_state"))
 -- data flow: servo_ident -> servo_inv
 depl:connect("servo_ident.out_servo_models", "servo_inv.in_servo_models", rtt.Variable("ConnPolicy"));
+-- data flow: servo_ident -> aggregator_real
+depl:connect("servo_ident.out_torque_error_fixed", "aggregator_real.in_joints", rtt.Variable("ConnPolicy"));
 -- timer syncronization: start of next control cycle
 depl:connect(timer.controller.port, "servo_ident.sync_step", rtt.Variable("ConnPolicy"));
 
--- assert(servo_ident:start())
+assert(servo_ident:start())
 
 --- start herkulex scheduler
 for name, group in pairs(herkulex) do
