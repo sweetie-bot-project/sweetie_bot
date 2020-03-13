@@ -45,7 +45,7 @@ destination_marker:
     gait_type_default_idx: 0
     n_steps_options: [ 2, 3, 4, 5 ]
     n_steps_default_idx: 2
-    duration: 4.0
+    duration: 3.5
     nominal_height: 0.1825
     recorded_trajectory_name: "recorded_trajectory"
     ee_names: [ leg1, leg2, leg3, leg4 ]
