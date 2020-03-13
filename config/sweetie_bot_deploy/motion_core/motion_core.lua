@@ -172,7 +172,7 @@ aggregator_real:configure()
 --
 
 -- load component
-depl:loadComponent("kinematics_fwd_real","sweetie_bot::motion::KinematicsFwd")
+depl:loadComponent("kinematics_fwd_real","sweetie_bot::motion::KinematicsFwdForce")
 kinematics_fwd_real = depl:getPeer("kinematics_fwd_real")
 config.get_peer_rosparams(kinematics_fwd_real)
 -- data flow: aggregator_real -> kinemaitics_fwd_real
