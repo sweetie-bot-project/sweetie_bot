@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import rospy, os, sys
+import xmlrpclib
+from rospy import ServiceProxy
+from actionlib import SimpleActionClient
+
+
+from actionlib_msgs.msg import GoalStatus
+from sweetie_bot_control_msgs.msg import FollowStepSequenceAction, FollowStepSequenceGoal
+from rtt_ros_msgs.srv import Eval, EvalRequest, EvalResponse
+
+def print_help():
+	print 'Usage: {0} STEP_SEQ1 [ STEP_SEQ2 ... ]'.format(sys.argv[0])
+	print '''
+Start servo identification (call "motion/servo_ident" OROCOS component "startIdentification()" opeartion), 
+execute FollowStepSequence stored in STEP_SEQ1, STEP_SEQ2, ... parameters from namespace "/saved_msgs/step_sequence/" 
+and stop then identification. If result is satispying (see log) then servo models of "motion/servo_inv" is updated.
+'''
+	sys.exit(0)
+
+def execute_step_sequence_param(action_client, param):
+    # add default parameter path
+    param = '/saved_msgs/step_sequence/' + param
+    # get ROS parameter value
+    param_value = rospy.get_param(param, None)
+    if not isinstance(param_value, xmlrpclib.Binary):
+        rospy.logerr('ROS parameter "%s" type is not Binary or it is not defined.' % param)
+        return False
+    # deserialize message
+    msg = FollowStepSequenceGoal()
+    msg.deserialize(param_value.data)
+    del msg.base_motion.points[:]
+    # execute message
+    action_client.send_goal_and_wait(msg)
+    state = action_client.get_state()
+    result = action_client.get_result()
+    # parse result
+    return state == GoalStatus.SUCCEEDED
+
+# parse command line arguments
+if len(sys.argv) < 2:
+    print_help()
+
+# init node
+rospy.init_node('servo_identification')
+
+# action client
+action_client = SimpleActionClient('motion/controller/step_sequence', FollowStepSequenceAction) 
+if not action_client.wait_for_server(timeout=rospy.Duration(3.0)):
+    rospy.logerr('motion/controller/step_sequence is not available.')
+    sys.exit(-1)
+
+# eval service
+deployer_eval = ServiceProxy('motion/Deployer/eval', Eval)
+deployer_eval.wait_for_service(timeout = 3.0)
+
+# start identification
+# TODO use with .. as .. statement current code is not exception safe.
+
+success = deployer_eval(code = 'servo_ident.startIdentification(strings("joint11", "joint12","joint13","joint21", "joint22","joint23","joint31", "joint32","joint33","joint41", "joint42","joint43"))')
+print('Call startIdentification(): %s' % success)
+if not success:
+    rospy.logerr('Unable to execute servo_ident:startIdentification() operation.')
+    sys.exit(-1)
+
+# execute step sequences
+for k in range(1, len(sys.argv)):
+    param = sys.argv[k]
+    sys.stdout.write('Executing "%s" StepSequence...' % param)
+    success = execute_step_sequence_param(action_client, param)
+    if not success:
+        print('FAILED')
+        break
+    print('SUCCEEDED')
+
+# abort identification identification
+if not success:
+    success = deployer_eval(code = 'servo_ident.abortIdentification()')
+    print('Call abortIdentification(): %s' % success)
+    sys.exit(-1)
+
+# finish identification
+success = deployer_eval(code = 'servo_ident.endIdentification()')
+print('Call endIdentification(): %s' % success)
+
+

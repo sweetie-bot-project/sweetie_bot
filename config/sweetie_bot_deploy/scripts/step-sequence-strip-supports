@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import rospy, os, sys
+import xmlrpclib
+import StringIO
+
+from sweetie_bot_control_msgs.msg import FollowStepSequenceGoal
+from geometry_msgs.msg import Pose
+from kdl_msgs.msg import Twist
+
+def print_help():
+	print 'Usage: {0} PARAM'.format(sys.argv[0])
+	print '''
+
+In sweetie_bot_control_msgs/FollowStepSequenceGoal base position, speed and acceleration are set to zero,
+contacts indication is also removed. Resulting trajectory can be used for servo model identification.
+'''
+	sys.exit(0)
+
+# parse command line arguments
+if len(sys.argv) < 2:
+	print_help()
+
+# get ROS parameter name
+param = sys.argv[1]
+param_value = rospy.get_param(param, None)
+if not isinstance(param_value, xmlrpclib.Binary):
+    raise KeyError, 'ROS parameter type is not Binary.'
+# deserialize message
+msg = FollowStepSequenceGoal()
+msg.deserialize(param_value.data)
+# remove information about base movement
+for k in range(len(msg.base_motion.points)):
+    msg.base_motion.points[k].pose = Pose()
+    msg.base_motion.points[k].twist = Twist()
+    msg.base_motion.points[k].accel = Twist()
+# remove contacts
+for ee in range(len(msg.ee_motion)):
+    for k in range(len(msg.ee_motion[ee].points)):
+        msg.ee_motion[ee].points[k].contact = False
+# serialize and save message
+buf = StringIO.StringIO()
+msg.serialize(buf)
+rospy.set_param(param, xmlrpclib.Binary(buf.getvalue()))
+
+sys.exit(0)
+
