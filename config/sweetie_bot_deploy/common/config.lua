@@ -28,6 +28,10 @@ ros:import("rtt_rosnode")
 ros:import("rtt_rosparam")
 ros:import("rtt_actionlib")
 ros:import("rtt_dynamic_reconfigure")
+ros:import("rtt_rosdeployment")
+
+--- provide interface for invorking external commands via OROCOS scripting
+depl:loadService("Deployer", "rosdeployment")
 
 --
 local function str_array_join(array) 
