@@ -29,7 +29,7 @@ end
 config.get_peer_rosparams(imu_real)
 -- data flow to ROS
 depl:stream("imu_real.out_imu", ros:topic("~imu_real/out_imu"))
-depl:stream("imu_real.out_tf", ros:topic("~/imu_real/out_tf"))
+depl:stream("imu_real.out_tf", ros:topic("~imu_real/out_tf"))
 
 -- configure and start component
 
