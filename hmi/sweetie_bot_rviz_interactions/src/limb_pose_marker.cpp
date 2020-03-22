@@ -49,17 +49,17 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
 {
   limb_node_handle.getParam("resource", resource_name);
 
-  // Set custom controller and activator
-  if (limb_node_handle.hasParam("controller")) {
-    std::string controller_topic;
-    limb_node_handle.getParam("controller", controller_topic);
-    pose_pub = ros::NodeHandle().advertise<geometry_msgs::PoseStamped>(controller_topic, 1);
+  // Set custom pose topic and activation action
+  if (limb_node_handle.hasParam("pose_topic")) {
+    std::string pose_topic;
+    limb_node_handle.getParam("pose_topic", pose_topic);
+    pose_pub = ros::NodeHandle().advertise<geometry_msgs::PoseStamped>(pose_topic, 1);
   }
 
-  if (limb_node_handle.hasParam("activator")) {
-    std::string activator_action;
-    limb_node_handle.getParam("activator", activator_action);
-    action_client.reset(new ActionClient(activator_action, false));
+  if (limb_node_handle.hasParam("activation_action")) {
+    std::string activation_action;
+    limb_node_handle.getParam("activation_action", activation_action);
+    action_client.reset(new ActionClient(activation_action, false));
   }
 
   init(makeMarkerBody);

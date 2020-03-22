@@ -27,8 +27,8 @@ robot_pose_marker:
           normalized_z_level: 0.3287
           frame: bone55
           resource: nose
-          controller: limb_pose
-          activator: limb_set_operational_action
+          pose_topic: limb_pose
+          activation_action: limb_set_operational_action
         head:
           name: "Look At marker"
           is_sphere: true
@@ -36,8 +36,8 @@ robot_pose_marker:
           normalized_z_level: 0.3287
           frame: bone55
           resource: head
-          controller: look_at_pose
-          activator: look_at_set_operational_action
+          pose_topic: look_at_pose
+          activation_action: look_at_set_operational_action
 destination_marker:
     name: "Destination Marker"
     scale: 1.1
