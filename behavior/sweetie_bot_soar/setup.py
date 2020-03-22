@@ -4,7 +4,7 @@ from catkin_pkg.python_setup import generate_distutils_setup
 
 # fetch values from package.xml
 setup_args = generate_distutils_setup(
-    packages=['sweetie_bot_soar'],
+    packages=['sweetie_bot_soar', 'sweetie_bot_soar.input_modules', 'sweetie_bot_soar.output_modules'],
     package_dir={'': 'src'},
 )
 
