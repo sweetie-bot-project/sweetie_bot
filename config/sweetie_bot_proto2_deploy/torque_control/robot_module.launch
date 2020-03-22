@@ -1,6 +1,9 @@
 <!-- MODULE: init robot-specific nodes and ROS services. -->
 <!-- run_real and robot launch parameters are always assumed. -->
 <launch>
+	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
 	<!-- link to default configuration -->
-	<include file="$(find sweetie_bot_proto2_deploy)/default/robot_module.launch" />
+	<include file="$(find sweetie_bot_proto2_deploy)/default/robot_module.launch" >
+		<arg name="robot_ns" value="$(arg robot_ns)" />
+	</include>
 </launch>

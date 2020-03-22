@@ -1,7 +1,7 @@
 
-stretch-amd64: &desktop_template
+stretch-amd64:
   stage: build
-  image: registry.gitlab.com/slavanap/ros-build:stretch-amd64
+  image: registry.gitlab.com/slavanap/ros-build:$CI_JOB_NAME
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
     ROBOT: "false"
@@ -11,7 +11,6 @@ stretch-amd64: &desktop_template
       - build.tar
   script:
     - |
-      export CI_PROJECT_DIR="$(pwd)" # GitLab bugfix
       "$CI_PROJECT_DIR/.gitlab-ci/recover-ts.sh" '' HEAD
       git submodule foreach --recursive "$CI_PROJECT_DIR/.gitlab-ci/recover-ts.sh" '' HEAD
       if [[ "$CI_COMMIT_REF_NAME" != "master" ]] && [[ -f build.tar ]]; then
@@ -64,46 +63,32 @@ stretch-amd64: &desktop_template
     paths:
       - "sweetie-bot-*.deb"
 
-xenial-amd64:
-  <<: *desktop_template
-  image: registry.gitlab.com/slavanap/ros-build:xenial-amd64
-  before_script:
-    - mkdir -p /opt/ros/sweetie_bot && cp /opt/ros/melodic/setup.sh /opt/ros/melodic/env.sh /opt/ros/sweetie_bot/
-
 bionic-amd64:
-  <<: *desktop_template
-  image: registry.gitlab.com/slavanap/ros-build:bionic-amd64
+  extends: stretch-amd64
 
-bionic-tinker: &robot_template
-  <<: *desktop_template
-  image: registry.gitlab.com/slavanap/ros-build:bionic-tinker
+bionic-tinker:
+  extends: stretch-amd64
   variables:
-    GIT_SUBMODULE_STRATEGY: recursive
     ROBOT: "true"
 
-bionic-orangepi:
-  <<: *robot_template
-  image: registry.gitlab.com/slavanap/ros-build:bionic-orangepi
+buster-arm64v8:
+  extends: bionic-tinker
 
 
 
-stretch-amd64-test: &test_template
+stretch-amd64-test:
   stage: test
   image: docker:stable-git
   services:
     - docker:stable-dind
   dependencies:
     - stretch-amd64
-  variables: &test_vars
+  variables:
     DOCKER_HOST: tcp://docker:2375/
     DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
     IMAGE_SOURCE: debian:stretch
   script:
-    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git .gitlab-ci/sweetie_bot_flexbe_behaviors
-    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git .gitlab-ci/sweetie_bot_proto2_movements
-    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_proto3_movements.git .gitlab-ci/sweetie_bot_proto3_movements
-    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/sweetie-bot/sweetie_bot_sounds.git .gitlab-ci/sweetie_bot_sounds
-
     - docker build -t test --build-arg image="$IMAGE_SOURCE" -f .gitlab-ci/test.dockerfile .
     - docker create --name temp test
     - docker cp temp:/home/dev/.ros/log ./__log || true
@@ -113,7 +98,6 @@ stretch-amd64-test: &test_template
     - docker cp temp:/home/dev/diff-towr.png . || true
     - docker cp temp:/home/dev/retcode . && cat ./retcode
     - exit $(cat ./retcode)
-
   artifacts:
     expire_in: 3 weeks
     paths:
@@ -123,11 +107,10 @@ stretch-amd64-test: &test_template
     when: always
 
 bionic-amd64-test:
-  <<: *test_template
+  extends: stretch-amd64-test
   dependencies:
     - bionic-amd64
   variables:
-    <<: *test_vars
     IMAGE_SOURCE: ubuntu:bionic
 
 
@@ -137,10 +120,9 @@ pages:
   image: ubuntu:bionic
   dependencies:
     - stretch-amd64
-    - xenial-amd64  # deprecated
     - bionic-amd64
     - bionic-tinker
-    - bionic-orangepi
+    - buster-arm64v8
   only:
     - master
   artifacts:
@@ -159,28 +141,28 @@ pages:
       cat > conf/distributions <<EOF
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: stretch
-      Architectures: armhf i386 amd64
-      Components: main
-      Description: no description
-      SignWith: yes
-
-      Origin: $CI_PROJECT_NAMESPACE.gitlab.io
-      Codename: xenial
-      Architectures: i386 amd64
+      Architectures: amd64
       Components: main
       Description: no description
       SignWith: yes
 
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: bionic
-      Architectures: armhf i386 amd64
+      Architectures: armhf amd64
+      Components: main
+      Description: no description
+      SignWith: yes
+
+      Origin: $CI_PROJECT_NAMESPACE.gitlab.io
+      Codename: buster
+      Architectures: arm64
       Components: main
       Description: no description
       SignWith: yes
       EOF
     - |
-      for dist in stretch xenial bionic; do
-        shopt -s nullglob
+      shopt -s nullglob
+      for dist in stretch bionic; do
         for f in $CI_PROJECT_DIR/*${dist}*.deb; do
           reprepro -S utils includedeb "$dist" "$f"
         done

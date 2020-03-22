@@ -1,0 +1,64 @@
+# OVERALL BEHAVIOR SELECTION
+
+# PROPOSE ANIMATION
+
+# Propose perform animation (no one around)
+sp {walker*propose*substate*animation*alone
+	(state <s> ^name walker ^drive <d>)
+	(<d> ^name movement)
+-->
+	(<s> ^operator <o> = 2 +)
+   	(<o> ^name animation-substate)
+   	(<o> ^drive <d>)
+   	(<o> ^tag alone)
+	(<o> ^substate select-action)
+}
+
+# PROPOSE WAIT
+
+# invoke RandHeadMovements for random timeout
+sp {walker*propose*rand*head*movements
+	(state <s> ^name walker ^drive <d>)
+	(<d> ^name movement)
+-->
+	(<s> ^operator <o> = 1 +)
+   	(<o> ^name flexbe ^drive <d>)
+   	(<o> ^behavior ExecuteRandHeadMovements ^param <p>)
+	(<p> ^timeout (+ 5 (rand-int 15)))
+}
+
+# WALKING
+
+# Install walking goal if one is missing. Then robot should walk sometime because goal-related rules are acive.
+
+sp {propose*walker*add*step-sequence*goal
+	(state <s> ^name walker ^drive <d> ^mem <m>)
+	(<d> ^name movement)
+	-(<s> ^goal.name step-sequence)
+	(<m> ^step-sequence <step-seq>)
+	(<step-seq> ^enter-point)
+-->
+	(<s> ^operator <o> = 2 +)
+	(<o> ^name add-step-sequence-goal ^drive <d> ^step-sequence <step-seq>)
+}
+
+sp {apply*walker*add*step-sequence*goal
+	(state <s> ^operator <o>)
+	(<o> ^name add-step-sequence-goal ^drive <d> ^step-sequence <step-seq>)
+-->
+	(<s> ^goal <g>)
+	(<g> ^name step-sequence ^drive <d> ^step-sequence <step-seq> ^state move ^num-preference 2)
+}
+
+# JOYSTICK CONTROL
+
+sp {propose*joystik*control
+	(state <s> ^name walker)
+	(<s> ^io.input-link.joystick.pressed <key>)
+	(<s> ^drive <d>)
+	(<d> ^name obey)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name flexbe ^drive <d>)
+	(<o> ^behavior JoystickOverall ^param <p>)
+}

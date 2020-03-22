@@ -1,24 +1,26 @@
 resource_control:
     arbiter:
         priority: 20
-        resources: [ leg1, leg2, leg3, leg4, head, eyes, tail, eyes_focus ]
+        resources: [ leg1, leg2, leg3, leg4, head, eyes, tail ]
 aggregator_ref: 
     priority: 20
+    publish_on_timer: true
+    publish_on_event: false
 servo_inv:
     priority: 20
     lead: 0.056
-aggregator_real:
-    priority: 20
+    extrapolate_position: false
 kinematics_inv:
     priority: 20
-    kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
+    kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
     eps_pos: 0.0001
     timeout_pos: 0.003
     eps_vel: 0.01
     zero_vel_at_singularity: true
+    max_joint_velocity: 18.7 # 60 grad per discretization period
 kinematics_fwd:
     priority: 20
-    kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
+    kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
 odometry_ref:
     priority: 20
     legs: [ leg1, leg3, leg4, leg2 ]
@@ -27,7 +29,25 @@ odometry_ref:
 dynamics_inv:
     priority: 20
     legs: [ leg1, leg3, leg4, leg2 ]
+aggregator_real:
+    priority: 20
+    publish_on_timer: false
+    publish_on_event: true
+kinematics_fwd_real:
+    priority: 20
+    kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
+    virtual_links: false
+imu_real:
+    priority: 25
+    imu_frame: 'base_link'
+    odometry_frame: 'odom_combined'
+    tf_prefix: 'real'
+    compass_enable: true
 timer:
     priority: 45
     period: 0.056
+    imu_frame: 'base_link'
+    odometry_frame: 'odom_combined'
+    tf_prefix: 'real'
+    compass_enable: true
     herkulex_period: 0.056

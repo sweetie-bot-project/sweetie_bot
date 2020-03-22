@@ -1,0 +1,20 @@
+path: sweetie_bot_flexbe_states.wait_for_message_state
+class: WaitForMessageState
+
+import_only: false
+
+launch: '<launch>
+	<node pkg="rosbag" type="play" name="player" args="$(find sweetie_bot_flexbe_states)/tests/bags/test_topic_bool_msgs.bag" />
+</launch>'
+
+data: sweetie_bot_flexbe_states/tests/bags/bool_true_msg.bag
+
+params:
+    topic: //test_topic
+    condition: "lambda msg: msg.data"
+    buffered: False
+
+outcome: received
+
+#output: 
+#    message: /bool_true

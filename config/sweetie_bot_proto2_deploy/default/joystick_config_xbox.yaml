@@ -1,0 +1,68 @@
+KeyPressed:
+    enable_group: "buttons"
+    joy_topic: "joystick"
+    key_topic: "keys_pressed"
+    buttons:
+        0: "3"
+        1: "2"
+        3: "4"
+        4: "0"
+        6: "L1"
+        7: "R1"
+        10: "select"
+        11: "start"
+    axes_positive:
+        0: "tumble"
+        1: "tumble"
+        2: "tumble"
+        3: "tumble"
+        4: "R2"
+        5: "L2"
+        6: "right"
+        7: "down"
+    axes_negative:
+        0: "tumble"
+        1: "tumble"
+        2: "tumble"
+        3: "tumble"
+        6: "left"
+        7: "up"
+JointAxes:
+    enable_group: "eyes"
+    joy_topic: "joystick"
+    joints_topic: "eyes_joints_ref"
+    buttons: { }
+    axes:
+        0:
+            joint: "eyes_yaw"
+            speed: 0.0
+            min: 1.2
+            max: -1.2
+        1:
+            joint: "eyes_pitch"
+            speed: 0.0
+            min: -1.2
+            max: 1.2
+JointAxes:
+    enable_group: "head"
+    joy_topic: "joystick"
+    joints_topic: "head_joints_ref"
+    buttons: { }
+    axes:
+        4:
+            joint: "joint51"
+            speed: -0.4
+            min: -1.2
+            max: 0.2
+        2:
+            joint: "joint52"
+            speed: 0.0
+            min: 1.0
+            max: -1.0
+        3:
+            joint: "joint53"
+            speed: 0.0
+            min: 0.6
+            max: -0.1
+
+

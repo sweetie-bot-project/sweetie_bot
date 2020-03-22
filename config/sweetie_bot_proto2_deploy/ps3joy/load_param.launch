@@ -1,0 +1,7 @@
+<!-- MODULE: Load default params to run joint space controllers -->
+<launch>
+	<!-- default configuration -->
+	<include file="$(find sweetie_bot_proto2_deploy)/default/load_param.launch" />
+	<!-- override config -->
+	<param name="conf_file/joystick_config_yaml" textfile="$(find sweetie_bot_proto2_deploy)/ps3joy/joystick_config.yaml" ></param>
+</launch>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="ExecuteLookAt">
+
+	<executable package_path="sweetie_bot_soar_flexbe_behaviors.executelookat_sm" class="ExecuteLookAtSM" />
+	<tagstring>soar, sweetie_bot, proto2, proto3, interruptable</tagstring>
+	<author>disRecord</author>
+	<date>Mon Nov 18 2019</date>
+	<description>
+		Starts LookAt controller and follow detected object, defined by (label, type) pair. Interruptable behavior.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="text" name="label" default="*" label="label" hint="Sets the label" />
+
+		<param type="text" name="type" default="*" label="type" hint="Sets the type" />
+
+		<param type="numeric" name="timeout" default="30" label="timeout" hint="If no objects detected for timeout second exit behavior.">
+			<min value="0" />
+			<max value="600" />
+		</param>
+
+	</params>
+
+
+</behavior>

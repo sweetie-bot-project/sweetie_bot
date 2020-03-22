@@ -27,8 +27,9 @@ catkin_package(
 #############
 
 # Scripts installation
-install(DIRECTORY default joint_trajectories
+install(DIRECTORY default orangepi rpi4 joint_trajectories
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
 # bash script
 install(PROGRAMS scripts/store-joint-trajectories scripts/store-msgs
 	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

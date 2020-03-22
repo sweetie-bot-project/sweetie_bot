@@ -89,33 +89,62 @@
 			<description>Last  chain element.</description>
 			<value>bone54</value>
 		</simple>
+	</struct>
+	<struct name="nose" type="PropertyBag">
+		<description>Head kinematics chain.</description>
+		<simple name="first_link" type="string">
+			<description>First chain element.</description>
+			<value>base_link</value>
+		</simple>
+		<simple name="last_link" type="string">
+			<description>Last  chain element.</description>
+			<value>bone54</value>
+		</simple>
 		<simple name="last_link_virtual" type="string">
 			<description>Last  chain element.</description>
 			<value>bone56</value>
 		</simple>
 	</struct>
-	<struct name="eyes" type="PropertyBag">
-		<description>Eyes pseudo kinematics chain.</description>
-		<simple name="first_link" type="string">
-			<description>First chain element.</description>
-			<value>bone54</value>
-		</simple>
-		<simple name="last_link" type="string">
-			<description>Last  chain element.</description>
-			<value>eyes_link_yaw</value>
-		</simple>
+  </struct>
+  <struct name="groups" type="PropertyBag">
+    <description>Joint groups.</description>
+	<struct name="leg1" type="PropertyBag">
+		<description>Leg1 joint group.</description>
+		<struct name="chains" type="string[]">
+			<simple name="Element0" type="string"><value>leg1</value></simple>
+		</struct>
 	</struct>
-	<struct name="eyes_focus" type="PropertyBag">
-		<description>Eyes pseudo kinematics chain.</description>
-		<simple name="first_link" type="string">
-			<description>First chain element.</description>
-			<value>bone54</value>
-		</simple>
-		<simple name="last_link" type="string">
-			<description>Last  chain element.</description>
-			<value>link_eyes_z</value>
-		</simple>
-    </struct>
+	<struct name="leg3" type="PropertyBag">
+		<description>Leg3 joint group.</description>
+		<struct name="chains" type="string[]">
+			<simple name="Element0" type="string"><value>leg3</value></simple>
+		</struct>
+	</struct>
+	<struct name="leg4" type="PropertyBag">
+		<description>Leg4 joint group.</description>
+		<struct name="chains" type="string[]">
+			<simple name="Element0" type="string"><value>leg4</value></simple>
+		</struct>
+	</struct>
+	<struct name="leg2" type="PropertyBag">
+		<description>Leg2 joint group.</description>
+		<struct name="chains" type="string[]">
+			<simple name="Element0" type="string"><value>leg2</value></simple>
+		</struct>
+	</struct>
+	<struct name="head" type="PropertyBag">
+		<description>Leg4 joint group.</description>
+		<struct name="chains" type="string[]">
+			<simple name="Element0" type="string"><value>head</value></simple>
+			<simple name="Element1" type="string"><value>nose</value></simple>
+		</struct>
+	</struct>
+	<struct name="eyes" type="PropertyBag">
+		<struct name="joints" type="string[]">
+			<simple name="Element0" type="string"><value>eyes_pitch</value></simple>
+			<simple name="Element1" type="string"><value>eyes_yaw</value></simple>
+		</struct>
+	</struct>
   </struct>
   <struct name="contacts" type="PropertyBag">
     <description>Contacts.</description>

@@ -21,9 +21,12 @@
 	<param name="conf_file/herkulex_servos_head_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/herkulex_servos_head.cpf" ></param>
 	<param name="conf_file/herkulex_servos_leg12_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/herkulex_servos_leg12.cpf" ></param>
 	<param name="conf_file/herkulex_servos_leg34_cpf" textfile="$(find sweetie_bot_proto2_deploy)/default/herkulex_servos_leg34.cpf" ></param>
+	<param name="conf_file/RTIMULib_ini" textfile="$(find sweetie_bot_proto2_deploy)/default/RTIMULib.ini" ></param>
 	<!-- other configuraton -->
-	<rosparam command="load" ns="hmi" file="$(find sweetie_bot_proto2_deploy)/default/hmi.yaml" ></rosparam> 
-	<rosparam command="load" ns="voice" file="$(find sweetie_bot_proto2_deploy)/default/voice.yaml" ></rosparam> 
-	<rosparam command="load" file="$(find sweetie_bot_proto2_deploy)/default/planner.yaml" ></rosparam> 
+	<rosparam command="load" file="$(find sweetie_bot_proto2_deploy)/default/hardware.yaml" ></rosparam>
+	<rosparam command="load" ns="voice" file="$(find sweetie_bot_proto2_deploy)/default/voice.yaml" ></rosparam>
+	<rosparam command="load" file="$(find sweetie_bot_proto2_deploy)/default/planner.yaml" ></rosparam>
+	<rosparam command="load" file="$(find sweetie_bot_proto2_deploy)/default/soar.yaml" ></rosparam>
+	<rosparam command="load" ns="hmi" file="$(find sweetie_bot_proto2_deploy)/default/hmi.yaml" ></rosparam>
 	<param name="conf_file/joystick_config_yaml" textfile="$(find sweetie_bot_proto2_deploy)/default/joystick_config.yaml" ></param>
 </launch>

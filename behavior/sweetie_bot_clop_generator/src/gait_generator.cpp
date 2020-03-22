@@ -1082,7 +1082,7 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 	}
 	// execute step seuence
 	ROS_INFO("Send goal to FollowStepSequence action server.");
-	actionlib::SimpleClientGoalState state = execute_step_sequence_ac->sendGoalAndWait(steps_msg, ros::Duration(msg->duration * 1.1)); // 10% additional time TODO: timeout processing
+	actionlib::SimpleClientGoalState state = execute_step_sequence_ac->sendGoalAndWait(steps_msg, ros::Duration(steps_msg.time_from_start.back() * 1.1)); // 10% additional time TODO: timeout processing
 
 	ROS_INFO_STREAM("FollowStepSequence execution: " << state.toString() << " (" << state.getText() << ")");
 	if (state.isDone()) {

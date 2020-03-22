@@ -1,0 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from sweetie_bot_battery_monitor.battery_monitor import main
+main()

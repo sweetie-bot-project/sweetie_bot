@@ -28,7 +28,9 @@
 			<arg name="interactive" value="false" /> 
 		</include>
 		<!-- robot-specific ROS nodes -->
-		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch" />
+		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch">
+			<arg name="robot_ns" value="$(arg robot_ns)" /> 
+		</include>
 	</group>
 	
 	<!-- host components -->

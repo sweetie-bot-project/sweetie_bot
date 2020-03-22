@@ -1,0 +1,28 @@
+# ANIMATION GOAL
+#
+# Select and execute CompoundAction.
+# 
+# goal example 
+#
+# (G1 ^name animation ^drive <d> ^tag greet)
+#
+
+# propose goal execution: should cause action selection in substate
+sp {propose*goal*animation*execution
+	(state <s> ^goal <g>)
+	(<g> ^name animation ^drive <d> ^tag <t>)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name animation-substate ^goal <g> ^substate select-action ^tag <t>)
+}
+
+# aniation completion hook
+sp {apply*flexbe*cmd*completed*hook*goal*step-sequence
+	(state <s> ^operator <op>)
+   	(<op> ^name flexbe-completed ^cmd <cmd>)
+	(<cmd> ^status completed ^outcome finished ^operator.goal <g>)
+	(<g> ^name animation)
+-->
+	(<s> ^goal <g> -)
+	(<s> ^completed-goal <g>)
+}

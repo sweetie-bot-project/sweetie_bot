@@ -7,15 +7,17 @@ herkulex:
         array:
             timeout: 0.060
             tryouts: 3
+            activity_period: 0.057
         sched:
             priority: 40
             timeout: 0.005
+            req_period: 0.002
             period_RT_JOG: 0.013
             period_RT_read: 0.025
             period_CM: 0.007
-            detailed_state: 0
+            detailed_state: false
             poll_list: [ joint11, joint12, joint13, joint14, joint15, joint51, joint21, joint22, joint23, joint24, joint25, joint52, joint31, joint32, joint33, joint34, joint35, joint53, joint41, joint42, joint43, joint44, joint45, joint54 ]
-            poll_round_size: 6
+            poll_round_size: 8
     leg12:
         driver:
             port_name: '/dev/ttyS3'
@@ -23,15 +25,17 @@ herkulex:
         array:
             timeout: 0.060
             tryouts: 3
+            activity_period: 0.057
         sched:
             priority: 40
             timeout: 0.005
+            req_period: 0.002
             period_RT_JOG: 0.013
             period_RT_read: 0.025
             period_CM: 0.007
-            detailed_state: 0
-            poll_list: [ joint11, joint12, joint13, joint14, joint15, joint21, joint22, joint23, joint24, joint25 ]
-            poll_round_size: 5
+            detailed_state: false
+            poll_list: [ joint11, joint12, joint13, joint21, joint22, joint23, joint14, joint15, joint24, joint25 ]
+            poll_round_size: -1
     leg34:
         driver:
             port_name: '/dev/ttyS4'
@@ -39,15 +43,17 @@ herkulex:
         array:
             timeout: 0.060
             tryouts: 3
+            activity_period: 0.057
         sched:
             priority: 40
             timeout: 0.005
+            req_period: 0.002
             period_RT_JOG: 0.013
             period_RT_read: 0.025
             period_CM: 0.007
-            detailed_state: 0
-            poll_list: [ joint31, joint32, joint33, joint34, joint35, joint41, joint42, joint43, joint44, joint45 ]
-            poll_round_size: 5
+            detailed_state: false
+            poll_list: [ joint31, joint32, joint33, joint41, joint42, joint43, joint34, joint35, joint44, joint45 ]
+            poll_round_size: -1
     head:
         driver:
             port_name: '/dev/ttyS1'
@@ -55,12 +61,14 @@ herkulex:
         array:
             timeout: 0.060
             tryouts: 3
+            activity_period: 0.057
         sched:
             priority: 40
             timeout: 0.005
+            req_period: 0.002
             period_RT_JOG: 0.013
             period_RT_read: 0.025
             period_CM: 0.007
-            detailed_state: 0
+            detailed_state: false
             poll_list: [ joint51, joint52, joint52, joint54 ]
-            poll_round_size: 5
+            poll_round_size: -1

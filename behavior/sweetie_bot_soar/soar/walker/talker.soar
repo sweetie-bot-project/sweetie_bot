@@ -1,0 +1,115 @@
+# OVERALL BEHAVIOR SELECTION
+
+# PROPOSE ANIMATION
+
+# Propose perform animation (no one around)
+sp {walker*propose*substate*animation*alone
+	(state <s> ^name walker ^drive <d>)
+	(<d> ^name movement)
+-->
+	(<s> ^operator <o> = 1 +)
+   	(<o> ^name animation-substate)
+   	(<o> ^drive <d>)
+   	(<o> ^tag alone)
+	(<o> ^substate select-action)
+}
+
+# PROPOSE WAIT
+
+# invoke RandHeadMovements for random timeout
+sp {walker*propose*rand*head*movements
+	(state <s> ^name walker ^drive <d>)
+	(<d> ^name movement)
+-->
+	(<s> ^operator <o> = 1 +)
+   	(<o> ^name flexbe ^drive <d>)
+   	(<o> ^behavior RandHeadMovementsUniversal ^param <p>)
+	(<p> ^timeout (+ 5 (rand-int 10)))
+}
+
+# PROPOSE GREETING
+
+sp {elaborate*cmd*interruptable
+	(state <s> ^io.output-link.flexbe <cmd>)
+	(<cmd> ^name RandHeadMovementsUniversal)
+-->
+	(<cmd> ^interruptable hard)
+}
+
+# process joystick key 1
+sp {walker*propose*joystick*pressed*1
+	(state <s> ^name walker ^drive <d> ^io.input-link.joystick.pressed |1|)
+	(<d> ^name obey)
+-->
+	(<s> ^operator <o> = +)
+   	(<o> ^name flexbe ^drive <d>)
+   	(<o> ^behavior ExecuteCompoundAction ^param <p>)
+	(<p> ^action_name brohoof)
+}
+
+# process joystick key 2
+sp {walker*propose*joystick*pressed*2
+	(state <s> ^name walker ^drive <d> ^io.input-link.joystick.pressed |2|)
+	(<d> ^name obey)
+-->
+	(<s> ^operator <o> = +)
+   	(<o> ^name flexbe ^drive <d>)
+   	(<o> ^behavior ExecuteCompoundAction ^param <p>)
+	(<p> ^action_name menace)
+}
+
+# process joystick key 3
+sp {walker*propose*joystick*pressed*3
+	(state <s> ^name walker ^drive <d> ^io.input-link.joystick.pressed |3|)
+	(<d> ^name obey)
+-->
+	(<s> ^operator <o> = +)
+   	(<o> ^name flexbe ^drive <d>)
+   	(<o> ^behavior ExecuteCompoundAction ^param <p>)
+	(<p> ^action_name dance_glory_to_robots)
+}
+# invoke RandHeadMovements for random timeout
+sp {walker*propose*joystick*pressed*4
+	(state <s> ^name walker ^drive <d> ^io.input-link.joystick.pressed |4|)
+	(<d> ^name obey)
+-->
+	(<s> ^operator <o> = +)
+   	(<o> ^name flexbe ^drive <d>)
+   	(<o> ^behavior ExecuteCompoundAction ^param <p>)
+	(<p> ^action_name hoof_stamp_do_you_want_attention)
+}
+
+# WATCH AT OBJECT
+
+# if anything in the view then look at it
+sp {propose*look-at*start
+	(state <s> ^name walker ^mem.human <h>)
+	(<s> ^drive <d>)
+	(<d> ^name interest)
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name flexbe ^drive <d>)
+   	(<o> ^behavior ExecuteLookAt ^param <p>)
+	(<p> ^timeout 5)
+}
+
+# ADD TALKER GOAL
+
+#sp {propose*walker*add*talk*goal
+#	(state <s> ^name walker ^drive <d> ^mem <m>)
+#	(<d> ^name communication)
+#	-(<s> ^goal)
+#	(<m> ^human <h>)
+#-->
+#	(<s> ^operator <o> = +)
+#	(<o> ^name add-talker-goal ^human <h> ^drive <d>)
+#}
+#
+#sp {apply*walker*add*talk*goal
+#	(state <s> ^operator <o>)
+#	(<o> ^name add-talker-goal ^human <h> ^drive <d>)
+#-->
+#   	(<s> ^goal <g>)
+#	(<g> ^name conversation ^drive <d> ^conversation-name general ^enter-topic greeting ^human <h>)
+#}
+#

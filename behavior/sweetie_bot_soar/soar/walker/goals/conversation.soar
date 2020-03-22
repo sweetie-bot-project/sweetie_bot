@@ -1,0 +1,251 @@
+# CONVERSATION
+#
+# Interpret conversation graph.
+# 
+# goal example 
+#
+# (G1 ^name conversation ^drive <d> 
+#		^conversation-name <name> ^enter-topic <topic> ^human <human>)
+#
+
+# goal initialization: conversation space creation
+sp {propose*goal*conversation*init-conversation-goal
+	(state <s> ^goal <g>)
+	(<g> ^name conversation ^enter-topic <enter-topic> ^human <h>)
+	(<g> -^state)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name init-conversation-goal ^goal <g> ^type cognition)
+}
+
+sp {apply*goal*conversation*init-conversation-goal
+	(state <s> ^operator <o>)
+	(<o> ^name init-conversation-goal ^goal <g>) 
+	(<g> ^enter-topic <enter-topic>)
+-->
+	(<g> ^conversation <c> ^state <state>)
+	(<state> ^name phrase-choice ^topic <enter-topic>)
+}
+
+# main executon cycle: create substate (normal prority)
+sp {propose*goal*conversation*execution
+	(state <s> ^goal <g> ^mem.human <h>)
+	(<g> ^name conversation ^human <h> ^state.name phrase-choice)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name conversation-substate ^goal <g> ^substate conversation)
+}
+
+# substate elaboration
+
+sp {elaborate*goal*conversation*substate
+	(state <s> ^superstate <ss>)
+	(<ss> ^operator <o> ^mem <m> ^io <io>)
+	(<o> ^name conversation-substate ^goal <g> ^substate conversation)
+	(<g> ^conversation-name <name> ^conversation <c> ^human <h>)
+-->
+	(<s> ^name conversation-substate ^mem <m> ^io <io>)
+	(<s> ^conversation <c> ^company <h>)
+	(<c> ^name <name>  ^goal <g>)
+}
+
+# conversation space elaboration
+
+sp {goal*conversation*elaborate*conversation*topic
+	(state <s> ^goal <g>)
+	(<g> ^conversation <c> ^state.topic <t>)
+-->
+	(<c> ^topic <t>)
+}
+
+sp {goal*conversation*elaborate*conversation*prev-topic
+	(state <s> ^goal <g>)
+	(<g> ^conversation <c> ^state.prev-topic <t>)
+-->
+	(<c> ^prev-topic <t>)
+}
+
+sp {goal*conversation*elaborate*conversation*said
+	(state <s> ^goal <g>)
+	(<g> ^conversation <c> ^state.said <t>)
+-->
+	(<c> ^said <t>)
+}
+
+sp {goal*conversation*elaborate*conversation*say
+	(state <s> ^goal <g>)
+	(<g> ^conversation <c> ^state.say <t>)
+-->
+	(<c> ^say <t>)
+}
+
+sp {goal*conversation*elaborate*conversation*heard
+	(state <s> ^goal <g>)
+	(<g> ^conversation <c> ^state.heard <h>)
+-->
+	(<c> ^heard <h>)
+}
+
+sp {goal*conversation*elaborate*conversation*timeout
+	(state <s> ^goal <g>)
+	(<g> ^conversation <c> ^state.timeout <h>)
+-->
+	(<c> ^timeout <h>)
+}
+
+#
+# phrase-choice operator application.
+#
+# change state to 'speak', save speak operator
+# and all transitions for later use
+
+# ordinary operator case
+sp {apply*goal*conversation*substate*phrase-choice*operator
+	(state <s> ^conversation.goal <g> ^operator <o>)
+	(<o> ^name phrase-choice ^say <what> ^operator <phrase-op>)
+	(<g> ^state <state>)
+-->
+	(<state> ^say <what> ^operator (copy-one-level <phrase-op>))
+	(<state> ^name phrase-choice -)
+	(<state> ^name speak)
+}
+
+# subgoal case case
+sp {apply*goal*conversation*substate*phrase-choice*subgoal
+	(state <s> ^conversation.goal <g> ^operator <o>)
+	(<o> ^name phrase-choice ^say <what> ^subgoal <phrase-op>)
+	(<g> ^state <state>)
+-->
+	(<state> ^say <what> ^subgoal (copy-one-level <phrase-op>))
+	(<state> ^name phrase-choice -)
+	(<state> ^name speak)
+}
+
+# copy all transitions
+sp {apply*goal*conversation*substate*phrase-choice*transition
+	(state <s> ^conversation.goal <g> ^operator <o>)
+	(<o> ^name phrase-choice ^transition <tr>)
+	(<g> ^state <state>)
+-->
+	(<state> ^transition (copy-one-level <tr>))
+}
+
+# 
+# execute proposed speak operator
+#
+
+# speak operator is ordinary operator
+sp {propose*goal*conversation*speak*operator
+	(state <s> ^goal <g>)
+	(<g> ^name conversation  ^state <gs> ^human <h> )
+	(<gs> ^name speak ^operator <op>)
+-->
+	(<s> ^operator <op> + =)
+	(<op> ^goal <g> ^type cognition ^conversation-role speak)
+}
+
+sp {apply*goal*conversation*speak*operator
+	(state <s> ^operator <o> ^goal <g> ^io.input-link.clock.time <t>)
+	(<o> ^conversation-role speak ^goal <g>)
+	(<g> ^name conversation ^state <state>)
+	(<state> ^transition.timeout <timeout>)
+-->
+	(<state> ^name speak -)
+	(<state> ^name wait-answer)
+	(<state> ^timestamp (+ <t> <timeout>))
+}
+
+# speak operator is subgoal: instal it instaed of conversation goal
+sp {propose*goal*conversation*speak*subgoal
+	(state <s> ^goal <g>)
+	(<g> ^name conversation  ^state <gs> ^human <h>)
+	(<gs> ^name speak ^subgoal <op>)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name conversation-subgoal ^subgoal <op> ^goal <g> ^type cognition)
+}
+
+sp {apply*goal*conversation*speak*subgoal
+	(state <s> ^operator <o> ^goal <g> ^io.input-link.clock.time <t>)
+	(<o> ^name conversation-subgoal ^subgoal <sg> ^goal <g>)
+	(<g> ^name conversation ^state <state> ^drive <d>)
+	(<state> ^transition.timeout <timeout>)
+-->
+	(<s> ^goal <g> -)
+	(<s> ^goal <sg>)
+	(<sg> ^parent <g> ^drive <d>)
+	(<state> ^name speak -)
+	(<state> ^name wait-answer)
+	(<state> ^timestamp (+ <t> <timeout>))
+}
+
+#
+# perform transition to next topic
+#
+
+# human said one of expected phrases
+sp {propose*goal*conversation*topic-transition
+	(state <s> ^goal <g> ^mem.human <h>)
+	(<g> ^name conversation  ^state <gs> ^human <h>)
+	(<gs> ^name wait-answer ^transition <n>)
+	(<h> ^say <what>)
+	(<n> ^hear <what> ^next-topic <next-topic>)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name conversation-transition ^heard <what> ^next-topic <next-topic> ^goal <g> ^type cognition)
+}
+
+sp {apply*goal*conversation*topic-transition
+	(state <s> ^operator <o> ^goal <g>)
+	(<o> ^name conversation-transition ^heard <heard> ^next-topic <next-topic> ^goal <g>)
+	(<g> ^state <old>)
+	(<old> ^topic <old-topic> ^say <said>)
+-->
+	(<g> ^state <new>)
+	(<new> ^name phrase-choice ^topic <next-topic> ^prev-topic <old-topic> ^said <said> ^heard <heard>)
+	(<g> ^state <old> -)
+}
+
+# timeout has happened
+sp {propose*goal*conversation*topic-transition*timeout
+	(state <s> ^goal <g> ^mem.human <h> ^io.input-link.clock.time <t>)
+	(<g> ^name conversation  ^state <gs>)
+	(<gs> ^name wait-answer ^timestamp {<stamp> < <t>} ^transition <n>)
+	(<n> ^timeout <timeout> ^next-topic <next-topic>)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name conversation-transition-timeout ^next-topic <next-topic> ^goal <g> ^type cognition)
+}
+
+sp {apply*goal*conversation*topic-transition*timeout
+	(state <s> ^operator <o> ^goal <g>)
+	(<o> ^name conversation-transition-timeout ^next-topic <next-topic> ^goal <g>)
+	(<g> ^state <old>)
+	(<old> ^topic <old-topic> ^say <said>)
+-->
+	(<g> ^state <new>)
+	(<new> ^name phrase-choice ^topic <next-topic> ^prev-topic <old-topic> ^said <said> ^timeout yes)
+	(<g> ^state <old> -)
+}
+
+#
+# end conversation
+#
+
+sp {propose*goal*conversation*end-conversation
+	(state <s> ^goal <g> ^mem <m>)
+	(<g> ^name conversation ^human <h>)
+	-(<m> ^human <h>)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name conversation-end-conversation ^goal <g> ^type cognition)
+}
+
+sp {apply*goal*conversation*end-conversation
+	(state <s> ^operator <o>)
+	(<o> ^name conversation-end-conversation ^goal <g>)
+-->
+	(<s> ^goal <g> -)
+	(<s> ^completed-goal <g>)
+}
+

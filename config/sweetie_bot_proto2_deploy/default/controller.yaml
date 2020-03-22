@@ -1,7 +1,7 @@
 controller:
     joint_state:
         priority: 20
-        controlled_chains: [ leg1, leg2, leg3, leg4, head, eyes, eyes_focus ]
+        controlled_chains: [ leg1, leg2, leg3, leg4, head, eyes ]
         activation_delay: 2
         publish_supports: true
         services: [ filter_joint_state_exp ]
@@ -9,7 +9,7 @@ controller:
             transient_time: 1
     joint_state_head:
         priority: 20
-        controlled_chains: [ head, eyes, eyes_focus ]
+        controlled_chains: [ head, eyes ]
         activation_delay: 2
         publish_supports: true
         services: [ filter_joint_state_exp_individual ]
@@ -48,7 +48,20 @@ controller:
         filter_rigid_body_state_pd:
             Kp: 25
             Kd: 10
+    look_at:
+        priority: 20
+        services: [ filter_rigid_body_state_pd, filter_joint_state_exp_individual ]
+        controlled_chains: [ head, eyes ]
+        use_kinematics_inv_port: false # deployment parameter: do not connect stance to kinematics_inv IK service, use port interface instead
+        pitch_yaw_joints: [ eyes_pitch, eyes_yaw ]
+        filter_joint_state_exp_individual:
+            transient_time: 1
+            joints_override: [ eyes_pitch, eyes_yaw ]
+            transient_time_override: [ 0.3, 0.3 ]
+        filter_rigid_body_state_pd:
+            Kp: 25
+            Kd: 10
     step_sequence:
         priority: 20
         override_odometry: true  # deployment parameter: discard odometry results if step_sequence is active. This is preferable for `fast` gaits.
-        use_kinematics_inv_port: false # deployment parameter: do not connect step_sequence to kinematics_inv IK service, use port interface instead. If it is set kinematic errors are ignored.
+        use_kinematics_inv_port: true # deployment parameter: do not connect step_sequence to kinematics_inv IK service, use port interface instead. If it is set kinematic errors are ignored.

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="RandHeadMovementsUniversal">
+
+	<executable package_path="sweetie_bot_soar_flexbe_behaviors.randheadmovementsuniversal_sm" class="RandHeadMovementsUniversalSM" />
+	<tagstring>SweetieBot, proto2, proto3</tagstring>
+	<author>disRecord</author>
+	<date>Thu Nov 21 2019</date>
+	<description>
+		Random head movements for SweetieBot Proto2 and Proto3. Behavior exits after timeout.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="numeric" name="timeout" default="15" label="timeout" hint="Behavior exit timeout.">
+			<min value="0" />
+			<max value="600" />
+		</param>
+
+	</params>
+
+
+</behavior>

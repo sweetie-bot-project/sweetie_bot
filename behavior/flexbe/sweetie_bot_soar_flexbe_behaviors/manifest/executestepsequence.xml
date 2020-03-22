@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="ExecuteStepSequence">
+
+	<executable package_path="sweetie_bot_soar_flexbe_behaviors.executestepsequence_sm" class="ExecuteStepSequenceSM" />
+	<tagstring>soar, sweetie_bot</tagstring>
+	<author>disRecord</author>
+	<date>Mon Nov 11 2019</date>
+	<description>
+		Execute StepSequence. If robot is standing then it crouchs beforehand.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="text" name="action_name" default="walk_fwd_40" label="action_name" hint="StepSequence parameter name." />
+
+	</params>
+
+
+</behavior>

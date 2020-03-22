@@ -1,0 +1,78 @@
+# INITIALIZATION
+
+# FIRST STAGE
+#
+# drives and mem
+#
+sp {propose*initilization
+   (state <s> ^superstate nil
+             -^name)
+-->
+   (<s> ^operator <o> +)
+   (<o> ^name initialization-first-stage)
+}
+
+sp {apply*initialization-first-stage*name
+   (state <s> ^operator <op>)
+   (<op> ^name initialization-first-stage)
+-->
+	(<s> ^name initialization-first-stage) 
+}
+
+sp {apply*initialization*drive*mem
+   (state <s> ^operator <op>)
+   (<op> ^name initialization-first-stage)
+-->
+	(<s> ^drive <d1> <d2> <d3> <d4> <d5>)
+	(<d1> ^name movement ^activation 0 ^importance 2) 
+	(<d2> ^name obey ^activation 0 ^importance 8)
+	(<d3> ^name security ^activation 0 ^importance 10)
+	(<d4> ^name communication ^activation 0 ^importance 6)
+	(<d5> ^name interest ^activation 0 ^importance 4)
+	(<s> ^mem <m>)
+}
+
+# SECOND STAGE
+#
+# put things into memory
+#
+
+sp {propose*initilization-second-stage
+   (state <s> ^name initialization-first-stage)
+-->
+   (<s> ^operator <o> +)
+   (<o> ^name initialization-second-stage)
+}
+
+sp {apply*initialization*mem*compound*action
+   (state <s> ^operator <op> ^mem <m>)
+   (<op> ^name initialization-second-stage)
+-->
+	(<m> ^compound-action <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12>)
+	(<c1> ^name brohoof ^tag greeting ^tag alone)
+	(<c2> ^name dance_glory_to_robots)
+	(<c3> ^name greeting_acquitance_procedure ^tag greeting ^tag alone)
+	(<c4> ^name greeting_friendship_programs ^tag greeting ^tag alone)
+	(<c5> ^name head_ask_about_sister ^tag alone)
+	(<c6> ^name head_shake_not_understand ^tag talk ^tag alone)
+	(<c7> ^name hoof_stamp_do_you_want_attention ^tag angry ^tag alone)
+	(<c8> ^name hoof_stamp_hate_laws ^tag angry ^tag alone)
+	(<c9> ^name menace ^tag angry ^tag alone)
+	(<c10> ^name obey_be_happy_command)
+	(<c11> ^name point_do_not_touch ^tag angry ^tag alone)
+	(<c12> ^name prance_maximum_fun)
+}
+
+#
+# FINISH INITIALIZATION
+#
+# set state name
+
+sp {apply*initialization-second-stage*name
+   (state <s> ^operator <op> ^name <name>)
+   (<op> ^name initialization-second-stage)
+-->
+	(<s> ^name walker) 
+	(<s> ^name <name> -) 
+	(write |Initialization finished.|)
+}

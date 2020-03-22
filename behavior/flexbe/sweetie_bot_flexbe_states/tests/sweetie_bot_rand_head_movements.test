@@ -1,0 +1,14 @@
+# ATTENTION: 
+#     1. `controller/joint_space_head` must be running to see actual robot motions. Run `sweetie_bot_deploy joint_space_control.launch`.
+#
+path: sweetie_bot_flexbe_states.rand_head_movements
+class: SweetieBotRandHeadMovements
+
+import_only: false
+
+params:
+    controller: joint_state_head
+    duration: 5
+    interval: [1, 2]
+
+outcome: done
