@@ -1,5 +1,5 @@
-#ifndef POSE_MARKER_HPP
-#define POSE_MARKER_HPP
+#ifndef POSE_MARKER_BASE_HPP
+#define POSE_MARKER_BASE_HPP
 
 #include <tf/tf.h>
 #include <tf2_ros/transform_listener.h>
@@ -15,9 +15,9 @@ namespace sweetie_bot {
 namespace hmi {
 
 
-class PoseMarker {
+class PoseMarkerBase {
 public:
-  PoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
+  PoseMarkerBase(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
              const std::string& name,
              double scale = 1.0,
              const std::string& marker_home_frame = "",
@@ -32,7 +32,7 @@ public:
   {
   }
 
-  PoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
+  PoseMarkerBase(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
              ros::NodeHandle node_handle
              )
     : server(server),
@@ -46,7 +46,7 @@ public:
 
     node_handle.getParam("scale", scale);
     if (scale < 0) {
-      ROS_FATAL("PoseMarker: scale parameter cannot be negative");
+      ROS_FATAL("PoseMarkerBase: scale parameter cannot be negative");
       exit(1);
     }
 
@@ -54,12 +54,12 @@ public:
 
     node_handle.getParam("normalized_z_level", normalized_z_level);
     if (normalized_z_level < 0) {
-      ROS_FATAL("PoseMarker: normalized_z_level parameter cannot be negative");
+      ROS_FATAL("PoseMarkerBase: normalized_z_level parameter cannot be negative");
       exit(1);
     }
   }
 
-  virtual ~PoseMarker() = 0;
+  virtual ~PoseMarkerBase() = 0;
 
 protected:
   void processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
@@ -69,7 +69,7 @@ protected:
   void updateInteractiveMarker(bool is6DOF);
   void makeInteractiveMarker(visualization_msgs::Marker (*makeMarkerBody)(double scale),
                              const MenuHandler::FeedbackCallback& processFeedback,
-                             bool is6DOF = false);
+                             bool is6DOF = true);
 
   virtual void makeMenu() = 0;
 
@@ -115,7 +115,7 @@ protected:
   // is_operational flag
   bool is_operational = false;
   // is_6DOF flag
-  bool is_6DOF = false;
+  bool is_6DOF = true;
   // menu
   MenuHandler menu_handler;
   // menu index
@@ -126,4 +126,4 @@ protected:
 } // namespace hmi
 } // namespace sweetie_bot
 
-#endif /*POSE_MARKER_HPP*/
+#endif /*POSE_MARKER_BASE_HPP*/

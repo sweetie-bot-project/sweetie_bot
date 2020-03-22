@@ -10,7 +10,7 @@ StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::Interact
                                    visualization_msgs::Marker (*makeMarkerBody)(const double scale),
                                    ros::NodeHandle node_handle
                                   )
-  : PoseMarker(server, node_handle),
+  : PoseMarkerBase(server, node_handle),
     action_client( new ActionClient("stance_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("stance_pose", 1))
 {
@@ -189,7 +189,10 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
                 std::unique_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
                 res_marker->changeVisibility(false); // hide bounded limb marker
                 res_marker->setState(LimbPoseMarker::LimbState::INACTIVE);
-                this->setOperational(false);
+                if (this->is_operational) {
+                  // We update operational state after resource marker deactivates
+                  this->setOperational(true);
+                }
                 rebuildMenu();
               }
               menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
@@ -200,7 +203,10 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
                 res_marker->changeVisibility(true); // show bounded limb marker
                 res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
                 res_marker->setState(LimbPoseMarker::LimbState::FREE);
-                this->setOperational(false);
+                if (this->is_operational) {
+                  // We update operational state after resource marker activates
+                  this->setOperational(true);
+                }
                 rebuildMenu();
               }
               menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
@@ -298,7 +304,7 @@ void StancePoseMarker::makeMenu()
   publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback);
   menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
   enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &StancePoseMarker::processEnable6DOF, this, _1 ));
-  menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::UNCHECKED);
+  menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::CHECKED);
   menu_handler.insert("Move to home frame", boost::bind( &StancePoseMarker::processMoveToHomeFrame, this, _1 ));
 
   menu_handler.reApply(*server);

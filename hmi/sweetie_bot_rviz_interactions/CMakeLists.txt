@@ -52,7 +52,7 @@ include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(${PROJECT_NAME}_pose_marker src/pose_marker_main.cpp src/pose_marker.cpp src/limb_pose_marker.cpp src/stance_pose_marker.cpp)
+add_executable(${PROJECT_NAME}_pose_marker src/robot_pose_marker_main.cpp src/pose_marker_base.cpp src/limb_pose_marker.cpp src/stance_pose_marker.cpp)
 add_executable(${PROJECT_NAME}_destination_marker src/destination_marker_main.cpp src/destination_marker.cpp)
 
 ## Rename C++ executable without prefix

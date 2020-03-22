@@ -1,7 +1,7 @@
 #ifndef LIMB_POSE_MARKER
 #define LIMB_POSE_MARKER
 
-#include "pose_marker.hpp"
+#include "pose_marker_base.hpp"
 
 #include <actionlib/client/simple_action_client.h>
 #include <sweetie_bot_control_msgs/SetOperationalAction.h>
@@ -10,7 +10,7 @@ namespace sweetie_bot {
 namespace hmi {
 
 
-class LimbPoseMarker : public PoseMarker {
+class LimbPoseMarker : public PoseMarkerBase {
 public:
   // Action type definitions
   ACTION_DEFINITION(sweetie_bot_control_msgs::SetOperationalAction);

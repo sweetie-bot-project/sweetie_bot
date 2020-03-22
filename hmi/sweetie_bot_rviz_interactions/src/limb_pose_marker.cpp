@@ -12,7 +12,7 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
                                ros::NodeHandle leg_node_handle,
                                const std::string& leg_name
                               )
-  : PoseMarker(server, name),
+  : PoseMarkerBase(server, name),
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
     resource_name(""),
@@ -41,7 +41,7 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
                                visualization_msgs::Marker (*makeMarkerBody)(double scale),
                                ros::NodeHandle limb_node_handle
                                )
-  : PoseMarker(server, limb_node_handle),
+  : PoseMarkerBase(server, limb_node_handle),
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
     resource_name(""),
@@ -260,7 +260,7 @@ void LimbPoseMarker::makeMenu()
   menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
   normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &LimbPoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
   enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &LimbPoseMarker::processEnable6DOF, this, _1 ));
-  menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::UNCHECKED);
+  menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::CHECKED);
   menu_handler.insert("Move to home frame", boost::bind( &LimbPoseMarker::processMoveToHomeFrame, this, _1 ));
 
   menu_handler.reApply(*server);
