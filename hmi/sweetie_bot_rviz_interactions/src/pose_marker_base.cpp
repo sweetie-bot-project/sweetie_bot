@@ -71,6 +71,22 @@ void PoseMarkerBase::processMoveToHomeFrame( const visualization_msgs::Interacti
   }
 }
 
+void PoseMarkerBase::processMoveToFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
+{
+  if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
+    ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
+                     << " / control '" << feedback->control_name << "': menu \"Move to home frame\" select, entry id = " << feedback->menu_entry_id );
+
+    std::string frame_id;
+    if (menu_handler.getTitle(feedback->menu_entry_id, frame_id)) {
+      moveToFrame(frame_id);
+
+      menu_handler.reApply(*server);
+      server->applyChanges();
+    }
+  }
+}
+
 void PoseMarkerBase::updateInteractiveMarker(bool is6DOF)
 {
   if (!is_visible) return;

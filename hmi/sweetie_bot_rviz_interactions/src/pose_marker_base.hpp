@@ -18,11 +18,11 @@ namespace hmi {
 class PoseMarkerBase {
 public:
   PoseMarkerBase(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-             const std::string& name,
-             double scale = 1.0,
-             const std::string& marker_home_frame = "",
-             double normalized_z_level = 0.0
-            )
+                 const std::string& name,
+                 double scale = 1.0,
+                 const std::string& marker_home_frame = "",
+                 double normalized_z_level = 0.0
+                 )
     : server(server),
       tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
       name(name),
@@ -33,8 +33,8 @@ public:
   }
 
   PoseMarkerBase(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-             ros::NodeHandle node_handle
-             )
+                 ros::NodeHandle node_handle
+                 )
     : server(server),
       tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
       name(""),
@@ -65,6 +65,7 @@ protected:
   void processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
   void processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, const ros::Publisher& pose_pub, bool publish_pose);
   void processMoveToHomeFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
+  void processMoveToFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 
   void updateInteractiveMarker(bool is6DOF);
   void makeInteractiveMarker(visualization_msgs::Marker (*makeMarkerBody)(double scale),

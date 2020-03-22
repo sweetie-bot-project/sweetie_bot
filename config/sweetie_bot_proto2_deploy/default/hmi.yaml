@@ -3,7 +3,7 @@ joint_state_ref:
 dynamics_visualizer:
     robot_model_namespace: "/motion"
     display_twist: true
-pose_marker:
+robot_pose_marker:
     name: "Stance Pose marker"
     scale: 1.0
     normalized_z_level: 0.2335
@@ -49,3 +49,11 @@ destination_marker:
     nominal_height: 0.1825
     recorded_trajectory_name: "recorded_trajectory"
     ee_names: [ leg1, leg2, leg3, leg4 ]
+# Example of generic marker configuration:
+# generic_pose_marker:
+#     name: "Generic Pose Marker"
+#     scale: 0.5
+#     normalized_z_level: 0.03
+#     resources: [ leg1, leg2, leg3, leg4, nose ]
+#     frames: [ bone15, bone25, bone35, bone45, bone55, base_link ]
+#     select_only_one_resource: true

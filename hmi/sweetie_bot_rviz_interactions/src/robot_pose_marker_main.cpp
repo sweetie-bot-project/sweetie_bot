@@ -46,7 +46,7 @@ typedef visualization_msgs::Marker (*makeMarkerBody)(const double scale);
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "pose_marker");
+  ros::init(argc, argv, "robot_pose_marker");
 
   ros::NodeHandle stance_nh("~");
   ros::NodeHandle legs_nh("~inner_markers/legs/");
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
         legs_nh.hasParam("list/leg2") &&
         legs_nh.hasParam("list/leg3") &&
         legs_nh.hasParam("list/leg4"))) {
-    ROS_FATAL("PoseMarker: Not all legs has defined in yaml file");
+    ROS_FATAL("RobotPoseMarker: Not all legs has defined in yaml file");
     return 1;
   }
 
