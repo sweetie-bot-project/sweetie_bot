@@ -8,7 +8,7 @@ servo_ident:
     priority: 10
     control_delay: 0.0224
     velocity_diff_cycles: 1
-    min_velocity: 0.1
+    min_accepted_velocity: 0.1
     relaxation_factor: 0.995
     error_averaging_time: 5.0
     threshold: 0.01
