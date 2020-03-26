@@ -39,7 +39,6 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
 {
   std::vector<std::string> gait_type_options;
   std::vector<int> _n_steps_options;
-  std::vector<std::string> ee_names;
 
   node_handle.getParam("name", name);
 
@@ -99,11 +98,11 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
     n_steps = n_steps_options[idx]; // default value for n_steps
   }
 
-  setEndEffectorTargets(ee_names);
-
-
   makeMenu(gait_type_options, n_steps_options);
-  makeInteractiveMarker();
+
+  geometry_msgs::Pose init_pose;
+  init_pose.position.x = 0.4;
+  makeInteractiveMarker(init_pose);
 
   server->applyChanges();
 }
@@ -114,7 +113,7 @@ void DestinationMarker::actionDoneCallback(const GoalState& state, const ResultC
                   << " error_code: " << result->error_code << " error_string: " << result->error_string);
 
   action_client->cancelAllGoals();
-  // Pretty print error cause
+  // Pretty print of the error cause
   switch (result->error_code) {
   case sweetie_bot_clop_generator::MoveBaseResult::SUCCESS:
     {
@@ -165,47 +164,110 @@ void DestinationMarker::actionActiveCallback()
 
 }
 
-// TODO: Split this method into several
-void DestinationMarker::invokeClopGenerator( const geometry_msgs::Pose& base_goal )
+MoveBaseGoal DestinationMarker::buildMoveBaseGoal(const std::string& frame_id, const std::string& gait_type, double duration, unsigned n_steps, bool execute_only)
 {
-  ROS_INFO_STREAM("Invoking clop generator by interactive marker");
-
   sweetie_bot_clop_generator::MoveBaseGoal goal;
 
   goal.header = std_msgs::Header();
-  goal.header.frame_id = "odom_combined";
+  goal.header.frame_id = frame_id;
   goal.gait_type = gait_type;
   goal.duration = duration;
   goal.n_steps = n_steps;
-  goal.base_goal = base_goal;
-  goal.base_goal.position.z = nominal_height;
 
   goal.visualize_only = false;
-  goal.execute_only = false;
+  goal.execute_only = execute_only;
 
   goal.position_tolerance = 0.07;
   goal.orientation_tolerance = 0.50;
 
-  // Add end effector targets to message
-  if (!ee_goal.empty())
-    goal.ee_goal.insert(goal.ee_goal.begin(), ee_goal.begin(), ee_goal.end());
-
-  goal.header.stamp = ros::Time::now();
-  action_client->sendGoal(goal, boost::bind( &DestinationMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &DestinationMarker::actionActiveCallback, this ));
+  return goal;
 }
 
-void DestinationMarker::setEndEffectorTargets(const std::vector<std::string>& ee_names, unsigned frame_type)
+void DestinationMarker::setBaseGoal(MoveBaseGoal& msg, const geometry_msgs::Pose& base_goal, double nominal_height)
+{
+  msg.base_goal = base_goal;
+  msg.base_goal.position.z = nominal_height;
+}
+
+void DestinationMarker::setEndEffectorTargets(std::vector<EndEffectorGoal>& ee_goals, std::vector<std::string>& ee_names, unsigned frame_type)
 {
   // Add end effector targets
-  this->ee_goal.clear();
+  ee_goals.clear();
   for (std::string name : ee_names) {
     sweetie_bot_clop_generator::EndEffectorGoal ee_goal;
     ee_goal.name = name;
     ee_goal.frame_type = frame_type;
     ee_goal.contact = true;
     ee_goal.position_bounds = sweetie_bot_clop_generator::EndEffectorGoal::POSITION_FREE_Z;
-    this->ee_goal.push_back(ee_goal);
+    ee_goals.push_back(ee_goal);
   }
+}
+
+void DestinationMarker::setEndEffectorPosition(EndEffectorGoal& ee_goal, double x, double y, double z)
+{
+  ee_goal.position.x = x;
+  ee_goal.position.y = y;
+  ee_goal.position.z = z;
+}
+
+void DestinationMarker::invokeClopGenerator(const geometry_msgs::Pose& base_goal, bool execute_only)
+{
+  ROS_INFO_STREAM("Invoking clop generator by interactive marker");
+
+  sweetie_bot_clop_generator::MoveBaseGoal goal;
+
+  goal = buildMoveBaseGoal("odom_combined", gait_type, duration, n_steps, execute_only);
+  setBaseGoal(goal, base_goal, nominal_height);
+  // Add end effector targets to message
+  if (!ee_names.empty()) {
+    // end effector goals
+    static bool is_ee_goals_init = false;
+    static std::vector<sweetie_bot_clop_generator::EndEffectorGoal> ee_goals;
+    if (!is_ee_goals_init) {
+      setEndEffectorTargets(ee_goals, ee_names);
+
+      is_ee_goals_init = true;
+    }
+
+    goal.ee_goal.insert(goal.ee_goal.begin(), ee_goals.begin(), ee_goals.end());
+  }
+
+  goal.header.stamp = ros::Time::now();
+  action_client->sendGoal(goal, boost::bind( &DestinationMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &DestinationMarker::actionActiveCallback, this ));
+}
+
+void DestinationMarker::toNominal()
+{
+  static bool is_goal_init = false;
+  static sweetie_bot_clop_generator::MoveBaseGoal goal;
+
+  if (!is_goal_init) {
+    goal = buildMoveBaseGoal("base_link_path", "free", 3.0, 0, false);
+    static geometry_msgs::Pose null_goal;
+    null_goal.orientation.w = 1.0;
+    setBaseGoal(goal, null_goal, nominal_height);
+    // Add end effector targets to message
+    if (!ee_names.empty()) {
+      // end effector goals
+      std::vector<sweetie_bot_clop_generator::EndEffectorGoal> ee_goals;
+      setEndEffectorTargets(ee_goals, ee_names, sweetie_bot_clop_generator::EndEffectorGoal::PATH_FINAL);
+
+      setEndEffectorPosition(ee_goals[0],  0.080425,  0.0386, 0.0);
+      setEndEffectorPosition(ee_goals[1],  0.080425, -0.0386, 0.0);
+      setEndEffectorPosition(ee_goals[2], -0.080425,  0.0386, 0.0);
+      setEndEffectorPosition(ee_goals[3], -0.080425, -0.0386, 0.0);
+
+      goal.ee_goal.insert(goal.ee_goal.begin(), ee_goals.begin(), ee_goals.end());
+    }
+
+    is_goal_init = true;
+  } else {
+    goal.header = std_msgs::Header();
+    goal.header.frame_id = "base_link_path";
+  }
+
+  goal.header.stamp = ros::Time::now();
+  action_client->sendGoal(goal, boost::bind( &DestinationMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &DestinationMarker::actionActiveCallback, this ));
 }
 
 Marker DestinationMarker::makePointMarker()
@@ -295,13 +357,13 @@ Marker DestinationMarker::makeConeMarker(float r, float g, float b, float scale,
 }
 
 static bool is_mod = false;
-void DestinationMarker::makeInteractiveMarker()
+void DestinationMarker::makeInteractiveMarker(const geometry_msgs::Pose& pose)
 {
   InteractiveMarker int_marker;
 
   //header setup
   int_marker.header.frame_id = "odom_combined";
-  int_marker.pose.position.x = 0.4;
+  int_marker.pose = pose;
   int_marker.scale = 0.15*std::min(scale, 1.0);
   int_marker.name = name;
   int_marker.description = name;
@@ -360,9 +422,13 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
                      << " / control '" << feedback->control_name << "': entry id = " << feedback->menu_entry_id );
 
     // check if user clicked on Start walk entry
-    if (feedback->menu_entry_id == start_walk_entry) {
+    if (feedback->menu_entry_id == start_motion_entry) {
       invokeClopGenerator(feedback->pose);
-   } else if (feedback->menu_entry_id == change_trajectory_name_entry) {
+    } else if (feedback->menu_entry_id == repeat_last_motion_entry) {
+      invokeClopGenerator(feedback->pose, true);
+    } else if (feedback->menu_entry_id == to_nominal_entry) {
+      toNominal();
+    } else if (feedback->menu_entry_id == change_trajectory_name_entry) {
       bool ok = false;
       QWidget w(nullptr);
       // Center parent widget
@@ -385,8 +451,8 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
       const static char test[] = {0x63, 0x61, 0x72, 0x72, 0x6F, 0x74, 0x00};
       if (name == test) {
         is_mod = true;
-        server->erase(name);
-        makeInteractiveMarker();
+        server->erase(this->name);
+        makeInteractiveMarker(feedback->pose);
         server->applyChanges();
       }
 
@@ -397,7 +463,7 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
 
       trajectory_name = name;
 
-   } else {
+    } else {
       if (feedback->menu_entry_id == change_duration_entry) {
         bool ok = false;
         QWidget w(nullptr);
@@ -468,7 +534,9 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
   MenuHandler::FeedbackCallback processFeedback = boost::bind( &DestinationMarker::processFeedback, this, _1 );
 
   if (!gait_type_options.empty() || !n_steps_options.empty()) {
-    start_walk_entry = menu_handler.insert("Start walk", processFeedback);
+    start_motion_entry = menu_handler.insert("Walk to marker", processFeedback);
+    repeat_last_motion_entry = menu_handler.insert("Repeat last motion", processFeedback);
+    to_nominal_entry = menu_handler.insert("To nominal", processFeedback);
     MenuHandler::EntryHandle gait_type_entry = menu_handler.insert("Gait type");
     MenuHandler::FeedbackCallback processGaitType = boost::bind( &DestinationMarker::processGaitType, this, _1 );
     for (auto& gait_type_option : gait_type_options) {

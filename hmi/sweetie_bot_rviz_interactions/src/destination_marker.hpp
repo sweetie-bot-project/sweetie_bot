@@ -8,6 +8,9 @@
 #include <sweetie_bot_clop_generator/MoveBaseAction.h>
 
 using interactive_markers::MenuHandler;
+using sweetie_bot_clop_generator::MoveBaseGoal;
+using sweetie_bot_clop_generator::MoveBaseAction;
+using sweetie_bot_clop_generator::EndEffectorGoal;
 
 namespace sweetie_bot {
 namespace hmi {
@@ -15,27 +18,30 @@ namespace hmi {
 class DestinationMarker {
 public:
   // Action type definitions
-  ACTION_DEFINITION(sweetie_bot_clop_generator::MoveBaseAction);
-  typedef actionlib::SimpleActionClient<sweetie_bot_clop_generator::MoveBaseAction> ActionClient;
+  ACTION_DEFINITION(MoveBaseAction);
+  typedef actionlib::SimpleActionClient<MoveBaseAction> ActionClient;
   typedef actionlib::SimpleClientGoalState GoalState;
 
 public:
-  DestinationMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                    ros::NodeHandle node_handle
-                    );
+  DestinationMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle);
 
 private:
-  void setEndEffectorTargets(const std::vector<std::string>& ee_names, unsigned frame_type = sweetie_bot_clop_generator::EndEffectorGoal::NOMINAL_POSE);
+  static MoveBaseGoal buildMoveBaseGoal(const std::string& frame_id, const std::string& gait_type, double duration, unsigned n_steps, bool execute_only);
+  static void setBaseGoal(MoveBaseGoal& msg, const geometry_msgs::Pose& base_goal, double nominal_height);
+  static void setEndEffectorTargets(std::vector<EndEffectorGoal>& ee_goals, std::vector<std::string>& ee_names, unsigned frame_type = EndEffectorGoal::NOMINAL_POSE);
+  static void setEndEffectorPosition(EndEffectorGoal& ee_goal, double x, double y, double z);
 
+  void toNominal();
+  void invokeClopGenerator(const geometry_msgs::Pose& base_goal, bool execute_only = false);
   void actionDoneCallback(const GoalState& state, const ResultConstPtr& result);
   void actionActiveCallback();
 
-  void invokeClopGenerator( const geometry_msgs::Pose& base_goal );
   void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
   void processGaitType( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
   void processStepsNum( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 
   void makeInteractiveMarker();
+  void makeInteractiveMarker(const geometry_msgs::Pose& position);
   visualization_msgs::Marker makePointMarker();
   visualization_msgs::Marker makeArrowMarker();
   visualization_msgs::Marker makeSphereMarker(float r, float g, float b);
@@ -83,8 +89,8 @@ private:
   double duration;
   // nominal base height
   double nominal_height;
-  // end effector goals
-  std::vector<sweetie_bot_clop_generator::EndEffectorGoal> ee_goal;
+  // end effectors' names
+  std::vector<std::string> ee_names;
   // Name of trajectory for saving
   std::string trajectory_name;
 
@@ -94,7 +100,9 @@ private:
   // menu
   MenuHandler base_menu_handler;
   MenuHandler menu_handler;
-  MenuHandler::EntryHandle start_walk_entry;
+  MenuHandler::EntryHandle start_motion_entry;
+  MenuHandler::EntryHandle repeat_last_motion_entry;
+  MenuHandler::EntryHandle to_nominal_entry;
   std::map<MenuHandler::EntryHandle, std::string> gait_type_submenu;
   std::map<MenuHandler::EntryHandle, unsigned> n_steps_submenu;
   MenuHandler::EntryHandle change_duration_entry;
