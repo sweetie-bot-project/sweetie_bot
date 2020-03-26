@@ -9,7 +9,7 @@ std::shared_ptr<InteractiveMarkerServer> server;
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "pose_marker");
+  ros::init(argc, argv, "generic_pose_marker");
 
   ros::NodeHandle nh("~");
 
@@ -21,7 +21,7 @@ int main(int argc, char **argv)
   GenericPoseMarker poseMarker(server, nh);
 
 
-  ROS_INFO("pose_marker is started!");
+  ROS_INFO("generic_pose_marker is started!");
 
   // main loop()
   ros::spin();
@@ -29,5 +29,5 @@ int main(int argc, char **argv)
   // shutdown
   server.reset();
 
-  ROS_INFO("pose_marker is shutdown!");
+  ROS_INFO("generic_pose_marker is shutdown!");
 }

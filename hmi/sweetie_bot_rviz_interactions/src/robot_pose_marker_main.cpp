@@ -19,7 +19,7 @@ int main(int argc, char **argv)
   // create markers
   StancePoseMarker stanceMarker(server, stance_nh);
 
-  ROS_INFO("pose_marker is started!");
+  ROS_INFO("robot_pose_marker is started!");
 
   // main loop()
   ros::spin();
@@ -27,5 +27,5 @@ int main(int argc, char **argv)
   // shutdown
   server.reset();
 
-  ROS_INFO("pose_marker is shutdown!");
+  ROS_INFO("robot_pose_marker is shutdown!");
 }
