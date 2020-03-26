@@ -18,7 +18,7 @@ namespace hmi {
 class PoseMarkerBase {
 public:
   PoseMarkerBase(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                 const std::string& name,
+                 const std::string& name = "",
                  double scale = 1.0,
                  const std::string& marker_home_frame = "",
                  double normalized_z_level = 0.0

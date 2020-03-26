@@ -26,9 +26,8 @@ public:
 public:
   LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
                  visualization_msgs::Marker (*makeMarkerBody)(double scale),
-                 const std::string& name,
-                 ros::NodeHandle leg_node_handle,
-                 const std::string& leg_name
+                 ros::NodeHandle legs_common_node_handle,
+                 ros::NodeHandle leg_node_handle
                 );
   LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
                  visualization_msgs::Marker (*makeMarkerBody)(double scale),

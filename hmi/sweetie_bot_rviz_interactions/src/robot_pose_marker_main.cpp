@@ -49,7 +49,6 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "robot_pose_marker");
 
   ros::NodeHandle stance_nh("~");
-  ros::NodeHandle legs_nh("~inner_markers/legs/");
 
   // marker server
   server.reset( new InteractiveMarkerServer(ros::this_node::getNamespace(),"",false) );
@@ -60,25 +59,20 @@ int main(int argc, char **argv)
 
   // add legs markers
   std::vector<std::unique_ptr<LimbPoseMarker>> leg_markers;
-  static const std::string leg_names[4] = {
-    "Front-Left leg Pose marker",
-    "Front-Right leg Pose marker",
-    "Back-Left leg Pose marker",
-    "Back-Right leg Pose marker"
-  };
+  if (stance_nh.hasParam("inner_markers/legs/")) {
+    ros::NodeHandle legs_common_nh("~inner_markers/legs/");
 
-  if (!(legs_nh.hasParam("list/leg1") &&
-        legs_nh.hasParam("list/leg2") &&
-        legs_nh.hasParam("list/leg3") &&
-        legs_nh.hasParam("list/leg4"))) {
-    ROS_FATAL("RobotPoseMarker: Not all legs has defined in yaml file");
-    return 1;
+    XmlRpc::XmlRpcValue legs;
+    stance_nh.getParam("inner_markers/legs/list/", legs);
+
+    for (auto& leg: legs) {
+      ros::NodeHandle leg_nh("~inner_markers/legs/list/" + leg.first);
+
+      leg_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, legs_common_nh, leg_nh)));
+    }
+  } else {
+    ROS_WARN("RobotPoseMarker: Less than 4 legs has defined in yaml file. Marker may not function properly");
   }
-
-  leg_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[0], legs_nh, "leg1")));
-  leg_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[1], legs_nh, "leg2")));
-  leg_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[2], legs_nh, "leg3")));
-  leg_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[3], legs_nh, "leg4")));
 
   // add limbs markers
   std::vector<std::unique_ptr<LimbPoseMarker>> limb_markers;
@@ -86,14 +80,14 @@ int main(int argc, char **argv)
     XmlRpc::XmlRpcValue limbs;
     stance_nh.getParam("inner_markers/limbs/", limbs);
 
-    for (auto limb: limbs) {
+    for (auto& limb: limbs) {
       ros::NodeHandle limb_nh("~inner_markers/limbs/" + limb.first);
 
       bool is_sphere;
       limb_nh.param<bool>("is_sphere", is_sphere, true);
-      const makeMarkerBody& makeBody = is_sphere ? &makeSphereBody : &makeCubeBody;
+      const makeMarkerBody& makeBodyRef = is_sphere ? &makeSphereBody : &makeCubeBody;
 
-      limb_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, makeBody, limb_nh)));
+      limb_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, makeBodyRef, limb_nh)));
     }
   }
 

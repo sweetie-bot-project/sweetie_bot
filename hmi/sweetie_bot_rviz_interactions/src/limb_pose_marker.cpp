@@ -8,30 +8,30 @@ namespace hmi {
 
 LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
                                visualization_msgs::Marker (*makeMarkerBody)(double scale),
-                               const std::string& name,
-                               ros::NodeHandle leg_node_handle,
-                               const std::string& leg_name
+                               ros::NodeHandle legs_common_node_handle,
+                               ros::NodeHandle leg_node_handle
                               )
-  : PoseMarkerBase(server, name),
+  : PoseMarkerBase(server),
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
     resource_name(""),
     limb_state(LimbPoseMarker::LimbState::INACTIVE)
 {
-  leg_node_handle.getParam("scale", scale);
+  legs_common_node_handle.getParam("scale", scale);
   if (scale < 0) {
     ROS_FATAL("LimbPoseMarker: scale parameter cannot be negative");
     exit(1);
   }
 
-  leg_node_handle.getParam("normalized_z_level", normalized_z_level);
+  legs_common_node_handle.getParam("normalized_z_level", normalized_z_level);
   if (normalized_z_level < 0) {
     ROS_FATAL("LimbPoseMarker: normalized_z_level parameter cannot be negative");
     exit(1);
   }
 
-  leg_node_handle.getParam("list/" + leg_name + "/frame", marker_home_frame);
-  leg_node_handle.getParam("list/" + leg_name + "/resource", resource_name);
+  leg_node_handle.getParam("frame", marker_home_frame);
+  leg_node_handle.getParam("resource", resource_name);
+  leg_node_handle.getParam("name", name);
 
   init(makeMarkerBody);
 }
