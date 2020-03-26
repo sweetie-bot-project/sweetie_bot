@@ -72,7 +72,7 @@ private:
   // frames
   std::vector<std::string> frames = { "bone15", "bone25", "bone35", "bone45", "bone55", "base_link" };
   // resources
-  std::vector<std::string> resources = { "leg1", "leg2", "leg3", "leg4", "head" };
+  std::vector<std::string> resources = { "leg1", "leg2", "leg3", "leg4", "nose" };
 
   // COMPONENT STATE
   // menu index
