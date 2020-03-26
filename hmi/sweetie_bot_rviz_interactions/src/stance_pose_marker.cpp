@@ -69,11 +69,9 @@ void StancePoseMarker::setOperational(bool is_operational)
     // form goal message
     Goal goal;
     goal.operational = true;
-    for (auto it = resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it) {
-      auto &limb_marker = *it;
-
-      if (limb_marker->getState() == LimbPoseMarker::LimbState::INACTIVE) {
-        goal.resources.push_back((*it)->getResourceName());
+    for (auto& leg_marker : leg_markers) {
+      if (leg_marker->getState() == LimbPoseMarker::LimbState::INACTIVE) {
+        goal.resources.push_back(leg_marker->getResourceName());
       }
     }
 
@@ -183,32 +181,30 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
           // toggle option
           MenuHandler::CheckState check;
           menu_handler.getCheckState(feedback->menu_entry_id, check);
+
+          std::unique_ptr<LimbPoseMarker>& res_marker = (resource_id < leg_markers.size()) ? leg_markers[resource_id] : limb_markers[resource_id - leg_markers.size()];
           switch (check) {
             case MenuHandler::CHECKED:
-              if (resource_id < resource_markers.size()) {
-                std::unique_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
-                res_marker->changeVisibility(false); // hide bounded limb marker
-                res_marker->setState(LimbPoseMarker::LimbState::INACTIVE);
-                if (this->is_operational) {
-                  // We update operational state after resource marker deactivates
-                  this->setOperational(true);
-                }
-                rebuildMenu();
+              res_marker->changeVisibility(false); // hide bounded limb marker
+              res_marker->setState(LimbPoseMarker::LimbState::INACTIVE);
+              if (this->is_operational) {
+                // We update operational state after resource marker deactivates
+                // in order to keep controlled resources list valid
+                this->setOperational(true);
               }
+              rebuildMenu();
               menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
               break;
             case MenuHandler::UNCHECKED:
-              if (resource_id < resource_markers.size()) {
-                std::unique_ptr<LimbPoseMarker>& res_marker = resource_markers[resource_id];
-                res_marker->changeVisibility(true); // show bounded limb marker
-                res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
-                res_marker->setState(LimbPoseMarker::LimbState::FREE);
-                if (this->is_operational) {
-                  // We update operational state after resource marker activates
-                  this->setOperational(true);
-                }
-                rebuildMenu();
+              res_marker->changeVisibility(true); // show bounded limb marker
+              res_marker->moveToFrame(res_marker->getMarkerHomeFrame()); // also move it to its place
+              res_marker->setState(LimbPoseMarker::LimbState::FREE);
+              if (this->is_operational) {
+                // We update operational state after resource marker activates
+                // in order to keep controlled resources list valid
+                this->setOperational(true);
               }
+              rebuildMenu();
               menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
               break;
           }
@@ -228,22 +224,21 @@ void StancePoseMarker::processNormalizeLegs( const visualization_msgs::Interacti
     ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
                      << " / control '" << feedback->control_name << "': menu \"Normalize legs\" select, entry id = " << feedback->menu_entry_id );
 
-    if (resource_markers.empty()) return;
+    if (leg_markers.empty()) return;
 
-    for (auto it=resource_markers.begin(); std::distance(resource_markers.begin(), it) < 4; ++it) {
-      auto& marker_ptr = *it;
-      if (marker_ptr->isVisible()) {
+    for (auto& leg_marker: leg_markers) {
+      if (leg_marker->isVisible()) {
         geometry_msgs::PoseStamped pose_stamped;
         pose_stamped.header = std_msgs::Header();
         pose_stamped.header.frame_id = "odom_combined";
         // update marker pose
-        marker_ptr->reloadMarker();
-        pose_stamped.pose = marker_ptr->getInteractiveMarker().pose;
+        leg_marker->reloadMarker();
+        pose_stamped.pose = leg_marker->getInteractiveMarker().pose;
         // normalize marker
-        marker_ptr->normalize(pose_stamped);
+        leg_marker->normalize(pose_stamped);
         // publish new pose
-        if (marker_ptr->isPosePublishing() && marker_ptr->isOperational()) {
-          marker_ptr->getPosePublisher().publish(pose_stamped);
+        if (leg_marker->isPosePublishing() && leg_marker->isOperational()) {
+          leg_marker->getPosePublisher().publish(pose_stamped);
         }
       }
     }
@@ -261,8 +256,12 @@ void StancePoseMarker::processMoveAllToHome( const visualization_msgs::Interacti
 
     // move stance marker to home
     moveToFrame(marker_home_frame);
-    // move limbs markers to home
-    for (auto& marker : resource_markers) {
+    // move leg markers to home
+    for (auto& marker : leg_markers) {
+      marker->moveToFrame(marker->getMarkerHomeFrame());
+    }
+    // move limb markers to home
+    for (auto& marker : limb_markers) {
       marker->moveToFrame(marker->getMarkerHomeFrame());
     }
 
@@ -276,28 +275,39 @@ void StancePoseMarker::makeMenu()
 
   set_operational_entry = menu_handler.insert( "OPERATIONAL", processFeedback);
   menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
-  int marker_idx = 0;
-  for (auto it=resource_markers.begin(); it != resource_markers.end(); ++it, ++marker_idx) {
+
+  // Add menu entries for legs
+  for (auto& leg_marker: leg_markers) {
     MenuHandler::EntryHandle handle;
     std::string state_msg = "(SUPPORT)";
-    auto& marker_ptr = *it;
-    if (marker_idx < 4) {
-      if (marker_ptr->getState() == LimbPoseMarker::LimbState::INACTIVE) {
-        state_msg = "(SUPPORT)";
-      } else {
-        state_msg = "(FREE)";
-      }
+
+    if (leg_marker->getState() == LimbPoseMarker::LimbState::INACTIVE) {
+      state_msg = "(SUPPORT)";
     } else {
-      state_msg = "";
+      state_msg = "(FREE)";
     }
-    handle = menu_handler.insert( "  " + marker_ptr->getResourceName() + " " + state_msg, processFeedback);
-    if (marker_ptr->getState() == LimbPoseMarker::LimbState::INACTIVE) {
+    handle = menu_handler.insert( "  " + leg_marker->getResourceName() + " " + state_msg, processFeedback);
+    if (leg_marker->getState() == LimbPoseMarker::LimbState::INACTIVE) {
       menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
     } else {
       menu_handler.setCheckState(handle, MenuHandler::CHECKED);
     }
-    resources_entry_map.emplace(handle, marker_ptr->getResourceName());
+    resources_entry_map.emplace(handle, leg_marker->getResourceName());
   }
+
+  // Add menu entries for other limbs
+  for (auto& limb_marker: limb_markers) {
+    MenuHandler::EntryHandle handle;
+
+    handle = menu_handler.insert( "  " + limb_marker->getResourceName(), processFeedback);
+    if (limb_marker->getState() == LimbPoseMarker::LimbState::INACTIVE) {
+      menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
+    } else {
+      menu_handler.setCheckState(handle, MenuHandler::CHECKED);
+    }
+    resources_entry_map.emplace(handle, limb_marker->getResourceName());
+  }
+
   normalize_pose_entry = menu_handler.insert( "Move all to home", boost::bind( &StancePoseMarker::processMoveAllToHome, this, _1 ));
   normalize_pose_entry = menu_handler.insert( "Normalize legs", boost::bind( &StancePoseMarker::processNormalizeLegs, this, _1 ));
   normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &StancePoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));

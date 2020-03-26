@@ -55,7 +55,8 @@ public:
     server->applyChanges();
  }
 
-  void setResourceMarkers(std::vector< std::unique_ptr<LimbPoseMarker> >& resource_markers) { this->resource_markers = std::move(resource_markers); rebuildMenu(); }
+  void setLegMarkers(std::vector< std::unique_ptr<LimbPoseMarker> >& leg_markers) { this->leg_markers = std::move(leg_markers); rebuildMenu(); }
+  void setLimbMarkers(std::vector< std::unique_ptr<LimbPoseMarker> >& limb_markers) { this->limb_markers = std::move(limb_markers); rebuildMenu(); }
 
 private:
 
@@ -69,7 +70,9 @@ private:
 
   // PARAMETERS
   // resource markers vector
-  std::vector< std::unique_ptr<LimbPoseMarker> > resource_markers;
+  std::vector< std::unique_ptr<LimbPoseMarker> > leg_markers;
+  // resource markers vector
+  std::vector< std::unique_ptr<LimbPoseMarker> > limb_markers;
   // publish_pose flag
   bool publish_pose = true;
 

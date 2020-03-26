@@ -58,9 +58,8 @@ int main(int argc, char **argv)
   // create markers
   StancePoseMarker stanceMarker(server, &makeCubeBody, stance_nh);
 
-  std::vector<std::unique_ptr<LimbPoseMarker>> resource_markers;
-
   // add legs markers
+  std::vector<std::unique_ptr<LimbPoseMarker>> leg_markers;
   static const std::string leg_names[4] = {
     "Front-Left leg Pose marker",
     "Front-Right leg Pose marker",
@@ -76,12 +75,13 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[0], legs_nh, "leg1")));
-  resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[1], legs_nh, "leg2")));
-  resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[2], legs_nh, "leg3")));
-  resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[3], legs_nh, "leg4")));
+  leg_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[0], legs_nh, "leg1")));
+  leg_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[1], legs_nh, "leg2")));
+  leg_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[2], legs_nh, "leg3")));
+  leg_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, leg_names[3], legs_nh, "leg4")));
 
   // add limbs markers
+  std::vector<std::unique_ptr<LimbPoseMarker>> limb_markers;
   if (stance_nh.hasParam("inner_markers/limbs/")) {
     XmlRpc::XmlRpcValue limbs;
     stance_nh.getParam("inner_markers/limbs/", limbs);
@@ -93,11 +93,13 @@ int main(int argc, char **argv)
       limb_nh.param<bool>("is_sphere", is_sphere, true);
       const makeMarkerBody& makeBody = is_sphere ? &makeSphereBody : &makeCubeBody;
 
-      resource_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, makeBody, limb_nh)));
+      limb_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, makeBody, limb_nh)));
     }
   }
 
-  stanceMarker.setResourceMarkers(resource_markers);
+  stanceMarker.setLegMarkers(leg_markers);
+  stanceMarker.setLimbMarkers(limb_markers);
+
   ROS_INFO("pose_marker is started!");
 
   // main loop()
