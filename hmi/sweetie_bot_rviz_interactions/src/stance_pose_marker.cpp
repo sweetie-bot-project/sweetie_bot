@@ -110,7 +110,7 @@ void StancePoseMarker::actionDoneCallback(const GoalState& state, const ResultCo
                   << " error_code: " << result->error_code << " error_string: " << result->error_string);
 
   setOperational(false);
-  //action_client->cancelAllGoals();
+  // action_client->cancelAllGoals();
 
   menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
   menu_handler.reApply(*server);
@@ -265,6 +265,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
               if (this->is_operational) {
                 // We update operational state after resource marker deactivates
                 // in order to keep controlled resources list valid
+                this->setOperational(false);
                 this->setOperational(true);
               }
               rebuildMenu();
@@ -277,6 +278,7 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
               if (this->is_operational) {
                 // We update operational state after resource marker activates
                 // in order to keep controlled resources list valid
+                this->setOperational(false);
                 this->setOperational(true);
               }
               rebuildMenu();
