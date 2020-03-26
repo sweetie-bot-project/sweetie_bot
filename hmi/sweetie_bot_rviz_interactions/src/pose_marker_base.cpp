@@ -128,7 +128,7 @@ void PoseMarkerBase::makeInteractiveMarker(MakeMarkerBodyFuncPtr makeMarkerBody,
   if (is_visible) return;
 
   //header setup
-  int_marker.header.frame_id = "odom_combined";
+  int_marker.header.frame_id = world_frame;
   int_marker.scale = 0.15*std::min(scale, 1.0);
   int_marker.name = name;
   int_marker.description = name;
@@ -254,7 +254,7 @@ void PoseMarkerBase::moveToFrame(const std::string& frame)
   try {
     // get transform
     geometry_msgs::TransformStamped T;
-    T = tf_buffer.lookupTransform("odom_combined", frame, ros::Time(0));
+    T = tf_buffer.lookupTransform(world_frame, frame, ros::Time(0));
     // convert to pose
     geometry_msgs::Pose pose;
     pose.position.x = T.transform.translation.x;

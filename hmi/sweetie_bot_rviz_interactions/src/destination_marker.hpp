@@ -79,6 +79,8 @@ private:
   // PARAMETERS
   // marker name
   std::string name;
+  // world frame
+  std::string world_frame;
   // marker sacle parameter
   double scale;
   // selected gait type

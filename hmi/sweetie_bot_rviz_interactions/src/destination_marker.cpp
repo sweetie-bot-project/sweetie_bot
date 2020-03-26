@@ -29,6 +29,7 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
                                     )
   : action_client( new ActionClient("move_base_action", false) ),
     name(""),
+    world_frame("odom_combined"),
     scale(1.0),
     gait_type("walk_overlap"),
     n_steps(4),
@@ -41,6 +42,7 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
   std::vector<int> _n_steps_options;
 
   node_handle.getParam("name", name);
+  node_handle.getParam("world_frame", world_frame);
 
   node_handle.getParam("scale", scale);
   if (scale < 0) {
@@ -216,7 +218,7 @@ void DestinationMarker::invokeClopGenerator(const geometry_msgs::Pose& base_goal
 
   sweetie_bot_clop_generator::MoveBaseGoal goal;
 
-  goal = buildMoveBaseGoal("odom_combined", gait_type, duration, n_steps, execute_only);
+  goal = buildMoveBaseGoal(world_frame, gait_type, duration, n_steps, execute_only);
   setBaseGoal(goal, base_goal, nominal_height);
   // Add end effector targets to message
   if (!ee_names.empty()) {
@@ -362,7 +364,7 @@ void DestinationMarker::makeInteractiveMarker(const geometry_msgs::Pose& pose)
   InteractiveMarker int_marker;
 
   //header setup
-  int_marker.header.frame_id = "odom_combined";
+  int_marker.header.frame_id = world_frame;
   int_marker.pose = pose;
   int_marker.scale = 0.15*std::min(scale, 1.0);
   int_marker.name = name;

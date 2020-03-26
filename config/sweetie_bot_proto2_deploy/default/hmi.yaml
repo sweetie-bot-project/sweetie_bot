@@ -5,6 +5,7 @@ dynamics_visualizer:
     display_twist: true
 robot_pose_marker:
     name: "Stance Pose marker"
+    world_frame: odom_combined
     scale: 1.0
     normalized_z_level: 0.2335
     frame: base_link
@@ -40,6 +41,7 @@ robot_pose_marker:
           activation_action: look_at_set_operational_action
 destination_marker:
     name: "Destination Marker"
+    world_frame: odom_combined
     scale: 1.1
     gait_type_options: [ walk_overlap, walk, trot ]
     gait_type_default_idx: 0

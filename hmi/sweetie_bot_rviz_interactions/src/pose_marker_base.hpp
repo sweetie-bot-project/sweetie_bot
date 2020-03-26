@@ -21,6 +21,7 @@ public:
   PoseMarkerBase(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
                  const std::string& name = "",
                  double scale = 1.0,
+                 const std::string& world_frame = "odom_combined",
                  const std::string& marker_home_frame = "",
                  double normalized_z_level = 0.0
                  )
@@ -28,6 +29,7 @@ public:
       tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
       name(name),
       scale(scale),
+      world_frame(world_frame),
       marker_home_frame(marker_home_frame),
       normalized_z_level(normalized_z_level)
   {
@@ -40,6 +42,7 @@ public:
       tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
       name(""),
       scale(1.0),
+      world_frame("odom_combined"),
       marker_home_frame(""),
       normalized_z_level(0.0)
   {
@@ -51,6 +54,7 @@ public:
       exit(1);
     }
 
+    node_handle.getParam("world_frame", world_frame);
     node_handle.getParam("frame", marker_home_frame);
 
     node_handle.getParam("normalized_z_level", normalized_z_level);
@@ -100,6 +104,8 @@ protected:
   std::string name;
   // marker sacle parameter
   double scale;
+  // World frame
+  std::string world_frame;
   // Home frame to place marker on start operation. Leave empty to ???
   std::string marker_home_frame;
   // Basic z level. When `Normilize pose` command is executed the marker is placed parallel Oxy plane on normalized_z_level heigh over it.
