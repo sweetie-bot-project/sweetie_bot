@@ -1,7 +1,6 @@
 #include "pose_marker_base.hpp"
 
 #include <ros/ros.h>
-#include <boost/thread/mutex.hpp>
 
 using namespace visualization_msgs;
 using namespace interactive_markers;
