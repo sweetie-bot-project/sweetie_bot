@@ -14,6 +14,11 @@ StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::Interact
   makeMenu();
   makeInteractiveMarker(makeCubeBody, boost::bind( &StancePoseMarker::processFeedback, this, _1 ));
 
+  // wait for transform gets available
+  ros::Time now = ros::Time::now();
+  tf_buffer.canTransform(world_frame, marker_home_frame, now, ros::Duration(5.0));
+
+  // and move it to its home frame
   if (marker_home_frame != "")
     moveToFrame(marker_home_frame);
 

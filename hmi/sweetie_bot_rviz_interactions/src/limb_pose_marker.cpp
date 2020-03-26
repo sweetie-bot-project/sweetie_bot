@@ -75,9 +75,6 @@ void LimbPoseMarker::init(MakeMarkerBodyFuncPtr makeMarkerBody) {
   makeMenu();
   makeInteractiveMarker(makeMarkerBody, boost::bind( &LimbPoseMarker::processFeedback, this, _1 ));
 
-  if (marker_home_frame != "")
-    moveToFrame(marker_home_frame);
-
   server->applyChanges();
 
   // hide limb marker by default

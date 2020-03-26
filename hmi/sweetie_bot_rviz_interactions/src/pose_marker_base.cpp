@@ -252,17 +252,19 @@ void PoseMarkerBase::changeColor(float r, float g, float b, float a)
 void PoseMarkerBase::moveToFrame(const std::string& frame)
 {
   try {
-    // get transform
-    geometry_msgs::TransformStamped T;
-    T = tf_buffer.lookupTransform(world_frame, frame, ros::Time(0));
-    // convert to pose
-    geometry_msgs::Pose pose;
-    pose.position.x = T.transform.translation.x;
-    pose.position.y = T.transform.translation.y;
-    pose.position.z = T.transform.translation.z;
-    pose.orientation = T.transform.rotation;
-    // set pose
-    server->setPose(name, pose);
+    if (tf_buffer.canTransform(world_frame, frame, ros::Time(0))) {
+      // get transform
+      geometry_msgs::TransformStamped T;
+      T = tf_buffer.lookupTransform(world_frame, frame, ros::Time(0));
+      // convert to pose
+      geometry_msgs::Pose pose;
+      pose.position.x = T.transform.translation.x;
+      pose.position.y = T.transform.translation.y;
+      pose.position.z = T.transform.translation.z;
+      pose.orientation = T.transform.rotation;
+      // set pose
+      server->setPose(name, pose);
+    }
   }
   catch (tf2::TransformException &ex) {
     ROS_WARN("lookupTransform: %s", ex.what());
