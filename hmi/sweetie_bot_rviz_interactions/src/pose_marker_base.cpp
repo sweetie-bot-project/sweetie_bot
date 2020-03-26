@@ -123,7 +123,7 @@ void PoseMarkerBase::updateInteractiveMarker(bool is6DOF)
   server->applyChanges();
 }
 
-void PoseMarkerBase::makeInteractiveMarker(Marker (*makeMarkerBody)(double scale), const MenuHandler::FeedbackCallback& processFeedback, bool is6DOF)
+void PoseMarkerBase::makeInteractiveMarker(MakeMarkerBodyFuncPtr makeMarkerBody, const MenuHandler::FeedbackCallback& processFeedback, bool is6DOF)
 {
   if (is_visible) return;
 

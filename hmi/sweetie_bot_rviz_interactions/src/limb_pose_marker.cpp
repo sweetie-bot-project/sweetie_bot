@@ -7,7 +7,7 @@ namespace hmi {
 
 
 LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                               visualization_msgs::Marker (*makeMarkerBody)(double scale),
+                               MakeMarkerBodyFuncPtr makeMarkerBody,
                                ros::NodeHandle legs_common_node_handle,
                                ros::NodeHandle leg_node_handle
                               )
@@ -38,7 +38,7 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
 
 
 LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                               visualization_msgs::Marker (*makeMarkerBody)(double scale),
+                               MakeMarkerBodyFuncPtr makeMarkerBody,
                                ros::NodeHandle limb_node_handle
                                )
   : PoseMarkerBase(server, limb_node_handle),
@@ -71,7 +71,7 @@ LimbPoseMarker::~LimbPoseMarker()
   action_client.reset();
 }
 
-void LimbPoseMarker::init(visualization_msgs::Marker (*makeMarkerBody)(double scale)) {
+void LimbPoseMarker::init(MakeMarkerBodyFuncPtr makeMarkerBody) {
   makeMenu();
   makeInteractiveMarker(makeMarkerBody, boost::bind( &LimbPoseMarker::processFeedback, this, _1 ));
 

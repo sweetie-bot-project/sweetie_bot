@@ -14,6 +14,7 @@ using interactive_markers::MenuHandler;
 namespace sweetie_bot {
 namespace hmi {
 
+typedef visualization_msgs::Marker (*MakeMarkerBodyFuncPtr)(const double scale);
 
 class PoseMarkerBase {
 public:
@@ -68,7 +69,7 @@ protected:
   void processMoveToFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 
   void updateInteractiveMarker(bool is6DOF);
-  void makeInteractiveMarker(visualization_msgs::Marker (*makeMarkerBody)(double scale),
+  void makeInteractiveMarker(MakeMarkerBodyFuncPtr makeMarkerBody,
                              const MenuHandler::FeedbackCallback& processFeedback,
                              bool is6DOF = true);
 

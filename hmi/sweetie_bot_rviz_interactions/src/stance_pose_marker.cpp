@@ -6,19 +6,55 @@ namespace sweetie_bot {
 namespace hmi {
 
 
-StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                                   visualization_msgs::Marker (*makeMarkerBody)(const double scale),
-                                   ros::NodeHandle node_handle
-                                  )
+StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle)
   : PoseMarkerBase(server, node_handle),
     action_client( new ActionClient("stance_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("stance_pose", 1))
 {
   makeMenu();
-  makeInteractiveMarker(makeMarkerBody, boost::bind( &StancePoseMarker::processFeedback, this, _1 ));
+  makeInteractiveMarker(makeCubeBody, boost::bind( &StancePoseMarker::processFeedback, this, _1 ));
 
   if (marker_home_frame != "")
     moveToFrame(marker_home_frame);
+
+  // Add legs markers
+  std::vector<std::unique_ptr<LimbPoseMarker>> leg_markers;
+  if (node_handle.hasParam("inner_markers/legs/")) {
+    ros::NodeHandle legs_common_nh("~inner_markers/legs/");
+
+    XmlRpc::XmlRpcValue legs;
+    node_handle.getParam("inner_markers/legs/list/", legs);
+
+    for (auto& leg: legs) {
+      ros::NodeHandle leg_nh("~inner_markers/legs/list/" + leg.first);
+
+      leg_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, &makeCubeBody, legs_common_nh, leg_nh)));
+    }
+  } else {
+    ROS_WARN("RobotPoseMarker: Less than 4 legs has defined in yaml file. Marker may not function properly");
+  }
+
+  setLegMarkers(leg_markers);
+
+  // Add limbs markers
+  std::vector<std::unique_ptr<LimbPoseMarker>> limb_markers;
+  if (node_handle.hasParam("inner_markers/limbs/")) {
+    XmlRpc::XmlRpcValue limbs;
+    node_handle.getParam("inner_markers/limbs/", limbs);
+
+    for (auto& limb: limbs) {
+      ros::NodeHandle limb_nh("~inner_markers/limbs/" + limb.first);
+
+      bool is_sphere;
+      limb_nh.param<bool>("is_sphere", is_sphere, true);
+
+      const MakeMarkerBodyFuncPtr& makeBodyRef = is_sphere ? &makeSphereBody : &makeCubeBody;
+
+      limb_markers.push_back(std::unique_ptr<LimbPoseMarker>(new LimbPoseMarker(server, makeBodyRef, limb_nh)));
+    }
+  }
+
+  setLimbMarkers(limb_markers);
 
   server->applyChanges();
 }
@@ -27,6 +63,40 @@ StancePoseMarker::~StancePoseMarker()
 {
   pose_pub.shutdown();
   action_client.reset();
+}
+
+// Display platform shape as controlled body
+Marker StancePoseMarker::makeCubeBody(double scale)
+{
+  Marker marker;
+
+  marker.type = Marker::CUBE;
+  marker.scale.x = 0.16*scale;
+  marker.scale.y = 0.08*scale;
+  marker.scale.z = 0.02*scale;
+  marker.color.r = 0.8;
+  marker.color.g = 0.5;
+  marker.color.b = 0.5;
+  marker.color.a = 0.7;
+
+  return marker;
+}
+
+// Display sphere as controlled body
+Marker StancePoseMarker::makeSphereBody(double scale)
+{
+  Marker marker;
+
+  marker.type = Marker::SPHERE;
+  marker.scale.x = 0.08*scale;
+  marker.scale.y = 0.08*scale;
+  marker.scale.z = 0.08*scale;
+  marker.color.r = 0.8;
+  marker.color.g = 0.5;
+  marker.color.b = 0.5;
+  marker.color.a = 0.7;
+
+  return marker;
 }
 
 void StancePoseMarker::actionDoneCallback(const GoalState& state, const ResultConstPtr& result)

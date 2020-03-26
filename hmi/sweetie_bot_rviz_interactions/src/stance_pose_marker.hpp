@@ -7,6 +7,8 @@
 #include <actionlib/client/simple_action_client.h>
 #include <sweetie_bot_control_msgs/SetOperationalAction.h>
 
+using visualization_msgs::Marker;
+
 namespace sweetie_bot {
 namespace hmi {
 
@@ -19,12 +21,10 @@ public:
   typedef actionlib::SimpleClientGoalState GoalState;
 
 public:
-  StancePoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                   visualization_msgs::Marker (*makeMarkerBody)(double scale),
-                   ros::NodeHandle node_handle
-                  );
+  StancePoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle);
   ~StancePoseMarker();
 
+private:
   void actionDoneCallback(const GoalState& state, const ResultConstPtr& result);
   void actionActiveCallback();
 
@@ -54,6 +54,9 @@ public:
     menu_handler.reApply(*server);
     server->applyChanges();
  }
+
+  static Marker makeCubeBody(double scale);
+  static Marker makeSphereBody(double scale);
 
   void setLegMarkers(std::vector< std::unique_ptr<LimbPoseMarker> >& leg_markers) { this->leg_markers = std::move(leg_markers); rebuildMenu(); }
   void setLimbMarkers(std::vector< std::unique_ptr<LimbPoseMarker> >& limb_markers) { this->limb_markers = std::move(limb_markers); rebuildMenu(); }
