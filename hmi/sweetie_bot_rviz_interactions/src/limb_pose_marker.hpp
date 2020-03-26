@@ -1,7 +1,7 @@
 #ifndef LIMB_POSE_MARKER
 #define LIMB_POSE_MARKER
 
-#include "pose_marker.hpp"
+#include "pose_marker_base.hpp"
 
 #include <actionlib/client/simple_action_client.h>
 #include <sweetie_bot_control_msgs/SetOperationalAction.h>
@@ -10,7 +10,7 @@ namespace sweetie_bot {
 namespace hmi {
 
 
-class LimbPoseMarker : public PoseMarker {
+class LimbPoseMarker : public PoseMarkerBase {
 public:
   // Action type definitions
   ACTION_DEFINITION(sweetie_bot_control_msgs::SetOperationalAction);
@@ -25,23 +25,15 @@ public:
 
 public:
   LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                 visualization_msgs::Marker (*makeMarkerBody)(double scale),
-                 const std::string& name,
-                 ros::NodeHandle leg_node_handle,
-                 const std::string& leg_name
+                 MakeMarkerBodyFuncPtr makeMarkerBody,
+                 ros::NodeHandle legs_common_node_handle,
+                 ros::NodeHandle leg_node_handle
                 );
   LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                 visualization_msgs::Marker (*makeMarkerBody)(double scale),
+                 MakeMarkerBodyFuncPtr makeMarkerBody,
                  ros::NodeHandle limb_node_handle
                 );
   ~LimbPoseMarker();
-
-  void actionDoneCallback(const GoalState& state, const ResultConstPtr& result);
-  void actionActiveCallback();
-
-  void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
-
-  void makeMenu();
 
   ros::Publisher const & getPosePublisher() const { return pose_pub; }
   std::string const & getResourceName() const { return resource_name; }
@@ -54,7 +46,14 @@ public:
 
 private:
 
-  void init(visualization_msgs::Marker (*makeMarkerBody)(double scale));
+  void init(MakeMarkerBodyFuncPtr makeMarkerBody);
+
+  void actionDoneCallback(const GoalState& state, const ResultConstPtr& result);
+  void actionActiveCallback();
+
+  void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
+
+  void makeMenu();
 
   void setOperational(bool is_operational);
 

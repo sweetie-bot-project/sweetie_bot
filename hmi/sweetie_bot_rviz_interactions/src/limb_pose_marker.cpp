@@ -7,41 +7,41 @@ namespace hmi {
 
 
 LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                               visualization_msgs::Marker (*makeMarkerBody)(double scale),
-                               const std::string& name,
-                               ros::NodeHandle leg_node_handle,
-                               const std::string& leg_name
+                               MakeMarkerBodyFuncPtr makeMarkerBody,
+                               ros::NodeHandle legs_common_node_handle,
+                               ros::NodeHandle leg_node_handle
                               )
-  : PoseMarker(server, name),
+  : PoseMarkerBase(server),
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
     resource_name(""),
     limb_state(LimbPoseMarker::LimbState::INACTIVE)
 {
-  leg_node_handle.getParam("scale", scale);
+  legs_common_node_handle.getParam("scale", scale);
   if (scale < 0) {
     ROS_FATAL("LimbPoseMarker: scale parameter cannot be negative");
     exit(1);
   }
 
-  leg_node_handle.getParam("normalized_z_level", normalized_z_level);
+  legs_common_node_handle.getParam("normalized_z_level", normalized_z_level);
   if (normalized_z_level < 0) {
     ROS_FATAL("LimbPoseMarker: normalized_z_level parameter cannot be negative");
     exit(1);
   }
 
-  leg_node_handle.getParam("list/" + leg_name + "/frame", marker_home_frame);
-  leg_node_handle.getParam("list/" + leg_name + "/resource", resource_name);
+  leg_node_handle.getParam("frame", marker_home_frame);
+  leg_node_handle.getParam("resource", resource_name);
+  leg_node_handle.getParam("name", name);
 
   init(makeMarkerBody);
 }
 
 
 LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                               visualization_msgs::Marker (*makeMarkerBody)(double scale),
+                               MakeMarkerBodyFuncPtr makeMarkerBody,
                                ros::NodeHandle limb_node_handle
                                )
-  : PoseMarker(server, limb_node_handle),
+  : PoseMarkerBase(server, limb_node_handle),
     action_client( new ActionClient("limb_set_operational_action", false) ),
     pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
     resource_name(""),
@@ -49,17 +49,17 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
 {
   limb_node_handle.getParam("resource", resource_name);
 
-  // Set custom controller and activator
-  if (limb_node_handle.hasParam("controller")) {
-    std::string controller_topic;
-    limb_node_handle.getParam("controller", controller_topic);
-    pose_pub = ros::NodeHandle().advertise<geometry_msgs::PoseStamped>(controller_topic, 1);
+  // Set custom pose topic and activation action
+  if (limb_node_handle.hasParam("pose_topic")) {
+    std::string pose_topic;
+    limb_node_handle.getParam("pose_topic", pose_topic);
+    pose_pub = ros::NodeHandle().advertise<geometry_msgs::PoseStamped>(pose_topic, 1);
   }
 
-  if (limb_node_handle.hasParam("activator")) {
-    std::string activator_action;
-    limb_node_handle.getParam("activator", activator_action);
-    action_client.reset(new ActionClient(activator_action, false));
+  if (limb_node_handle.hasParam("activation_action")) {
+    std::string activation_action;
+    limb_node_handle.getParam("activation_action", activation_action);
+    action_client.reset(new ActionClient(activation_action, false));
   }
 
   init(makeMarkerBody);
@@ -71,12 +71,9 @@ LimbPoseMarker::~LimbPoseMarker()
   action_client.reset();
 }
 
-void LimbPoseMarker::init(visualization_msgs::Marker (*makeMarkerBody)(double scale)) {
+void LimbPoseMarker::init(MakeMarkerBodyFuncPtr makeMarkerBody) {
   makeMenu();
   makeInteractiveMarker(makeMarkerBody, boost::bind( &LimbPoseMarker::processFeedback, this, _1 ));
-
-  if (marker_home_frame != "")
-    moveToFrame(marker_home_frame);
 
   server->applyChanges();
 
@@ -260,7 +257,7 @@ void LimbPoseMarker::makeMenu()
   menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
   normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &LimbPoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
   enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &LimbPoseMarker::processEnable6DOF, this, _1 ));
-  menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::UNCHECKED);
+  menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::CHECKED);
   menu_handler.insert("Move to home frame", boost::bind( &LimbPoseMarker::processMoveToHomeFrame, this, _1 ));
 
   menu_handler.reApply(*server);

@@ -39,7 +39,7 @@
 			<remap from="supports" to="$(arg robot_ns)/motion/aggregator_ref/out_supports_sorted"/>
 		</node>
 		<!-- robot pose control -->
-		<node name="pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
+		<node name="robot_pose_marker" pkg="sweetie_bot_rviz_interactions" type="robot_pose_marker" >
 			<remap from="stance_pose" to="$(arg robot_ns)/motion/controller/stance/in_pose_ref"/>
 			<remap from="stance_set_operational_action" to="$(arg robot_ns)/motion/controller/stance"/>
 			<remap from="limb_pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/>
@@ -51,6 +51,11 @@
 	  <node name="destination_marker" pkg="sweetie_bot_rviz_interactions" type="destination_marker" >
 	    <remap from="move_base_action" to="$(arg robot_ns)/clop_generator"/>
 	  </node>
+		<!-- example of generic pose marker -->
+	  <!-- <node name="generic_pose_marker" pkg="sweetie_bot_rviz_interactions" type="generic_pose_marker" > -->
+		<!-- 	<remap from="pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/> -->
+		<!-- 	<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/pose"/> -->
+	  <!-- </node> -->
 		<!-- eyes vizualization -->
 		<group>
 			<remap from="joint_states" to="$(arg robot_ns)/joint_states"/>

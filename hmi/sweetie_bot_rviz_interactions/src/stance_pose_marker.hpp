@@ -1,17 +1,19 @@
 #ifndef STANCE_POSE_MARKER
 #define STANCE_POSE_MARKER
 
-#include "pose_marker.hpp"
+#include "pose_marker_base.hpp"
 #include "limb_pose_marker.hpp"
 
 #include <actionlib/client/simple_action_client.h>
 #include <sweetie_bot_control_msgs/SetOperationalAction.h>
 
+using visualization_msgs::Marker;
+
 namespace sweetie_bot {
 namespace hmi {
 
 
-class StancePoseMarker : public PoseMarker {
+class StancePoseMarker : public PoseMarkerBase {
 public:
   // Action type definitions
   ACTION_DEFINITION(sweetie_bot_control_msgs::SetOperationalAction);
@@ -19,12 +21,10 @@ public:
   typedef actionlib::SimpleClientGoalState GoalState;
 
 public:
-  StancePoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-                   visualization_msgs::Marker (*makeMarkerBody)(double scale),
-                   ros::NodeHandle node_handle
-                  );
+  StancePoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle);
   ~StancePoseMarker();
 
+private:
   void actionDoneCallback(const GoalState& state, const ResultConstPtr& result);
   void actionActiveCallback();
 
@@ -55,7 +55,11 @@ public:
     server->applyChanges();
  }
 
-  void setResourceMarkers(std::vector< std::unique_ptr<LimbPoseMarker> >& resource_markers) { this->resource_markers = std::move(resource_markers); rebuildMenu(); }
+  static Marker makeCubeBody(double scale);
+  static Marker makeSphereBody(double scale);
+
+  void setLegMarkers(std::vector< std::unique_ptr<LimbPoseMarker> >& leg_markers) { this->leg_markers = std::move(leg_markers); rebuildMenu(); }
+  void setLimbMarkers(std::vector< std::unique_ptr<LimbPoseMarker> >& limb_markers) { this->limb_markers = std::move(limb_markers); rebuildMenu(); }
 
 private:
 
@@ -69,7 +73,9 @@ private:
 
   // PARAMETERS
   // resource markers vector
-  std::vector< std::unique_ptr<LimbPoseMarker> > resource_markers;
+  std::vector< std::unique_ptr<LimbPoseMarker> > leg_markers;
+  // resource markers vector
+  std::vector< std::unique_ptr<LimbPoseMarker> > limb_markers;
   // publish_pose flag
   bool publish_pose = true;
 

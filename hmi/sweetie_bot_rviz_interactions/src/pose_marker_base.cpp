@@ -1,7 +1,6 @@
-#include "pose_marker.hpp"
+#include "pose_marker_base.hpp"
 
 #include <ros/ros.h>
-#include <boost/thread/mutex.hpp>
 
 using namespace visualization_msgs;
 using namespace interactive_markers;
@@ -10,9 +9,9 @@ namespace sweetie_bot {
 namespace hmi {
 
 
-PoseMarker::~PoseMarker() {}
+PoseMarkerBase::~PoseMarkerBase() {}
 
-void PoseMarker::processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
+void PoseMarkerBase::processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
 {
   if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT)
   {
@@ -36,7 +35,7 @@ void PoseMarker::processEnable6DOF( const visualization_msgs::InteractiveMarkerF
   }
 }
 
-void PoseMarker::processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, const ros::Publisher& pose_pub, bool pose_publish )
+void PoseMarkerBase::processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, const ros::Publisher& pose_pub, bool pose_publish )
 {
   if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT)
   {
@@ -56,7 +55,7 @@ void PoseMarker::processNormalize( const visualization_msgs::InteractiveMarkerFe
   }
 }
 
-void PoseMarker::processMoveToHomeFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
+void PoseMarkerBase::processMoveToHomeFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
 {
   if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
     ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
@@ -71,7 +70,23 @@ void PoseMarker::processMoveToHomeFrame( const visualization_msgs::InteractiveMa
   }
 }
 
-void PoseMarker::updateInteractiveMarker(bool is6DOF)
+void PoseMarkerBase::processMoveToFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
+{
+  if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
+    ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "' "
+                     << " / control '" << feedback->control_name << "': menu \"Move to home frame\" select, entry id = " << feedback->menu_entry_id );
+
+    std::string frame_id;
+    if (menu_handler.getTitle(feedback->menu_entry_id, frame_id)) {
+      moveToFrame(frame_id);
+
+      menu_handler.reApply(*server);
+      server->applyChanges();
+    }
+  }
+}
+
+void PoseMarkerBase::updateInteractiveMarker(bool is6DOF)
 {
   if (!is_visible) return;
   server->get(name, int_marker);
@@ -107,12 +122,12 @@ void PoseMarker::updateInteractiveMarker(bool is6DOF)
   server->applyChanges();
 }
 
-void PoseMarker::makeInteractiveMarker(Marker (*makeMarkerBody)(double scale), const MenuHandler::FeedbackCallback& processFeedback, bool is6DOF)
+void PoseMarkerBase::makeInteractiveMarker(MakeMarkerBodyFuncPtr makeMarkerBody, const MenuHandler::FeedbackCallback& processFeedback, bool is6DOF)
 {
   if (is_visible) return;
 
   //header setup
-  int_marker.header.frame_id = "odom_combined";
+  int_marker.header.frame_id = world_frame;
   int_marker.scale = 0.15*std::min(scale, 1.0);
   int_marker.name = name;
   int_marker.description = name;
@@ -182,7 +197,7 @@ void PoseMarker::makeInteractiveMarker(Marker (*makeMarkerBody)(double scale), c
   is_visible = true;
 }
 
-void PoseMarker::changeVisibility(bool isVisible)
+void PoseMarkerBase::changeVisibility(bool isVisible)
 {
   if (!isVisible)
   {
@@ -217,7 +232,7 @@ void PoseMarker::changeVisibility(bool isVisible)
 }
 
 
-void PoseMarker::changeColor(float r, float g, float b, float a)
+void PoseMarkerBase::changeColor(float r, float g, float b, float a)
 {
   if (is_visible) {
     server->get(name, int_marker);
@@ -233,27 +248,29 @@ void PoseMarker::changeColor(float r, float g, float b, float a)
   }
 }
 
-void PoseMarker::moveToFrame(const std::string& frame)
+void PoseMarkerBase::moveToFrame(const std::string& frame)
 {
   try {
-    // get transform
-    geometry_msgs::TransformStamped T;
-    T = tf_buffer.lookupTransform("odom_combined", frame, ros::Time(0));
-    // convert to pose
-    geometry_msgs::Pose pose;
-    pose.position.x = T.transform.translation.x;
-    pose.position.y = T.transform.translation.y;
-    pose.position.z = T.transform.translation.z;
-    pose.orientation = T.transform.rotation;
-    // set pose
-    server->setPose(name, pose);
+    if (tf_buffer.canTransform(world_frame, frame, ros::Time(0))) {
+      // get transform
+      geometry_msgs::TransformStamped T;
+      T = tf_buffer.lookupTransform(world_frame, frame, ros::Time(0));
+      // convert to pose
+      geometry_msgs::Pose pose;
+      pose.position.x = T.transform.translation.x;
+      pose.position.y = T.transform.translation.y;
+      pose.position.z = T.transform.translation.z;
+      pose.orientation = T.transform.rotation;
+      // set pose
+      server->setPose(name, pose);
+    }
   }
   catch (tf2::TransformException &ex) {
     ROS_WARN("lookupTransform: %s", ex.what());
   }
 }
 
-void PoseMarker::normalize(geometry_msgs::PoseStamped& pose_stamped)
+void PoseMarkerBase::normalize(geometry_msgs::PoseStamped& pose_stamped)
 {
   // normilize pose
   pose_stamped.pose.position.z = normalized_z_level;

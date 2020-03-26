@@ -1,5 +1,5 @@
-#ifndef POSE_MARKER_HPP
-#define POSE_MARKER_HPP
+#ifndef POSE_MARKER_BASE_HPP
+#define POSE_MARKER_BASE_HPP
 
 #include <tf/tf.h>
 #include <tf2_ros/transform_listener.h>
@@ -14,31 +14,35 @@ using interactive_markers::MenuHandler;
 namespace sweetie_bot {
 namespace hmi {
 
+typedef visualization_msgs::Marker (*MakeMarkerBodyFuncPtr)(const double scale);
 
-class PoseMarker {
+class PoseMarkerBase {
 public:
-  PoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-             const std::string& name,
-             double scale = 1.0,
-             const std::string& marker_home_frame = "",
-             double normalized_z_level = 0.0
-            )
+  PoseMarkerBase(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
+                 const std::string& name = "",
+                 double scale = 1.0,
+                 const std::string& world_frame = "odom_combined",
+                 const std::string& marker_home_frame = "",
+                 double normalized_z_level = 0.0
+                 )
     : server(server),
       tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
       name(name),
       scale(scale),
+      world_frame(world_frame),
       marker_home_frame(marker_home_frame),
       normalized_z_level(normalized_z_level)
   {
   }
 
-  PoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
-             ros::NodeHandle node_handle
-             )
+  PoseMarkerBase(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
+                 ros::NodeHandle node_handle
+                 )
     : server(server),
       tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
       name(""),
       scale(1.0),
+      world_frame("odom_combined"),
       marker_home_frame(""),
       normalized_z_level(0.0)
   {
@@ -46,30 +50,32 @@ public:
 
     node_handle.getParam("scale", scale);
     if (scale < 0) {
-      ROS_FATAL("PoseMarker: scale parameter cannot be negative");
+      ROS_FATAL("PoseMarkerBase: scale parameter cannot be negative");
       exit(1);
     }
 
+    node_handle.getParam("world_frame", world_frame);
     node_handle.getParam("frame", marker_home_frame);
 
     node_handle.getParam("normalized_z_level", normalized_z_level);
     if (normalized_z_level < 0) {
-      ROS_FATAL("PoseMarker: normalized_z_level parameter cannot be negative");
+      ROS_FATAL("PoseMarkerBase: normalized_z_level parameter cannot be negative");
       exit(1);
     }
   }
 
-  virtual ~PoseMarker() = 0;
+  virtual ~PoseMarkerBase() = 0;
 
 protected:
   void processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
   void processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, const ros::Publisher& pose_pub, bool publish_pose);
   void processMoveToHomeFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
+  void processMoveToFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 
   void updateInteractiveMarker(bool is6DOF);
-  void makeInteractiveMarker(visualization_msgs::Marker (*makeMarkerBody)(double scale),
+  void makeInteractiveMarker(MakeMarkerBodyFuncPtr makeMarkerBody,
                              const MenuHandler::FeedbackCallback& processFeedback,
-                             bool is6DOF = false);
+                             bool is6DOF = true);
 
   virtual void makeMenu() = 0;
 
@@ -98,6 +104,8 @@ protected:
   std::string name;
   // marker sacle parameter
   double scale;
+  // World frame
+  std::string world_frame;
   // Home frame to place marker on start operation. Leave empty to ???
   std::string marker_home_frame;
   // Basic z level. When `Normilize pose` command is executed the marker is placed parallel Oxy plane on normalized_z_level heigh over it.
@@ -115,7 +123,7 @@ protected:
   // is_operational flag
   bool is_operational = false;
   // is_6DOF flag
-  bool is_6DOF = false;
+  bool is_6DOF = true;
   // menu
   MenuHandler menu_handler;
   // menu index
@@ -126,4 +134,4 @@ protected:
 } // namespace hmi
 } // namespace sweetie_bot
 
-#endif /*POSE_MARKER_HPP*/
+#endif /*POSE_MARKER_BASE_HPP*/
