@@ -44,6 +44,7 @@ imu_real:
     odometry_frame: 'odom_combined'
     tf_prefix: 'real'
     compass_enable: true
+    pose_publish_divider: 23
 timer:
     priority: 45
     period: 0.056
