@@ -27,6 +27,8 @@ if config_filepath then
 end 
 -- get ROS parameteres and services
 config.get_peer_rosparams(imu_real)
+-- data flow
+depl:connect("odometry_ref.out_base", "imu_real.in_base_ref", rtt.Variable("ConnPolicy"));
 -- data flow to ROS
 depl:stream("imu_real.out_imu", ros:topicBuffer("~imu_real/out_imu", 50))
 depl:stream("imu_real.out_tf", ros:topic("~imu_real/out_tf"))
