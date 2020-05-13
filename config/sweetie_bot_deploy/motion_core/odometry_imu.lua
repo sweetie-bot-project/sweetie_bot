@@ -28,7 +28,7 @@ end
 -- get ROS parameteres and services
 config.get_peer_rosparams(imu_real)
 -- data flow to ROS
-depl:stream("imu_real.out_imu", ros:topic("~imu_real/out_imu"))
+depl:stream("imu_real.out_imu", ros:topicBuffer("~imu_real/out_imu", 50))
 depl:stream("imu_real.out_tf", ros:topic("~imu_real/out_tf"))
 
 -- configure and start component

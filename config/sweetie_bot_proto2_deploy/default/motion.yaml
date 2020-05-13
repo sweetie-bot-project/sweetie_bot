@@ -38,7 +38,8 @@ kinematics_fwd_real:
     kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
     virtual_links: false
 imu_real:
-    priority: 25
+    priority: 40
+    activity_period: 0.002
     imu_frame: 'base_link'
     odometry_frame: 'odom_combined'
     tf_prefix: 'real'
