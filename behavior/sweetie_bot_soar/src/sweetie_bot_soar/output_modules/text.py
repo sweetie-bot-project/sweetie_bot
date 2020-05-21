@@ -18,11 +18,11 @@ class TextCmd(OutputModule):
 
     def startHook(self, cmd_id):
         # extract text command parameters
-        type_id = cmd_id.FindByAttribute("type", 0);
+        type_id = cmd_id.FindByAttribute("type", 0)
         if not type_id: # or type_id.GetValueType() != "string":
             rospy.logerr("textcmd output module: type attribute is empty")
             return "error"
-        command_id = cmd_id.FindByAttribute("command", 0);
+        command_id = cmd_id.FindByAttribute("command", 0)
         if not command_id: # or command_id.GetValueType() != "string": 
             rospy.logerr("textcmd output module: command attribute is empty")
             return "error"
