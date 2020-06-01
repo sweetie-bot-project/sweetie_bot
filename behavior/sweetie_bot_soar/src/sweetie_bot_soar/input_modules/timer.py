@@ -15,7 +15,7 @@ class Clock:
 
     def update(self):
         # update wall clock and cycle counter
-        self.cycle += 1;
+        self.cycle += 1
         self.agent.Update(self.cycle_id, self.cycle)
         self.agent.Update(self.time_id, rospy.get_rostime().to_sec())
 
