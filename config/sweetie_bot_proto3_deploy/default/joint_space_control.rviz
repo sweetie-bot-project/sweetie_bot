@@ -75,11 +75,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
-        camera_link_simulation:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         ear_l_link:
           Alpha: 1
           Show Axes: false
@@ -94,21 +89,19 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         eye_r_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         eyes_link_pitch:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         eyes_link_yaw:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         head_base:
           Alpha: 1
           Show Axes: false
@@ -133,11 +126,19 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        head_link5:
+        hoof1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        head_link6:
+        hoof2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hoof3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hoof4:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -282,11 +283,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        screen_l_link:
+        nose_link1:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        screen_r_link:
+        nose_link2:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -309,8 +310,6 @@ Visualization Manager:
           Value: true
         camera_link:
           Value: true
-        camera_link_simulation:
-          Value: true
         ear_l_link:
           Value: true
         ear_r_link:
@@ -333,9 +332,13 @@ Visualization Manager:
           Value: true
         head_link4:
           Value: true
-        head_link5:
+        hoof1:
           Value: true
-        head_link6:
+        hoof2:
+          Value: true
+        hoof3:
+          Value: true
+        hoof4:
           Value: true
         leg1_link1:
           Value: true
@@ -395,11 +398,11 @@ Visualization Manager:
           Value: true
         mouth_link:
           Value: true
+        nose_link1:
+          Value: true
+        nose_link2:
+          Value: true
         odom_combined:
-          Value: true
-        screen_l_link:
-          Value: true
-        screen_r_link:
           Value: true
         world:
           Value: true
@@ -413,8 +416,6 @@ Visualization Manager:
           base_link:
             base_link_inertia:
               {}
-            camera_link_simulation:
-              {}
             head_link1:
               head_link2:
                 head_link3:
@@ -426,27 +427,27 @@ Visualization Manager:
                     ear_r_link:
                       {}
                     eye_l_link:
-                      screen_l_link:
-                        {}
+                      {}
                     eye_r_link:
-                      screen_r_link:
-                        {}
-                    eyes_link_yaw:
-                      eyes_link_pitch:
+                      {}
+                    eyes_link_pitch:
+                      eyes_link_yaw:
                         {}
                     head_base:
                       {}
-                    head_link5:
-                      head_link6:
-                        {}
                     mouth_link:
                       {}
+                    nose_link1:
+                      nose_link2:
+                        {}
             leg1_link1:
               leg1_link2:
                 leg1_link3:
                   leg1_link4:
                     leg1_link5:
                       leg1_link6:
+                        hoof1:
+                          {}
                         leg1_link7:
                           {}
             leg2_link1:
@@ -455,6 +456,8 @@ Visualization Manager:
                   leg2_link4:
                     leg2_link5:
                       leg2_link6:
+                        hoof2:
+                          {}
                         leg2_link7:
                           {}
             leg3_link1:
@@ -463,6 +466,8 @@ Visualization Manager:
                   leg3_link4:
                     leg3_link5:
                       leg3_link6:
+                        hoof3:
+                          {}
                         leg3_link7:
                           {}
             leg4_link1:
@@ -471,6 +476,8 @@ Visualization Manager:
                   leg4_link4:
                     leg4_link5:
                       leg4_link6:
+                        hoof4:
+                          {}
                         leg4_link7:
                           {}
           base_link_path:
@@ -598,6 +605,14 @@ Visualization Manager:
       Topic: /motion/controller/look_at/in_pose_ref
       Unreliable: false
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /hmi/xpp/rviz_markers
+      Name: PlannedTrajectory
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -663,4 +678,4 @@ Window Geometry:
     collapsed: false
   Width: 1596
   X: 0
-  Y: 199
+  Y: 27

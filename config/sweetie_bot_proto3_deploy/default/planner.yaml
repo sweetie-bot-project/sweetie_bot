@@ -1,0 +1,77 @@
+clop_generator:
+    period: 0.056
+    contact_height_tolerance: 0.005
+    world_frame: "odom_combined"
+    planning_frame: "base_link_path"
+    storage_namespace: "saved_msgs"
+    towr_model:
+        base:
+            frame_id: "base_link"
+            links: ["base_link", "base_link_inertia", "leg1_link1", "leg1_link2", "leg2_link1", "leg2_link2", "leg3_link1", "leg3_link2", "leg4_link1", "leg4_link2", "head_link1", "head_link2", "head_link3", "head_link4", "ear_l_link", "ear_r_link", "mouth_link" ]
+        LF:
+            name: "leg1"
+            frame_id: "leg1_link6"
+            nominal_stance: [ 0.042, 0.057, -0.25 ]
+            bounding_box: [ -0.01, 0.04, -1.0, 1.0, 0.08, -0.23 ]
+            bounding_sphere: [ 0.0228, 0.0442, -0.0397, 0.235 ] # 0.24
+            contact_point: [ 0.0, 0.0, -0.035 ]
+            links: ["leg1_link4", "leg1_link5", "leg1_link6"]
+        RF:
+            name: "leg2"
+            frame_id: "leg2_link6"
+            nominal_stance: [ 0.042, -0.057, -0.25 ]
+            bounding_box: [ -0.01, -0.08, -1.0, 1.0, -0.04, -0.23 ]
+            bounding_sphere: [ 0.0228, -0.0442, -0.0397, 0.235 ]
+            contact_point: [ 0.0, 0.0, -0.035 ]
+            links: ["leg2_link4", "leg2_link5", "leg2_link6"]
+        LH:
+            name: "leg3"
+            frame_id: "leg3_link6"
+            nominal_stance: [ -0.175, 0.078, -0.25 ]
+            bounding_box: [ -1.0, 0.04, -1.0, -0.10, 0.12, -0.23 ]
+            bounding_sphere: [ -0.124, 0.048, -0.031, 0.26 ] # 0.265
+            contact_point: [ 0.0, 0.0, -0.035 ]
+            links: ["leg3_link4", "leg3_link5", "leg3_link6"]
+        RH: 
+            name: "leg4"
+            frame_id: "leg4_link6"
+            nominal_stance: [ -0.175, -0.078, -0.25 ]
+            bounding_box: [ -1.0, -0.12, -1.0, -0.10, -0.04, -0.23 ]
+            bounding_sphere: [ -0.124, -0.048, -0.031, 0.26 ]
+            contact_point: [ 0.0, 0.0, -0.035 ]
+            links: ["leg4_link4", "leg4_link5", "leg4_link6"]
+    towr_parameters: # see towr::Parameteres for desciption, are updated move request
+        scale_per_step: false
+        #duration_base_polynomial: 0.25
+        #dt_constraint_dynamic: 0.25
+        #dt_constraint_range_of_motion: 0.2
+        #dt_constraint_base_motion: 0.0625
+        duration_base_polynomial: 0.25
+        dt_constraint_dynamic: 0.1
+        dt_constraint_range_of_motion: 0.1
+        dt_constraint_base_motion: 0.1
+        ee_polynomials_per_swing_phase: 2
+        optimize_phase_durations: false
+        bound_phase_duration_min: 0.4
+        bound_phase_duration_max: 2.0
+        min_swing_height: 0.01
+        costs: # better for on-line synthesis
+            base_lin_motion: 0.00001
+            base_ang_motion: 0.0001
+            ee_motion: 0.000025
+        #costs: # turn costs off
+            #costcostbase_lin_motion: 0.0
+            #costcostbase_ang_motion: 0.0
+            #costcostee_motion: 0.0
+        #costs: # better for synthesis for saving motions
+            #base_lin_motion: 0.0001
+            #base_ang_motion: 0.001
+            #ee_motion: 0.00025
+    ipopt_solver_parameters:
+        linear_solver: "mumps"
+        jacobian_approximation: "exact"
+        derivative_test: "none"  # BEWARE! Test "first-order" breaks optimization process! 
+        max_cpu_time: 20.0
+        print_level: 5
+        max_iter: 300
+
