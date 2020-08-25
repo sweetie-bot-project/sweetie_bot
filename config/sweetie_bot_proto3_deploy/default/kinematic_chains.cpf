@@ -102,7 +102,7 @@
 		</simple>
 		<simple name="last_link_virtual" type="string">
 			<description>Last  chain element.</description>
-			<value>head_link6</value>
+			<value>nose_link2</value>
 		</simple>
 	</struct>
   </struct>
