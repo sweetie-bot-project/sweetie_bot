@@ -1,6 +1,6 @@
 #include "stance_pose_marker.hpp"
 
-#include <boost/thread/mutex.hpp>
+#include <boost/bind.hpp>
 
 namespace sweetie_bot {
 namespace hmi {
@@ -13,14 +13,6 @@ StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::Interact
 {
   makeMenu();
   makeInteractiveMarker(makeCubeBody, boost::bind( &StancePoseMarker::processFeedback, this, _1 ));
-
-  // wait for transform gets available
-  ros::Time now = ros::Time::now();
-  tf_buffer.canTransform(world_frame, marker_home_frame, now, ros::Duration(5.0));
-
-  // and move it to its home frame
-  if (marker_home_frame != "")
-    moveToFrame(marker_home_frame);
 
   // Add legs markers
   std::vector<std::unique_ptr<LimbPoseMarker>> leg_markers;
@@ -386,7 +378,7 @@ void StancePoseMarker::makeMenu()
   }
 
   normalize_pose_entry = menu_handler.insert( "Move all to home", boost::bind( &StancePoseMarker::processMoveAllToHome, this, _1 ));
-  normalize_pose_entry = menu_handler.insert( "Normalize legs", boost::bind( &StancePoseMarker::processNormalizeLegs, this, _1 ));
+  // normalize_pose_entry = menu_handler.insert( "Normalize legs", boost::bind( &StancePoseMarker::processNormalizeLegs, this, _1 ));
   normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &StancePoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
   publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback);
   menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);

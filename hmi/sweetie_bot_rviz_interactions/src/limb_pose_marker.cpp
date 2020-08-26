@@ -1,6 +1,6 @@
 #include "limb_pose_marker.hpp"
 
-#include <boost/thread/mutex.hpp>
+#include <boost/bind.hpp>
 
 namespace sweetie_bot {
 namespace hmi {

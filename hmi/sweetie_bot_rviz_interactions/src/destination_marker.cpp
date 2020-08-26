@@ -1,7 +1,7 @@
 #include "destination_marker.hpp"
 
 #include <ros/ros.h>
-#include <boost/thread/mutex.hpp>
+#include <boost/bind.hpp>
 #include <sstream>
 #include <math.h>
 #include <stdlib.h>
@@ -536,7 +536,7 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
   MenuHandler::FeedbackCallback processFeedback = boost::bind( &DestinationMarker::processFeedback, this, _1 );
 
   if (!gait_type_options.empty() || !n_steps_options.empty()) {
-    start_motion_entry = menu_handler.insert("Walk to marker", processFeedback);
+    start_motion_entry = menu_handler.insert("Walk to the target", processFeedback);
     repeat_last_motion_entry = menu_handler.insert("Repeat last motion", processFeedback);
     to_nominal_entry = menu_handler.insert("To nominal", processFeedback);
     MenuHandler::EntryHandle gait_type_entry = menu_handler.insert("Gait type");
