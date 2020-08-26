@@ -35,7 +35,7 @@ void PoseMarkerBase::processEnable6DOF( const visualization_msgs::InteractiveMar
   }
 }
 
-void PoseMarkerBase::processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, const ros::Publisher& pose_pub, bool pose_publish )
+void PoseMarkerBase::processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
 {
   if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT)
   {
@@ -48,7 +48,7 @@ void PoseMarkerBase::processNormalize( const visualization_msgs::InteractiveMark
     // normalize pose
     normalize(pose_stamped);
     // publish new pose
-    if (pose_publish && is_operational) pose_pub.publish(pose_stamped);
+    if (is_pose_publishing && is_operational) pose_publisher.publish(pose_stamped);
 
     menu_handler.reApply(*server);
     server->applyChanges();

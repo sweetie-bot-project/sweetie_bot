@@ -7,9 +7,8 @@ namespace hmi {
 
 
 StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle)
-  : PoseMarkerBase(server, node_handle),
-    action_client( new ActionClient("stance_set_operational_action", false) ),
-    pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("stance_pose", 1))
+  : PoseMarkerBase(server, ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("stance_pose", 1),  node_handle),
+    action_client( new ActionClient("stance_set_operational_action", false) )
 {
   makeMenu();
   makeInteractiveMarker(makeCubeBody, boost::bind( &StancePoseMarker::processFeedback, this, _1 ));
@@ -58,7 +57,7 @@ StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::Interact
 
 StancePoseMarker::~StancePoseMarker()
 {
-  pose_pub.shutdown();
+  pose_publisher.shutdown();
   action_client.reset();
 }
 
@@ -189,12 +188,12 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
           << "\nframe: " << feedback->header.frame_id
           << " time: " << feedback->header.stamp.sec << "sec, "
           << feedback->header.stamp.nsec << " nsec" );
-      if (publish_pose && is_operational) {
+      if (is_pose_publishing && is_operational) {
         geometry_msgs::PoseStamped pose_stamped;
 
         pose_stamped.header = feedback->header;
         pose_stamped.pose = feedback->pose;
-        pose_pub.publish(pose_stamped);
+        pose_publisher.publish(pose_stamped);
       }
       break;
 
@@ -225,17 +224,17 @@ void StancePoseMarker::processFeedback( const visualization_msgs::InteractiveMar
         switch (check) {
           case MenuHandler::CHECKED:
             menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
-            publish_pose = false;
+            setPublishPose(false);
             break;
           case MenuHandler::UNCHECKED:
             menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
-            publish_pose = true;
+            setPublishPose(true);
             if (is_operational) {
               // publish current pose
               geometry_msgs::PoseStamped pose_stamped;
               pose_stamped.header = feedback->header;
               pose_stamped.pose = feedback->pose;
-              pose_pub.publish(pose_stamped);
+              pose_publisher.publish(pose_stamped);
             }
         }
       }
@@ -379,8 +378,8 @@ void StancePoseMarker::makeMenu()
 
   normalize_pose_entry = menu_handler.insert( "Move all to home", boost::bind( &StancePoseMarker::processMoveAllToHome, this, _1 ));
   // normalize_pose_entry = menu_handler.insert( "Normalize legs", boost::bind( &StancePoseMarker::processNormalizeLegs, this, _1 ));
-  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &StancePoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
-  publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback);
+  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &StancePoseMarker::processNormalize, this, _1 ));
+  publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback );
   menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
   enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &StancePoseMarker::processEnable6DOF, this, _1 ));
   menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::CHECKED);

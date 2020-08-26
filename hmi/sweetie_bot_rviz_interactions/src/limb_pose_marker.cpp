@@ -11,9 +11,8 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
                                ros::NodeHandle legs_common_node_handle,
                                ros::NodeHandle leg_node_handle
                               )
-  : PoseMarkerBase(server),
+  : PoseMarkerBase(server, ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
     action_client( new ActionClient("limb_set_operational_action", false) ),
-    pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
     resource_name(""),
     limb_state(LimbPoseMarker::LimbState::INACTIVE)
 {
@@ -41,9 +40,8 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
                                MakeMarkerBodyFuncPtr makeMarkerBody,
                                ros::NodeHandle limb_node_handle
                                )
-  : PoseMarkerBase(server, limb_node_handle),
+  : PoseMarkerBase(server, ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1), limb_node_handle),
     action_client( new ActionClient("limb_set_operational_action", false) ),
-    pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("limb_pose", 1)),
     resource_name(""),
     limb_state(LimbPoseMarker::LimbState::INACTIVE)
 {
@@ -53,7 +51,7 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
   if (limb_node_handle.hasParam("pose_topic")) {
     std::string pose_topic;
     limb_node_handle.getParam("pose_topic", pose_topic);
-    pose_pub = ros::NodeHandle().advertise<geometry_msgs::PoseStamped>(pose_topic, 1);
+    pose_publisher = ros::NodeHandle().advertise<geometry_msgs::PoseStamped>(pose_topic, 1);
   }
 
   if (limb_node_handle.hasParam("activation_action")) {
@@ -67,7 +65,7 @@ LimbPoseMarker::LimbPoseMarker(std::shared_ptr<interactive_markers::InteractiveM
 
 LimbPoseMarker::~LimbPoseMarker()
 {
-  pose_pub.shutdown();
+  pose_publisher.shutdown();
   action_client.reset();
 }
 
@@ -184,12 +182,12 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
           << " time: " << feedback->header.stamp.sec << "sec, "
           << feedback->header.stamp.nsec << " nsec" );
 
-      if (publish_pose && is_operational) {
+      if (is_pose_publishing && is_operational) {
         geometry_msgs::PoseStamped pose_stamped;
 
         pose_stamped.header = feedback->header;
         pose_stamped.pose = feedback->pose;
-        pose_pub.publish(pose_stamped);
+        pose_publisher.publish(pose_stamped);
       }
       break;
 
@@ -213,24 +211,24 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
         }
       }
       // check user toggled publish pose meny entry
-      else {
+      else if (feedback->menu_entry_id == publish_pose_entry) {
         // toggle option
         MenuHandler::CheckState check;
         menu_handler.getCheckState(feedback->menu_entry_id, check);
         switch (check) {
           case MenuHandler::CHECKED:
             menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
-            publish_pose = false;
+            setPublishPose(false);
             break;
           case MenuHandler::UNCHECKED:
             menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
-            publish_pose = true;
+            setPublishPose(true);
             if (is_operational) {
               // publish current pose
               geometry_msgs::PoseStamped pose_stamped;
               pose_stamped.header = feedback->header;
               pose_stamped.pose = feedback->pose;
-              pose_pub.publish(pose_stamped);
+              pose_publisher.publish(pose_stamped);
             }
         }
       }
@@ -251,11 +249,11 @@ void LimbPoseMarker::makeMenu()
 {
   MenuHandler::FeedbackCallback processFeedback = boost::bind( &LimbPoseMarker::processFeedback, this, _1 );
 
-  set_operational_entry = menu_handler.insert( "Keep activated", processFeedback);
+  set_operational_entry = menu_handler.insert( "Keep activated", processFeedback );
   menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
-  publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback);
+  publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback );
   menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
-  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &LimbPoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
+  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &LimbPoseMarker::processNormalize, this, _1 ));
   enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &LimbPoseMarker::processEnable6DOF, this, _1 ));
   menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::CHECKED);
   menu_handler.insert("Move to home frame", boost::bind( &LimbPoseMarker::processMoveToHomeFrame, this, _1 ));

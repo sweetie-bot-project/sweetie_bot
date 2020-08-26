@@ -19,6 +19,7 @@ typedef visualization_msgs::Marker (*MakeMarkerBodyFuncPtr)(const double scale);
 class PoseMarkerBase {
 public:
   PoseMarkerBase(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
+                 ros::Publisher pose_publisher,
                  const std::string& name = "",
                  double scale = 1.0,
                  const std::string& world_frame = "odom_combined",
@@ -26,6 +27,7 @@ public:
                  double normalized_z_level = 0.0
                  )
     : server(server),
+      pose_publisher(pose_publisher),
       tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
       name(name),
       scale(scale),
@@ -36,9 +38,11 @@ public:
   }
 
   PoseMarkerBase(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
+                 ros::Publisher pose_publisher,
                  ros::NodeHandle node_handle
                  )
     : server(server),
+      pose_publisher(pose_publisher),
       tf_listener( new tf2_ros::TransformListener(tf_buffer) ),
       name(""),
       scale(1.0),
@@ -68,7 +72,7 @@ public:
 
 protected:
   void processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
-  void processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback, const ros::Publisher& pose_pub, bool publish_pose);
+  void processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
   void processMoveToHomeFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
   void processMoveToFrame( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 
@@ -89,7 +93,13 @@ public:
 
   std::string const & getMarkerHomeFrame() const { return marker_home_frame; }
   visualization_msgs::InteractiveMarker const & getInteractiveMarker() const { return int_marker; }
+  ros::Publisher const & getPosePublisher() const { return pose_publisher; }
+
+  void setPublishPose(bool is_pose_publishing) { this->is_pose_publishing = is_pose_publishing; }
+
   bool isVisible() const { return is_visible; }
+  bool isPosePublishing() const { return is_pose_publishing; }
+  bool isOperational() const { return is_operational; }
 
 protected:
   // COMPONENT INTERFACE
@@ -98,6 +108,8 @@ protected:
   // tf listener
   tf2_ros::Buffer tf_buffer;
   std::unique_ptr<tf2_ros::TransformListener> tf_listener;
+  // publisers
+  ros::Publisher pose_publisher;
 
   // PARAMETERS
   // marker name
@@ -118,16 +130,19 @@ protected:
   visualization_msgs::InteractiveMarker int_marker;
   // dummy interactive marker for real marker replacement in changeVisibility()
   visualization_msgs::InteractiveMarker dummy_marker;
-  // flag, indicating "visibility" of interactive marker
+  // flag that indicates "visibility" of interactive marker
   bool is_visible = false;
-  // is_operational flag
+  // flag that indicates whether marker is active
   bool is_operational = false;
-  // is_6DOF flag
+  // flag that indicates whether markers pose publishing
+  bool is_pose_publishing = true;
+  // flag that indicates visibility of 6DOF controls
   bool is_6DOF = true;
   // menu
   MenuHandler menu_handler;
   // menu index
   MenuHandler::EntryHandle normalize_pose_entry;
+  MenuHandler::EntryHandle publish_pose_entry;
   MenuHandler::EntryHandle enable_6DOF_entry;
 };
 
