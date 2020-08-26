@@ -26,8 +26,8 @@ robot_pose_marker:
         list:
           leg1: { resource: leg1, frame: bone15, name: "Front-Left leg Pose marker"  }
           leg2: { resource: leg2, frame: bone25, name: "Front-Right leg Pose marker" }
-          leg3: { resource: leg3, frame: bone35, name: "Back-Left leg Pose marker"   }
-          leg4: { resource: leg4, frame: bone45, name: "Back-Right leg Pose marker"  }
+          leg3: { resource: leg3, frame: bone35, name: "Hind-Left leg Pose marker"   }
+          leg4: { resource: leg4, frame: bone45, name: "Hind-Right leg Pose marker"  }
         normalized_z_level: 0.03
         scale: 0.5
       limbs:
