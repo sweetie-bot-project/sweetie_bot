@@ -13,7 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
 	tf2
 	tf2_geometry_msgs
 	tf2_ros
-	orocos_kdl
 	kdl_parser
 	kdl_conversions 
 	eigen_conversions 
@@ -84,14 +83,13 @@ catkin_package(
 	sweetie_bot_orocos_misc
   DEPENDS 
     towr 
-	orocos_kdl
 )
 
 ###########
 ## Build ##
 ###########
 
-include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ library
 

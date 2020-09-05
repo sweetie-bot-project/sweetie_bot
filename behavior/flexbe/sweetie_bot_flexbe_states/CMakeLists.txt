@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(sweetie_bot_flexbe_states)
 
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED rospy)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
