@@ -9,7 +9,7 @@
 	<group>
 		<!-- OROCOS motion core -->
 		<param name="param_ns" value="$(arg param_namespace)" />
-		<node unless="$(arg interactive)" machine="$(arg machine)" name="motion" pkg="sweetie_bot_deploy" type="sweetie-bot-core" args="$(arg modules) $(arg overlays) __param_ns:=$(arg param_namespace)" output="screen"/>
-		<node if="$(arg interactive)" machine="$(arg machine)" launch-prefix="xterm -e " name="motion" pkg="sweetie_bot_deploy" type="sweetie-bot-core" args="$(arg modules) $(arg overlays) __param_ns:=$(arg param_namespace)" output="screen" />
+		<node unless="$(arg interactive)" machine="$(arg machine)" name="motion" pkg="rtt_ros" type="rttlua" args="-i $(find sweetie_bot_deploy)/common/config.lua $(arg modules) $(arg overlays) __param_ns:=$(arg param_namespace)" output="screen"/>
+		<node if="$(arg interactive)" machine="$(arg machine)" launch-prefix="xterm -e " name="motion" pkg="rtt_ros" type="rttlua" args="-i $(find sweetie_bot_deploy)/common/config.lua $(arg modules) $(arg overlays) __param_ns:=$(arg param_namespace)" output="screen" />
 	</group>
 </launch>
