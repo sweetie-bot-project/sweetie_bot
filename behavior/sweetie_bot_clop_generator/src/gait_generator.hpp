@@ -96,7 +96,7 @@ class ClopGenerator
 		bool checkEERangeConditions(const towr::BaseState& base_pose, const towr::NlpFormulation::EEPos& ee_pose);
 
 		void setInitialStateFromNominal(double ground_z);
-		bool setInitialStateFromTF();
+		void setInitialStateFromTF();
 
 		void setGoalPoseFromMsg(const MoveBaseGoal& msg);
 		void setGaitFromGoalMsg(const MoveBaseGoal& msg);

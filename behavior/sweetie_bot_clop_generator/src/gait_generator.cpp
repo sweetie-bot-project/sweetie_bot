@@ -431,7 +431,7 @@ void ClopGenerator::setInitialStateFromNominal(double ground_z)
 	}
 }
 	
-bool ClopGenerator::setInitialStateFromTF() 
+void ClopGenerator::setInitialStateFromTF()
 {
 	//try {
 		// get base position
