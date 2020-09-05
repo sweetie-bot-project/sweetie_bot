@@ -70,9 +70,9 @@
 			</node>
 		</group>
 		<!-- visualizes gait generaot goal, opt. parameters and cartesian base state, endeffector positions and forces -->
-		<group>
-			<node pkg="tf" type="static_transform_publisher" name="xpp_world_static_publisher" args="0 0 0 0 0 0 /odom_combined /world 1000"/> 
-			<node name="xpp_vis" pkg="xpp_vis" type="rviz_marker_node" output="screen"/>
-		</group>
+		<!--<group>-->
+			<!--<node pkg="tf" type="static_transform_publisher" name="xpp_world_static_publisher" args="0 0 0 0 0 0 /odom_combined /world 1000"/> -->
+			<!--<node name="xpp_vis" pkg="xpp_vis" type="rviz_marker_node" output="screen"/>-->
+		<!--</group>-->
 	</group>
 </launch>
