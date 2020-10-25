@@ -11,7 +11,7 @@ def load_modules(agent, input_link_config):
     if not isinstance(input_link_config, dict):
         raise RuntimeError("Input link configuration is not valid.")
     # process configuration
-    for module_name, module_config in input_link_config.iteritems():
+    for module_name, module_config in input_link_config.items():
         module_type = _registered_input_modules_types.get(module_name)
         if module_type:
             input_modules.append( module_type(agent, module_config) )

@@ -1,5 +1,4 @@
-import output_module
-from output_module import OutputModule
+from . import output_module
 
 import rospy
 import actionlib
@@ -10,7 +9,7 @@ from flexbe_msgs.msg import BehaviorExecutionGoal
 from flexbe_msgs.msg import BehaviorExecutionResult
 
 
-class FlexBe(OutputModule):
+class FlexBe(output_module.OutputModule):
 
     def __init__(self, config):
         super(FlexBe, self).__init__("flexbe")

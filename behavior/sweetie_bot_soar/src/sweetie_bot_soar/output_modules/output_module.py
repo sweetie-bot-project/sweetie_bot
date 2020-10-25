@@ -11,7 +11,7 @@ def load_modules(output_link_config):
     if not isinstance(output_link_config, dict):
         raise RuntimeError("Output link configuration parameters tree is not supplied.")
     # process configuration
-    for module_name, module_config in output_link_config.iteritems():
+    for module_name, module_config in output_link_config.items():
         module_type = _registered_output_modules_types.get(module_name)
         if module_type:
             output_modules.append( module_type(module_config) )

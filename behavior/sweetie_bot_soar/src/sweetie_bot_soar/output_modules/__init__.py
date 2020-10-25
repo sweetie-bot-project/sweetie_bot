@@ -1,4 +1,4 @@
 from .output_module import *
-import .flexbe
-import .text
-import .nop
+from . import flexbe
+from . import text
+from . import nop

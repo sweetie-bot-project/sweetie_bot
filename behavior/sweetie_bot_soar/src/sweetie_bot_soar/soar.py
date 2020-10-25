@@ -1,6 +1,7 @@
 import Python_sml_ClientInterface as sml
 
-import input_modules, output_modules
+from . import input_modules
+from . import output_modules
 
 import os, sys
 import rospy, rospkg

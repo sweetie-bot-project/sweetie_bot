@@ -1,11 +1,9 @@
-import output_module
-from output_module import OutputModule
+from . import output_module
 
 import rospy
 from sweetie_bot_text_msgs.msg import TextCommand
 
-
-class TextCmd(OutputModule):
+class TextCmd(output_module.OutputModule):
 
     def __init__(self, config):
         super(TextCmd, self).__init__("textcmd")

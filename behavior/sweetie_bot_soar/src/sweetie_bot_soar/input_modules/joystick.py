@@ -1,5 +1,6 @@
+from . import input_module
+
 from copy import copy
-import input_module
 import rospy
 from sweetie_bot_joystick.msg import KeyPressed
 

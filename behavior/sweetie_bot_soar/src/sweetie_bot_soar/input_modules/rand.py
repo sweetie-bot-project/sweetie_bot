@@ -1,4 +1,5 @@
-import input_module
+from . import input_module
+
 from random import random
 
 class Rand:
