@@ -12,3 +12,7 @@
 [submodule "inc/ifopt"]
 	path = inc/ifopt
 	url = https://github.com/sweetie-bot-project/ifopt
+[submodule "inc/rtimulib2"]
+	path = inc/rtimulib2
+	url = https://github.com/sweetie-bot-project/RTIMULib2
+	branch = master

@@ -1,5 +1,5 @@
-#ifndef STANCE_POSE_MARKER
-#define STANCE_POSE_MARKER
+#ifndef STANCE_POSE_MARKER_HPP
+#define STANCE_POSE_MARKER_HPP
 
 #include "pose_marker_base.hpp"
 #include "limb_pose_marker.hpp"
@@ -41,7 +41,7 @@ private:
     makeMenu(); // Remake menu
 
     // Restore original checkbox states
-    if (publish_pose)
+    if (is_pose_publishing)
       menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
     else
       menu_handler.setCheckState(publish_pose_entry, MenuHandler::UNCHECKED);
@@ -68,22 +68,17 @@ private:
   // CONNECTIONS
   // action server
   std::unique_ptr<ActionClient> action_client;
-  // publisers
-  ros::Publisher pose_pub;
 
   // PARAMETERS
   // resource markers vector
   std::vector< std::unique_ptr<LimbPoseMarker> > leg_markers;
   // resource markers vector
   std::vector< std::unique_ptr<LimbPoseMarker> > limb_markers;
-  // publish_pose flag
-  bool publish_pose = true;
 
   // COMPONENT STATE
   // menu index
   MenuHandler::EntryHandle set_operational_entry;
   std::map<MenuHandler::EntryHandle, std::string> resources_entry_map;
-  MenuHandler::EntryHandle publish_pose_entry;
   MenuHandler::EntryHandle move_all_to_home_etry;
   MenuHandler::EntryHandle normalize_legs;
 };
@@ -91,4 +86,4 @@ private:
 } // namespace hmi
 } // namespace sweetie_bot
 
-#endif /*STANCE_POSE_MARKER*/
+#endif /*STANCE_POSE_MARKER_HPP*/

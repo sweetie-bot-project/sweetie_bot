@@ -6,9 +6,8 @@ namespace hmi {
 GenericPoseMarker::GenericPoseMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
                                      ros::NodeHandle node_handle
                                      )
-  : PoseMarkerBase(server, node_handle),
-    action_client( new ActionClient("set_operational_action", false) ),
-    pose_pub(ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("pose", 1))
+  : PoseMarkerBase(server, ros::NodeHandle().advertise<geometry_msgs::PoseStamped>("pose", 1), node_handle),
+    action_client( new ActionClient("set_operational_action", false) )
 {
   node_handle.getParam("resources", resources);
   node_handle.getParam("frames", frames);
@@ -69,7 +68,7 @@ void GenericPoseMarker::setOperational(bool is_operational)
 
 GenericPoseMarker::~GenericPoseMarker()
 {
-  pose_pub.shutdown();
+  pose_publisher.shutdown();
   action_client.reset();
 }
 
@@ -120,12 +119,12 @@ void GenericPoseMarker::processFeedback( const visualization_msgs::InteractiveMa
           << " time: " << feedback->header.stamp.sec << "sec, "
           << feedback->header.stamp.nsec << " nsec" );
 
-      if (publish_pose && is_operational) {
+      if (is_pose_publishing && is_operational) {
         geometry_msgs::PoseStamped pose_stamped;
 
         pose_stamped.header = feedback->header;
         pose_stamped.pose = feedback->pose;
-        pose_pub.publish(pose_stamped);
+        pose_publisher.publish(pose_stamped);
       }
       break;
 
@@ -151,28 +150,28 @@ void GenericPoseMarker::processFeedback( const visualization_msgs::InteractiveMa
         switch (check) {
           case MenuHandler::CHECKED:
             menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
-            publish_pose = false;
+            setPublishPose(false);
             break;
           case MenuHandler::UNCHECKED:
             menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
-            publish_pose = true;
+            setPublishPose(true);
             if (is_operational) {
               // publish current pose
               geometry_msgs::PoseStamped pose_stamped;
               pose_stamped.header = feedback->header;
               pose_stamped.pose = feedback->pose;
-              pose_pub.publish(pose_stamped);
+              pose_publisher.publish(pose_stamped);
             }
         }
       }
       else {
-        // check if user toggled resource
-				auto it_found = resources_entry_map.find(feedback->menu_entry_id);
-				if (it_found != resources_entry_map.end()) {
-					// toggle option
-					MenuHandler::CheckState check;
-					menu_handler.getCheckState(feedback->menu_entry_id, check);
-					switch (check) {
+        // check if user toggled a resource
+        auto it_found = resources_entry_map.find(feedback->menu_entry_id);
+        if (it_found != resources_entry_map.end()) {
+          // toggle option
+          MenuHandler::CheckState check;
+          menu_handler.getCheckState(feedback->menu_entry_id, check);
+          switch (check) {
           case MenuHandler::CHECKED:
             menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
             break;
@@ -183,11 +182,11 @@ void GenericPoseMarker::processFeedback( const visualization_msgs::InteractiveMa
                 if (it != it_found) menu_handler.setCheckState(it->first, MenuHandler::UNCHECKED);
             }
             break;
-					}
-					// apply changes if controller is operational
-					GoalState state = action_client->getState();
-					if (!state.isDone()) setOperational(true);
-				}
+          }
+          // apply changes if controller is operational
+          GoalState state = action_client->getState();
+          if (!state.isDone()) setOperational(true);
+        }
       }
       break;
   }
@@ -208,8 +207,8 @@ void GenericPoseMarker::makeMenu()
 		else menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
 		resources_entry_map.emplace(handle, res);
 	}
-  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &GenericPoseMarker::processNormalize, this, _1, pose_pub, publish_pose ));
-  publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback);
+  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &GenericPoseMarker::processNormalize, this, _1 ));
+  publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback );
   menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
   enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &GenericPoseMarker::processEnable6DOF, this, _1 ));
   menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::CHECKED);

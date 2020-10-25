@@ -1,6 +1,5 @@
 #include "generic_pose_marker.hpp"
 
-using namespace visualization_msgs;
 using namespace interactive_markers;
 using namespace sweetie_bot::hmi;
 

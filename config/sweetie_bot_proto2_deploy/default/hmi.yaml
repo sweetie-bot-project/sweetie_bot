@@ -3,6 +3,18 @@ joint_state_ref:
 dynamics_visualizer:
     robot_model_namespace: "/motion"
     display_twist: true
+
+# Example of generic marker configuration.
+#    This is old simple version of the markers system. It inteded for debugging
+#    applications where new complex pose marker not appropriate.
+#
+# generic_pose_marker:
+#     name: "Generic Pose Marker"
+#     scale: 0.5
+#     normalized_z_level: 0.03
+#     resources: [ leg1, leg2, leg3, leg4, nose ]
+#     frames: [ bone15, bone25, bone35, bone45, bone55, base_link ]
+#     select_only_one_resource: true
 robot_pose_marker:
     name: "Stance Pose marker"
     world_frame: odom_combined
@@ -14,8 +26,8 @@ robot_pose_marker:
         list:
           leg1: { resource: leg1, frame: bone15, name: "Front-Left leg Pose marker"  }
           leg2: { resource: leg2, frame: bone25, name: "Front-Right leg Pose marker" }
-          leg3: { resource: leg3, frame: bone35, name: "Back-Left leg Pose marker"   }
-          leg4: { resource: leg4, frame: bone45, name: "Back-Right leg Pose marker"  }
+          leg3: { resource: leg3, frame: bone35, name: "Hind-Left leg Pose marker"   }
+          leg4: { resource: leg4, frame: bone45, name: "Hind-Right leg Pose marker"  }
         normalized_z_level: 0.03
         scale: 0.5
       limbs:
@@ -40,7 +52,7 @@ robot_pose_marker:
           pose_topic: look_at_pose
           activation_action: look_at_set_operational_action
 destination_marker:
-    name: "Destination Marker"
+    name: "Destination marker"
     world_frame: odom_combined
     scale: 1.1
     gait_type_options: [ walk_overlap, walk, trot ]
@@ -51,11 +63,3 @@ destination_marker:
     nominal_height: 0.1825
     recorded_trajectory_name: "recorded_trajectory"
     ee_names: [ leg1, leg2, leg3, leg4 ]
-# Example of generic marker configuration:
-# generic_pose_marker:
-#     name: "Generic Pose Marker"
-#     scale: 0.5
-#     normalized_z_level: 0.03
-#     resources: [ leg1, leg2, leg3, leg4, nose ]
-#     frames: [ bone15, bone25, bone35, bone45, bone55, base_link ]
-#     select_only_one_resource: true

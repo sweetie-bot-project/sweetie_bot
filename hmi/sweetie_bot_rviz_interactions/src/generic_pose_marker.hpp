@@ -1,5 +1,5 @@
-#ifndef GENERIC_POSE_MARKER
-#define GENERIC_POSE_MARKER
+#ifndef GENERIC_POSE_MARKER_HPP
+#define GENERIC_POSE_MARKER_HPP
 
 #include "pose_marker_base.hpp"
 
@@ -30,11 +30,6 @@ public:
 
   void makeMenu();
 
-  ros::Publisher const & getPosePublisher() const { return pose_pub; }
-
-  bool isPosePublishing() const { return publish_pose; }
-  bool isOperational() const { return is_operational; }
-
 private:
 
   // Display platform shape as controlled body
@@ -61,12 +56,8 @@ private:
   // CONNECTIONS
   // action server
   std::unique_ptr<ActionClient> action_client;
-  // publisers
-  ros::Publisher pose_pub;
 
   // PARAMETERS
-  // publish_pose flag
-  bool publish_pose = true;
   // resource_select_only_one flag
   bool select_only_one_resource = false;
   // frames
@@ -78,11 +69,10 @@ private:
   // menu index
   MenuHandler::EntryHandle set_operational_entry;
   std::map<MenuHandler::EntryHandle, std::string> resources_entry_map;
-  MenuHandler::EntryHandle publish_pose_entry;
   MenuHandler::EntryHandle frames_submenu_entry;
 };
 
 } // namespace hmi
 } // namespace sweetie_bot
 
-#endif /*GENERIC_POSE_MARKER*/
+#endif /*GENERIC_POSE_MARKER_HPP*/

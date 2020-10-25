@@ -1,5 +1,5 @@
-#ifndef LIMB_POSE_MARKER
-#define LIMB_POSE_MARKER
+#ifndef LIMB_POSE_MARKER_HPP
+#define LIMB_POSE_MARKER_HPP
 
 #include "pose_marker_base.hpp"
 
@@ -35,14 +35,10 @@ public:
                 );
   ~LimbPoseMarker();
 
-  ros::Publisher const & getPosePublisher() const { return pose_pub; }
   std::string const & getResourceName() const { return resource_name; }
   LimbState const & getState() const { return limb_state; }
 
   void setState(LimbState state);
-
-  bool isPosePublishing() const { return publish_pose; }
-  bool isOperational() const { return is_operational; }
 
 private:
 
@@ -62,24 +58,19 @@ private:
   // CONNECTIONS
   // action server
   std::unique_ptr<ActionClient> action_client;
-  // publisers
-  ros::Publisher pose_pub;
 
   // PARAMETERS
   // resource name bounded with marker
   std::string resource_name;
-  // publish_pose flag
-  bool publish_pose = true;
   // limb state
   LimbState limb_state;
 
   // COMPONENT STATE
   // menu index
   MenuHandler::EntryHandle set_operational_entry;
-  MenuHandler::EntryHandle publish_pose_entry;
 };
 
 } // namespace hmi
 } // namespace sweetie_bot
 
-#endif /*LIMB_POSE_MARKER*/
+#endif /*LIMB_POSE_MARKER_HPP*/
