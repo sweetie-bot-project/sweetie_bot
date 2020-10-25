@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import rospy
-import rostopic
-import inspect
 from flexbe_core import EventState, Logger
 
 from flexbe_core.proxy import ProxySubscriberCached

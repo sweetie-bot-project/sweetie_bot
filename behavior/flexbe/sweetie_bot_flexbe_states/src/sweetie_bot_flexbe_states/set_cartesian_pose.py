@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import xmlrpclib
 import math
 
 import rospy

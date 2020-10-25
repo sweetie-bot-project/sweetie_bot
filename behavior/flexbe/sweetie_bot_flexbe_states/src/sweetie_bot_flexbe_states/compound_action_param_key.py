@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from flexbe_core import Logger
-from internal.compound_action_base import CompoundActionBase as EventState
+from .internal.compound_action_base import CompoundActionBase as EventState
 
 # Superclass is imported as EventState to allow to parse state definition FlexApp correctly.
 class CompoundActionParamKey(EventState):

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-from itertools import izip
-import xmlrpclib
+from xmlrpc.client import Binary
 import rospy 
 from rospy.rostime import Time, Duration
 
@@ -29,7 +28,7 @@ class CheckJointState(EventState):
 
         # check if 'unknown' outcome is present
         if 'unknown' not in outcomes:
-            raise RuntimeError, '"unknown" should presents in state outcomes'
+            raise RuntimeError('"unknown" should presents in state outcomes')
         # remove 'unknown' while preserving items order
         poses_names = [ outcome for outcome in outcomes if outcome != 'unknown' ]
         # Load poses from paramere server. Pose is loaded in form dict(joint name -> position),
@@ -58,14 +57,14 @@ class CheckJointState(EventState):
         try:
             goal_raw = rospy.get_param(pose_param)
         except KeyError as e:
-            raise KeyError, "CheckJointState: Unable to get '" + pose_param + "' parameter."
-        if not isinstance(goal_raw, xmlrpclib.Binary):
-            raise TypeError, "CheckJointState: ROS parameter '" + pose_param + "' is not a binary data."
+            raise KeyError("CheckJointState: Unable to get '" + pose_param + "' parameter.")
+        if not isinstance(goal_raw, Binary):
+            raise TypeError("CheckJointState: ROS parameter '" + pose_param + "' is not a binary data.")
         # deserialize
         msg = JointState()
         msg.deserialize(goal_raw.data)
         # create and return joint index to simplify tolerance check
-        return { name: position for name, position in izip(msg.name, msg.position) }
+        return { name: position for name, position in zip(msg.name, msg.position) }
     
     def on_enter(self, userdata):
         # set start timestamp
@@ -84,7 +83,7 @@ class CheckJointState(EventState):
             for pose_name, target_joint_states in self._poses:
                 # check given pose
                 on_position = True
-                for joint_name, pos in izip(joints_msg.name, joints_msg.position):
+                for joint_name, pos in zip(joints_msg.name, joints_msg.position):
                     target_pos = target_joint_states.get(joint_name)
                     if target_pos != None:
                         if abs(target_pos - pos) > self._tolerance:

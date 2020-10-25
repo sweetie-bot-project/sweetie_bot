@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from flexbe_core import Logger
-from internal.set_joint_state_base import SetJointStateBase as EventState
+from .internal.set_joint_state_base import SetJointStateBase as EventState
 
 # Superclass is imported as EventState to allow to parse state definition FlexApp correctly.
 class SetJointState(EventState):

@@ -12,7 +12,7 @@ from std_msgs.msg import Header
 from geometry_msgs.msg import Point, PointStamped, PoseStamped
 from sensor_msgs.msg import JointState
 
-from proto2.head_ik import HeadIK
+from .proto2.head_ik import HeadIK
 
 class SweetieBotFollowHeadPoseSmart(EventState):
     '''

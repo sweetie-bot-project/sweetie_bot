@@ -6,7 +6,7 @@ from flexbe_core.proxy import ProxyActionClient
 # modules
 import rospy
 import actionlib
-import xmlrpclib
+import xmlrpc.client
 
 # datatypes
 from rospy.rostime import Duration
@@ -54,10 +54,10 @@ class GenerateStepSequenceBase(Dummy):
         try:
             goal_raw = rospy.get_param(trajectory_param)
         except KeyError as e:
-            raise KeyError, "Unable to get '" + trajectory_param + "' parameter."
+            raise KeyError("Unable to get '" + trajectory_param + "' parameter.")
 
-        if not isinstance(goal_raw, xmlrpclib.Binary):
-            raise TypeError, "ROS parameter '" + trajectory_param + "' is not a binary data."
+        if not isinstance(goal_raw, xmlrpc.client.Binary):
+            raise TypeError("ROS parameter '" + trajectory_param + "' is not a binary data.")
         # deserialize
         goal = MoveBaseGoal()
         goal.deserialize(goal_raw.data)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from itertools import izip
-import xmlrpclib
+import xmlrpc.client
 import rospy 
 from rospy.rostime import Time, Duration
 
@@ -61,9 +61,9 @@ class SetJointStateBase(Dummy):
         try:
             goal_raw = rospy.get_param(pose_param)
         except KeyError as e:
-            raise KeyError, "SetJointStateBase: Unable to get '" + pose_param + "' parameter."
-        if not isinstance(goal_raw, xmlrpclib.Binary):
-            raise TypeError, "SetJointStateBase: ROS parameter '" + pose_param + "' is not a binary data."
+            raise KeyError("SetJointStateBase: Unable to get '" + pose_param + "' parameter.")
+        if not isinstance(goal_raw, xmlrpc.client.Binary):
+            raise TypeError("SetJointStateBase: ROS parameter '" + pose_param + "' is not a binary data.")
         # deserialize
         self._target_joint_state = JointState()
         self._target_joint_state.deserialize(goal_raw.data)

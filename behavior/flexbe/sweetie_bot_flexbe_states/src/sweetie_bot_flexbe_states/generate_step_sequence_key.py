@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from internal.generate_step_sequence_base import GenerateStepSequenceBase as EventState
+from .internal.generate_step_sequence_base import GenerateStepSequenceBase as EventState
 from flexbe_core import Logger
 
 # Superclass is imported as EventState to allow to parse state definition FlexApp correctly.

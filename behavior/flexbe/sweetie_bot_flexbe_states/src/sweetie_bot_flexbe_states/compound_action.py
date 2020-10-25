@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from internal.compound_action_base import CompoundActionBase as EventState
+from .internal.compound_action_base import CompoundActionBase as EventState
 from flexbe_core import Logger
 
 from sweetie_bot_text_msgs.msg import TextCommand, CompoundAction as CompoundActionMsg, CompoundActionElement

@@ -2,7 +2,7 @@
 # modules
 import rospy
 import actionlib
-import xmlrpclib
+import xmlrpc.client
 
 # flexbe
 from flexbe_core import EventState as Dummy
@@ -82,8 +82,8 @@ class CompoundActionBase(Dummy):
         # Load FollowStepSequenceGoal from Parameter Server
         msg_raw = rospy.get_param(action_param)
 
-        if not isinstance(msg_raw, xmlrpclib.Binary):
-            raise TypeError, "CompoundAction ROS parameter '" + action_param + "' is not a binary data."
+        if not isinstance(msg_raw, xmlrpc.client.Binary):
+            raise TypeError("CompoundAction ROS parameter '" + action_param + "' is not a binary data.")
         # deserialize
         msg = CompoundActionMsg()
         msg.deserialize(msg_raw.data)
@@ -96,9 +96,9 @@ class CompoundActionBase(Dummy):
         actions = list()
         for i, p in enumerate(compound_action_msg.action_list):
             if not isinstance(p.seq_num, int) or not isinstance(p.seq_delay, float):
-                raise TypeError, 'CompoundAction: Incorrect action (seq_num,seq_delay) pair in position %d. (int,float) pair was expected..' % i
+                raise TypeError('CompoundAction: Incorrect action (seq_num,seq_delay) pair in position %d. (int,float) pair was expected..' % i)
             if p.seq_num >= i+1 or p.seq_delay < 0:
-                raise TypeError, 'CompoundAction parse error: incorrect action (seq_num,seq_delay) pair in position %d. seq_num must reference only previously defined actions.' % i
+                raise TypeError('CompoundAction parse error: incorrect action (seq_num,seq_delay) pair in position %d. seq_num must reference only previously defined actions.' % i)
             if p.cmd.type == None:
                 actions.append(None)
             else:
@@ -107,7 +107,7 @@ class CompoundActionBase(Dummy):
                 delay = p.seq_delay
                 description = p.cmd.type + ' ' + p.cmd.command
                 if not isinstance(p.cmd.type, str):
-                    raise TypeError, 'CompoundAction: Incorrect action type %d. Type must be string or None.' % i
+                    raise TypeError('CompoundAction: Incorrect action type %d. Type must be string or None.' % i)
                 # Select action
                 if p.cmd.type == 'motion/joint_trajectory':
                     flexbe_state = ExecuteJointTrajectory(trajectory_param = p.cmd.command)
