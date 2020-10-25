@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import string
 import rospy, roslib, rospkg, os, sys, random
 from sound_play.libsoundplay import SoundClient
 
@@ -73,7 +72,7 @@ def main():
         rospy.logerr('"lang_prefixes" parameter must be a string.')
         sys.exit(-1)
 
-    lang_prefixes = string.split(lang_prefixes, ',')
+    lang_prefixes = str.split(lang_prefixes, ',')
     rospy.loginfo('Sound prefixes: ' + repr(lang_prefixes))
    
     # Get sounds location
