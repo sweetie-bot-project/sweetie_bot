@@ -51,6 +51,10 @@
 		<node name="destination_marker" pkg="sweetie_bot_rviz_interactions" type="destination_marker" >
 			<remap from="move_base_action" to="$(arg robot_ns)/clop_generator"/>
 		</node>
+		<!-- object detection imitation -->
+		<node name="object_detection_marker" pkg="sweetie_bot_rviz_interactions" type="object_detection_marker" >
+			<remap from="detections" to="$(arg robot_ns)/detections"/>
+		</node>
 		<!-- example of generic pose marker -->
 		<!-- <node name="generic_pose_marker" pkg="sweetie_bot_rviz_interactions" type="generic_pose_marker" > -->
 		<!-- 	<remap from="pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/> -->
