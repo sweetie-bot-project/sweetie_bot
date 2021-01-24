@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-from itertools import izip
+#!/usr/bin/env python3
 import xmlrpc.client
 import rospy 
 from rospy.rostime import Time, Duration
@@ -68,7 +67,7 @@ class SetJointStateBase(Dummy):
         self._target_joint_state = JointState()
         self._target_joint_state.deserialize(goal_raw.data)
         # create joint index to simplify tolerance check
-        self._joint_target_pose = { name: position for name, position in izip(self._target_joint_state.name, self._target_joint_state.position) }
+        self._joint_target_pose = { name: position for name, position in zip(self._target_joint_state.name, self._target_joint_state.position) }
     
     def on_enter(self, userdata):
         self._error = False
@@ -107,7 +106,7 @@ class SetJointStateBase(Dummy):
         joints_msg = self._pose_subscriber.get_last_msg(self._joint_topic)
 
         on_position = True
-        for name, pos in izip(joints_msg.name, joints_msg.position):
+        for name, pos in zip(joints_msg.name, joints_msg.position):
             target_pos = self._joint_target_pose.get(name)
             if (target_pos != None):
                 if abs(target_pos - pos) > self._tolerance:

@@ -12,7 +12,7 @@ class GenerateStepSequence(EventState):
     -- trajectory_param    string    ROS parameter in trajectory_ns which stores MoveBase message. If is set to None corresponding key value is used.
     -- trajectory_ns       string    Namespace where trajectores are stored. 
 
-    <= success 		    Motion have been planned and executed succesfully.
+    <= success              Motion have been planned and executed succesfully.
     <= solution_not_found   Planner is unable to find solution.
     <= partial_movement     Execution stopped in midway (path or goal tolerance error, obstacle, external cancel request).
     <= invalid_pose         Initial pose is invalid, movement cannot be started.
@@ -22,10 +22,10 @@ class GenerateStepSequence(EventState):
 
     def __init__(self, controller = 'clop_generator', trajectory_param = None, trajectory_ns = 'saved_msgs/move_base'):
         # Declare outcomes and output keys
-	super(GenerateStepSequence, self).__init__(controller = controller, outcomes = ['success', 'solution_not_found', 'partial_movement', 'invalid_pose', 'failure'])
+        super(GenerateStepSequence, self).__init__(controller = controller, outcomes = ['success', 'solution_not_found', 'partial_movement', 'invalid_pose', 'failure'])
 
         # Load MoveBaseGoal from Parameter Server if parameter is not supplied
-	self._goal = self.loadGoalMsg(trajectory_ns, trajectory_param)
+        self._goal = self.loadGoalMsg(trajectory_ns, trajectory_param)
 
     def on_enter(self, userdata):
         # Send the goal
