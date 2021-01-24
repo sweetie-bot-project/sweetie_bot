@@ -11,10 +11,21 @@ soar:
         joystick:
             type: "joystick"
             topic: "/hmi/joy_decoder/keys_pressed"
-        camera:
-            type: "camera"
-            timeout: 60
+        #camera:
+            #type: "camera"
+            #timeout: 60
+            #topic: "detections"
+        swm:
+            type: "swm"
             topic: "detections"
+            timeout: 600
+            visibility_timeout: 2
+            world_frame: "odom_combined"
+            body_frame: "base_link"
+            head_frame: "bone54"
+            distance_bins_map: { names: [ "close", "near", "far" ], values: [ 0.1, 2.0] }
+            yaw_bins_map: { names: [ "right", "center", "left" ], values: [ -0.52, 0.52] }
+            time_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 2.0, 120.0] }
     output:
         nop: true
         textcmd: 
