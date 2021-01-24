@@ -51,8 +51,9 @@ ObjectDetectionMarker::ObjectDetectionMarker(const std::string& _name, std::shar
 	detection.type = (types.size() > 0) ? types[0] : "";
 	detection.id = rand();
 
-	// setup publiser
-	publisher = node_handle.advertise<sweetie_bot_text_msgs::DetectionArray>("detections", 10);
+	// setup publiser: use non-private node handle
+	ros::NodeHandle root_node_handle; 
+	publisher = root_node_handle.advertise<sweetie_bot_text_msgs::DetectionArray>("detections", 10);
 	publish_timer = node_handle.createTimer(ros::Duration(period), &ObjectDetectionMarker::publishCallback, this);
 	publish_timer.stop();
 	is_publishing = false;
