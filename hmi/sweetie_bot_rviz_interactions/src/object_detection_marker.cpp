@@ -11,9 +11,10 @@ using namespace interactive_markers;
 namespace sweetie_bot {
 namespace hmi {
 
-ObjectDetectionMarker::ObjectDetectionMarker(const std::string& _name, std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle) : 
+ObjectDetectionMarker::ObjectDetectionMarker(const std::string& _name, ros::Publisher& detection_publisher, std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle) : 
 	name(_name),
-	server(server)
+	server(server),
+	publisher(detection_publisher)
 {
 	double period;
 
@@ -51,9 +52,7 @@ ObjectDetectionMarker::ObjectDetectionMarker(const std::string& _name, std::shar
 	detection.type = (types.size() > 0) ? types[0] : "";
 	detection.id = rand();
 
-	// setup publiser: use non-private node handle
-	ros::NodeHandle root_node_handle; 
-	publisher = root_node_handle.advertise<sweetie_bot_text_msgs::DetectionArray>("detections", 10);
+	// setup publlish timer
 	publish_timer = node_handle.createTimer(ros::Duration(period), &ObjectDetectionMarker::publishCallback, this);
 	publish_timer.stop();
 	is_publishing = false;

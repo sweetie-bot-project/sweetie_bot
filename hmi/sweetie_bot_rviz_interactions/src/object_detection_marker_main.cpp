@@ -7,8 +7,9 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "object_detection_marker");
 
-	// node hanler
-	ros::NodeHandle nh("~");
+	// node handle
+	ros::NodeHandle nh;
+	ros::NodeHandle nh_priv("~");
 
 	// get parameters
 	std::vector<std::string> names;
@@ -18,11 +19,13 @@ int main(int argc, char **argv)
 
 	// interactive server
 	auto server = std::make_shared<InteractiveMarkerServer>(ros::this_node::getNamespace(), ros::this_node::getName(), false);
+    // publisher
+    ros::Publisher publisher = nh.advertise<sweetie_bot_text_msgs::DetectionArray>("detections", 10);
 
 	// create markers
 	std::vector< std::unique_ptr<ObjectDetectionMarker> > markers;
 	for(const std::string& name : names) {
-		markers.emplace_back( new ObjectDetectionMarker(name, server, nh) );
+		markers.emplace_back( new ObjectDetectionMarker(name, publisher, server, nh_priv) );
 	}
 
 	ROS_INFO("object_detection_marker is started!");

@@ -12,7 +12,7 @@ namespace hmi {
 
 class ObjectDetectionMarker {
 public:
-	ObjectDetectionMarker(const std::string& _name, std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle);
+	ObjectDetectionMarker(const std::string& _name, ros::Publisher& detection_publisher, std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle);
 
     // mark class not copy/move assignable: boost::bind stores this value to call callbacks
 	ObjectDetectionMarker(const ObjectDetectionMarker&) = delete;
