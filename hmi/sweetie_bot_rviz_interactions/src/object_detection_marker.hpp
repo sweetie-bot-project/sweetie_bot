@@ -14,6 +14,10 @@ class ObjectDetectionMarker {
 public:
 	ObjectDetectionMarker(const std::string& _name, std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle);
 
+    // mark class not copy/move assignable: boost::bind stores this value to call callbacks
+	ObjectDetectionMarker(const ObjectDetectionMarker&) = delete;
+	ObjectDetectionMarker& operator= (const ObjectDetectionMarker&) = delete;
+
 private:
 	visualization_msgs::Marker makeSphereMarker(float r, float g, float b);
 	visualization_msgs::InteractiveMarker  makeInteractiveMarker(const geometry_msgs::Pose& pose);

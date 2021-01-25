@@ -25,6 +25,10 @@ public:
 public:
   DestinationMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server, ros::NodeHandle node_handle);
 
+  // mark class not copy/move assignable: boost::bind stores this value to call callbacks
+  DestinationMarker(const DestinationMarker&) = delete; 
+  DestinationMarker& operator= (const DestinationMarker&) = delete;
+
 private:
   static MoveBaseGoal buildMoveBaseGoal(const std::string& frame_id, const std::string& gait_type, double duration, unsigned n_steps, bool execute_only);
   static void setBaseGoal(MoveBaseGoal& msg, const geometry_msgs::Pose& base_goal, double nominal_height);

@@ -17,12 +17,12 @@ int main(int argc, char **argv)
 	}
 
 	// interactive server
-	auto server = std::make_shared<InteractiveMarkerServer>(ros::this_node::getNamespace(), "", false);
+	auto server = std::make_shared<InteractiveMarkerServer>(ros::this_node::getNamespace(), ros::this_node::getName(), false);
 
 	// create markers
-	std::vector<ObjectDetectionMarker> markers;
+	std::vector< std::unique_ptr<ObjectDetectionMarker> > markers;
 	for(const std::string& name : names) {
-		markers.emplace_back(name, server, nh);
+		markers.emplace_back( new ObjectDetectionMarker(name, server, nh) );
 	}
 
 	ROS_INFO("object_detection_marker is started!");

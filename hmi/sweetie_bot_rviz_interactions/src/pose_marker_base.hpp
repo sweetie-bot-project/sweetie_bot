@@ -70,6 +70,10 @@ public:
 
   virtual ~PoseMarkerBase() = 0;
 
+  // mark class not copy/move assignable: boost::bind stores this value to call callbacks
+  PoseMarkerBase(const PoseMarkerBase&) = delete; 
+  PoseMarkerBase& operator= (const PoseMarkerBase&) = delete;
+
 protected:
   void processEnable6DOF( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
   void processNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
