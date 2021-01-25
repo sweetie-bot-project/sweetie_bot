@@ -159,55 +159,6 @@ visualization_msgs::InteractiveMarker ObjectDetectionMarker::makeInteractiveMark
 	return int_marker;
 }
 
-void ObjectDetectionMarker::processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
-{
-	if ( feedback->marker_name != name ) return;
-
-	// POSE CHANGE
-	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::POSE_UPDATE) {
-		detection.header = feedback->header;
-		detection.pose = feedback->pose;
-	}
-
-	// MENU HANDLING
-	if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
-		ROS_INFO_STREAM( "Feedback from marker '" << feedback->marker_name << "', control '" << feedback->control_name << "': entry id = " << feedback->menu_entry_id );
-
-		// check if user clicked on Start walk entry
-		if (feedback->menu_entry_id == menu_entry_visible) {
-			MenuHandler::CheckState check;
-			menu_handler.getCheckState(feedback->menu_entry_id, check);
-			switch (check) {
-				case MenuHandler::CHECKED:
-					menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
-					is_publishing = false;
-					publish_timer.stop();
-					break;
-				case MenuHandler::UNCHECKED:
-					menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
-					is_publishing = true;
-					publish_timer.start();
-					break;
-			}
-		} else if (feedback->menu_entry_id == menu_entry_new_id) {
-			detection.id = rand();	
-			updateInteractiveMarker();
-		} else if (feedback->menu_entry_id == menu_entry_to_nominal) {
-			detection.pose = feedback->pose;
-			// normalize pose
-			detection.pose.position.z = normalized_z_level;
-			tf::Quaternion orien(0.0, 0.0, detection.pose.orientation.z, detection.pose.orientation.w);
-			orien.normalize();
-			tf::quaternionTFToMsg(orien, detection.pose.orientation);
-			// set pose of marker
-			server->setPose(name, detection.pose);
-		}
-
-		menu_handler.reApply(*server);
-		server->applyChanges();
-	}
-}
-
 void ObjectDetectionMarker::updateInteractiveMarker() 
 {
 	visualization_msgs::InteractiveMarker int_marker;
@@ -215,9 +166,79 @@ void ObjectDetectionMarker::updateInteractiveMarker()
 	server->get(name, int_marker);
 	int_marker.description = "label: " + detection.label + " type: " + detection.type + " id: " + std::to_string(detection.id);
 	server->erase(name);
-	server->insert(int_marker, boost::bind( &ObjectDetectionMarker::processFeedback, this, _1 ));
+	server->insert(int_marker, boost::bind( &ObjectDetectionMarker::processFeedback, this, _1 ), visualization_msgs::InteractiveMarkerFeedback::POSE_UPDATE);
+	menu_handler.apply( *server, int_marker.name );
+	server->applyChanges();
+}
+
+void ObjectDetectionMarker::makeMenu()
+{
+	// visibility trigger
+	auto menu_entry_visible = menu_handler.insert("VISIBLE", boost::bind( &ObjectDetectionMarker::processToggleVisibility, this, _1 ));
+	menu_handler.setCheckState(menu_entry_visible, is_publishing ? MenuHandler::CHECKED : MenuHandler::UNCHECKED);
+	// list of labels
+	if (!labels.empty()) {
+		auto labels_submenu_entry = menu_handler.insert("label");
+		for ( const std::string& label : labels ) {
+			menu_handler.insert(labels_submenu_entry, label, boost::bind( &ObjectDetectionMarker::processChangeLabel, this, _1 ));
+		}
+	}
+	// list of types
+	if (!types.empty()) {
+		auto types_submenu_entry = menu_handler.insert("types");
+		for ( const std::string& type : types ) {
+			menu_handler.insert(types_submenu_entry, type, boost::bind( &ObjectDetectionMarker::processChangeType, this, _1 ));
+		}
+	}
+	// new id
+	menu_handler.insert("New id", boost::bind( &ObjectDetectionMarker::processClickNewId, this, _1 ));
+	// to nominal
+	menu_handler.insert("Normalize", boost::bind( &ObjectDetectionMarker::processClickNormalize, this, _1 ));
+}
+
+void ObjectDetectionMarker::publishCallback(const ros::TimerEvent&)
+{
+	// update header and publish detection
+	detection.header.stamp = ros::Time::now();
+	
+	sweetie_bot_text_msgs::DetectionArray array;
+	array.detections.push_back(detection);
+	publisher.publish(array);
+}
+
+// MARKER FEEDBACK HANDLERS
+
+void ObjectDetectionMarker::processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
+{
+		detection.header = feedback->header;
+		detection.pose = feedback->pose;
+}
+
+
+void ObjectDetectionMarker::processToggleVisibility( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
+{
+	MenuHandler::CheckState check;
+	menu_handler.getCheckState(feedback->menu_entry_id, check);
+	switch (check) {
+		case MenuHandler::CHECKED:
+			menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
+			is_publishing = false;
+			publish_timer.stop();
+			break;
+		case MenuHandler::UNCHECKED:
+			menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
+			is_publishing = true;
+			publish_timer.start();
+			break;
+	}
 	menu_handler.reApply(*server);
 	server->applyChanges();
+}
+
+void ObjectDetectionMarker::processClickNewId( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback ) 
+{
+	detection.id = rand();	
+	updateInteractiveMarker();
 }
 
 void ObjectDetectionMarker::processChangeLabel( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
@@ -238,41 +259,17 @@ void ObjectDetectionMarker::processChangeType( const visualization_msgs::Interac
 	}
 }
 
-void ObjectDetectionMarker::publishCallback(const ros::TimerEvent&)
+void ObjectDetectionMarker::processClickNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback )
 {
-	// update header and publish detection
-	detection.header.stamp = ros::Time::now();
-	
-	sweetie_bot_text_msgs::DetectionArray array;
-	array.detections.push_back(detection);
-	publisher.publish(array);
-}
-
-void ObjectDetectionMarker::makeMenu()
-{
- 	MenuHandler::FeedbackCallback processFeedback = boost::bind( &ObjectDetectionMarker::processFeedback, this, _1 );
-
-	// visibility trigger
-	menu_entry_visible = menu_handler.insert("VISIBLE", processFeedback);
-	menu_handler.setCheckState(menu_entry_visible, is_publishing ? MenuHandler::CHECKED : MenuHandler::UNCHECKED);
-	// list of labels
-	if (!labels.empty()) {
-		auto labels_submenu_entry = menu_handler.insert("label");
-		for ( const std::string& label : labels ) {
-			menu_handler.insert(labels_submenu_entry, label, boost::bind( &ObjectDetectionMarker::processChangeLabel, this, _1 ));
-		}
-	}
-	// list of types
-	if (!types.empty()) {
-		auto types_submenu_entry = menu_handler.insert("types");
-		for ( const std::string& type : types ) {
-			menu_handler.insert(types_submenu_entry, type, boost::bind( &ObjectDetectionMarker::processChangeType, this, _1 ));
-		}
-	}
-	// new id
-	menu_entry_new_id = menu_handler.insert("New id", processFeedback);
-	// to nominal
-	menu_entry_to_nominal = menu_handler.insert("Normalize", processFeedback);
+	detection.pose = feedback->pose;
+	// normalize pose
+	detection.pose.position.z = normalized_z_level;
+	tf::Quaternion orien(0.0, 0.0, detection.pose.orientation.z, detection.pose.orientation.w);
+	orien.normalize();
+	tf::quaternionTFToMsg(orien, detection.pose.orientation);
+	// set pose of marker
+	server->setPose(name, detection.pose);
+	server->applyChanges();
 }
 
 } // namespace hmi
