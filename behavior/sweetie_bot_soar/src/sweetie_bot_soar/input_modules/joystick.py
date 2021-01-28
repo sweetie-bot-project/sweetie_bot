@@ -5,10 +5,12 @@ import rospy
 from sweetie_bot_joystick.msg import KeyPressed
 
 class Joystick:
-    def __init__(self, agent, config):
+    def __init__(self, name, config, agent):
+        self._joy_sub = None
+
         input_link_id = agent.GetInputLink()
         # add sensor element  
-        self._sensor_id = input_link_id.CreateIdWME("joystick")
+        self._sensor_id = input_link_id.CreateIdWME(name)
         # configuration
         joy_topic = config.get("topic")
         if not joy_topic:

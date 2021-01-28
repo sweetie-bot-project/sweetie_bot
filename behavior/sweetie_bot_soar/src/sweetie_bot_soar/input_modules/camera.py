@@ -7,11 +7,12 @@ import tf
 from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
 
 class Camera:
-    def __init__(self, agent, config):
+    def __init__(self, name, config, agent):
         self._detections_sub = None
+
         # get input link WME ids
         input_link_id = agent.GetInputLink()
-        self._sensor_id = input_link_id.CreateIdWME("camera")
+        self._sensor_id = input_link_id.CreateIdWME(name)
         # configuration
         detection_topic = config.get("topic")
         if not detection_topic:

@@ -2,7 +2,6 @@ from . import input_module
 
 import math
 import rospy
-import tf
 
 from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, PoseStamped
@@ -130,11 +129,12 @@ class SpatialWorldModel:
             self.spatial_object = spatial_object
             self.soar_view = soar_view
 
-    def __init__(self, agent, config):
+    def __init__(self, name, config, agent):
         self._detections_sub = None
+
         # get input link WME ids
         input_link_id = agent.GetInputLink()
-        self._sensor_id = input_link_id.CreateIdWME('swm')
+        self._sensor_id = input_link_id.CreateIdWME(name)
 
         # get configuration from parameters
         detection_topic = config.get('topic')

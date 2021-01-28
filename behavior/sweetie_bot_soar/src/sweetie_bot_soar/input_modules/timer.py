@@ -3,11 +3,11 @@ from . import input_module
 import rospy
 
 class Clock:
-    def __init__(self, agent, config):
+    def __init__(self, name, config, agent):
         # common sensor initialization
         self.agent = agent
         self.input_link_id = agent.GetInputLink()
-        self.sensor_wme_id = agent.CreateIdWME(self.input_link_id, "clock")
+        self.sensor_wme_id = agent.CreateIdWME(self.input_link_id, name)
         # create wall clock
         self.time_id = agent.CreateFloatWME(self.sensor_wme_id, "time", rospy.get_rostime().to_sec())
         # cycle counter

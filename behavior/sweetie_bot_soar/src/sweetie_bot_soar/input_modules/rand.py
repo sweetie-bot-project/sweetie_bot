@@ -4,11 +4,11 @@ from random import random
 
 class Rand:
 
-    def __init__(self, agent, config):
+    def __init__(self, name, config, agent):
         self._agent = agent
         self._input_link_id = agent.GetInputLink()
         # add random value element  
-        self._sensor_id = agent.CreateFloatWME(self._input_link_id, "random", random())
+        self._sensor_id = agent.CreateFloatWME(self._input_link_id, name, random())
 
     def update(self):
         # update random value
