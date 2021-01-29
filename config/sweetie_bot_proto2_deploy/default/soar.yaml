@@ -26,6 +26,28 @@ soar:
             distance_bins_map: { names: [ "close", "near", "far" ], values: [ 0.1, 2.0] }
             yaw_bins_map: { names: [ "right", "center", "left" ], values: [ -0.52, 0.52] }
             time_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 2.0, 120.0] }
+        body-pose:
+            type: "pose_joints"
+            topic: "joint_state"
+            storage_ns: "saved_msgs"
+            pose_list: [ "body_nominal", "body_crouched", "body_lying" ]
+            tolerance: 0.174 # 10 degrees
+            time_bins_map: { names: [ "recently", "long-time" ], values: [ 60.0 ] }
+        head-pose:
+            type: "pose_joints"
+            topic: "joint_states"
+            storage_ns: "saved_msgs"
+            pose_list: [ "head_nominal" ]
+            tolerance: 0.174 # 10 degrees
+            time_bins_map: { names: [ "recently", "long-time" ], values: [ 60.0 ] }
+        battery:
+            type: "battery"
+            topic: "battery_state"
+            level_bins_map: { names: [ "critical", "low", "normal" ], values: [ 3.0, 15.0 ] }
+        servos:
+            type: "herkulex_servos"
+            topic: "motion/herkulex/servo_states"
+            overheat_temperature: 45.0
     output:
         nop: true
         textcmd: 
