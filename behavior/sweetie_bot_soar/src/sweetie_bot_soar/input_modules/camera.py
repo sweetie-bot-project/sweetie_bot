@@ -25,18 +25,12 @@ class Camera:
         # message buffers
         self._detections_msg = []
         self._detections_wme_map = {}
-        self._detections_new_value = False
 
     def detectionCallback(self, msg):
         # buffer msg
         self._detections_msg = msg
-        self._detections_new_value = True
 
     def update(self):
-        # check if input was updated
-        if not self._detections_new_value:
-            return
-        self._detections_new_value = False
         # get current time
         time_now = rospy.Time.now().to_sec();
         # iterate detected objects
