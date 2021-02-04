@@ -35,9 +35,9 @@ class CompoundActionBase(Dummy):
     * type 'generate/step_sequence' -> GenerateStepSequence(trajectory_param=<cmd>)
     * other types -> TextCommand(type=<type>, cmd=<cmd>)
 
-    <= success 				All actions are executed successfully
-    <= invalid_pose 			One of the action failed. The cause of failure is inconsistent robot pose, i.e. invalid_pose or partial_movement.
-    <= failure 				One of actions has failed. 
+    <= success              All actions are executed successfully
+    <= invalid_pose         One of the action failed. The cause of failure is inconsistent robot pose, i.e. invalid_pose or partial_movement.
+    <= failure              One of actions has failed. 
 
     '''
     # Define C-like structure types

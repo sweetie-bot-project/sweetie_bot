@@ -20,22 +20,22 @@ class CompoundAction(EventState):
     * other strings -> TextCommand(type=<type>, cmd=<cmd>);
     * None -> no actions.
 
-    -- t1			(int,float)			  Time label of the first action. Time label is a tuple which contains two values: previous simple action reference and time delay (seconds). So `(2, 0.5)` means that action is started with 0.5 seconds delay after second action is finished. Zero coresponds to CompoundAction state start time.
-    -- type1		string				  Type of the first action. None means no action.  
-    -- cmd1			string				  First action command.
-    -- t2			(int,float)		          Time label of the second action.
-    -- type2		string				  Type of the second action.
-    -- cmd2			string				  Second action command.
-    -- t3			(int,float)		          Time label of the third action.
-    -- type3		string				  Type of the thrid action.
-    -- cmd3			string				  Third action command.
-    -- t4			(int,float)		          Time label of the third action.
-    -- type4		string				  Type of the fourth action.
-    -- cmd4			string				  Fourth action command.
+    -- t1           (int,float)              Time label of the first action. Time label is a tuple which contains two values: previous simple action reference and time delay (seconds). So `(2, 0.5)` means that action is started with 0.5 seconds delay after second action is finished. Zero coresponds to CompoundAction state start time.
+    -- type1        string                  Type of the first action. None means no action.  
+    -- cmd1         string                  First action command.
+    -- t2           (int,float)                  Time label of the second action.
+    -- type2        string                  Type of the second action.
+    -- cmd2         string                  Second action command.
+    -- t3           (int,float)                  Time label of the third action.
+    -- type3        string                  Type of the thrid action.
+    -- cmd3         string                  Third action command.
+    -- t4           (int,float)                  Time label of the third action.
+    -- type4        string                  Type of the fourth action.
+    -- cmd4         string                  Fourth action command.
 
-    <= success 				All actions are executed successfully.
-    <= invalid_pose 			One of the action failed. The cause of failure is inconsistent robot pose, i.e. invalid_pose or partial_movement.
-    <= failure 				One of actions has failed.
+    <= success              All actions are executed successfully.
+    <= invalid_pose         One of the action failed. The cause of failure is inconsistent robot pose, i.e. invalid_pose or partial_movement.
+    <= failure              One of actions has failed.
 
     '''
 

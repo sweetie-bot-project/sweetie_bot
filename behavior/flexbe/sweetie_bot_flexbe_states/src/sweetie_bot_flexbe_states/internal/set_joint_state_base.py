@@ -26,9 +26,9 @@ class SetJointStateBase(Dummy):
     -- timeout              float           Movement timeout (s).
     -- joint_topic          string          Topic where actual pose published.
 
-    <= done 	                    Finished.
-    <= failed 	                    Failed to activate FollowJointState controller.
-    <= timeout 	                    Timeout reached.
+    <= done                     Finished.
+    <= failed                   Failed to activate FollowJointState controller.
+    <= timeout                  Timeout reached.
 
     '''
 

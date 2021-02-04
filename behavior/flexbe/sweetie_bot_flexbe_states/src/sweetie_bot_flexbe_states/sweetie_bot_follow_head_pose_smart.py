@@ -30,8 +30,8 @@ class SweetieBotFollowHeadPoseSmart(EventState):
     -- deactivate                            boolean         Deactivate controller on exit state.
     -- controlled_chains                     string[]        List of controlled kinematics chains, may contains 'head', 'eyes'.
 
-    <= failed 	                    Unable to activate state (controller is unavailable and etc)
-    <= too_close 	            Object is too close to head.
+    <= failed                           Unable to activate state (controller is unavailable and etc)
+    <= too_close                        Object is too close to head.
 
     '''
 

@@ -19,9 +19,9 @@ class SetJointStateKey(EventState):
 
     ># pose_param           string    ROS parameter in pose_ns which stores JointState message.
 
-    <= done 	                    Finished.
-    <= failed 	                    Failed to activate FollowJointState controller.
-    <= timeout 	                    Timeout reached.
+    <= done                         Finished.
+    <= failed                       Failed to activate FollowJointState controller.
+    <= timeout                      Timeout is reached.
 
     '''
 

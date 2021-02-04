@@ -31,9 +31,9 @@ class SetCartesianPose(EventState):
     -- tolerance_ang        float           Orientation tolerance (rad).
     -- timeout              float           Movement timeout (s).
 
-    <= done 	                    Finished.
-    <= failed 	                    Failed to activate FollowJointState controller.
-    <= timeout 	                    Timeout reached (if 
+    <= done                         Finished.
+    <= failed                       Failed to activate FollowJointState controller.
+    <= timeout                      Timeout reached.
 
     '''
 
