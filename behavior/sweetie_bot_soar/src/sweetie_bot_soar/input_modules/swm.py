@@ -200,6 +200,7 @@ class SpatialWorldModel:
                 mem_elem.soar_view = soar_view
             # visibility timestamp
             soar_view.updateChildWME( 'visible', self._time_bins_map(time_now - spatial_object.update_time) ) # string
+            soar_view.updateChildWME( 'appeared', self._time_bins_map(time_now - spatial_object.creation_time) ) # string
             # position relative to head
             pose = spatial_object.getPose( self._head_frame, self._tf_listener )
             soar_view.updateChildWME( 'distance-head', self._distance_bins_map( SpatialWorldModel.distance(pose.position) ) ) # string
