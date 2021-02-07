@@ -189,7 +189,6 @@ class SpatialWorldModel:
         # remove WMEs which corresponds to outdated objects
         self._soar_view_remove_list.clear()
         # update WMEs 
-        print(self._memory_map)
         for mem_elem in self._memory_map.values():
             spatial_object = mem_elem.spatial_object
             soar_view = mem_elem.soar_view
