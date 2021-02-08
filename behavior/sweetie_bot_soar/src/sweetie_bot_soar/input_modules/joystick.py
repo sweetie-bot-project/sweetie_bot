@@ -55,6 +55,7 @@ class Joystick:
     def __del__(self):
         # remove sensor wme and ROS subscriber
         self._sensor_id.DestroyWME()
-        self._joy_sub.unregister()
+        if self._joy_sub != None:
+            self._joy_sub.unregister()
 
 input_module.register("joystick", Joystick)

@@ -76,7 +76,7 @@ class PoseJoints:
         if self._last_pose_index != None:
             if self._pose_list[self._last_pose_index].check(self._joint_state_msg):
                 # pose has not changed: only time update is needed
-                time_value = self._time_bins_map( (time_now - self._last_update_time).to_sec() );
+                time_value = self._time_bins_map( (time_now - self._last_pose_change_time).to_sec() );
                 if time_value != self._time_wme_id.GetValue():
                     self._time_wme_id.Update(time_value)
                 return
@@ -86,7 +86,7 @@ class PoseJoints:
             if self._pose_list[pose_index].check( self._joint_state_msg ):
                 # corresponding pose found
                 self._last_pose_index = pose_index
-                self._last_update_time = time_now
+                self._last_pose_change_time = time_now
                 # update WMEs
                 self._pose_wme_id.Update( self._pose_list[pose_index].name )
                 self._time_wme_id.Update( self._time_bins_map(0.0) )
@@ -95,14 +95,14 @@ class PoseJoints:
         # pose not found
         if self._last_pose_index != None:
             # pose was known: chnge WMEs and reset time
-            self._last_update_time = time_now
+            self._last_pose_change_time = time_now
             self._last_pose_index = None
             self._pose_wme_id.Update('unknown')
             self._time_wme_id.Update( self._time_bins_map(0.0) )
             return
         else:
             # pose remains unknown: update time
-            time_value = self._time_bins_map( (time_now - self._last_update_time).to_sec() );
+            time_value = self._time_bins_map( (time_now - self._last_pose_change_time).to_sec() );
             if time_value != self._time_wme_id.GetValue():
                 self._time_wme_id.Update(time_value)
             return

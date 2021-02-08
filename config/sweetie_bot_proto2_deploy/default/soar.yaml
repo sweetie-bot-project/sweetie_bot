@@ -2,12 +2,14 @@ soar:
     soar_period: 0.5
     autostart: false
     agent_package: "sweetie_bot_soar"
-    agent_file: "soar/walker.soar"
+    agent_file: "soar/unified.soar"
     input:
         rand:
             type: "rand"
         clock:
             type: "clock"
+            recently_delay: 120.0
+            long_time_delay: 3600.0
         joystick:
             type: "joystick"
             topic: "/hmi/joy_decoder/keys_pressed"
@@ -28,7 +30,7 @@ soar:
             time_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 2.0, 120.0] }
         body-pose:
             type: "pose_joints"
-            topic: "joint_state"
+            topic: "joint_states"
             storage_ns: "saved_msgs"
             pose_list: [ "body_nominal", "body_crouched", "body_lying" ]
             tolerance: 0.174 # 10 degrees
