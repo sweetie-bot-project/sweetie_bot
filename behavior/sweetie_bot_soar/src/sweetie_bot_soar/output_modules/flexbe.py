@@ -70,16 +70,16 @@ class FlexBe(output_module.OutputModule):
             result = self._action_client.get_result()
             cmd_id.CreateStringWME("outcome", result.outcome)
             rospy.loginfo("flexbe output module: behavior outcome is %s.", result.outcome)
-            return "completed"
+            return result.outcome
         if status in [ GoalStatus.RECALLED, GoalStatus.PREEMPTED ]:
             rospy.loginfo("flexbe output module:  behavior execution was preempted.")
-            return "preempted"
+            return "aborted"
         if status in [ GoalStatus.REJECTED, GoalStatus.ABORTED ]:
             rospy.loginfo("flexbe output module:  behavior execution has failed with error.")
-            return "error"
+            return "failed"
         else:
             rospy.loginfo("flexbe output module:  behavior execution has failed: %s.", status)
-            return "error"
+            return "failed"
         
 output_module.register("flexbe", FlexBe)
 
