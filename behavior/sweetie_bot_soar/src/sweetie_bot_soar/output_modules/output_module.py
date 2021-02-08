@@ -70,6 +70,9 @@ class OutputModule(object):
     def getCommandName(self):
         return self._name
 
+    def getTimeTag(self):
+        return self._cmd_timetag
+
     def isReady(self):
         return not self._is_running
 

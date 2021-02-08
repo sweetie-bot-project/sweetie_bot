@@ -28,7 +28,7 @@ class Soar:
 
 	def __del__(self):
 		# remove all output modules
-		del self.input_modules[:]
+		self.input_modules.clear()
 		self.output_modules_map.clear()
 		self.active_output_modules.clear()
 
@@ -39,7 +39,7 @@ class Soar:
 		# peform deconfiguration
 		if self.configured:
 			# destroy input and output modules
-			del self.input_modules[:]
+			self.input_modules.clear()
 			self.output_modules_map.clear()
 			self.active_output_modules.clear()
 			# reset soar 
@@ -55,9 +55,11 @@ class Soar:
 			# load input modules (they are creating WME)
 			input_link_config = rospy.get_param("~input")
 			self.input_modules = input_modules.load_modules(self.agent, input_link_config)
+			rospy.loginfo("Loaded %d input modules" % len(self.input_modules))
 			# load output modules
 			output_link_config = rospy.get_param("~output")
 			self.output_modules_map = { m.getCommandName(): m for m in  output_modules.load_modules(output_link_config) }
+			rospy.loginfo("Loaded %d output modules" % len(self.output_modules_map))
 		except RuntimeError as e:
 			rospy.logerr("SOAR configuration: input/output link initialization failed: " + str(e))
 			return False
@@ -123,7 +125,7 @@ class Soar:
 				cmd_id.CreateStringWME("status", "error") 
 				rospy.logerr("SOAR step: unknown command '%s' is skipped." % cmd_name)
 				continue
-			if module.isRunning():
+			if module.isRunning() and cmd_id.GetTimeTag() != module.getTimeTag():
 				# unknown outout module is busy
 				cmd_id.CreateStringWME("status", "busy") 
 				rospy.logerr("SOAR step: attemting to execute command '%s' before previous command instance is finished." % cmd_name)
