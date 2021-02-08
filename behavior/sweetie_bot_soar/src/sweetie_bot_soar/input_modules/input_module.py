@@ -21,3 +21,21 @@ def load_modules(agent, input_link_config):
         else: 
             raise RuntimeError("Input module %s type is unknown." % module_name)
     return input_modules
+
+class InputModule:
+    def __init__(self, name):
+        self._name = name
+
+    def getConfigParameter(self, config, name, default_value = None, allowed_types = (str,), check_func = lambda v: True, error_desc = None):
+        # get parameter
+        value = config.get(name)
+        # check if paramter is not specified and default_value exists
+        if value == None and default_value != None:
+            value = default_value
+        # check if parameter value correct
+        if value == None or not isinstance(value, allowed_types) or not check_func(value):
+            if error_desc == None:
+                error_desc = '`%s` input module: parameter %s is not present or invalid.' % (self._name, name)
+            raise RuntimeError(error_desc)
+        # return parater value
+        return value
