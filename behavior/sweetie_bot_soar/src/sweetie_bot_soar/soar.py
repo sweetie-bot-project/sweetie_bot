@@ -161,6 +161,9 @@ class Soar:
 			rospy.logerr("SOAR step: attempt to execute unconfigured enviroment")
 			return False
 
+		# update input link
+		self._update_io_link()
+
 		#start new major step: wait until output
 		while True:
 			# check soar kernel
@@ -172,9 +175,6 @@ class Soar:
 			if self.agent.GetRunState() in [sml.sml_RUNSTATE_HALTED, sml.sml_RUNSTATE_INTERRUPTED]:
 				rospy.logerr("SOAR agent halted or interrupted!")
 				return False
-
-			# update input link
-			self._update_io_link()
 
 			# invoke SOAR for one step
 			self.agent.RunSelf(1)
