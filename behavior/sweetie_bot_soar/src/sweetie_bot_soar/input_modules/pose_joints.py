@@ -39,7 +39,7 @@ class PoseJoints:
             # get pose
             msg = robot_pose.load_joint_state_param(storage_ns + '/joint_state/' + pose_name)
             if msg == None:
-                raise RuntimeError("Pose input module: pose parameter '%s' does not exists." % (pose_param, ))
+                raise RuntimeError("Pose input module: pose parameter '%s' does not exists." % (pose_name, ))
             # get tolerance
             msg_tol = robot_pose.load_joint_state_param(storage_ns + '/joint_state_tolerance/' + pose_name)
             # add pose to list

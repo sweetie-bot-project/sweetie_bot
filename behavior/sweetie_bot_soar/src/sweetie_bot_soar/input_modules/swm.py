@@ -19,6 +19,7 @@ class SpatialObject:
         # time properties
         self.creation_time = timestamp
         self.update_time = timestamp
+        self.perceive_begin_time = timestamp
         self.perceive_end_time = None
         self.memorize_time = timeout
         # spatial properties
@@ -29,10 +30,13 @@ class SpatialObject:
         self.update_time = timestamp
         self.pose = pose
         self.perceive_end_time = None
+        if self.perceive_begin_time == None:
+            self.perceive_begin_time = timestamp
 
     def updateInvisible(self, timestamp):
         if self.perceive_end_time == None:
             self.perceive_end_time = timestamp
+        self.perceive_begin_time = None
 
     def isOutdated(self, time_now):
         return self.perceive_end_time != None and (self.perceive_end_time + self.memorize_time) < time_now
@@ -75,11 +79,11 @@ class SpatialObjectSoarView:
 
     def removeChildWME(self, attrib):
         child_id = self._child_ids.get(attrib)
-        if child_id == None:
-            raise KeyError('WME with attribute "%s" is not registered')
-        else:
+        if child_id != None:
             del self._child_ids[attrib]
             child_id.DestroyWME()
+        #else:
+        #    raise KeyError('WME with attribute "%s" is not registered')
 
     def __del__(self):
         # remove WME
@@ -200,6 +204,14 @@ class SpatialWorldModel:
             # visibility timestamp
             soar_view.updateChildWME( 'visible', self._time_bins_map(time_now - spatial_object.update_time) ) # string
             soar_view.updateChildWME( 'appeared', self._time_bins_map(time_now - spatial_object.creation_time) ) # string
+            if spatial_object.perceive_begin_time != None:
+                soar_view.updateChildWME('perceive-begin', self._time_bins_map(time_now - spatial_object.perceive_begin_time) ) # string
+            else:
+                soar_view.removeChildWME('perceive-begin')
+            if spatial_object.perceive_end_time != None:
+                soar_view.updateChildWME('perceive-end', self._time_bins_map(time_now - spatial_object.perceive_end_time) ) # string
+            else:
+                soar_view.removeChildWME('perceive-end')
             # position relative to head
             pose = spatial_object.getPose( self._head_frame, self._tf_listener )
             soar_view.updateChildWME( 'distance-head', self._distance_bins_map( SpatialWorldModel.distance(pose.position) ) ) # string
