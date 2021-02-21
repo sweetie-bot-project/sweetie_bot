@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="ExecuteJointTrajectoryAndSay">
+
+	<executable package_path="sweetie_bot_soar_flexbe_behaviors.executejointtrajectoryandsay_sm" class="ExecuteJointTrajectoryAndSaySM" />
+	<tagstring>SOAR</tagstring>
+	<author>disRecord</author>
+	<date>Sun Feb 21 2021</date>
+	<description>
+		Prononce text (TextCommand voice/say) and execute JointTrajectory at the same time.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="text" name="joint_trajectory" default="head_node" label="joint_trajectory" hint="Joint trajectory name. May be empty if no movement is needed." />
+
+		<param type="numeric" name="text_delay" default="0.2" label="text_delay" hint="Delay between animation and text verbolization.">
+			<min value="0.0" />
+			<max value="10.0" />
+		</param>
+
+		<param type="boolean" name="is_relative" default="False" label="is_relative" hint="Set true if trajectory is relative (ExecuteJointTrajectoryRelative)." />
+
+		<param type="text" name="text" default="I am speaking." label="text" hint="Text to say." />
+
+	</params>
+
+
+</behavior>
