@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from flexbe_core import EventState as Dummy
 from flexbe_core import Logger
 from flexbe_core.proxy import ProxyActionClient
@@ -6,7 +6,7 @@ from flexbe_core.proxy import ProxyActionClient
 # modules
 import rospy
 import actionlib
-import xmlrpclib
+import xmlrpc.client
 
 # datatypes
 from rospy.rostime import Duration
@@ -25,7 +25,7 @@ class GenerateStepSequenceBase(Dummy):
 
     -- controller          string    Action server to execute action.
 
-    <= success 		    Motion have been planned and executed succesfully.
+    <= success                     Motion have been planned and executed succesfully.
     <= solution_not_found   Planner is unable to find solution.
     <= partial_movement     Execution stopped in midway (path or goal tolerance error, obstacle, external cancel request).
     <= invalid_pose         Initial pose is invalid, movement cannot be started.
@@ -35,7 +35,7 @@ class GenerateStepSequenceBase(Dummy):
 
     def __init__(self, controller = 'clop_generator', outcomes = ['success', 'solution_not_found', 'partial_movement', 'invalid_pose', 'failure'], *args, **kwargs):
         # Declare outcomes and output keys
-	super(GenerateStepSequenceBase, self).__init__(outcomes = outcomes, *args, **kwargs)
+        super(GenerateStepSequenceBase, self).__init__(outcomes = outcomes, *args, **kwargs)
 
         # Connect to action server.
         self._controller = controller
@@ -49,15 +49,15 @@ class GenerateStepSequenceBase(Dummy):
         self._logfunc = { 'info': Logger.loginfo, 'warn': Logger.logwarn, 'err': Logger.logerr, 'hint': Logger.loghint }
 
     def loadGoalMsg(self, trajectory_ns, trajectory_param):
-	if trajectory_ns:
-	    trajectory_param = trajectory_ns + '/' + trajectory_param
+        if trajectory_ns:
+            trajectory_param = trajectory_ns + '/' + trajectory_param
         try:
             goal_raw = rospy.get_param(trajectory_param)
         except KeyError as e:
-            raise KeyError, "Unable to get '" + trajectory_param + "' parameter."
+            raise KeyError("Unable to get '" + trajectory_param + "' parameter.")
 
-        if not isinstance(goal_raw, xmlrpclib.Binary):
-            raise TypeError, "ROS parameter '" + trajectory_param + "' is not a binary data."
+        if not isinstance(goal_raw, xmlrpc.client.Binary):
+            raise TypeError("ROS parameter '" + trajectory_param + "' is not a binary data.")
         # deserialize
         goal = MoveBaseGoal()
         goal.deserialize(goal_raw.data)

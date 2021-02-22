@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from flexbe_core import Logger
-from internal.set_joint_state_base import SetJointStateBase as EventState
+from .internal.set_joint_state_base import SetJointStateBase as EventState
 
 # Superclass is imported as EventState to allow to parse state definition FlexApp correctly.
 class SetJointStateKey(EventState):
@@ -19,9 +19,9 @@ class SetJointStateKey(EventState):
 
     ># pose_param           string    ROS parameter in pose_ns which stores JointState message.
 
-    <= done 	                    Finished.
-    <= failed 	                    Failed to activate FollowJointState controller.
-    <= timeout 	                    Timeout reached.
+    <= done                         Finished.
+    <= failed                       Failed to activate FollowJointState controller.
+    <= timeout                      Timeout is reached.
 
     '''
 

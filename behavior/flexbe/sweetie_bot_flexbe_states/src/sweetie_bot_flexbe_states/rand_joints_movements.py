@@ -25,8 +25,8 @@ class RandJointsMovements(EventState):
 
     ># config       dict            Dictionary with keys 'duration', 'interval', 'joints', 'min' and 'max' to override default configuration. dict or key values can be set to None to use default value from parameters.
 
-    <= done 	                    Finished.
-    <= failed 	                    Failed to activate FollowJointState controller.
+    <= done                         Finished.
+    <= failed                       Failed to activate FollowJointState controller.
 
     '''
 

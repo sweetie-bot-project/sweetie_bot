@@ -23,8 +23,8 @@ class RandPoseGenerator(EventState):
     -- frame_xyz    string          Coordinate frame of parallelepiped. 
     -- frame_out    string          Frame in which pose is publised.
 
-    <= done 	                    Finished.
-    <= failed 	                    Failed to activate FollowJointState controller.
+    <= done                         Finished.
+    <= failed                       Failed to activate FollowJointState controller.
 
     '''
 

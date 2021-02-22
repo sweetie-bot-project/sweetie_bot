@@ -47,7 +47,7 @@ class ExecuteStepSequenceSM(Behavior):
 
 	def create(self):
 		# x:43 y:392, x:240 y:396, x:477 y:395
-		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed', 'invalid_pose'])
+		_state_machine = OperatableStateMachine(outcomes=['succeed', 'failed', 'invalid_pose'])
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -71,7 +71,7 @@ class ExecuteStepSequenceSM(Behavior):
 			# x:127 y:182
 			OperatableStateMachine.add('StepSequence',
 										ExecuteStepSequence(controller='motion/controller/step_sequence', trajectory_param=self.action_name, trajectory_ns='saved_msgs/step_sequence'),
-										transitions={'success': 'finished', 'partial_movement': 'Crouch', 'invalid_pose': 'Crouch', 'failure': 'failed'},
+										transitions={'success': 'succeed', 'partial_movement': 'Crouch', 'invalid_pose': 'Crouch', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 

@@ -68,3 +68,10 @@ destination_marker:
     nominal_height: 0.25
     recorded_trajectory_name: "recorded_trajectory"
     ee_names: [ leg1, leg2, leg3, leg4 ]
+object_detection_marker:
+    names: [ "Detection 1", "Detection 2", "Detection 3" ]
+    labels: [ "", "Alex", "Alice", "yes", "no", "greeting" ]
+    types: [ "human", "pony", "ball", "qr" ]
+    frame: odom_combined
+    scale: 0.5
+    nominal_height: 0.4

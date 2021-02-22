@@ -4,6 +4,7 @@
 	<arg name="robot_profile" default="default" doc="Use configuration profile (load_param.launch, *.cpf, .log4cpp files) located in '`rospack find {robot_name}_deploy`/{robot_profile}' directory."/>
 	<arg name="robot_profile_path" default="$(eval find(arg('robot_name')+'_deploy') + '/' + arg('robot_profile'))" doc="Fully qualified path to configuration profile. By default 'robot_name' and 'robot_profile' parameters are used to determine it."/>
 	<arg name="robot_ns" default="/" doc="Namespace where to run robot components "/>
-
+	
+	<param name="$(arg robot_ns)/robot_name" value="$(arg robot_name)" />
 	<include ns="$(arg robot_ns)" file="$(arg robot_profile_path)/load_param.launch" />
 </launch>

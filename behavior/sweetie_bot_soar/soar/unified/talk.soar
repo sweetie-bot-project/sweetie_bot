@@ -1,0 +1,66 @@
+#
+# TALKING
+#
+
+# ELABORATIONS
+
+sp {talk*elaborate*match-decision
+	(state <s> ^substate talk ^beliefs.decision <d> ^superstate.operator <sop>)
+	(<d> ^name {<<ask say>>} ^substate talk ^object <obj>)
+	(<sop> ^object <obj>)
+-->
+	(<s> ^decision <d>)
+}
+
+# DECISION RULES
+
+# propose to ask question: qustions are always pending
+sp {talk*propose*ask-question
+	(state <s> ^substate talk -^decision ^events <ev-pool> ^mem.topic <t> ^superstate.operator.object <obj>)
+	(<t> ^name <topic> ^text <text> ^animation-tag <tag>)
+	-{(<ev-pool> ^event <ev>)
+	  (<ev> ^name talk-answered ^actor <obj> ^question-topic <topic>)}
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name ask-question ^substate ask ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+}
+
+
+# decision implementation
+sp {talk*propose*say-decision
+	(state <s> ^substate talk ^decision <d>)
+	(<d> ^name say ^substate talk ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name say-decision ^substate say ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res>)
+	(<res> ^status succeed ^remove-decision <d>)
+}
+
+# COGNITION RULES
+
+# detect valid answer and produce reaction decision
+sp {talk*propose*known-answer-reaction
+	(state <s> ^bottom-state 1 ^beliefs <b> ^mem.topic <t>)
+	(<b> ^event <ev>)
+	(<ev> ^name talk-answer ^actor <obj> ^question-topic <q-topic> ^answer-topic <a-topic> -^prcessed talk-known-answer-reaction)
+	(<t> ^name <q-topic> ^reaction <r>)
+	(<r> ^topic <a-topic> ^text <text> ^animation-tag <tag>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name talk-known-answer-reaction ^type cognition automatic ^add-decision <d>)
+	(<d> ^name say ^substate talk ^object <obj> ^topic reaction ^text <text> ^animation-tag <tag> ^deadline-time 10.0 ^mark-processed <ev>)
+}
+	
+# detect irrelevant answer and produce reaction decision
+sp {talk*propose*ignore-reaction
+	(state <s> ^bottom-state 1 ^beliefs <b> ^mem.topic <t>)
+	(<b> ^event <ev>)
+	(<ev> ^name talk-answer ^actor <obj> ^question-topic <q-topic> ^answer-topic <a-topic>)
+	(<t> ^name <q-topic> ^reaction <r>)
+	(<r> ^topic <a-topic> ^text <text> ^animation-tag <tag>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name talk-known-answer-reaction ^type cognition automatic ^add-decision <d>)
+	(<d> ^name say ^substate talk ^object <obj> ^topic reaction ^text <text> ^animation-tag <tag>)
+}
+

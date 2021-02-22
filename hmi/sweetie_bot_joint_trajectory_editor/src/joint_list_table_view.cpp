@@ -132,6 +132,7 @@ bool JointListTableModel::reReadData()
 	   emit dataChanged(indexBegin, indexEnd);
 	// */
 	emit layoutChanged();
+	return true;
 }
 
 } // namespace hmi

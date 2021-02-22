@@ -1,0 +1,20 @@
+source system/system_source.soar
+# agent initialization
+source initialization-proto3.soar
+# cyclic o-support actions
+source cycle.soar
+source utility_local.soar
+# cognition modules
+source vision.soar
+# low lever actions
+source flexbe.soar
+# high level actions
+source animation.soar
+source lookat.soar
+source attention.soar
+# talk
+source say.soar
+source ask.soar
+# main behavior
+source general.soar
+

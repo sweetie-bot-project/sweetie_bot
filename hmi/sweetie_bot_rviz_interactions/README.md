@@ -1,8 +1,16 @@
 HMI nodes for rviz
 ==================
 
+These nodes creates particular interactive markers in rviz which control a robot pose and movements or can be used for debugging purposes.
+Markers are intended to use with Sweetie Bot motion control subsystem so they uses `SetOperation` actions to activate different controllers.
+
+* `robot_pose_marker` controls overall pose of the robot (legs and 
+* `destination_marker` invokes gait generator to move robot to desired position.
+* `generic_pose_marker` is general-purpose marker which publishes `PoseStamped` message on specified topic if it is active.
+* `object_detection_marker` imitates object detection by publishing `DetectionArray` messages,
+
 `robot_pose_marker` node
-------------------
+------------------------
 
 This node adds 6-DOF composite `InteractiveMarker` publishes to rviz and publishes pose as `geometry_msgs::PoseStamped` message.
 Main marker allows you to controll robot stance by using `SetOperational` action interface for corresponding controller.
@@ -58,9 +66,10 @@ Both limbs and legs markers described in `~inner_markers/` namespace:
    Default: `limb_set_operational_action`
 
 `generic_pose_marker` node
-------------------
+--------------------------
 
 This node implements generic pose marker architecture, which intended for debugging purposes.
+Upon activation it activates corresponding controller via `SetOperational` action and starts publishing `PoseStamped` messages.
 
 ### ROS interface
 
@@ -94,7 +103,7 @@ This node implements generic pose marker architecture, which intended for debugg
 
 
 `destination_marker` node
-------------------
+-------------------------
 
 This node contains `InteractiveMarker` which invoke `MoveBase` action allowing you to control the gait generator (`clop_generator`) by publishing `sweetie_bot_clop_generator::MoveBaseGoal` message.
 Marker itself can be placed in desired gait target position. Arrow above the marker points in the direction of the robot gaze after it reaches the goal.
@@ -135,3 +144,31 @@ Context menu contains `clop_generator` settings (type of gait, number of steps, 
 * `~ee_names` (`string[]`) --- the set of `clop_generator` end effector names.
     Default: `[]`
 
+
+`object_detection_maker` node
+-------------------------
+
+This node creates interactive markers which publish `sweetie_bot_text_msgs/DetectionArray` messages when they are active.
+
+### ROS interface
+
+#### Published topics
+
+* `detections` (`sweetie_bot_text_msgs::DetectionArray`) 
+* `update`, `update_full` (`visualization_msgs::InteractiveMarkers`) 
+
+#### Subscribed topics
+
+* `tf`, `tf_static`
+* `feedback` (`visualization_msgs::InteractiveMarkersFeedback`) 
+
+#### Parameters
+
+* `~names` (`string[]`) --- names of interactive markers, Node creates marker for every name in this list. Default: [ `Object Detection` ]
+* `~period` (`double`) --- period which specifies how often `DetectionArray` message is sent. Default: 0.1.
+* `~world_frame` (`string`) --- world frame string id. Default: `'odom_combined'`
+* `~scale` (`double`) --- marker scale. Default: `1.0`.
+* `labels` (`string[]`) --- list of label field values for `Detection` messages. User can select desired label in marker context menu.
+* `types` (`string[]`) --- list of type field values for `Detection` messages. User can select desired type in marker context menu.
+* `~normalized_z_level` (`double`) --- nominal position of marker over z plane. Default: 0.40.
+* `~is6DOF` (`bool`) --- if it is true then marker orientation can be changed. Default: `false`.

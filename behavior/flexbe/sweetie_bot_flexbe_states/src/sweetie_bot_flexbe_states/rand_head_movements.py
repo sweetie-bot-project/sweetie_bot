@@ -24,8 +24,8 @@ class SweetieBotRandHeadMovements(EventState):
 
     ># config       dict            Dictionary with keys 'duration', 'interval', 'max2356', 'min2356' to override default configuration. dict or key values can be set to None to use default value from parameters.
 
-    <= done 	                    Finished.
-    <= failed 	                    Failed to activate FollowJointState controller.
+    <= done                         Finished.
+    <= failed                       Failed to activate FollowJointState controller.
 
     '''
 

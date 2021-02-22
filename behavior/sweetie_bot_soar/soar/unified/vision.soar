@@ -1,0 +1,73 @@
+# 
+# VISION SUBMODULE
+#
+# SWM input submodule is able to memorize objects for a relativy long time
+# So at current versin of SWM input interpretation is simple mirroning b
+#
+
+# mirror swm object in belief space
+sp {vision*elaborate*object
+	(state <s> ^top-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
+	(<swm-obj> ^id <id> ^label <label> ^type {<<|human| |pony|>> <type>})
+-->
+	(<b> ^object <obj>)
+	(<obj> ^name <label> ^id <id> ^label <label> ^type <type> ^input-link <swm-obj>)
+}
+
+# translate qr codes into objects
+sp {vision*elaborate*qr-code
+	(state <s> ^top-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
+	(<swm-obj> ^id <id> ^label <label> ^type qr ^visible now)
+-->
+	(<b> ^predicate <obj>)
+	(<obj> ^name qr-code-is-visible ^text <label> ^input-link <swm-obj>)
+}
+
+# traslate qr codes initiated event into speech event
+sp {vision*elaborate*qr-code-to-speech
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text <text>)
+-->
+	(<b> ^event <speech>)
+	(<speech> ^name speech ^topic <text> ^text <text> ^type qr)
+}
+
+## QR codes are translated to sound events
+#sp {vision*propose*qr-code-detected
+#	(state <s> ^bottom-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
+#	(<swm-obj> ^id <id> ^label <label> ^type qr ^visibility now)
+#	-{(<b> ^object <obj>) 
+#	  (<obj> ^id <id> ^label <label> ^type qr)}
+#-->
+#	(<s> ^operator <op> + =)
+#	(<op> ^name qr-code-detected ^type cognition ^swm <swm-obj>)
+#}
+#
+#sp {vision*apply*qr-code-detected
+#	(state <s> ^bottom-state 1 ^operator <op> ^beliefs <b>)
+#	(<op> ^name qr-code-detected ^type cognition ^swm <swm-obj>)
+#	(<swm-obj> ^id <id> ^label <label>)
+#-->
+#	(<b> ^object <obj> ^event <ev>)
+#	(<obj> ^name <label> ^id <id> ^label <label> ^type qr ^input-link <swm-obj>)
+#	(<ev> ^name speech ^topic <label> ^text <label> ^type qr)
+#}
+#
+## QR code is considered expired and repercepted if appered not now
+#sp {vision*propose*qr-code-expired
+#	(state <s> ^bottom-state 1 ^beliefs <b>)
+#	(<b> ^object <obj>)
+#	(<obj> ^type qr ^input-link <swm-obj>)
+#	(<swm-obj> -^perceive-begin now)
+#-->
+#	(<s> ^operator <op> + =)
+#	(<op> ^name qr-code-expired ^object <obj>)
+#}
+#
+#sp {vision*apply*qr-code-expired
+#	(state <s> ^bottom-state 1 ^operator <op> ^beliefs <b>)
+#	(<op> ^name qr-code-expired ^object <obj>)
+#-->
+#	(<b> ^object <obj> -)
+#}

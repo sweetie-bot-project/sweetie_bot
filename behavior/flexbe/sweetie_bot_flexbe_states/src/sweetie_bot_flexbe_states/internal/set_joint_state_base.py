@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-from itertools import izip
-import xmlrpclib
+#!/usr/bin/env python3
+import xmlrpc.client
 import rospy 
 from rospy.rostime import Time, Duration
 
@@ -27,9 +26,9 @@ class SetJointStateBase(Dummy):
     -- timeout              float           Movement timeout (s).
     -- joint_topic          string          Topic where actual pose published.
 
-    <= done 	                    Finished.
-    <= failed 	                    Failed to activate FollowJointState controller.
-    <= timeout 	                    Timeout reached.
+    <= done                     Finished.
+    <= failed                   Failed to activate FollowJointState controller.
+    <= timeout                  Timeout reached.
 
     '''
 
@@ -61,14 +60,14 @@ class SetJointStateBase(Dummy):
         try:
             goal_raw = rospy.get_param(pose_param)
         except KeyError as e:
-            raise KeyError, "SetJointStateBase: Unable to get '" + pose_param + "' parameter."
-        if not isinstance(goal_raw, xmlrpclib.Binary):
-            raise TypeError, "SetJointStateBase: ROS parameter '" + pose_param + "' is not a binary data."
+            raise KeyError("SetJointStateBase: Unable to get '" + pose_param + "' parameter.")
+        if not isinstance(goal_raw, xmlrpc.client.Binary):
+            raise TypeError("SetJointStateBase: ROS parameter '" + pose_param + "' is not a binary data.")
         # deserialize
         self._target_joint_state = JointState()
         self._target_joint_state.deserialize(goal_raw.data)
         # create joint index to simplify tolerance check
-        self._joint_target_pose = { name: position for name, position in izip(self._target_joint_state.name, self._target_joint_state.position) }
+        self._joint_target_pose = { name: position for name, position in zip(self._target_joint_state.name, self._target_joint_state.position) }
     
     def on_enter(self, userdata):
         self._error = False
@@ -107,7 +106,7 @@ class SetJointStateBase(Dummy):
         joints_msg = self._pose_subscriber.get_last_msg(self._joint_topic)
 
         on_position = True
-        for name, pos in izip(joints_msg.name, joints_msg.position):
+        for name, pos in zip(joints_msg.name, joints_msg.position):
             target_pos = self._joint_target_pose.get(name)
             if (target_pos != None):
                 if abs(target_pos - pos) > self._tolerance:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from internal.execute_step_sequence_base import ExecuteStepSequenceBase as EventState 
+from .internal.execute_step_sequence_base import ExecuteStepSequenceBase as EventState 
 
 # Superclass is imported as EventState to allow to parse state definition FlexApp correctly.
 class ExecuteStepSequence(EventState):

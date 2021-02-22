@@ -21,3 +21,57 @@ soar:
             topic: "control"
         flexbe:
             action_ns: "flexbe/flexbe/execute_behavior"
+soar:
+    soar_period: 0.5
+    autostart: false
+    agent_package: "sweetie_bot_soar"
+    agent_file: "soar/unified.soar"
+    input:
+        rand:
+            type: "rand"
+        clock:
+            type: "clock"
+            recently_delay: 120.0
+            long_time_delay: 3600.0
+        joystick:
+            type: "joystick"
+            topic: "/hmi/joy_decoder/keys_pressed"
+        swm:
+            type: "swm"
+            topic: "detections"
+            timeout: 600
+            visibility_timeout: 2
+            world_frame: "odom_combined"
+            body_frame: "base_link"
+            head_frame: "head_link4"
+            distance_bins_map: { names: [ "close", "near", "far" ], values: [ 0.3, 3.0] }
+            yaw_bins_map: { names: [ "right", "center", "left" ], values: [ -0.52, 0.52] }
+            time_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 2.0, 120.0] }
+        body-pose:
+            type: "pose_joints"
+            topic: "joint_states"
+            storage_ns: "saved_msgs"
+            pose_list: [ "body_nominal", "body_crouched" ]
+            tolerance: 0.174 # 10 degrees
+            time_bins_map: { names: [ "recently", "long-time" ], values: [ 60.0 ] }
+        head-pose:
+            type: "pose_joints"
+            topic: "joint_states"
+            storage_ns: "saved_msgs"
+            pose_list: [ "head_nominal" ]
+            tolerance: 0.174 # 10 degrees
+            time_bins_map: { names: [ "recently", "long-time" ], values: [ 60.0 ] }
+        battery:
+            type: "battery"
+            topic: "battery_state"
+            level_bins_map: { names: [ "critical", "low", "normal" ], values: [ 3.0, 15.0 ] }
+        servos:
+            type: "herkulex_servos"
+            topic: "motion/herkulex/servo_states"
+            overheat_temperature: 45.0
+    output:
+        nop: true
+        textcmd: 
+            topic: "control"
+        flexbe:
+            action_ns: "flexbe/flexbe/execute_behavior"

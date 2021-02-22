@@ -15,7 +15,7 @@ class TextCommandState(EventState):
     -- command      string          Command string.
     -- topic        string          Topic where to publish message.
 
-    <= done 	                    Message is sent.  
+    <= done                         Message is sent.  
     '''
 
     def __init__(self, type, command, topic = 'control'):

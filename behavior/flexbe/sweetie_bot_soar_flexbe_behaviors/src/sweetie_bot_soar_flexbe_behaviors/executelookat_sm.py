@@ -8,8 +8,8 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from sweetie_bot_flexbe_states.set_operational import SetOperational
 from sweetie_bot_flexbe_states.object_detection_monitor import ObjectDetectionMonitor
+from sweetie_bot_flexbe_states.set_operational import SetOperational
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -48,7 +48,7 @@ class ExecuteLookAtSM(Behavior):
 
 	def create(self):
 		# x:30 y:353, x:346 y:329
-		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
+		_state_machine = OperatableStateMachine(outcomes=['succeed', 'failed'])
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -85,7 +85,7 @@ class ExecuteLookAtSM(Behavior):
 			# x:153 y:101
 			OperatableStateMachine.add('LookAtContainer',
 										_sm_lookatcontainer_0,
-										transitions={'finished': 'finished', 'failed': 'failed'},
+										transitions={'finished': 'succeed', 'failed': 'failed'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
 
