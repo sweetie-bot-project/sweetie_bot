@@ -30,9 +30,13 @@ def commandCallback(cmd):
         else:
             rospy.logerr('Unknown play_wav sound: ' + cmd.command)
     elif cmd.type == 'voice/say':
-        # use voice synthesis
-        snd = soundhandle.voiceSound(cmd.command)
-        snd.play()
+        # Use RHVoice synthesizer
+        package_location = rospkg.RosPack().get_path("sweetie_bot_voice")
+        os.system(package_location + "/src/voice/say.sh '{}'".format(cmd.command))
+
+        # Old way
+        # snd = soundhandle.voiceSound(cmd.command)
+        # snd.play()
 
 
 def file_dict(directory, ext):
