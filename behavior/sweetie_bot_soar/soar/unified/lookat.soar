@@ -1,0 +1,125 @@
+#
+# LOOK AT
+#
+# DESCRIPTION
+#
+# Focus attention on givaen object and enshure that object is in viewfield for specific time.
+#
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate look-at ^object <obj> ^delay <delay>  ^timeout <timeout>)
+#
+# Look at <obj>.  Result it success if object is visible and is located in center of viewfield for at least <delay> time (may fire multiple times)
+# If success condition is not met not after <timeout> seconds then result is failure. 
+#
+# RESULT STATUSES
+#
+# * succeed --- object is located for <delay> second in center of viewfield.
+# * failed -- <timeout> seconds has passed but object is still is not center of view.
+#
+# SIDE EFFECTS
+#
+# Output link: 
+#
+# flexbe behavior 'ExecuteLookAt':
+#   * succeed or failed event does not stop flexbe behavior execution.
+#   * behavior timeout is 1.0 seconds greater then <delay> value.
+#
+# Processes:
+#
+# * (^name focusing-at ^substate look-at ^object <obj> ^deadline-time <timeout>) --- trying to focus onto object. 
+#
+# Predicates:
+#
+# * (^name looking-at ^object <obj> ^focusing-proccess <proc>) --- object is in focus for for at least <delay> seconds.
+# * (^name looking-at-verifing ^object <obj> ^focusing-proccess <proc>) --- object is in focus.
+#
+
+# ELABOARTIONS
+
+# recover process
+sp {look-at*elaborate*processes
+	(state <s> ^substate look-at ^beliefs.process <proc> ^superstate.operator.object <obj>)
+	(<proc> ^name focusing-at ^substate look-at ^object <obj>)
+-->
+	(<s> ^process <proc>)
+}
+
+# detect "object in the center" situation
+sp {look-at*elaborate*looking-at-verifing
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^process <proc>)
+	(<proc> ^name focusing-at ^object <obj> ^delay <delay>)
+	(<obj> ^input-link <il>)
+	(<il> ^visible now ^yaw-head center)
+-->
+	(<b> ^predicate <pred>)
+	(<pred> ^name looking-at-verifing ^object <obj> ^focusing-proccess <proc>)
+}
+
+sp {look-at*elaborate*looking-at-verifing-treshhold
+	(state <s> ^top-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name looking-at-verifing ^initiated-at <time> ^focusing-proccess.delay <delay>)
+-->
+	(<pred> ^delay-time (+ <time> <delay>))
+}
+
+# detect "looking-at" situation: object is in fous 
+sp {look-at*elaborate*looking-at
+	(state <s> ^top-state 1 ^beliefs <b> ^time <clock>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name looking-at-verifing ^delay-time <delay-time> ^object <obj> ^focusing-proccess <proc>)
+	-(<clock> ^now {>= <delay-time>})
+-->
+	(<b> ^predicate <pred-new>)
+	(<pred-new> ^name looking-at ^object <obj> ^focusing-proccess <proc>)
+}
+
+# DECISION OPERATORS
+
+# create process to mark substate activation
+sp {look-at*propose*create-process-predicate
+	(state <s> ^substate look-at -^process ^superstate.operator <sop> ^results <r>)
+	(<sop> ^object <obj> ^delay <delay> ^timeout <timeout>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name create-process-predicate ^type automatic ^add-process <proc>)
+	(<proc> ^name focusing-at ^substate look-at  ^object <obj> ^delay <delay> ^deadline-time <timeout> ^results <r>)
+}
+
+# start flexbe behavior: if object is not visible exit after delay
+sp {look-at*propose*start-look-at-bahavior
+	(state <s> ^substate look-at ^process <proc>)
+	(<proc> ^object <obj> ^delay <delay>)
+	(<obj> ^id <id> ^label <label> ^type <type>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name execute-look-at ^substate flexbe ^behavior ExecuteLookAt ^param <p> ^result <res>)
+	(<p> ^id <id> ^label <label> ^type <type> ^timeout (+ <delay> 1.0))
+	(<res> ^status succeed aborted failed ^remove-process <proc>)
+}
+
+# COGNITION OPERATORS
+
+# check if timeout is expired: failed outcome
+sp {look-at*propose*focus-failed
+	(state <s> ^substate look-at ^beliefs.event <ev> ^beliefs-stable <bs>)
+	(<ev> ^name focusing-at ^reason deadline terminated -^processed look-at-focus-failed  ^process <proc>)
+	-{(<bs> ^predicate <pred>) 
+	  (<pred> ^name looking-at ^focusing-proccess <proc>)}
+	(<proc> ^results <r>)
+-->
+	(<s> ^operator <op> + =)
+	(<op> ^name look-at-focus-failed ^type cognition completion automatic ^status failed ^results <r> ^mark-processed <ev>)
+}
+
+# object is in center for delay: succeed outcome
+sp {look-at*propose*focus-succeed
+	(state <s> ^substate look-at ^beliefs.event <ev>)
+	(<ev> ^name looking-at ^reason initiated -^processed look-at-focus-succeed ^predicate.focusing-proccess <proc>)
+	(<proc> ^object <obj> ^results <r>)
+-->
+	(<s> ^operator <op> + =)
+	(<op> ^name look-at-focus-succeed ^type cognition completion automatic ^status succeed ^results <r> ^mark-processed <ev>)
+}
+

@@ -1,0 +1,115 @@
+# OVERALL BEHAVIOR SELECTION
+
+# PROPOSE ANIMATION
+
+# Propose perform animation (no one around)
+sp {talker*propose*substate*animation*alone
+	(state <s> ^substate main)
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name animation-alone ^drive movement ^substate animation ^tag alone)
+}
+
+# LOOK AT OBJECT
+
+#sp {talker*propose*look-at
+#	(state <s> ^substate main ^drive <d> ^beliefs.object <obj>)
+#	(<obj> ^input-link.visible now)
+#	(<d> ^name curiosity)
+#-->
+#	(<s> ^operator <o> + =)
+#   	(<o> ^name look-at ^substate look-at ^object <obj> ^delay 2.0 ^timeout 20.0 ^drive <d>)
+#}
+
+# SWITCH ATTENTION OVER MULTIPLE OBJECTS
+
+sp {talker*propose*look-at
+	(state <s> ^substate main ^beliefs.object <obj>)
+	(<obj> ^input-link.visible now)
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name look-at-multiple-objects ^substate attention ^drive curiosity)
+}
+
+# SELECT HUMAN TO TALK
+
+# select human if we a looking at him 
+sp {talker*propose*select-human-to-talk
+	(state <s> ^substate main ^beliefs <b>)
+	(<b> ^object <obj> ^predicate <pred>)
+	(<obj> ^type human)
+	(<pred> ^name looking-at ^object <obj>)
+	-{(<b> ^decision <d>) 
+      (<d> ^name talk ^substate main)
+    }
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name object-selected-to-talk ^type automatic ^drive social ^add-decision <d>)
+	(<d> ^name talk ^substate main ^object <obj> ^deadline-time 120.0)
+}
+
+# say hello
+sp {talker*propose*say-greet
+	(state <s> ^substate main ^beliefs <b>)
+	(<b> ^decision <d>)
+	(<d> ^name talk ^substate main ^object <obj>)
+	-{(<b> ^predicate <pred>) 
+	  (<pred> ^name greeted ^object <obj>)}
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name ask-greet ^substate ask ^drive social ^object <obj> ^topic greeting ^text |Hello, I am Sweetie Bot!| ^animation-tag greet)
+}
+
+sp {talker*propose*end-dialog 
+	(state <s> ^substate main ^beliefs.event <ev>)
+	(<ev> ^name talk-answer ^actor <obj> ^question-topic greeting -^processed end-dialog)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name end-dialog ^type cognition automatic ^add-predicate <pred> ^mark-processed <ev>)
+	(<pred> ^name greeted ^object <obj>)
+}
+
+#
+# PROPOSE WAIT
+#
+# invoke RandHeadMovements for random timeout
+#sp {talker*propose*rand*head*movements
+#	(state <s> ^name talker ^drive <d> ^cycle <cycle>)
+#	(<d> ^name movement)
+#-->
+#	(<s> ^operator <o> + =)
+#   	(<o> ^name head-movements ^substate flexbe ^drive <d>)
+#   	(<o> ^behavior ExecuteRandHeadMovements ^param <p>)
+#	(<p> ^timeout (+ 5 (rand-int 15)))
+#}
+
+# WALKING
+
+## Install walking goal if one is missing. Then robot should walk sometime because goal-related rules are acive.
+#
+#sp {talker*propose*step-sequence
+#	(state <s> ^name talker ^drive <d> ^cycle <cycle>)
+#	(<d> ^name movement)
+#-->
+#	(<s> ^operator <o> + =)
+#	(<o> ^name step-sequence ^substate step-sequence ^drive <d>)
+#}
+#
+## CYCLE SPIN
+
+# gather results and spin cycle to trigger next behavior selection
+sp {talker*apply*complete*next-cycle
+	(state <s> ^substate main ^operator <o> ^cycle <cycle>)
+	(<o> ^name {<< step-sequence animation head-movements >>}  ^status)
+-->
+	(<s> ^cycle <cycle> -)
+	(<s> ^cycle (+ <cycle> 1))
+}
+#sp {talker*apply*complete*next-cycle
+#	(state <s> ^name talker ^operator <o> ^cycle <cycle>)
+#	(<o> ^name complete ^status)
+#-->
+#	(<s> ^cycle <cycle> -)
+#	(<s> ^cycle (+ <cycle> 1))
+#}
+

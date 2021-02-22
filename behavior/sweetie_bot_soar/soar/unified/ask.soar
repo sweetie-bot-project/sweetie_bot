@@ -1,0 +1,87 @@
+# ASK SUBSTATE
+#  
+# DESCRIPTION
+#
+# Ask question and wait responce. Do not focus attention on speker.
+#
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate ask ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+#
+# Ask person <object> about <topic> with text and use animation tagged with <tag>.
+#
+# RESULT STATUSES
+#
+# None.
+#
+# SIDE EFFECTS
+#
+# Events (including relevant substates):
+#
+# * (^name talk-ignored ^actor <object> ^topic <topic>) --- question was asked by object ignored it: it left, moved or did not say anything.
+# * (^name talk-answer ^actor <object> ^question-topic <topic> ^answer-topic <answer-topic> ^answer-text <text>) --- answer was detected.
+# * (^name talk-failed ^actor <object> ^topic <topic>) --- was unable to ask question (object is moving or invisble)
+# * (^name talk-said ^object <object> ^topic <topic>) --- said defined phrase.
+#
+# Process:
+#
+# * (^name waiting-answer ^substate ask ^object <obj> ^question-topic <topic> ^deadline-time 10.0)
+#
+
+# match process to the substate
+sp {ask*elaborate*match-asking-process
+	(state <s> ^substate ask ^beliefs.process <p> ^superstate.operator <sop>)
+	(<p> ^name waiting-answer ^substate ask ^object <obj> ^question-topic <topic>)
+	(<sop> ^object <obj> ^topic <topic>)
+-->
+	(<s> ^process <p>)
+}
+
+# DECISION RULES
+
+
+# if desicion to ask is active, then say related phrase and perform animation 
+sp {ask*propose*say
+	(state <s> ^substate ask -^process ^superstate.operator <sop>)
+	(<sop> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> )
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name ask-question ^substate say ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed>)
+	(<res-succeed> ^status succeed ^add-process <proc>)
+	(<proc> ^name waiting-answer ^substate ask ^object <obj> ^question-topic <topic> ^deadline-time 20.0)
+}
+
+# waiting for answer: look at object
+sp {ask*propose*look-at-waiting
+	(state <s> ^substate ask ^process <proc>)
+	(<proc> ^object <obj> ^question-topic <topic>)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name waiting-answer-look-at ^substate look-at ^object <obj> ^timeout 10.0 ^delay 2.0 ^result <res-failed>)
+	(<res-failed> ^status failed ^remove-process <proc> ^add-event <ev>)
+	(<ev> ^name talk-ignored ^actor <obj> ^topic <topic>)
+}
+
+# COGNITION RULES
+
+sp {ask*elaborate*question-is-ignored-event
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^name waiting-answer ^reason deadline ^process <proc>)
+	(<proc> ^substate ask ^object <obj> ^question-topic <topic>)
+-->
+	(<b> ^event <ev-ignored>)
+	(<ev-ignored> ^name talk-ignored ^actor <obj> ^question-topic <topic>)
+}
+
+sp {ask*propose*question-is-answered-event
+	(state <s> ^bottom-state 1 ^beliefs <b>)
+	(<b> ^process <proc> ^event <ev>)
+	(<proc> ^name waiting-answer ^substate ask ^object <obj> ^question-topic <topic>)
+	(<ev> ^name speech ^topic <answer-topic> ^text <text>)
+-->
+	(<s> ^operator <op> + =)
+	(<op> ^name ask-question-is-answered ^type cognition automatic ^add-event <ev-answer> ^remove-process <proc>)
+	(<ev-answer> ^name talk-answer ^actor <obj> ^question-topic <topic> ^answer-topic <answer-topic> ^answer-text <text>)
+}
+

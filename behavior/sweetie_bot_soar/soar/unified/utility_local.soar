@@ -1,0 +1,45 @@
+#
+# UTILITY ELABORATION RULES
+#
+
+# default utility
+sp {attention*elaborate*map-utility-default
+	(state <s> ^substate attention ^evaluation-frame <e> ^preference <p>)
+	(<p> ^attribute <attr> ^map <m> ^utility <utility> ^default <default>)
+	(<e> ^<attr> <a-value>)
+	-(<m> ^<a-value> <u-value>)
+-->
+	(<e> ^<utility> <default>)
+}
+
+# utltity
+sp {attention*elaborate*map-utility
+	(state <s> ^substate attention ^evaluation-frame <e> ^preference <p>)
+	(<p> ^attribute <attr> ^map <m> ^utility <utility>)
+	(<e> ^<attr> <a-value>)
+	(<m> ^<a-value> <u-value>)
+-->
+	(<e> ^<utility> <u-value>)
+}
+
+# produce result utiltity
+sp {attention*elaborate*utility-result-ab
+	(state <s> ^substate attention ^evaluation-frame <e>)
+	(<e> ^utilityA <u1> -^utilityB)
+-->
+	(<e> ^utility <u1>)
+}
+
+sp {attention*elaborate*utility-result-ab
+	(state <s> ^substate attention ^evaluation-frame <e>)
+	(<e> ^utilityA <u1> ^utilityB <u2> -^utilityC)
+-->
+	(<e> ^utility (+ <u1> <u2>))
+}
+
+sp {attention*elaborate*utility-result-abc
+	(state <s> ^substate attention ^evaluation-frame <e>)
+	(<e> ^utilityA <u1> ^utilityB <u2> ^utilityC <u3> -^utilityD)
+-->
+	(<e> ^utility (+ <u1> <u2> <u3>))
+}
