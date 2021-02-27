@@ -1,0 +1,37 @@
+vision:
+    camera_frame: 'camera_link'
+    # camera_matrix: [101, 0.000000, 120, 0.000000, 101, 80, 0.000000, 0.000000, 1.000000]
+    input_stream: 'udpsrc port=5000 ! application/x-rtp, encoding-name=JPEG,payload=26 !  rtpjpegdepay !  jpegdec ! videoconvert ! appsink'
+    fps_lock: 30
+    distance_to_camera: 0.3
+    face_recognizer:
+        detection_model_xml: "/models/face_detection/FP16/face-detection-retail-0004.xml"
+        landmarks_model_xml: "/models/landmarks_regression/FP16/landmarks-regression-retail-0009.xml"
+        reident_model_xml: "/models/face_reidentification/FP16/face-reidentification-retail-0095.xml"
+        prob_threshold: 0.5
+        roi_scale_factor: 1.15
+        device: "MYRIAD" # Options are: CPU, MYRIAD, etc.
+    object_recognizer:
+        yolo_model_xml: "/models/object_recognition/FP16/yolov4-tiny.xml"
+        prob_threshold: 0.5
+        iou_threshold: 0.4
+        device: "MYRIAD" # Options are: CPU, MYRIAD, etc.
+vision_simulated:
+    camera_frame: 'camera_link'
+    #camera_matrix: [101, 0.000000, 120, 0.000000, 101, 80, 0.000000, 0.000000, 1.000000]
+    input_stream: -1
+    #input_stream: "/path/to/a/video.mp4" 
+    fps_lock: 30
+    distance_to_camera: 0.3
+    face_recognizer:
+        detection_model_xml: "/models/face_detection/FP16/face-detection-retail-0004.xml"
+        landmarks_model_xml: "/models/landmarks_regression/FP16/landmarks-regression-retail-0009.xml"
+        reident_model_xml: "/models/face_reidentification/FP16/face-reidentification-retail-0095.xml"
+        prob_threshold: 0.5
+        roi_scale_factor: 1.15
+        device: "MYRIAD" # Options are: CPU, MYRIAD, etc.
+    object_recognizer:
+        yolo_model_xml: "/models/object_recognition/FP16/yolov4-tiny.xml"
+        prob_threshold: 0.5
+        iou_threshold: 0.4
+        device: "MYRIAD" # Options are: CPU, MYRIAD, etc.

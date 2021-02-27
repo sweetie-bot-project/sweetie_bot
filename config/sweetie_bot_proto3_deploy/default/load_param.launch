@@ -24,5 +24,6 @@
 	<rosparam command="load" ns="voice" file="$(find sweetie_bot_proto3_deploy)/default/voice.yaml" ></rosparam> 
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/planner.yaml" ></rosparam>
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/soar.yaml" ></rosparam>
+	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/vision.yaml" ></rosparam>
 	<param name="conf_file/joystick_config_yaml" textfile="$(find sweetie_bot_proto3_deploy)/default/joystick_config.yaml" ></param>
 </launch>
