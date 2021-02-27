@@ -1,0 +1,11 @@
+# event processing
+source talk-common.soar
+source talk-answered.soar
+source talk-heard.soar
+source talk-ignored.soar
+source talk-irrelevant.soar
+source talk-said.soar
+# verbolization rules
+source verbolization.soar
+# talk substate definition
+source talk.soar

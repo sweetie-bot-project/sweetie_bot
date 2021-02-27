@@ -1,0 +1,81 @@
+# TALKING: REACTION ON ANSWER
+#
+# Events:
+#
+# * (<ev-irrelevant> ^name talk-irrelevant ^actor <obj> ^topic <topic> ^memorization-time 3600.0) --- answer was irrelevant.
+#
+# Predicates:
+#
+# * (<pred> ^name possible-talk-topic ^object <obj> ^topic <a-topic> ^previous-topic <q-topic> ^reaction talk-answered ^deadline-time 60.0) --- possible reaction to 
+#
+
+# ELABORATIONS 
+
+# propagate event attributes and substate
+sp {talk-answered*elaborate*substate
+	(state <s> ^substate talk-answered ^superstate.operator.event <ev>)
+	(<ev> ^question-topic <q-topic> ^answer-topic <a-topic> ^actor <obj>)
+-->
+	(<s> ^substate talk-event)
+	(<s> ^question-topic <q-topic> ^answer-topic <a-topic> ^actor <obj>)
+}
+
+# waiting answer process
+sp {talk-answered*elaborate*substate
+	(state <s> ^substate talk-answered ^beliefs.predicate <proc> ^question-topic <q-topic> ^actor <obj>)
+	(<proc> ^name waiting-answer ^substate talk ^topic <q-topic> ^object <obj>)
+-->
+	(<s> ^waiting-answer <proc>)
+}
+
+# matching verbolization frame
+sp {talk-answered*elaborate*substate
+	(state <s> ^substate talk-answered ^question-topic <q-topic> ^verbolization.frame <q>)
+	(<q> ^topic <q-topic>)
+-->
+	(<s> ^matching-verbolization-frame <q>)
+}
+
+# VERBOLIZATION COGNITION RULES
+
+# propose reaction which matches answer topic and remove waiting-answer predicate
+sp {talk-answered*elaboration*specific-reaction
+	(state <s> ^substate talk-answered ^matching-verbolization-frame <q> ^event <ev> ^actions <a>)
+	(<ev> ^question-topic <q-topic>  ^answer-topic <a-topic>)
+	(<q> ^reaction <r>)
+	(<r> ^answer-topic <a-topic>)
+-->
+	(<s> ^conclusion specific-reaction)
+	(<a> ^add-predicate <pred> ^remove-process <proc>)
+	(<pred> ^name talk-possible-reaction ^object <obj> ^reaction <r> ^event <ev> ^deadline-time 60.0)
+}
+
+# propose default reaction and remove 
+sp {talk-answered*elaboration*general-reaction
+	(state <s> ^substate talk-answered -^conclusion specific-reaction ^matching-verbolization-frame <q> ^event <ev> ^actions <a>)
+	(<ev> ^question-topic <q-topic> ^answer-topic <a-topic>)
+	(<q> ^reaction-other <r>)
+-->
+	(<s> ^conclusion general-reaction)
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name talk-possible-reaction ^object <obj> ^reaction <r> ^event <ev> ^deadline-time 60.0)
+}
+
+# remove waiting-answer predicate
+sp {talk-answered*propose*remove-waiting-answer
+	(state <s> ^substate talk-answered ^conclusion {<<|specific-reaction| |general-reaction|>>} ^waiting-answer <proc> ^actions <a>)
+-->
+	(<a> ^remove-process <proc>)
+}
+
+# GENERAL COGNITION RULES
+
+# remove ignor-me predicate
+sp {talk-answered*propose*stopped-ignor-me
+	(state <s> ^substate talk-answered ^conclusion answer-relevant ^event <ev> ^beliefs.predicate <pred>)
+	(<ev> ^actor <obj>)
+	(<pred> ^name ignor-me ^actor <obj>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name stopped-ignor-me ^type automatic ^remove-predicate <pred>)
+}

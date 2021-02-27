@@ -45,29 +45,38 @@ sp {talker*propose*select-human-to-talk
 -->
 	(<s> ^operator <o> + =)
    	(<o> ^name object-selected-to-talk ^type automatic ^drive social ^add-decision <d>)
-	(<d> ^name talk ^substate main ^object <obj> ^deadline-time 120.0)
+	(<d> ^name talk ^substate main ^object <obj> ^deadline-time 600.0)
 }
 
-# say hello
-sp {talker*propose*say-greet
+sp {talker*propose*talk
 	(state <s> ^substate main ^beliefs <b>)
 	(<b> ^decision <d>)
 	(<d> ^name talk ^substate main ^object <obj>)
-	-{(<b> ^predicate <pred>) 
-	  (<pred> ^name greeted ^object <obj>)}
 -->
 	(<s> ^operator <o> +, =)
-   	(<o> ^name ask-greet ^substate ask ^drive social ^object <obj> ^topic greeting ^text |Hello, I am Sweetie Bot!| ^animation-tag greet)
+   	(<o> ^name talk ^substate talk ^drive social ^object <obj>)
 }
 
-sp {talker*propose*end-dialog 
-	(state <s> ^substate main ^beliefs.event <ev>)
-	(<ev> ^name talk-answer ^actor <obj> ^question-topic greeting -^processed end-dialog)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name end-dialog ^type cognition automatic ^add-predicate <pred> ^mark-processed <ev>)
-	(<pred> ^name greeted ^object <obj>)
-}
+# say hello
+#sp {talker*propose*say-greet
+#	(state <s> ^substate main ^beliefs <b>)
+#	(<b> ^decision <d>)
+#	(<d> ^name talk ^substate main ^object <obj>)
+#	-{(<b> ^predicate <pred>) 
+#	  (<pred> ^name greeted ^object <obj>)}
+#-->
+#	(<s> ^operator <o> +, =)
+#   	(<o> ^name ask-greet ^substate ask ^drive social ^object <obj> ^topic greeting ^text |Hello, I am Sweetie Bot!| ^animation-tag greet)
+#}
+#
+#sp {talker*propose*end-dialog 
+#	(state <s> ^substate main ^beliefs.event <ev>)
+#	(<ev> ^name talk-answer ^actor <obj> ^question-topic greeting -^processed end-dialog)
+#-->
+#	(<s> ^operator <op> +, =)
+#	(<op> ^name end-dialog ^type cognition automatic ^add-predicate <pred> ^mark-processed <ev>)
+#	(<pred> ^name greeted ^object <obj>)
+#}
 
 #
 # PROPOSE WAIT

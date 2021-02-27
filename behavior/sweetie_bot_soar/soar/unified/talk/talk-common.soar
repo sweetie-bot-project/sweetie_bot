@@ -1,0 +1,44 @@
+#
+# TALKING: COMMON EVENT PROCESSING CODE
+#
+
+# ELABORATIONS
+
+# substate basic agumentation
+sp {talk-event*elaborate*event
+	(state <s> ^substate talk-event ^superstate.operator <sop>)
+	(<sop> ^event <ev>)
+-->
+	(<s> ^event <ev>)
+	(<s> ^actions <a>)
+	(<s> ^talk-ignored <c1> ^talk-answered <c2> ^talk-irrelevant <c3>)
+}
+
+# elaborate recent talk events
+sp {talk-event*elaborate-recent-events
+	(state <s> ^substate talk-event ^event.actor <obj> ^events.event <ev> ^time.recently <time>)
+	(<ev> ^name {<<|talk-ignored| |talk-answered| |talk-irrelevant|>> <ev-type>} ^actor <obj> ^initiated-at {>= <time>})	
+	(<s> ^<ev-type> <c>)
+-->
+	(<c> ^event <ev>)
+}
+
+# COGNITION RULES
+
+# worst operator: cognition process is finished
+sp {talk-event*propose*finish
+	(state <s> ^substate talk-event ^event <ev> ^superstate.operator.name finish-event-processing)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name finish-event-processing ^type automatic ^mark-processed <ev>)
+}
+
+# add all actions to finish-event-processing operator
+sp {talk-event*elaborate*finish-agumentation
+	(state <s> ^substate talk-event ^operator <op> + ^actions <a>)
+	(<op> ^name finish-event-processing)
+	(<a> ^<attr> <value>)
+-->
+	(<op> ^<attr> <value>)
+}
+

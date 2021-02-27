@@ -1,0 +1,15 @@
+#
+# TALKING: REACTION ON FAILED
+#
+#
+
+# ELABORATIONS 
+
+# propagate event attributes and substate
+sp {talk-failed*elaborate*substate
+	(state <s> ^substate talk-failed ^superstate.operator.event <ev>)
+	(<ev> ^topic <topic> ^object <obj>)
+-->
+	(<s> ^substate talk-event)
+	(<s> ^topic <topic> ^actor <obj>)
+}

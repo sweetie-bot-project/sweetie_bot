@@ -1,0 +1,180 @@
+#
+# PREDIACTES VERBOLIZATION
+#
+# Perform verblization of talk-related predicates
+#
+# * (<pred> ^name possible-talk-topic ^object <obj> ^topic <a-topic> ^previous-topic <q-topic> ^reaction talk-answered ^deadline-time 60.0) --- possible reaction to 
+# *	(<pred> ^name ignor-possibility ^actor <obj> ^topic <topic> ^deadline-time 60.0) --- question is possibly being ignored.
+# *	(<pred> ^name ignor-topic ^actor <obj> ^topic <topic> ^deadline-time 600.0) --- question on specific topic is being ignored.
+# *	(<pred> ^name ignor-me ^actor <obj>) --- speaker ignores me.
+# *	(<pred> ^name nonsense-possibility ^actor <obj> ^topic <topic> ^deadline-time 60.0) --- answer has no meaning
+# *	(<pred> ^name nonsense-me ^actor <obj>) --- speaker doe not interact normally
+
+# GENERAL KNOWLEDGE
+
+# maybe we are not ignored but speaker do not know how to talk
+sp {verbolization*elaborate*maye-do-not-know-how-to-talk
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^predicate <pred1>)
+	(<pred1> ^name {<<|ignor-possibility| |nonsense-possibility|>>} ^actor <obj>)
+	-{(<b> ^predicate <pred2>)
+	  (<pred2> ^name explained-how-to-talk ^object <obj>)}
+-->
+	(<b> ^predicate <pred>)
+	(<pred> ^name maybe-do-not-know-how-to-talk ^object <obj>)
+}
+
+# VERBOLIZATION RULES
+
+# greeting -- max utililty to start dialog with it
+sp {verbolization*elaborate*greeting-base
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	-{(<b> ^predicate <pred1>)
+	  (<pred1> ^name greeted ^object <obj>)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic greeting)
+}
+
+sp {verbolization*elaborate*greeting-not-acquitance
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization.frame <f>)
+	(<f> ^topic greeting)
+	-{(<b> ^predicate <pred2>)
+	  (<pred2> ^name acquitance ^object <obj>)}
+	(<obj> ^label <label>)
+-->
+	(<f>  ^utility 100 ^type question ^animation-tag greeting ^reaction <r1>)
+	(<f> ^text |Привет!| |Привет! Меня зовут Свити Бот!|)
+	(<r1> ^answer-topic greeting ^topic make-acquitance ^text (concat |Я буду называть тебя брони | <label> |. Не обижайлся. Даже, если ты назовешь мне свое имя, я не пойму.|) ^animation-tag long)
+}
+
+sp {verbolization*elaborate*greeting-acquitance-normal
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization.frame <f>)
+	(<f> ^topic greeting)
+	(<b> ^predicate <pred2>)
+	(<pred2> ^name acquitance ^object <obj>)
+	(<obj> ^label <label>)
+-->
+	(<f> ^utility 100 ^type question ^animation-tag greeting ^reaction <r1>)
+	(<f> ^text (concat |Привет, брони | <label> |!|) (concat |Рада тебя видеть вновь, брони | <label> |.|))
+	(<r1> ^answer-topic greeting)
+}
+
+sp {verbolization*elaborate*greeting-acquitance-dislike
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization.frame <f>)
+	(<f> ^topic greeting)
+	(<b> ^predicate <pred2>)
+	(<pred2> ^name dislike ^object <obj>)
+	(<obj> ^label <label>)
+-->
+	(<f> ^utility 110 ^type question ^animation-tag rejection ^reaction <r1>)
+	(<f> ^text (concat |Ты мне не нравишься, брони | <label> |!|) (concat |Не рада тебя видеть вновь, брони | <label> |.|))
+	(<r1> ^answer-topic greeting)
+}
+
+sp {talk-said*propose*greeted
+	(state <s> ^substate talk-said ^topic greeting ^object <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name greeted ^object <obj> ^deadline-time 3600.0)
+}
+
+sp {talk-answered*propose*made-acquitance
+	(state <s> ^substate talk-said ^topic make-acquitance ^object <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name acquitance ^object <obj>)
+}
+
+# ask question about robots
+sp {verbolization*elaborate*ask-do-you-like-robots
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	-{(<b> ^predicate <pred1>)
+	  (<pred1> ^name {<<|like| |dislike|>>} ^actor <obj> ^type robot)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic do-you-like-robots ^utility 20 ^type question ^animation-tag question ^reaction <r1> <r2>)
+	(<f> ^text |Ты любишь роботов?|)
+	(<r1> ^answer-topic yes ^topic reaction-speaker-like-robots ^text |Я рада, что ты признаешь мое превосходство!| ^animation-tag confirmation)
+	(<r2> ^answer-topic no ^topic reaction-speaker-dislike-robots ^text |Теперь ты мне не нравишься.| ^animation-tag rejection)
+}
+
+sp {talk-answered*propose*speaker-likes-robots
+	(state <s> ^substate talk-answered ^question-topic do-you-like-robots ^answer-topic yes ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name like ^actor <obj> ^type robot)
+}
+
+sp {talk-answered*propose*speaker-dalike-robots
+	(state <s> ^substate talk-answered ^question-topic do-you-like-robots ^answer-topic no ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name like ^actor <obj> ^type robot)
+}
+
+# explain how to talk to speaker
+sp {verbolization*elaborate*explanation-how-to-talk
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1>)
+	(<pred1> ^name maybe-do-not-know-how-to-talk ^object <obj>)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic explanation-how-to-talk ^type question ^utility 50 ^animation-tag long ^reaction <r1> ^reaction-irrelevant <r2>)
+	(<f> ^text reaction |Видишь карточки на передо мной? Чтобы ответить возьми одну и покажи мне. Все понятно? Используй карточки!|)
+	(<r1> ^answer-topic yes ^text |Молодец!| |Отлично!| ^animation-tag confirmation)
+	(<r2> ^topic reaction ^text |Я ожидала немного другого, но тоже сойдет.| |Хорошо. Будем считать, ты научился пользоваться карточками.| ^animation-tag surprise)
+}
+
+sp {talk-answered*propose*explained-how-to-talk
+	(state <s> ^substate talk-answered ^question-topic explanation-how-to-talk ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name explained-how-to-talk ^object <obj>)
+}
+
+# decode possible reaction to verbolization frame
+sp {verbolizatiion*elaborate*talk-possible-reaction
+	(state <s> ^substate talk ^beliefs.predicate <pred> ^object <obj> ^verbolizatiion <v>)
+	(<pred> ^name talk-possible-reaction ^object <obj> ^reaction <r>)
+	(<r> ^topic <topic> ^type <type> ^text <text> ^animation-tag <tag>)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic <topic> ^utility 200 ^type statement reaction ^animation-tag <tag> ^text <text>)
+}
+
+# make remark about ignorance
+sp {verbolization*elaborate*ramark-about-ignorance
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1>)
+	(<pred1> ^name ignor-possible ^actor <obj>)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic ignorance-remark ^utiltity 40 ^type statement ^animation-tag notification)
+	(<f> ^text |Ты не слышишь меня? Я обратилась к тебе!| |Не надо меня игнорировать.|)
+}
+
+sp {talk-said*propose*said-about-ignorance
+	(state <s> ^substate talk-said ^topic ignorance-remark ^object <obj> ^actions <a> ^beliefs.predicate <pred>)	
+	(<pred> ^name ignor-possible ^actor <obj>)
+-->
+	(<a> ^remove-predicate <pred>)
+}
+	
+# make remark about ignorance
+sp {verbolization*elaborate*ramark-about-nonsense
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1>)
+	(<pred1> ^name nonsense-possible ^actor <obj>)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic nonsense-remark ^utiltity 40 ^type statement ^animation-tag suprise)
+	(<f> ^text |И что ты хотел этим сказать?| |Нерелевантный ответ.|)
+}
+
+sp {talk-said*propose*said-about-nonsense
+	(state <s> ^substate talk-said ^topic nonsense-remark ^object <obj> ^actions <a> ^beliefs.predicate <pred>)	
+	(<pred> ^name nonsense-possible ^actor <obj>)
+-->
+	(<a> ^remove-predicate <pred>)
+}

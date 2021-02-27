@@ -1,0 +1,99 @@
+#
+# TALKING: REACTION ON IRRELEVANT ANSWER
+#
+# Predicates:
+#
+# * (<pred> ^name possible-talk-topic ^object <obj> ^topic <a-topic> ^previous-topic <q-topic> ^reaction talk-answered ^deadline-time 60.0) --- possible reaction to ignorance
+# *	(<pred> ^name nonsense-possibility ^actor <obj> ^topic <topic> ^deadline-time 60.0) --- answer has no meaning
+# *	(<pred> ^name ignor-topic ^actor <obj> ^topic <topic> ^deadline-time 600.0) --- question on specific topic is being ignored.
+# *	(<pred> ^name nonsense-me ^actor <obj>) --- speaker doe not interact normally
+#
+
+# ELABORATIONS
+
+# envoke common event processing rules
+sp {talk-irrelevant*elaborate*substate
+	(state <s> ^substate talk-irrelevant ^superstate.operator.event <ev>)
+	(<ev> ^topic <topic> ^actor <obj>)
+-->
+	(<s> ^substate talk-event)
+	(<s> ^topic <topic> ^actor <obj>)
+}
+
+# only one irrelevant event is detected
+sp {talk-irrelevant*elaborate*irrelevant-once
+	(state <s> ^substate talk-irrelevant -^conclusion nosnsense-me ignor-topic specific-reaction)
+-->
+	(<s> ^conclusion irrelevant-single)
+}
+
+# there is specific reaction to irrelevant answer in topic definition
+sp {talk-irrelevant*elaborate*specific-reacation
+	(state <s> ^substate talk-irrelevant ^event.topic <topic> ^verbalization.frame <q>)
+	(<q> ^topic <topic> ^reaction-irrelevant <r>)
+-->
+	(<s> ^conclusion specific-reaction)
+	(<s> ^reaction <r>)
+}
+
+# thera are at least two event related to given topic
+sp {talk-irrelevant*elaborate*ignor-topic
+	(state <s> ^substate talk-irrelevant ^event <ev> ^talk-irrelevant <c>)
+	(<c> ^event {<> <ev> <ev1>})
+	(<ev> ^topic <topic>)
+	(<ev1> ^topic <topic>)
+-->
+	(<s> ^conclusion ignor-topic)
+}
+
+# there are at least three events related to different topics
+sp {talk-irrelevant*elaborate*nonsense-me
+	(state <s> ^substate talk-irrelevant ^event <ev> ^talk-irrelevant <c>)
+	(<c> ^event {<> <ev> <ev1>} ^event {<> <ev> <ev2>})
+	(<ev> ^topic <topic>)
+	-(<ev1> ^topic <topic>)
+-->
+	(<s> ^conclusion nonsense-me)
+}
+
+# COGNITION RULES
+
+# if single event is detected conclude that we are possible irrelevant
+sp {talk-irrelevant*propose*nonsense-possibility
+  	(state <s> ^substate talk-irrelevant ^conclusion irrelevant-single ^event <ev> ^beliefs <b> ^actions <a>)
+	(<ev> ^actor <obj> ^topic <topic>)
+  	-{(<b> ^predicate <p>) (<p> ^name nonsense-possibility ^actor <obj> ^topic <topic>)}
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name nonsense-possibility ^actor <obj> ^topic <topic> ^deadline-time 60.0)
+}
+
+# specific reaction: propose talk topic
+sp {talk-irrelevant*propose*specific-reaction-topic
+  	(state <s> ^substate talk-irrelevant ^conclusion specific-reaction ^reaction <r> ^event <ev> ^actions <a>)
+	(<ev> ^actor <obj>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name talk-possible-reaction ^object <obj> ^reaction <r> ^event <ev> ^deadline-time 60.0)
+}
+
+# note that speaker ignores specific topic
+sp {talk-irrelevant*propose*ignor-topic
+  	(state <s> ^substate talk-irrelevant ^conclusion ignor-topic ^event <ev> ^beliefs <b> ^actions <a>)
+	(<ev> ^actor <obj> ^topic <topic>)
+  	-{(<b> ^predicate <p>) (<p> ^name ignor-topic ^actor <obj> ^topic <topic>)}
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name ignor-topic ^actor <obj> ^topic <topic> ^deadline-time 600.0)
+}
+
+# note that speaker systematically speaks nonsense
+sp {talk-irrelevant*propose*ignor-me
+  	(state <s> ^substate talk-irrelevant ^conclusion nonsense-me ^event <ev> ^beliefs <b> ^actions <a>)
+	(<ev> ^actor <obj>)
+  	-{(<b> ^predicate <p>) (<p> ^name nonsense-me ^actor <obj>)}
+-->
+	(<a>  ^add-predicate <pred>)
+	(<pred> ^name nonsense-me ^actor <obj>)
+}
+
