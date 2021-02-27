@@ -48,7 +48,7 @@ sp {say*propose*look-at
 	(<s> ^operator <op> +, <)
 	(<op> ^name say-look-at ^substate look-at ^object <obj> ^timeout 10.0 ^delay 2.0 ^result <r-failed>)
 	(<r-failed> ^status failed ^add-event <ev>)
-	(<ev> ^name talk-failed ^object <obj> ^topic <topic>)
+	(<ev> ^name talk-failed ^object <obj> ^topic <topic> ^memorization-time 3600.0)
 }
 
 # choice animation with tag 'talk'
@@ -76,7 +76,7 @@ sp {say*propose*say-execute
     (<param> ^text <text> ^joint_trajectory <animation-name> ^text_delay 0.2)
 	(<res> ^status failure invalid_pose ^remove-decision <d>)
 	(<res-succeed> ^status succeed ^add-event <ev> ^remove-decision <d>)
-	(<ev> ^name talk-said ^object <obj> ^topic <topic>)
+	(<ev> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
 }
 
 # elaborate is_relative ExecuteJointTrajectoryAndSay paramter

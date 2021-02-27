@@ -21,7 +21,7 @@
 # * (^name talk-ignored ^actor <object> ^topic <topic>) --- question was asked by object ignored it: it left, moved or did not say anything.
 # * (^name talk-answer ^actor <object> ^question-topic <topic> ^answer-topic <answer-topic> ^answer-text <text>) --- answer was detected.
 # * (^name talk-failed ^actor <object> ^topic <topic>) --- was unable to ask question (object is moving or invisble)
-# * (^name talk-said ^object <object> ^topic <topic>) --- said defined phrase.
+# * (^name talk-said ^object <object> ^topic <topic>) --- said defined phrase to the object.
 #
 # Process:
 #
@@ -51,6 +51,7 @@ sp {ask*propose*say
 	(<proc> ^name waiting-answer ^substate ask ^object <obj> ^question-topic <topic> ^deadline-time 20.0)
 }
 
+
 # waiting for answer: look at object
 sp {ask*propose*look-at-waiting
 	(state <s> ^substate ask ^process <proc>)
@@ -64,6 +65,7 @@ sp {ask*propose*look-at-waiting
 
 # COGNITION RULES
 
+# detect ignored event
 sp {ask*elaborate*question-is-ignored-event
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^event <ev>)
@@ -71,9 +73,10 @@ sp {ask*elaborate*question-is-ignored-event
 	(<proc> ^substate ask ^object <obj> ^question-topic <topic>)
 -->
 	(<b> ^event <ev-ignored>)
-	(<ev-ignored> ^name talk-ignored ^actor <obj> ^question-topic <topic>)
+	(<ev-ignored> ^name talk-ignored ^actor <obj> ^question-topic <topic> ^memorization-time 3600.0)
 }
 
+# emit talk-answeed event only if talk subsystem is not active
 sp {ask*propose*question-is-answered-event
 	(state <s> ^bottom-state 1 ^beliefs <b>)
 	(<b> ^process <proc> ^event <ev>)
@@ -82,6 +85,6 @@ sp {ask*propose*question-is-answered-event
 -->
 	(<s> ^operator <op> + =)
 	(<op> ^name ask-question-is-answered ^type cognition automatic ^add-event <ev-answer> ^remove-process <proc>)
-	(<ev-answer> ^name talk-answer ^actor <obj> ^question-topic <topic> ^answer-topic <answer-topic> ^answer-text <text>)
+	(<ev-answer> ^name talk-answered ^actor <obj> ^question-topic <topic> ^answer-topic <answer-topic> ^answer-text <text> ^memorization-time 3600.0)
 }
 
