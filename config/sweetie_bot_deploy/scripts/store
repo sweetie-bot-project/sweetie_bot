@@ -106,7 +106,7 @@ def save(param, path):
 		if not os.path.isdir(path):
 			raise KeyError('Save namespace failed: target directory does not exists.', path)
 		print('Saving namespace `{0}` to direcotry `{1}`.'.format(param, path))
-		for name, val in value.iteritems():
+		for name, val in value.items():
 			if isinstance(val, Binary):
 				xmlrpc_to_file(val, os.path.join(path, name + '.json'), msg_type)
 
