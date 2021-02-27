@@ -176,6 +176,16 @@ sp {automatic*apply*remove-desicion
 }
 
 #
+# RETVAL SUPPORT
+#
+sp {automatic*elaborate*retval
+	(state <s> ^operator <op>)
+	(<op> ^type automatic ^retval-name <name> ^reval-attribute <attr> ^<name> <value> ^{<<|add-predicate| |add-process| |add-decision|>>} <belief>)
+-->
+	(<belief> ^<attr> <value>)
+}
+
+#
 # TAGS
 #
 

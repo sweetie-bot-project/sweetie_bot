@@ -23,7 +23,7 @@ sp {attention*elaborate*map-utility
 }
 
 # produce result utiltity
-sp {attention*elaborate*utility-result-ab
+sp {attention*elaborate*utility-result-a
 	(state <s> ^substate attention ^evaluation-frame <e>)
 	(<e> ^utilityA <u1> -^utilityB)
 -->
