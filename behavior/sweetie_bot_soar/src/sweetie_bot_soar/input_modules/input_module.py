@@ -33,7 +33,7 @@ class InputModule:
         if value == None and default_value != None:
             value = default_value
         # check if parameter value correct
-        if value == None or not isinstance(value, allowed_types) or not check_func(value):
+        if not isinstance(value, allowed_types) or not check_func(value):
             if error_desc == None:
                 error_desc = '`%s` input module: parameter %s is not present or invalid.' % (self._name, name)
             raise RuntimeError(error_desc)
