@@ -7,17 +7,20 @@ import json
 import numpy as np
 import rospy
 
-from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
+from cob_object_detection_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
 from visualization_msgs.msg import MarkerArray, Marker
-from geometry_msgs.msg import PoseStamped, Pose, Point, Vector3
+from geometry_msgs.msg import PoseStamped, Pose, Point, Vector3, Quaternion
 from std_msgs.msg import ColorRGBA
-from std_srvs.srv import Trigger, TriggerResponse
+
+from pyquaternion import Quaternion as PyQuaternion
 
 class Detection:
+    __NO_ROTATION = Quaternion(1, 0, 0, 0)
+
     def __init__(self, id = None, label = None, type = None, pose = None):
-        #process id
+        # process id
         if id == None or isinstance(id, int):
-            self.id = id 
+            self.id = id
         else:
             raise TypeError("Detection: id must be int.")
         # process label
@@ -29,13 +32,15 @@ class Detection:
         if not isinstance(type, str):
             raise TypeError("Detection: type must be string.")
         self.type = type
+
+        self.pose = None
         # process pose
         if isinstance(pose, np.ndarray) and len(pose) == 3:
-            self.pose = pose
+            self.pose = Pose(position=Point(x = pose[0], y = pose[1], z = pose[2]), orientation=Detection.__NO_ROTATION)
         elif isinstance(pose, Pose):
-            self.pose = np.array([pose.position.x, pose.position.y, pose.position.z])
+            self.pose = pose
         elif isinstance(pose, Point):
-            self.pose = np.array([pose.x, pose.y, pose.z])
+            self.pose = Pose(position=pose, orientation=Detection.__NO_ROTATION)
         else:
             raise TypeError("Detection: pose must be numpy.array, geometry_msgs/Point or geometry_msgs/Pose")
 
@@ -43,8 +48,8 @@ class Detection:
         msg = DetectionMsg()
         msg.id = self.id
         msg.label = self.label if self.label else ''
-        msg.type = self.type
-        msg.pose.position = Point(x = self.pose[0], y = self.pose[1], z = self.pose[2])
+        msg.detector = self.type
+        msg.pose.pose = self.pose
         return msg
 
     def to_visualizaton_msg(self):
@@ -56,23 +61,26 @@ class Detection:
             msg.type = Marker.SPHERE
             msg.scale = Vector3(x=0.15, y=0.15, z=0.15)
             msg.color = ColorRGBA(r=1.0, g=0.8, b=0.8, a=1.0)
-        elif self.type == 'april_tag':
+        elif self.type in ('april_tag', 'aruco', 'qrcode'):
             msg.type=Marker.CUBE
-            msg.scale =Vector3(x=0.05, y=0.05, z=0.05)
+            msg.scale = Vector3(x=0.05, y=0.05, z=0.05)
             msg.color = ColorRGBA(r=1.0, g=1.0, b=1.0, a=1.0)
         else:
             msg.type=Marker.CYLINDER
-            msg.scale =Vector3(x=0.05, y=0.05, z=0.05)
+            msg.scale = Vector3(x=0.05, y=0.05, z=0.05)
             msg.color = ColorRGBA(r=1.0, g=0.0, b=0.0, a=1.0)
         msg.lifetime = rospy.Duration(1.0)
         msg.frame_locked = False
-        msg.text = '(%s, %s, %s)' % (self.id, self.label, self.type)
-        msg.pose.position = Point(x=self.pose[0], y=self.pose[1], z=self.pose[2])
+        # Keep text attribute empty to avoid RViz warning
+        # msg.text = '(%s, %s, %s)' % (self.id, self.label, self.type)
+        msg.pose = self.pose
         return msg
 
     def __repr__(self):
-        return "(type: %s, id: %s, label: %s, pose: (%f, %f, %f)" % (self.type, self.id, self.label, self.pose[0], self.pose[1], self.pose[2])
+        return "(type: %s, id: %s, label: %s, pose: %s" % (self.type, self.id, self.label, self.pose)
 
+def pose_to_np_array(pose):
+    return np.array([pose.position.x, pose.position.y, pose.position.z])
 
 class DetectionFilter:
     def __init__(self, length=3, threshold=2, alpha = 0.5):
@@ -96,7 +104,9 @@ class DetectionFilter:
                 self.label = detection.label
             # perform filtering
             if not self.pose is None:
-                self.pose = self.alpha*self.pose + (1-self.alpha)*detection.pose
+                position = self.alpha*pose_to_np_array(self.pose) + (1-self.alpha)*pose_to_np_array(detection.pose)
+                self.pose.position = Point(position[0], position[1], position[2])
+                self.pose.orientation = detection.pose.orientation
             else:
                 self.pose = detection.pose
             # add element to hit list
@@ -104,7 +114,7 @@ class DetectionFilter:
         else:
             # me have missed one step
             self.detection_hits.append(False)
-        # clear  
+        # clear
         if len(self.detection_hits) > self.detection_hits_len:
             del self.detection_hits[0]
 
@@ -114,7 +124,7 @@ class DetectionFilter:
         for hit in self.detection_hits:
             if hit:
                 hit_count += 1
-        # check condidtions 
+        # check conditions
         if (not self.type is None) and (not self.pose is None) and (hit_count >= self.detection_hits_threshold):
             return True
 
@@ -132,7 +142,7 @@ class DetectionFilter:
             label = 'label' + str(self.id)
         else:
             label = self.label
-        # id, type, pose must always present 
+        # id, type, pose must always present
         return Detection(id = self.id, label = label, type = self.type, pose = self.pose)
 
     def match(self, detection):
@@ -145,7 +155,7 @@ class DetectionFilter:
             matches = False
         # calculate distance
         if not self.pose is None:
-            distance = np.linalg.norm(detection.pose - self.pose)
+            distance = np.linalg.norm(pose_to_np_array(detection.pose) - pose_to_np_array(self.pose))
         else:
             distance = 0.0
         # return match result
@@ -153,6 +163,7 @@ class DetectionFilter:
 
         
 class OpenMVBridge:
+    MESSAGE_BUFFER_LIMIT = 1024 * 10
 
     def __init__(self):
         # Initialize the node, name it, set log verbosity level
@@ -162,14 +173,10 @@ class OpenMVBridge:
         self.detections_pub = rospy.Publisher('detections', DetectionArrayMsg, queue_size=5)
         self.markers_pub = rospy.Publisher('markers', MarkerArray, queue_size=5)
 
-        # services 
-        self.reconfigure_srv = rospy.Service('~reconfigure', Trigger, self.reconfigureCallback)
-
         # COMPONENT STATE
         self.ok = False
         self.openmv_port = None
         self.message_buffer = bytes()
-        self.MESSAGE_BUFFER_LIMIT = 2048
         self.detection_filters = []
         self.detection_filter_params_cache = {}
 
@@ -179,15 +186,10 @@ class OpenMVBridge:
     def is_ok(self):
         return self.ok
 
-    def reconfigureCallback(self, req):
-        # TODO syncronization. It is dangerous not to use syncronization.
-        self.configure()
-        return TriggerResponse(success = self.ok)
-
-    def configure(self, silent = False):
+    def configure(self):
         # reset state
         self.ok = False
-        self.openmv_port = None
+        self.serial_read_timeout = None
         self.message_buffer = bytes()
         self.detection_filters = []
         self.detection_filter_params_cache = {}
@@ -206,24 +208,26 @@ class OpenMVBridge:
                 raise EnvironmentError('"camera_matrix" must be array float with size 12 wich represent 3x3 matrix (row major).')
             self.camera_matrix = np.matrix(self.camera_matrix).reshape([3, 3])
             # distance
-            self.distance = rospy.get_param('~distance', 1.0)
+            self.distance = rospy.get_param('~distance', 0.3)
             if not isinstance(self.distance, (int,float)) or self.distance <= 0.0:
                 raise EnvironmentError('"distance" must be positive float.')
+            # serial read timeout
+            self.serial_read_timeout = rospy.get_param('~serial/read_timeout', 1.0)
+            if not isinstance(self.serial_read_timeout, float):
+                raise EnvironmentError('Read timeout value has to be a float.')
 
             # serial port configuration
             self.openmv_port = self.create_serial_connection()
         except EnvironmentError as e:
-            if not silent:
-                rospy.logerr('OpenMV node configuration failed: %s' % e)
+            rospy.logerr('OpenMV node configuration failed: %s' % e)
             return False
         except serial.serialutil.SerialException as e:
-            if not silent:
-                rospy.logerr('OpenMV node configuration failed: %s' % e)
+            rospy.logerr('OpenMV node configuration failed: %s' % e)
             return False
-           
+
         # node is fully configured
         self.ok = True
-        rospy.loginfo('OpneMV node is configured.')
+        rospy.loginfo('OpenMV node is configured.')
 
     def back_projection(self, cx, cy, z):
         # convert to image center relative position
@@ -239,34 +243,51 @@ class OpenMVBridge:
         if not self.ok:
             return
 
+        # data read loop timeout
+        timeout = serial.Timeout(self.serial_read_timeout)
+        incoming_byte = None
         # read next portion of data
-        try:
-            # Get a byte from the serial port
-            # HINT: It's a blocking routine
-            self.message_buffer += self.openmv_port.read_until('\n', self.MESSAGE_BUFFER_LIMIT)
-        except serial.serialutil.SerialException as e:
-            # Check if it is an interrupted system call
-            # TODO: That's an ugly solution... Do we have other options with PySerial?
-            if str(e).find("Interrupted system call") == -1:
-                rospy.logerr('Failed to read from the serial device: %s', e)
-                self.ok = False
-            else:
-                rospy.logdebug('EINTR received.')
-            return
+        while True:
+            try:
+                # read a byte
+                # HINT: it's a blocking routine
+                incoming_byte = self.openmv_port.read()
+            except serial.serialutil.SerialException as e:
+                # Check if it is an interrupted system call
+                # TODO: That's an ugly solution... Do we have other options with PySerial?
+                if str(e).find("Interrupted system call") == -1:
+                    rospy.logerr('Failed to read from the serial device: %s', e)
+                    self.ok = False
+                else:
+                    rospy.logdebug('EINTR received')
+                return
 
-        # check overflow
-        if len(self.message_buffer) > self.MESSAGE_BUFFER_LIMIT:
-            rospy.logerr('Message buffer limit is exceeded.')
-            self.message_buffer = bytes()
-            return
+            # read timeout
+            if not len(incoming_byte):
+                return
+            # read loop timeout
+            if timeout.expired():
+                return
 
-        # check if EOL received
-        if not len(self.message_buffer) > 0 or self.message_buffer[-1] != '\n':
-           return 
+            # EOL detected, time to parse
+            if incoming_byte == serial.LF:
+                break
+
+            # check overflow
+            if len(self.message_buffer) >= OpenMVBridge.MESSAGE_BUFFER_LIMIT:
+                rospy.logerr('Message buffer limit is exceeded')
+                self.message_buffer = bytes()
+
+            # add the byte to the buffer
+            self.message_buffer += incoming_byte
+
+        # empty line
+        if not len(self.message_buffer):
+            return
 
         rospy.logdebug("Message buffer %s" % self.message_buffer.strip())
 
-        # message buffer may contain full json message so parse it
+        # message buffer may contain full JSON message so parse it
         detections = self.parse_openmv_frame(self.message_buffer)
         self.message_buffer = bytes()
 
@@ -280,11 +301,11 @@ class OpenMVBridge:
         stamp = rospy.Time.now()
         # create DetectionArray message
         detections_msg = DetectionArrayMsg()
+        detections_msg.header.stamp = stamp
+        detections_msg.header.frame_id = self.camera_frame
         for detection in detections:
-            detection_msg = detection.to_msg()
-            detection_msg.header.frame_id = self.camera_frame
-            detection_msg.header.stamp = stamp
-            detections_msg.detections.append(detection_msg)
+            detections_msg.detections.append(detection.to_msg())
+            detections_msg.detections[-1].header = detections_msg.header
 
         # create MarkerArray
         markers_msg = MarkerArray()
@@ -295,8 +316,8 @@ class OpenMVBridge:
             markers_msg.markers.append(marker_msg)
 
         # publish it
-        self.detections_pub.publish(detections_msg)
         if len(detections) > 0:
+            self.detections_pub.publish(detections_msg)
             self.markers_pub.publish(markers_msg)
 
     def parse_openmv_frame(self, message_buffer):
@@ -318,6 +339,23 @@ class OpenMVBridge:
                     cy = obj['y'] + obj['h']/2
                     pose = self.back_projection(cx, cy, self.distance)
                     detection = Detection(type = 'april_tag', label = str(obj['id']), pose = pose)
+
+                elif obj['type'] == 'qrcode':
+                    cx = obj['x'] + obj['w']/2
+                    cy = obj['y'] + obj['h']/2
+                    pose = self.back_projection(cx, cy, self.distance)
+                    detection = Detection(type = 'qrcode', label = str(obj['data']), pose = pose)
+
+                elif obj['type'] == 'aruco':
+                    x = -(obj['x'] + obj['w']/2)
+                    y = -(obj['y'] + obj['h']/2)
+                    z = obj['z']
+                    q = PyQuaternion(obj['q']['w'], obj['q']['x'], obj['q']['y'], obj['q']['z']).normalised
+                    pose = Pose(
+                        Point(x, y, z),
+                        Quaternion(q[1], q[2], q[3], q[0])
+                    )
+                    detection = Detection(type = 'aruco', label = str(obj['id']), pose = pose)
 
                 else:
                     detection = None
@@ -433,12 +471,7 @@ class OpenMVBridge:
         if not isinstance(rtscts, bool):
             raise EnvironmentError('Serial port RTS/CTS value has to be a bool!')
 
-        # read timeout
-        read_timeout = rospy.get_param('~serial/read_timeout', 1.0)
-        if not isinstance(read_timeout, float):
-            raise EnvironmentError('Read timeout value has to be a bool!')
-
-        rospy.logdebug('Serial port: dev %s baud %s parity %s datab %s stopb %s xonxoff %s rstcst %s timeout %s', (port_name, baudrate, bytesize, parity, stopbits, xonxoff, rtscts, read_timeout))
+        rospy.logdebug('Serial port: dev %s baud %s parity %s datab %s stopb %s xonxoff %s rstcst %s timeout %s', (port_name, baudrate, bytesize, parity, stopbits, xonxoff, rtscts, self.serial_read_timeout))
 
         # create serial connection to camera
         openmv_port = serial.Serial(
@@ -451,26 +484,23 @@ class OpenMVBridge:
             rtscts=rtscts,
             # Blocking mode
             # WARNING: We have to keep a timeout for the correct node shutdown!
-            timeout=read_timeout
+            timeout=self.serial_read_timeout
         )
         rospy.logdebug('OpenMV serial port: %s', openmv_port)
 
         return openmv_port
 
+
 # Main function
 def main():
     node = OpenMVBridge()
 
-    while (True):
-        # check if node should be stopped
+    while True:
         if rospy.is_shutdown():
             break
-        # check if node properly configured
         if not node.is_ok():
-            rospy.sleep(rospy.Duration(2.0))
-            node.configure(silent = True)
-            continue
+            break
 
         node.step()
 
-    rospy.logerr("OpenMV: shutdown node.")
+    rospy.logdebug("OpenMV: shutdown node.")
