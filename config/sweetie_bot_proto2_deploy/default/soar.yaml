@@ -8,6 +8,7 @@ soar:
             type: "rand"
         clock:
             type: "clock"
+            just_delay: 10.0
             recently_delay: 120.0
             long_time_delay: 3600.0
         joystick:
