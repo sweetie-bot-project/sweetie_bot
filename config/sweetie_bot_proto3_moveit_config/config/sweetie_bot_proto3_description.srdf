@@ -82,14 +82,14 @@
         <link name="head_link2" />
         <link name="head_link3" />
         <link name="head_link4" />
-        <link name="head_link5" />
-        <link name="head_link6" />
+        <link name="nose_link1" />
+        <link name="nose_link2" />
         <joint name="head_joint1" />
         <joint name="head_joint2" />
         <joint name="head_joint3" />
         <joint name="head_joint4" />
-        <joint name="head_joint5" />
-        <joint name="head_joint6" />
+        <joint name="nose_joint1" />
+        <joint name="nose_joint2" />
         <chain base_link="base_link" tip_link="head_link6" />
     </group>
     <group name="legs">
@@ -110,7 +110,7 @@
     <end_effector name="hoof2" parent_link="leg2_link7" group="leg2" />
     <end_effector name="hoof3" parent_link="leg3_link7" group="leg3" />
     <end_effector name="hoof4" parent_link="leg4_link7" group="leg4" />
-    <end_effector name="nose" parent_link="head_link6" group="head" />
+    <end_effector name="nose" parent_link="nose_link2" group="head" />
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
     <virtual_joint name="floating_base" type="floating" parent_frame="odom_combined" child_link="base_link" />
     <!--PASSIVE JOINT: Purpose: this element is used to mark joints that are not actuated-->
@@ -118,8 +118,8 @@
     <passive_joint name="leg2_joint7" />
     <passive_joint name="leg3_joint7" />
     <passive_joint name="leg4_joint7" />
-    <passive_joint name="head_joint5" />
-    <passive_joint name="head_joint6" />
+    <passive_joint name="nose_joint1" />
+    <passive_joint name="nose_joint2" />
     <passive_joint name="floating_base" />
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="base_link" link2="head_link1" reason="Adjacent" />
