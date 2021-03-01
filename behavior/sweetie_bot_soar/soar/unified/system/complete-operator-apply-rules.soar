@@ -64,6 +64,30 @@ sp {apply*complete*retval-copy-value-one-level
 }
 
 #
+# EVENTS HANDLING
+#
+
+# add event: create predicate WME, add `^initiated-at`
+sp {apply*complete*add-event
+	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
+	(<op> ^type completion ^status <status> ^results.result <result>)
+	(<result> ^status <status> ^add-event <ev>)
+-->
+	(<b> ^event <ev>)
+	(<ev> ^initiated-at <time>)
+}
+
+# add event: add to history
+sp {apply*complete*add-event*history
+	(state <s> ^operator <op> ^events <ev-pool> ^time.now <time>)
+	(<op> ^type completion ^status <status> ^results.result <result>)
+	(<result> ^status <status> ^add-event <ev>)
+	(<ev> ^memorization-time <mem-time>)
+-->
+	(<ev-pool> ^event <ev>)
+}
+
+#
 # PREDICATES HANDLING
 #
 

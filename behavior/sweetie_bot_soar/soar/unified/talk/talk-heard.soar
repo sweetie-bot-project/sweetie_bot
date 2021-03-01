@@ -53,7 +53,7 @@ sp {talk-heard*evaborate*relevant-answer
 }
 
 # check if answer is relevant to asked question (other reacton)
-sp {talk-heard*evaborate*relevant-answer
+sp {talk-heard*evaborate*relevant-answer-other
 	(state <s> ^substate talk-heard -^conclusion question-specific-reaction ^waiting-answer ^question-topic <q-topic> ^event <ev> ^verbolization.frame <q>)
 	(<q> ^topic <q-topic> ^reaction-other <a-topic>)
 -->	

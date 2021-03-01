@@ -69,7 +69,7 @@ sp {look-at*elaborate*looking-at
 	(state <s> ^top-state 1 ^beliefs <b> ^time <clock>)
 	(<b> ^predicate <pred>)
 	(<pred> ^name looking-at-verifing ^delay-time <delay-time> ^object <obj> ^focusing-proccess <proc>)
-	-(<clock> ^now {>= <delay-time>})
+	-(<clock> ^now {<= <delay-time>})
 -->
 	(<b> ^predicate <pred-new>)
 	(<pred-new> ^name looking-at ^object <obj> ^focusing-proccess <proc>)

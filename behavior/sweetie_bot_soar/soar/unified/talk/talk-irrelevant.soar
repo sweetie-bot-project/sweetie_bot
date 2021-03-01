@@ -49,7 +49,7 @@ sp {talk-irrelevant*elaborate*ignor-topic
 # there are at least three events related to different topics
 sp {talk-irrelevant*elaborate*nonsense-me
 	(state <s> ^substate talk-irrelevant ^event <ev> ^talk-irrelevant <c>)
-	(<c> ^event {<> <ev> <ev1>} ^event {<> <ev> <ev2>})
+	(<c> ^event {<> <ev> <ev1>} ^event {<> <ev> <> <ev1> <ev2>})
 	(<ev> ^topic <topic>)
 	-(<ev1> ^topic <topic>)
 -->

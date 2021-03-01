@@ -11,6 +11,23 @@ sp {talk-said*elaborate*substate
 	(<ev> ^topic <topic> ^object <obj>)
 -->
 	(<s> ^substate talk-event)
-	(<s> ^topic <topic> ^actor <obj>)
+	(<s> ^topic <topic> ^object <obj>)
 }
 
+# COGNITION RULES
+
+# remove last topic predicate
+sp {talk-said*propose*last-topic-remove
+	(state <s> ^substate talk-said ^topic <topic> ^object <obj> ^beliefs.predicate <pred> ^actions <a>)
+	(<pred> ^name last-topic ^object <obj>)
+-->
+	(<a> ^remove-predicate <pred>)
+}
+
+# add last topic predicate
+sp {talk-said*propose*last-topic
+	(state <s> ^substate talk-said ^topic <topic> ^object <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name last-topic ^object <obj> ^topic <topic>)
+}

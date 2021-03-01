@@ -25,13 +25,13 @@
 #
 # Process:
 #
-# * (^name waiting-answer ^substate ask ^object <obj> ^question-topic <topic> ^deadline-time 10.0)
+# * (^name waiting-answer ^substate ask ^object <obj> ^topic <topic> ^deadline-time 10.0)
 #
 
 # match process to the substate
 sp {ask*elaborate*match-asking-process
 	(state <s> ^substate ask ^beliefs.process <p> ^superstate.operator <sop>)
-	(<p> ^name waiting-answer ^substate ask ^object <obj> ^question-topic <topic>)
+	(<p> ^name waiting-answer ^substate ask ^object <obj> ^topic <topic>)
 	(<sop> ^object <obj> ^topic <topic>)
 -->
 	(<s> ^process <p>)
@@ -48,7 +48,7 @@ sp {ask*propose*say
 	(<s> ^operator <o> + =)
 	(<o> ^name ask-question ^substate say ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed>)
 	(<res-succeed> ^status succeed ^add-process <proc>)
-	(<proc> ^name waiting-answer ^substate ask ^object <obj> ^question-topic <topic> ^deadline-time 20.0)
+	(<proc> ^name waiting-answer ^substate ask ^object <obj> ^topic <topic> ^deadline-time 20.0)
 }
 
 
@@ -70,17 +70,17 @@ sp {ask*elaborate*question-is-ignored-event
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^event <ev>)
 	(<ev> ^name waiting-answer ^reason deadline ^process <proc>)
-	(<proc> ^substate ask ^object <obj> ^question-topic <topic>)
+	(<proc> ^substate ask ^object <obj> ^topic <topic>)
 -->
 	(<b> ^event <ev-ignored>)
-	(<ev-ignored> ^name talk-ignored ^actor <obj> ^question-topic <topic> ^memorization-time 3600.0)
+	(<ev-ignored> ^name talk-ignored ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
 }
 
 # emit talk-answeed event only if talk subsystem is not active
 sp {ask*propose*question-is-answered-event
 	(state <s> ^bottom-state 1 ^beliefs <b>)
 	(<b> ^process <proc> ^event <ev>)
-	(<proc> ^name waiting-answer ^substate ask ^object <obj> ^question-topic <topic>)
+	(<proc> ^name waiting-answer ^substate ask ^object <obj> ^topic <topic>)
 	(<ev> ^name speech ^topic <answer-topic> ^text <text>)
 -->
 	(<s> ^operator <op> + =)

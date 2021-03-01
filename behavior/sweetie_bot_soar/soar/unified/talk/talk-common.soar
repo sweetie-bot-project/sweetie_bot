@@ -27,16 +27,16 @@ sp {talk-event*elaborate-recent-events
 
 # worst operator: cognition process is finished
 sp {talk-event*propose*finish
-	(state <s> ^substate talk-event ^event <ev> ^superstate.operator.name finish-event-processing)
+	(state <s> ^substate talk-event ^event <ev>)
 -->
 	(<s> ^operator <op> +, <)
-	(<op> ^name finish-event-processing ^type automatic ^mark-processed <ev>)
+	(<op> ^name talk-event-reaction ^type automatic ^mark-processed <ev>)
 }
 
 # add all actions to finish-event-processing operator
 sp {talk-event*elaborate*finish-agumentation
 	(state <s> ^substate talk-event ^operator <op> + ^actions <a>)
-	(<op> ^name finish-event-processing)
+	(<op> ^name talk-event-reaction)
 	(<a> ^<attr> <value>)
 -->
 	(<op> ^<attr> <value>)

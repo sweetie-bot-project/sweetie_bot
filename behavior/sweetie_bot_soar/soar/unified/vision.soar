@@ -8,10 +8,18 @@
 # mirror swm object in belief space
 sp {vision*elaborate*object
 	(state <s> ^top-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
-	(<swm-obj> ^id <id> ^label <label> ^type {<<|human| |pony|>> <type>})
+	(<swm-obj> ^id <id> ^label {<> None <label>} ^type {<<|human| |pony| |face|>> <type>})
 -->
 	(<b> ^object <obj>)
 	(<obj> ^name <label> ^id <id> ^label <label> ^type <type> ^input-link <swm-obj>)
+}
+
+# face is the same object as human
+sp {vision*elaborate*face-is-human
+	(state <s> ^top-state 1 ^beliefs.object <obj>)
+	(<obj> ^type face)
+-->
+	(<obj> ^type human)
 }
 
 # translate qr codes into objects

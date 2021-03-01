@@ -1,0 +1,26 @@
+sp {debug*elaborate*lists
+	(state <s> ^top-state 1)
+-->
+	(<s> ^debug <d>)
+	(<d> ^event <e>)
+	(<d> ^predicate <pred>)
+	(<d> ^process <proc>)
+	(<d> ^decision <des>)
+	(<d> ^events-memorized <em>)
+}
+	
+sp {debug*elaborate*belief
+	(state <s> ^top-state 1 ^beliefs <b> ^debug <d>)
+	(<d> ^<pool-name> <pool>)
+	(<b> ^<pool-name> <belief>)
+	(<belief> ^name <name>)
+-->
+	(<pool> ^<name> <belief>)
+}
+
+sp {debug*elaborate*event-memorized
+	(state <s> ^top-state 1 ^events.event <ev> ^debug.events-memorized <pool>)
+	(<ev> ^name <name>)
+-->
+	(<pool> ^<name> <ev>)
+}

@@ -39,8 +39,8 @@ sp {attention*elaborate*evaluation-frames
 sp {attention*elaborate*preferences-and-utility
 	(state <s> ^substate attention)
 -->
-	(<s> ^focus-reconsider-time 20.0)
-	(<s> ^attempt-to-focus-time 10.0)
+	(<s> ^focus-reconsider-time 10.0)
+	(<s> ^attempt-to-focus-time 5.0)
 	(<s> ^preference <p1> <p2> <p3>)
 	(<p1> ^attribute type ^map <m1> ^utility utilityA ^default -100)
 	(<m1> ^human 20 ^pony 10)	

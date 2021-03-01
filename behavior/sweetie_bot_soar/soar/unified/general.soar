@@ -1,13 +1,48 @@
 # OVERALL BEHAVIOR SELECTION
 
-# PROPOSE ANIMATION
+
+
+sp {talker*elaborate*decision
+	(state <s> ^substate main ^beliefs.decision <d>)
+	(<d> ^substate main)
+-->
+	(<s> ^decision <d>)
+}
+
+# PROPOSE ANIMATION OR WAIT
 
 # Propose perform animation (no one around)
-sp {talker*propose*substate*animation*alone
-	(state <s> ^substate main)
+sp {talker*propose*decide-animation
+	(state <s> ^substate main -^decision)
 -->
-	(<s> ^operator <o> + =)
-   	(<o> ^name animation-alone ^drive movement ^substate animation ^tag alone)
+	(<s> ^operator <op> +, =)
+   	(<op> ^name decide-animation ^drive movement ^type automatic ^add-decision <d>)
+	(<d> ^name animation ^substate main ^deadline-time 10.0)
+}
+
+sp {talker*propose*decide-wait
+	(state <s> ^substate main -^decision)
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name decide-wait ^drive movement ^type automatic ^add-decision <d>)
+	(<d> ^name wait ^substate main ^deadline-time 20.0)
+}
+
+# Propose perform animation (no one around)
+sp {talker*propose*animation
+	(state <s> ^substate main ^decision <d>)
+	(<d> ^name animation)
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name animation-alone ^drive movement ^substate animation ^tag alone ^result <res>)
+	(<res> ^status succeed ^remove-decision <d>)
+}
+
+sp {talker*propose*wait
+	(state <s> ^substate main ^beliefs.decision.name wait)
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name wait ^drive movement ^substate wait)
 }
 
 # LOOK AT OBJECT
@@ -27,7 +62,7 @@ sp {talker*propose*look-at
 	(state <s> ^substate main ^beliefs.object <obj>)
 	(<obj> ^input-link.visible now)
 -->
-	(<s> ^operator <o> + =)
+	(<s> ^operator <o> +, =)
    	(<o> ^name look-at-multiple-objects ^substate attention ^drive curiosity)
 }
 
@@ -42,15 +77,17 @@ sp {talker*propose*select-human-to-talk
 	-{(<b> ^decision <d>) 
       (<d> ^name talk ^substate main)
     }
+	-{(<b> ^predicate <p>) 
+      (<p> ^name talked ^object <obj>)
+    }
 -->
 	(<s> ^operator <o> + =)
-   	(<o> ^name object-selected-to-talk ^type automatic ^drive social ^add-decision <d>)
+   	(<o> ^name decide-talk ^type automatic ^drive social ^add-decision <d>)
 	(<d> ^name talk ^substate main ^object <obj> ^deadline-time 600.0)
 }
 
 sp {talker*propose*talk
-	(state <s> ^substate main ^beliefs <b>)
-	(<b> ^decision <d>)
+	(state <s> ^substate main ^decision <d>)
 	(<d> ^name talk ^substate main ^object <obj>)
 -->
 	(<s> ^operator <o> +, =)

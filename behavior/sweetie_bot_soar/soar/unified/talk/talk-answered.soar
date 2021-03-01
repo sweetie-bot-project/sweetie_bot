@@ -21,15 +21,15 @@ sp {talk-answered*elaborate*substate
 }
 
 # waiting answer process
-sp {talk-answered*elaborate*substate
-	(state <s> ^substate talk-answered ^beliefs.predicate <proc> ^question-topic <q-topic> ^actor <obj>)
+sp {talk-answered*elaborate*waiting-answer
+	(state <s> ^substate talk-answered ^beliefs.process <proc> ^question-topic <q-topic> ^actor <obj>)
 	(<proc> ^name waiting-answer ^substate talk ^topic <q-topic> ^object <obj>)
 -->
 	(<s> ^waiting-answer <proc>)
 }
 
 # matching verbolization frame
-sp {talk-answered*elaborate*substate
+sp {talk-answered*elaborate*verbolization-frame
 	(state <s> ^substate talk-answered ^question-topic <q-topic> ^verbolization.frame <q>)
 	(<q> ^topic <q-topic>)
 -->
@@ -41,19 +41,19 @@ sp {talk-answered*elaborate*substate
 # propose reaction which matches answer topic and remove waiting-answer predicate
 sp {talk-answered*elaboration*specific-reaction
 	(state <s> ^substate talk-answered ^matching-verbolization-frame <q> ^event <ev> ^actions <a>)
-	(<ev> ^question-topic <q-topic>  ^answer-topic <a-topic>)
+	(<ev> ^question-topic <q-topic>  ^answer-topic <a-topic> ^actor <obj>)
 	(<q> ^reaction <r>)
 	(<r> ^answer-topic <a-topic>)
 -->
 	(<s> ^conclusion specific-reaction)
-	(<a> ^add-predicate <pred> ^remove-process <proc>)
+	(<a> ^add-predicate <pred>)
 	(<pred> ^name talk-possible-reaction ^object <obj> ^reaction <r> ^event <ev> ^deadline-time 60.0)
 }
 
 # propose default reaction and remove 
 sp {talk-answered*elaboration*general-reaction
 	(state <s> ^substate talk-answered -^conclusion specific-reaction ^matching-verbolization-frame <q> ^event <ev> ^actions <a>)
-	(<ev> ^question-topic <q-topic> ^answer-topic <a-topic>)
+	(<ev> ^question-topic <q-topic> ^answer-topic <a-topic> ^actor <obj>)
 	(<q> ^reaction-other <r>)
 -->
 	(<s> ^conclusion general-reaction)
