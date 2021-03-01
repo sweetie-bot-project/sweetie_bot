@@ -1,6 +1,11 @@
+#!/bin/sh
 export LADSPA_PATH=~/.ladspa/
-export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
-rm ~/.cache/gstreamer-1.0/registry.x86_64.bin | echo "just in case" | gst-inspect-1.0 ladspa
+export JAVA_HOME=/lib/jvm/adoptopenjdk-8-openj9-amd64/
+
+# fix broken ladspa support
+#rm -f ~/.cache/gstreamer-1.0/registry.x86_64.bin; 
+#gst-inspect-1.0 ladspa
+# issue speech sinnthesis
 echo $1 | RHVoice-client -r -0.18 -s Anna+CLB | gst-launch-1.0 fdsrc fd=0 ! decodebin ! audioconvert ! audioresample ! ladspa-autotalent-so-autotalent \
         concert-a="440.48001"           \
         fixed-pitch="0.0"               \
@@ -22,5 +27,4 @@ echo $1 | RHVoice-client -r -0.18 -s Anna+CLB | gst-launch-1.0 fdsrc fd=0 ! deco
         mix="1.0"                       \
 ! audioconvert ! ladspa-pt-robotize-so-pt-robotize \
         mode="2"                        \
-        latency="0"                     \
 ! autoaudiosink

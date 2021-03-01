@@ -37,4 +37,5 @@ parameters.
 * `~sound_packages` (`strings`, default []) --- ROS packages with sounds. First elements have precedence over lasts. 
     Sound files should be located in `<package_path>/sound/<lang_prefix>` directories. `sweetie_bot_voice` package is always appended to this list.
 * `lang`, (`string`, default "ru,en") --- use provided language prefixes.  First prefix has precedence over the last.
+* `~tts_backend`, (`string`, default "sound_play") --- Text-to-Speech service selection. Currently "sound_play", "rhvoice" and "rhvoice_robotized" are supported.
 

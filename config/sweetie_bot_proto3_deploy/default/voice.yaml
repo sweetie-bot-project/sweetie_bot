@@ -2,3 +2,4 @@ lang: "en,ru"
 voice_node:
     playback_command: "mpv"
     sound_packages: [ sweetie_bot_sounds ]
+    tts_backend: rhvoice

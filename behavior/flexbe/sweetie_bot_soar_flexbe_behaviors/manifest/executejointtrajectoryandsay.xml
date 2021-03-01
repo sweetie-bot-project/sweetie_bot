@@ -18,8 +18,8 @@
 
 		<param type="text" name="joint_trajectory" default="head_node" label="joint_trajectory" hint="Joint trajectory name. May be empty if no movement is needed." />
 
-		<param type="numeric" name="text_delay" default="0.2" label="text_delay" hint="Delay between animation and text verbolization.">
-			<min value="0.0" />
+		<param type="numeric" name="text_delay" default="-0.5" label="text_delay" hint="Delay between animation and text verbolization.">
+			<min value="-10.0" />
 			<max value="10.0" />
 		</param>
 

@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   rospack
   sound_play
+  sweetie_bot_text_msgs
 )
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -38,8 +39,13 @@ catkin_package(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-catkin_install_python(PROGRAMS nodes/voice
+catkin_install_python(PROGRAMS nodes/voice 
                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
+# install shell scripts
+install(DIRECTORY scripts
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+	USE_SOURCE_PERMISSIONS)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
