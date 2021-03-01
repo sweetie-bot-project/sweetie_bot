@@ -2,11 +2,9 @@
 <!-- run_real and robot launch parameters are always assumed. -->
 <launch>
 	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
-	<!-- openmv camera-->
-	<node ns="hardware" pkg="sweetie_bot_openmv" type="openmv_node" name="openmv_node">
-		<remap from="detections" to="$(arg robot_ns)/detections" />
-		<remap from="markers" to="$(arg robot_ns)/hmi/detections" />
-	</node>
+	<!-- run eyes on fb device -->
+	<!--<node machine="sweetiebot" name="eye_left"  pkg="sweetie_bot_eyes" type="eye" args="-l -platform linuxfb:fb=/dev/fb1 -plugin EvdevKeyboard"></node>-->
+	<!--<node machine="sweetiebot" name="eye_rigth" pkg="sweetie_bot_eyes" type="eye" args="-r -platform linuxfb:fb=/dev/fb2 -plugin EvdevKeyboard"></node>-->
 	<!-- run battery monitor -->
 	<node ns="hardware" machine="sweetiebot" name="battery_monitor" pkg="sweetie_bot_battery_monitor" type="battery_monitor">
 		<remap from="battery_state" to="$(arg robot_ns)/battery_state" />
