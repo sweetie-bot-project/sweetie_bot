@@ -10,12 +10,10 @@ vision:
         reident_model_xml: "/models/face_reidentification/FP16/face-reidentification-retail-0095.xml"
         prob_threshold: 0.5
         roi_scale_factor: 1.15
-        device: "MYRIAD" # Options are: CPU, MYRIAD, etc.
     object_recognizer:
         yolo_model_xml: "/models/object_recognition/FP16/yolov4-tiny.xml"
         prob_threshold: 0.5
         iou_threshold: 0.4
-        device: "MYRIAD" # Options are: CPU, MYRIAD, etc.
 vision_simulated:
     camera_frame: 'camera_link_simulated'
     #camera_matrix: [101, 0.000000, 120, 0.000000, 101, 80, 0.000000, 0.000000, 1.000000]
@@ -29,10 +27,8 @@ vision_simulated:
         reident_model_xml: "/models/face_reidentification/FP16/face-reidentification-retail-0095.xml"
         prob_threshold: 0.5
         roi_scale_factor: 1.15
-        device: "MYRIAD" # Options are: CPU, MYRIAD, etc.
     object_recognizer:
         yolo_model_xml: "/models/object_recognition/FP16/yolov4-tiny.xml"
         prob_threshold: 0.5
         iou_threshold: 0.4
-        device: "MYRIAD" # Options are: CPU, MYRIAD, etc.
 

@@ -81,17 +81,11 @@
 			</group>
 			<!-- vision subsystem -->
 			<group if="$(arg run_vision)">
-				<!-- connect node to real robot -->
-				<node if="$(arg run_real)" pkg="sweetie_bot_vision" type="vision_node.py" name="vision">
-					<remap from="detections" to="$(arg robot_ns)/detections" />
-					<remap from="marker_array" to="$(arg robot_ns)/hmi/detections" />
-				</node>
-				<!-- run simulted node -->
-				<node unless="$(arg run_real)" pkg="sweetie_bot_vision" type="vision_node.py" name="vision_simulated">
-					<remap from="detections" to="$(arg robot_ns)/detections" />
-					<remap from="marker_array" to="$(arg robot_ns)/hmi/detections" />
-					<param name="camera_frame" value="camera_link_simulation" />
-				</node>
+				<!-- run vision node -->
+				<include file="$(find sweetie_bot_deploy)/highlevel/vision.launch">
+					<arg name="robot_ns" value="$(arg robot_ns)" /> 
+					<arg name="run_real" value="$(arg run_real)" /> 
+				</include>
 			</group>
 		</group>
 

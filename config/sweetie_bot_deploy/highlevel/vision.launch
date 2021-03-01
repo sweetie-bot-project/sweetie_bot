@@ -1,0 +1,16 @@
+<launch>
+	<arg name="run_real" default="false" doc="Run on real robot."/>
+	<arg name="robot_ns" default="/" doc="Namespace where to run robot components "/>
+
+	<!-- connect node to real robot -->
+	<node if="$(arg run_real)" pkg="sweetie_bot_vision" type="vino_laucher" args="vision_node " name="vision" ns="$(arg robot_ns)" respawn="true">
+		<remap from="detections" to="$(arg robot_ns)/detections" />
+		<remap from="marker_array" to="$(arg robot_ns)/hmi/detections" />
+	</node>
+	<!-- run simulted node -->
+	<node unless="$(arg run_real)" pkg="sweetie_bot_vision" type="vino_laucher" args="vision_node " name="vision_simulated" ns="$(arg robot_ns)" respawn="true">
+		<remap from="detections" to="$(arg robot_ns)/detections" />
+		<remap from="marker_array" to="$(arg robot_ns)/hmi/detections" />
+		<param name="camera_frame" value="camera_link_simulation" />
+	</node>
+</launch>
