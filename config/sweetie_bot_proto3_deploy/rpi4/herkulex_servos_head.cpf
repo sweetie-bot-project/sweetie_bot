@@ -60,7 +60,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>739</value>
+            <value>806</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
