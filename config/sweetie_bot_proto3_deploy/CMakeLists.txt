@@ -27,7 +27,7 @@ catkin_package(
 #############
 
 # Scripts installation
-install(DIRECTORY default orangepi rpi4 joint_trajectories
+install(DIRECTORY default tinker rpi4 joint_trajectories
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # bash script
