@@ -35,7 +35,7 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 
 		# parameters of this behavior
 		self.add_parameter('joint_trajectory', 'head_node')
-		self.add_parameter('text_delay', 0.2)
+		self.add_parameter('text_delay', -0.5)
 		self.add_parameter('is_relative', False)
 		self.add_parameter('text', 'I am speaking.')
 
@@ -66,7 +66,7 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 		with _sm_waitandsay_0:
 			# x:123 y:80
 			OperatableStateMachine.add('WaitTextDelay',
-										WaitState(wait_time=self.text_delay),
+										WaitState(wait_time=max(self.text_delay, 0.0)),
 										transitions={'done': 'SayText'},
 										autonomy={'done': Autonomy.Off})
 
@@ -81,20 +81,26 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 		_sm_animation_1 = OperatableStateMachine(outcomes=['finished', 'failed', 'invalid_pose'], input_keys=['none'])
 
 		with _sm_animation_1:
-			# x:112 y:75
+			# x:99 y:134
+			OperatableStateMachine.add('WaitAnimation',
+										WaitState(wait_time=max(-self.text_delay, 0.0)),
+										transitions={'done': 'ChoiceAnimationType'},
+										autonomy={'done': Autonomy.Off})
+
+			# x:274 y:137
 			OperatableStateMachine.add('ChoiceAnimationType',
 										DecisionState(outcomes=['absolute', 'relative'], conditions=lambda x: 'relative' if self.is_relative else 'absolute'),
 										transitions={'absolute': 'Animation', 'relative': 'RelativeAnimation'},
 										autonomy={'absolute': Autonomy.Off, 'relative': Autonomy.Off},
 										remapping={'input_value': 'none'})
 
-			# x:411 y:60
+			# x:548 y:58
 			OperatableStateMachine.add('RelativeAnimation',
 										ExecuteJointTrajectoryRelative(action_topic='motion/controller/joint_trajectory', trajectory_param=self.joint_trajectory, trajectory_ns='saved_msgs/joint_trajectory', joints_limits=self.get_joint_limits(), joint_states_topic='joint_states'),
 										transitions={'success': 'finished', 'partial_movement': 'invalid_pose', 'invalid_pose': 'invalid_pose', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
-			# x:420 y:239
+			# x:566 y:233
 			OperatableStateMachine.add('Animation',
 										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param=self.joint_trajectory, trajectory_ns='saved_msgs/joint_trajectory'),
 										transitions={'success': 'finished', 'partial_movement': 'invalid_pose', 'invalid_pose': 'invalid_pose', 'failure': 'failed'},
