@@ -45,26 +45,25 @@ sp {talk-heard*propose*emit-talk-answered
 
 # check if answer is relevant to asked question (specific reacton)
 sp {talk-heard*evaborate*relevant-answer
-	(state <s> ^substate talk-heard ^waiting-answer ^question-topic <q-topic> ^event <ev> ^verbolization.frame <q>)
+	(state <s> ^substate talk-heard ^waiting-answer ^event <ev> ^verbolization.reaction <r>)
 	(<ev> ^topic <a-topic>)
-	(<q> ^topic <q-topic> ^reaction.answer-topic <a-topic>)
+	(<r> ^answer-topic <a-topic>)
 -->	
 	(<s> ^conclusion question-specific-reaction)
 }
 
 # check if answer is relevant to asked question (other reacton)
 sp {talk-heard*evaborate*relevant-answer-other
-	(state <s> ^substate talk-heard -^conclusion question-specific-reaction ^waiting-answer ^question-topic <q-topic> ^event <ev> ^verbolization.frame <q>)
-	(<q> ^topic <q-topic> ^reaction-other <a-topic>)
+	(state <s> ^substate talk-heard -^conclusion question-specific-reaction ^waiting-answer ^event <ev> ^verbolization.reaction-other <q>)
 -->	
 	(<s> ^conclusion question-general-reaction)
 }
 
 # check if heard phrase matches to one of general reaction 
-sp {talk-answered*elaboration*relevant-phrase
-	(state <s> ^substate talk-heard  ^event <ev> ^verbolization.frame <q> ^actions <a>)
+sp {talk-heard*elaboration*relevant-phrase
+	(state <s> ^substate talk-heard  ^event <ev> ^verbolization.reaction <r> ^actions <a>)
 	(<ev> ^topic <topic> ^actor <obj>)
-	(<q> ^reaction-topic <topic>)
+	(<r> ^reaction-topic <topic>)
 -->
 	(<s> ^conclusion specific-reaction)
 	(<a> ^add-predicate <pred>)
@@ -72,7 +71,7 @@ sp {talk-answered*elaboration*relevant-phrase
 }
 
 # emit irrelevant event -- nor one options above
-sp {talk-answered*propose*irrelevant-phrase
+sp {talk-heard*propose*irrelevant-phrase
 	(state <s> ^substate talk-heard -^conclusion ^event <ev> ^actions <a>)
 	(<ev> ^actor <obj> ^topic <topic>)
 -->

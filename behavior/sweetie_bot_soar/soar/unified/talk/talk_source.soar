@@ -6,6 +6,8 @@ source talk-ignored.soar
 source talk-irrelevant.soar
 source talk-said.soar
 # verbolization rules
+source verbolization-talk.soar
+source verbolization-greeting.soar
 source verbolization.soar
 # talk substate definition
 source talk.soar
