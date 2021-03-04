@@ -66,7 +66,7 @@ sp {verbolization*elaborate*greeting-not-acquitance
 	-{(<b> ^predicate <pred2>)
 	  (<pred2> ^name acquitance ^object <obj>)}
 -->
-	(<f>  ^utility 50 ^type question ^animation-tag greeting ^reaction <r1>)
+	(<f>  ^utility 50 ^type question ^animation-tag greeting)
 	(<f> ^text |Привет! Я --- Свити. Лучшая робопони в мире.| |Привет! Меня зовут Свити Бот!|)
 }
 
@@ -88,7 +88,7 @@ sp {verbolization*elaborate*greeting-acquitance-normal
 	(<pred2> ^name acquitance ^object <obj>)
 	(<obj> ^label <label>)
 -->
-	(<f> ^utility 50 ^type question ^animation-tag greeting ^reaction <r1>)
+	(<f> ^utility 50 ^type question ^animation-tag greeting)
 	(<f> ^text (concat |Привет, собеседник | <label> |!|) (concat |Рада тебя видеть вновь, собеседник | <label> |.|))
 }
 
@@ -99,7 +99,7 @@ sp {verbolization*elaborate*greeting-acquitance-dislike
 	(<pred2> ^name dislike ^object <obj>)
 	(<obj> ^label <label>)
 -->
-	(<f> ^utility 55 ^type question ^animation-tag rejection ^reaction <r1>)
+	(<f> ^utility 55 ^type question ^animation-tag rejection)
 	(<f> ^text (concat |Ты мне не нравишься, собеседник | <label> |!|) (concat |Не рада тебя видеть вновь, собеседник | <label> |.|))
 }
 
@@ -145,16 +145,16 @@ sp {verbolization*elaborate*goodbye
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic goodbye ^utility 10 ^type statement ^animation-tag question ^reaction-other <r1>)
+	(<f> ^topic goodbye ^utility 10 ^type statement ^animation-tag question)
 	(<f> ^text |У меня кончились темы для разговора. До встречи!| |Ты мне наскучил. Пока.|)
 }
 
-sp {talk-said*propose*goodbye
-	(state <s> ^substate talk-said ^topic goodbye ^object <obj> ^beliefs.decision <d> ^actions <a> )
-	(<d> ^name talk ^substate main)
+sp {talk*propose*goodbye-said
+	(state <s> ^substate talk ^object <obj> ^beliefs.event <ev> ^results <r>)
+	(<ev> ^name talk-said ^topic goodbye ^object <obj>)
 -->
-	(<a> ^remove-decision <d> ^add-predicate <pred>)
-	(<pred> ^name talked ^object <obj> ^deadline-time 300.0)
+	(<s> ^operator <op> +, =)
+	(<op> ^name talk-said-goodbye ^type cognition completion ^status succeed ^results <r>)
 }
 
 

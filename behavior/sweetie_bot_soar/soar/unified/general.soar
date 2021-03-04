@@ -91,7 +91,10 @@ sp {talker*propose*talk
 	(<d> ^name talk ^substate main ^object <obj>)
 -->
 	(<s> ^operator <o> +, =)
-   	(<o> ^name talk ^substate talk ^drive social ^object <obj>)
+   	(<o> ^name talk ^substate talk ^drive social ^object <obj> ^result <r1> <r2>)
+	(<r1> ^status succeed talk-failed ^remove-decision <d>)
+	(<r2> ^status succeed ^add-predicate <pred>)
+	(<pred> ^name talked ^object <obj> ^deadline-time 120.0)
 }
 
 # say hello

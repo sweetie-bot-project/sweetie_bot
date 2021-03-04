@@ -75,7 +75,7 @@ sp {talk*propose*reaction-verbolization
 }
 
 # wait until question is answered, failure as ignored event
-sp {ask*propose*waiting-answer
+sp {talk*propose*waiting-answer
 	(state <s> ^substate talk ^waiting-answer <proc>)
 	(<proc> ^object <obj> ^topic <topic> ^utility <utility>)
 -->
@@ -86,7 +86,7 @@ sp {ask*propose*waiting-answer
 }
 
 # waiting for reaction, failure is interpreted as failure
-sp {ask*propose*waiting-reaction
+sp {talk*propose*waiting-reaction
 	(state <s> ^substate talk ^waiting-reaction <proc>)
 	(<proc> ^object <obj> ^topic <topic> ^utility <utility>)
 -->
@@ -94,6 +94,19 @@ sp {ask*propose*waiting-reaction
 	(<op> ^name waiting-reaction ^substate look-at ^utility <utility> ^object <obj> ^timeout 10.0 ^delay 2.0 ^result <res-failed>)
 	(<res-failed> ^status failed ^remove-process <proc> ^add-event <ev>)
 	(<ev> ^name talk-failed ^actor <obj> ^topic <topic>)
+}
+
+# finding-speaker if he is missing
+sp {talk*propose*search-missing-speaker
+	(state <s> ^substate talk ^beliefs.predicate <proc> ^object <obj> ^verbolization.frame <f>)
+	(<proc> ^name missing-speaker ^object <obj>)
+	(<f> ^topic missing-speaker ^text <text>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name search-missing-speaker ^utility 60 ^substate flexbe ^behavior ExecuteJointTrajectoryAndSay ^interruptable hard ^param <p> ^result <res-succeed>)
+	(<p> ^joint_trajectory |head_look_around| ^text <text>)
+	(<res-succeed> ^status succeed ^add-event <ev>)
+	(<ev> ^name talk-speaker-search-finished ^object <obj>)
 }
 
 # PREFERENCES
@@ -125,7 +138,6 @@ sp {talk*prefer*ignored-topic-worst
 	(<s> ^operator <op> <)
 }
 
-
 # COGNITION RULES
 
 # interpret speech event as talk-said event 
@@ -156,4 +168,34 @@ sp {talk*elaborate*question-is-ignored-event
 -->
 	(<b> ^event <ev-ignored>)
 	(<ev-ignored> ^name talk-ignored ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
+}
+
+# detect that speaker is missing
+sp {talk*propose*talk-failed-reaction
+	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
+	(<ev> ^name talk-failed ^object <obj> -^processed talk-failed-reaction)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name talk-failed-reaction ^type cognition automatic ^add-predicate <pred> ^mark-processed <ev>)
+	(<pred> ^name missing-speaker ^object <obj> ^deadline 60.0)
+}
+
+# remove missing speaker predicate if speaker is visible
+sp {talk*propose*missing-speaker-is-found
+	(state <s> ^bottom-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name missing-speaker ^object.input-link.visible now)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name missing-speaker-is-found ^type cognition automatic ^remove-predicate <pred>)
+}
+
+# comlete talk if speaker is misiing and not found
+sp {talk*propose*missing-speaker-is-not-found
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^results <r>)
+	(<b> ^predicate <pred> ^event <ev>)
+	(<pred> ^name missing-speaker ^object <obj>)
+	(<ev> ^name talk-speaker-search-finished ^object <obj>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name speaker-is-missing ^type cognition completion ^status talk-failed ^results <r>)
 }
