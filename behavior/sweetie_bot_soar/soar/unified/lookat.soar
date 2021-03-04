@@ -94,7 +94,7 @@ sp {look-at*propose*start-look-at-bahavior
 	(<obj> ^id <id> ^label <label> ^type <type>)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name execute-look-at ^substate flexbe ^behavior ExecuteLookAt ^param <p> ^result <res>)
+	(<op> ^name execute-look-at ^substate flexbe ^behavior ExecuteLookAt ^interruptable hard ^param <p> ^result <res>)
 	(<p> ^id <id> ^label <label> ^type <type> ^timeout (+ <delay> 1.0))
 	(<res> ^status succeed aborted failed ^remove-process <proc>)
 }
@@ -104,7 +104,7 @@ sp {look-at*propose*start-look-at-bahavior
 # check if timeout is expired: failed outcome
 sp {look-at*propose*focus-failed
 	(state <s> ^substate look-at ^beliefs.event <ev> ^beliefs-stable <bs>)
-	(<ev> ^name focusing-at ^reason deadline terminated -^processed look-at-focus-failed  ^process <proc>)
+	(<ev> ^name focusing-at ^reason {<<|deadline| |terminated|>>} -^processed look-at-focus-failed  ^process <proc>)
 	-{(<bs> ^predicate <pred>) 
 	  (<pred> ^name looking-at ^focusing-proccess <proc>)}
 	(<proc> ^results <r>)

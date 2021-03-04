@@ -2,7 +2,7 @@
 #  
 # DECISION OPERATOR
 #
-# (<op> ^name @name@ ^substate flexbe ^behavior @behavior-name@ ^param <p> [^mode async])
+# (<op> ^name @name@ ^substate flexbe ^behavior @behavior-name@ ^param <p> [^interruptable [hard|soft]])
 #   (<p> ^@parameter-name@ @parameter-value@)
 #
 # DESCRIPTION
@@ -81,6 +81,13 @@ sp {flexbe*apply*start*behavior
 	(write |Execute FlexBe behavior | <bh> (crlf))
 	(<cmd> ^process <ps>)
 	(<ps> ^name <name> ^substate flexbe ^behavior <bh> ^param (copy-one-level <p>) ^results <r>)
+}
+
+sp {flexbe*elaborate*interruptability
+	(state <s> ^substate flexbe ^process <proc> ^superstate.operator.interruptable <mode> ^io.output-link.flexbe <cmd>)
+	(<cmd> ^process <proc>)
+-->
+	(<cmd> ^interruptable <mode>)
 }
 	
 # WAIT BEHAVIOR
@@ -163,13 +170,4 @@ sp {flexbe*apply*abort
 	(<op> ^name abort-behavior ^cmd <cmd> ^abort <abort-type>)
 -->
 	(<cmd> ^abort <abort-type>)
-}
-
-# INFO ABOUT BEHAVIORS
-
-sp {flexbe*elaborate*execute-look-at-interruptable 
-	(state <s> ^top-state 1 ^io.output-link.flexbe <cmd>)
-	(<cmd> ^name ExecuteLookAt)
--->
-	(<cmd> ^interruptable hard)
 }
