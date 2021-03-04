@@ -1,4 +1,3 @@
-# 
 # VISION SUBMODULE
 #
 # SWM input submodule is able to memorize objects for a relativy long time
@@ -8,24 +7,16 @@
 # mirror swm object in belief space
 sp {vision*elaborate*object
 	(state <s> ^top-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
-	(<swm-obj> ^id <id> ^label {<> None <label>} ^type {<<|human| |pony| |face|>> <type>})
+	(<swm-obj> ^id <id> ^label {<> None <label>} ^type {<<|human| |pony|>> <type>})
 -->
 	(<b> ^object <obj>)
 	(<obj> ^name <label> ^id <id> ^label <label> ^type <type> ^input-link <swm-obj>)
 }
 
-# face is the same object as human
-sp {vision*elaborate*face-is-human
-	(state <s> ^top-state 1 ^beliefs.object <obj>)
-	(<obj> ^type face)
--->
-	(<obj> ^type human)
-}
-
 # translate qr codes into objects
 sp {vision*elaborate*qr-code
 	(state <s> ^top-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
-	(<swm-obj> ^id <id> ^label <label> ^type qr ^visible now)
+	(<swm-obj> ^label <label> ^type {<<|qrcode| |qr|>>} ^visible now)
 -->
 	(<b> ^predicate <obj>)
 	(<obj> ^name qr-code-is-visible ^text <label> ^input-link <swm-obj>)
@@ -35,10 +26,28 @@ sp {vision*elaborate*qr-code
 sp {vision*elaborate*qr-code-to-speech
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^event <ev>)
-	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text <text>)
+	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text {<<|yes| |no| |greeting| |excuse| |goodbye|>> <text>})
 -->
 	(<b> ^event <speech>)
 	(<speech> ^name speech ^topic <text> ^text <text> ^type qr)
+}
+
+sp {vision*elaborate*qr-code-to-speech*hello
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text hello)
+-->
+	(<b> ^event <speech>)
+	(<speech> ^name speech ^topic greeting ^text hello ^type qr)
+}
+
+sp {vision*elaborate*qr-code-to-speech*sorry
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text sorry)
+-->
+	(<b> ^event <speech>)
+	(<speech> ^name speech ^topic excuse ^text sorry ^type qr)
 }
 
 ## QR codes are translated to sound events
