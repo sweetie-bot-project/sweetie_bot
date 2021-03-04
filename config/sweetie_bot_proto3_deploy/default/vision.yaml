@@ -1,5 +1,5 @@
 vision:
-    camera_frame: 'camera_link'
+    camera_frame: 'camera_link_optical'
     # camera_matrix: [101, 0.000000, 120, 0.000000, 101, 80, 0.000000, 0.000000, 1.000000]
     input_stream: 'udpsrc port=5000 ! application/x-rtp, encoding-name=JPEG,payload=26 !  rtpjpegdepay !  jpegdec ! videoconvert ! appsink'
     fps_lock: 30
@@ -15,7 +15,7 @@ vision:
         prob_threshold: 0.5
         iou_threshold: 0.4
 vision_simulated:
-    camera_frame: 'camera_link'
+    camera_frame: 'camera_link_simulation'
     #camera_matrix: [101, 0.000000, 120, 0.000000, 101, 80, 0.000000, 0.000000, 1.000000]
     input_stream: -1
     #input_stream: "/path/to/a/video.mp4" 
