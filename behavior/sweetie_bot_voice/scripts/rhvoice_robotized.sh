@@ -1,12 +1,15 @@
 #!/bin/sh
 export LADSPA_PATH=~/.ladspa/
+# For debian
 export JAVA_HOME=/lib/jvm/adoptopenjdk-8-openj9-amd64/
+# For ubuntu
+#export JAVA_HOME=/lib/jvm/java-8-openjdk-amd64/
 
 # fix broken ladspa support
 #rm -f ~/.cache/gstreamer-1.0/registry.x86_64.bin; 
 #gst-inspect-1.0 ladspa
 # issue speech sinnthesis
-echo $1 | RHVoice-client -r -0.18 -s Anna+CLB | gst-launch-1.0 fdsrc fd=0 ! decodebin ! audioconvert ! audioresample ! ladspa-autotalent-so-autotalent \
+echo $1 | RHVoice-client -r -0.2 -v 1.0 -s Anna+CLB | gst-launch-1.0 fdsrc fd=0 ! decodebin ! audioconvert ! audioresample ! ladspa-autotalent-so-autotalent \
         concert-a="440.48001"           \
         fixed-pitch="0.0"               \
         pull-to-fixed-pitch="0.384"     \
