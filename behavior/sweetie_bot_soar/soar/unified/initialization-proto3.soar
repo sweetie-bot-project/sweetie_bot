@@ -28,27 +28,46 @@ sp {initialization*apply*compound*action
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^compound-action <c1> <c2> <c3> <c4> <c5> <c6> <c7>)
-	(<c1> ^name greeting_acquitance_procedure ^tag greet ^tag talk)
-	(<c2> ^name greeting_friendship_programs ^tag greet ^tag talk)
-	(<c3> ^name point_do_not_touch ^tag angry ^topic comfort-zone ^tag talk)
-	(<c4> ^name hoof_stamp_do_you_want_attention ^tag angry ^tag talk)
-	(<c5> ^name prance_maximum_fun ^tag fun ^tag general ^tag alone)
-	(<c6> ^name menace ^tag angry ^tag alone)
-	(<c7> ^name head_ask_about_sister ^tag talk)
+	(<m> ^compound-action <c7>)
+	(<c7> ^name head_ask_about_sister ^tag talk ^tag alone)
 }
 
 sp {initialization*apply*joint-trajectory
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5>)
-	(<c1> ^name head_node ^tag confirmation ^tag talk ^relative yes)
+	(<m> ^joint-trajectory <c1> <c2> <c3> <c4>)
+	(<c1> ^name head_node ^tag confirmation greeting ^tag talk ^relative yes)
 	(<c2> ^name head_shake ^tag rejection ^tag talk ^relative yes)
 	(<c3> ^name head_suprised ^tag question ^tag suprise  ^tag general ^tag talk ^relative yes)
-	(<c4> ^name greeting ^tag greet ^tag general ^tag talk)
-	(<c5> ^name applause ^tag confirmation rejection ^tag talk)
+	(<c3> ^name head_look_around ^tag long ^tag general ^tag talk)
 }
+
+#sp {initialization*apply*compound*action
+#	(state <s> ^name initialization ^operator <op> ^mem <m>)
+#	(<op> ^name initialization ^stage 2)
+#-->
+#	(<m> ^compound-action <c1> <c2> <c3> <c4> <c5> <c6> <c7>)
+#	(<c1> ^name greeting_acquitance_procedure ^tag greet ^tag talk)
+#	(<c2> ^name greeting_friendship_programs ^tag greet ^tag talk)
+#	(<c3> ^name point_do_not_touch ^tag angry ^topic comfort-zone ^tag talk)
+#	(<c4> ^name hoof_stamp_do_you_want_attention ^tag angry ^tag talk)
+#	(<c5> ^name prance_maximum_fun ^tag fun ^tag general ^tag alone)
+#	(<c6> ^name menace ^tag angry ^tag alone)
+#	(<c7> ^name head_ask_about_sister ^tag talk)
+#}
+#
+#sp {initialization*apply*joint-trajectory
+#	(state <s> ^name initialization ^operator <op> ^mem <m>)
+#	(<op> ^name initialization ^stage 2)
+#-->
+#	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5>)
+#	(<c1> ^name head_node ^tag confirmation ^tag talk ^relative yes)
+#	(<c2> ^name head_shake ^tag rejection ^tag talk ^relative yes)
+#	(<c3> ^name head_suprised ^tag question ^tag suprise  ^tag general ^tag talk ^relative yes)
+#	(<c4> ^name greeting ^tag greet ^tag general ^tag talk)
+#	(<c5> ^name applause ^tag confirmation rejection ^tag talk)
+#}
 
 #
 # FINISH INITIALIZATION
