@@ -40,6 +40,7 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 		self.add_parameter('text_delay', -0.5)
 		self.add_parameter('is_relative', False)
 		self.add_parameter('text', 'I am speaking.')
+		self.add_parameter('alpha_duration', 0.058)
 
 		# references to used behaviors
 
@@ -62,7 +63,7 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 		
 		# [/MANUAL_CREATE]
 
-		# x:542 y:219
+		# x:683 y:221
 		_sm_say_0 = OperatableStateMachine(outcomes=['finished'])
 
 		with _sm_say_0:
@@ -72,10 +73,16 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 										transitions={'done': 'SayText'},
 										autonomy={'done': Autonomy.Off})
 
+			# x:509 y:199
+			OperatableStateMachine.add('WaitSayEnd',
+										WaitState(wait_time=self.alpha_duration*len(self.text)),
+										transitions={'done': 'finished'},
+										autonomy={'done': Autonomy.Off})
+
 			# x:272 y:200
 			OperatableStateMachine.add('SayText',
 										TextCommandState(type='voice/say', command=self.text, topic='control'),
-										transitions={'done': 'finished'},
+										transitions={'done': 'WaitSayEnd'},
 										autonomy={'done': Autonomy.Off})
 
 
@@ -117,7 +124,7 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit, 'invaid_pose': Autonomy.Inherit})
 
 
-		# x:572 y:166
+		# x:729 y:163
 		_sm_say_3 = OperatableStateMachine(outcomes=['finished'])
 
 		with _sm_say_3:
@@ -127,10 +134,16 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 										transitions={'done': 'SayText'},
 										autonomy={'done': Autonomy.Off})
 
+			# x:549 y:153
+			OperatableStateMachine.add('WaitSayEnd',
+										WaitState(wait_time=self.alpha_duration*len(self.text)),
+										transitions={'done': 'finished'},
+										autonomy={'done': Autonomy.Off})
+
 			# x:308 y:141
 			OperatableStateMachine.add('SayText',
 										TextCommandState(type='voice/say', command=self.text, topic='control'),
-										transitions={'done': 'finished'},
+										transitions={'done': 'WaitSayEnd'},
 										autonomy={'done': Autonomy.Off})
 
 

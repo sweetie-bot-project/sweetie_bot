@@ -27,6 +27,11 @@
 
 		<param type="text" name="text" default="I am speaking." label="text" hint="Text to say." />
 
+		<param type="numeric" name="alpha_duration" default="0.058" label="alpha_duration" hint="Sets the alpha_duration">
+			<min value="0.0" />
+			<max value="1.0" />
+		</param>
+
 	</params>
 
 
