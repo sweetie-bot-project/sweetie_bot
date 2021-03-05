@@ -21,7 +21,6 @@ soundhandle = SoundClient()
 sounds = {}
 playback_command = None
 tts_backend = None
-scripts_path = None
 
 rhvoice_relative_rate = 1.0
 rhvoice_relative_volume = 1.0
@@ -29,7 +28,7 @@ gstreamer_pipeline = None
 gstreamer_src = None
 
 def commandCallback(cmd):
-    global soundhandle, sounds, playback_command, tts_backend, scripts_path
+    global soundhandle, sounds, playback_command, tts_backend
     global gstreamer_pipeline, gstreamer_src, rhvoice_relative_rate, rhvoice_relative_volume
     # check command type
     if cmd.type == 'voice/play_wav':
@@ -101,7 +100,7 @@ def file_dict(directory, ext):
 
 
 def main():
-    global soundhandle, sounds, playback_command, tts_backend, scripts_path
+    global soundhandle, sounds, playback_command, tts_backend
     global gstreamer_pipeline, gstreamer_src, rhvoice_relative_volume, rhvoice_relative_rate
     rospy.init_node('voice', anonymous = True)
     rospy.Subscriber('control', TextCommand, commandCallback)
@@ -126,9 +125,6 @@ def main():
 
     lang_prefixes = str.split(lang_prefixes, ',')
     rospy.loginfo('Sound prefixes: ' + repr(lang_prefixes))
-    
-    # Get script location
-    scripts_path = os.path.join(rospkg.RosPack().get_path('sweetie_bot_voice'), 'scripts')
    
     # Get sounds location
     sound_packages = rospy.get_param('~sound_packages', [])

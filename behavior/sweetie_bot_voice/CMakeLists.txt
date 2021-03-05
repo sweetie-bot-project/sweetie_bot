@@ -43,9 +43,9 @@ catkin_install_python(PROGRAMS nodes/voice
                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # install shell scripts
-install(DIRECTORY scripts
-	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-	USE_SOURCE_PERMISSIONS)
+#install(DIRECTORY scripts
+#	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#	USE_SOURCE_PERMISSIONS)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
