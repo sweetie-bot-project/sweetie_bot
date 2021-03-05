@@ -2,6 +2,7 @@ from . import input_module
 
 import math
 import rospy
+from threading import Lock
 
 from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, PoseStamped
@@ -137,36 +138,38 @@ class SpatialWorldModel:
         self._tf_listener = ProxyTransformListener().listener()
 
         # map with memorized objects
+        self._memory_lock = Lock()
         self._memory_map = {}
         self._soar_view_remove_list = []
         self._last_update_time = rospy.Time.now().to_sec();
 
     def detectionCallback(self, msg):
-        # iterate over detected objects 
-        for detection_msg in msg.detections:
-            # extract information from detection message
-            timestamp = detection_msg.header.stamp.to_sec()
-            pose_stamped = PoseStamped(header = Header(frame_id = detection_msg.header.frame_id), pose = detection_msg.pose)
-            pose_stamped = self._tf_listener.transformPose(self._world_frame, pose_stamped)
+        with self._memory_lock:
+            # iterate over detected objects 
+            for detection_msg in msg.detections:
+                # extract information from detection message
+                timestamp = detection_msg.header.stamp.to_sec()
+                pose_stamped = PoseStamped(header = Header(frame_id = detection_msg.header.frame_id), pose = detection_msg.pose)
+                pose_stamped = self._tf_listener.transformPose(self._world_frame, pose_stamped)
 
-            # search detected object in index
-            key_tuple = (detection_msg.id, detection_msg.label, detection_msg.type)
-            # check if corrsponding object exists
-            mem_elem = self._memory_map.get(key_tuple)
-            if mem_elem != None:
-                # renew timestamp and pose of SpatialObject
-                mem_elem.spatial_object.updateVisible(timestamp, pose_stamped.pose)
-            else:
-                # add new SpatialObject but do not create corresponding SOAR view
-                spatial_object = SpatialObject( detection_msg.id, detection_msg.label, detection_msg.type, timestamp, self._timeout, self._world_frame, pose_stamped.pose )
-                self._memory_map[key_tuple] = SpatialWorldModel.MemoryElement(spatial_object, None)
+                # search detected object in index
+                key_tuple = (detection_msg.id, detection_msg.label, detection_msg.type)
+                # check if corrsponding object exists
+                mem_elem = self._memory_map.get(key_tuple)
+                if mem_elem != None:
+                    # renew timestamp and pose of SpatialObject
+                    mem_elem.spatial_object.updateVisible(timestamp, pose_stamped.pose)
+                else:
+                    # add new SpatialObject but do not create corresponding SOAR view
+                    spatial_object = SpatialObject( detection_msg.id, detection_msg.label, detection_msg.type, timestamp, self._timeout, self._world_frame, pose_stamped.pose )
+                    self._memory_map[key_tuple] = SpatialWorldModel.MemoryElement(spatial_object, None)
 
-        # check time of last update
-        time_now = rospy.Time.now().to_sec();
-        if time_now - self._last_update_time > self._seen_timeout:
-            self._updateSpatialMemory(time_now)
+            # check time of last update
+            time_now = rospy.Time.now().to_sec();
+            if time_now - self._last_update_time > self._seen_timeout:
+                self.__updateSpatialMemory(time_now)
 
-    def _updateSpatialMemory(self, time_now):
+    def __updateSpatialMemory(self, time_now):
         self._last_update_time = time_now
         # iterate over objects, mark unseen invisible and and mark to remove outdated 
         remove_list = []
@@ -186,40 +189,41 @@ class SpatialWorldModel:
             del self._memory_map[key_tuple]
 
     def update(self):
-        # get current time
-        time_now = rospy.Time.now().to_sec();
-        # spatial memory update is mandatory
-        self._updateSpatialMemory(time_now)
-        # remove WMEs which corresponds to outdated objects
-        self._soar_view_remove_list.clear()
-        # update WMEs 
-        for mem_elem in self._memory_map.values():
-            spatial_object = mem_elem.spatial_object
-            soar_view = mem_elem.soar_view
-            # check if corresponding WME exists 
-            if soar_view == None:
-                # create WME 
-                soar_view = SpatialObjectSoarView(spatial_object, self._sensor_id)
-                mem_elem.soar_view = soar_view
-            # visibility timestamp
-            soar_view.updateChildWME( 'visible', self._time_bins_map(time_now - spatial_object.update_time) ) # string
-            soar_view.updateChildWME( 'appeared', self._time_bins_map(time_now - spatial_object.creation_time) ) # string
-            if spatial_object.perceive_begin_time != None:
-                soar_view.updateChildWME('perceive-begin', self._time_bins_map(time_now - spatial_object.perceive_begin_time) ) # string
-            else:
-                soar_view.removeChildWME('perceive-begin')
-            if spatial_object.perceive_end_time != None:
-                soar_view.updateChildWME('perceive-end', self._time_bins_map(time_now - spatial_object.perceive_end_time) ) # string
-            else:
-                soar_view.removeChildWME('perceive-end')
-            # position relative to head
-            pose = spatial_object.getPose( self._head_frame, self._tf_listener )
-            soar_view.updateChildWME( 'distance-head', self._distance_bins_map( SpatialWorldModel.distance(pose.position) ) ) # string
-            soar_view.updateChildWME( 'yaw-head', self._yaw_bins_map( math.atan2(pose.position.y, pose.position.x) ) ) # string
-            # position relative to bode
-            pose = spatial_object.getPose( self._body_frame, self._tf_listener )
-            soar_view.updateChildWME( 'distance-body', self._distance_bins_map( SpatialWorldModel.distance(pose.position) ) ) # string
-            soar_view.updateChildWME( 'yaw-body', self._yaw_bins_map( math.atan2(pose.position.y, pose.position.x) ) ) # string
+        with self._memory_lock:
+            # get current time
+            time_now = rospy.Time.now().to_sec();
+            # spatial memory update is mandatory
+            self.__updateSpatialMemory(time_now)
+            # remove WMEs which corresponds to outdated objects
+            self._soar_view_remove_list.clear()
+            # update WMEs 
+            for mem_elem in self._memory_map.values():
+                spatial_object = mem_elem.spatial_object
+                soar_view = mem_elem.soar_view
+                # check if corresponding WME exists 
+                if soar_view == None:
+                    # create WME 
+                    soar_view = SpatialObjectSoarView(spatial_object, self._sensor_id)
+                    mem_elem.soar_view = soar_view
+                # visibility timestamp
+                soar_view.updateChildWME( 'visible', self._time_bins_map(time_now - spatial_object.update_time) ) # string
+                soar_view.updateChildWME( 'appeared', self._time_bins_map(time_now - spatial_object.creation_time) ) # string
+                if spatial_object.perceive_begin_time != None:
+                    soar_view.updateChildWME('perceive-begin', self._time_bins_map(time_now - spatial_object.perceive_begin_time) ) # string
+                else:
+                    soar_view.removeChildWME('perceive-begin')
+                if spatial_object.perceive_end_time != None:
+                    soar_view.updateChildWME('perceive-end', self._time_bins_map(time_now - spatial_object.perceive_end_time) ) # string
+                else:
+                    soar_view.removeChildWME('perceive-end')
+                # position relative to head
+                pose = spatial_object.getPose( self._head_frame, self._tf_listener )
+                soar_view.updateChildWME( 'distance-head', self._distance_bins_map( SpatialWorldModel.distance(pose.position) ) ) # string
+                soar_view.updateChildWME( 'yaw-head', self._yaw_bins_map( math.atan2(pose.position.y, pose.position.x) ) ) # string
+                # position relative to bode
+                pose = spatial_object.getPose( self._body_frame, self._tf_listener )
+                soar_view.updateChildWME( 'distance-body', self._distance_bins_map( SpatialWorldModel.distance(pose.position) ) ) # string
+                soar_view.updateChildWME( 'yaw-body', self._yaw_bins_map( math.atan2(pose.position.y, pose.position.x) ) ) # string
 
     def __del__(self):
         # remove sensor wme and ROS subscriber
