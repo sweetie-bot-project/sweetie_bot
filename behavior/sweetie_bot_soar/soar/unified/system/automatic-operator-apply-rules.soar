@@ -198,6 +198,17 @@ sp {automatic*apply*mark-processed
 }
 
 #
+# PRINT
+#
+
+sp {automatic*apply*print
+	(state <s> ^operator <op>)
+	(<op> ^type automatic ^print <string>)
+-->
+	(write <string> (crlf))
+}
+
+#
 # CHANGE ATTRIBUTES SUPPORT
 #
 # i-supported WME created in top state preserves i-support after being copied to beliefs
