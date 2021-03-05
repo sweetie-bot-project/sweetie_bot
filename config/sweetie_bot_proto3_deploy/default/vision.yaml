@@ -1,7 +1,22 @@
 vision:
     camera_frame: 'camera_link_optical'
     # camera_matrix: [101, 0.000000, 120, 0.000000, 101, 80, 0.000000, 0.000000, 1.000000]
-    input_stream: 'udpsrc port=5000 ! application/x-rtp, encoding-name=JPEG,payload=26 !  rtpjpegdepay !  jpegdec ! videoconvert ! appsink'
+    apply_undistortion: false
+    camera_matrix_undistorted: [ 150,  0., 320,
+                                  0., 150, 240,
+                                  0.,  0.,   1. ]
+    camera_matrix: [ 3.0545268453989814e+02, 0., 3.1950000000000000e+02,
+                     0., 3.0596841016708993e+02, 2.3950000000000000e+02,
+                     0.,                     0.,                      1. ]
+    # Original coefficients after calibration:
+    # dist = np.array([ -3.7798169242237084e-02, -3.5606715553346212e-03, -1.0833438941311863e-02, 0. ])
+    distortion_coefficients: [ -12.7798169242237084e-02, -3.5606715553346212e-04, -1.0833438941311863e-02, 0. ]
+    #input_stream: 'udpsrc port=5000 ! application/x-rtp, encoding-name=JPEG,payload=26 !  rtpjpegdepay !  jpegdec ! videoconvert ! appsink'
+    # Preferred method because it allows to record the video from 5001 port
+    input_stream: "udpsrc port=5000 ! tee name=RecievedStream ! queue ! application/x-rtp, encoding-name=JPEG,payload=26 ! rtpjpegdepay !  jpegdec ! videoconvert ! appsink RecievedStream. ! queue ! udpsink host=127.0.0.1 port=5001"
+
+    # If true node shows a window with resulting detections on the video
+    show_video_result: true
     fps_lock: 30
     distance_to_camera: 0.3
     face_recognizer:
@@ -10,15 +25,25 @@ vision:
         reident_model_xml: "/models/face_reidentification/FP16/face-reidentification-retail-0095.xml"
         prob_threshold: 0.5
         roi_scale_factor: 1.15
+        # You can manually assign a device, from list printed during node startup
+        #device: "AUTO"
     object_recognizer:
         yolo_model_xml: "/models/object_recognition/FP16/yolov4-tiny.xml"
         prob_threshold: 0.5
         iou_threshold: 0.4
+        # You can manually assign a device, from list printed during node startup
+        #device: "AUTO"
 vision_simulated:
     camera_frame: 'camera_link_simulation'
     #camera_matrix: [101, 0.000000, 120, 0.000000, 101, 80, 0.000000, 0.000000, 1.000000]
+    camera_matrix_undistorted: [ 150,  0., 320,
+                                  0., 150, 240,
+                                  0.,  0.,   1. ]
     input_stream: -1
     #input_stream: "/path/to/a/video.mp4" 
+    
+    # If true node shows a window with resulting detections on the video
+    show_video_result: true
     fps_lock: 30
     distance_to_camera: 0.3
     face_recognizer:

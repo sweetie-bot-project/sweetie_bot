@@ -1,5 +1,6 @@
 <launch>
 	<arg name="run_real" default="false" doc="Run on real robot."/>
+	<arg name="record_video" default="true" doc="Record video stream from camera."/>
 	<arg name="robot_ns" default="/" doc="Namespace where to run robot components "/>
 
 	<!-- connect node to real robot -->
@@ -12,5 +13,8 @@
 		<remap from="detections" to="$(arg robot_ns)/detections" />
 		<remap from="marker_array" to="$(arg robot_ns)/hmi/detections" />
 		<param name="camera_frame" value="camera_link_simulation" />
+	</node>
+	<!-- start recording video stream -->
+	<node if="$(eval record_video and run_real)" pkg="sweetie_bot_vision" type="gstreamer_record" name="videostream_recorder" ns="$(arg robot_ns)" respawn="true">
 	</node>
 </launch>
