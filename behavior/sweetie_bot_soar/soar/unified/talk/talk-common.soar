@@ -23,6 +23,15 @@ sp {talk-event*elaborate-recent-events
 	(<c> ^event <ev>)
 }
 
+# DEBUG
+
+# ptint topic and conclusion
+sp {talk-common*propose*debug-output
+	(state <s> ^substate talk-event ^substate {<> |talk-event| <ev-type>} ^topic <topic> ^conclusion <conclusion> ^actions <a>)
+-->
+	(<a> ^print (concat <ev-type> |: topic '| <topic> |', conclusion '| <conclusion> |'|))
+}
+
 # COGNITION RULES
 
 # worst operator: cognition process is finished
