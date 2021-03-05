@@ -13,15 +13,36 @@
 # GENERAL KNOWLEDGE
 
 # dislike speaker if he dislikes me
-sp {verbolization*elaborate*dislike-from-dislike-robots
+sp {reasoning*elaborate*dislike-from-dislike-robots
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^predicate <pred>)
-	(<pred> ^name dislike ^actor <obj> ^type robot ^initiated-at <time>)
-	-{(<b> ^predicate <pred-dislike>) 
-	  (<pred-dislike> ^name dislike ^actor me ^object <obj> ^initiated-at {< <time>})}
+	(<pred> ^name dislike ^actor <obj> ^object robot)
 -->
 	(<b> ^predicate <pred-new>)
-	(<pred-new> ^name dislike ^actor me ^object <obj>)
+	(<pred-new> ^name dislike-for ^actor me ^object <obj> ^reason <pred>)
+}
+
+# like speaker if he likes me
+sp {reasoning*elaborate*dislike-from-like-robots
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name like ^actor <obj> ^object robot)
+-->
+	(<b> ^predicate <pred-new>)
+	(<pred-new> ^name like-for ^actor me ^object <obj> ^reason <pred>)
+}
+
+# detect contradiction
+sp {reasoning*prpose*solve-contradiction-like-dislike
+	(state <s> ^bottom-state 1 ^beliefs <b>)
+	(<b> ^predicate <pred1>)
+	(<pred1> ^name like ^actor <obj> ^object <obj>)
+	(<b> ^predicate <pred2>)
+	(<pred2> ^name dislike ^actor <obj> ^object <obj>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name solve-contradiction-like-dislike  ^type cognition automatic ^remove-predicate <pred1> <pred2> ^add-predicate <pred>)
+	(<pred> ^name contradict-itself ^actor <obj> ^object <obj>)
 }
 
 # VERBOLIZATION RULES
@@ -32,7 +53,7 @@ sp {verbolization*elaborate*dislike-from-dislike-robots
 sp {verbolization*elaborate*ask-do-you-like-robots
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
 	-{(<b> ^predicate <pred1>)
-	  (<pred1> ^name {<<|like| |dislike|>>} ^actor <obj> ^type robot)}
+	  (<pred1> ^name {<<|like| |dislike|>>} ^actor <obj> ^object robot)}
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic do-you-like-robots ^utility 20 ^type question ^animation-tag question ^reaction <r1> <r2>)
@@ -51,14 +72,14 @@ sp {talk-answered*propose*speaker-likes-robots
 	(state <s> ^substate talk-answered ^question-topic do-you-like-robots ^answer-topic yes ^actor <obj> ^actions <a>)
 -->
 	(<a> ^add-predicate <pred>)
-	(<pred> ^name like ^actor <obj> ^type robot)
+	(<pred> ^name like ^actor <obj> ^object robot)
 }
 
 sp {talk-answered*propose*speaker-dilike-robots
 	(state <s> ^substate talk-answered ^question-topic do-you-like-robots ^answer-topic no ^actor <obj> ^actions <a>)
 -->
 	(<a> ^add-predicate <pred>)
-	(<pred> ^name dislike ^actor <obj> ^type robot)
+	(<pred> ^name dislike ^actor <obj> ^object robot)
 }
 
 	

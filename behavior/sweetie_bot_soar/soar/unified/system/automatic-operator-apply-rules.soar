@@ -136,7 +136,7 @@ sp {automatic*apply*add-event*history
 	(<op> ^type automatic ^add-event <ev>)
 	(<ev> ^memorization-time <mem-time>)
 -->
-	(<ev-pool> ^events <ev>)
+	(<ev-pool> ^event <ev>)
 }
 
 #

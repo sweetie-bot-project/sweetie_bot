@@ -80,7 +80,7 @@ sp {talk*propose*waiting-answer
 	(<proc> ^object <obj> ^topic <topic> ^utility <utility>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name waiting-answer ^substate look-at ^utility <utility> ^object <obj> ^timeout 10.0 ^delay 2.0 ^result <res-failed>)
+	(<op> ^name waiting-answer ^substate look-at ^utility <utility> ^object <obj> ^timeout 5.0 ^delay 1.0 ^result <res-failed>)
 	(<res-failed> ^status failed ^remove-process <proc> ^add-event <ev>)
 	(<ev> ^name talk-ignored ^actor <obj> ^topic <topic>)
 }
@@ -91,7 +91,7 @@ sp {talk*propose*waiting-reaction
 	(<proc> ^object <obj> ^topic <topic> ^utility <utility>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name waiting-reaction ^substate look-at ^utility <utility> ^object <obj> ^timeout 10.0 ^delay 2.0 ^result <res-failed>)
+	(<op> ^name waiting-reaction ^substate look-at ^utility <utility> ^object <obj> ^timeout 5.0 ^delay 1.0 ^result <res-failed>)
 	(<res-failed> ^status failed ^remove-process <proc> ^add-event <ev>)
 	(<ev> ^name talk-failed ^actor <obj> ^topic <topic>)
 }
@@ -103,7 +103,7 @@ sp {talk*propose*search-missing-speaker
 	(<f> ^topic missing-speaker ^text <text>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name search-missing-speaker ^utility 60 ^substate flexbe ^behavior ExecuteJointTrajectoryAndSay ^interruptable hard ^param <p> ^result <res-succeed>)
+	(<op> ^name search-missing-speaker ^utility 80 ^substate flexbe ^behavior ExecuteJointTrajectoryAndSay ^interruptable hard ^param <p> ^result <res-succeed>)
 	(<p> ^joint_trajectory |head_look_around| ^text <text>)
 	(<res-succeed> ^status succeed ^add-event <ev>)
 	(<ev> ^name talk-speaker-search-finished ^object <obj>)

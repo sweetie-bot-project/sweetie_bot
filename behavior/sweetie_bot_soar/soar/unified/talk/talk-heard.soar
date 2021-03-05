@@ -33,7 +33,6 @@ sp {talk-heard*elaborate*waiting-answer
 
 # COGNITION RULES
 
-
 # if we are waiting answer then schedule talk-answered event
 sp {talk-heard*propose*emit-talk-answered
 	(state <s> ^substate talk-heard ^waiting-answer ^question-topic <q-topic> ^event <ev> ^actions <a>)
@@ -77,6 +76,15 @@ sp {talk-heard*propose*irrelevant-phrase
 -->
 	(<a> ^add-event <ev-irrelevant>)
 	(<ev-irrelevant> ^name talk-irrelevant ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
+}
+
+# agument irrelevant event with question/statement topic
+sp {talk-heard*elaborate*irrelevant-phrase*question-topic
+	(state <s> ^substate talk-heard  ^waiting-answer <proc> ^actions.add-event <ev>)
+	(<ev> ^name talk-irrelevant)
+	(<proc> ^topic <q-topic>)
+-->
+	(<ev> ^question-topic <q-topic>)
 }
 
 # if we are waiting answer check if it is a relevant answer

@@ -40,8 +40,8 @@ sp {talk-irrelevant*elaborate*specific-reacation
 sp {talk-irrelevant*elaborate*ignor-topic
 	(state <s> ^substate talk-irrelevant ^event <ev> ^talk-irrelevant <c>)
 	(<c> ^event {<> <ev> <ev1>})
-	(<ev> ^topic <topic>)
-	(<ev1> ^topic <topic>)
+	(<ev> ^question-topic <topic>)
+	(<ev1> ^question-topic <topic>)
 -->
 	(<s> ^conclusion ignor-topic)
 }
@@ -80,7 +80,7 @@ sp {talk-irrelevant*propose*specific-reaction-topic
 # note that speaker ignores specific topic
 sp {talk-irrelevant*propose*ignor-topic
   	(state <s> ^substate talk-irrelevant ^conclusion ignor-topic ^event <ev> ^beliefs <b> ^actions <a>)
-	(<ev> ^actor <obj> ^topic <topic>)
+	(<ev> ^actor <obj> ^question-topic <topic>)
   	-{(<b> ^predicate <p>) (<p> ^name ignor-topic ^actor <obj> ^topic <topic>)}
 -->
 	(<a> ^add-predicate <pred>)

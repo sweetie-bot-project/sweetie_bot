@@ -33,6 +33,13 @@ sp {verbolization*elaborate*maye-do-not-know-how-to-talk
 	(<pred> ^name maybe-do-not-know-how-to-talk ^object <obj>)
 }
 
+sp {talk-answered*propose*remove*maybe-do-not-know-how-to-talk
+	(state <s> ^substate talk ^conclusion specific-reaction ^beliefs.predicate <pred> ^object <obj> ^actions <a>)
+	(<pred> ^name maybe-do-not-know-how-to-talk ^object <obj>)
+-->
+	(<a> ^remove-predicate <pred>)
+}
+
 # VERBOLIZATION RULES
 
 #
@@ -144,7 +151,7 @@ sp {verbolization*elaborate*remark-about-ignor-me-addition
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic ignor-me-remark ^utility 70 ^type statement ^animation-tag anger)
-	(<f> ^text |Ты игнорируешь меня!|)
+	(<f> ^text |Ты игнорируешь меня!| |Ты не отвечаешь! Невозможно с тобой разговаривать!|)
 }
 
 # if systematic ignorance was detectedin past
@@ -188,7 +195,7 @@ sp {verbolization*elaborate*remark-about-nonsense
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic nonsense-remark ^utility 60 ^type statement ^animation-tag suprise)
-	(<f> ^text |И что ты хотел этим сказать?| |Не понимаю тебя.| |Просто покажи карточку с ответом.|)
+	(<f> ^text |И что ты хотел этим сказать? Не надо просто так махать карточками.| |Не понимаю тебя. Дождись, пока я задам вопрос, потом отвечай.| |Просто покажи карточку с ответом, когда я задам ворос.|)
 }
 
 sp {talk-said*propose*said-about-nonsense
@@ -238,7 +245,7 @@ sp {talk-answered*propose*terminate-nonsense-me
 	(<a> ^add-predicate <pred-reaction>)
 	(<pred-reaction> ^name talk-possible-reaction ^object <obj> ^reaction <r> ^deadline-time 60.0)
 	(<r> ^topic nonsense-me-terminated ^animation-tag surprise)
-	(<r> ^text |Ты научился пользоваться карточками! Силен!| |Теперь ты умеешь пользоваться карточками. Впрочем, даже медведя можно научить ездить на велосипеде.|)
+	(<r> ^text |Ты научился пользоваться карточками! Силен!| |Теперь ты умеешь пользоваться карточками. Люди поддаются дрессировке!.|)
 }
 
 #
@@ -252,20 +259,19 @@ sp {verbolization*elaborate*missing-speaker
 	(<f> ^topic missing-speaker)
 }
 
-sp {verbolization*elaborate*missing-speaker*greeted
+sp {verbolization*elaborate*missing-speaker*acquitance
 	(state <s> ^substate talk ^object <obj> ^beliefs.predicate <pred> ^verbolization.frame <f>)
 	(<f> ^topic missing-speaker)
-	(<pred> ^name greeted ^object <obj>)
+	(<pred> ^name acquitance ^object <obj>)
 	(<obj> ^label <label>)
 -->
 	(<f> ^text (concat |Где ты? Куда ты делся, собеседник | <label> |?|) |Уходить во время разговора невежливо.|)
 }
 
 sp {verbolization*elaborate*missing-speaker*not-greeted
-	(state <s> ^substate talk ^object <obj> ^beliefs <b> ^verbolization.frame <f>)
+	(state <s> ^substate talk ^object <obj> ^process <proc> ^verbolization.frame <f>)
 	(<f> ^topic missing-speaker)
-  -{(<b> ^predicate <pred>)
-	(<pred> ^name greeted ^object <obj>)}
+	(<proc> ^name waiting-answer ^object greeting)
 -->
-	(<f> ^text |Похоже, он убежал. Робкий собеседник.|)
+	(<f> ^text |Похоже, убежал. Робкий собеседник.|)
 }

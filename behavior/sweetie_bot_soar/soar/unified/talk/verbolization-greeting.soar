@@ -32,15 +32,14 @@ sp {verbolization*propose*remove-greeted-predicate
 	(<op> ^name remove-greeted-predicate ^type cognition automatic ^remove-predicate <pred>)
 }
 
-# dislike speaker if he ignores me
-# TODO: agregate?
+# dislike speaker 
 sp {verbolization*elaborate*dislike-from-ignor-me-nonsense-me
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^predicate <pred>)
 	(<pred> ^name {<<|ignor-me| |nonsense-me|>>} ^actor <obj>)
 -->
-	(<b> ^predicate <pred>)
-	(<pred> ^name dislike ^object <obj> ^actor me)
+	(<b> ^predicate <pred-new>)
+	(<pred-new> ^name dislike-for ^object <obj> ^actor me ^reason <pred>)
 }
 
 # VERBOLIZATION RULES
@@ -96,11 +95,11 @@ sp {verbolization*elaborate*greeting-acquitance-dislike
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization.frame <f>)
 	(<f> ^topic greeting)
 	(<b> ^predicate <pred2>)
-	(<pred2> ^name dislike ^object <obj>)
+	(<pred2> ^name dislike-for ^object <obj>)
 	(<obj> ^label <label>)
 -->
 	(<f> ^utility 55 ^type question ^animation-tag rejection)
-	(<f> ^text (concat |Ты мне не нравишься, собеседник | <label> |!|) (concat |Не рада тебя видеть вновь, собеседник | <label> |.|))
+	(<f> ^text (concat |Привет, собеседник | <label> |!| |Но я тобой недовольна.|) (concat |Не очень рада тебя видеть вновь, собеседник | <label> |.|))
 }
 
 sp {verbolization*elaborate*greeting-acquitance*reaction
