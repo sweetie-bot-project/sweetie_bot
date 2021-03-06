@@ -23,6 +23,35 @@ sp {talk-event*elaborate-recent-events
 	(<c> ^event <ev>)
 }
 
+# check if we are waiting answer (talk-answered event substate have special routines)
+sp {talk-event*elaborate*waiting-answer
+	(state <s> ^substate talk-event -^substate talk-answered ^beliefs.process <proc> ^actor <obj>)
+	(<proc> ^name waiting-answer ^substate talk ^topic <topic> ^object <obj>)
+-->
+	(<s> ^last-topic <topic>)
+	(<s> ^question-topic <topic>)
+	(<s> ^waiting-answer <proc>)
+}
+
+# check if we are waiting reaction
+sp {talk-event*elaborate*waiting-reaction
+	(state <s> ^substate talk-event ^beliefs.process <proc> ^actor <obj>)
+	(<proc> ^name waiting-reaction ^substate talk ^topic <topic> ^object <obj>)
+-->
+	(<s> ^last-topic <topic>)
+	(<s> ^statement-topic <topic>)
+	(<s> ^waiting-reaction <proc>)
+}
+
+## add last topic
+#sp {talk-heard*elaborate*last-topic
+#	(state <s> ^substate talk-heard ^beliefs.predicate <proc> ^actor <obj>)
+#	(<proc> ^name last-topic ^topic <topic> ^object <obj>)
+#-->
+#	(<s> ^last-topic <topic>)
+#}
+
+
 # DEBUG
 
 # ptint topic and conclusion

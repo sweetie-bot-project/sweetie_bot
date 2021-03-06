@@ -43,7 +43,7 @@ sp {talk-answered*elaboration*specific-reaction
 
 # propose default reaction and remove 
 sp {talk-answered*elaboration*general-reaction
-	(state <s> ^substate talk-answered -^conclusion specific-reaction ^verbolization.reaction-other <r> ^event <ev> ^object <obj> ^actions <a>)
+	(state <s> ^substate talk-answered -^conclusion specific-reaction ^verbolization.reaction-other <r> ^event <ev> ^actor <obj> ^actions <a>)
 -->
 	(<s> ^conclusion general-reaction)
 	(<a> ^add-predicate <pred>)

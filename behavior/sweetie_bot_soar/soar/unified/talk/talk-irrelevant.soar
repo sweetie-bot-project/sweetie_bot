@@ -22,18 +22,16 @@ sp {talk-irrelevant*elaborate*substate
 
 # only one irrelevant event is detected
 sp {talk-irrelevant*elaborate*irrelevant-once
-	(state <s> ^substate talk-irrelevant -^conclusion nosnsense-me ignor-topic specific-reaction)
+	(state <s> ^substate talk-irrelevant -^conclusion nosnsense-me ignor-topic specific-reaction interrupted-me)
 -->
 	(<s> ^conclusion irrelevant-single)
 }
 
-# there is specific reaction to irrelevant answer in topic definition
-sp {talk-irrelevant*elaborate*specific-reacation
-	(state <s> ^substate talk-irrelevant ^event.topic <topic> ^verbalization.frame <q>)
-	(<q> ^topic <topic> ^reaction-irrelevant <r>)
+# only heard event detected during speech
+sp {talk-irrelevant*elaborate*irrelevant-once
+	(state <s> ^substate talk-irrelevant -^conclusion nosnsense-me ignor-topic specific-reaction -^waiting-reaction -^waiting-answer)
 -->
-	(<s> ^conclusion specific-reaction)
-	(<s> ^reaction <r>)
+	(<s> ^conclusion interrupted-me)
 }
 
 # thera are at least two event related to given topic
@@ -70,11 +68,12 @@ sp {talk-irrelevant*propose*nonsense-possibility
 
 # specific reaction: propose talk topic
 sp {talk-irrelevant*propose*specific-reaction-topic
-  	(state <s> ^substate talk-irrelevant ^conclusion specific-reaction ^reaction <r> ^event <ev> ^actions <a>)
-	(<ev> ^actor <obj>)
+  	(state <s> ^substate talk-irrelevant ^conclusion interrupted-me ^event <ev> ^beliefs <b> ^actions <a>)
+	(<ev> ^actor <obj> ^topic <topic>)
+  	-{(<b> ^predicate <p>) (<p> ^name interrupted-me ^actor <obj> ^topic <topic>)}
 -->
 	(<a> ^add-predicate <pred>)
-	(<pred> ^name talk-possible-reaction ^object <obj> ^reaction <r> ^event <ev> ^deadline-time 60.0)
+	(<pred> ^name interrupted-me ^actor <obj> ^topic <topic> ^deadline-time 60.0)
 }
 
 # note that speaker ignores specific topic

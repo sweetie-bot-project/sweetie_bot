@@ -134,12 +134,14 @@ sp {verbolization*elaborate*acquitance-statement
 	(<obj> ^label <label>)
 -->
 	(<v> ^frame <r1>)
-	(<r1> ^topic make-acquitance ^utility 49 ^type statement ^text (concat |Я буду называть тебя собеседник | <label> |.|) ^animation-tag confirmation)
+	(<r1> ^topic make-acquitance ^utility 49 ^type reaction ^text (concat |Я буду называть тебя собеседник | <label> |.|) ^animation-tag confirmation)
 }
 
 #
 # finish dialog
 #
+
+# default talk end reaction
 sp {verbolization*elaborate*goodbye
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
 -->
@@ -148,9 +150,38 @@ sp {verbolization*elaborate*goodbye
 	(<f> ^text |У меня кончились темы для разговора. До встречи!| |Ты мне наскучил. Пока.|)
 }
 
-sp {talk*propose*goodbye-said
+# elaborate predicate which marks that thera are no questions left
+sp {verbolization*elaborate*consider-end-dialog
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	-(<v> ^frame.type question)
+-->
+	(<b> ^predicate <pred>)
+	(<pred> ^name consider-end-talk ^object <obj> ^deadline-time 40.0)
+}
+	
+# end talk if there are no questions
+sp {verbolization*elaborate*goodbye-end-dialog
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	-(<v> ^frame.type question)
+	-{(<b> ^predicate <pred>) 
+      (<pred> ^name consider-end-talk ^object <obj>)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic goodbye ^utility 20 ^type statement ^animation-tag question)
+	(<f> ^text |У меня кончились темы для разговора. До встречи!| |Думаю, мы достаточно поговорили. Пока.|)
+}
+
+sp {talk*propose*goodbye-said*answer
 	(state <s> ^substate talk ^object <obj> ^beliefs.event <ev> ^results <r>)
-	(<ev> ^name talk-said ^topic goodbye ^object <obj>)
+	(<ev> ^name talk-ignored ^topic goodbye ^object <obj>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name talk-said-goodbye ^type cognition completion ^status succeed ^results <r>)
+}
+
+sp {talk*propose*goodbye-said*ignored
+	(state <s> ^substate talk ^object <obj> ^beliefs.event <ev> ^results <r>)
+	(<ev> ^name talk-heard ^statement-topic goodbye ^object <obj>)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name talk-said-goodbye ^type cognition completion ^status succeed ^results <r>)

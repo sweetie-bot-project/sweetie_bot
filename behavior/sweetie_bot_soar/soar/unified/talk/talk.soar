@@ -34,12 +34,12 @@ sp {talk*elaborate*attach-processes
 }
 
 # last topic
-sp {talk*elaborate*last-topic
-	(state <s> ^substate talk ^beliefs.predicate <pred> ^object <obj>)
-	(<pred> ^name last-topic ^object <obj> ^topic <topic>)
--->
-	(<s> ^last-topic <topic>)
-}
+#sp {talk*elaborate*last-topic
+#	(state <s> ^substate talk ^beliefs.predicate <pred> ^object <obj>)
+#	(<pred> ^name last-topic ^object <obj> ^topic <topic>)
+#-->
+#	(<s> ^last-topic <topic>)
+#}
 
 # DECISION RULES
 
@@ -67,8 +67,8 @@ sp {talk*propose*statement-verbolization
 
 # propose reaction verbolization
 sp {talk*propose*reaction-verbolization
-	(state <s> ^substate talk ^verbolization.reaction <q> ^object <obj>)
-	(<q> ^topic <topic> ^text <text> ^animation-tag <tag> ^utility <utility>)
+	(state <s> ^substate talk ^verbolization.frame <q> ^object <obj>)
+	(<q> ^type reaction ^topic <topic> ^text <text> ^animation-tag <tag> ^utility <utility>)
 -->
 	(<s> ^operator <o> + =)
 	(<o> ^name reaction-verbolization ^utility <utility> ^substate say ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)

@@ -22,15 +22,6 @@ sp {talk-heard*elaborate*substate
 	(<s> ^topic <topic> ^actor <obj>)
 }
 
-# check if we are waiting answer
-sp {talk-heard*elaborate*waiting-answer
-	(state <s> ^substate talk-heard ^beliefs.process <proc> ^actor <obj>)
-	(<proc> ^name waiting-answer ^substate talk ^topic <topic> ^object <obj>)
--->
-	(<s> ^question-topic <topic>)
-	(<s> ^waiting-answer <proc>)
-}
-
 # COGNITION RULES
 
 # if we are waiting answer then schedule talk-answered event
@@ -58,15 +49,22 @@ sp {talk-heard*evaborate*relevant-answer-other
 	(<s> ^conclusion question-general-reaction)
 }
 
-# check if heard phrase matches to one of general reaction 
+# check if heard phrase matches to one of general reaction: reactions on question have precendence
 sp {talk-heard*elaboration*relevant-phrase
-	(state <s> ^substate talk-heard  ^event <ev> ^verbolization.reaction <r> ^actions <a>)
+	(state <s> ^substate talk-heard  -^conclusion question-specific-reaction question-specific-reaction ^event <ev> ^verbolization.reaction <r> ^actions <a>)
 	(<ev> ^topic <topic> ^actor <obj>)
 	(<r> ^reaction-topic <topic>)
 -->
 	(<s> ^conclusion specific-reaction)
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name talk-possible-reaction ^object <obj> ^reaction <r> ^event <ev> ^deadline-time 60.0)
+}
+
+# any type of sane reaction nullyfies waiting-reaction predicate
+sp {talk-heard*elaboration*remove-waiting-reaction
+	(state <s> ^substate talk-heard  ^conclusion  ^waiting-reaction <proc> ^actions <a>)
+-->
+	(<a> ^remove-process <proc>)
 }
 
 # emit irrelevant event -- nor one options above
@@ -80,9 +78,8 @@ sp {talk-heard*propose*irrelevant-phrase
 
 # agument irrelevant event with question/statement topic
 sp {talk-heard*elaborate*irrelevant-phrase*question-topic
-	(state <s> ^substate talk-heard  ^waiting-answer <proc> ^actions.add-event <ev>)
+	(state <s> ^substate talk-heard  ^question-topic <q-topic> ^actions.add-event <ev>)
 	(<ev> ^name talk-irrelevant)
-	(<proc> ^topic <q-topic>)
 -->
 	(<ev> ^question-topic <q-topic>)
 }

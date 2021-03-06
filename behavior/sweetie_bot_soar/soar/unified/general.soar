@@ -1,7 +1,6 @@
 # OVERALL BEHAVIOR SELECTION
 
-
-
+# attach related decision
 sp {talker*elaborate*decision
 	(state <s> ^substate main ^beliefs.decision <d>)
 	(<d> ^substate main)
@@ -17,7 +16,7 @@ sp {talker*propose*decide-animation
 -->
 	(<s> ^operator <op> +, =)
    	(<op> ^name decide-animation ^drive movement ^type automatic ^add-decision <d>)
-	(<d> ^name animation ^substate main ^deadline-time 10.0)
+	(<d> ^name animation ^substate main ^deadline-time 5.0)
 }
 
 sp {talker*propose*decide-wait
@@ -25,19 +24,31 @@ sp {talker*propose*decide-wait
 -->
 	(<s> ^operator <o> +, =)
    	(<o> ^name decide-wait ^drive movement ^type automatic ^add-decision <d>)
-	(<d> ^name wait ^substate main ^deadline-time 20.0)
+	(<d> ^name wait ^substate main ^deadline-time (+ 5 (rand-int 15)))
 }
 
 # Propose perform animation (no one around)
-sp {talker*propose*animation
+#sp {talker*propose*animation
+#	(state <s> ^substate main ^decision <d>)
+#	(<d> ^name animation)
+#-->
+#	(<s> ^operator <o> +, =)
+#   	(<o> ^name animation-alone ^drive movement ^substate animation ^tag alone ^result <res>)
+#	(<res> ^status succeed ^remove-decision <d>)
+#}
+
+# invoke RandHeadMovements for random timeout instead of animation 
+sp {talker*propose*rand*head*movements
 	(state <s> ^substate main ^decision <d>)
 	(<d> ^name animation)
 -->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name animation-alone ^drive movement ^substate animation ^tag alone ^result <res>)
-	(<res> ^status succeed ^remove-decision <d>)
+	(<s> ^operator <o> + =)
+   	(<o> ^name head-movements ^drive movement ^substate flexbe ^interruptable hard)
+   	(<o> ^behavior ExecuteRandHeadMovements ^param <p>)
+	(<p> ^timeout (+ 5 (rand-int 15)))
 }
 
+# wait 
 sp {talker*propose*wait
 	(state <s> ^substate main ^beliefs.decision.name wait)
 -->
@@ -97,7 +108,8 @@ sp {talker*propose*talk
 	(<pred> ^name talked ^object <obj> ^deadline-time 120.0)
 }
 
-# say hello
+# SAY HELLO
+
 #sp {talker*propose*say-greet
 #	(state <s> ^substate main ^beliefs <b>)
 #	(<b> ^decision <d>)
@@ -119,46 +131,4 @@ sp {talker*propose*talk
 #}
 
 #
-# PROPOSE WAIT
-#
-# invoke RandHeadMovements for random timeout
-#sp {talker*propose*rand*head*movements
-#	(state <s> ^name talker ^drive <d> ^cycle <cycle>)
-#	(<d> ^name movement)
-#-->
-#	(<s> ^operator <o> + =)
-#   	(<o> ^name head-movements ^substate flexbe ^drive <d>)
-#   	(<o> ^behavior ExecuteRandHeadMovements ^param <p>)
-#	(<p> ^timeout (+ 5 (rand-int 15)))
-#}
-
-# WALKING
-
-## Install walking goal if one is missing. Then robot should walk sometime because goal-related rules are acive.
-#
-#sp {talker*propose*step-sequence
-#	(state <s> ^name talker ^drive <d> ^cycle <cycle>)
-#	(<d> ^name movement)
-#-->
-#	(<s> ^operator <o> + =)
-#	(<o> ^name step-sequence ^substate step-sequence ^drive <d>)
-#}
-#
-## CYCLE SPIN
-
-# gather results and spin cycle to trigger next behavior selection
-sp {talker*apply*complete*next-cycle
-	(state <s> ^substate main ^operator <o> ^cycle <cycle>)
-	(<o> ^name {<< step-sequence animation head-movements >>}  ^status)
--->
-	(<s> ^cycle <cycle> -)
-	(<s> ^cycle (+ <cycle> 1))
-}
-#sp {talker*apply*complete*next-cycle
-#	(state <s> ^name talker ^operator <o> ^cycle <cycle>)
-#	(<o> ^name complete ^status)
-#-->
-#	(<s> ^cycle <cycle> -)
-#	(<s> ^cycle (+ <cycle> 1))
-#}
 
