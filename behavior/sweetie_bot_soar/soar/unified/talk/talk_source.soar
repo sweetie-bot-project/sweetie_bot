@@ -11,3 +11,6 @@ source verbolization-greeting.soar
 source verbolization.soar
 # talk substate definition
 source talk.soar
+# verbolization rules
+source verbolization-requestria.soar
+source verbolization-ghost.soar
