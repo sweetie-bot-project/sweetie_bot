@@ -10,7 +10,7 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.check_joint_state import CheckJointState
 from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
-from sweetie_bot_flexbe_states.rand_head_movements import SweetieBotRandHeadMovements
+from sweetie_bot_flexbe_states.rand_joints_movements import RandJointsMovements
 from sweetie_bot_flexbe_states.set_joint_state import SetJointState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
@@ -61,7 +61,7 @@ class ExecuteRandHeadMovementsSM(Behavior):
 			# x:189 y:30
 			OperatableStateMachine.add('CheckCrouched',
 										CheckJointState(outcomes=['body_crouched', 'unknown'], pose_ns='saved_msgs/joint_state', tolerance=0.17, joint_topic="joint_states", timeout=1.0),
-										transitions={'body_crouched': 'StandUp', 'unknown': 'RandHeadMovements'},
+										transitions={'body_crouched': 'StandUp', 'unknown': 'RandMovements'},
 										autonomy={'body_crouched': Autonomy.Off, 'unknown': Autonomy.Off})
 
 			# x:196 y:256
@@ -70,9 +70,9 @@ class ExecuteRandHeadMovementsSM(Behavior):
 										transitions={'done': 'succeed', 'failed': 'failed', 'timeout': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
 
-			# x:176 y:144
-			OperatableStateMachine.add('RandHeadMovements',
-										SweetieBotRandHeadMovements(controller='joint_state_head', duration=self.timeout, interval=[1,4], max2356=[0.3,0.3,1.5,1.5], min2356=[-0.3,-0.3,-1.5,-1.5]),
+			# x:192 y:143
+			OperatableStateMachine.add('RandMovements',
+										RandJointsMovements(controller='joint_state_head', duration=self.timeout, interval=[2.0,4.0], joints=['head_joint2', 'head_joint3', 'head_joint4'], minimal=[ -0.05, -0.2, -0.2 ], maximal=[ 0.2, 0.2, 0.2 ]),
 										transitions={'done': 'HeadNominal', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off},
 										remapping={'config': 'unused'})
@@ -80,7 +80,7 @@ class ExecuteRandHeadMovementsSM(Behavior):
 			# x:445 y:78
 			OperatableStateMachine.add('StandUp',
 										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='crouch_end', trajectory_ns='saved_msgs/joint_trajectory'),
-										transitions={'success': 'RandHeadMovements', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										transitions={'success': 'RandMovements', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 
