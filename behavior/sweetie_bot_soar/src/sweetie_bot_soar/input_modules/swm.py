@@ -134,8 +134,8 @@ class SpatialWorldModel:
             raise RuntimeError('SWM input module: "distance_bins_map" , "yaw_bins_map", "time_bins_map" parameters must present.')
 
         # add topic subscriber and tf buffer
-        self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
         self._tf_listener = ProxyTransformListener().listener()
+        self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
 
         # map with memorized objects
         self._memory_lock = Lock()
