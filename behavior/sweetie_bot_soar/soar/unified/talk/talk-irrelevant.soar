@@ -28,7 +28,7 @@ sp {talk-irrelevant*elaborate*irrelevant-once
 }
 
 # only heard event detected during speech
-sp {talk-irrelevant*elaborate*irrelevant-once
+sp {talk-irrelevant*elaborate*interrupted-once
 	(state <s> ^substate talk-irrelevant -^conclusion nosnsense-me ignor-topic specific-reaction -^waiting-reaction -^waiting-answer)
 -->
 	(<s> ^conclusion interrupted-me)

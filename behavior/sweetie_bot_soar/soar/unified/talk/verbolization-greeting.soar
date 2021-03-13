@@ -171,20 +171,35 @@ sp {verbolization*elaborate*goodbye-end-dialog
 	(<f> ^text |У меня кончились темы для разговора. До встречи!| |Думаю, мы достаточно поговорили. Пока.|)
 }
 
-sp {talk*propose*goodbye-said*answer
-	(state <s> ^substate talk ^object <obj> ^beliefs.event <ev> ^results <r>)
-	(<ev> ^name talk-ignored ^topic goodbye ^object <obj>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name talk-said-goodbye ^type cognition completion ^status succeed ^results <r>)
-}
-
 sp {talk*propose*goodbye-said*ignored
 	(state <s> ^substate talk ^object <obj> ^beliefs.event <ev> ^results <r>)
-	(<ev> ^name talk-heard ^statement-topic goodbye ^object <obj>)
+	(<ev> ^name talk-ignored ^topic goodbye ^actor <obj>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name talk-ignored-goodbye ^type cognition completion ^status succeed ^results <r>)
+}
+
+sp {talk*propose*goodbye-said*heard-answer
+	(state <s> ^substate talk-heard ^statement-topic goodbye ^object <obj> ^beliefs.event <ev> ^results <r>)
+	(<ev> ^name talk-heard ^actor <obj>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name talk-heard-goodbye ^type cognition completion ^status succeed ^results <r>)
+}
+
+# end talk by request
+sp {verbolization*elaborate*goodbye-reaction
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+-->
+	(<v> ^reaction <f>)
+	(<f> ^reaction-topic goodbye ^topic goodbye-reaction ^type reaction ^animation-tag confirmation)
+	(<f> ^text |До встречи!| |Ты уже уходишь? Пока!|)
+}
+
+sp {talk*propose*goodbye-said-reaction
+	(state <s> ^substate talk-said ^object <obj> ^beliefs.event <ev> ^results <r>)
+	(<ev> ^name talk-said ^topic goodbye-reaction ^object <obj>)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name talk-said-goodbye ^type cognition completion ^status succeed ^results <r>)
 }
-
-
