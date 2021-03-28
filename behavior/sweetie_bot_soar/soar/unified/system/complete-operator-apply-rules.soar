@@ -2,6 +2,18 @@
 # APPLY RULES FOR COMPLETE OPERATORS
 #
 
+# copmletion operator with status
+sp {apply*complete*remove-substate-process
+	(state <s> ^opertor <op> ^beliefs <b> ^time.now <time>)
+	(<op> ^type completion ^status <status> ^process <pred>)
+	(<pred> ^name <name>)
+-->
+	(<pred> ^terminated-at <time> ^status <status>)
+	(<b> ^process <pred> -)
+	(<b> ^event <ev>)
+	(<ev> ^name <name> ^reason terminated ^status <status> ^process <pred> ^initiated-at <time>)
+}
+
 #
 # GENERAL WME MANIPULATIONS
 #

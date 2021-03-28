@@ -52,18 +52,18 @@ sp {attention*elaborate*preferences-and-utility
 
 # ELABORATIONS 
 
-# attach related decisions to state
-sp {attention*evaluate*recover-decision
-	(state <s> ^substate attention ^beliefs.decision <d>)
-	(<d> ^name attention-focus ^substate attention)
+# attach related processe to state
+sp {attention*evaluate*recover-focusing-attention-process
+	(state <s> ^substate attention ^beliefs.process <proc> ^process <sproc>)
+	(<proc> ^name focusing-attention ^substate attention ^subprocess-of <sproc>)
 -->
-	(<s> ^decision <d>)
+	(<s> ^focusing-attention <proc>)
 }
 
 # calculate reconsider decision threshold 
 sp {attention*elaborate*reconsider-decision-utility-threshold
-	(state <s> ^substate attention ^decision <d> ^evaluation-frame <eval>)
-	(<d> ^object <obj>)
+	(state <s> ^substate attention ^focusing-attention <proc> ^evaluation-frame <eval>)
+	(<proc> ^object <obj>)
 	(<eval> ^object <obj> ^utility <utility>)
 -->
 	(<s> ^decision-reconsider-utility-threshold (+ <utility> 100))
@@ -71,35 +71,35 @@ sp {attention*elaborate*reconsider-decision-utility-threshold
 
 # DECISION OPERATORS
 
-# decide what object we should look at: use numeric preferences 
-sp {attention*propose*select-attention-focus
-	(state <s> ^substate attention ^beliefs <b> ^evaluation-frame <en> ^focus-reconsider-time <timeout>)
+# look at the object
+sp {attention*propose*look-at-new-atention-focus
+	(state <s> ^substate attention -^focusing-attention ^evaluation-frame <en> ^superstate.operator.process <sproc>)
 	(<en> ^object <obj> ^utility <utility>)
-	(<b> -^decision.name attention-focus)
+	(<s> ^focus-reconsider-time <reconsider-time> ^attempt-to-focus-time <focus-timeout>)
 -->
 	(<s> ^operator <op> +, = <utility>)
-   	(<op> ^name select-attention-focus ^type automatic ^object <obj> ^drive <d> ^add-decision <ds>) 
-	(<ds> ^name attention-focus ^substate attention ^object <obj> ^deadline-time <timeout>)
+	(<op> ^name look-at-new-attention-focus ^substate look-at ^object <obj> ^delay 2.0 ^timeout <focus-timeout> ^process <proc>)
+	(<proc> ^name focusing-attention ^object <obj> ^deadline-time <reconsider-time> ^start-process <sproc>) 
 }
 
-# reconside active decision if its utility is greater then threshold
-sp {attention*propose*switch-atttention-focus
-	(state <s> ^substate attention ^decision <ds> ^evaluation-frame <eval-new> ^decision-reconsider-utility-threshold <threshold> ^focus-reconsider-time <delay>)
-	(<eval-new> ^utility {>= <threshold> <utility>} ^object <obj>)
--->
-	(<s> ^operator <op> +, = <utility>)
-   	(<op> ^name switch-attention-focus ^type automatic ^add-decision <new-ds> ^remove-decision <ds>) 
-	(<new-ds> ^name attention-focus ^substate attention ^object <obj> ^deadline-time <delay>)
-}
-
-# look at the object. If action failed then reconsider desicion.
-sp {attention*propose*look-at
-	(state <s> ^substate attention ^beliefs.decision <ds> ^attempt-to-focus-time <timeout>)
-	(<ds> ^name attention-focus ^object <obj> ^deadline-time <delay>)
+# continue looking at the object
+sp {attention*propose*look-at-attention-focus
+	(state <s> ^substate attention ^focusing-attention <proc> ^attempt-to-focus-time <focus-timeout>)
+	(<proc> ^object <obj>)
 -->
 	(<s> ^operator <op> +) 
-	(<op> ^name look-at-attention-focus ^substate look-at ^object <obj> ^delay 2.0 ^timeout <timeout> ^result <res>)
-	(<res> ^status failed ^remove-decision <ds>) 
+	(<op> ^name look-at-attention-focus ^substate look-at ^object <obj> ^delay 2.0 ^timeout <focus-timeout> ^process <proc>)
+}
+
+# conside new attention focus if its utility is greater then threshold
+sp {attention*propose*switch-atention-focus
+	(state <s> ^substate attention ^focusing-attention <proc-old> ^evaluation-frame <eval-new> ^decision-reconsider-utility-threshold <threshold>)
+	(<eval-new> ^utility {>= <threshold> <utility>} ^object <obj>)
+	(<s> ^focus-reconsider-time <reconsider-time> ^attempt-to-focus-time <focus-timeout>)
+-->
+	(<s> ^operator <op> +, = <utility>)
+	(<op> ^name look-at-switch-attention-focus ^substate look-at ^object <obj> ^delay 2.0 ^timeout <focus-timeout> ^process <proc-new>)
+	(<proc-new> ^name focusing-attention ^object <obj> ^deadline-time <reconsider-time> ^start-process <sproc>) 
 }
 
 # PREFERENCES
@@ -107,7 +107,7 @@ sp {attention*propose*look-at
 # prefer switch attention over look at
 sp {attention*prefer*switch
 	(state <s> ^substate attention ^operator <op1> + ^operator {<> <op1> <op2>} +)
-	(<op1> ^name switch-attention-focus)
+	(<op1> ^name look-at-switch-attention-focus)
 	(<op2> ^name look-at-attention-focus)
 -->
 	(<s> ^operator <op1> > <op2>)

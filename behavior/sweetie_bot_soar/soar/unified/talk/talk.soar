@@ -26,10 +26,10 @@ sp {talk*elaborate*verbolization
 # attach process to substate
 sp {talk*elaborate*attach-processes
 	(state <s> ^substate talk ^beliefs.process <proc> ^object <obj>)
-	(<proc> ^name {<<|waiting-answer| |waiting-reaction|>> <process-type>} ^substate talk ^object <obj> ^topic <topic>)
+	(<proc> ^name waiting-answer ^substate talk ^object <obj> ^topic <topic>)
 -->
 	(<s> ^process <proc>)
-	(<s> ^<process-type> <proc>)
+	(<s> ^waiting-answer <proc>)
 	(<s> ^last-topic <topic>)
 }
 

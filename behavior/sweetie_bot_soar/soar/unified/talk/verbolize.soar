@@ -1,0 +1,92 @@
+# VERBOLIZE SUBSTATE
+#  
+# DESCRIPTION
+#
+# Say phrase, which can be accomplished with animation.
+#
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate verbolize ^topic <topic> ^text <text> ^animation-tag <tag>)
+#
+# Say about <topic> with <text> and using animation tagged with <tag>.
+#
+# RESULT STATUSES
+#
+# * succeed --- desired phrase is said to <object>. 
+#
+# SIDE EFFECTS
+#
+# Events:
+#
+# * (^name execution-failure ^subsystem flexbe) --- was unable to execute animation
+#
+
+# ELABORATIONS
+
+# match process to the sustate
+sp {say*elaborate*match-decision
+	(state <s> ^substate verbilize ^beliefs.process <proc> ^superstate.operator <sop>)
+	(<d> ^name verbolizing ^substate verbilize ^topic <topic>)
+	(<sop> ^topic <topic>)
+-->
+	(<s> ^process <d>)
+}
+
+# DECISION RULES
+
+# choice animation with tag 'talk' and create verbolizing process 
+sp {say*propose*select-animation
+	(state <s> ^substate say -^process ^superstate.operator <sop> ^mem.joint-trajectory <anim> ^results <r>)
+	(<sop> ^object <obj> ^topic <topic> ^text <text>)
+	(<anim> ^tag talk)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name select-animation ^type automatic ^animation <anim> ^add-process <p>)
+	(<d> ^name say ^substate say ^object <obj> ^topic <topic> ^animation <anim> ^deadline-time 30.0)
+}
+
+
+# if desicion to ask is made execute flexbe command
+sp {say*propose*say-execute
+	(state <s> ^substate say ^decision <d> ^superstate.operator <sop>)
+	(<d> ^object <obj> ^topic <topic> ^animation <anim>)
+	(<anim> ^name <animation-name>)
+	(<sop> ^text <text>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name say-execute ^substate flexbe ^behavior ExecuteJointTrajectoryAndSay ^param <param> ^animation <anim> ^result-inherit succeed ^result <res> ^result <res-succeed>)
+    (<param> ^text <text> ^joint_trajectory <animation-name> ^text_delay 0.2)
+	(<res> ^status failed invalid_pose ^remove-decision <d>)
+	(<res-succeed> ^status succeed ^add-event <ev> ^remove-decision <d>)
+	(<ev> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
+	(write |Say: | <text> (crlf))
+}
+
+# elaborate is_relative ExecuteJointTrajectoryAndSay paramter
+sp {say*elaborate*say-execute-animation-is-relative
+	(state <s> ^substate say ^operator <op> +)
+	(<op> ^name say-execute ^param <param> ^animation.relative) 
+-->
+	(<param> ^is_relative True)
+}
+ 
+# PREFERENCES 
+
+# prefer animation with tag matching supplied as substate parameter
+sp {say*prefer*select-animation-tag
+	(state <s> ^substate say ^operator <op1> + ^operator {<> <op1> <op2>} ^superstate.operator.animation-tag <tag>)
+	(<op1> ^name select-animation ^animation.tag <tag>)
+	(<op2> ^name select-animation ^animation <anim2>)
+	(<anim2> -^tag <tag>)
+-->
+	(<s> ^operator <op1> > <op2>)
+}
+
+# reject animations which are not tagged as general 
+sp {say*prefer*select-animation-general-tag
+	(state <s> ^substate say ^operator <op> + ^superstate.operator.animation-tag <tag>)
+	(<op> ^name select-animation ^animation <anim2>)
+	(<anim2> -^tag <tag> -^tag general)
+-->
+	(<s> ^operator <op> ~)
+}

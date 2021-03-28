@@ -18,6 +18,13 @@ sp {elaborate*state-cognition-type
 	(<s> ^type cognition)
 }
 
+# substate process
+sp {elaborate*state-process
+	(state <s> ^substate ^superstate.operator.process <proc> ^beliefs.process <proc>)
+-->
+	(<s> ^process <proc>)
+}
+
 # propagate memory access to subgoal substates
 sp {elaborate*state-io-mem-beliefs
 	(state <s> ^substate ^superstate <ss>)

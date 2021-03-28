@@ -14,7 +14,6 @@
 #
 # RESULT STATUSES
 #
-# * succeed --- object is located for <delay> second in center of viewfield.
 # * failed -- <timeout> seconds has passed but object is still is not center of view.
 #
 # SIDE EFFECTS
@@ -38,11 +37,11 @@
 # ELABOARTIONS
 
 # recover process
-sp {look-at*elaborate*processes
-	(state <s> ^substate look-at ^beliefs.process <proc> ^superstate.operator.object <obj>)
-	(<proc> ^name focusing-at ^substate look-at ^object <obj>)
+sp {look-at*elaborate*focusing-at-process
+	(state <s> ^substate look-at ^beliefs.process <proc> ^process <sp>)
+	(<proc> ^name focusing-at ^substate look-at ^subprocess-of <sp>)
 -->
-	(<s> ^process <proc>)
+	(<s> ^focusing-at <proc>)
 }
 
 # detect "object in the center" situation
@@ -77,49 +76,38 @@ sp {look-at*elaborate*looking-at
 
 # DECISION OPERATORS
 
-# create process to mark substate activation
-sp {look-at*propose*create-process-predicate
-	(state <s> ^substate look-at -^process ^superstate.operator <sop> ^results <r>)
-	(<sop> ^object <obj> ^delay <delay> ^timeout <timeout>)
--->
-	(<s> ^operator <op> +)
-	(<op> ^name create-process-predicate ^type automatic ^add-process <proc>)
-	(<proc> ^name focusing-at ^substate look-at  ^object <obj> ^delay <delay> ^deadline-time <timeout> ^results <r>)
-}
-
-# start flexbe behavior: if object is not visible exit after delay
+# start flexbe behavior and create focusing-at process
 sp {look-at*propose*start-look-at-bahavior
-	(state <s> ^substate look-at ^process <proc>)
-	(<proc> ^object <obj> ^delay <delay>)
+	(state <s> ^substate look-at -^focusing-at ^superstate.operator <sop>)
+	(<sop> ^object <obj> ^delay <delay> ^timeout <timeout> ^process <sp>)
 	(<obj> ^id <id> ^label <label> ^type <type>)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name execute-look-at ^substate flexbe ^behavior ExecuteLookAt ^interruptable hard ^param <p> ^result <res>)
+	(<op> ^name start-look-at ^substate flexbe ^behavior ExecuteLookAt ^interruptable hard ^param <p> ^process <proc>)
 	(<p> ^id <id> ^label <label> ^type <type> ^timeout (+ <delay> 1.0))
-	(<res> ^status succeed aborted failed ^remove-process <proc>)
+	(<proc> ^name focusing-at ^substate look-at  ^object <obj> ^delay <delay> ^deadline-time <timeout> ^initiate-process <sp>)
+}
+
+# wait until flexbe behavior exit 
+sp {look-at*propose*wait-look-at-behavior
+	(state <s> ^substate look-at ^focusing-at <proc>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name wait-look-at ^substate flexbe ^process <proc>)
 }
 
 # COGNITION OPERATORS
 
-# check if timeout is expired: failed outcome
-sp {look-at*propose*focus-failed
-	(state <s> ^substate look-at ^beliefs.event <ev> ^beliefs-stable <bs>)
-	(<ev> ^name focusing-at ^reason {<<|deadline| |terminated|>>} -^processed look-at-focus-failed  ^process <proc>)
-	-{(<bs> ^predicate <pred>) 
-	  (<pred> ^name looking-at ^focusing-proccess <proc>)}
-	(<proc> ^results <r>)
+# detect look-at failed situation: focusing-at is expired (due to timeout, abort or execution failure) but looking-at does not holds
+sp {look-at*propose*completion-failed
+	(state <s> ^bottom-state 1 ^beliefs.event <ev> ^beliefs-stable <bs>)
+	(<ev> ^name focusing-at ^reason {<< |deadline| |terminated| >>} -^processed lookat-focus-failed ^process <proc>)
+	-{(<b> ^predicate <pred>)
+	  (<pred> ^name looking-at ^focusing-proccess <proc>)
+    }
+	(<proc> ^object <obj> ^subprocess-of <sproc>)
 -->
-	(<s> ^operator <op> + =)
-	(<op> ^name look-at-focus-failed ^type cognition completion automatic ^status failed ^results <r> ^mark-processed <ev>)
-}
-
-# object is in center for delay: succeed outcome
-sp {look-at*propose*focus-succeed
-	(state <s> ^substate look-at ^beliefs.event <ev>)
-	(<ev> ^name looking-at ^reason initiated -^processed look-at-focus-succeed ^predicate.focusing-proccess <proc>)
-	(<proc> ^object <obj> ^results <r>)
--->
-	(<s> ^operator <op> + =)
-	(<op> ^name look-at-focus-succeed ^type cognition completion automatic ^status succeed ^results <r> ^mark-processed <ev>)
+	(<s> ^operator <op> +, =)
+	(<op> ^name look-at-focus-failed ^type cognition automatic ^status failed ^terminate-process <sproc> ^mark-processed <ev>) 
 }
 

@@ -20,64 +20,38 @@
 
 # ELABORATIONS
 
-# match existing decision (use name, substate and tags)
-sp {animation*elaborate*match-decision-one-tag
-	(state <s> ^substate animation ^beliefs.decision <d> ^superstate.operator <sop>)
-	(<d> ^name <name> ^substate animation ^tag <tag>)
-	(<sop> ^name <name> ^tag <tag> -^tag {<> <tag>})
--->
-	(<s> ^decision <d>)
-}
-
-sp {animation*elaborate*match-decision-two-tags
-	(state <s> ^substate animation ^beliefs.decision <d> ^superstate.operator <sop>)
-	(<d> ^name <name> ^substate animation ^tag1 <tag1> ^tag2 <tag2>)
-	(<sop> ^name <name> ^tag <tag1> ^tag <tag2> -^tag {<> <tag1> <> <tag2>})
--->
-	(<s> ^decision <d>)
-}
-	
 
 # SELECT ANIMATION TO EXECUTION
 
-# propose animations: select animation with corresponding tag (one tag is provided) and add decision
-sp {animation*propose*select-compound-action*one-tag
-	(state <s> ^substate animation -^decision ^name <name> ^superstate.operator <sop> ^mem <mem>)
-	(<sop> ^tag <tag> -^tag {<> <tag>})
+# propose animations: select animation with corresponding tag (one tag is provided)
+sp {animation*propose*animation-one-tag
+	(state <s> ^substate animation -^process ^superstate.operator <sop> ^mem <mem>)
+	(<sop> ^tag <tag> -^tag {<> <tag>} ^process <proc>)
 	(<mem> ^compound-action <anim>)
 	(<anim> ^name <action_name> ^tag <tag>)
 -->
-	(<s> ^operator <o> + =)
-	(<o> ^name select-compound-action ^compound-action <anim> ^type automatic ^add-decision <d>)
-	(<d> ^name <name> ^substate animation ^tag <tag> ^compound-action <anim> ^deadline-time 60.0)
+	(<s> ^operator <op> +, =)
+	(<o> ^name animation-one-tag ^substate flexbe ^behavior ExecuteCompoundAction ^param <p> ^process <proc>)
+	(<p> ^action_name <action_name>)
 }
 
-sp {animation*propose*compound-action*two-tags
-	(state <s> ^substate animation -^decision ^name <name> ^superstate.operator <sop> ^mem <mem>)
-	(<sop> ^tag <tag1> ^tag {<> <tag1> <tag2>} -^tag {<> <tag1> <> <tag2>})
+# propose animations: select animation with corresponding tags (two tags are provided)
+sp {animation*propose*animation-two-tags
+	(state <s> ^substate animation -^process ^superstate.operator <sop> ^mem <mem>)
+	(<sop> ^tag <tag1> ^tag {<> <tag1> <tag2>} -^tag {<> <tag1> <> <tag2>} ^process <proc>)
 	(<mem> ^compound-action <anim>)
 	(<anim> ^name <action_name> ^tag <tag1> ^tag <tag2>)
 -->
-	(<s> ^operator <o> + =)
-	(<o> ^name select-compound-action ^type automatic ^add-decision <d>)
-	(<d> ^name <name> ^substate animation ^tag1 <tag1> ^tag2 <tag2> ^compound-action <anim> ^deadline-time 60.0)
+	(<s> ^operator <op> +, =)
+	(<o> ^name animation-two-tags flexbe ^behavior ExecuteCompoundAction ^param <p> ^process <proc>)
+	(<p> ^action_name <action_name>)
 }
 
-# EXECUTE ANIMATION
+# WAIT WHILE PROCESS IS ACTIVE
 
-# execute flexbe behavior if decsion is made
-# results:
-#	animation succeed if flexbe succeed
-#   animation failed if flexbe substate completed with failed or invalid_pose status.
-#   if flexbe succeed decision object should be deleted
-sp {animation*propose*execute-compound-action
-	(state <s> ^substate animation ^decision <d>)
-	(<d> ^compound-action.name <action_name>)
+sp {animation*propose*wait
+	(state <s> ^substate animation ^process)
 -->
-	(<s> ^operator <op> +)
-	(<op> ^name execute-compound-action ^substate flexbe ^behavior ExecuteCompoundAction ^param <p>)
-	(<p> ^action_name <action_name>)
-	(<op> ^result-inherit succeed ^result-map <map-failed> ^result <del-decision>)
-	(<map-failed> ^status failed invalid_pose ^to-status failed)
-	(<del-decision> ^status succeed ^remove-decision <d>)
+	(<s> ^operator <op> +, =)
+	(<o> ^name animation-wait ^substate wait)
 }

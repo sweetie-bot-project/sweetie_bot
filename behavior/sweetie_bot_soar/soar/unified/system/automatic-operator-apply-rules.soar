@@ -165,9 +165,20 @@ sp {automatic*apply*remove-process
 	(<ev> ^name <name> ^reason terminated ^process <pred> ^initiated-at <time>)
 }
 
+# terminate process: delete WME, add `^terminated-at`, set status
+sp {automatic*apply*remove-process
+	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
+	(<op> ^type automatic ^status <status> ^terminate-process <pred>)
+-->
+	(<b> ^process <pred> -)
+	(<pred> ^terminated-at <time> ^status <status>)
+	(<b> ^event <ev>)
+	(<ev> ^name <name> ^reason terminated ^status <status> ^process <pred> ^initiated-at <time>)
+}
+
 # remove decision: delete WME
 sp {automatic*apply*remove-desicion
-	(state <s> ^operator <op> ^beliefs <b>)
+	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
 	(<op> ^type automatic ^remove-decision <d>)
 -->
 	(<b> ^decision <d> -)
@@ -206,6 +217,30 @@ sp {automatic*apply*print
 	(<op> ^type automatic ^print <string>)
 -->
 	(write <string> (crlf))
+}
+
+#
+# PROCESS HIERARCHY 
+#
+# TODO: analize correctness, superprocess can be created on the next 
+# 
+
+#
+sp {automatic*propose*start-superprocess
+	(state <s> ^bottom-state 1 ^beliefs.process <proc>)
+	(<proc> ^start-process <sproc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name start-superprocess ^type system automatic ^add-process <sproc> ^subprocess <proc>)
+}
+
+sp {automatic*apply*start-superprocess
+	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
+	(<op> ^name start-superprocess ^add-process <sproc> ^subprocess <proc>)
+	(<sproc> ^name <name>)
+-->
+	(<proc> ^subprocess-of <sproc>)
+	(<proc> ^start-process <sproc> -)
 }
 
 #
