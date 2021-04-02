@@ -3,17 +3,6 @@
 #
 
 #
-# ELABORATIONS
-#
-
-sp {automatic*elaborate*add-process-results
-	(state <s> ^operator <op> ^results <r>)
-	(<op> ^type automatic ^add-process <pred>)
--->
-	(<pred> ^results <r>)
-}
-
-#
 # WME ADDITITON
 #
 
@@ -108,19 +97,6 @@ sp {automatic*apply*add-process*history
 	(<pred-pool> ^process <pred>)
 }
 
-# add decision: create predicate WME, add `^initiated-at`
-sp {automatic*apply*add-decision
-	(state <s> ^operator <op> ^beliefs <b> ^beliefs-stable.pending <bs> ^time.now <time>)
-	(<op> ^type automatic ^add-decision <pred>)
-	(<pred> ^name <name>)
--->
-	(<b> ^decision <pred>)
-	(<pred> ^initiated-at <time>)
-	(<b> ^event <ev>)
-	(<ev> ^name <name> ^reason initiated ^decision <pred> ^initiated-at <time>)
-	(<bs> ^decision <pred>)
-}
-
 # add event: create predicate WME, add `^initiated-at`
 sp {automatic*apply*add-event
 	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
@@ -166,24 +142,14 @@ sp {automatic*apply*remove-process
 }
 
 # terminate process: delete WME, add `^terminated-at`, set status
-sp {automatic*apply*remove-process
+sp {automatic*apply*finish-process
 	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
-	(<op> ^type automatic ^status <status> ^terminate-process <pred>)
+	(<op> ^type automatic ^status <status> ^finish-process <pred>)
 -->
 	(<b> ^process <pred> -)
 	(<pred> ^terminated-at <time> ^status <status>)
 	(<b> ^event <ev>)
 	(<ev> ^name <name> ^reason terminated ^status <status> ^process <pred> ^initiated-at <time>)
-}
-
-# remove decision: delete WME
-sp {automatic*apply*remove-desicion
-	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
-	(<op> ^type automatic ^remove-decision <d>)
--->
-	(<b> ^decision <d> -)
-	(<b> ^event <ev>)
-	(<ev> ^name <name> ^reason terminated ^decision <pred> ^initiated-at <time>)
 }
 
 #
@@ -220,50 +186,17 @@ sp {automatic*apply*print
 }
 
 #
-# PROCESS HIERARCHY 
-#
-# TODO: analize correctness, superprocess can be created on the next 
-# 
-
-#
-sp {automatic*propose*start-superprocess
-	(state <s> ^bottom-state 1 ^beliefs.process <proc>)
-	(<proc> ^start-process <sproc>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name start-superprocess ^type system automatic ^add-process <sproc> ^subprocess <proc>)
-}
-
-sp {automatic*apply*start-superprocess
-	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
-	(<op> ^name start-superprocess ^add-process <sproc> ^subprocess <proc>)
-	(<sproc> ^name <name>)
--->
-	(<proc> ^subprocess-of <sproc>)
-	(<proc> ^start-process <sproc> -)
-}
-
-#
 # CHANGE ATTRIBUTES SUPPORT
 #
 # i-supported WME created in top state preserves i-support after being copied to beliefs
 # so if results from top state is linked to process they must be made o-supported
 #
 
-sp {automatic*apply*make-top-state-results-o-supported
-	(state <s> ^operator <op>)
-	(<op> ^type automatic ^add-process.results.result <result>)
-	(state <ss> ^top-state 1 ^operator.result <result>)
-	(<result> ^<attr> <value>)
--->
-	(<result> ^<attr> <value>)
-}
-
 sp {automatic*apply*make-top-state-results-o-supported-level-two
 	(state <s> ^operator <op>)
 	(<op> ^type automatic ^add-process.results.result <result>)
 	(state <ss> ^top-state 1 ^operator.result <result>)
-	(<result> ^{<<|add-predicate| |add-event| |add-process| |add-decision|>>} <pred>)
+	(<result> ^{<<|add-predicate| |add-event| |add-process|>>} <pred>)
 	(<pred> ^<attr> <value>)
 -->
 	(<pred> ^<attr> <value>)

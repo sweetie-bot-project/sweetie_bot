@@ -20,7 +20,7 @@ sp {initialization*apply*belief-history-timestamp
 
 sp {beliefs*elaborate*terminate-time
 	(state <s> ^top-state 1 ^beliefs <b>)
-	(<b> ^{<<|predicate| |process| |decision|>> <belief-type>} <pred>)
+	(<b> ^{<<|predicate| |process|>> <belief-type>} <pred>)
 	(<pred> ^deadline-time <d-time> ^initiated-at <init-time>)
 -->
 	(<pred> ^terminate-time (+ <init-time> <d-time>))
@@ -39,7 +39,7 @@ sp {beliefs*elaborate*predicate-forget-time
 # newly created belief does not have `^initiated-at` attribute.
 sp {beliefs*propose*register-new-belief
 	(state <s> ^bottom-state 1 ^beliefs <b>)
-	(<b> ^{<<|event| |predicate| |process| |decision|>> <belief-type>} <belief>)
+	(<b> ^{<<|event| |predicate| |process|>> <belief-type>} <belief>)
 	(<belief> -^initiated-at)
 -->
 	(<s> ^operator <op> +, =)

@@ -36,14 +36,6 @@
 
 # ELABOARTIONS
 
-# recover process
-sp {look-at*elaborate*focusing-at-process
-	(state <s> ^substate look-at ^beliefs.process <proc> ^process <sp>)
-	(<proc> ^name focusing-at ^substate look-at ^subprocess-of <sp>)
--->
-	(<s> ^focusing-at <proc>)
-}
-
 # detect "object in the center" situation
 sp {look-at*elaborate*looking-at-verifing
 	(state <s> ^top-state 1 ^beliefs <b>)
@@ -77,23 +69,14 @@ sp {look-at*elaborate*looking-at
 # DECISION OPERATORS
 
 # start flexbe behavior and create focusing-at process
-sp {look-at*propose*start-look-at-bahavior
-	(state <s> ^substate look-at -^focusing-at ^superstate.operator <sop>)
-	(<sop> ^object <obj> ^delay <delay> ^timeout <timeout> ^process <sp>)
+sp {look-at*propose*start-look-at-behavior
+	(state <s> ^substate look-at ^args <args>)
+	(<args> ^object <obj> ^delay <delay> ^timeout <timeout>)
 	(<obj> ^id <id> ^label <label> ^type <type>)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name start-look-at ^substate flexbe ^behavior ExecuteLookAt ^interruptable hard ^param <p> ^process <proc>)
-	(<p> ^id <id> ^label <label> ^type <type> ^timeout (+ <delay> 1.0))
-	(<proc> ^name focusing-at ^substate look-at  ^object <obj> ^delay <delay> ^deadline-time <timeout> ^initiate-process <sp>)
-}
-
-# wait until flexbe behavior exit 
-sp {look-at*propose*wait-look-at-behavior
-	(state <s> ^substate look-at ^focusing-at <proc>)
--->
-	(<s> ^operator <op> +)
-	(<op> ^name wait-look-at ^substate flexbe ^process <proc>)
+	(<op> ^name focusing-at ^substate flexbe ^args <a> ^interruptable hard)
+	(<a> ^behavior ExecuteLookAt ^id <id> ^label <label> ^type <type> ^timeout (+ <delay> 1.0) ^deadline-time <timeout>)
 }
 
 # COGNITION OPERATORS
@@ -102,10 +85,10 @@ sp {look-at*propose*wait-look-at-behavior
 sp {look-at*propose*completion-failed
 	(state <s> ^bottom-state 1 ^beliefs.event <ev> ^beliefs-stable <bs>)
 	(<ev> ^name focusing-at ^reason {<< |deadline| |terminated| >>} -^processed lookat-focus-failed ^process <proc>)
-	-{(<b> ^predicate <pred>)
+	-{(<bs> ^predicate <pred>)
 	  (<pred> ^name looking-at ^focusing-proccess <proc>)
     }
-	(<proc> ^object <obj> ^subprocess-of <sproc>)
+	(<proc> ^subprocess-of <sproc>)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name look-at-focus-failed ^type cognition automatic ^status failed ^terminate-process <sproc> ^mark-processed <ev>) 

@@ -25,33 +25,34 @@
 
 # propose animations: select animation with corresponding tag (one tag is provided)
 sp {animation*propose*animation-one-tag
-	(state <s> ^substate animation -^process ^superstate.operator <sop> ^mem <mem>)
-	(<sop> ^tag <tag> -^tag {<> <tag>} ^process <proc>)
+	(state <s> ^substate animation ^process-status pending ^process <proc> ^args <args> ^mem <mem>)
+	(<args> ^tag <tag> -^tag {<> <tag>})
 	(<mem> ^compound-action <anim>)
 	(<anim> ^name <action_name> ^tag <tag>)
 -->
 	(<s> ^operator <op> +, =)
-	(<o> ^name animation-one-tag ^substate flexbe ^behavior ExecuteCompoundAction ^param <p> ^process <proc>)
-	(<p> ^action_name <action_name>)
+	(<op> ^name animation-start ^substate flexbe ^args <a> ^process <proc>)
+	(<a> ^behavior ExecuteCompoundAction ^action_name <action_name>)
 }
 
 # propose animations: select animation with corresponding tags (two tags are provided)
 sp {animation*propose*animation-two-tags
-	(state <s> ^substate animation -^process ^superstate.operator <sop> ^mem <mem>)
-	(<sop> ^tag <tag1> ^tag {<> <tag1> <tag2>} -^tag {<> <tag1> <> <tag2>} ^process <proc>)
+	(state <s> ^substate animation ^process-status pending ^process <proc> ^args <args> ^mem <mem>)
+	(<args> ^tag <tag1> ^tag {<> <tag1> <tag2>} -^tag {<> <tag1> <> <tag2>})
 	(<mem> ^compound-action <anim>)
 	(<anim> ^name <action_name> ^tag <tag1> ^tag <tag2>)
 -->
 	(<s> ^operator <op> +, =)
-	(<o> ^name animation-two-tags flexbe ^behavior ExecuteCompoundAction ^param <p> ^process <proc>)
-	(<p> ^action_name <action_name>)
+	(<op> ^name animation-start ^substate flexbe ^a <args> ^process <proc> ^args-add <a>)
+	(<a> ^behavior ExecuteCompoundAction ^action_name <action_name>)
 }
 
 # WAIT WHILE PROCESS IS ACTIVE
 
 sp {animation*propose*wait
-	(state <s> ^substate animation ^process)
+	(state <s> ^substate animation ^process-status active ^process <proc>)
+	(<proc> ^action_name <action_name>)
 -->
 	(<s> ^operator <op> +, =)
-	(<o> ^name animation-wait ^substate wait)
+	(<op> ^name animation-wait ^substate flexbe ^process <proc>)
 }

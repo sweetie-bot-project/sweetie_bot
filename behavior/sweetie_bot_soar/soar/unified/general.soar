@@ -1,59 +1,40 @@
 # OVERALL BEHAVIOR SELECTION
 
-# attach related decision
+# process: all related subprocesses will be automatilly attaches all to state
 sp {talker*elaborate*decision
-	(state <s> ^substate main ^beliefs.decision <d>)
-	(<d> ^substate main)
+	(state <s> ^substate main)
 -->
-	(<s> ^decision <d>)
+	(<s> ^process <proc>)
+	(<proc> ^name main ^substate main)
 }
 
 # PROPOSE ANIMATION OR WAIT
 
 # Propose perform animation (no one around)
 sp {talker*propose*decide-animation
-	(state <s> ^substate main -^decision)
+	(state <s> ^substate main -^performing-animation)
 -->
 	(<s> ^operator <op> +, =)
-   	(<op> ^name decide-animation ^drive movement ^type automatic ^add-decision <d>)
-	(<d> ^name animation ^substate main ^deadline-time 5.0)
+   	(<op> ^name performing-animation ^substate animation ^args <a> ^drive movement)
+	(<a> ^tag alone ^deadline-time 5.0)
 }
-
-sp {talker*propose*decide-wait
-	(state <s> ^substate main -^decision)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name decide-wait ^drive movement ^type automatic ^add-decision <d>)
-	(<d> ^name wait ^substate main ^deadline-time (+ 5 (rand-int 15)))
-}
-
-# Propose perform animation (no one around)
-#sp {talker*propose*animation
-#	(state <s> ^substate main ^decision <d>)
-#	(<d> ^name animation)
-#-->
-#	(<s> ^operator <o> +, =)
-#   	(<o> ^name animation-alone ^drive movement ^substate animation ^tag alone ^result <res>)
-#	(<res> ^status succeed ^remove-decision <d>)
-#}
 
 # invoke RandHeadMovements for random timeout instead of animation 
 sp {talker*propose*rand*head*movements
-	(state <s> ^substate main ^decision <d>)
-	(<d> ^name animation)
+	(state <s> ^substate main -^moving-head)
 -->
-	(<s> ^operator <o> + =)
-   	(<o> ^name head-movements ^drive movement ^substate flexbe ^interruptable hard)
-   	(<o> ^behavior ExecuteRandHeadMovements ^param <p>)
-	(<p> ^timeout (+ 5 (rand-int 15)))
+	(<s> ^operator <op> +, =)
+   	(<op> ^name moving-head ^substate flexbe ^args <a> ^interruptable hard ^drive movement)
+   	(<a> ^behavior ExecuteRandHeadMovements ^timeout (+ 5 (rand-int 15))) 
 }
 
 # wait 
 sp {talker*propose*wait
-	(state <s> ^substate main ^beliefs.decision.name wait)
+	(state <s> ^substate main ^{<<|performing-animation| |moving-head|>>} <proc>)
+	(<proc> ^substate <substate>)
 -->
 	(<s> ^operator <o> +, =)
-   	(<o> ^name wait ^drive movement ^substate wait)
+   	(<o> ^name wait-proccess ^substate <substate> ^drive movement ^process <proc>)
 }
 
 # LOOK AT OBJECT
@@ -74,39 +55,39 @@ sp {talker*propose*look-at
 	(<obj> ^input-link.visible now)
 -->
 	(<s> ^operator <o> +, =)
-   	(<o> ^name look-at-multiple-objects ^substate attention ^drive curiosity)
+   	(<o> ^name look-at-multiple-objects ^substate attention ^args <a> ^drive curiosity)
 }
 
 # SELECT HUMAN TO TALK
 
 # select human if we a looking at him 
-sp {talker*propose*select-human-to-talk
-	(state <s> ^substate main ^beliefs <b>)
-	(<b> ^object <obj> ^predicate <pred>)
-	(<obj> ^type human)
-	(<pred> ^name looking-at ^object <obj>)
-	-{(<b> ^decision <d>) 
-      (<d> ^name talk ^substate main)
-    }
-	-{(<b> ^predicate <p>) 
-      (<p> ^name talked ^object <obj>)
-    }
--->
-	(<s> ^operator <o> + =)
-   	(<o> ^name decide-talk ^type automatic ^drive social ^add-decision <d>)
-	(<d> ^name talk ^substate main ^object <obj> ^deadline-time 600.0)
-}
-
-sp {talker*propose*talk
-	(state <s> ^substate main ^decision <d>)
-	(<d> ^name talk ^substate main ^object <obj>)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name talk ^substate talk ^drive social ^object <obj> ^result <r1> <r2>)
-	(<r1> ^status succeed talk-failed ^remove-decision <d>)
-	(<r2> ^status succeed ^add-predicate <pred>)
-	(<pred> ^name talked ^object <obj> ^deadline-time 120.0)
-}
+#sp {talker*propose*select-human-to-talk
+#	(state <s> ^substate main ^beliefs <b>)
+#	(<b> ^object <obj> ^predicate <pred>)
+#	(<obj> ^type human)
+#	(<pred> ^name looking-at ^object <obj>)
+#	-{(<b> ^decision <d>) 
+#      (<d> ^name talk ^substate main)
+#    }
+#	-{(<b> ^predicate <p>) 
+#      (<p> ^name talked ^object <obj>)
+#    }
+#-->
+#	(<s> ^operator <o> + =)
+#   	(<o> ^name decide-talk ^type automatic ^drive social ^add-decision <d>)
+#	(<d> ^name talk ^substate main ^object <obj> ^deadline-time 600.0)
+#}
+#
+#sp {talker*propose*talk
+#	(state <s> ^substate main ^decision <d>)
+#	(<d> ^name talk ^substate main ^object <obj>)
+#-->
+#	(<s> ^operator <o> +, =)
+#   	(<o> ^name talk ^substate talk ^drive social ^object <obj> ^result <r1> <r2>)
+#	(<r1> ^status succeed talk-failed ^remove-decision <d>)
+#	(<r2> ^status succeed ^add-predicate <pred>)
+#	(<pred> ^name talked ^object <obj> ^deadline-time 120.0)
+#}
 
 # SAY HELLO
 

@@ -4,8 +4,7 @@
 
 # subgoal support: derive substate name if operator implies substate creation.
 sp {elaborate*state-name
-	(state <s> ^superstate <ss> ^impasse no-change)
-	(<ss> ^operator <op>)
+	(state <s> ^superstate.operator <op> ^impasse no-change)
 	(<op> ^name <name> ^substate <substate-name>)
 -->
 	(<s> ^name <name> ^substate <substate-name>)
@@ -16,13 +15,6 @@ sp {elaborate*state-cognition-type
 	(state <s> ^superstate.operator.type cognition ^impasse no-change)
 -->
 	(<s> ^type cognition)
-}
-
-# substate process
-sp {elaborate*state-process
-	(state <s> ^substate ^superstate.operator.process <proc> ^beliefs.process <proc>)
--->
-	(<s> ^process <proc>)
 }
 
 # propagate memory access to subgoal substates

@@ -27,86 +27,72 @@
 # * (^name say ^substate say ^object <obj> ^topic <topic> ^deadline-time 2.0) --- gaze is focused on object so we can say <text>.
 #
 
-# ELABORATIONS
-
-# match decision to the sustate
-sp {say*elaborate*match-decision
-	(state <s> ^substate say ^beliefs.process <proc> ^process <sproc>)
-	(<proc> ^name saying ^substate say ^subprocess-of <sproc>)
--->
-	(<s> ^saying <proc>)
-}
-
 # DECISION RULES
 
-# enshure that object is in center of view before asking
+# ENSHURE THAT OBJECT IS IN CENTER OF VIEW BEFORE ASKING
+
+# activate LookAt flexbe behavior
 sp {say*propose*look-at
-	(state <s> ^substate say -^saying ^superstate.operator <sop>)
-	(<sop> ^object <obj> ^topic <topic> ^process <sproc>)
+	(state <s> ^substate say ^args <args>)
+	(<args> ^object <obj> ^topic <topic>)
 -->
 	(<s> ^operator <op> +, <)
-	(<op> ^name say-look-at ^substate look-at ^object <obj> ^timeout 10.0 ^delay 2.0 ^process <proc>)
-	(<proc> ^name focusing-to-say ^object <obj> ^topic <topic> ^subprocess-of <sproc>)
+	(<op> ^name focusing-to-say ^substate look-at ^args <a>)
+	(<a> ^object <obj> ^topic <topic> ^timeout 10.0 ^delay 2.0 )
 }
 
-# detect focus failed outcome
+# detect focus failed outcome: emit talk-failed event, finish process
 sp {say*propose*look-at*failed
 	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
 	(<ev> ^name focusing-to-say ^status failed ^process <proc>)
-	(<proc> ^topic <topic> ^object <obj>)
+	(<proc> ^topic <topic> ^object <obj> ^subprocess-of <sp>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name say-look-at-failed ^type cognition automatic ^add-event <ev-new>)
+	(<op> ^name say-look-at-failed ^type cognition automatic ^add-event <ev-new> ^status failed ^finish-process <sp>)
 	(<ev-new> ^name talk-failed ^object <obj> ^topic <topic>)
 }
 
-# choice animation with tag 'talk'
-sp {say*propose*execute
-	(state <s> ^substate say -^saying ^beliefs.predicate <pred> ^superstate.operator <sop> ^mem.joint-trajectory <anim>)
-	(<sop> ^object <obj> ^topic <topic> ^process <proc>)
+# PERFORM TALK ANIMATION
+
+# propose animations with 'talk': start flexbe behavior, add 'saying' process
+sp {say*propose*select-animation
+	(state <s> ^substate say -^saying ^beliefs.predicate <pred> ^args <args> ^mem.joint-trajectory <anim>)
+	(<args> ^object <obj> ^topic <topic>)
 	(<pred> ^name looking-at ^object <obj>)
 	(<anim> ^tag talk)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name say-execute ^substate flexbe ^behavior ExecuteJointTrajectoryAndSay ^param <param> ^process <proc>)
-    (<param> ^text <text> ^joint_trajectory <animation-name> ^text_delay 0.2)
-	(<proc> ^name saying ^substate say ^object <obj> ^topic <topic> ^subprocess-of <sproc>)
+	(<op> ^name saying ^substate flexbe ^args <a> ^animation <anim>)
+    (<a> ^object <obj> ^topic <topic> ^behavior ExecuteJointTrajectoryAndSay ^text <text> ^joint_trajectory <animation-name> ^text_delay 0.2)
 }
 
-sp {say*propose*execute-wait
-	(state <s> ^substate say ^saying <proc>)
-	(<proc> ^object <obj> ^topic <topic> ^subprocess-of <sproc>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name say-execute ^substate flexbe ^behavior ExecuteJointTrajectoryAndSay ^param <param> ^process <proc>)
-    (<param> ^text <text> ^joint_trajectory <animation-name> ^text_delay 0.2)
-	(<proc> ^name saying ^substate say ^object <obj> ^topic <topic> ^subprocess-of <sproc>)
-}
-
-# if desicion to ask is made execute flexbe command
-sp {say*propose*say-execute
-	(state <s> ^substate say ^decision <d> ^superstate.operator <sop>)
-	(<d> ^object <obj> ^topic <topic> ^animation <anim>)
-	(<anim> ^name <animation-name>)
-	(<sop> ^text <text>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name say-execute ^substate flexbe ^behavior ExecuteJointTrajectoryAndSay ^param <param> ^animation <anim> ^result-inherit succeed ^result <res> ^result <res-succeed>)
-    (<param> ^text <text> ^joint_trajectory <animation-name> ^text_delay 0.2)
-	(<res> ^status failed invalid_pose ^remove-decision <d>)
-	(<res-succeed> ^status succeed ^add-event <ev> ^remove-decision <d>)
-	(<ev> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
-	(write |Say: | <text> (crlf))
-}
-
-# elaborate is_relative ExecuteJointTrajectoryAndSay paramter
+# elaborate is_relative ExecuteJointTrajectoryAndSay parameter
 sp {say*elaborate*say-execute-animation-is-relative
 	(state <s> ^substate say ^operator <op> +)
-	(<op> ^name say-execute ^param <param> ^animation.relative) 
+	(<op> ^name saying ^args <args> ^animation.relative) 
 -->
-	(<param> ^is_relative True)
+	(<args> ^is_relative True)
 }
- 
+
+# if 'saying' process is active continue its execution
+sp {say*propose*execute-animation
+	(state <s> ^substate say ^saying <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name saying-continue ^substate flexbe ^process <proc>)
+}
+
+# detect saying succeed: add talk-said event and finish prcess
+sp {say*propose*saying*succeed
+	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
+	(<ev> ^name saying ^status succeed ^process <proc>)
+	(<proc> ^topic <topic> ^object <obj> ^subprocess-of <sp>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name say-saying-succeed ^type cognition automatic ^add-event <ev-new> ^status succeed ^finish-process <sp>)
+	(<ev-new> ^name talk-said ^object <obj> ^topic <topic>)
+}
+
 # PREFERENCES 
 
 # prefer animation with tag matching supplied as substate parameter

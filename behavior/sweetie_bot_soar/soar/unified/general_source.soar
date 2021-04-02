@@ -15,8 +15,8 @@ source lookat.soar
 source attention.soar
 # talk
 source say.soar
-source ask.soar
-source talk/talk_source.soar
+#source ask.soar
+#source talk/talk_source.soar
 # main behavior
 source general.soar
 # debug
