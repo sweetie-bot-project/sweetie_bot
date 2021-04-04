@@ -40,9 +40,10 @@ insert_servo_model('default_servo_model', 'default', $hashref->{'default'} );
 print <<"ENDHEREDOC";
   <struct name="servo_models" type="/sweetie_bot_servo_model_msg/ServoModel[]">
 ENDHEREDOC
+# element counter
+my $count = 0;
 foreach $group_ref (@{$hashref->{'servos'}}) {
 	# insert servo model
-	my $count = 0;
 	foreach $servo (@{$group_ref->{'names'}}) {
 		insert_servo_model('Element' . $count++, $servo, $group_ref->{'model'});
 	}
