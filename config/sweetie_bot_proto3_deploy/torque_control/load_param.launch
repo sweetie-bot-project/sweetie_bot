@@ -1,0 +1,13 @@
+<!-- MODULE: Load default params to run joint space controllers -->
+<launch>
+	<!-- default configuration -->
+	<include file="$(find sweetie_bot_proto3_deploy)/default/load_param.launch" />
+
+    <!-- additional components' configuration-->
+	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto3_deploy)/torque_control/servo_inv.yaml" ></rosparam> 
+    <!-- OROCOS cpf file configuration: replace not valid charcters with "_"  -->
+	<param name="conf_file/servo_models_cpf" textfile="$(find sweetie_bot_proto3_deploy)/torque_control/servo_models.cpf" ></param>
+	<param name="conf_file/herkulex_servos_head_cpf" textfile="$(find sweetie_bot_proto3_deploy)/torque_control/herkulex_servos_head.cpf" ></param>
+	<param name="conf_file/herkulex_servos_leg12_cpf" textfile="$(find sweetie_bot_proto3_deploy)/torque_control/herkulex_servos_leg12.cpf" ></param>
+	<param name="conf_file/herkulex_servos_leg34_cpf" textfile="$(find sweetie_bot_proto3_deploy)/torque_control/herkulex_servos_leg34.cpf" ></param>
+</launch>
