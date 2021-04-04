@@ -31,6 +31,18 @@
 				<description>Blink with led if coresponding status error bit set.</description>
 				<value>119</value>
 			</simple>
+			<simple name="position_kp" type="ulong">
+				<description>Position PID regulator proportional coefficient.</description>
+				<value>230</value>
+			</simple>
+			<simple name="position_kd" type="ulong">
+				<description>Position PID regulator differential coefficient.</description>
+				<value>500</value>
+			</simple>
+			<simple name="position_ki" type="ulong">
+				<description>Position PID regulator integral coefficient.</description>
+				<value>0</value>
+			</simple>
 		</struct>
 	</struct>
     <struct name="head_joint1" type="PropertyBag">
@@ -66,14 +78,13 @@
             <description>Reverse direction flag.</description>
             <value>1</value>
         </simple>
-        <simple name="position_kp" type="ulong">
-            <description>Position KP</description>
-            <value>64</value>
-        </simple>
-        <simple name="position_kd" type="ulong">
-            <description>Position Kd</description>
-            <value>1500</value>
-        </simple>
+		<struct name="registers_init" type="PropertyBag">
+			<description>These values are written to RAM register of ALL servos after reboot. The servo-specific values override them.</description>
+			<simple name="position_kp" type="ulong">
+				<description>Position PID regulator proportional coefficient.</description>
+				<value>128</value>
+			</simple>
+		</struct>
     </struct>
     <struct name="head_joint3" type="PropertyBag">
         <description>Servo description.</description>
@@ -89,14 +100,13 @@
             <description>Reverse direction flag.</description>
             <value>1</value>
         </simple>
-        <simple name="position_kp" type="ulong">
-            <description>Position KP</description>
-            <value>64</value>
-        </simple>
-        <simple name="position_kd" type="ulong">
-            <description>Position Kd</description>
-            <value>1500</value>
-        </simple>
+		<struct name="registers_init" type="PropertyBag">
+			<description>These values are written to RAM register of ALL servos after reboot. The servo-specific values override them.</description>
+			<simple name="position_kp" type="ulong">
+				<description>Position PID regulator proportional coefficient.</description>
+				<value>128</value>
+			</simple>
+		</struct>
     </struct>
     <struct name="head_joint4" type="PropertyBag">
         <description>Servo description.</description>
@@ -112,14 +122,13 @@
             <description>Reverse direction flag.</description>
             <value>0</value>
         </simple>
-        <simple name="position_kp" type="ulong">
-            <description>Position KP</description>
-            <value>64</value>
-        </simple>
-        <simple name="position_kd" type="ulong">
-            <description>Position Kd</description>
-            <value>1500</value>
-        </simple>
+		<struct name="registers_init" type="PropertyBag">
+			<description>These values are written to RAM register of ALL servos after reboot. The servo-specific values override them.</description>
+			<simple name="position_kp" type="ulong">
+				<description>Position PID regulator proportional coefficient.</description>
+				<value>100</value>
+			</simple>
+		</struct>
     </struct>
   </struct>
 </properties>

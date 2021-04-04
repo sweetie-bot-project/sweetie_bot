@@ -31,6 +31,18 @@
 				<description>Blink with led if coresponding status error bit set.</description>
 				<value>119</value>
 			</simple>
+			<simple name="position_kp" type="ulong">
+				<description>Position PID regulator proportional coefficient.</description>
+				<value>230</value>
+			</simple>
+			<simple name="position_kd" type="ulong">
+				<description>Position PID regulator differential coefficient.</description>
+				<value>500</value>
+			</simple>
+			<simple name="position_ki" type="ulong">
+				<description>Position PID regulator integral coefficient.</description>
+				<value>0</value>
+			</simple>
 		</struct>
 	</struct>
     <struct name="leg3_joint1" type="PropertyBag">
