@@ -170,7 +170,7 @@
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>1</value>
+            <value>0</value>
         </simple>
     </struct>
     <struct name="leg2_joint3" type="PropertyBag">
@@ -238,7 +238,7 @@
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
-            <value>1</value>
+            <value>0</value>
         </simple>
     </struct>
   </struct>
