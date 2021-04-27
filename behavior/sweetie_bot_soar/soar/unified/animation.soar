@@ -31,7 +31,7 @@ sp {animation*propose*animation-one-tag
 	(<anim> ^name <action_name> ^tag <tag>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name animation-start ^substate flexbe ^args <a> ^process <proc>)
+	(<op> ^name animation-start ^substate flexbe ^process-link <proc> ^additional-process-args <a>)
 	(<a> ^behavior ExecuteCompoundAction ^action_name <action_name>)
 }
 
@@ -43,7 +43,7 @@ sp {animation*propose*animation-two-tags
 	(<anim> ^name <action_name> ^tag <tag1> ^tag <tag2>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name animation-start ^substate flexbe ^a <args> ^process <proc> ^args-add <a>)
+	(<op> ^name animation-start ^substate flexbe ^process-link <proc> ^additional-process-args <a>)
 	(<a> ^behavior ExecuteCompoundAction ^action_name <action_name>)
 }
 
@@ -54,5 +54,5 @@ sp {animation*propose*wait
 	(<proc> ^action_name <action_name>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name animation-wait ^substate flexbe ^process <proc>)
+	(<op> ^name animation-wait ^substate flexbe ^process-link <proc>)
 }

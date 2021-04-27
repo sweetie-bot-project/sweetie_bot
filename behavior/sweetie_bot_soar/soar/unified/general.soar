@@ -15,8 +15,8 @@ sp {talker*propose*decide-animation
 	(state <s> ^substate main -^performing-animation)
 -->
 	(<s> ^operator <op> +, =)
-   	(<op> ^name performing-animation ^substate animation ^args <a> ^drive movement)
-	(<a> ^tag alone ^deadline-time 5.0)
+   	(<op> ^name performing-animation ^substate animation ^process-args <a> ^drive movement)
+	(<a> ^tag alone ^deadline-time 30.0)
 }
 
 # invoke RandHeadMovements for random timeout instead of animation 
@@ -24,7 +24,7 @@ sp {talker*propose*rand*head*movements
 	(state <s> ^substate main -^moving-head)
 -->
 	(<s> ^operator <op> +, =)
-   	(<op> ^name moving-head ^substate flexbe ^args <a> ^interruptable hard ^drive movement)
+   	(<op> ^name moving-head ^substate flexbe ^process-args <a> ^interruptable hard ^drive movement)
    	(<a> ^behavior ExecuteRandHeadMovements ^timeout (+ 5 (rand-int 15))) 
 }
 
@@ -34,7 +34,7 @@ sp {talker*propose*wait
 	(<proc> ^substate <substate>)
 -->
 	(<s> ^operator <o> +, =)
-   	(<o> ^name wait-proccess ^substate <substate> ^drive movement ^process <proc>)
+   	(<o> ^name wait-proccess ^substate <substate> ^drive movement ^process-link <proc>)
 }
 
 # LOOK AT OBJECT
@@ -55,7 +55,7 @@ sp {talker*propose*look-at
 	(<obj> ^input-link.visible now)
 -->
 	(<s> ^operator <o> +, =)
-   	(<o> ^name look-at-multiple-objects ^substate attention ^args <a> ^drive curiosity)
+   	(<o> ^name look-at-multiple-objects ^substate attention ^process-args <a> ^drive curiosity)
 }
 
 # SELECT HUMAN TO TALK
@@ -91,25 +91,35 @@ sp {talker*propose*look-at
 
 # SAY HELLO
 
-#sp {talker*propose*say-greet
-#	(state <s> ^substate main ^beliefs <b>)
-#	(<b> ^decision <d>)
-#	(<d> ^name talk ^substate main ^object <obj>)
-#	-{(<b> ^predicate <pred>) 
-#	  (<pred> ^name greeted ^object <obj>)}
-#-->
-#	(<s> ^operator <o> +, =)
-#   	(<o> ^name ask-greet ^substate ask ^drive social ^object <obj> ^topic greeting ^text |Hello, I am Sweetie Bot!| ^animation-tag greet)
-#}
-#
-#sp {talker*propose*end-dialog 
-#	(state <s> ^substate main ^beliefs.event <ev>)
-#	(<ev> ^name talk-answer ^actor <obj> ^question-topic greeting -^processed end-dialog)
-#-->
-#	(<s> ^operator <op> +, =)
-#	(<op> ^name end-dialog ^type cognition automatic ^add-predicate <pred> ^mark-processed <ev>)
-#	(<pred> ^name greeted ^object <obj>)
-#}
+# we are looking at human but he is not greeted the start greeting him
+sp {talker*propose*say-greet
+	(state <s> ^substate main -^greeting ^beliefs <b> ^beliefs-stable <bs>)
+	(<bs> ^predicate <pred>)
+	(<pred> ^name looking-at ^object <obj>)
+	(<obj> ^type human)
+	-{(<b> ^predicate <pred>) 
+	  (<pred> ^name greeted ^object <obj>)}
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name greeting ^substate ask ^drive social ^process-args <a>) 
+	(<a> ^object <obj> ^topic greeting ^text |Hello, I am Sweetie Bot!| ^animation-tag greet ^result <r-succeed>)
+	(<r-succeed> ^status succeed ^add-predicate <n-pred>)
+	(<n-pred> ^name greeted ^object <obj>)
+}
 
-#
+sp {talker*propose*say-greet-continue
+	(state <s> ^substate main ^greeting <proc>)
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name greeting-continue ^substate ask ^drive social ^process-link <proc>) 
+}
+
+sp {talker*propose*detect-greeted
+	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
+	(<ev> ^name talk-answered ^actor <obj> ^question-topic greeting ^answer-topic greeting -^processed object-is-greeted)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name object-is-greeted ^type cognition automatic ^add-predicate <pred> ^mark-processed <ev>)
+	(<pred> ^name greeted ^object <obj>)
+}
 

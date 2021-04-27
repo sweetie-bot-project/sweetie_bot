@@ -80,18 +80,14 @@ sp {elaborate*state-events-predicates-pool
 # BOTTOM AND TOP STATE MARKS
 #
 
-# bottom state: cognition substates produced by cognition operators are not bottom
 sp {elaborate*not-bottom-state
-	:i-support
-	(state <s> ^substate ^superstate <ss>)
-	(<ss> ^operator <op>)
-	(<op> -^type cognition)
+	(state <s> ^superstate <ss> -^type cognition)
 -->
 	(<ss> ^bottom-state 0)
 }
 
 sp {elaborate*bottom-state
-	(state <s> ^substate ^superstate <ss> -^bottom-state 0 -^type cognition)
+	(state <s> ^superstate <ss> -^bottom-state 0 -^type cognition)
 -->
 	(<s> ^bottom-state 1)
 }

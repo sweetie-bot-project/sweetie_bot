@@ -8,15 +8,15 @@
 # user provided process
 sp {process*elaborate*user-provided-process
 	(state <s> ^superstate.operator <op>)
-	(<op> -^type cognition ^process <proc>)
+	(<op> -^type cognition ^process-link <proc>)
 -->
 	(<s> ^process <proc> ^process-origin user)
 }
 
-# agument user provided process if ^args-add provided
+# agument user provided process if ^additional-process-args provided
 sp {process*elaborate*user-provided-process*add-args
 	(state <s> ^superstate.operator <op>)
-	(<op> -^type cognition ^args-add <args> ^process <proc>)
+	(<op> -^type cognition ^additional-process-args <args> ^process-link <proc>)
 	(<args> ^<attr> <value>)
 -->
 	(<proc> ^<attr> <value>)
@@ -25,11 +25,11 @@ sp {process*elaborate*user-provided-process*add-args
 # recover existing process
 sp {process*elaborate*recover-existing-process
 	(state <s> -^process-origin user ^superstate.operator <op> ^beliefs.process <proc>)
-	(<op> -^type cognition ^name <name> ^substate <substate> ^args <args>)
+	(<op> -^type cognition ^name <name> ^substate <substate> ^process-args <args>)
 	(<proc> ^name <name> ^substate <substate>)
 	-{ (<args> ^<attr> <value>) -(<proc> ^<attr> <value>) }
 -->
-	(<s> ^process <proc> ^process-origin recovered ^process-status created)
+	(<s> ^process <proc> ^process-origin recovered ^process-status active)
 }
 
 # auto-created process
@@ -43,7 +43,7 @@ sp {process*elaborate*auto-create-process
 
 # copy arguments to auto-created process
 sp {process*elaborate*auto-create-process*copy-args
-	(state <s> ^process-origin auto ^process <proc> ^superstate.operator.args <args>)
+	(state <s> ^process-origin auto ^process <proc> ^superstate.operator.process-args <args>)
 	(<args> ^<attr> <value>)
 -->
 	(<proc> ^<attr> <value>)
@@ -53,12 +53,12 @@ sp {process*elaborate*auto-create-process*copy-args
 sp {process*elaborate*process-status-created
 	(state <s> ^process-origin user ^process <proc> ^beliefs.process <proc>)
 -->	
-	(<s> ^process-status created)
+	(<s> ^process-status active)
 }
 	
 # process status: user provided process yet to be created
 sp {process*elaborate*process-status-pending
-	(state <s> ^process-origin user -^process-status created)
+	(state <s> ^process-origin user -^process-status active)
 -->	
 	(<s> ^process-status pending)
 }
@@ -108,6 +108,21 @@ sp {process*elaborate*substate-arguments
 	(state <s> ^process <p>)
 -->
 	(<s> ^args <p>)
+}
+
+# if process was recovered pending superstate process should be activated
+sp {process*propose*activate-pending-superstate-process
+	(state <s> ^process-status active ^pending-superstate-process)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name activate-pending-superstate-process ^type system automatic)
+}
+
+sp {process*elaborate*activate-pending-superstate-process
+	(state <s> ^operator <op> + ^pending-superstate-process <sp>)
+	(<op> ^name activate-pending-superstate-process ^type automatic)
+-->
+	(<op> ^add-process <sp>)
 }
 
 # TODO non-automatic process predicate creation

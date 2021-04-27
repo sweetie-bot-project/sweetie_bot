@@ -7,6 +7,14 @@
 # create basic structures in memory
 #
 
+sp {initialization*apply*debug-time
+	(state <s> ^name initialization ^operator <op> -^io.input-link.clock)
+	(<op> ^name initialization ^stage 1)
+-->
+	(<s> ^time <t>)
+	(<t> ^now 100)
+	(<t> ^cycle 1)
+}
 
 # SECOND STAGE
 #
@@ -23,6 +31,18 @@ sp {initialization*apply*drives
 	(<d4> ^name curiosity ^activation 0 ^importance 5) 
 	(<d5> ^name social ^activation 0 ^importance 6) 
 }
+
+sp {initialization*apply*flexbe-commands
+	(state <s> ^name initialization ^operator <op> ^mem <m>)
+	(<op> ^name initialization ^stage 2)
+-->
+	(<m> ^flexbe-command <c1> <c2> <c3> <c4>)
+	(<c1> ^name ExecuteLookAt ^param id label type timeout)
+	(<c2> ^name ExecuteCompoundAction ^param action_name)
+	(<c3> ^name ExecuteStepSequence ^param step_sequence)
+	(<c4> ^name ExecuteJointTrajectoryAndSay ^param joint_trajectory text text_delay is_relative)
+}
+
 
 sp {initialization*apply*compound*action
 	(state <s> ^name initialization ^operator <op> ^mem <m>)

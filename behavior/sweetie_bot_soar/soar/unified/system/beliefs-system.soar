@@ -8,6 +8,7 @@ sp {initialization*apply*belief-stable-pending-and-timestamp
 -->
 	(<bs> ^pending <p>)
 	(<b> ^timestamp <time>)
+	(<b> ^terminated <t> ^deadline <d> ^initiated <i>)
 }
 
 sp {initialization*apply*belief-history-timestamp
@@ -18,6 +19,7 @@ sp {initialization*apply*belief-history-timestamp
 
 # ELABORATIONS
 
+# terminate time elaboration
 sp {beliefs*elaborate*terminate-time
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^{<<|predicate| |process|>> <belief-type>} <pred>)
@@ -26,12 +28,22 @@ sp {beliefs*elaborate*terminate-time
 	(<pred> ^terminate-time (+ <init-time> <d-time>))
 }
 
+# forget time elaboration 
 sp {beliefs*elaborate*predicate-forget-time
 	(state <s> ^top-state 1 ^predicates <pred-pool>)
 	(<pred-pool> ^<pred-type> <pred>)
 	(<pred> ^memorization-time <mem-time> ^terminated-at <term-time>)
 -->
 	(<pred> ^forget-time (+ <term-time> <mem-time>))
+}
+
+# fast access for predicate initiated/termintaed/deadline events
+sp {beliefs*elaborate*predicate-events-fast-access
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^reason <reason> ^{<<|predicate| |process|>> <belief-type>} <belief>)
+-->
+	(<b> ^<reason> <ev>)
 }
 
 # BELIEF CREATION DETECTION
