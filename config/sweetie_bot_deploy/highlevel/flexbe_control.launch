@@ -21,7 +21,9 @@
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
-		<include ns="$(arg robot_ns)" file="$(arg robot_profile_path)/load_param.launch"/>
+		<include ns="$(arg robot_ns)" file="$(arg robot_profile_path)/load_param.launch">
+			<arg name="run_real" value="$(arg run_real)" />
+		</include>
 	</group>
 
 	<!-- ROBOT -->

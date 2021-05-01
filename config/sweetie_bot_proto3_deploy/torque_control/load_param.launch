@@ -1,5 +1,7 @@
 <!-- MODULE: Load default params to run joint space controllers -->
 <launch>
+	<arg name="run_real" default="false" doc="Run on real robot."/>
+
 	<!-- default configuration -->
 	<include file="$(find sweetie_bot_proto3_deploy)/default/load_param.launch" />
 
