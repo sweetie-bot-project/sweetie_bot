@@ -34,6 +34,7 @@ class ExecuteLookAtSM(Behavior):
 		self.add_parameter('label', '*')
 		self.add_parameter('type', '*')
 		self.add_parameter('timeout', 30)
+		self.add_parameter('transform_delay', 0)
 
 		# references to used behaviors
 
@@ -74,7 +75,7 @@ class ExecuteLookAtSM(Behavior):
 
 			# x:361 y:83
 			OperatableStateMachine.add('ObjectMonitor',
-										ObjectDetectionMonitor(detection_topic='detections', label=self.label, type=self.type, exit_states=['no_detections'], pose_topic='motion/controller/look_at/in_pose_ref', pose_frame_id='odom_combined', detection_period=float(self.timeout)),
+										ObjectDetectionMonitor(detection_topic='detections', label=self.label, type=self.type, exit_states=['no_detections'], pose_topic='motion/controller/look_at/in_pose_ref', pose_frame_id='odom_combined', detection_period=float(self.timeout), transform_delay=0.0),
 										transitions={'no_detections': 'finished', 'have_detections': 'failed', 'detection_matches': 'failed', 'failure': 'failed'},
 										autonomy={'no_detections': Autonomy.Off, 'have_detections': Autonomy.Off, 'detection_matches': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'pose': 'pose'})
