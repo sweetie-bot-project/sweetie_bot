@@ -47,11 +47,11 @@
 			<!-- robot_state_publisher: real robot pose -->
 			<include file="$(find sweetie_bot_deploy)/motion_core/robot_state.launch">
 				<arg name="name" value="robot_state_publisher_real" /> 
-				<arg name="tf_prefix" value="$(arg tf_prefix_real)" /> 
+				<arg name="tf_prefix" value="$(arg tf_prefix_real)/" /> 
 				<arg name="joint_states_topic" value="joint_states_real" /> 
 			</include>
 			<!-- fix together reference and real base_link  if odometry is unavailable -->
-			<!--<node if="$(arg run_real)" pkg="tf" type="static_transform_publisher" name="odometry_real" args="$(arg static_tf_shift) 0 0 0 base_link $(arg tf_prefix_real)/base_link 100" /> -->
+			<node if="$(arg run_real)" pkg="tf" type="static_transform_publisher" name="odometry_real" args="$(arg static_tf_shift) 0 0 0 base_link $(arg tf_prefix_real)/base_link 100" />
 		</group>
 	</group>
 </launch>
