@@ -9,7 +9,7 @@
         <simple name="Element0" type="double"><value>1.3887</value></simple>
         <simple name="Element1" type="double"><value>52.0818</value></simple>
         <simple name="Element2" type="double"><value>7.0933</value></simple>
-        <simple name="Element3" type="double"><value>212.2978</value></simple>
+        <simple name="Element3" type="double"><value>53.00</value></simple>
       </struct>
     </struct>
   <struct name="servo_models" type="/sweetie_bot_servo_model_msg/ServoModel[]">
@@ -21,7 +21,7 @@
         <simple name="Element0" type="double"><value>1.3887</value></simple>
         <simple name="Element1" type="double"><value>52.0818</value></simple>
         <simple name="Element2" type="double"><value>7.0933</value></simple>
-        <simple name="Element3" type="double"><value>212.2978</value></simple>
+        <simple name="Element3" type="double"><value>53.00</value></simple>
       </struct>
     </struct>
     <struct name="Element1" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -32,7 +32,7 @@
         <simple name="Element0" type="double"><value>1.3887</value></simple>
         <simple name="Element1" type="double"><value>52.0818</value></simple>
         <simple name="Element2" type="double"><value>7.0933</value></simple>
-        <simple name="Element3" type="double"><value>212.2978</value></simple>
+        <simple name="Element3" type="double"><value>53.00</value></simple>
       </struct>
     </struct>
     <struct name="Element2" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -43,7 +43,7 @@
         <simple name="Element0" type="double"><value>2.1095</value></simple>
         <simple name="Element1" type="double"><value>53.9546</value></simple>
         <simple name="Element2" type="double"><value>12.5499</value></simple>
-        <simple name="Element3" type="double"><value>234.9008</value></simple>
+        <simple name="Element3" type="double"><value>78.3</value></simple>
       </struct>
     </struct>
     <struct name="Element3" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -54,7 +54,7 @@
         <simple name="Element0" type="double"><value>2.1095</value></simple>
         <simple name="Element1" type="double"><value>53.9546</value></simple>
         <simple name="Element2" type="double"><value>12.5499</value></simple>
-        <simple name="Element3" type="double"><value>234.9008</value></simple>
+        <simple name="Element3" type="double"><value>78.3</value></simple>
       </struct>
     </struct>
     <struct name="Element4" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -65,7 +65,7 @@
         <simple name="Element0" type="double"><value>2.1095</value></simple>
         <simple name="Element1" type="double"><value>53.9546</value></simple>
         <simple name="Element2" type="double"><value>12.5499</value></simple>
-        <simple name="Element3" type="double"><value>234.9008</value></simple>
+        <simple name="Element3" type="double"><value>78.3</value></simple>
       </struct>
     </struct>
     <struct name="Element5" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -76,7 +76,7 @@
         <simple name="Element0" type="double"><value>2.1095</value></simple>
         <simple name="Element1" type="double"><value>53.9546</value></simple>
         <simple name="Element2" type="double"><value>12.5499</value></simple>
-        <simple name="Element3" type="double"><value>234.9008</value></simple>
+        <simple name="Element3" type="double"><value>78.3</value></simple>
       </struct>
     </struct>
     <struct name="Element6" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -87,7 +87,7 @@
         <simple name="Element0" type="double"><value>2.1095</value></simple>
         <simple name="Element1" type="double"><value>53.9546</value></simple>
         <simple name="Element2" type="double"><value>12.5499</value></simple>
-        <simple name="Element3" type="double"><value>234.9008</value></simple>
+        <simple name="Element3" type="double"><value>78.3</value></simple>
       </struct>
     </struct>
     <struct name="Element7" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -98,7 +98,7 @@
         <simple name="Element0" type="double"><value>2.1095</value></simple>
         <simple name="Element1" type="double"><value>53.9546</value></simple>
         <simple name="Element2" type="double"><value>12.5499</value></simple>
-        <simple name="Element3" type="double"><value>234.9008</value></simple>
+        <simple name="Element3" type="double"><value>78.3</value></simple>
       </struct>
     </struct>
     <struct name="Element8" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -109,7 +109,7 @@
         <simple name="Element0" type="double"><value>2.1095</value></simple>
         <simple name="Element1" type="double"><value>53.9546</value></simple>
         <simple name="Element2" type="double"><value>12.5499</value></simple>
-        <simple name="Element3" type="double"><value>234.9008</value></simple>
+        <simple name="Element3" type="double"><value>78.3</value></simple>
       </struct>
     </struct>
     <struct name="Element9" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -120,7 +120,7 @@
         <simple name="Element0" type="double"><value>2.1095</value></simple>
         <simple name="Element1" type="double"><value>53.9546</value></simple>
         <simple name="Element2" type="double"><value>12.5499</value></simple>
-        <simple name="Element3" type="double"><value>234.9008</value></simple>
+        <simple name="Element3" type="double"><value>78.3</value></simple>
       </struct>
     </struct>
     <struct name="Element10" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -131,7 +131,7 @@
         <simple name="Element0" type="double"><value>2.1095</value></simple>
         <simple name="Element1" type="double"><value>53.9546</value></simple>
         <simple name="Element2" type="double"><value>12.5499</value></simple>
-        <simple name="Element3" type="double"><value>234.9008</value></simple>
+        <simple name="Element3" type="double"><value>78.3</value></simple>
       </struct>
     </struct>
     <struct name="Element11" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -142,7 +142,7 @@
         <simple name="Element0" type="double"><value>2.1095</value></simple>
         <simple name="Element1" type="double"><value>53.9546</value></simple>
         <simple name="Element2" type="double"><value>12.5499</value></simple>
-        <simple name="Element3" type="double"><value>234.9008</value></simple>
+        <simple name="Element3" type="double"><value>78.3</value></simple>
       </struct>
     </struct>
     <struct name="Element12" type="/sweetie_bot_servo_model_msg/ServoModel">
@@ -153,7 +153,7 @@
         <simple name="Element0" type="double"><value>1.3887</value></simple>
         <simple name="Element1" type="double"><value>52.0818</value></simple>
         <simple name="Element2" type="double"><value>7.0933</value></simple>
-        <simple name="Element3" type="double"><value>212.2978</value></simple>
+        <simple name="Element3" type="double"><value>53.00</value></simple>
       </struct>
     </struct>
   </struct>
