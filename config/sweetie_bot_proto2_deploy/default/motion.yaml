@@ -29,6 +29,7 @@ odometry_ref:
 dynamics_inv:
     priority: 20
     legs: [ leg1, leg3, leg4, leg2 ]
+    use_ref_joint_position: true
 aggregator_real:
     priority: 20
     publish_on_timer: false

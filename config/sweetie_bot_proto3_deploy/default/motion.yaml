@@ -40,6 +40,7 @@ imu_real:
 dynamics_inv:
     priority: 20
     legs: [ leg1, leg3, leg4, leg2 ]
+    use_ref_joint_position: true
 servo_inv:
     priority: 20
     lead: 0.056
