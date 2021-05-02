@@ -54,6 +54,7 @@ end
 -- data flow (setup): herkulex/array -> aggregator_ref
 for name, group in pairs(herkulex) do
 	depl:connect("herkulex/"..name.."/array.out_joints", "aggregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+	depl:stream("herkulex/"..name.."/array.commands", ros:topic("/motion/herkulex/servo_commands"))
 	group.array:publishJointStates()
 end
 
@@ -95,6 +96,7 @@ assert(servo_ident:start())
 for name, group in pairs(herkulex) do
 	if group.array:isConfigured() then
 		group.sched:start()
+		group.array:start()
 		print("herkulex."..name..".sched is started!")
 	else
 		print("WARNING: herkulex."..name..".array is not configured. herkulex."..name..".sched is not started.")
