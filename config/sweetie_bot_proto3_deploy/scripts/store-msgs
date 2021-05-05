@@ -4,7 +4,7 @@ NS=saved_msgs
 
 if [ -z $1 ] || [ "$1" = "-h" ]; then
 	echo "Usage:"
-	echo "    $ `basename $0` load|save"
+	echo "    $ `basename $0` load|load_overwrite|save"
 	echo 
 	echo "Load saved messages from '$PKG' package to 'saved_msgs' namespace."
 	echo "or"
