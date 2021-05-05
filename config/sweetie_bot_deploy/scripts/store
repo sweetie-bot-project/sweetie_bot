@@ -38,7 +38,7 @@ def load(param, path, msg_type, replace_existing = False):
 		# check if target parameter stores message
 		if rospy.has_param(param) and not isinstance(rospy.get_param(param), Binary):
 			raise KeyError('Load file failed: target ROS parameter type is not Binary.', param)
-			load_namespace = False
+		load_namespace = False
 	elif os.path.isdir(path):
 		load_namespace = True
 		if rospy.has_param(param):
