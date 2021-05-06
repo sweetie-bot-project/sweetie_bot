@@ -22,7 +22,7 @@ soar:
         flexbe:
             action_ns: "flexbe/flexbe/execute_behavior"
 soar:
-    soar_period: 0.5
+    soar_period: 0.25
     autostart: false
     agent_package: "sweetie_bot_soar"
     agent_file: "soar/unified.soar"
@@ -69,7 +69,7 @@ soar:
         servos:
             type: "herkulex_servos"
             topic: "motion/herkulex/servo_states"
-            overheat_temperature: 45.0
+            overheat_temperature: 80.0
     output:
         nop: true
         textcmd: 
