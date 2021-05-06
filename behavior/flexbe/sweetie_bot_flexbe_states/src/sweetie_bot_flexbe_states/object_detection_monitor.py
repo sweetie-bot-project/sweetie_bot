@@ -129,13 +129,14 @@ class ObjectDetectionMonitor(EventState):
             # object detected but it is not match
             self._last_detection_stamp = stamp
             # check if detection perod exceeded
-            if (stamp - self._last_detection_stamp).to_sec() > self._detection_period:
+            if (stamp - self._last_match_stamp).to_sec() > self._detection_period:
                 # have_detections state
                 if 'have_detections' in self._exit_states:
                     Logger.loginfo('ObjectDetectionMonitor: detection.')
                     return 'have_detections'
         else:
             # appropriate match is found
+            self._last_detection_stamp = stamp
             self._last_match_stamp = stamp
             self._last_match_id = match.id
             # publish 
@@ -143,11 +144,11 @@ class ObjectDetectionMonitor(EventState):
                 # transform to frame_id
                 try:
                     # transform
-					# TODO use message 
+		    # TODO use message 
                     pose_stamped = PoseStamped(pose = match.pose, header = Header(frame_id = match.header.frame_id, stamp = match.header.stamp - rospy.Duration(self._transform_delay)))
                     self._pose = self._tf_listener.transformPose(self._frame_id, pose_stamped)
                 except tf.Exception as e:
-                    Logger.logwarn('Unable to transform from %s to %s' % (match.pose.header.frame_id, self._frame_id))
+                    Logger.logwarn('Unable to transform from %s to %s' % (match.header.frame_id, self._frame_id))
                     return 'failure'
                 # publish
                 self._pose_publisher.publish(self._pose_topic, self._pose)
