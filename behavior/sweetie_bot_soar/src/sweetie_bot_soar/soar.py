@@ -205,6 +205,7 @@ class SoarNode:
 		self.reconfigure_srv = rospy.Service('~reconfigure', Trigger, self.reconfigureCallback)
 		self.reload_prod_srv = rospy.Service('~reload_prod', Trigger, self.reloadProdCallback)
 		self.set_operational_srv = rospy.Service('~set_operational', SetBool, self.setOperationalCallback)
+		self.trigger_operational_srv = rospy.Service('~toggle_operational', Trigger, self.triggerOperationalCallback)
 		self.step_srv = rospy.Service('~step', Trigger, self.stepCallback)
 		self.step_srv = rospy.Service('~io_update', Trigger, self.ioUpdateCallback)
 		# create SOAR envelopment
@@ -237,6 +238,17 @@ class SoarNode:
 				self.timer = None
 		# success
 		return SetBoolResponse(success = True)
+
+	def triggerOperationalCallback(self, req):
+		if not self.configured:
+			return TriggerResponse(success = False, message = 'Node is not configured.')
+                # toggle timer
+		if self.timer:
+			self.timer.shutdown()
+			self.timer = None
+		else:
+                        self.timer = rospy.Timer(rospy.Duration(self.period), self.timerCallback)
+		return TriggerResponse(success = True)
 
 	def timerCallback(self, event):
 		success = self.soar.step()
