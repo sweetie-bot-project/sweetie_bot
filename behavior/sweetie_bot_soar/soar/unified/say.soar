@@ -24,7 +24,8 @@
 #
 # Processes:
 #
-# * (^name focusing-to-say ^substate look-at ^object <obj> ^topic <topic> ^deadline-time 2.0) --- gaze is focused on object so we can say <text>.
+# * (^name focusing-to-say ^substate look-at ^object <obj> ^topic <topic>) --- gaze is focused on object so we can say <text>.
+# * (^name saying ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>) --- verbolization animation is active.
 #
 
 # DECISION RULES
@@ -46,52 +47,23 @@ sp {say*propose*look-at
 # PERFORM TALK ANIMATION
 
 # propose animations with 'talk': start flexbe behavior, add 'saying' process
-sp {say*propose*select-animation
-	(state <s> ^substate say -^saying ^beliefs-stable.predicate <pred> ^args <args> ^mem.joint-trajectory <anim> ^process <sp>)
-	(<args> ^object <obj> ^topic <topic>)
+sp {say*propose*say
+	(state <s> ^substate say -^saying ^beliefs-stable.predicate <pred> ^args <args> ^process <sp>)
+	(<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
 	(<pred> ^name looking-at ^object <obj>)
-	(<anim> ^name <animation-name> ^tag talk)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name saying ^substate flexbe ^process-args <a> ^animation <anim>)
-    (<a> ^object <obj> ^topic <topic> ^behavior ExecuteJointTrajectoryAndSay ^text <text> ^joint_trajectory <animation-name> ^text_delay 0.2 ^result <r>)
-	(<r> ^status succeed ^add-event <ev-new> ^finish-status succeed ^finish-process <sp>)
-	(<ev-new> ^name talk-said ^object <obj> ^topic <topic>)
+	(<op> ^name saying ^substate verbolize ^process-args <a>)
+    (<a> ^object <obj> ^topic <topic>  ^text <text> ^animation-tag <tag> ^result <r>)
+	(<r> ^status succeed ^finish-status succeed ^finish-process <sp>)
 }
 
-# elaborate is_relative ExecuteJointTrajectoryAndSay parameter
-sp {say*elaborate*say-execute-animation-is-relative
-	(state <s> ^substate say ^operator <op> +)
-	(<op> ^name saying ^args <args> ^animation.relative) 
--->
-	(<args> ^is_relative True)
-}
-
-# if 'saying' process is active continue its execution (looking-at is not necessary)
+# if 'saying' process is active continue its execution 
 sp {say*propose*execute-animation-continue
 	(state <s> ^substate say ^saying <proc>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name saying-continue ^substate flexbe ^process-link <proc>)
+	(<op> ^name saying-continue ^substate verbolize ^process-link <proc>)
 }
 
-# PREFERENCES 
 
-# prefer animation with tag matching supplied as substate parameter
-sp {say*prefer*select-animation-tag
-	(state <s> ^substate say ^operator <op1> + ^operator {<> <op1> <op2>} ^superstate.operator.animation-tag <tag>)
-	(<op1> ^name saying ^animation.tag <tag>)
-	(<op2> ^name saying ^animation <anim2>)
-	(<anim2> -^tag <tag>)
--->
-	(<s> ^operator <op1> > <op2>)
-}
-
-# reject animations which are not tagged as general 
-sp {say*prefer*select-animation-general-tag
-	(state <s> ^substate say ^operator <op> + ^superstate.operator.animation-tag <tag>)
-	(<op> ^name saying ^animation <anim2>)
-	(<anim2> -^tag <tag> -^tag general)
--->
-	(<s> ^operator <op> ~)
-}

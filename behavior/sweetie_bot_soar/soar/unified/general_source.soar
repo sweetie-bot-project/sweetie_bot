@@ -14,6 +14,7 @@ source animation.soar
 source lookat.soar
 source attention.soar
 # talk
+source verbolize.soar
 source say.soar
 source ask.soar
 #source talk/talk_source.soar
