@@ -61,65 +61,66 @@ sp {talker*propose*look-at
 # SELECT HUMAN TO TALK
 
 # select human if we a looking at him 
-#sp {talker*propose*select-human-to-talk
-#	(state <s> ^substate main ^beliefs <b>)
-#	(<b> ^object <obj> ^predicate <pred>)
-#	(<obj> ^type human)
-#	(<pred> ^name looking-at ^object <obj>)
-#	-{(<b> ^decision <d>) 
-#      (<d> ^name talk ^substate main)
-#    }
-#	-{(<b> ^predicate <p>) 
-#      (<p> ^name talked ^object <obj>)
-#    }
-#-->
-#	(<s> ^operator <o> + =)
-#   	(<o> ^name decide-talk ^type automatic ^drive social ^add-decision <d>)
-#	(<d> ^name talk ^substate main ^object <obj> ^deadline-time 600.0)
-#}
-#
-#sp {talker*propose*talk
-#	(state <s> ^substate main ^decision <d>)
-#	(<d> ^name talk ^substate main ^object <obj>)
-#-->
-#	(<s> ^operator <o> +, =)
-#   	(<o> ^name talk ^substate talk ^drive social ^object <obj> ^result <r1> <r2>)
-#	(<r1> ^status succeed talk-failed ^remove-decision <d>)
-#	(<r2> ^status succeed ^add-predicate <pred>)
-#	(<pred> ^name talked ^object <obj> ^deadline-time 120.0)
-#}
+sp {talker*propose*select-human-to-talk
+	(state <s> ^substate main ^beliefs-stable.predicate <pred> ^beliefs <b>)
+	(<pred> ^name looking-at ^object <obj>)
+	(<obj> ^type human)
+	-{(<b> ^predicate <p>) (<p> ^name talked ^object <obj>)}
+-->
+	(<s> ^operator <o> + =)
+   	(<o> ^name talking ^substate talk ^process-args <a> ^drive social)
+	(<a> ^object <obj>)
+}
+
+sp {talker*propose*talk
+	(state <s> ^substate main ^talking <proc>)
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name talking-continue ^substate talk ^process-link <proc> ^drive social)
+}
+
+# TODO: results support top-state
+sp {talker*propose*talking-succeed
+	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
+	(<ev> ^name talking ^reason terminated ^process.object <obj> -^processed talking-succeed)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name talking-succeed ^type cognition automatic ^add-predicate <pred> ^mark-processed <ev>)
+	(<pred> ^name talked ^object <obj> ^deadline-time 60.0)
+}
+	
 
 # SAY HELLO
 
 # we are looking at human but he is not greeted the start greeting him
-sp {talker*propose*say-greet
-	(state <s> ^substate main -^greeting ^beliefs <b> ^beliefs-stable <bs>)
-	(<bs> ^predicate <pred>)
-	(<pred> ^name looking-at ^object <obj>)
-	(<obj> ^type human)
-	-{(<b> ^predicate <pred>) 
-	  (<pred> ^name greeted ^object <obj>)}
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name greeting ^substate ask ^drive social ^process-args <a>) 
-	(<a> ^object <obj> ^topic greeting ^text |Hello, I am Sweetie Bot!| ^animation-tag greet ^result <r-succeed>)
-	(<r-succeed> ^status succeed ^add-predicate <n-pred>)
-	(<n-pred> ^name greeted ^object <obj>)
-}
-
-sp {talker*propose*say-greet-continue
-	(state <s> ^substate main ^greeting <proc>)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name greeting-continue ^substate ask ^drive social ^process-link <proc>) 
-}
-
-sp {talker*propose*detect-greeted
-	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
-	(<ev> ^name talk-answered ^actor <obj> ^question-topic greeting ^answer-topic greeting -^processed object-is-greeted)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name object-is-greeted ^type cognition automatic ^add-predicate <pred> ^mark-processed <ev>)
-	(<pred> ^name greeted ^object <obj>)
-}
-
+#sp {talker*propose*say-greet
+#	(state <s> ^substate main -^greeting ^beliefs <b> ^beliefs-stable <bs>)
+#	(<bs> ^predicate <pred>)
+#	(<pred> ^name looking-at ^object <obj>)
+#	(<obj> ^type human)
+#	-{(<b> ^predicate <pred>) 
+#	  (<pred> ^name greeted ^object <obj>)}
+#-->
+#	(<s> ^operator <o> +, =)
+#   	(<o> ^name greeting ^substate ask ^drive social ^process-args <a>) 
+#	(<a> ^object <obj> ^topic greeting ^text |Hello, I am Sweetie Bot!| ^animation-tag greet ^result <r-succeed>)
+#	(<r-succeed> ^status succeed ^add-predicate <n-pred>)
+#	(<n-pred> ^name greeted ^object <obj>)
+#}
+#
+#sp {talker*propose*say-greet-continue
+#	(state <s> ^substate main ^greeting <proc>)
+#-->
+#	(<s> ^operator <o> +, =)
+#   	(<o> ^name greeting-continue ^substate ask ^drive social ^process-link <proc>) 
+#}
+#
+#sp {talker*propose*detect-greeted
+#	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
+#	(<ev> ^name talk-answered ^actor <obj> ^question-topic greeting ^answer-topic greeting -^processed object-is-greeted)
+#-->
+#	(<s> ^operator <op> +, =)
+#	(<op> ^name object-is-greeted ^type cognition automatic ^add-predicate <pred> ^mark-processed <ev>)
+#	(<pred> ^name greeted ^object <obj>)
+#}
+#

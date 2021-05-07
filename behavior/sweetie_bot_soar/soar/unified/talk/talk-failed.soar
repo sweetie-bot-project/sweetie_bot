@@ -8,7 +8,7 @@
 # propagate event attributes and substate
 sp {talk-failed*elaborate*substate
 	(state <s> ^substate talk-failed ^superstate.operator.event <ev>)
-	(<ev> ^topic <topic> ^object <obj>)
+	(<ev> ^topic <topic> ^actor <obj>)
 -->
 	(<s> ^substate talk-event)
 	(<s> ^topic <topic> ^actor <obj>)

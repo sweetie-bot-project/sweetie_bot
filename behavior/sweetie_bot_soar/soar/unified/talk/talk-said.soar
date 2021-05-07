@@ -14,20 +14,18 @@ sp {talk-said*elaborate*substate
 	(<s> ^topic <topic> ^object <obj>)
 }
 
-# COGNITION RULES
+# remove last-said-topic predicate
+sp {talk-said*propose*remove-last-said
+	(state <s> ^substate talk-said ^beliefs.predicate <pred> ^object <obj> ^actions <a>)
+	(<pred> ^name talk-last-said-topic ^object <obj>)
+-->
+	(<a> ^remove-predicate <pred>)
+}
 
-## remove last topic predicate
-#sp {talk-said*propose*last-topic-remove
-#	(state <s> ^substate talk-said ^topic <topic> ^object <obj> ^beliefs.predicate <pred> ^actions <a>)
-#	(<pred> ^name last-topic ^object <obj>)
-#-->
-#	(<a> ^remove-predicate <pred>)
-#}
-#
-## add last topic predicate
-#sp {talk-said*propose*last-topic
-#	(state <s> ^substate talk-said ^topic <topic> ^object <obj> ^actions <a>)
-#-->
-#	(<a> ^add-predicate <pred>)
-#	(<pred> ^name last-topic ^object <obj> ^topic <topic>)
-#}
+# add new talk-last-said-topic predicate
+sp {talk-said*propose*add-last-said
+	(state <s> ^substate talk-said ^topic <topic> ^object <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name talk-last-said-topic ^topic <topic> ^object <obj> ^deadline-time 60.0)
+}

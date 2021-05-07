@@ -17,7 +17,7 @@ source attention.soar
 source verbolize.soar
 source say.soar
 source ask.soar
-#source talk/talk_source.soar
+source talk/talk_source.soar
 # main behavior
 source general.soar
 # debug

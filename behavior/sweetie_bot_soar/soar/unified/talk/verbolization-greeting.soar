@@ -70,12 +70,12 @@ sp {verbolization*elaborate*greeting-not-acquitance
 }
 
 sp {verbolization*elaborate*greeting-not-acquitance*reaction
-	(state <s> ^substate talk ^last-topic greeting ^object <obj> ^beliefs <b> ^verbolization <v>)
+	(state <s> ^substate talk-answered ^question-topic greeting ^answer-topic greeting ^actor <obj> ^beliefs <b>)
 	-{(<b> ^predicate <pred2>)
 	  (<pred2> ^name acquitance ^object <obj>)}
 	(<obj> ^label <label>)
 -->
-	(<v> ^reaction <r1>)
+	(<s> ^reaction <r1>)
 	(<r1> ^answer-topic greeting ^topic make-acquitance ^text (concat |Я буду называть тебя собеседник | <label> |.|) ^animation-tag confirmation)
 }
 
@@ -117,13 +117,6 @@ sp {talk-said*propose*greeted
 	(<pred> ^name greeted ^object <obj> ^deadline-time 3600.0)
 }
 
-sp {talk-answered*propose*made-acquitance
-	(state <s> ^substate talk-said ^topic make-acquitance ^object <obj> ^actions <a>)
--->
-	(<a> ^add-predicate <pred>)
-	(<pred> ^name acquitance ^object <obj>)
-}
-
 #
 # acquitance
 #
@@ -136,6 +129,14 @@ sp {verbolization*elaborate*acquitance-statement
 	(<v> ^frame <r1>)
 	(<r1> ^topic make-acquitance ^utility 49 ^type reaction ^text (concat |Я буду называть тебя собеседник | <label> |.|) ^animation-tag confirmation)
 }
+
+sp {talk-answered*propose*made-acquitance
+	(state <s> ^substate talk-said ^topic make-acquitance ^object <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name acquitance ^object <obj>)
+}
+
 
 #
 # finish dialog
@@ -151,55 +152,65 @@ sp {verbolization*elaborate*goodbye
 }
 
 # elaborate predicate which marks that thera are no questions left
-sp {verbolization*elaborate*consider-end-dialog
+sp {verbolization*elaborate*not-questions-left
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
-	-(<v> ^frame.type question)
--->
-	(<b> ^predicate <pred>)
-	(<pred> ^name consider-end-talk ^object <obj> ^deadline-time 40.0)
-}
-	
-# end talk if there are no questions
-sp {verbolization*elaborate*goodbye-end-dialog
-	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
-	-(<v> ^frame.type question)
-	-{(<b> ^predicate <pred>) 
-      (<pred> ^name consider-end-talk ^object <obj>)}
+	-{(<v> ^frame <f>) (<f> ^type question ^topic {<> goodbye <topic>}) -{(<b> ^predicate <p>) (<p> ^name ignor-topic ^topic <topic>)}}
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic goodbye ^utility 20 ^type statement ^animation-tag question)
+	(<f> ^topic goodbye ^type question ^animation-tag question ^utility 30)
 	(<f> ^text |У меня кончились темы для разговора. До встречи!| |Думаю, мы достаточно поговорили. Пока.|)
 }
 
-sp {talk*propose*goodbye-said*ignored
-	(state <s> ^substate talk ^object <obj> ^beliefs.event <ev> ^results <r>)
-	(<ev> ^name talk-ignored ^topic goodbye ^actor <obj>)
+# if goodbye is answered in any way consider dialog finished
+sp {talk-answered*propose*goodbye-end-talk
+	(state <s> ^substate talk-answered ^question-topic goodbye ^actor <obj> ^beliefs.process <proc> ^actions <a>)
+	(<proc> ^substate talk ^object <obj>)
 -->
-	(<s> ^operator <op> +, =)
-	(<op> ^name talk-ignored-goodbye ^type cognition completion ^status succeed ^results <r>)
+	(<a> ^finish-status succeed ^finish-process <proc>)
 }
 
-sp {talk*propose*goodbye-said*heard-answer
-	(state <s> ^substate talk-heard ^statement-topic goodbye ^object <obj> ^beliefs.event <ev> ^results <r>)
-	(<ev> ^name talk-heard ^actor <obj>)
+# if goodbye is ignored finish dialog
+sp {talk-ignored*propose*goodbye-end-talk
+	(state <s> ^substate talk-ignored ^topic goodbye ^actor <obj> ^beliefs.process <proc> ^actions <a>)
+	(<proc> ^substate talk ^object <obj>)
 -->
-	(<s> ^operator <op> +, =)
-	(<op> ^name talk-heard-goodbye ^type cognition completion ^status succeed ^results <r>)
+	(<a> ^finish-status succeed ^finish-process <proc>)
+}
+
+# end talk if speaker igonres
+sp {verbolization*elaborate*goodbye-ignores-me
+	(state <s> ^substate talk ^beliefs.predicate <pred> ^object <obj> ^verbolization <v> ^time <clock>)
+	(<pred> ^name ignor-me ^actor <obj> ^initiated-at <time>)
+	-(<clock> ^just {< <time>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic goodbye-reaction ^type reaction ^animation-tag question ^utility 20)
+	(<f> ^text |Ты игнорируешь меня -- я игнорирую тебя! Пока.| |Думаю, мы достаточно поговорили. Пока.|)
+}
+
+# end talk if speaker says nonsense
+sp {verbolization*elaborate*goodbye-nonsense-me
+	(state <s> ^substate talk ^beliefs.predicate <pred> ^object <obj> ^verbolization <v> ^time <clock>)
+	(<pred> ^name nonsense-me ^actor <obj> ^initiated-at <time>)
+	-(<clock> ^just {< <time>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic goodbye-reaction ^type reaction ^animation-tag question ^utility 20)
+	(<f> ^text |Не хочу с тобой разговаривать! Пока.|)
 }
 
 # end talk by request
-sp {verbolization*elaborate*goodbye-reaction
-	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+sp {talk-heard*elaborate*goodbye-reaction
+	(state <s> ^substate talk-heard ^topic goodbye ^actor <obj>)
 -->
-	(<v> ^reaction <f>)
-	(<f> ^reaction-topic goodbye ^topic goodbye-reaction ^type reaction ^animation-tag confirmation)
+	(<s> ^reaction <f>)
+	(<f> ^topic goodbye-reaction ^type reaction ^animation-tag confirmation ^utility 70)
 	(<f> ^text |До встречи!| |Ты уже уходишь? Пока!|)
 }
 
-sp {talk*propose*goodbye-said-reaction
-	(state <s> ^substate talk-said ^object <obj> ^beliefs.event <ev> ^results <r>)
-	(<ev> ^name talk-said ^topic goodbye-reaction ^object <obj>)
+sp {talk-said*propose*goodbye-reaction-end-talk
+	(state <s> ^substate talk-said ^topic goodbye-reaction ^object <obj> ^beliefs.process <proc> ^actions <a>)
+	(<proc> ^substate talk ^object <obj>)
 -->
-	(<s> ^operator <op> +, =)
-	(<op> ^name talk-said-goodbye ^type cognition completion ^status succeed ^results <r>)
+	(<a> ^finish-status succeed ^finish-process <proc>)
 }

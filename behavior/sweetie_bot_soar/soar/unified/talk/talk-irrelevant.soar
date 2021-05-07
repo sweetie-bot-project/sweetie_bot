@@ -20,16 +20,25 @@ sp {talk-irrelevant*elaborate*substate
 	(<s> ^topic <topic> ^actor <obj>)
 }
 
+# attach related waiting-answer process
+sp {talk-irrelevant*elaborate*waiting-answer
+	(state <s> ^substate talk-irrelevant ^actor <obj> ^beliefs.process <proc>)
+	(<proc> ^name waiting-answer ^object <obj>)
+-->
+	(<s> ^waiting-answer <proc>)
+}
+
 # only one irrelevant event is detected
 sp {talk-irrelevant*elaborate*irrelevant-once
-	(state <s> ^substate talk-irrelevant -^conclusion nosnsense-me ignor-topic specific-reaction interrupted-me)
+	(state <s> ^substate talk-irrelevant -^conclusion nosnsense-me -^conclusion ignor-topic -^conclusion interrupted-me)
 -->
 	(<s> ^conclusion irrelevant-single)
 }
 
 # only heard event detected during speech
 sp {talk-irrelevant*elaborate*interrupted-once
-	(state <s> ^substate talk-irrelevant -^conclusion nosnsense-me ignor-topic specific-reaction -^waiting-reaction -^waiting-answer)
+	(state <s> ^substate talk-irrelevant ^beliefs.process <proc> ^actor <obj>)
+	(<proc> ^name verbolizing ^object <obj>)
 -->
 	(<s> ^conclusion interrupted-me)
 }
@@ -48,8 +57,8 @@ sp {talk-irrelevant*elaborate*ignor-topic
 sp {talk-irrelevant*elaborate*nonsense-me
 	(state <s> ^substate talk-irrelevant ^event <ev> ^talk-irrelevant <c>)
 	(<c> ^event {<> <ev> <ev1>} ^event {<> <ev> <> <ev1> <ev2>})
-	(<ev> ^topic <topic>)
-	-(<ev1> ^topic <topic>)
+	(<ev> ^question-topic <topic>)
+	-(<ev1> ^question-topic <topic>)
 -->
 	(<s> ^conclusion nonsense-me)
 }
