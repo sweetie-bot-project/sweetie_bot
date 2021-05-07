@@ -112,6 +112,15 @@ sp {beliefs*apply*register-new-beliefs*memorize-event
 	(<ev> ^forget-time (+ <time> <mem-time>))
 }
 
+# copy to events pool
+sp {beliefs*apply*register-new-belief*log
+	(state <s> ^operator <op>)
+	(<op> ^name register-new-belief ^belief-type <type> ^belief <belief>)
+	(<belief> ^name <name>)
+-->
+	(log 1 (concat |REGISTER NEW | <type> | | <name> | | <belief> (crlf)))
+}
+
 # BELIEF DELETION DETECTION
 # TODO: speed up? current implementation performs n^2 matches
 sp {beliefs*propose*register-removed-belief
@@ -133,6 +142,7 @@ sp {beliefs*apply*register-removed-beliefs*terminated-at
 	(<belief> ^terminated-at <time>)
 	(<b> ^event <ev>)
 	(<ev> ^name <name> ^reason terminated ^<belief-type> <belief> ^initiated-at <time>)
+	(log 1 (concat |REGISTER REMOVED | <belief-type> | | <name> | | <belief> (crlf)))
 }
 
 # PERIODIC PROCESSING
@@ -210,6 +220,7 @@ sp {beliefs*apply*update*belief-terminate-deadline
 	(<pred> ^terminated-at <time>)
 	(<b> ^event <ev>)
 	(<ev> ^name <name> ^reason deadline ^<pred-type> <pred>)
+	(log 1 (concat |DEADLINE | <pred-type> | | <name> | | <pred> (crlf)))
 }
 
 # MEMORY PERIODIC PROCESSING

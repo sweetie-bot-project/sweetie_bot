@@ -64,6 +64,7 @@ sp {automatic*apply*add-predicate
 	(<b> ^event <ev>)
 	(<ev> ^name <name> ^reason initiated ^predicate <pred> ^initiated-at <time>)
 	(<bs> ^predicate <pred>)
+	(log 1 (concat |INITIATE PREDICATE: | <name> | | <pred> (crlf)))
 }
 
 # add predicate: add to history
@@ -86,6 +87,7 @@ sp {automatic*apply*add-process
 	(<b> ^event <ev>)
 	(<ev> ^name <name> ^reason initiated ^process <pred> ^initiated-at <time>)
 	(<bs> ^process <pred>)
+	(log 1 (concat |INITIATE PROCESS: | <name> | | <pred> (crlf)))
 }
 
 # add process: add to history
@@ -101,9 +103,11 @@ sp {automatic*apply*add-process*history
 sp {automatic*apply*add-event
 	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
 	(<op> ^type automatic ^add-event <ev>)
+	(<ev> ^name <name>)
 -->
 	(<b> ^event <ev>)
 	(<ev> ^initiated-at <time>)
+	(log 1 (concat |EMIT EVENT: | <name> | | <ev> (crlf)))
 }
 
 # add event: add to history
@@ -123,36 +127,42 @@ sp {automatic*apply*add-event*history
 sp {automatic*apply*remove-predicate
 	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
 	(<op> ^type automatic ^remove-predicate <pred>)
+	(<b> ^predicate <pred>)
 	(<pred> ^name <name>)
 -->
 	(<b> ^predicate <pred> -)
 	(<pred> ^terminated-at <time>)
 	(<b> ^event <ev>)
 	(<ev> ^name <name> ^reason terminated ^predicate <pred> ^initiated-at <time>)
+	(log 1 (concat |TERMINATE PREDICATE: | <name> | | <pred> (crlf)))
 }
 
 # remove process: delete WME, add `^terminated-at`
 sp {automatic*apply*remove-process
 	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
 	(<op> ^type automatic ^remove-process <pred>)
+	(<b> ^process <pred>)
 	(<pred> ^name <name>)
 -->
 	(<b> ^process <pred> -)
 	(<pred> ^terminated-at <time>)
 	(<b> ^event <ev>)
 	(<ev> ^name <name> ^reason terminated ^process <pred> ^initiated-at <time>)
+	(log 1 (concat |TERMINATE PROCESS: | <name> | | <pred> (crlf)))
 }
 
 # terminate process: delete WME, add `^terminated-at`, set status
 sp {automatic*apply*finish-process
 	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
 	(<op> ^type automatic ^finish-status <status> ^finish-process <pred>)
+	(<b> ^process <pred>)
 	(<pred> ^name <name>)
 -->
 	(<b> ^process <pred> -)
 	(<pred> ^terminated-at <time> ^status <status>)
 	(<b> ^event <ev>)
 	(<ev> ^name <name> ^reason terminated ^status <status> ^process <pred> ^initiated-at <time>)
+	(log 1 (concat |FINISH PROCESS | <name> | | <pred> | WITH STATUS | <status> (crlf)))
 }
 
 #
@@ -186,6 +196,13 @@ sp {automatic*apply*print
 	(<op> ^type automatic ^print <string>)
 -->
 	(write <string> (crlf))
+}
+
+sp {automatic*apply*log
+	(state <s> ^operator <op>)
+	(<op> ^type automatic ^log <string>)
+-->
+	(log 1 <string> (crlf))
 }
 
 #

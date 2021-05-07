@@ -15,7 +15,7 @@ sp {process*elaborate*user-provided-process
 
 # agument user provided process if ^additional-process-args provided
 sp {process*elaborate*user-provided-process*add-args
-	(state <s> ^superstate.operator <op>)
+	(state <s> ^process-status pending ^superstate.operator <op>)
 	(<op> -^type cognition ^additional-process-args <args> ^process-link <proc>)
 	(<args> ^<attr> <value>)
 -->
