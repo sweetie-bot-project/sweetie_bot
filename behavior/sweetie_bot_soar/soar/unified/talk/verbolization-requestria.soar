@@ -119,7 +119,7 @@ sp {requestria*elaborate*ask-if-ponies-prevail*reacton
 	(state <s> ^substate talk ^last-topic ask-if-ponies-prevail ^object <obj> ^verbolization <v>)
 -->
 	(<v> ^reaction <r1> <r2>)
-	(<r1> ^topic reaction-ponies-prevail ^type statement ^animation-tag confirmation)
+	(<r1> ^topic reaction-ponies-prevail ^type statement ^animation-tag pleased)
 	(<r1> ^text |Успех! Не сомневайся, пони-роботы смогут взять управление в свои копыта, пока мир будет подготавливаться к понификации.|)
 	(<r2> ^topic reaction-ponies-do-not-prevail ^type statement ^animation-tag rejection)
 	(<r2> ^text |Жаль. В таком случае тебе не избежать двойной дозы дружбомагина, перед тем, как твое сознание будет пересажено.|)

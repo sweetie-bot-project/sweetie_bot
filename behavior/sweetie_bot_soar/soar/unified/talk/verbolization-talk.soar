@@ -166,7 +166,7 @@ sp {verbolization*elaborate*remark-about-ignor-me-addition
 	-(<clock> ^just {>= <time>})
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic ignor-me-remark ^utility 70 ^type statement ^animation-tag anger)
+	(<f> ^topic ignor-me-remark ^utility 70 ^type statement ^animation-tag rejection)
 	(<f> ^text |Ты игнорируешь меня!| |Ты не отвечаешь! Невозможно с тобой разговаривать!|)
 }
 
@@ -203,7 +203,7 @@ sp {verbolization*elaborate*remark-about-nonsense
 	(<pred1> ^name nonsense-possibility ^actor <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic nonsense-remark ^utility 60 ^type reaction ^animation-tag suprise)
+	(<f> ^topic nonsense-remark ^utility 60 ^type reaction ^animation-tag surprise)
 	(<f> ^text |И что ты хотел этим сказать? Не надо просто так махать карточками.| |Не понимаю тебя. Дождись, пока я задам вопрос, потом отвечай.| |Просто покажи карточку с ответом, когда я задам ворос.|)
 }
 
