@@ -75,14 +75,14 @@ sp {process*elaborate*attach-subprocesse-to-state
 
 # automatically attach process to superstate process
 sp {process*elaborate*link-to-superprocess
-	(state <s> ^process <p> ^superstate.process {<> <p> <sp>})
+	(state <s> -^substate general ^process <p> ^superstate.process {<> <p> <sp>})
 -->
 	(<p> ^subprocess-of <sp>)
 }
 
 # elaborate pending-superstate property
 sp {process*elaborate*start-process
-	(state <s> ^process <p> ^superstate <ss>)
+	(state <s> -^substate general ^process <p> ^superstate <ss>)
 	(<ss> ^process-status pending ^process {<> <p> <sp>})
 -->
 	(<s> ^pending-superstate-process <sp>)

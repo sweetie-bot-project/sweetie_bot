@@ -2,6 +2,14 @@
 # SUBSTATE SUPPORT
 #
 
+# top level goals
+sp {elaborate*state-general
+	(state <s> ^superstate.operator <op> ^impasse no-change)
+	(<op> ^name top-level-goal)
+-->
+	(<s> ^substate general)
+}
+
 # subgoal support: derive substate name if operator implies substate creation.
 sp {elaborate*state-name
 	(state <s> ^superstate.operator <op> ^impasse no-change)
