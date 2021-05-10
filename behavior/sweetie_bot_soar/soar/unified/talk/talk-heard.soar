@@ -25,9 +25,10 @@ sp {talk-heard*elaborate*substate
 # check if we are waiting answer 
 sp {talk-event*elaborate*waiting-answer
 	(state <s> ^substate talk-heard ^beliefs.process <proc> ^actor <obj>)
-	(<proc> ^name waiting-answer ^topic <topic> ^object <obj>)
+	(<proc> ^name waiting-answer ^topic <topic> ^object <obj> ^type <type>)
 -->
 	(<s> ^waiting-answer <proc>)
+	(<s> ^waiting-answer-type <type>)
 	(<s> ^question-topic <topic>)
 }
 
