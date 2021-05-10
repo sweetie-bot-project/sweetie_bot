@@ -13,7 +13,7 @@ sp {talk*elaborate*substate
 	(state <s> ^substate talk ^args <args>)
 	(<args> ^object <obj>)
 -->
-	(<s> ^object <obj> ^verbolization <v>)	
+	(<s> ^object <obj> ^verbolization <v> ^talk-said <ev-pool>)	
 }
 
 # propagate verbolization to the bottom state
@@ -39,6 +39,14 @@ sp {talk*elaborate*looking-at
 	(<s> ^looking-at yes)
 }
 
+# relevant talk-said events
+sp {talk-event*elaborate-recent-talk-said-events
+	(state <s> ^substate talk ^object <obj> ^events.event <ev> ^time.recently <time> ^talk-said <c>)
+	(<ev> ^name talk-said ^object <obj> ^initiated-at {>= <time>})	
+-->
+	(<c> ^event <ev>)
+}
+
 # DECISION RULES
 
 # propose question verbolization
@@ -46,7 +54,7 @@ sp {talk*propose*question-verbolization
 	(state <s> ^substate talk ^looking-at -^verbolizing -^waiting-answer ^verbolization.frame <q> ^object <obj> ^process <sp>)
 	(<q> ^type question ^topic <topic> ^text <text> ^animation-tag <tag> ^utility <utility>)
 -->
-	(<s> ^operator <o> +, =)
+	(<s> ^operator <o> +)
 	(<o> ^name question-verbolization ^substate verbolize ^utility <utility> ^process-link <proc>)
 	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed>)
 	(<res-succeed> ^status succeed ^add-process <proc-result>)
@@ -59,7 +67,7 @@ sp {talk*propose*statement-verbolization
 	(state <s> ^substate talk ^looking-at -^verbolizing -^waiting-answer  ^verbolization.frame <q> ^object <obj> ^process <sp>)
 	(<q> ^type statement ^topic <topic> ^text <text> ^animation-tag <tag> ^utility <utility>)
 -->
-	(<s> ^operator <o> + =)
+	(<s> ^operator <o> +)
 	(<o> ^name statement-verbolization ^substate verbolize ^utility <utility> ^process-link <proc>)
 	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed>)
 	(<res-succeed> ^status succeed ^add-process <proc-result> )
@@ -72,7 +80,7 @@ sp {talk*propose*reaction-verbolization
 	(state <s> ^substate talk ^looking-at -^verbolizing ^verbolization.frame <q> ^object <obj>)
 	(<q> ^type reaction ^topic <topic> ^text <text> ^animation-tag <tag> ^utility <utility>)
 -->
-	(<s> ^operator <o> +, =)
+	(<s> ^operator <o> +)
 	(<o> ^name reaction-verbolization ^substate verbolize ^utility <utility> ^process-link <proc>)
 	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed>)
 	(<res-succeed> ^status succeed ^print (concat |TALK: VERBOLIZED REACTION | <topic> | WITH TEXT | <text> (crlf)))
@@ -120,17 +128,6 @@ sp {talk*propose*looking-at-speaker
 	(<a> ^object <obj> ^timeout 5.0 ^delay 2.0)
 }
 
-sp {talk*elaboreate*talk-falied-from-look-at-speaker-failed
-	(state <s> ^top-state 1 ^beliefs <b>)
-	(<b> ^event <ev>)
-	(<ev> ^name looking-at-speaker ^reason terminated ^status failed ^process <proc>)
-	(<proc> ^object <obj>)
--->
-	(<b> ^event <ev1>)
-	(<ev1> ^name talk-failed ^actor <obj> ^topic none)
-}
-	
-
 # finding-speaker if he is missing
 sp {talk*propose*search-missing-speaker
 	(state <s> ^substate talk ^beliefs.predicate <proc> ^object <obj> ^verbolization.frame <f>)
@@ -153,7 +150,7 @@ sp {talk*prefer*say-operator-with-greater-utility
 	(<s> ^operator <op1> > <op2>)
 }
 
-# waiting before action with same utility
+# waiting is preferable over the talk verbolization with same utility
 sp {talk*prefer*waiting-operators
 	(state <s> ^substate talk ^operator <op1> + ^operator {<> <op1> <op2>} +)
 	(<op1> ^substate look-at ^utility <utility>)
@@ -162,13 +159,32 @@ sp {talk*prefer*waiting-operators
 	(<s> ^operator <op1> > <op2>)
 }
 
-# ignored topics are worst
-sp {talk*prefer*ignored-topic-worst
+# TODO use impasse
+
+# numeric preferences for verbolize operators
+sp {talk*prefer*verbolization-numerical-base
+	(state <s> ^substate talk ^operator <op> + )
+	(<op> ^name {<<|question-verbolization| |statement-verbolization| |reaction-verbolization|>>})
+-->
+	(<s> ^operator <op> = 100)
+}
+
+# avoid ignored topics
+sp {talk*prefer*verbolization-avoid-ignored-topics
 	(state <s> ^substate talk ^operator <op> + ^beliefs.predicate <pred> ^object <obj>)
-	(<op> ^substate say ^topic <topic>)
+	(<op> ^name {<<|question-verbolization| |statement-verbolization| |reaction-verbolization|>>} ^process-link.topic <topic>)
 	(<pred> ^name ignor-topic ^topic <topic> ^actor <obj>)
 -->
-	(<s> ^operator <op> <)
+	(<s> ^operator <op> = -50)
+}
+
+# avoid mentioned topics
+sp {talk*prefer*verbolization-avoid-recent-topics
+	(state <s> ^substate talk ^operator <op> + ^talk-said.event <ev>)
+	(<op> ^name {<<|question-verbolization| |statement-verbolization| |reaction-verbolization|>>} ^process-link.topic <topic>)
+	(<ev> ^topic <topic>)
+-->
+	(<s> ^operator <op> = -30)
 }
 
 # COGNITION RULES
@@ -207,6 +223,17 @@ sp {talk*propose*event-reaction
 }
 
 # MISSING SPEAKER (talk-failed EVENT PROCESSING)
+
+# detect talk-failed event if looking-at-speaker failed
+sp {talk*elaboreate*talk-falied-from-look-at-speaker-failed
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^name looking-at-speaker ^reason terminated ^status failed ^process <proc>)
+	(<proc> ^object <obj>)
+-->
+	(<b> ^event <ev1>)
+	(<ev1> ^name talk-failed ^actor <obj> ^topic none)
+}
 
 # detect if robot said somthing to object
 sp {talk-failed*elaborate*talk-has-started
