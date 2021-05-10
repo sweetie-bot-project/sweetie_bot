@@ -1,3 +1,4 @@
+trace -d 0
 source system/system_source.soar
 # agent initialization
 source initialization-proto3.soar
