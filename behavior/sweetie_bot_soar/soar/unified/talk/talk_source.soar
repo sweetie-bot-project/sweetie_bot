@@ -13,5 +13,5 @@ source verbolization.soar
 # talk substate definition
 source talk.soar
 # verbolization rules
-# source verbolization-requestria.soar
-# source verbolization-ghost.soar
+source verbolization-requestria.soar
+source verbolization-rarity.soar

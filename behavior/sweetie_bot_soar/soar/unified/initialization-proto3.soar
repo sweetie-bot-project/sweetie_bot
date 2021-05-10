@@ -24,23 +24,25 @@ sp {initialization*apply*drives
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^drive <d1> <d2> <d3> <d4> <d5>)
+	(<m> ^drive <d1> <d2> <d3> <d4> <d5> <d6>)
 	(<d1> ^name movement ^activation 0 ^importance 2) 
 	(<d2> ^name obey ^activation 0 ^importance 8)
 	(<d3> ^name security ^activation 0 ^importance 10)
 	(<d4> ^name curiosity ^activation 0 ^importance 5) 
 	(<d5> ^name social ^activation 0 ^importance 6) 
+	(<d6> ^name dummy ^activation 0 ^importance 11) 
 }
 
 sp {initialization*apply*flexbe-commands
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^flexbe-command <c1> <c2> <c3> <c4>)
+	(<m> ^flexbe-command <c1> <c2> <c3> <c4> <c5>)
 	(<c1> ^name ExecuteLookAt ^param id label type timeout)
 	(<c2> ^name ExecuteCompoundAction ^param action_name)
 	(<c3> ^name ExecuteStepSequence ^param step_sequence)
 	(<c4> ^name ExecuteJointTrajectoryAndSay ^param joint_trajectory text text_delay is_relative)
+	(<c5> ^name ExecuteSetPose ^param pose)
 }
 
 
@@ -48,19 +50,23 @@ sp {initialization*apply*compound*action
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^compound-action <c7>)
-	(<c7> ^name head_ask_about_sister ^tag talk ^tag alone)
+	(<m> ^compound-action <c5> <c6> <c7>)
+	(<c5> ^name push_up ^tag alone)
+	(<c6> ^name show_off ^tag alone)
+	(<c7> ^name head_bored ^tag alone)
 }
 
 sp {initialization*apply*joint-trajectory
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^joint-trajectory <c1> <c2> <c3> <c4>)
-	(<c1> ^name head_node ^tag confirmation greeting ^tag talk ^relative yes)
+	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7>)
+	(<c1> ^name head_node ^tag confirmation greeting pleased ^tag general ^tag talk ^relative yes)
 	(<c2> ^name head_shake ^tag rejection ^tag talk ^relative yes)
-	(<c3> ^name head_suprised ^tag question ^tag suprise  ^tag general ^tag talk ^relative yes)
-	(<c3> ^name head_look_around ^tag long ^tag general ^tag talk)
+	(<c3> ^name head_suprised ^tag question suprise  ^tag general ^tag talk ^relative yes)
+	(<c4> ^name head_look_around ^tag long ^tag general ^tag talk)
+	(<c5> ^name hoof_stamp ^tag rejection angry ^tag talk)
+	(<c6> ^name greeting2 ^tag greeting ^tag talk)
 }
 
 #sp {initialization*apply*compound*action
@@ -98,6 +104,5 @@ sp {apply*initialization-second-stage*name
 	(state <s> ^name initialization ^operator <op>)
 	(<op> ^name initialization ^stage 3)
 -->
-	(<s> ^name main) 
-	(<s> ^substate main) 
+	(<s> ^substate general) 
 }
