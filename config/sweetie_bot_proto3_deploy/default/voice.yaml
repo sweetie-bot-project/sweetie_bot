@@ -3,7 +3,7 @@ voice_node:
     playback_command: "mpv"
     sound_packages: [ sweetie_bot_sounds ]
     # Options are: sound_play, rhvoice, rhvoice_robotized
-    tts_backend: rhvoice_robotized
+    tts_backend: rhvoice
 
     # Parameters for rhvoice and rhvoice_robotized backends:
     relative_volume: 2.0 # in percents devided by 100
