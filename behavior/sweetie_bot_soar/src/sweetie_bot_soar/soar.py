@@ -135,7 +135,8 @@ class Soar:
 			if module.isRunning():
 				self.active_output_modules.add(module)
 		# print executed commands list
-		rospy.loginfo("SOAR commands: %s " % str(cmd_list))
+		if any([cmd != 'nop' for cmd in cmd_list]):
+			rospy.loginfo("SOAR output commands: %s " % str(cmd_list))
 
 
 	def step_io_link_update(self):
