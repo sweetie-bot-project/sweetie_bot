@@ -148,7 +148,8 @@ class ObjectDetectionMonitor(EventState):
                     pose_stamped = PoseStamped(pose = match.pose, header = Header(frame_id = match.header.frame_id, stamp = match.header.stamp - rospy.Duration(self._transform_delay)))
                     self._pose = self._tf_listener.transformPose(self._frame_id, pose_stamped)
                 except tf.Exception as e:
-                    Logger.logwarn('Unable to transform from %s to %s' % (match.header.frame_id, self._frame_id))
+                    delay = rospy.Time.now() - pose_stamped.header.stamp
+                    Logger.logwarn('Unable to transform from %s to %s, effective match time delay %f.' % (match.header.frame_id, self._frame_id, delay))
                     return 'failure'
                 # publish
                 self._pose_publisher.publish(self._pose_topic, self._pose)
