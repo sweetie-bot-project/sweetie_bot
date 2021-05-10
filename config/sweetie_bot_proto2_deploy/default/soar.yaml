@@ -1,5 +1,5 @@
 soar:
-    soar_period: 0.25
+    soar_period: 0.2
     autostart: false
     agent_package: "sweetie_bot_soar"
     agent_file: "soar/unified.soar"
