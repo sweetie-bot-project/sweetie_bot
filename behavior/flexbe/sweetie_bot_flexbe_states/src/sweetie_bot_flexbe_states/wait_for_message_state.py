@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 from flexbe_core import EventState, Logger
 
@@ -14,32 +14,32 @@ Created on 14.10.2017
 '''
 
 class WaitForMessageState(EventState):
-        '''
-        Wait for the message on the given topic with specified properties.
+    '''
+    Wait for the message on the given topic with specified properties.
 
-        -- topic        string      The topic on which should be listened.
-        -- condition         function    The condition to check message properties.
-                                                                Has to expect one parameter which will be set to message and return a boolean.
-        -- buffered        bool        Use buffered connection to avoid message loss.
-        -- clear        bool        Drops last message on this topic on enter
-                                                                in order to only handle message received since this state is active.
+    -- topic        string      The topic on which should be listened.
+    -- condition         function    The condition to check message properties.
+                                                            Has to expect one parameter which will be set to message and return a boolean.
+    -- buffered        bool        Use buffered connection to avoid message loss.
+    -- clear        bool        Drops last message on this topic on enter
+                                                            in order to only handle message received since this state is active.
 
-        #> message          object      Message which passed conditions check.
+    #> message          object      Message which passed conditions check.
 
-        <= received                   Message was received. 
-        <= unavailable              The topic is not available when this state becomes actives.
+    <= received                   Message was received. 
+    <= unavailable              The topic is not available when this state becomes actives.
 
-        '''
-
-#    def __init__(self, topic, condition, buffered = False, clear = False):
-#               super(SubscriberState, self).__init__(outcomes=['received', 'unavailable'], output_keys=['message'])
+    '''
+    
+    #    def __init__(self, topic, condition, buffered = False, clear = False):
+    #               super(SubscriberState, self).__init__(outcomes=['received', 'unavailable'], output_keys=['message'])
     def __init__(self, topic, condition, buffered = False, clear = False):
         super(WaitForMessageState , self).__init__(topic = topic, blocking = False, clear = clear)
 
         self._buffered = buffered
 
         if not callable(condition):
-            raise TypeError, 'Provided condition parameter is not callable object.'
+            raise TypeError('Provided condition parameter is not callable object.')
         self._condition = condition
 
 
