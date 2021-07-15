@@ -3,7 +3,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <tf2_ros/transform_listener.h>
 
-#include <towr/nlp_formulation.h>
+#include <towr/nlp_formulation_base.h>
 #include <ifopt/ipopt_solver.h>
 
 #include <sweetie_bot_clop_generator/MoveBaseAction.h>
@@ -73,7 +73,7 @@ class ClopGenerator
 		std::vector<KDL::Vector> end_effector_contact_point;
 		std::shared_ptr<towr::GeneralKinematicModelNonCoM> kinematic_model;
 		// NLP formulation and its solution
-		towr::NlpFormulation formulation;
+		std::unique_ptr<towr::NlpFormulationBase> formulation;
 		ifopt::IpoptSolver::Ptr solver;
 		ifopt::Problem nlp;
 		towr::SplineHolder solution;
@@ -93,7 +93,7 @@ class ClopGenerator
 
 		KDL::Vector getContactPointFromRobotModel(const std::string& contact);
 		KDL::Frame convertTFToPathTF(const KDL::Frame& T);
-		bool checkEERangeConditions(const towr::BaseState& base_pose, const towr::NlpFormulation::EEPos& ee_pose);
+		bool checkEERangeConditions(const towr::BaseState& base_pose, const towr::NlpFormulationBase::EEPos& ee_pose);
 
 		void setInitialStateFromNominal(double ground_z);
 		void setInitialStateFromTF();

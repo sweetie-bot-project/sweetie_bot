@@ -13,6 +13,7 @@ TowrSolutionVisualizer::XppVec TowrSolutionVisualizer::GetTrajectory(const towr:
 	XppVec trajectory;
 	double t = 0.0;
 	double T = solution.base_linear_->GetTotalTime();
+	Eigen::VectorXd p;
 
 	towr::EulerConverter base_angular(solution.base_angular_);
 
@@ -31,8 +32,18 @@ TowrSolutionVisualizer::XppVec TowrSolutionVisualizer::GetTrajectory(const towr:
 
 			state.ee_contact_.at(ee_xpp) = solution.phase_durations_.at(ee_towr)->IsContactPhase(t);
 			state.ee_motion_.at(ee_xpp)  = towr::ToXpp(solution.ee_motion_.at(ee_towr)->GetPoint(t));
-			state.ee_forces_ .at(ee_xpp) = solution.ee_force_.at(ee_towr)->GetPoint(t).p();
+			p = solution.ee_force_.at(ee_towr)->GetPoint(t).p();
+			if (p.size() == 1) {
+				auto& f = state.ee_forces_.at(ee_xpp);
+				f.x() = 0.0;
+				f.y() = 0.0;
+			  	f.z() = p.x();
+		    }
+			else {
+				state.ee_forces_.at(ee_xpp) = p;
+			}
 		}
+		
 
 		state.t_global_ = t;
 		trajectory.push_back(state);
@@ -65,7 +76,7 @@ xpp_msgs::RobotParameters TowrSolutionVisualizer::GetRobotParametersMsg(const to
 	return params_msg;
 }
 		 
-void TowrSolutionVisualizer::SaveOptimizationAsRosbag(const std::string& bag_name, const towr::NlpFormulation& formulation, const towr::SplineHolder& solution) const 
+void TowrSolutionVisualizer::SaveOptimizationAsRosbag(const std::string& bag_name, const towr::NlpFormulationBase& formulation, const towr::SplineHolder& solution) const 
 {
   rosbag::Bag bag;
   bag.open(bag_name, rosbag::bagmode::Write);
@@ -133,7 +144,7 @@ visualization_msgs::MarkerArray TowrSolutionVisualizer::GetTerrainMsg(const towr
   return msg;
 }
 
-void TowrSolutionVisualizer::AddTrajectoryToRosbag (rosbag::Bag& bag, const towr::NlpFormulation& formulation, const towr::SplineHolder& solution, const std::string& topic) const
+void TowrSolutionVisualizer::AddTrajectoryToRosbag (rosbag::Bag& bag, const towr::NlpFormulationBase& formulation, const towr::SplineHolder& solution, const std::string& topic) const
 {
 	XppVec traj = GetTrajectory(solution);
 	for (const auto state : traj) {
@@ -156,7 +167,7 @@ void TowrSolutionVisualizer::AddTrajectoryToRosbag (rosbag::Bag& bag, const towr
 
 
 
-void TowrSolutionVisualizer::PlayTrajectory(const towr::NlpFormulation& formulation, const towr::SplineHolder& solution, double replay_speed) const
+void TowrSolutionVisualizer::PlayTrajectory(const towr::NlpFormulationBase& formulation, const towr::SplineHolder& solution, double replay_speed) const
 {
 	const std::string rosbag_file = "/tmp/towr_optimization.bag";
 	SaveOptimizationAsRosbag(rosbag_file, formulation, solution);

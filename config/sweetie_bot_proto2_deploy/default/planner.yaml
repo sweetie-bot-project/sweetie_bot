@@ -5,6 +5,7 @@ clop_generator:
     planning_frame: "base_link_path"
     storage_namespace: "saved_msgs"
     towr_model:
+        nlp_type: "planar"
         base:
             frame_id: "base_link"
             links: ["base_link", "base_link_inertia", "bone11", "bone12", "bone21", "bone22", "bone31", "bone32", "bone41", "bone42", "bone51", "bone52", "bone53", "bone54", "screen_left", "screen_right" ]
@@ -12,10 +13,10 @@ clop_generator:
             name: "leg1"
             frame_id: "bone15"
             nominal_stance: [ 0.08, 0.038, -0.1675 ]
-            #bounding_box: [ 0.05, 0.025, -1.2075, 0.145, 0.08, -0.1575 ]
+            #bounding_box: [ 0.05, 0.025, -0.2075, 0.145, 0.08, -0.1575 ]
             bounding_box: [ 0.05, 0.025, -1.2075, 1.145, 0.08, -0.1575 ]
             #bounding_box: [ 0.05, 0.025, -1.2075, 1.145, 1.08, -0.1575 ]
-            bounding_box: [ -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
+            #bounding_box: [ -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
             bounding_sphere: [ 0.08, 0.037, -0.0575, 0.17 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone13", "bone14", "bone15"]
@@ -23,10 +24,10 @@ clop_generator:
             name: "leg2"
             frame_id: "bone25"
             nominal_stance: [ 0.08, -0.038, -0.1675 ]
-            #bounding_box: [ 0.05, -0.08, -1.2075, 0.145, -0.025, -0.1575 ]
+            #bounding_box: [ 0.05, -0.08, -0.2075, 0.145, -0.025, -0.1575 ]
             bounding_box: [ 0.05, -0.08, -1.2075, 1.145, -0.025, -0.1575 ]
             #bounding_box: [ 0.05, -1.08, -1.2075, 1.145, -0.025, -0.1575 ]
-            bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
+            #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
             bounding_sphere: [ 0.08, -0.037, -0.0575, 0.17 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone23", "bone24", "bone25"]
@@ -34,7 +35,7 @@ clop_generator:
             name: "leg3"
             frame_id: "bone35"
             nominal_stance: [ -0.08, 0.038, -0.1675 ]
-            #bounding_box: [ -0.145, 0.025, -1.2075, -0.05, 0.08, -0.1575 ]
+            #bounding_box: [ -0.145, 0.025, -0.2075, -0.05, 0.08, -0.1575 ]
             bounding_box: [ -1.145, 0.025, -1.2075, -0.05, 0.08, -0.1575 ]
             #bounding_box: [ -1.145, 0.025, -1.2075, -0.05, 1.08, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
@@ -45,9 +46,9 @@ clop_generator:
             name: "leg4"
             frame_id: "bone45"
             nominal_stance: [ -0.08, -0.038, -0.1675 ]
-            #bounding_box: [ -0.145, -0.08, -1.2075, -0.05, -0.025, -0.1575 ]
+            #bounding_box: [ -0.145, -0.08, -0.2075, -0.05, -0.025, -0.1575 ]
             bounding_box: [ -1.145, -0.08, -1.2075, -0.05, -0.025, -0.1575 ]
-            #bounding_box: [ -1.145, -0.08, -1.2075, -0.05, -0.025, -0.1575 ]
+            #bounding_box: [ -1.145, -1.08, -1.2075, -0.05, -0.025, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
             bounding_sphere: [ -0.08, -0.037, -0.0575, 0.17 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
@@ -83,7 +84,7 @@ clop_generator:
         linear_solver: "mumps"
         jacobian_approximation: "exact"
         derivative_test: "none"  # BEWARE! Test "first-order" breaks optimization process! 
-        max_cpu_time: 15.0
+        max_cpu_time: 5.0
         print_level: 5
-        max_iter: 300
+        max_iter: 100
 
