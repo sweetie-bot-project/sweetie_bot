@@ -10,8 +10,6 @@
 #include <sweetie_bot_clop_generator/SaveTrajectory.h>
 #include <sweetie_bot_control_msgs/FollowStepSequenceAction.h>
 
-#include "general_kinematic_model_non_com.h"
-
 namespace sweetie_bot {
 
 class ClopGenerator 
@@ -71,7 +69,7 @@ class ClopGenerator
 		std::string base_frame_id;
 		std::map<std::string, EndEffectorInfo> end_effector_index;
 		std::vector<KDL::Vector> end_effector_contact_point;
-		std::shared_ptr<towr::GeneralKinematicModelNonCoM> kinematic_model;
+		Eigen::Vector3d com_B; // Robot body CoM position in base link frame.
 		// NLP formulation and its solution
 		std::unique_ptr<towr::NlpFormulationBase> formulation;
 		ifopt::IpoptSolver::Ptr solver;

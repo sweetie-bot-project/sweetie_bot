@@ -7,6 +7,7 @@
 
 #include <towr/models/endeffector_mappings.h>
 #include <towr/models/single_rigid_body_dynamics.h>
+#include "single_rigid_body_with_point_ee_dynamics.h"
 #include <towr/models/general_kinematic_model.h>
 #include <towr/initialization/quadruped_gait_generator.h>
 #include <towr/terrain/height_map.h>
@@ -22,8 +23,6 @@
 
 #include "towr_trajectory_visualizer.hpp"
 #include "rigid_body_inertia_calculator.hpp"
-#include "general_kinematic_model_non_com.h"
-#include "single_rigid_body_with_point_ee_dynamics.h"
 
 using XmlRpc::XmlRpcValue;
 using XmlRpc::XmlRpcException;
@@ -248,7 +247,8 @@ bool ClopGenerator::configureRobotModel()
 	this->end_effector_contact_point.assign(end_effector_mapper.size(), KDL::Vector::Zero());
 	this->formulation.reset();
 
-	this->kinematic_model = std::make_shared<towr::GeneralKinematicModelNonCoM>(4);
+	std::shared_ptr<towr::GeneralKinematicModel> kinematic_model = std::make_shared<towr::GeneralKinematicModel>(4);
+	std::shared_ptr<towr::DynamicModel> dynamic_model;
 
 	// get urdf model
 	std::string urdf_model;
@@ -313,7 +313,7 @@ bool ClopGenerator::configureRobotModel()
 				base_inetria_tensor = kdl_inertia_calculator.getInertiaTotal();
 			}
 		}
-		
+		 
 		// process end effectors
 		for(auto ee_it = end_effector_mapper.begin(); ee_it != end_effector_mapper.end(); ee_it++) {
 			XmlRpcValue& leg_param = towr_model[ee_it->first];
@@ -356,8 +356,10 @@ bool ClopGenerator::configureRobotModel()
 			}
 			Eigen::Vector3d center(bounding_sphere[0], bounding_sphere[1], bounding_sphere[2]);
 			double radius = bounding_sphere[3];
-			// configure end effector
-			kinematic_model->configureEndEffector(ee_info.towr_index, nominal_stance_p, Eigen::AlignedBox3d(bounding_box_p1, bounding_box_p2), towr::Sphere3d(center, radius) );
+
+			// configure end effector: note that TOWR plans trajectory for CoM so kinematics model should be "shifted".
+			Eigen::Vector3d cog(base_inetria_tensor.getCOG().data);
+			kinematic_model->configureEndEffector(ee_info.towr_index, nominal_stance_p - cog, Eigen::AlignedBox3d(bounding_box_p1 - cog, bounding_box_p2 - cog), towr::Sphere3d(center - cog, radius) );
 
 			// Get information about contact
 			XmlRpcValue& contact_point = leg_param["contact_point"];
@@ -406,7 +408,6 @@ bool ClopGenerator::configureRobotModel()
 		Eigen::Matrix3d Icog(base_inetria_tensor.RefPoint( base_inetria_tensor.getCOG() ).getRotationalInertia().data);
 		Eigen::Vector3d cog(base_inetria_tensor.getCOG().data);
 
-		std::shared_ptr<towr::DynamicModel> dynamic_model;
 		if (std::any_of(ee_masses.begin(), ee_masses.end(), [](double m) { return m != 0.0; } )) {
 			dynamic_model.reset( new towr::SingleRigidBodyWithPointEEDynamics(M, Icog , ee_masses) );
 		}
@@ -415,33 +416,30 @@ bool ClopGenerator::configureRobotModel()
 		}
 
 		ROS_INFO_STREAM("SingleRigidBodyDynamics: mass = " << M << " CoM = (" << cog.transpose() << "), I = " << std::endl << Icog  << std::endl << "ee_masses = " << ee_masses << std::endl);
-
-		// set CoM position
-		kinematic_model->SetCoM(cog);
-		
-		// save models
-		this->formulation->model_.kinematic_model_ = kinematic_model;
-		this->formulation->model_.dynamic_model_ = dynamic_model;
 	}
 	catch (std::invalid_argument& e) {
 		ROS_ERROR_STREAM("'towr_model' processing error: " << e.what());
 		return false;
 	}
 
+	// save models
+	this->formulation->model_.kinematic_model_ = kinematic_model;
+	this->formulation->model_.dynamic_model_ = dynamic_model;
+	this->com_B = Eigen::Vector3d(base_inetria_tensor.getCOG().data);
+
 	return true;
 }
 
 void ClopGenerator::setInitialStateFromNominal(double ground_z)
 {
-	Vector3d com = kinematic_model->GetCoM();
 	int n_ee = end_effector_index.size();
 	// get nominal pose in base
 	formulation->initial_ee_W_.resize(n_ee);
-	for(int ee = 0; ee < n_ee; ee++) formulation->initial_ee_W_[ee] =  formulation->model_.kinematic_model_->GetNominalStanceInBase(ee) + com;
+	for(int ee = 0; ee < n_ee; ee++) formulation->initial_ee_W_[ee] =  formulation->model_.kinematic_model_->GetNominalStanceInBase(ee) + com_B;
 	// get base heigh
 	double base_height = - formulation->initial_ee_W_.front().z();
 	// set base posiition
-	formulation->initial_base_.lin.at(kPos) = Eigen::Vector3d(0.0f, 0.0f, base_height + ground_z) + com;
+	formulation->initial_base_.lin.at(kPos) = Eigen::Vector3d(0.0f, 0.0f, base_height + ground_z) + com_B;
 	formulation->initial_base_.ang.at(kPos).setZero();
 	// set base velocity
 	formulation->initial_base_.lin.at(kVel).setZero();
@@ -460,7 +458,6 @@ void ClopGenerator::setInitialStateFromTF()
 	//try {
 		// get base position
 		{
-			Vector3d com = kinematic_model->GetCoM();
 			geometry_msgs::TransformStamped T;
 			Vector3d tmp;
 
@@ -479,7 +476,7 @@ void ClopGenerator::setInitialStateFromTF()
 			// set position 
 			tf::vectorMsgToEigen(T.transform.translation, tmp);
 			Eigen::Map< Eigen::Matrix<double,3,3,Eigen::RowMajor> > rot_eigen(rot.data);
-			formulation->initial_base_.lin.at(kPos) = tmp + rot_eigen * com;
+			formulation->initial_base_.lin.at(kPos) = tmp + rot_eigen * com_B;
 			// set velocities to zero
 			formulation->initial_base_.lin.at(towr::kVel).setZero();
 			formulation->initial_base_.ang.at(towr::kVel).setZero();
@@ -560,7 +557,7 @@ void ClopGenerator::setGoalPoseFromMsg(const MoveBaseGoal& msg)
 
 	Eigen::Vector3d tmp;
 	KDL::Frame initial_pose, final_pose;
-	KDL::Vector com = EigenToKDL( kinematic_model->GetCoM() );
+	KDL::Vector com = EigenToKDL( com_B );
 
 	// get initial base pose
 	tf::vectorEigenToKDL(formulation->initial_base_.lin.at(kPos), initial_pose.p);
@@ -1178,7 +1175,7 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 	double t_total = solution.base_linear_->GetTotalTime();
 	int n_samples = std::ceil(t_total / period) + 1; // we need addition point to include t_total
 	towr::EulerConverter base_angular(solution.base_angular_);
-	KDL::Vector com = EigenToKDL( kinematic_model->GetCoM() );
+	KDL::Vector com = EigenToKDL( com_B );
 
 	// clear buffers, allocate memory 
 	msg.time_from_start.clear(); 
