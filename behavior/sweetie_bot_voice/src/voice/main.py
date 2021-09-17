@@ -64,19 +64,23 @@ def commandCallback(cmd):
 
             Gst.Event.new_flush_stop(True)
 
-            # @Note: Pipeline must be resetted exactly like this. Otherwise it will not flush
-            gstreamer_pipeline.set_state(Gst.State.PAUSED)
+            # @Note: Pipeline must be resetted exactly like this. Otherwise it will not push buffer after EOS signal
+            gstreamer_pipeline.set_state(Gst.State.READY)
             gstreamer_pipeline.set_state(Gst.State.PLAYING)
             
             # Allocate new buffer
             buf = Gst.Buffer.new_allocate(None, len(raw_sound), None)
             buf.fill(0, raw_sound)
+
+            # We cannot know duration of generated audio from rhvoice wrapper API
+            buf.duration = Gst.CLOCK_TIME_NONE
+            buf.pts = Gst.CLOCK_TIME_NONE
+
             # Push buffer on appsrc
             gst_flow_return = gstreamer_src.emit('push-buffer', buf)
 
             if gst_flow_return != Gst.FlowReturn.OK:
                 rospy.logerr('Gstreamer error. Failed to process synthesized voice')
-
 
 def file_dict(directory, ext):
     ''' Return list of files with given extension.
@@ -180,6 +184,10 @@ def main():
 
         gstreamer_pipeline = Gst.parse_launch(auto_audio_sink_pipeline)
         gstreamer_src = gstreamer_pipeline.get_by_name('source')
+
+        # @Note: Important, as we will produce timestamped buffers
+        gstreamer_src.set_property("format", Gst.Format.TIME)
+
         gstreamer_pipeline.set_state(Gst.State.PLAYING)
 
     # List sound files
