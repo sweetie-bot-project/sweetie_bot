@@ -3,6 +3,7 @@ joint_state_ref:
 dynamics_visualizer:
     robot_model_namespace: "/motion"
     display_twist: true
+    balance_history_length: 1000
 
 # Example of generic marker configuration.
 #    This is old simple version of the markers system. It inteded for debugging
