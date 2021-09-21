@@ -18,6 +18,7 @@
 
 #include <towr/nlp_formulation.h>
 #include <towr/nlp_formulation_planar.h>
+#include <towr/nlp_formulation_zmp_planar.h>
 
 #include "towr_trajectory_visualizer.hpp"
 #include "rigid_body_inertia_calculator.hpp"
@@ -93,6 +94,7 @@ static void DebugPrintFormulation(const NlpFormulationBase& formulation)
 	}
 
 	ROS_INFO_STREAM("GAIT PHASES");
+	ROS_INFO_STREAM("BASE phases: (" << Eigen::Map<const Eigen::VectorXd>(formulation.params_.base_phase_durations_.data(), formulation.params_.base_phase_durations_.size()).transpose() << ")");
 	n_ee = std::min(formulation.params_.ee_phase_durations_.size(), formulation.params_.ee_in_contact_at_start_.size());
 	for(int ee = 0; ee < n_ee; ee++) {
 		ROS_INFO_STREAM("EE (" << ee << ") phases: contact at start " << formulation.params_.ee_in_contact_at_start_[ee] << " phases (" 
@@ -271,14 +273,18 @@ bool ClopGenerator::configureRobotModel()
 			if (nlp_type_param.getType() != XmlRpcValue::TypeString) throw std::string("towr_model must contain 'nlp_type' string"); 
 			if (static_cast<std::string>(nlp_type_param) == "6d") {
 				this->formulation.reset(new towr::NlpFormulation());
-				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorRom, Parameters::Terrain, Parameters::Swing };
+				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorRom, Parameters::Terrain, Parameters::Swing, Parameters::BaseAcc };
 			}
 			else if (static_cast<std::string>(nlp_type_param) == "planar") {
 				this->formulation.reset(new towr::NlpFormulationPlanar());
-				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorRom, Parameters::Swing };
+				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorRom, Parameters::Swing, Parameters::BaseAcc };
+			}
+			else if (static_cast<std::string>(nlp_type_param) == "zmp") {
+				this->formulation.reset(new towr::NlpFormulationZMPPlanar());
+				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::EndeffectorRom, Parameters::Swing, Parameters::BaseAcc };
 			}
 			else {
-				throw std::string("'nlp_type' must be '6d' or 'planar'"); 
+				throw std::string("'nlp_type' must be '6d', 'planar', 'zmp'"); 
 			}
 		}
 		// process base
@@ -886,6 +892,8 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 			params.ee_phase_durations_.push_back(gait_gen->GetPhaseDurations(msg.duration, ee));
 			params.ee_in_contact_at_start_.push_back(gait_gen->IsInContactAtStart(ee));
 		}
+		// add base phases
+		params.base_phase_durations_ = gait_gen->GetBasePhaseDurations(msg.duration);
 	}
 	// debug output
 	for (int ee = 0; ee < n_ee; ++ee) {
