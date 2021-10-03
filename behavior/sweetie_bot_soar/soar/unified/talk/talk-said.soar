@@ -1,0 +1,31 @@
+#
+# TALKING: REACTION ON SAID
+#
+#
+
+# ELABORATIONS 
+
+# propagate event attributes and substate
+sp {talk-said*elaborate*substate
+	(state <s> ^substate talk-said ^superstate.operator.event <ev>)
+	(<ev> ^topic <topic> ^object <obj>)
+-->
+	(<s> ^substate talk-event)
+	(<s> ^topic <topic> ^object <obj>)
+}
+
+# remove last-said-topic predicate
+sp {talk-said*propose*remove-last-said
+	(state <s> ^substate talk-said ^beliefs.predicate <pred> ^object <obj> ^actions <a>)
+	(<pred> ^name talk-last-said-topic ^object <obj>)
+-->
+	(<a> ^remove-predicate <pred>)
+}
+
+# add new talk-last-said-topic predicate
+sp {talk-said*propose*add-last-said
+	(state <s> ^substate talk-said ^topic <topic> ^object <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name talk-last-said-topic ^topic <topic> ^object <obj> ^deadline-time 60.0)
+}

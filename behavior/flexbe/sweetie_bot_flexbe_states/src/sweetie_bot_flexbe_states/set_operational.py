@@ -14,8 +14,8 @@ class SetOperational(EventState):
     -- resources            string          Resource list.
     -- sync                 bool            If set to true execution is blocked until controller operational.
 
-    <= done 	                    Finished.
-    <= failure 	                    Failed to change controller state.
+    <= done                         Finished.
+    <= failure                      Failed to change controller state.
 
     '''
 

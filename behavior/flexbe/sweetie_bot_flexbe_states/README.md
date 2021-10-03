@@ -18,5 +18,6 @@ Defined states:
 * `SweetieBotCompoundAction` --- perform a few actions in one (`ExecuteJointTrajectoryState` and `TextCommandState`)
 * `SweetieBotFollowHeadPoseSmart` --- Sweetie Bot follows object (`geometry_msgs::PoseStamped` topic) with head.
 * `TextCommandState` --- send `TextCommand`.
+* `TextActionState` --- calls to `TextAction` action server.
 * `WaitForMessageState` --- wait for message on topic which satisfies given predicate.
 

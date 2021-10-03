@@ -1,0 +1,90 @@
+#
+# TALKING: REACTION ON IGNORANCE
+#
+# Predicates:
+#
+# * (<pred> ^name possible-talk-topic ^object <obj> ^topic <a-topic> ^previous-topic <q-topic> ^reaction talk-answered ^deadline-time 60.0) --- possible reaction to ignorance
+# *	(<pred> ^name ignor-possibility ^actor <obj> ^topic <topic> ^deadline-time 60.0) --- question is possibly being ignored.
+# *	(<pred> ^name ignor-topic ^actor <obj> ^topic <topic> ^deadline-time 600.0) --- question on specific topic is being ignored.
+# *	(<pred> ^name ignor-me ^actor <obj>) --- speaker ignores me.
+#
+
+# ELABORATIONS
+
+# propagate event attributes
+sp {talk-ignore*elaborate*substate
+	(state <s> ^substate talk-ignored ^superstate.operator.event <ev>)
+	(<ev> ^topic <topic> ^actor <obj>)
+-->
+	(<s> ^substate talk-event)
+	(<s> ^topic <topic> ^actor <obj>)
+}
+
+# only one ignore event is detected
+sp {talk-ignore*elaborate*ignored-once
+	(state <s> ^substate talk-ignored -^conclusion ignor-me -^conclusion ignor-topic -^conclusion specific-reaction)
+-->
+	(<s> ^conclusion ignor-single)
+}
+
+# there is specific reaction to ignore in topic definition
+sp {talk-ignore*elaborate*specific-reaction
+	(state <s> ^substate talk-ignored ^reaction <r> ^actor <obj> ^event <ev> ^actions <a>)
+-->
+	(<s> ^conclusion specific-reaction)
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name talk-possible-reaction ^object <obj> ^reaction <r> ^event <ev> ^deadline-time 60.0)
+}
+
+# thera are at least two even related to given topic
+sp {talk-ignore*elaborate*ignor-topic
+	(state <s> ^substate talk-ignored ^event <ev> ^talk-ignored <c>)
+	(<c> ^event {<> <ev> <ev1>})
+	(<ev> ^topic <topic>)
+	(<ev1> ^topic <topic>)
+-->
+	(<s> ^conclusion ignor-topic)
+}
+
+# thera are at least three events related to different topics
+sp {talk-ignore*elaborate*ignor-talk
+	(state <s> ^substate talk-ignored ^event <ev> ^talk-ignored <c>)
+	(<c> ^event {<> <ev> <ev1>} ^event {<> <ev> <> <ev1> <ev2>})
+	(<ev> ^topic <topic>)
+	-(<ev1> ^topic <topic>)
+-->
+	(<s> ^conclusion ignor-me)
+}
+
+# ACTION RULES
+
+# if single event is detected conclude that we are possible ignored
+sp {talk-ignore*elaborate*ignor-possibility
+  	(state <s> ^substate talk-ignored ^conclusion ignor-single ^event <ev> ^beliefs <b> ^actions <a>)
+	(<ev> ^actor <obj> ^topic <topic>)
+  	-{(<b> ^predicate <p>) (<p> ^name ignor-possibility ^actor <obj> ^topic <topic>)}
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name ignor-possibility ^actor <obj> ^topic <topic> ^deadline-time 60.0)
+}
+
+# note that speaker ignores specific topic
+sp {talk-ignore*propose*ignor-topic
+  	(state <s> ^substate talk-ignored ^conclusion ignor-topic ^event <ev> ^beliefs <b> ^actions <a>)
+	(<ev> ^actor <obj> ^topic <topic>)
+  	-{(<b> ^predicate <p>) (<p> ^name ignor-topic ^actor <obj> ^topic <topic>)}
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name ignor-topic ^actor <obj> ^topic <topic> ^deadline-time 600.0)
+}
+
+# note that speaker ignores me alltogather
+sp {talk-ignore*propose*ignor-me
+  	(state <s> ^substate talk-ignored ^conclusion ignor-me ^event <ev> ^beliefs <b> ^actions <a>)
+	(<ev> ^actor <obj>)
+  	-{(<b> ^predicate <p>) (<p> ^name ignor-me ^actor <obj>)}
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name ignor-me ^actor <obj>)
+}
+

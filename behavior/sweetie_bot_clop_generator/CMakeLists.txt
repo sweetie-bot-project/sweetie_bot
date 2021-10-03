@@ -13,7 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
 	tf2
 	tf2_geometry_msgs
 	tf2_ros
-	orocos_kdl
 	kdl_parser
 	kdl_conversions 
 	eigen_conversions 
@@ -84,20 +83,19 @@ catkin_package(
 	sweetie_bot_orocos_misc
   DEPENDS 
     towr 
-	orocos_kdl
 )
 
 ###########
 ## Build ##
 ###########
 
-include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ library
 
 ## Declare a C++ executable
      
-add_executable(towr_clop_generator src/gait_generator.cpp src/towr_trajectory_visualizer.cpp src/rigid_body_inertia_calculator.cpp src/general_kinematic_model_non_com.cc src/single_rigid_body_with_point_ee_dynamics.cc)
+add_executable(towr_clop_generator src/gait_generator.cpp src/towr_trajectory_visualizer.cpp src/rigid_body_inertia_calculator.cpp)
 target_link_libraries(towr_clop_generator ${catkin_LIBRARIES})
 add_dependencies(towr_clop_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 

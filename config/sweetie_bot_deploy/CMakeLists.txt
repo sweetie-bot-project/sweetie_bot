@@ -36,9 +36,6 @@ install(DIRECTORY motion_core
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 install(DIRECTORY common
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-# python node installation
-catkin_install_python(PROGRAMS scripts/sweetie-bot-core
-	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 # python scripts installation
 catkin_install_python(PROGRAMS scripts/store
 	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

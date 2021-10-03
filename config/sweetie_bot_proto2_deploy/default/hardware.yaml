@@ -15,6 +15,8 @@ hardware:
                     length = 3
                     treshold = 2
                     alpha = 0.3
-
-
+    battery_monitor:
+        period: 2.0
+        #sysfs_path: '/sys/class/power_supply/BAT0'
+        sysfs_path: '/sys/class/power_supply/sbs-1-000b'
 

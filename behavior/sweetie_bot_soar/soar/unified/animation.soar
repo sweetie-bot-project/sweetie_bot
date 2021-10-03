@@ -1,0 +1,58 @@
+# ANIMATION SUBSTATE
+#  
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate animation {^tag <tag> ... }
+#
+# DESCRIPTION
+#
+# Selects animation tagged with provided tags and executes it. Two tags maximum is supported.
+#
+# RESULT STATUSES
+#
+#	* succeed --- animation is performed.
+#	* failed --- flexbe substate failed with invalid_pose or failed status.
+#
+# SIDE EFFECTS
+#
+# None.
+#
+
+# ELABORATIONS
+
+
+# SELECT ANIMATION TO EXECUTION
+
+# propose animations: select animation with corresponding tag (one tag is provided)
+sp {animation*propose*animation-one-tag
+	(state <s> ^substate animation ^process-status pending ^process <proc> ^args <args> ^mem <mem>)
+	(<args> ^tag <tag> -^tag {<> <tag>})
+	(<mem> ^compound-action <anim>)
+	(<anim> ^name <action_name> ^tag <tag>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name animation-start ^substate flexbe ^process-link <proc> ^additional-process-args <a>)
+	(<a> ^behavior ExecuteCompoundAction ^action_name <action_name>)
+}
+
+# propose animations: select animation with corresponding tags (two tags are provided)
+sp {animation*propose*animation-two-tags
+	(state <s> ^substate animation ^process-status pending ^process <proc> ^args <args> ^mem <mem>)
+	(<args> ^tag <tag1> ^tag {<> <tag1> <tag2>} -^tag {<> <tag1> <> <tag2>})
+	(<mem> ^compound-action <anim>)
+	(<anim> ^name <action_name> ^tag <tag1> ^tag <tag2>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name animation-start ^substate flexbe ^process-link <proc> ^additional-process-args <a>)
+	(<a> ^behavior ExecuteCompoundAction ^action_name <action_name>)
+}
+
+# WAIT WHILE PROCESS IS ACTIVE
+
+sp {animation*propose*wait
+	(state <s> ^substate animation ^process-status active ^process <proc>)
+	(<proc> ^action_name <action_name>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name animation-wait ^substate flexbe ^process-link <proc>)
+}

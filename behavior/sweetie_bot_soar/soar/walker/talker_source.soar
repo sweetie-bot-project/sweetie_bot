@@ -1,5 +1,5 @@
 # agent initialization
-source initialization.soar
+source initialization-proto3.soar
 # common elaboration rules
 source preferences.soar
 source elaborations.soar
@@ -15,5 +15,6 @@ source flexbe.soar
 source animation.soar
 source joy.soar
 source talker.soar
-source genenral-talk.soar
+source general-talk.soar
+source camera.soar
 

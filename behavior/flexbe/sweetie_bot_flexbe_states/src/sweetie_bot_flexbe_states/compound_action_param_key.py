@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from flexbe_core import Logger
-from internal.compound_action_base import CompoundActionBase as EventState
+from .internal.compound_action_base import CompoundActionBase as EventState
 
 # Superclass is imported as EventState to allow to parse state definition FlexApp correctly.
 class CompoundActionParamKey(EventState):
@@ -9,14 +9,14 @@ class CompoundActionParamKey(EventState):
     
     Compound actions are stored as sweetie_bot_text_msgs.CompoundAction messages serialized in binary form.
 
-    -- action_ns                        string    Namespace where messages are stored. 
+    -- action_ns               string    Namespace where messages are stored. 
 
-    ># action_param                     string    ROS parameter which stores CompoundAction message.
+    ># action_param            string    ROS parameter which stores CompoundAction message.
 
-    <= success 				All actions are executed successfully.
-    <= unavailable                      Unable to load desired movement.
-    <= invalid_pose 			One of the action failed. The cause of failure is inconsistent robot pose, i.e. invalid_pose or partial_movement.
-    <= failure 				One of actions has failed.
+    <= success                 All actions are executed successfully.
+    <= unavailable             Unable to load desired movement.
+    <= invalid_pose            One of the action failed. The cause of failure is inconsistent robot pose, i.e. invalid_pose or partial_movement.
+    <= failure                 One of actions has failed.
 
     '''
 

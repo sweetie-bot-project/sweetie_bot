@@ -1,16 +1,18 @@
+from . import input_module
+
 from copy import copy
-import input_module
 import rospy
 import tf
 
 from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
 
 class Camera:
-    def __init__(self, agent, config):
+    def __init__(self, name, config, agent):
         self._detections_sub = None
+
         # get input link WME ids
         input_link_id = agent.GetInputLink()
-        self._sensor_id = input_link_id.CreateIdWME("camera")
+        self._sensor_id = input_link_id.CreateIdWME(name)
         # configuration
         detection_topic = config.get("topic")
         if not detection_topic:
@@ -23,18 +25,12 @@ class Camera:
         # message buffers
         self._detections_msg = []
         self._detections_wme_map = {}
-        self._detections_new_value = False
 
     def detectionCallback(self, msg):
         # buffer msg
         self._detections_msg = msg
-        self._detections_new_value = True
 
     def update(self):
-        # check if input was updated
-        if not self._detections_new_value:
-            return
-        self._detections_new_value = False
         # get current time
         time_now = rospy.Time.now().to_sec();
         # iterate detected objects

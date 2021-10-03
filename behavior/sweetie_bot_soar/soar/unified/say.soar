@@ -1,0 +1,69 @@
+# SAY SUBSTATE
+#  
+# DESCRIPTION
+#
+# Focus attention on speaker and say phrase, which can be accomplished with animation.
+#
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate say ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+#
+# Say person about <topic> with <text> and using animation tagged with <tag>.
+#
+# RESULT STATUSES
+#
+# * succeed --- desired phrase is said to <object>.
+# * failed --- was unable to focus on <object>.
+#
+# SIDE EFFECTS
+#
+# Events:
+#
+# * (^name talk-said ^object <object> ^topic <topic>) --- said to <object> about <topic>.
+# * (^name talk-failed ^object <object> ^topic <topic>) --- unable to focus attention on <object>.
+#
+# Processes:
+#
+# * (^name focusing-to-say ^substate look-at ^object <obj> ^topic <topic>) --- gaze is focused on object so we can say <text>.
+# * (^name saying ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>) --- verbolization animation is active.
+#
+
+# DECISION RULES
+
+# ENSHURE THAT OBJECT IS IN CENTER OF VIEW BEFORE ASKING
+
+# activate LookAt flexbe behavior
+sp {say*propose*look-at
+	(state <s> ^substate say ^args <args> ^process <sp>)
+	(<args> ^object <obj> ^topic <topic>)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name focusing-to-say ^substate look-at ^process-args <a>)
+	(<a> ^object <obj> ^topic <topic> ^timeout 10.0 ^delay 2.0 ^result <r>)
+	(<r> ^status failed ^add-event <ev-new> ^finish-status failed ^finish-process <sp>)
+	(<ev-new> ^name talk-failed ^object <obj> ^topic <topic>)
+}
+
+# PERFORM TALK ANIMATION
+
+# propose animations with 'talk': start flexbe behavior, add 'saying' process
+sp {say*propose*say
+	(state <s> ^substate say -^saying ^beliefs-stable.predicate <pred> ^args <args> ^process <sp>)
+	(<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+	(<pred> ^name looking-at ^object <obj>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name saying ^substate verbolize ^process-args <a>)
+    (<a> ^object <obj> ^topic <topic>  ^text <text> ^animation-tag <tag> ^result <r>)
+	(<r> ^status succeed ^finish-status succeed ^finish-process <sp>)
+}
+
+# if 'saying' process is active continue its execution 
+sp {say*propose*execute-animation-continue
+	(state <s> ^substate say ^saying <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name saying-continue ^substate verbolize ^process-link <proc>)
+}
+
+

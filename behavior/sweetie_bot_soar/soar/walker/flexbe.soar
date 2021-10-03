@@ -54,3 +54,67 @@ sp {apply*flexbe*cmd*completed*hook*remove*cmd
 	(write |Flexbe: remove behavior cmd. |)
 }
 
+# BEHAVIOR CONFLICT IMPASS
+#
+# If new flexbe operator selected while behavior is running  impass happens. 
+# Inside new state check if current behavior is interruptible and then abort it if possible.
+#
+
+# substate name elaboration
+sp {elaborate*state*name*flexbe
+	(state <s> ^superstate.operator <op>)
+	(<op> ^name flexbe)
+-->
+	(<s> ^name flexbe-abort)
+}
+
+# substate elaboration
+sp {elaborate*state*flexbe
+	(state <s> ^name flexbe-abort ^superstate <ss>)
+	(<ss> ^operator <op> ^io <io> ^mem <mem>)
+-->
+	(<s> ^io <io>)
+	(<s> ^mem <mem>)
+	(<s> ^proposed-operator <op>)
+}
+
+# abort interruptable behavior
+sp {propose*flexbe*abort*behavior
+	(state <s> ^name flexbe-abort ^io.output-link.flexbe <cmd>)
+	(<cmd> ^interruptable {<< hard soft >> <abort-type>} -^abort)
+	(<s> ^proposed-operator <op>)
+	(<op> ^drive <d>)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name flexbe-abort-behavior ^cmd <cmd> ^abort <abort-type> ^drive <d> ^type cognition)
+}
+
+sp {apply*flexbe*abort*behavior
+	(state <s> ^operator <o>)
+	(<o> ^name flexbe-abort-behavior ^cmd <cmd> ^abort <abort-type>)
+-->
+	(<cmd> ^abort <abort-type>)
+}
+
+# propose wait if behavior is being interrupted
+sp {propose*flexbe*wait*until*aborted
+	(state <s> ^name flexbe-abort ^io.output-link.flexbe <cmd> ^io.input-link.clock.cycle <t>)
+	(<cmd> ^abort)
+	(<s> ^proposed-operator <op>)
+	(<op> ^drive <d>)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name flexbe-wait ^drive <d> ^type wait-resource)
+}
+
+# propose wait if behavior is not interruptable
+sp {propose*flexbe*wait*not-interuptable
+	(state <s> ^name flexbe-abort ^io.output-link.flexbe <cmd> ^io.input-link.clock.cycle <t>)
+	-(<cmd> ^interruptable << hard soft >>)
+	(<s> ^proposed-operator <op>)
+	(<op> ^drive <d>)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name flexbe-wait ^drive <d> ^type wait-resource)
+}
+

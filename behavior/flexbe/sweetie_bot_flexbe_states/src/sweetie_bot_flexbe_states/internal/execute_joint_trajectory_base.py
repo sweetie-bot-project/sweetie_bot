@@ -6,7 +6,7 @@ from flexbe_core.proxy import ProxyActionClient
 # modules
 import rospy
 import actionlib
-import xmlrpclib
+import xmlrpc.client
 
 # datatypes
 from control_msgs.msg import FollowJointTrajectoryAction
@@ -54,8 +54,8 @@ class ExecuteJointTrajectoryBase(Dummy):
         # Load FollowStepSequenceGoal from Parameter Server
         goal_raw = rospy.get_param(trajectory_param)
 
-        if not isinstance(goal_raw, xmlrpclib.Binary):
-            raise TypeError, "ExecuteJointTrajectory: ROS parameter '" + trajectory_param + "' is not a binary data."
+        if not isinstance(goal_raw, xmlrpc.client.Binary):
+            raise TypeError("ExecuteJointTrajectory: ROS parameter '" + trajectory_param + "' is not a binary data.")
         # deserialize
         goal = FollowJointTrajectoryGoal()
         goal.deserialize(goal_raw.data)

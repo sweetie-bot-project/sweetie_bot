@@ -1,0 +1,130 @@
+# VISISON SUBSYSTEM SUPPORT
+# any detected object is interpreted as human structure
+
+# create human object
+sp {vision*propose*add*human-object
+	(state <s> ^mem <m> ^io.input-link <il>) 
+	(<il> ^camera.detection <obj> ^clock.time <timestamp>)
+	(<obj> ^type << face april_tag >> ^seen {<t> < 1.0})
+	(<m> -^human)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name add-human-object ^timestamp <timestamp> ^type cognition)
+}
+
+sp {vision*propose*add*human-object*joystick
+	(state <s> ^mem <m> ^io.input-link <il>) 
+	(<il> ^joystick.pressed <key> ^clock.time <timestamp>)
+	(<m> -^human)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name add-human-object ^timestamp <timestamp> ^type cognition)
+}
+
+sp {vision*apply*add*human*object
+	(state <s> ^operator <o> ^mem <m>)
+	(<o> ^name add-human-object ^timestamp <timestamp>)
+-->
+	(<m> ^human <h>)
+	(<h> ^timestamp <timestamp>)
+	(write |human object added|)
+}
+
+# elaborate human detection mark
+sp {vision*elaborate*human*detection
+	(state <s> ^mem.human <h> ^io.input-link.camera.detection <obj>)
+	(<obj> ^type face ^seen {<in_past> < 1.0})
+-->
+	(<h> ^detection yes)
+}
+
+# april tag presense mark
+sp {vision*elaborate*human*detection*april-tag
+	(state <s> ^mem.human <h> ^io.input-link.camera.detection <obj>)
+	(<obj> ^type april_tag ^seen {<in_past> < 1.0})
+-->
+	(<h> ^show april_tag)
+}
+
+# april tag to answer translation
+sp {vision*elaborate*human*say-no
+	(state <s> ^mem.human <h> ^io.input-link.camera.detection <obj>)
+	(<obj> ^type april_tag ^label |1| ^seen {<in_past> < 4.0})
+-->
+	(<h> ^say no)
+}
+
+sp {vision*elaborate*human*say-yes
+	(state <s> ^mem.human <h> ^io.input-link.camera.detection <obj>)
+	(<obj> ^type april_tag ^label |2| ^seen {<in_past> < 4.0})
+-->
+	(<h> ^say yes)
+}
+
+sp {vision*elaborate*human*say-greet
+	(state <s> ^mem.human <h> ^io.input-link.camera.detection <obj>)
+	(<obj> ^type april_tag ^label |3| ^seen {<in_past> < 4.0})
+-->
+	(<h> ^say greet)
+}
+
+sp {vision*elaborate*human*command-be-happy
+	(state <s> ^mem.human <h> ^io.input-link.camera.detection <obj>)
+	(<obj> ^type april_tag ^label |4| ^seen {<in_past> < 4.0})
+-->
+	(<h> ^say command-be-happy)
+}
+
+# destroy human object
+sp {vision*propose*remove*human-object
+	(state <s> ^mem <m> ^io.input-link <il>)
+	(<il> ^camera <c> ^joystick <j>)
+	-{(<c> ^detection <obj>) 
+	  (<obj> ^seen {<t> < 15.0})}
+	-(<j> ^pressed <key>)
+	(<m> ^human <h>)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name remove-human-object ^human <h> ^type cognition)
+}
+
+sp {vision*apply*remove*human*object
+	(state <s> ^operator <o> ^mem <m>)
+	(<o> ^name remove-human-object ^human <h>)
+-->
+	(<m> ^human <h> -)
+}
+
+
+# elaborate human detection mark
+sp {joystick*elaborate*human*detection
+	(state <s> ^mem.human <h> ^io.input-link.joystick.pressed <key>)
+-->
+	(<h> ^detection yes)
+}
+
+# april tag to answer translation
+sp {joystick*elaborate*human*say-no
+	(state <s> ^mem.human <h> ^io.input-link.joystick.pressed |2|)
+-->
+	(<h> ^say no)
+}
+
+sp {joystick*elaborate*human*say-yes
+	(state <s> ^mem.human <h> ^io.input-link.joystick.pressed |1|)
+-->
+	(<h> ^say yes)
+}
+
+sp {joystick*elaborate*human*say-greet
+	(state <s> ^mem.human <h> ^io.input-link.joystick.pressed |3|)
+-->
+	(<h> ^say greet)
+}
+
+sp {joystick*elaborate*human*command-be-happy
+	(state <s> ^mem.human <h> ^io.input-link.joystick.pressed |4|)
+-->
+	(<h> ^say command-be-happy)
+}
+

@@ -8,7 +8,7 @@ from flexbe_core.proxy import ProxyActionClient
 # modules
 import rospy
 import actionlib
-import xmlrpclib
+import xmlrpc.client
 
 # datatypes
 from rospy.rostime import Duration
@@ -56,8 +56,8 @@ class ExecuteStepSequenceBase(Dummy):
         # Load FollowStepSequenceGoal from Parameter Server
         goal_raw = rospy.get_param(trajectory_param)
 
-        if not isinstance(goal_raw, xmlrpclib.Binary):
-            raise TypeError, "ExecuteStepSequence: ROS parameter '" + trajectory_param + "' is not a binary data."
+        if not isinstance(goal_raw, xmlrpc.client.Binary):
+            raise TypeError("ExecuteStepSequence: ROS parameter '" + trajectory_param + "' is not a binary data.")
         # deserialize
         goal = FollowStepSequenceGoal()
         goal.deserialize(goal_raw.data)

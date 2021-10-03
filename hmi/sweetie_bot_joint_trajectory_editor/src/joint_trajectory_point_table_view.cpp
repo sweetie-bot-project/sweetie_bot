@@ -165,6 +165,7 @@ bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVa
 bool JointTrajectoryPointTableModel::reReadData()
 {
 	emit layoutChanged();
+	return true;
 }
 
 } // namespace hmi

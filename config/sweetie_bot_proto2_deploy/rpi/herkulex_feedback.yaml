@@ -7,6 +7,7 @@ herkulex:
         array:
             timeout: 0.060
             tryouts: 3
+            activity_period: 0.057
         sched:
             priority: 40
             timeout: 0.005

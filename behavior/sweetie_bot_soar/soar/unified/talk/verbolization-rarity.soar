@@ -1,0 +1,127 @@
+#
+# PREDIACTES VERBOLIZATION
+#
+# Utility levels:
+#
+# 1. 20 --- general predicates verbolization, second verbolization
+# 2. 20 --- general questions
+# 3. 40-50 --- greeting and making acquitance
+# 4. 70 --- general knowledge additions
+# 5. 80 --- reactions
+#
+
+# GENERAL KNOWLEDGE
+
+
+# VERBOLIZATION RULES
+
+#
+# ask question about rarity pony
+#
+sp {verbolization-rarity-robot*elaborate*know-rarity
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	-{(<b> ^predicate <pred>)
+ 	  (<pred> ^name asked-about-rarity ^object <obj>)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic ask-about-rarity ^utility 20 ^type question ^animation-tag question)
+	(<f> ^text |Ты знаешь мою сестру? Ее уникальное имя - Рарити.|)
+}
+
+sp {talk-answered*elaborate*know-rarity*reaction
+	(state <s> ^substate talk-answered ^question-topic ask-about-rarity)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic ask-is-rarity-robot ^type question ^text |Как ты думаешь, она может быть идентифицирована, как робот?| ^animation-tag question)
+	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-know-about-rarity ^type reaction ^text |Тогда вероятность того, что ты мне поможешь нулевая. Спасибо.| ^animation-tag rejection)
+}
+
+sp {talk-answered*propose*know-rarity
+	(state <s> ^substate talk-answered ^question-topic ask-about-rarity ^answer-topic {<< |yes| |no| >> <a-topic>} ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name asked-about-rarity ^object <obj> ^answer-topic <a-topic>)
+}
+
+#
+# reaction on question about trust 
+#
+sp {verbolization-rarity-robot*elaborate*rarity-is-robot*reaction
+	(state <s> ^substate talk-answered ^question-topic ask-is-rarity-robot)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic speaker-think-rarity-is-robot ^type reaction ^text |Входные данные приняты. Но для точной оценки мне нужно больше информации.| ^animation-tag confirmation)
+	(<r2> ^answer-topic no ^topic speaker-think-rarity-is-not-robot ^type reaction ^text |Входные данные приняты. Вычисляю статистику.| ^animation-tag confirmation)
+}
+
+# add predicate: have o-support in superstate
+sp {talk-answered*elaborate*rarity-is-robot*add-counter
+	(state <s> ^substate talk-answered ^question-topic ask-is-rarity-robot ^answer-topic {<< |yes| |no| >>} ^beliefs <b>)
+	-{(<b> ^predicate <pred>) 
+	  (<pred> ^name consider-rarity-is-robot)}
+-->
+	(<b> ^predicate <pred>)
+	(<pred> ^name consider-rarity-is-robot ^yes 0 ^no 0)
+}
+
+sp {talk-answered*propose*rarity-is-robot*update-counter
+	(state <s> ^substate talk-answered ^question-topic ask-is-rarity-robot ^answer-topic {<< |yes| |no| >> <answer>} ^beliefs.predicate <pred> ^actions <a>)
+	(<pred> ^name consider-rarity-is-robot ^<answer> <value>)
+-->
+	(<a> ^parent <pred> ^attribute <answer> ^remove-value <value> ^link-value (+ <value> 1))
+}
+
+#
+# verbolize speaker does not know about rarity
+#
+sp {verbolization-rarity-robot*elaborate*speaker-do-not-knows-about-rarity
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1>)
+  	(<pred1> ^name asked-about-rarity ^object <obj> ^answer-topic no)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic speaker-does-not-know-about-rarity ^utility 20 ^type statement ^animation-tag long)
+	(<f> ^text |В твоей памяти нет сведений о моей сестре.|)
+}
+
+sp {verbolization-rarity-robot*propose*speaker-do-no-know-about-rarity*reaction*yes
+	(state <s> ^substate talk-answered ^question-topic speaker-does-not-know-about-rarity ^answer-topic {<<|yes| |sorry|>>})
+-->
+	(<s> ^reaction <r1>)
+	(<r1> ^topic speaker-does-not-know-about-rarity-confirmed ^type reaction ^text |Подтверждение получено.| ^animation-tag confirmation)
+}
+
+sp {verbolization-rarity-robot*propose*speaker-do-no-know-about-rarity*reaction*no
+	(state <s> ^substate talk-answered ^question-topic speaker-does-not-know-about-rarity ^answer-topic no ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
+  	(<pred1> ^name asked-about-rarity ^object <obj> ^answer-topic no)
+-->
+	(<s> ^reaction <r1>)
+	(<r1> ^topic ask-is-rarity-robot ^type question ^text |Похоже, содержимое твоей памяти было обновлено? Ответь, моя сетра - робот?| ^animation-tag surprise)
+	(<a> ^remove-predicate <pred> ^add-predicate <pred-new>)
+  	(<pred-new> ^name asked-about-rarity ^object <obj> ^answer-topic yes)
+}
+
+#
+# verbolize rarity is robot statistics
+#
+sp {verbolization-rarity-robot*elaborate*rarity-is-robot
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1> <pred2>)
+  	(<pred1> ^name asked-about-rarity ^object <obj> ^answer-topic yes)
+	(<pred2> ^name consider-rarity-is-robot ^yes <value> ^no {< <value>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-rarity-is-robot ^utility 20 ^type reaction ^animation-tag surprise)
+	(<f> ^text |Люди считают, что моя сестра робот. Но я все равно ее люблю!.|)
+}
+
+sp {verbolization-rarity-robot*elaborate*rarity-is-not-robot
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1> <pred2>)
+  	(<pred1> ^name asked-about-rarity ^object <obj> ^answer-topic yes)
+	(<pred2> ^name consider-rarity-is-robot ^yes <value> ^no {> <value>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-rarity-is-not-robot ^utility 20 ^type reaction ^animation-tag pleased)
+	(<f> ^text |Люди полагают, что моя сестра не робот. Значит она точно согласится в участвовать в Соревновании настоящих сестер.|)
+}

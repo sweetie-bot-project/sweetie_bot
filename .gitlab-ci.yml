@@ -1,7 +1,7 @@
 
-stretch-amd64:
+.common:
   stage: build
-  image: registry.gitlab.com/slavanap/ros-build:$CI_JOB_NAME
+  image: registry.gitlab.com/slavanap/ros-build/dev:$CI_JOB_NAME
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
     ROBOT: "false"
@@ -63,34 +63,20 @@ stretch-amd64:
     paths:
       - "sweetie-bot-*.deb"
 
-bionic-amd64:
-  extends: stretch-amd64
-
-bionic-tinker:
-  extends: stretch-amd64
+.common-robot:
+  extends: .common
   variables:
     ROBOT: "true"
 
-buster-arm64v8:
-  extends: bionic-tinker
-
-bionic-arm64v8:
-  extends: bionic-tinker
-
-
-
-stretch-amd64-test:
+.common-test:
   stage: test
   image: docker:stable-git
   services:
     - docker:stable-dind
-  dependencies:
-    - stretch-amd64
   variables:
     DOCKER_HOST: tcp://docker:2375/
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
-    IMAGE_SOURCE: debian:stretch
   script:
     - docker build -t test --build-arg image="$IMAGE_SOURCE" -f .gitlab-ci/test.dockerfile .
     - docker create --name temp test
@@ -109,12 +95,32 @@ stretch-amd64-test:
       - __log/
     when: always
 
-bionic-amd64-test:
-  extends: stretch-amd64-test
+
+buster-amd64:
+  extends: .common
+focal-amd64:
+  extends: .common
+
+focal-tinker:
+  extends: .common-robot
+buster-arm64v8:
+  extends: .common-robot
+focal-arm64v8:
+  extends: .common-robot
+
+buster-amd64-test:
+  extends: .common-test
   dependencies:
-    - bionic-amd64
+    - buster-amd64
   variables:
-    IMAGE_SOURCE: ubuntu:bionic
+    IMAGE_SOURCE: debian:buster
+focal-amd64-test:
+  extends: .common-test
+  dependencies:
+    - focal-amd64
+  variables:
+    IMAGE_SOURCE: ubuntu:focal
+
 
 
 
@@ -122,11 +128,11 @@ pages:
   stage: deploy
   image: ubuntu:bionic
   dependencies:
-    - stretch-amd64
-    - bionic-amd64
-    - bionic-tinker
+    - buster-amd64
+    - focal-amd64
+    - focal-tinker
     - buster-arm64v8
-    - bionic-arm64v8
+    - focal-arm64v8
   only:
     - master
   artifacts:
@@ -144,29 +150,22 @@ pages:
     - |
       cat > conf/distributions <<EOF
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
-      Codename: stretch
-      Architectures: amd64
-      Components: main
-      Description: no description
-      SignWith: yes
-
-      Origin: $CI_PROJECT_NAMESPACE.gitlab.io
-      Codename: bionic
-      Architectures: armhf arm64 amd64
-      Components: main
-      Description: no description
-      SignWith: yes
-
-      Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: buster
-      Architectures: arm64
+      Architectures: armhf amd64
+      Components: main
+      Description: no description
+      SignWith: yes
+
+      Origin: $CI_PROJECT_NAMESPACE.gitlab.io
+      Codename: focal
+      Architectures: armhf amd64
       Components: main
       Description: no description
       SignWith: yes
       EOF
     - |
       shopt -s nullglob
-      for dist in stretch bionic; do
+      for dist in buster focal; do
         for f in $CI_PROJECT_DIR/*${dist}*.deb; do
           reprepro -S utils includedeb "$dist" "$f"
         done

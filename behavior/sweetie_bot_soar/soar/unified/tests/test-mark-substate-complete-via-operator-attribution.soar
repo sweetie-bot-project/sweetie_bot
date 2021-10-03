@@ -1,0 +1,137 @@
+# INITIALIZATION 
+
+sp {propose*init
+	(state <s> ^superstate nil -^name)
+-->
+	(<s> ^operator init)
+}
+
+sp {apply*init
+	(state <s> ^operator init)
+-->
+	(<s> ^name base ^mem <m>)
+	(<m> ^fact A)
+	(<s> ^fact B)
+}
+
+# SUBSTATE ELABORATIONS 
+
+sp {elaborate*name
+	(state <s> ^superstate.operator.name <name>)
+-->
+	(<s> ^name <name>)
+}
+
+sp {elaborate*mem-io
+	(state <s> ^superstate <ss>)
+	(<ss> ^io <io> ^mem <m>)
+-->
+	(<s> ^io <io> ^mem <m>)
+}
+
+# CREATE SUBGOAL
+
+sp {base*propose*subgoal
+	(state <s> ^name base -^completed)
+-->
+	(<s> ^operator <op>)
+	(<op> ^name subgoal)
+}
+
+sp {base*apply*subgoal
+	(state <s> ^name base ^operator <op>)
+	(<op> ^name subgoal ^result)
+-->
+	(<s> ^completed yes)
+	(write |subgoal operator applied| (crlf))
+}
+
+sp {base*propose*halt
+	(state <s> ^name base ^completed)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name halt)
+}
+
+sp {base*apply*halt
+	(state <s> ^name base ^operator <op>)
+	(<op> ^name halt)
+-->
+	(interrupt)
+}
+
+
+# SUBGOAL
+
+sp {elaborate*mem*fact-B-mem
+	(state <s> ^name subgoal ^superstate <ss> ^mem <m>)
+	(<ss> ^fact B)
+-->
+	(<m> ^fact B)
+}
+
+sp {elaborate*mem*fact-B
+	(state <s> ^name subgoal ^superstate <ss>)
+	(<ss> ^fact B)
+-->
+	(<s> ^fact B)
+}
+
+# add element to mem.subgoal from mem
+#sp {subgoal*propose*add-mem-A
+#	(state <s> ^name subgoal ^mem <m>)
+#	(<m> ^fact A ^subgoal <sp>)
+#	(<sp> -^derived A)
+#-->
+#	(<s> ^operator <op> + =)
+#	(<op> ^name add-mem-A)
+#}
+#
+#sp {subgoal*apply*add-mem-A
+#	(state <s> ^name subgoal ^operator <op> ^mem.subgoal <sp>)
+#	(<op> ^name add-mem-A)
+#-->
+#	(<sp> ^derived A)
+#	(write |add-mem-A operator applied| (crlf))
+#}
+
+# add local from mem 
+#sp {subgoal*propose*add-state-A
+#	(state <s> ^name subgoal ^mem.fact A -^derived A)
+#-->
+#	(<s> ^operator <op> + =)
+#	(<op> ^name add-state-A)
+#}
+#
+#sp {subgoal*apply*add-state-A
+#	(state <s> ^name subgoal ^operator <op>)
+#	(<op> ^name add-state-A)
+#-->
+#	(<s> ^derived A)
+#	(write |add-state-A operator applied| (crlf))
+#}
+
+# complete substate
+sp {subgoal*propose*complete
+	(state <s> ^name subgoal)
+-->
+	(<s> ^operator <op> + <)
+	(<op> ^name complete)
+}
+	
+sp {subgoal*apply*complete
+	(state <s> ^name subgoal ^operator <op> ^superstate.operator <sop> ^mem <m>)
+	(<op> ^name complete)
+-->
+	(<sop> ^result yes)
+	(write |complete operator applied| (crlf))
+}
+
+#sp {subgoal*apply*complete
+#	(state <s> ^name subgoal ^operator <op> ^mem <m>)
+#	(<op> ^name complete)
+#	(<m> ^subgoal <sp>)
+#-->
+#	(<m> ^subgoal <sp> -)
+#	(write |complete cleanup operator applied| (crlf))
+#}

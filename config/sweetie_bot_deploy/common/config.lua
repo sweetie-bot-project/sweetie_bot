@@ -28,6 +28,10 @@ ros:import("rtt_rosnode")
 ros:import("rtt_rosparam")
 ros:import("rtt_actionlib")
 ros:import("rtt_dynamic_reconfigure")
+ros:import("rtt_rosdeployment")
+
+--- provide interface for invorking external commands via OROCOS scripting
+depl:loadService("Deployer", "rosdeployment")
 
 --
 local function str_array_join(array) 
@@ -148,7 +152,6 @@ function config.file(conf_file)
 		conf_file_param = "conf_file/" .. conf_file_param
 	end
 	-- try to get rosparam
-	print(conf_file_param)
 	local buffer = config.get_rosparam(conf_file_param, 'string')
 	if buffer then
 		print("config.file: use ROS parameter ", conf_file_param)

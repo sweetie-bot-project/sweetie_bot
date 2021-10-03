@@ -15,7 +15,8 @@
 	<group if="$(arg robot)">
 		<!-- REFERENCE POSE PUBLISHING: tf, joint_states -->
 		<!-- remaps -->
-		<remap from="motion/aggregator_ref/out_joints_sorted" to="joint_states" />
+		<remap from="motion/aggregator_ref/out_joints_sorted" to="$(arg robot_ns)/joint_states" />
+		<remap from="motion/in_battery_state" to="$(arg robot_ns)/battery_state" />
 		<!-- robot_state_publisher: reference robot pose: local publisher -->
 		<include file="$(find sweetie_bot_deploy)/motion_core/robot_state.launch">
 			<arg if="$(arg run_real)" name="machine" value="sweetiebot"/> 
@@ -24,6 +25,7 @@
 		<!-- REAL POSE PUBLISHING: joint_states_real -->
 		<!-- remaps -->
 		<remap from="motion/aggregator_real/out_joints_sorted" to="joint_states_real" /> 
+		<remap from="motion/imu_real/out_tf" to="tf" />
 		<!-- MOTION CORE -->
 		<include file="$(find sweetie_bot_deploy)/motion_core/motion.launch">
 			<arg if="$(arg run_real)" name="machine" value="sweetiebot"/> 
@@ -45,11 +47,11 @@
 			<!-- robot_state_publisher: real robot pose -->
 			<include file="$(find sweetie_bot_deploy)/motion_core/robot_state.launch">
 				<arg name="name" value="robot_state_publisher_real" /> 
-				<arg name="tf_prefix" value="$(arg tf_prefix_real)" /> 
+				<arg name="tf_prefix" value="$(arg tf_prefix_real)/" /> 
 				<arg name="joint_states_topic" value="joint_states_real" /> 
 			</include>
-			<!-- fix together reference and real base_link: real odometry is unavailable -->
-			<node if="$(arg run_real)" pkg="tf" type="static_transform_publisher" name="odometry_real" args="$(arg static_tf_shift) 0 0 0 base_link $(arg tf_prefix_real)/base_link 100" /> 
+			<!-- fix together reference and real base_link  if odometry is unavailable -->
+			<node if="$(arg run_real)" pkg="tf" type="static_transform_publisher" name="odometry_real" args="$(arg static_tf_shift) 0 0 0 base_link $(arg tf_prefix_real)/base_link 100" />
 		</group>
 	</group>
 </launch>

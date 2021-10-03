@@ -19,16 +19,20 @@
   <depend>actionlib</depend>
   <depend>interactive_markers</depend>
   <depend>moveit_ros_visualization</depend>
+
   <depend>geometry_msgs</depend>
   <depend>visualization_msgs</depend>
+
+  <depend>sweetie_bot_clop_generator</depend>
+
   <depend>sweetie_bot_control_msgs</depend>
+  <depend>sweetie_bot_text_msgs</depend>
   
   <exec_depend>rviz</exec_depend>
   <exec_depend>moveit_ros_move_group</exec_depend>
   <exec_depend>moveit_fake_controller_manager</exec_depend>
   <exec_depend>moveit_kinematics</exec_depend>
   <exec_depend>moveit_planners_ompl</exec_depend>
-
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

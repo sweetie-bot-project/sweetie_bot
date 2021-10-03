@@ -17,9 +17,9 @@ class SetBoolState(EventState):
     #> success      bool            Request result as in std_srvs.srv.SetBoolResponce message.
     #> message      string          Request result as in std_srvs.srv.SetBoolResponce message.
 
-    <= true 	                    True has been returned.		
+    <= true                         True has been returned.        
     <= false                        False has been returned.
-    <= failure 			    Service call has failed.
+    <= failure                      Service call has failed.
 
     '''
 

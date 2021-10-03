@@ -10,9 +10,9 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from sweetie_bot_flexbe_states.check_joint_state import CheckJointState
 from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
+from sweetie_bot_flexbe_states.rand_pose_generator import RandPoseGenerator
 from sweetie_bot_flexbe_states.set_joint_state import SetJointState
 from sweetie_bot_flexbe_states.set_operational import SetOperational
-from sweetie_bot_flexbe_states.rand_pose_generator import RandPoseGenerator
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -49,7 +49,7 @@ class RandHeadMovementsUniversalSM(Behavior):
 
 	def create(self):
 		# x:30 y:353, x:425 y:365
-		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
+		_state_machine = OperatableStateMachine(outcomes=['succeed', 'failed'])
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -86,16 +86,10 @@ class RandHeadMovementsUniversalSM(Behavior):
 										transitions={'body_crouched': 'StandUp', 'unknown': 'RandHeadMovements'},
 										autonomy={'body_crouched': Autonomy.Off, 'unknown': Autonomy.Off})
 
-			# x:412 y:68
-			OperatableStateMachine.add('StandUp',
-										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='crouch_end', trajectory_ns='saved_msgs/joint_trajectory'),
-										transitions={'success': 'RandHeadMovements', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
-										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
-
 			# x:150 y:341
 			OperatableStateMachine.add('HeadNominal',
 										SetJointState(controller='motion/controller/joint_state_head', pose_param='head_nominal', pose_ns='saved_msgs/joint_state', tolerance=0.017, timeout=10.0, joint_topic="joint_states"),
-										transitions={'done': 'finished', 'failed': 'failed', 'timeout': 'failed'},
+										transitions={'done': 'succeed', 'failed': 'failed', 'timeout': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
 
 			# x:154 y:179
@@ -103,6 +97,12 @@ class RandHeadMovementsUniversalSM(Behavior):
 										_sm_randheadmovements_0,
 										transitions={'finished': 'HeadNominal', 'failed': 'failed'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
+
+			# x:412 y:68
+			OperatableStateMachine.add('StandUp',
+										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='crouch_end', trajectory_ns='saved_msgs/joint_trajectory'),
+										transitions={'success': 'RandHeadMovements', 'partial_movement': 'failed', 'invalid_pose': 'failed', 'failure': 'failed'},
+										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 
 		return _state_machine

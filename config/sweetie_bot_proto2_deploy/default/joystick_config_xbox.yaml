@@ -47,6 +47,7 @@ JointAxes:
     enable_group: "head"
     joy_topic: "joystick"
     joints_topic: "head_joints_ref"
+    buttons: { }
     axes:
         4:
             joint: "joint51"

@@ -4,13 +4,8 @@ resource_control:
         resources: [ leg1, leg2, leg3, leg4, head, eyes, ears, mouth ]
 aggregator_ref: 
     priority: 20
-servo_inv:
-    priority: 20
-    lead: 0.056
-    #gear_joints: [ leg1_joint3, leg1_joint5, leg2_joint3, leg2_joint5, leg3_joint5, leg4_joint5, head_joint1 ]
-    #gear_ratios: [ 1.54, 1.29, 1.54, 1.29, 1.41, 1.41, 2.155 ]
-aggregator_real:
-    priority: 20
+    publish_on_timer: true
+    publish_on_event: false
 kinematics_inv:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
@@ -27,9 +22,29 @@ odometry_ref:
     legs: [ leg1, leg3, leg4, leg2 ]
     force_contact_z_to_zero: true
     zero_twist_if_no_contacts: true
+aggregator_real:
+    priority: 20
+    publish_on_timer: false
+    publish_on_event: true
+kinematics_fwd_real:
+    priority: 20
+    kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
+imu_real:
+    priority: 40
+    activity_period: 0.002
+    imu_frame: 'base_link'
+    odometry_frame: 'odom_combined'
+    tf_prefix: 'real'
+    compass_enable: true
+    pose_publish_divider: 23
 dynamics_inv:
     priority: 20
     legs: [ leg1, leg3, leg4, leg2 ]
+    use_ref_joint_position: true
+servo_inv:
+    priority: 20
+    lead: 0.056
+    extrapolate_position: false
 timer:
     priority: 45
     period: 0.056

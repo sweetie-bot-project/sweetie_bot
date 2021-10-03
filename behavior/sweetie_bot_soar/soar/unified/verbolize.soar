@@ -1,0 +1,76 @@
+# VERBOLIZE SUBSTATE
+#  
+# DESCRIPTION
+#
+# Say phrase with animation.
+#
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+#
+# Say person <obj> about <topic> with <text> and using animation tagged with <tag>.
+#
+# RESULT STATUSES
+#
+# * succeed --- desired phrase is said to <object>.
+#
+# SIDE EFFECTS
+#
+# Events:
+#
+# * (^name talk-said ^object <object> ^topic <topic>) --- said to <object> about <topic>.
+#
+
+# DECISION RULES
+
+# PERFORM TALK ANIMATION
+
+# propose animations with 'talk': reuse current process to start animation
+sp {verbolize*propose*select-animation
+	(state <s> ^substate verbolize ^process-status pending ^args <args> ^mem.joint-trajectory <anim> ^process <proc>)
+	(<args> ^object <obj> ^topic <topic>)
+	(<anim> ^name <animation-name> ^tag talk)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name select-animation ^substate flexbe ^animation <anim> ^process-link <proc> ^additional-process-args <a>)
+    (<a> ^object <obj> ^topic <topic> ^behavior ExecuteJointTrajectoryAndSay ^text <text> ^joint_trajectory <animation-name> ^text_delay 0.2 ^result <r>)
+	(<r> ^status succeed ^add-event <ev-new> ^finish-status succeed ^finish-process <sp>)
+	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
+}
+
+# elaborate is_relative ExecuteJointTrajectoryAndSay parameter
+sp {verbolize*elaborate*say-execute-animation-is-relative
+	(state <s> ^substate verbolize ^operator <op> +)
+	(<op> ^name select-animation ^additional-process-args <args> ^animation.relative) 
+-->
+	(<args> ^is_relative True)
+}
+
+# if 'saying' process is active continue its execution (looking-at is not necessary)
+sp {verbolize*propose*execute-animation-continue
+	(state <s> ^substate verbolize ^process-status active ^process <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name saying-continue ^substate flexbe ^process-link <proc>)
+}
+
+# PREFERENCES 
+
+# prefer animation with tag matching supplied as substate parameter
+sp {verbolize*prefer*select-animation-tag
+	(state <s> ^substate verbolize ^operator <op1> + ^operator {<> <op1> <op2>} ^superstate.operator.animation-tag <tag>)
+	(<op1> ^name select-animation ^animation.tag <tag>)
+	(<op2> ^name select-animation ^animation <anim2>)
+	(<anim2> -^tag <tag>)
+-->
+	(<s> ^operator <op1> > <op2>)
+}
+
+# reject animations which are not tagged as general 
+sp {verbolize*prefer*select-animation-general-tag
+	(state <s> ^substate verbolize ^operator <op> + ^superstate.operator.animation-tag <tag>)
+	(<op> ^name select-animation ^animation <anim2>)
+	(<anim2> -^tag <tag> -^tag general)
+-->
+	(<s> ^operator <op> ~)
+}

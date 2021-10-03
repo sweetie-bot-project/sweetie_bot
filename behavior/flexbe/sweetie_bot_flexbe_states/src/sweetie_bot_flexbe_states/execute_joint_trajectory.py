@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from internal.execute_joint_trajectory_base import ExecuteJointTrajectoryBase as EventState
+from .internal.execute_joint_trajectory_base import ExecuteJointTrajectoryBase as EventState
 
 # Superclass is imported as EventState to allow to parse state definition FlexApp correctly.
 class ExecuteJointTrajectory(EventState):

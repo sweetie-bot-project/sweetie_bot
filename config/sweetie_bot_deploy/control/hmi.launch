@@ -9,8 +9,7 @@
 		<remap from="robot_description" to="$(arg robot_ns)/robot_description"/>
 
 		<!-- manual joints control -->
-		<node name="joint_state_ref" pkg="joint_state_publisher" type="joint_state_publisher">
-			<param name="use_gui" value="true"/>
+		<node name="joint_state_ref" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
 			<rosparam param="source_list">["joint_states_reset"]</rosparam>
 			<param name="rate" value="5"/>
 			<remap from="joint_states" to="$(arg robot_ns)/motion/controller/joint_state/in_joints_ref"/>
@@ -18,8 +17,8 @@
 		</node>
 		<!-- vizualization -->
 		<!-- NOTE: rviz is lauched in root namespace due to problems with moveit plugin.
-			 If rviz is lauched in /hmi and move_group  is deployed in / rviz plugin uable to find necessary topics.
-			 If move_group is startd inside /moveit/ namespace rviz plugin has problems with finding necessary parameters.  -->
+			 If rviz is lauched in /hmi and move_group is deployed in / rviz plugin uable to find necessary topics.
+			 If move_group is startd inside /moveit/ namespace rviz plugin has problems with finding necessary parameters.		-->
 		<node if="$(arg run_rviz)" ns="/" name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_config)" output="screen" >
 			<remap from="/clicked_point" to="$(arg robot_ns)/hmi/clicked_point"/>
 			<remap from="/move_base_simple/goal" to="$(arg robot_ns)/hmi/move_base_simple/goal"/>
@@ -40,26 +39,32 @@
 			<remap from="supports" to="$(arg robot_ns)/motion/aggregator_ref/out_supports_sorted"/>
 		</node>
 		<!-- robot pose control -->
-		<node name="stance_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-			<remap from="pose" to="$(arg robot_ns)/motion/controller/stance/in_pose_ref"/>
-			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/stance"/>
-			<param name="resources_select_only_one" value="false"/>
+		<node name="robot_pose_marker" pkg="sweetie_bot_rviz_interactions" type="robot_pose_marker" >
+			<remap from="stance_pose" to="$(arg robot_ns)/motion/controller/stance/in_pose_ref"/>
+			<remap from="stance_set_operational_action" to="$(arg robot_ns)/motion/controller/stance"/>
+			<remap from="limb_pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/>
+			<remap from="limb_set_operational_action" to="$(arg robot_ns)/motion/controller/pose"/>
+			<remap from="look_at_pose" to="$(arg robot_ns)/motion/controller/look_at/in_pose_ref"/>
+			<remap from="look_at_set_operational_action" to="$(arg robot_ns)/motion/controller/look_at"/>
 		</node>
-		<node name="limb_pose_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-			<remap from="pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/>
-			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/pose"/>
-			<param name="resources_select_only_one" value="true"/>
+		<!-- robot position control -->
+		<node name="destination_marker" pkg="sweetie_bot_rviz_interactions" type="destination_marker" >
+			<remap from="move_base_action" to="$(arg robot_ns)/clop_generator"/>
 		</node>
-		<node name="head_target_marker" pkg="sweetie_bot_rviz_interactions" type="pose_marker" >
-			<remap from="pose" to="$(arg robot_ns)/motion/controller/look_at/in_pose_ref"/>
-			<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/look_at"/>
-			<param name="resources_select_only_one" value="true"/>
+		<!-- object detection imitation -->
+		<node name="object_detection_marker" pkg="sweetie_bot_rviz_interactions" type="object_detection_marker" >
+			<remap from="detections" to="$(arg robot_ns)/detections"/>
 		</node>
+		<!-- example of generic pose marker -->
+		<!-- <node name="generic_pose_marker" pkg="sweetie_bot_rviz_interactions" type="generic_pose_marker" > -->
+		<!-- 	<remap from="pose" to="$(arg robot_ns)/motion/controller/pose/in_pose_ref"/> -->
+		<!-- 	<remap from="set_operational_action" to="$(arg robot_ns)/motion/controller/pose"/> -->
+		<!-- </node> -->
 		<!-- eyes vizualization -->
 		<group>
 			<remap from="joint_states" to="$(arg robot_ns)/joint_states"/>
 			<remap from="control" to="$(arg robot_ns)/control"/>
-			<node name="eye_left_rviz"  pkg="sweetie_bot_eyes" type="eye">
+			<node name="eye_left_rviz" pkg="sweetie_bot_eyes" type="eye">
 				<param name="is_left" value="true"/>
 				<param name="publish_pixmap" value="true"/>
 			</node>
@@ -69,9 +74,9 @@
 			</node>
 		</group>
 		<!-- visualizes gait generaot goal, opt. parameters and cartesian base state, endeffector positions and forces -->
-		<group>
-		  <node pkg="tf" type="static_transform_publisher" name="xpp_world_static_publisher" args="0 0 0 0 0 0 /odom_combined /world 1000"/> 
-		  <node name="xpp_vis" pkg="xpp_vis" type="rviz_marker_node" output="screen"/>
-		</group>
+		<!--<group>-->
+			<!--<node pkg="tf" type="static_transform_publisher" name="xpp_world_static_publisher" args="0 0 0 0 0 0 /odom_combined /world 1000"/> -->
+			<!--<node name="xpp_vis" pkg="xpp_vis" type="rviz_marker_node" output="screen"/>-->
+		<!--</group>-->
 	</group>
 </launch>

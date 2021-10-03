@@ -8,8 +8,8 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from sweetie_bot_flexbe_states.compound_action_param import CompoundActionParam
 from sweetie_bot_flexbe_states.check_joint_state import CheckJointState
+from sweetie_bot_flexbe_states.compound_action_param import CompoundActionParam
 from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from sweetie_bot_flexbe_states.set_joint_state import SetJointState
 # Additional imports can be added inside the following tags
@@ -48,7 +48,7 @@ class ExecuteCompoundActionSM(Behavior):
 
 	def create(self):
 		# x:30 y:365, x:183 y:341, x:352 y:353
-		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed', 'invalid_pose'])
+		_state_machine = OperatableStateMachine(outcomes=['succeed', 'failed', 'invalid_pose'])
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -62,8 +62,8 @@ class ExecuteCompoundActionSM(Behavior):
 			# x:127 y:102
 			OperatableStateMachine.add('CheckBodyPose',
 										CheckJointState(outcomes=['body_nominal', 'body_crouched', 'unknown'], pose_ns='saved_msgs/joint_state', tolerance=0.17, joint_topic="joint_states", timeout=1.0),
-										transitions={'body_nominal': 'finished', 'unknown': 'invalid_pose', 'body_crouched': 'CrouchEnd'},
-										autonomy={'body_nominal': Autonomy.Off, 'unknown': Autonomy.Off, 'body_crouched': Autonomy.Off})
+										transitions={'body_nominal': 'finished', 'body_crouched': 'CrouchEnd', 'unknown': 'invalid_pose'},
+										autonomy={'body_nominal': Autonomy.Off, 'body_crouched': Autonomy.Off, 'unknown': Autonomy.Off})
 
 			# x:350 y:172
 			OperatableStateMachine.add('CrouchEnd',
@@ -100,7 +100,7 @@ class ExecuteCompoundActionSM(Behavior):
 			# x:108 y:85
 			OperatableStateMachine.add('CompoundAction',
 										CompoundActionParam(action_param=self.action_name, action_ns='saved_msgs/compound_action'),
-										transitions={'success': 'finished', 'invalid_pose': 'StandUp', 'failure': 'failed'},
+										transitions={'success': 'succeed', 'invalid_pose': 'StandUp', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 			# x:405 y:81

@@ -26,9 +26,9 @@ class LeapMotionMonitor(EventState):
 
     #> pose                                  object          Object pose before exit.
 
-    <= no_object 	                     No object detected. `pose` key contains zero pose.
-    <= still_object 	                     Object presents and it is not moving. `pose` key contains averaged pose.
-    <= moving_object 	                     Object presents and it is moving. `pose` key contains last pose.
+    <= no_object                          No object detected. `pose` key contains zero pose.
+    <= still_object                       Object presents and it is not moving. `pose` key contains averaged pose.
+    <= moving_object                      Object presents and it is moving. `pose` key contains last pose.
 
     '''
 

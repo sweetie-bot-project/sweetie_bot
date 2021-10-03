@@ -1,0 +1,209 @@
+
+sp {propose*init
+	(state <s> ^superstate nil -^name)
+-->
+	(<s> ^operator init)
+}
+
+sp {apply*init
+	(state <s> ^operator init)
+-->
+	(<s> ^name state1)
+	(<s> ^belifs <b>)
+}
+
+# elaborations
+
+sp {elaborate*name
+	(state <s> ^superstate <ss>)
+	(<ss> ^operator <op> ^io <io> ^belifs <b>)
+	(<op> ^name <name>)
+-->
+	(<s> ^name <name> ^io <io> ^belifs <b>)
+}
+
+#sp {elaborate*complete-substate-operator-agumentation
+#	(state <s> ^superstate.operator <sop>)
+#	(<sop> ^name complete)
+#	(<sop> ^<attr> <value>)
+#-->
+#	(<s> ^<attr> <value>)
+#}
+#
+#sp {elaborate*complete-substate-results
+#	(state <s> ^superstate <ss>)
+#	(<ss> ^operator.name complete ^result <res>)
+#-->
+#	(<s> ^result <res>)
+#}
+
+sp {elaborate*state-result
+	(state <s> ^superstate.operator <sop>)
+	(<sop> ^result <result>)
+-->
+	(<s> ^result <result>)
+}
+
+sp {elaborate*operator-result-inherit
+	(state <s> ^operator <op> + ^result <inherited-result>)
+	(<op> ^result-inherit <status>)
+	(<inherited-result> ^status <status>)
+-->
+	(<op> ^result <inherited-result>)
+}
+
+#sp {elaborate*substate-result*add-value-link
+#	(state <s> ^result <result> ^status <status>)
+#	(<result> ^status <status> ^parent <p> ^attribute <attr> ^add-value <value>)
+#-->
+#	(<p> ^<attr> <value>)
+#}
+#
+#sp {elaborate*substate-result*add-value-copy-one-level
+#	(state <s> ^result <result> ^status <status>)
+#	(<result> ^status <status> ^parent <p> ^attribute <attr> ^add-value-copy <value>)
+#-->
+#	(<p> ^<attr> (copy-one-level <value>))
+#}
+#
+#sp {elaborate*substate-result*del-value
+#	(state <s> ^result <result> ^status <status>)
+#	(<result> ^status <status> ^parent <p> ^attribute <attr> ^del-value <value>)
+#-->
+#	(<p> ^<attr> <value> -)
+#}
+#
+#sp {elaborate*substate-result*print
+#	(state <s> ^result <result> ^status <status>)
+#	(<result> ^status <status> ^print <value>)
+#-->
+#	(write <value> (crlf))
+#}
+
+sp {apply*substate-result*add-value-link
+	(state <s> ^operator <op> ^result <result>)
+	(<op> ^name complete ^status <status>)
+	(<result> ^status <status> ^parent <p> ^attribute <attr> ^add-value <value>)
+-->
+	(<p> ^<attr> <value>)
+}
+
+sp {apply*substate-result*add-value-copy-one-level
+	(state <s> ^operator <op> ^result <result>)
+	(<op> ^name complete ^status <status>)
+	(<result> ^status <status> ^parent <p> ^attribute <attr> ^add-value-copy <value>)
+-->
+	(<p> ^<attr> (copy-one-level <value>))
+}
+
+sp {apply*substate-result*del-value
+	(state <s> ^operator <op> ^result <result>)
+	(<op> ^name complete ^status <status>)
+	(<result> ^status <status> ^parent <p> ^attribute <attr> ^del-value <value>)
+-->
+	(<p> ^<attr> <value> -)
+}
+
+sp {apply*substate-result*print
+	(state <s> ^operator <op> ^result <result>)
+	(<op> ^name complete ^status <status>)
+	(<result> ^status <status> ^print <value>)
+-->
+	(write <value> (crlf))
+}
+
+# state1
+	#-(<b> ^completed.name state1)
+sp {state1*propose
+	(state <s> ^name state1 ^belifs <b>)
+	-(<b> ^completed.name state1)
+-->
+	(<s> ^operator <op>)
+	(<op> ^name state2 ^result <res1> ^result <res2>)
+	(<res1> ^status success ^parent <b> ^attribute completed ^add-value-copy <pred>)
+	(<pred> ^name state1 ^value 1.0)
+	(<res2> ^status success ^print |state1 completed|)
+}
+
+sp {state1*propose
+	(state <s> ^name state1 ^belifs <b>)
+	-(<b> ^completed.name state1)
+-->
+	(<s> ^operator <op>)
+	(<op> ^name state2 ^result <res1> ^result <res2>)
+	(<res1> ^status success ^add-predicate-with-retval <predicate> ^retval-name who ^retval-attribute subject)
+	(<predicate> ^name is-completed ^what state2)
+	(<res1> ^status success ^add-predicate <predicate> ^retval-1-name subject ^retval-1-attribute phrase)
+	(<predicate> ^name is-completed ^what state2)
+	(<pred> ^name state1 ^value 1.0)
+	(<res2> ^status success ^print |state1 completed|)
+}
+
+# state2
+
+sp {state2*propose
+	(state <s> ^name state2 ^belifs <b>)
+-->
+	(<s> ^operator <op>)
+	(<op> ^name state3 ^result-inherit success ^result <res1> ^result <res2>)
+	(<res1> ^status success ^parent <b> ^attribute completed ^add-value state2)
+	(<res2> ^status success ^print |state2 completed|)
+}
+
+# state3
+
+sp {action*propose*start
+	(state <s> ^name state3 ^io.output-link <ol> -^status)
+	(<ol> -^task)
+-->
+	(<s> ^operator <op>)
+	(<op> ^name start)
+}
+
+sp {action*apply*start
+	(state <s> ^name state3 ^operator <op> ^io.output-link <ol>)
+	(<op> ^name start)
+-->
+	(<ol> ^task <cmd>)
+	(write |start operator applied| (crlf))
+}
+
+sp {action*propose*complete
+	(state <s> ^name state3 ^io.output-link <ol>)
+	(<ol> ^task <cmd>)
+-->
+	(<s> ^operator <op>)
+	(<op> ^name complete ^cmd <cmd> ^status success)
+}
+
+sp {action*apply*end*cleanup
+	(state <s> ^name state3 ^operator <op> ^io.output-link <ol>)
+	(<op> ^name complete ^cmd <cmd>)
+-->
+	(<ol> ^task <cmd> -)
+	(write |end cleanup operator applied| (crlf))
+}
+
+#sp {action*propose*end
+#	(state <s> ^name state3 ^io.output-link <ol>)
+#	(<ol> ^task <cmd>)
+#-->
+#	(<s> ^operator <op>)
+#	(<op> ^name end ^task <cmd>)
+#}
+#
+#sp {action*apply*end
+#	(state <s> ^name state3 ^operator <op>)
+#	(<op> ^name end)
+#-->
+#	(<s> ^status success)
+#	(write |end operator applied| (crlf))
+#}
+#
+#sp {action*apply*end*cleanup
+#	(state <s> ^name state3 ^operator <op> ^io.output-link <ol>)
+#	(<op> ^name end ^task <cmd>)
+#-->
+#	(<ol> ^task <cmd> -)
+#	(write |end cleanup operator applied| (crlf))
+#}

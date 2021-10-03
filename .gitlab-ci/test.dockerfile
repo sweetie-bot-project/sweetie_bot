@@ -15,7 +15,7 @@ COPY *.deb ./
 RUN dpkg -i *.deb 2>/dev/null; apt-get install -qqy -f && rm *.deb
 
 # image comparison & virtual display support & user
-RUN apt-get install -qqy --no-install-recommends imagemagick sudo git python-rosdep xvfb scrot git \
+RUN apt-get install -qqy --no-install-recommends imagemagick sudo git python3-rosdep xvfb scrot git \
  && rosdep init \
  && useradd -ms /bin/bash dev && mkdir -p /home/dev/src && chown dev:dev -R /home/dev \
  && echo "dev ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dev \

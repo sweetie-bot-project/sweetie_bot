@@ -1,5 +1,9 @@
-from input_module import *
-import rand
-import timer
-import joystick
-import camera
+from .input_module import *
+from .rand import Rand
+from .timer import Clock
+from .joystick import Joystick
+from .camera import Camera
+from .swm import SpatialWorldModel
+from .battery import Battery
+from .pose_joints import PoseJoints
+from .herkulex_servos import HerkulexServos

@@ -15,7 +15,7 @@ class TextCommandState(EventState):
     -- command      string          Command string.
     -- topic        string          Topic where to publish message.
 
-    <= done 	                    Message is sent.  
+    <= done                         Message is sent.  
     '''
 
     def __init__(self, type, command, topic = 'control'):
@@ -25,8 +25,10 @@ class TextCommandState(EventState):
         self._topic = topic
 
         # Check and form message
-        check_type('type', 'string', type)
-        check_type('command', 'string', command)
+        if not isinstance(type, str):
+            raise TypeError('TextCommandState: "type" parameter must be string')
+        if not isinstance(command, str):
+            raise TypeError('TextCommandState: "command" parameter must be string')
         self._message = TextCommand(type = type, command = command)
 
         # create publisher

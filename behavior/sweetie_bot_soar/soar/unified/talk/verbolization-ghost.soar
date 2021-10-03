@@ -1,0 +1,97 @@
+#
+# PREDIACTES VERBOLIZATION
+#
+# Utility levels:
+#
+# 1. 20 --- general predicates verbolization, second verbolization
+# 2. 20 --- general questions
+# 3. 40-50 --- greeting and making acquitance
+# 4. 70 --- general knowledge additions
+# 5. 80 --- reactions
+#
+
+# GENERAL KNOWLEDGE
+
+
+# VERBOLIZATION RULES
+
+#
+# ask question about ghost pony
+#
+sp {requestria*elaborate*ghost-pony
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	-{(<b> ^predicate <pred>)
+ 	  (<pred> ^name asked-about-ghost-pony ^object <obj>)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic ask-about-ghost-pony ^utility 20 ^type question ^animation-tag question)
+	(<f> ^text |Со мной тут контактировало одно эфемерное создание пони-подобного типа. Ты что-то слышал о таком существе?|)
+}
+
+sp {requestria*elaborate*ghost-pony*reaction
+	(state <s> ^substate talk ^last-topic ask-about-ghost-pony ^object <obj> ^verbolization <v>)
+-->
+	(<v> ^reaction <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic ask-can-i-trust-ghost-pony ^type question ^text |Оно говорило что-то о исчезновении магии, и что запрашивает мою помощь. Остальное непонятно. Мои дачики не приспособлены для детектирования аномалий подобного рода. Как думаешь, можно доверять этому призрачному существу?| ^animation-tag long)
+	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-know-about-ghost-pony ^type reaction ^text |Тогда вероятность того, что ты мне поможешь нулевая. Спасибо.| ^animation-tag rejection)
+}
+
+sp {talk-answered*propose*ghost-pony
+	(state <s> ^substate talk-answered ^question-topic ask-about-ghost-pony ^answer-topic {<< |yes| |no| >> <a-topic>} ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name asked-about-ghost-pony ^object <obj> ^answer-topic <a-topic> ^deadline-time 600.0)
+}
+
+#
+# reaction on question about trust 
+#
+sp {requestria*elaborate*trust-ghost-pony*reaction
+	(state <s> ^substate talk ^last-topic ask-can-i-trust-ghost-pony ^object <obj> ^verbolization <v>)
+-->
+	(<v> ^reaction <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic speaker-trust-ghost-pony ^type reaction ^text |Входные данные приняты. Для точной оценки мне нужно собрать информацию с большего количества людей.| ^animation-tag confirmation)
+	(<r2> ^answer-topic no ^topic speaker-do-not-trust-ghost-pony ^type reaction ^text |Входные данные приняты. В таком случае попробуй вызывать охотников за привидениями. А я попробую снова приманить его к себе.| ^animation-tag confirmation)
+}
+
+# add predicate: have o-support in superstate
+sp {talk-answered*elaborate*trust-ghost-pony*add-counter
+	(state <s> ^substate talk-answered ^question-topic ask-can-i-trust-ghost-pony ^answer-topic {<< |yes| |no| >>} ^beliefs <b>)
+	-{(<b> ^predicate <pred>) 
+	  (<pred> ^name consider-trust-ghost-pony)}
+-->
+	(<b> ^predicate <pred>)
+	(<pred> ^name consider-trust-ghost-pony ^yes 0 ^no 0)
+}
+
+sp {talk-answered*propose*trust-ghost-pony*update-counter
+	(state <s> ^substate talk-answered ^question-topic ask-can-i-trust-ghost-pony ^answer-topic {<< |yes| |no| >> <answer>} ^beliefs.predicate <pred> ^actions <a>)
+	(<pred> ^name consider-trust-ghost-pony ^<answer> <value>)
+-->
+	(<a> ^parent <pred> ^attribute <answer> ^remove-value <value> ^link-value (+ <value> 1))
+}
+
+#
+# verbolize trust ghost pony statistics
+#
+sp {requestria*elaborate*trust-ghost-pony
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1> <pred2>)
+  	(<pred1> ^name asked-about-ghost-pony ^object <obj> ^answer-topic yes)
+	(<pred2> ^name consider-trust-ghost-pony ^yes <value> ^no {< <value>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-trust-ghost-pony ^utility 20 ^type statement ^animation-tag surprise)
+	(<f> ^text |Люди склонны верить призрачной пони. Интересно, почему?|)
+}
+
+sp {requestria*elaborate*do-not-trust-ghost-pony
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1> <pred2>)
+  	(<pred1> ^name asked-about-ghost-pony ^object <obj> ^answer-topic yes)
+	(<pred2> ^name consider-trust-ghost-pony ^yes <value> ^no {> <value>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-trust-ghost-pony ^utility 20 ^type statement ^animation-tag long)
+	(<f> ^text |Люди не склонны верить призрачной пони. А мне почему-то хочется...|)
+}

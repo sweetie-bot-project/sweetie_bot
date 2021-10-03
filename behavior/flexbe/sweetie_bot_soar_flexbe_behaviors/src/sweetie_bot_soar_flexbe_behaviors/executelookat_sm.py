@@ -8,8 +8,8 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from sweetie_bot_flexbe_states.set_operational import SetOperational
 from sweetie_bot_flexbe_states.object_detection_monitor import ObjectDetectionMonitor
+from sweetie_bot_flexbe_states.set_operational import SetOperational
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -33,7 +33,8 @@ class ExecuteLookAtSM(Behavior):
 		# parameters of this behavior
 		self.add_parameter('label', '*')
 		self.add_parameter('type', '*')
-		self.add_parameter('timeout', 30)
+		self.add_parameter('timeout', 30.0)
+		self.add_parameter('transform_delay', 0.0)
 
 		# references to used behaviors
 
@@ -48,19 +49,19 @@ class ExecuteLookAtSM(Behavior):
 
 	def create(self):
 		# x:30 y:353, x:346 y:329
-		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
+		_state_machine = OperatableStateMachine(outcomes=['succeed', 'failed'])
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
 		
 		# [/MANUAL_CREATE]
 
-		# x:30 y:353, x:130 y:353, x:230 y:353, x:291 y:337, x:651 y:309, x:537 y:357, x:391 y:376, x:793 y:299
+		# x:30 y:353, x:130 y:353, x:230 y:353, x:311 y:368, x:651 y:309, x:537 y:357, x:391 y:376, x:793 y:299, x:830 y:475
 		_sm_lookatcontainer_0 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
 										('finished', [('LookAtOperational', 'done')]),
 										('failed', [('LookAtOperational', 'failure')]),
 										('finished', [('ObjectMonitor', 'no_detections')]),
-										('failed', [('ObjectMonitor', 'have_detections')]),
+										('finished', [('ObjectMonitor', 'have_detections')]),
 										('failed', [('ObjectMonitor', 'detection_matches')]),
 										('failed', [('ObjectMonitor', 'failure')])
 										])
@@ -74,8 +75,8 @@ class ExecuteLookAtSM(Behavior):
 
 			# x:361 y:83
 			OperatableStateMachine.add('ObjectMonitor',
-										ObjectDetectionMonitor(detection_topic='detections', label=self.label, type=self.type, exit_states=['no_detections'], pose_topic='motion/controller/look_at/in_pose_ref', pose_frame_id='odom_combined', detection_period=30.0),
-										transitions={'no_detections': 'finished', 'have_detections': 'failed', 'detection_matches': 'failed', 'failure': 'failed'},
+										ObjectDetectionMonitor(detection_topic='detections', label=self.label, type=self.type, exit_states=['no_detections', 'have_detections'], pose_topic='motion/controller/look_at/in_pose_ref', pose_frame_id='odom_combined', detection_period=float(self.timeout), transform_delay=float(self.transform_delay)),
+										transitions={'no_detections': 'finished', 'have_detections': 'finished', 'detection_matches': 'failed', 'failure': 'failed'},
 										autonomy={'no_detections': Autonomy.Off, 'have_detections': Autonomy.Off, 'detection_matches': Autonomy.Off, 'failure': Autonomy.Off},
 										remapping={'pose': 'pose'})
 
@@ -85,7 +86,7 @@ class ExecuteLookAtSM(Behavior):
 			# x:153 y:101
 			OperatableStateMachine.add('LookAtContainer',
 										_sm_lookatcontainer_0,
-										transitions={'finished': 'finished', 'failed': 'failed'},
+										transitions={'finished': 'succeed', 'failed': 'failed'},
 										autonomy={'finished': Autonomy.Inherit, 'failed': Autonomy.Inherit})
 
 

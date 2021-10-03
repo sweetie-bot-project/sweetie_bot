@@ -71,6 +71,7 @@ class KeyPressed : public JoyDecoderBase
 		KeyNames key_names_;
 		PressedKeySet key_set_;
 		ros::Publisher pub_;
+		double deadzone;
 
 	protected:
 		void addKey(KeyMapping& key_map, int key, const std::string& key_value);
@@ -116,6 +117,14 @@ KeyPressed::KeyPressed(ros::NodeHandle& nh, const YAML::Node& node) :
 	}
 	// get topic name
 	std::string topic = node["key_topic"].as<std::string>();
+	// get deadzone value
+	//YAML::Node * deadzone_node = node.FindValue("deadzone");
+	try {
+		deadzone = node["deadzone"].as<double>();
+	}
+	catch (const YAML::Exception& e) {
+		deadzone = 0.0f;
+	}
 	// create publisher
 	pub_ = nh.advertise< sweetie_bot_joystick::KeyPressed >(topic, 1);
 }
@@ -141,8 +150,8 @@ void KeyPressed::decodeHook(const sensor_msgs::Joy& joy_msg) {
 	}
 	// process axes
 	for(int k = 0; k < joy_msg.axes.size(); k++) {
-		if (joy_msg.axes[k] < 0.0)  processKey(naxis_map_, k, key_msg);
-		if (joy_msg.axes[k] > 0.0)  processKey(paxis_map_, k, key_msg);
+		if (joy_msg.axes[k] < -deadzone)  processKey(naxis_map_, k, key_msg);
+		if (joy_msg.axes[k] > deadzone)  processKey(paxis_map_, k, key_msg);
 	}
 	// publish result
 	pub_.publish(key_msg);

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="ExecuteSetPose">
+
+	<executable package_path="sweetie_bot_soar_flexbe_behaviors.executesetpose_sm" class="ExecuteSetPoseSM" />
+	<tagstring>soar, SweetieBot</tagstring>
+	<author>disRecord</author>
+	<date>Sat May 08 2021</date>
+	<description>
+		Move robot in specified pose.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="text" name="pose" default="head_nominal" label="pose" hint="Sets the pose" />
+
+	</params>
+
+
+</behavior>

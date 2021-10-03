@@ -8,7 +8,7 @@
   <author>disRecord</author>
   <maintainer email="xdnmail@gmail.com">XDN</maintainer>
   <license>GPL</license>
-  <url></url>
+  <url>https://gitlab.com/sweetie-bot/sweetie_bot</url>
 
   <buildtool_depend>catkin</buildtool_depend>
 

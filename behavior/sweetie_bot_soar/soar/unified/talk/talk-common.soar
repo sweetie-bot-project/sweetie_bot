@@ -1,0 +1,86 @@
+#
+# TALKING: COMMON EVENT PROCESSING CODE
+#
+
+# ELABORATIONS
+
+# substate basic agumentation
+sp {talk-event*elaborate*event
+	(state <s> ^substate talk-event ^superstate.operator <sop>)
+	(<sop> ^event <ev>)
+-->
+	(<s> ^event <ev>)
+	(<s> ^actions <a>)
+	(<s> ^talk-ignored <c1> ^talk-answered <c2> ^talk-irrelevant <c3>)
+}
+
+# elaborate recent talk events
+sp {talk-event*elaborate-recent-events
+	(state <s> ^substate talk-event ^event.actor <obj> ^events.event <ev> ^time.recently <time>)
+	(<ev> ^name {<<|talk-ignored| |talk-answered| |talk-irrelevant|>> <ev-type>} ^actor <obj> ^initiated-at {>= <time>})	
+	(<s> ^<ev-type> <c>)
+-->
+	(<c> ^event <ev>)
+}
+
+# DEBUG
+
+# ptint topic and conclusion
+sp {talk-common*propose*debug-output
+	(state <s> ^substate talk-event ^substate {<> |talk-event| <ev-type>} ^topic <topic> ^conclusion <conclusion> ^actions <a>)
+-->
+	(<a> ^print (concat <ev-type> |: topic '| <topic> |', conclusion '| <conclusion> |'|))
+}
+
+sp {talk-common*propose*debug-output-question
+	(state <s> ^substate talk-event ^substate {<> |talk-event| <ev-type>} ^question-topic <q-topic> ^answer-topic <a-topic> ^conclusion <conclusion> ^actions <a>)
+-->
+	(<a> ^print (concat <ev-type> |: q-topic '| <q-topic> |', a-topic '| <a-topic> |', conclusion '| <conclusion> |'|))
+}
+
+# COGNITION RULES
+
+# worst operator: cognition process is finished, mark event processed
+sp {talk-event*propose*finish
+	(state <s> ^substate talk-event ^event <ev>)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name talk-event-reaction ^type automatic ^mark-processed <ev>)
+}
+
+#
+# if superstate is not another talk-event substate then execute all actions before exit
+#
+
+# add all actions to finish-event-processing operator if superstate is not talk-event
+sp {talk-event*elaborate*finish-agumentation*non-cogntion-superstate
+	(state <s> ^substate talk-event ^operator <op> + ^actions <a> ^superstate <ss>)
+	(<op> ^name talk-event-reaction)
+	(<ss> -^substate talk-event)
+	(<a> ^<attr> <value>)
+-->
+	(<op> ^<attr> <value>)
+}
+
+#
+# if superstate is talk-event substate then move all actions and conclusions to superstate
+#
+
+# add all actions to superstate if superstate is talk-event 
+sp {talk-event*elaborate*cogntion-superstate-copy-actions
+	(state <s> ^substate talk-event  ^actions <a> ^superstate <ss>)
+	(<ss> ^substate talk-event ^actions <sa>)
+	(<a> ^<attr> <value>)
+-->
+	(<sa> ^<attr> <value>)
+}
+
+# add conclusion to superstate if superstate is talk-event 
+sp {talk-event*elaborate*cogntion-superstate-copy-conclusion
+	(state <s> ^substate talk-event  ^conclusion <c> ^superstate <ss>)
+	(<ss> ^substate talk-event)
+-->
+	(<ss> ^conclusion <c>)
+}
+
+

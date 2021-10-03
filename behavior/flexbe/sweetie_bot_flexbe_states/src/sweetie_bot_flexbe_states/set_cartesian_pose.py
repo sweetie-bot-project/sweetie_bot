@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import xmlrpclib
 import math
 
 import rospy
@@ -32,9 +31,9 @@ class SetCartesianPose(EventState):
     -- tolerance_ang        float           Orientation tolerance (rad).
     -- timeout              float           Movement timeout (s).
 
-    <= done 	                    Finished.
-    <= failed 	                    Failed to activate FollowJointState controller.
-    <= timeout 	                    Timeout reached (if 
+    <= done                         Finished.
+    <= failed                       Failed to activate FollowJointState controller.
+    <= timeout                      Timeout reached.
 
     '''
 

@@ -1,7 +1,6 @@
-import output_module
-from output_module import OutputModule
+from . import output_module
 
-class Nop(OutputModule):
+class NOp(output_module.OutputModule):
 
     def __init__(self, config):
         super(Nop, self).__init__("nop")

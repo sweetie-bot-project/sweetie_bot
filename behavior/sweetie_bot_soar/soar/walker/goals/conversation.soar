@@ -11,14 +11,14 @@
 # goal initialization: conversation space creation
 sp {propose*goal*conversation*init-conversation-goal
 	(state <s> ^goal <g>)
-	(<g> ^name conversation)
+	(<g> ^name conversation ^enter-topic <enter-topic> ^human <h>)
 	(<g> -^state)
 -->
 	(<s> ^operator <o> + =)
 	(<o> ^name init-conversation-goal ^goal <g> ^type cognition)
 }
 
-sp {init*goal*conversation*init-conversation-goal
+sp {apply*goal*conversation*init-conversation-goal
 	(state <s> ^operator <o>)
 	(<o> ^name init-conversation-goal ^goal <g>) 
 	(<g> ^enter-topic <enter-topic>)
@@ -38,7 +38,7 @@ sp {propose*goal*conversation*execution
 
 # substate elaboration
 
-sp {goal*conversation*elaborate*substate
+sp {elaborate*goal*conversation*substate
 	(state <s> ^superstate <ss>)
 	(<ss> ^operator <o> ^mem <m> ^io <io>)
 	(<o> ^name conversation-substate ^goal <g> ^substate conversation)
@@ -93,8 +93,13 @@ sp {goal*conversation*elaborate*conversation*timeout
 	(<c> ^timeout <h>)
 }
 
-# phrase choice operator application
+#
+# phrase-choice operator application.
+#
+# change state to 'speak', save speak operator
+# and all transitions for later use
 
+# ordinary operator case
 sp {apply*goal*conversation*substate*phrase-choice*operator
 	(state <s> ^conversation.goal <g> ^operator <o>)
 	(<o> ^name phrase-choice ^say <what> ^operator <phrase-op>)
@@ -105,6 +110,7 @@ sp {apply*goal*conversation*substate*phrase-choice*operator
 	(<state> ^name speak)
 }
 
+# subgoal case case
 sp {apply*goal*conversation*substate*phrase-choice*subgoal
 	(state <s> ^conversation.goal <g> ^operator <o>)
 	(<o> ^name phrase-choice ^say <what> ^subgoal <phrase-op>)
@@ -115,6 +121,7 @@ sp {apply*goal*conversation*substate*phrase-choice*subgoal
 	(<state> ^name speak)
 }
 
+# copy all transitions
 sp {apply*goal*conversation*substate*phrase-choice*transition
 	(state <s> ^conversation.goal <g> ^operator <o>)
 	(<o> ^name phrase-choice ^transition <tr>)
@@ -123,7 +130,11 @@ sp {apply*goal*conversation*substate*phrase-choice*transition
 	(<state> ^transition (copy-one-level <tr>))
 }
 
-# phrase operator execution
+# 
+# execute proposed speak operator
+#
+
+# speak operator is ordinary operator
 sp {propose*goal*conversation*speak*operator
 	(state <s> ^goal <g>)
 	(<g> ^name conversation  ^state <gs> ^human <h> )
@@ -144,9 +155,10 @@ sp {apply*goal*conversation*speak*operator
 	(<state> ^timestamp (+ <t> <timeout>))
 }
 
+# speak operator is subgoal: instal it instaed of conversation goal
 sp {propose*goal*conversation*speak*subgoal
 	(state <s> ^goal <g>)
-	(<g> ^name conversation  ^state <gs> ^human <h> )
+	(<g> ^name conversation  ^state <gs> ^human <h>)
 	(<gs> ^name speak ^subgoal <op>)
 -->
 	(<s> ^operator <o> + =)
@@ -167,7 +179,11 @@ sp {apply*goal*conversation*speak*subgoal
 	(<state> ^timestamp (+ <t> <timeout>))
 }
 
-# perform topic transition
+#
+# perform transition to next topic
+#
+
+# human said one of expected phrases
 sp {propose*goal*conversation*topic-transition
 	(state <s> ^goal <g> ^mem.human <h>)
 	(<g> ^name conversation  ^state <gs> ^human <h>)
@@ -190,10 +206,11 @@ sp {apply*goal*conversation*topic-transition
 	(<g> ^state <old> -)
 }
 
+# timeout has happened
 sp {propose*goal*conversation*topic-transition*timeout
 	(state <s> ^goal <g> ^mem.human <h> ^io.input-link.clock.time <t>)
 	(<g> ^name conversation  ^state <gs>)
-	(<gs> ^name wait-answer ^timestamp {<stamp> < t} ^transition <n>)
+	(<gs> ^name wait-answer ^timestamp {<stamp> < <t>} ^transition <n>)
 	(<n> ^timeout <timeout> ^next-topic <next-topic>)
 -->
 	(<s> ^operator <o> + =)
@@ -211,4 +228,24 @@ sp {apply*goal*conversation*topic-transition*timeout
 	(<g> ^state <old> -)
 }
 
+#
+# end conversation
+#
+
+sp {propose*goal*conversation*end-conversation
+	(state <s> ^goal <g> ^mem <m>)
+	(<g> ^name conversation ^human <h>)
+	-(<m> ^human <h>)
+-->
+	(<s> ^operator <o> + =)
+	(<o> ^name conversation-end-conversation ^goal <g> ^type cognition)
+}
+
+sp {apply*goal*conversation*end-conversation
+	(state <s> ^operator <o>)
+	(<o> ^name conversation-end-conversation ^goal <g>)
+-->
+	(<s> ^goal <g> -)
+	(<s> ^completed-goal <g>)
+}
 

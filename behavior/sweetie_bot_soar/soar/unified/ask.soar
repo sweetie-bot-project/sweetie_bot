@@ -1,0 +1,82 @@
+# ASK SUBSTATE
+#  
+# DESCRIPTION
+#
+# Ask question and wait responce. Do not focus attention on speker.
+#
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate ask ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+#
+# Ask person <object> about <topic> with text and use animation tagged with <tag>.
+#
+# RESULT STATUSES
+#
+# * succeed --- question is succesfully answered
+#
+# SIDE EFFECTS
+#
+# Events (including relevant substates):
+#
+# * (^name talk-ignored ^actor <object> ^topic <topic>) --- question was asked by object ignored it: it left, moved or did not say anything.
+# * (^name talk-answer ^actor <object> ^question-topic <topic> ^answer-topic <answer-topic> ^answer-text <text>) --- answer was detected.
+# * (^name talk-failed ^actor <object> ^topic <topic>) --- was unable to ask question (object is moving or invisble)
+# * (^name talk-said ^object <object> ^topic <topic>) --- said defined phrase to the object.
+#
+# Process:
+#
+# * (^name asking ^substate say ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+# * (^name waiting-answer-ask ^substate look-at ^object <obj> ^topic <topic> ^deadline-time 10.0)
+#
+
+# DECISION RULES
+
+# if question is not asked then say it and then initiate waiting-answer-ask process
+sp {ask*propose*say
+	(state <s> ^substate ask -^waiting-answer-ask ^args <args> ^process <sp>)
+	(<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+-->
+	(<s> ^operator <o> +, =)
+	(<o> ^name asking ^substate say ^process-args <a>)
+	(<a> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed>)
+	(<res-succeed> ^status succeed ^add-process <proc>)
+	(<proc> ^name waiting-answer-ask ^object <obj> ^question-topic <topic> ^subprocess-of <sp> ^deadline-time 10.0)
+}
+
+# waiting for answer: look at object. If action is failed consider question is ignored.
+sp {ask*propose*look-at-waiting
+	(state <s> ^substate ask ^waiting-answer-ask <proc> ^process <sp>)
+	(<proc> ^object <obj> ^question-topic <topic> ^deadline-time <timeout>)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name waiting-answer-ask ^substate look-at ^process-link <proc> ^additional-process-args <a>)
+	(<a> ^delay 2.0 ^timeout <timeout> ^result <res-failed>)
+	(<res-failed> ^status failed ^add-event <ev-ignored>)
+	(<ev-ignored> ^name talk-ignored ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
+}
+
+# COGNITION RULES
+
+# emit talk-ignored event if waiting answer 
+sp {ask*propose*question-is-ignored-event
+	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
+	(<ev> ^name waiting-answer-ask ^reason deadline ^process <proc>)
+	(<proc> ^object <obj> ^question-topic <topic> ^subprocess-of <sp>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name ask-question-is-ignored ^type cognition automatic ^add-event <ev-ignored>)
+	(<ev-ignored> ^name talk-ignored ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
+}
+
+# emit talk-answered event 
+sp {ask*propose*question-is-answered-event
+	(state <s> ^bottom-state 1 ^beliefs <b>)
+	(<b> ^process <proc> ^event <ev>)
+	(<proc> ^name waiting-answer-ask ^object <obj> ^question-topic <topic>)
+	(<ev> ^name speech ^topic <answer-topic> ^text <text>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name ask-question-is-answered ^type cognition automatic ^add-event <ev-answer> ^finish-status succeed ^finish-process <proc>)
+	(<ev-answer> ^name talk-answered ^actor <obj> ^question-topic <topic> ^answer-topic <answer-topic> ^answer-text <text> ^memorization-time 3600.0)
+}
+

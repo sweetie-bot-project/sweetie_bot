@@ -1,0 +1,52 @@
+# WAIT SUBSTATE
+#  
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate wait)
+#
+# DESCRIPTION
+#
+# Waits indefinetely. All operators have the worst preference, so they can be added to another substate.
+#
+# RESULT STATUSES:
+#
+# SIDE EFFECTS
+#
+#
+# IMPLEMENTATION
+# 
+
+# ELABORATIONS
+
+sp {wait*propose*wait-behavior-create
+	(state <s> ^substate wait ^io.output-link <ol>)
+	(<ol> -^nop)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name wait-behavior-create)
+}
+
+sp {wait*apply*wait*behavior-create
+	(state <s> ^substate wait ^operator <op> ^io.output-link <ol>)
+	(<op> ^name wait-behavior-create)
+-->
+	(<ol> ^nop <cmd>)
+	(<cmd> ^cycle 1)
+}
+
+sp {wait*propose*wait-behavior
+	(state <s> ^substate wait ^io.output-link.nop <cmd>)
+	(<cmd> ^cycle <c>)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name wait-behavior ^cmd <cmd> ^cycle <c>)
+}
+
+sp {wait*apply*wait-behavior
+	(state <s> ^substate wait ^operator <op>)
+	(<op> ^name wait-behavior ^cmd <cmd> ^cycle <c>)
+-->
+	(<cmd> ^cycle <c> -)
+	(<cmd> ^cycle (+ <c> 1))
+}
+

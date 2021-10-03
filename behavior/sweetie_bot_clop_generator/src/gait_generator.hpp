@@ -3,14 +3,12 @@
 #include <actionlib/client/simple_action_client.h>
 #include <tf2_ros/transform_listener.h>
 
-#include <towr/nlp_formulation.h>
+#include <towr/nlp_formulation_base.h>
 #include <ifopt/ipopt_solver.h>
 
 #include <sweetie_bot_clop_generator/MoveBaseAction.h>
 #include <sweetie_bot_clop_generator/SaveTrajectory.h>
 #include <sweetie_bot_control_msgs/FollowStepSequenceAction.h>
-
-#include "general_kinematic_model_non_com.h"
 
 namespace sweetie_bot {
 
@@ -71,9 +69,9 @@ class ClopGenerator
 		std::string base_frame_id;
 		std::map<std::string, EndEffectorInfo> end_effector_index;
 		std::vector<KDL::Vector> end_effector_contact_point;
-		std::shared_ptr<towr::GeneralKinematicModelNonCoM> kinematic_model;
+		Eigen::Vector3d com_B; // Robot body CoM position in base link frame.
 		// NLP formulation and its solution
-		towr::NlpFormulation formulation;
+		std::unique_ptr<towr::NlpFormulationBase> formulation;
 		ifopt::IpoptSolver::Ptr solver;
 		ifopt::Problem nlp;
 		towr::SplineHolder solution;
@@ -93,10 +91,10 @@ class ClopGenerator
 
 		KDL::Vector getContactPointFromRobotModel(const std::string& contact);
 		KDL::Frame convertTFToPathTF(const KDL::Frame& T);
-		bool checkEERangeConditions(const towr::BaseState& base_pose, const towr::NlpFormulation::EEPos& ee_pose);
+		bool checkEERangeConditions(const towr::BaseState& base_pose, const towr::NlpFormulationBase::EEPos& ee_pose);
 
 		void setInitialStateFromNominal(double ground_z);
-		bool setInitialStateFromTF();
+		void setInitialStateFromTF();
 
 		void setGoalPoseFromMsg(const MoveBaseGoal& msg);
 		void setGaitFromGoalMsg(const MoveBaseGoal& msg);

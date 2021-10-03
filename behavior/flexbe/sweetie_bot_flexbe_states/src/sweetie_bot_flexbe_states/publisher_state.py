@@ -13,8 +13,8 @@ class PublisherState(EventState):
     -- msg_type     datatype        Message type.
     -- value        dict            Message initializer. Dict is translated to argument list.
 
-    <= done 	                    Message is sent.  
-    <= failed 	                    Unable to send a message.
+    <= done                         Message is sent.  
+    <= failed                       Unable to send a message.
 
     '''
 

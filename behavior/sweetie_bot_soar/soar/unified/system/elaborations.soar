@@ -1,0 +1,113 @@
+#
+# SUBSTATE SUPPORT
+#
+
+# top level goals
+sp {elaborate*state-general
+	(state <s> ^superstate.operator <op> ^impasse no-change)
+	(<op> ^name top-level-goal)
+-->
+	(<s> ^substate general)
+}
+
+# subgoal support: derive substate name if operator implies substate creation.
+sp {elaborate*state-name
+	(state <s> ^superstate.operator <op> ^impasse no-change)
+	(<op> ^name <name> ^substate <substate-name>)
+-->
+	(<s> ^name <name> ^substate <substate-name>)
+}
+
+# cognition subgoal
+sp {elaborate*state-cognition-type
+	(state <s> ^superstate.operator.type cognition ^impasse no-change)
+-->
+	(<s> ^type cognition)
+}
+
+# propagate memory access to subgoal substates
+sp {elaborate*state-io-mem-beliefs
+	(state <s> ^substate ^superstate <ss>)
+	(<ss> ^io <io> ^beliefs <b> ^beliefs-stable <bs> ^mem <m>)
+-->
+	(<s> ^io <io>)
+	(<s> ^mem <m>)
+	(<s> ^beliefs <b>)
+	(<s> ^beliefs-stable <bs>)
+}
+
+# propagate time structure:
+sp {elaborate*time
+	(state <s> ^io.input-link.clock <clock>)
+-->
+	(<s> ^time <clock>)
+}
+
+# debug time structure: envirement is not running
+sp {elaborate*debug-time
+	(state <s> -^io.input-link.clock ^substate ^superstate <ss>)
+	(<ss> ^time <time>)
+-->
+	(<s> ^time <time>)
+}
+
+# propagate memory access to subgoal substates
+sp {elaborate*state-events-predicates-pool
+	(state <s> ^superstate <ss>)
+	(<ss> ^events <ev-pool> ^predicates <pred-pool>)
+-->
+	(<s> ^events <ev-pool> ^predicates <pred-pool>)
+}
+
+#
+# INTENTION BELIEFS
+# 
+# beliefs which map presence of specific substate in goal hierarchy
+#
+
+# create intention beliefs
+#sp {elaborate*state-intention
+#	(state <s> ^substate <substate-name> ^beliefs <b>)
+#-->
+#	(<b> ^intention <i>)
+#	(<i> ^name <substate-name>)
+#}
+
+# remove intantion belief once bottom state is changed
+#sp {elaborate*remove-state-intention
+#	:o-support
+#	(state <s> ^bottom-state 1 ^beliefs <b>)
+#	(<b> ^intention <i>)
+#	(<i> ^name <name>)
+#	-(state <si> ^substate <name>)
+#-->
+#	(<b> ^intention <i> -)
+#}
+
+#
+# BOTTOM AND TOP STATE MARKS
+#
+
+sp {elaborate*delay
+	(state <s> ^superstate)
+-->
+	(<s> ^delay 1)
+}
+
+sp {elaborate*not-bottom-state
+	(state <s> ^superstate <ss> ^delay -^type cognition)
+-->
+	(<ss> ^bottom-state 0)
+}
+
+sp {elaborate*bottom-state
+	(state <s> ^superstate <ss> -^bottom-state 0 -^type cognition)
+-->
+	(<s> ^bottom-state 1)
+}
+
+sp {elaborate*top-state
+	(state <s> ^superstate nil)
+-->
+	(<s> ^top-state 1)
+}

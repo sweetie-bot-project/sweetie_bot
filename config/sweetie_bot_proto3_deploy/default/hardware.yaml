@@ -1,7 +1,7 @@
 hardware:     
     openmv_node:
         camera_frame: 'camera_link'
-        camera_matrix: [101, 0.000000, 120, 0.000000, 101, 80, 0.000000, 0.000000, 1.000000]
+        camera_matrix: [200, 0.000000, 120, 0.000000, 200, 80, 0.000000, 0.000000, 1.000000]
         serial:
             port: '/dev/ttyACM0'
             read_timeout: 1.0
@@ -14,10 +14,13 @@ hardware:
                 length = 3
                 treshold = 2
                 alpha = 0.3
+    battery_monitor:
+        period: 2.0
+        sysfs_path: '/sys/class/power_supply/BAT0'
     simulated:
         openmv_node:
             camera_frame: 'camera_link'
-            camera_matrix: [101, 0.000000, 120, 0.000000, 101, 80, 0.000000, 0.000000, 1.000000]
+            camera_matrix: [200, 0.000000, 120, 0.000000, 200, 80, 0.000000, 0.000000, 1.000000]
             serial:
                 port: '/dev/ttyACM0'
                 read_timeout: 1.0

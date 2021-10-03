@@ -1,0 +1,38 @@
+# PREFERENCES 
+
+# SYSTEM AND COGNITION OPERATORS
+
+sp {prefer*system-cognition-best
+	(state <s> ^operator <o> +)
+	(<o> ^type {<< system cognition >>})
+-->
+	(<s> ^operator <o> > =)
+}
+
+sp {prefer*system-over-cognition
+   (state <s> ^operator <o1> +  ^operator { <o2> <> <o1> } +)
+   (<o1> ^type system)
+   (<o2> ^type cognition)
+-->
+   (<s> ^operator <o1> > <o2>)
+}
+
+# DRIVED OPERATOR PREFERENCES
+
+# opertors with greater importance are better
+sp {prefer*importance
+   (state <s> ^operator <o1> +  ^operator { <o2> <> <o1> } +)
+   (<o1> ^importance <i1>)
+   (<o2> ^importance { <i2> > <i1> })
+-->
+   (<s> ^operator <o2> > <o1>)
+}
+
+# derive importance from drive
+sp {elaborate*driver-operator-importance
+	(state <s> ^operator <op> + ^mem.drive <d>)
+	(<op> ^drive <name>)
+	(<d> ^name <name> ^importance <i>)
+-->
+   (<op> ^importance <i>)
+}
