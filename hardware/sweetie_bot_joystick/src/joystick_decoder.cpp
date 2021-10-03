@@ -122,7 +122,7 @@ KeyPressed::KeyPressed(ros::NodeHandle& nh, const YAML::Node& node) :
 	try {
 		deadzone = node["deadzone"].as<double>();
 	}
-	catch (const YAML::KeyNotFound& e) {
+	catch (const YAML::Exception& e) {
 		deadzone = 0.0f;
 	}
 	// create publisher
