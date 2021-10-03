@@ -7,7 +7,7 @@
 
 #include <towr/models/endeffector_mappings.h>
 #include <towr/models/single_rigid_body_dynamics.h>
-#include "single_rigid_body_with_point_ee_dynamics.h"
+#include <towr/models/single_rigid_body_with_point_ee_dynamics.h>
 #include <towr/models/general_kinematic_model.h>
 #include <towr/initialization/quadruped_gait_generator.h>
 #include <towr/terrain/height_map.h>
