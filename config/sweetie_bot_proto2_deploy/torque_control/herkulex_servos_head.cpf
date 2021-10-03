@@ -33,7 +33,7 @@
 			</simple>
 			<simple name="position_kp" type="ulong">
 				<description>Position PID regulator proportional coefficient.</description>
-				<value>50</value>
+				<value>100</value>
 			</simple>
 			<simple name="position_kd" type="ulong">
 				<description>Position PID regulator differential coefficient.</description>

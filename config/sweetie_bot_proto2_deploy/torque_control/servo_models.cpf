@@ -3,7 +3,7 @@
 <properties>
     <struct name="default_servo_model" type="/sweetie_bot_servo_model_msg/ServoModel">
       <simple name="name" type="string"><value>default</value></simple>
-      <simple name="kp" type="double"><value>50.0</value></simple>
+      <simple name="kp" type="double"><value>100.0</value></simple>
       <simple name="kgear" type="double"><value>1.0</value></simple>
       <struct name="alpha" type="double">
         <simple name="Element0" type="double"><value>2.1095</value></simple>
@@ -15,7 +15,7 @@
   <struct name="servo_models" type="/sweetie_bot_servo_model_msg/ServoModel[]">
     <struct name="Element0" type="/sweetie_bot_servo_model_msg/ServoModel">
       <simple name="name" type="string"><value>joint12</value></simple>
-      <simple name="kp" type="double"><value>50.0</value></simple>
+      <simple name="kp" type="double"><value>100.0</value></simple>
       <simple name="kgear" type="double"><value>1.0</value></simple>
       <struct name="alpha" type="double">
         <simple name="Element0" type="double"><value>1.3887</value></simple>
@@ -26,7 +26,7 @@
     </struct>
     <struct name="Element1" type="/sweetie_bot_servo_model_msg/ServoModel">
       <simple name="name" type="string"><value>joint13</value></simple>
-      <simple name="kp" type="double"><value>50.0</value></simple>
+      <simple name="kp" type="double"><value>100.0</value></simple>
       <simple name="kgear" type="double"><value>1.0</value></simple>
       <struct name="alpha" type="double">
         <simple name="Element0" type="double"><value>1.3887</value></simple>
@@ -37,7 +37,7 @@
     </struct>
     <struct name="Element2" type="/sweetie_bot_servo_model_msg/ServoModel">
       <simple name="name" type="string"><value>joint22</value></simple>
-      <simple name="kp" type="double"><value>50.0</value></simple>
+      <simple name="kp" type="double"><value>100.0</value></simple>
       <simple name="kgear" type="double"><value>1.0</value></simple>
       <struct name="alpha" type="double">
         <simple name="Element0" type="double"><value>1.3887</value></simple>
@@ -48,7 +48,7 @@
     </struct>
     <struct name="Element3" type="/sweetie_bot_servo_model_msg/ServoModel">
       <simple name="name" type="string"><value>joint23</value></simple>
-      <simple name="kp" type="double"><value>50.0</value></simple>
+      <simple name="kp" type="double"><value>100.0</value></simple>
       <simple name="kgear" type="double"><value>1.0</value></simple>
       <struct name="alpha" type="double">
         <simple name="Element0" type="double"><value>1.3887</value></simple>
@@ -59,7 +59,7 @@
     </struct>
     <struct name="Element4" type="/sweetie_bot_servo_model_msg/ServoModel">
       <simple name="name" type="string"><value>joint32</value></simple>
-      <simple name="kp" type="double"><value>50.0</value></simple>
+      <simple name="kp" type="double"><value>100.0</value></simple>
       <simple name="kgear" type="double"><value>1.0</value></simple>
       <struct name="alpha" type="double">
         <simple name="Element0" type="double"><value>1.3887</value></simple>
@@ -70,7 +70,7 @@
     </struct>
     <struct name="Element5" type="/sweetie_bot_servo_model_msg/ServoModel">
       <simple name="name" type="string"><value>joint33</value></simple>
-      <simple name="kp" type="double"><value>50.0</value></simple>
+      <simple name="kp" type="double"><value>100.0</value></simple>
       <simple name="kgear" type="double"><value>1.0</value></simple>
       <struct name="alpha" type="double">
         <simple name="Element0" type="double"><value>1.3887</value></simple>
@@ -81,7 +81,7 @@
     </struct>
     <struct name="Element6" type="/sweetie_bot_servo_model_msg/ServoModel">
       <simple name="name" type="string"><value>joint42</value></simple>
-      <simple name="kp" type="double"><value>50.0</value></simple>
+      <simple name="kp" type="double"><value>100.0</value></simple>
       <simple name="kgear" type="double"><value>1.0</value></simple>
       <struct name="alpha" type="double">
         <simple name="Element0" type="double"><value>1.3887</value></simple>
@@ -92,7 +92,7 @@
     </struct>
     <struct name="Element7" type="/sweetie_bot_servo_model_msg/ServoModel">
       <simple name="name" type="string"><value>joint43</value></simple>
-      <simple name="kp" type="double"><value>50.0</value></simple>
+      <simple name="kp" type="double"><value>100.0</value></simple>
       <simple name="kgear" type="double"><value>1.0</value></simple>
       <struct name="alpha" type="double">
         <simple name="Element0" type="double"><value>1.3887</value></simple>
