@@ -42,6 +42,9 @@ class ExecuteJointTrajectoryBase(Dummy):
         # It may happen that the action client fails to send the action goal, if _outcome is set then execute() exits immediately.
         self._outcome = None
 
+        # info about executed trajectry
+        self._trajectory_info = None 
+
         # log_once support
         self._logged = False
         self._logfunc = { 'info': Logger.loginfo, 'warn': Logger.logwarn, 'err': Logger.logerr, 'hint': Logger.loghint }
@@ -55,7 +58,7 @@ class ExecuteJointTrajectoryBase(Dummy):
         goal_raw = rospy.get_param(trajectory_param)
 
         if not isinstance(goal_raw, xmlrpc.client.Binary):
-            raise TypeError("ExecuteJointTrajectory: ROS parameter '" + trajectory_param + "' is not a binary data.")
+            raise TypeError("ExecuteJointTrajectory: ROS parameter '%s' is not a binary data." % (trajectory_param,) )
         # deserialize
         goal = FollowJointTrajectoryGoal()
         goal.deserialize(goal_raw.data)
@@ -73,7 +76,7 @@ class ExecuteJointTrajectoryBase(Dummy):
         try:
             self._client.send_goal(self._controller, goal)
         except Exception as e:
-            Logger.logwarn('ExecuteJointTrajectory: Failed to send the FollowJointTrajectory command:\n%s' % str(e))
+            Logger.logwarn('ExecuteJointTrajectory: Failed to send the FollowJointTrajectory command (%s):\n%s' % (self._trajectory_info, str(e)))
             self._outcome = 'failure'
 
 
@@ -92,20 +95,20 @@ class ExecuteJointTrajectoryBase(Dummy):
             # Save output key 
             if state == GoalStatus.SUCCEEDED:
                 # everything is good
-                self.log_once('info', 'ExecuteJointTrajectory: FollowJointTrajectory action succesed: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('info', 'ExecuteJointTrajectory: FollowJointTrajectory (%s) action succesed: %s, %s' % (self._trajectory_info, repr(result.error_code), result.error_string))
                 return 'success'
             elif state in [ GoalStatus.ABORTED, GoalStatus.PREEMPTED ]:
                 # perhaps we stuck in midway due to tolerance error or controller switch.
-                self.log_once('warn', 'ExecuteJointTrajectory: FollowJointTrajectory action was aborted: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('warn', 'ExecuteJointTrajectory: FollowJointTrajectory (%s) action was aborted:  %s, %s' % (self._trajectory_info, repr(result.error_code), result.error_string))
                 return 'partial_movement'
             elif state in [ GoalStatus.REJECTED, GoalStatus.RECALLED ]:
                 # Execution has not started, perhaps due to invalid goal.
-                self.log_once('warn', 'ExecuteJointTrajectory: FollowJointTrajectory action was rejected: ' + repr(result.error_code) + " " + result.error_string)
+                self.log_once('warn', 'ExecuteJointTrajectory: FollowJointTrajectory (%s) action was rejected: %s, %s' % (self._trajectory_info, repr(result.error_code), result.error_string))
                 if result.error_code in [ FollowJointTrajectoryResult.PATH_TOLERANCE_VIOLATED, FollowJointTrajectoryResult.GOAL_TOLERANCE_VIOLATED]:
                     # Starting pose is invalid
                     return 'invalid_pose'
             # Any another kind of error.
-            self.log_once('warn', 'ExecuteJointTrajectory: FollowJointTrajectory action failed (' + repr(state) + '): ' + repr(result.error_code) + " " + result.error_string)
+            self.log_once('warn', 'ExecuteJointTrajectory: FollowJointTrajectory (%s) action failed (%s): %s %s' % (self._trajectory_info, repr(state), repr(result.error_code), result.error_string))
             return 'failure'
 
 

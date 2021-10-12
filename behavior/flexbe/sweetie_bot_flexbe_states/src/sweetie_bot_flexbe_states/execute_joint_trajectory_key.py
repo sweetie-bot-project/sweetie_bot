@@ -32,6 +32,7 @@ class ExecuteJointTrajectoryKey(EventState):
         # Load FollowStepSequenceGoal from Parameter Server
         try:
             goal = self.load_goal_msg(self._trajectory_ns, userdata.trajectory_param)
+            self._trajectory_info = userdata.trajectory_param
         except Exception as e:
             Logger.logwarn('ExecuteJointTrajectoryKey: unable to load trajectory from `%s/%s` parameter:\n%s' % (self._trajectory_ns, userdata.trajectory_param, str(e)) )
             self._outcome = 'unavaliable'
