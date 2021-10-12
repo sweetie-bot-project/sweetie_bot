@@ -14,6 +14,7 @@ soar:
         joystick:
             type: "joystick"
             topic: "/hmi/joy_decoder/keys_pressed"
+            last_activity_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 10.0, 300.0] }
         swm:
             type: "swm"
             topic: "detections"
