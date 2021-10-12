@@ -93,7 +93,7 @@ sp {verbolization-rarity-robot*propose*speaker-do-no-know-about-rarity*reaction*
 
 sp {verbolization-rarity-robot*propose*speaker-do-no-know-about-rarity*reaction*no
 	(state <s> ^substate talk-answered ^question-topic speaker-does-not-know-about-rarity ^answer-topic no ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
-  	(<pred1> ^name asked-about-rarity ^object <obj> ^answer-topic no)
+  	(<pred> ^name asked-about-rarity ^object <obj> ^answer-topic no)
 -->
 	(<s> ^reaction <r1>)
 	(<r1> ^topic ask-is-rarity-robot ^type question ^text |Похоже, содержимое твоей памяти было обновлено? Ответь, моя сетра - робот?| ^animation-tag surprise)
