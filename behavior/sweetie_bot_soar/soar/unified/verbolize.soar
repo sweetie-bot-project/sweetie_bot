@@ -6,13 +6,15 @@
 #
 # DECISION OPERATOR
 #
-# (<op> ^name @name@ ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+# (<op> ^name @name@ ^substate verbolize ^process-args <args>) 
+#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
 #
 # Say person <obj> about <topic> with <text> and using animation tagged with <tag>.
 #
-# RESULT STATUSES
+# PROCESS RESULT STATUSES
 #
-# * succeed --- desired phrase is said to <object>.
+# Substate aguments supplied process with flexbe substate arguments and reuse it as flexbe substate process.
+# Result statuses are the same as for flexbe sustate.
 #
 # SIDE EFFECTS
 #
@@ -34,7 +36,7 @@ sp {verbolize*propose*select-animation
 	(<s> ^operator <op> +, =)
 	(<op> ^name select-animation ^substate flexbe ^animation <anim> ^process-link <proc> ^additional-process-args <a>)
     (<a> ^object <obj> ^topic <topic> ^behavior ExecuteJointTrajectoryAndSay ^text <text> ^joint_trajectory <animation-name> ^text_delay 0.2 ^result <r>)
-	(<r> ^status succeed ^add-event <ev-new> ^finish-status succeed ^finish-process <sp>)
+	(<r> ^status succeed ^add-event <ev-new>)
 	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
 }
 

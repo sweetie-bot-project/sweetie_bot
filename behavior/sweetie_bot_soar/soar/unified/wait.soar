@@ -8,13 +8,14 @@
 #
 # Waits indefinetely. All operators have the worst preference, so they can be added to another substate.
 #
-# RESULT STATUSES:
+# PROCESS RESULT STATUSES
+#
+# Substate does not initiate process.
 #
 # SIDE EFFECTS
 #
+# None.
 #
-# IMPLEMENTATION
-# 
 
 # ELABORATIONS
 

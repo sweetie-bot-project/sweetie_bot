@@ -6,14 +6,17 @@
 #
 # DECISION OPERATOR
 #
-# (<op> ^name @name@ ^substate say ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+# (<op> ^name @name@ ^substate say ^process-args <args>)
+#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
 #
-# Say person about <topic> with <text> and using animation tagged with <tag>.
+# Say person <obj> about <topic> with <text> and using animation tagged with <tag>.
 #
-# RESULT STATUSES
+# PROCESS RESULT STATUSES
 #
 # * succeed --- desired phrase is said to <object>.
 # * failed --- was unable to focus on <object>.
+#
+# Execution failure will cause new attemt to perform action.
 #
 # SIDE EFFECTS
 #

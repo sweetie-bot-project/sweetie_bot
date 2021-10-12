@@ -1,16 +1,26 @@
+#
 # FLEXBE SUBSTATE
 #  
-# DECISION OPERATOR
-#
-# (<op> ^name <name> ^substate flexbe ^args <args> [^interruptable [hard|soft]])
-#   (<args> ^behavior <behavior-name> ^param <parameter-name> ^<parameter-name> <parameter-value>)
+# Start flexbe substate.
 #
 # DESCRIPTION
 #
 # It waits or aborts for current FlexBe behavior if it presents. Then start behavior 
 # with name <behavior-name> and given parameters. 
 #
-# RESULT STATUSES:
+# To correctly deduce behavior paramters it must be registered in mem:
+#
+# (<s> ^mem <m>)
+#   (<m> ^flexbe-command <cmd>)
+#     (<cmd> ^name @BehaviorName@ ^param @param1_name@ @param2_name@ ... )
+#
+# DECISION OPERATOR
+#
+# (<op> ^name <name> ^substate flexbe ^process-args <args> [^interruptable [hard|soft]])
+#   (<args> ^behavior <behavior-name> ^<parameter-name> <parameter-value> ...)
+#
+# PROCESS RESULT STATUSES
+#
 #	* FlexBe behavior outcomes (standart convention): 
 #		* succeed --- FlexBe behavior finished successfully
 #		* failed --- internal error (execution system failure, invalid argument)
@@ -22,6 +32,7 @@
 #
 #	* event(^name error ^type failed ^subsystem flexbe) --- added on "failed" result
 #	* event(^name error ^type invalid_pose ^subsystem flexbe) --- added on "invalid_pose" result
+#
 
 
 # START BEHAVIOR

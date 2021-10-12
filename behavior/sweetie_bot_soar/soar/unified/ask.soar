@@ -6,27 +6,28 @@
 #
 # DECISION OPERATOR
 #
-# (<op> ^name @name@ ^substate ask ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+# (<op> ^name @name@ ^substate ask ^process-args <args>)
+#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
 #
-# Ask person <object> about <topic> with text and use animation tagged with <tag>.
+# Ask person <object> about <topic> with <text> and use animation tagged with <tag>.
 #
 # RESULT STATUSES
 #
-# * succeed --- question is succesfully answered
+# Does not finish supplied process nor set it result status.
 #
 # SIDE EFFECTS
 #
 # Events (including relevant substates):
 #
-# * (^name talk-ignored ^actor <object> ^topic <topic>) --- question was asked by object ignored it: it left, moved or did not say anything.
-# * (^name talk-answer ^actor <object> ^question-topic <topic> ^answer-topic <answer-topic> ^answer-text <text>) --- answer was detected.
-# * (^name talk-failed ^actor <object> ^topic <topic>) --- was unable to ask question (object is moving or invisble)
-# * (^name talk-said ^object <object> ^topic <topic>) --- said defined phrase to the object.
+# * event (^name talk-ignored ^actor <object> ^topic <topic>) --- question was asked by object ignored it: it left, moved or did not say anything.
+# * event (^name talk-answer ^actor <object> ^question-topic <topic> ^answer-topic <answer-topic> ^answer-text <text>) --- answer was detected.
+# * event (^name talk-failed ^actor <object> ^topic <topic>) --- was unable to ask question (object is moving or invisble)
+# * event (^name talk-said ^object <object> ^topic <topic>) --- said defined phrase to the object.
 #
 # Process:
 #
-# * (^name asking ^substate say ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
-# * (^name waiting-answer-ask ^substate look-at ^object <obj> ^topic <topic> ^deadline-time 10.0)
+# * process (^name asking ^substate say ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+# * process (^name waiting-answer-ask ^substate look-at ^object <obj> ^topic <topic> ^deadline-time 10.0)
 #
 
 # DECISION RULES
