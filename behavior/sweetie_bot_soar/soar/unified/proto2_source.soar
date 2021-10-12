@@ -1,25 +1,19 @@
 trace -d 0
 source system/system_source.soar
 # agent initialization
-source initialization-proto3.soar
+source initialization-proto2.soar
 # cyclic o-support actions
 source cycle.soar
 source utility_local.soar
-# cognition modules
-source vision.soar
 # low lever actions
 source wait.soar
 source flexbe.soar
 # high level actions
 source animation.soar
-source lookat.soar
-source attention.soar
-# talk
-source verbolize.soar
-source say.soar
-source ask.soar
-source talk/talk_source.soar
+source step-sequence-graph.soar
+source joystick.soar
 # main behavior
 source general.soar
+source general-proto2.soar
 # debug
 source debug.soar

@@ -7,17 +7,6 @@
 # create basic structures in memory
 #
 
-sp {initialization*apply*drives
-	(state <s> ^name initialization ^operator <op>)
-	(<op> ^name initialization ^stage 1)
--->
-	(<s> ^drive <d1> <d2> <d3> <d4>)
-	(<d1> ^name movement ^activation 0 ^importance 2) 
-	(<d2> ^name obey ^activation 0 ^importance 8)
-	(<d3> ^name security ^activation 0 ^importance 10)
-	(<d4> ^name curiosity ^activation 0 ^importance 5) 
-}
-
 sp {initialization*apply*debug-time
 	(state <s> ^name initialization ^operator <op> -^io.input-link.clock)
 	(<op> ^name initialization ^stage 1)
@@ -31,6 +20,17 @@ sp {initialization*apply*debug-time
 #
 # put things into memory
 #
+sp {initialization*apply*drives
+	(state <s> ^name initialization ^operator <op> ^mem <m>)
+	(<op> ^name initialization ^stage 2)
+-->
+	(<m> ^drive <d1> <d2> <d3> <d4>)
+	(<d1> ^name movement ^activation 0 ^importance 2) 
+	(<d2> ^name obey ^activation 0 ^importance 8)
+	(<d3> ^name security ^activation 0 ^importance 10)
+	(<d4> ^name curiosity ^activation 0 ^importance 5) 
+}
+
 
 sp {initialization*apply*compound*action
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
@@ -78,13 +78,16 @@ sp {apply*initialization*mem*step-sequences
 	(<s13> ^name backslide_right_20_20_90 ^next <s1>)
 }
 
-sp {initialization*apply*compound*action
+sp {initialization*apply*flexbe-commands
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^joint-trajectory <c1> <c2>)
-	(<c1> ^name head_node ^tag confirmation ^tag talk ^relative yes)
-	(<c2> ^name head_shake ^tag rejection ^tag talk ^relative yes)
+	(<m> ^flexbe-command <c1> <c2> <c3> <c4> <c5>)
+	(<c1> ^name ExecuteLookAt ^param id label type timeout)
+	(<c2> ^name ExecuteCompoundAction ^param action_name)
+	(<c3> ^name ExecuteStepSequence ^param action_name)
+	(<c4> ^name ExecuteJointTrajectoryAndSay ^param joint_trajectory text text_delay is_relative)
+	(<c5> ^name ExecuteSetPose ^param pose)
 }
 
 #

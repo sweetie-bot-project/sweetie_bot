@@ -10,7 +10,7 @@ sp {prefer*system-cognition-best
 }
 
 sp {prefer*system-over-cognition
-   (state <s> ^operator <o1> +  ^operator { <o2> <> <o1> } +)
+   (state <s> ^operator <o1> +  ^operator {<> <o1> <op2>} +)
    (<o1> ^type system)
    (<o2> ^type cognition)
 -->

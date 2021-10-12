@@ -1,3 +1,0 @@
-pushd unified
-source general_source.soar
-popd

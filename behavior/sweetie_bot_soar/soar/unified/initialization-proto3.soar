@@ -40,7 +40,7 @@ sp {initialization*apply*flexbe-commands
 	(<m> ^flexbe-command <c1> <c2> <c3> <c4> <c5>)
 	(<c1> ^name ExecuteLookAt ^param id label type timeout)
 	(<c2> ^name ExecuteCompoundAction ^param action_name)
-	(<c3> ^name ExecuteStepSequence ^param step_sequence)
+	(<c3> ^name ExecuteStepSequence ^param action_name)
 	(<c4> ^name ExecuteJointTrajectoryAndSay ^param joint_trajectory text text_delay is_relative)
 	(<c5> ^name ExecuteSetPose ^param pose)
 }

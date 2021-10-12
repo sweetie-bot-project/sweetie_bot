@@ -1,0 +1,103 @@
+#
+# PROTO2 GENERAL BEHAVIOR
+#
+# Implenents following drives:
+#  1. movement (random animation, step-sequence-graph, random head movements).
+#  2. obey (joystick-control).
+#  3. security (overheat). 
+#
+
+#
+# MOVEMENT DRIVE
+#
+
+## Propose perform animation (no one around)
+sp {movement*propose*decide-animation
+	(state <s> ^name movement ^substate general -^performing-animation)
+-->
+	(<s> ^operator <op> +, =)
+   	(<op> ^name performing-animation ^substate animation ^process-args <a>)
+	(<a> ^tag alone ^deadline-time 30.0)
+}
+
+# invoke RandHeadMovements for random timeout instead of animation 
+sp {movement*propose*rand*head*movements
+	(state <s> ^name movement ^substate general -^moving-head)
+-->
+	(<s> ^operator <op> +, =)
+   	(<op> ^name moving-head ^substate flexbe ^process-args <a> ^interruptable hard)
+   	(<a> ^behavior ExecuteRandHeadMovements ^timeout (+ 5 (rand-int 15))) 
+}
+
+# walk along graph
+sp {movement*propose*step-sequence-graph
+	(state <s> ^name movement ^substate general -^step-sequence-graph)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name step-sequence-graph ^substate step-sequence-graph ^process-args <a>)
+   	(<a> ^deadline-time (+ 4 (rand-int 12))) 
+}
+
+# wait action execution
+sp {movement*propose*wait
+	(state <s> ^name movement ^substate general ^{<<|performing-animation| |moving-head| |step-sequence-graph|>>} <proc>)
+	(<proc> ^substate <substate>)
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name wait-proccess ^substate <substate> ^drive movement ^process-link <proc>)
+}
+
+#
+# JOYSTICK
+#
+
+# execute joystick commands
+sp {obey*propose*joystick
+	(state <s> ^name obey ^substate general ^io.input-link.joystick.last-activity now ^process <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name joystick-control ^substate joystick ^process-link <proc>)
+}
+
+#
+# SECURITY
+#
+
+# wait until overheat is over
+sp {security*propose*wait-if-overheat
+	(state <s> ^name security ^substate general ^io.input-link.servos.status overheat)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name wait-overheat ^substate wait)
+}
+
+# place head in nominal position
+sp {security*propose*head-to-nominal-overheat
+	(state <s> ^name security ^substate general ^io.input-link <il>)
+	(<il> ^servos.status overheat ^head-pose.pose {<> head_nominal})
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name move-head-nominal-pose ^substate flexbe ^process-args <a>)
+    (<a> ^behavior ExecuteSetPose ^pose head_nominal)
+}
+
+# say about overheat using only text commad
+sp {security*propose*say-overheat
+	(state <s> ^name security ^substate general ^io.input-link.servos.status overheat ^beliefs <b>)
+	-{(<b> ^predicate <pred>) (<pred> ^name said-about-overheat)}
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name say-overheat ^type automatic ^add-predicate <pred-new> ^add-output-link-command <cmd>)
+	(<pred-new> ^name said-about-overheat ^deadline-time 30.0)
+	(<cmd> ^name textcmd ^type |voice/say| ^command |Я перегрелась. Буду теперь отдыхать.|)
+}
+
+# say and pose change must be done before waiting
+sp {security*prefer*wait-is-last-chioce
+	(state <s> ^name security ^substate general ^operator <op1> + ^operator <op2> +)
+	(<op1> ^name wait-overheat)
+	(<op2> ^name {<<|move-head-nominal-pose| |say-overheat|>>})
+-->
+	(<s> ^operator <op1> < <op2>)
+}
+
