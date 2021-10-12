@@ -5,5 +5,6 @@ source preferences.soar
 # belief subsustem
 source beliefs-system.soar
 source automatic-operator-apply-rules.soar
+source automatic-output-link.soar
 # continos actions support
 source processes.soar

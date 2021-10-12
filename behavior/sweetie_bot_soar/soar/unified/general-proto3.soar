@@ -144,21 +144,13 @@ sp {security*propose*head-to-nominal-overheat
     (<a> ^behavior ExecuteSetPose ^pose head_nominal)
 }
 
-# say about overheat using only text commad
 sp {security*propose*say-overheat
 	(state <s> ^name security ^substate general ^io.input-link.servos.status overheat ^beliefs <b>)
 	-{(<b> ^predicate <pred>) (<pred> ^name said-about-overheat)}
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name say-overheat ^type automatic ^add-predicate <pred-new>)
+	(<op> ^name say-overheat ^type automatic ^add-predicate <pred-new> ^add-output-command textcmd ^output-command-args <cmd>)
 	(<pred-new> ^name said-about-overheat ^deadline-time 30.0)
-}
-
-# say about overheat using text command
-sp {security*apply*say-overheat
-	(state <s> ^name security ^substate general ^operator <op> ^io.output-link.textcmd <cmd>)
-	(<op> ^name say-overheat)
--->
 	(<cmd> ^type |voice/say| ^command |Я перегрелась. Буду теперь отдыхать.|)
 }
 
