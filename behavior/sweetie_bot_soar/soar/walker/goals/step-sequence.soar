@@ -26,7 +26,7 @@ sp {propose*goal*step-sequence*execution
 sp {apply*flexbe*cmd*completed*hook*goal*step-sequence
 	(state <s> ^operator <op>)
    	(<op> ^name flexbe-completed ^cmd <cmd>)
-	(<cmd> ^status completed ^outcome finished ^operator.goal <g>)
+	(<cmd> ^status succeed ^operator.goal <g>)
 	(<g> ^name step-sequence)
 -->
 	(<g> ^state move -)
