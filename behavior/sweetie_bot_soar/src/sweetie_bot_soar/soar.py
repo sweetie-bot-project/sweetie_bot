@@ -213,8 +213,18 @@ class SoarNode:
 		self.soar = Soar()
 		self.timer = None
 		self.period = 1.0
-		# configure node
-		self.reconfigure()
+		# configure node: by default perform 3 attempts with 5 second period
+		attempts = rospy.get_param("~reconfiguration_attempts", 3)
+		timer = rospy.Rate(0.2)
+		while not self.reconfigure():
+			if attempts <= 0:
+				rospy.logwarn("SOAR abandoned reconfiguration attempts.")
+				break
+			else:
+				attempts -= 1
+				rospy.logwarn("SOAR will attemt to reconfigure in 5 seconds.")
+				timer.sleep()
+                        
 
 	def reconfigureCallback(self, req):
 		success = self.reconfigure()
