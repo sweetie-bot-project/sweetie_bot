@@ -110,6 +110,7 @@ static void DebugPrintFormulation(const NlpFormulationBase& formulation)
 	ROS_INFO_STREAM("ee_polynomials_per_swing_phase: " << formulation.params_.ee_polynomials_per_swing_phase_);
 	ROS_INFO_STREAM("force_limit_in_normal_direction: " << formulation.params_.force_limit_in_normal_direction_);
 	ROS_INFO_STREAM("min_swing_height: " << formulation.params_.min_swing_height_);
+	ROS_INFO_STREAM("stability_margin: " << formulation.params_.stability_margin_);
 
 	ROS_INFO_STREAM("COSTS");
 	for(auto& cost_pair : formulation.params_.costs_) {
@@ -283,8 +284,12 @@ bool ClopGenerator::configureRobotModel()
 				this->formulation.reset(new towr::NlpFormulationZMPPlanar());
 				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::EndeffectorRom, Parameters::Swing, Parameters::BaseAcc };
 			}
+			else if (static_cast<std::string>(nlp_type_param) == "zmp_phase") {
+				this->formulation.reset(new towr::NlpFormulationZMPPlanar());
+				this->formulation->params_.constraints_ = { Parameters::DynamicPhase, Parameters::EndeffectorRom, Parameters::Swing, Parameters::BaseAcc };
+			}
 			else {
-				throw std::string("'nlp_type' must be '6d', 'planar', 'zmp'"); 
+				throw std::string("'nlp_type' must be '6d', 'planar', 'zmp', 'zmp_phase'"); 
 			}
 		}
 		// process base
@@ -680,6 +685,9 @@ void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, d
 	}
 	if (ros::param::getCached(ns + "/force_limit_in_normal_direction", dvalue)) {
 		params.force_limit_in_normal_direction_ = dvalue;
+	}
+	if (ros::param::getCached(ns + "/stability_margin", dvalue)) {
+		params.stability_margin_ = dvalue;
 	}
 	if (ros::param::getCached(ns + "/min_swing_height", dvalue)) {
 		params.min_swing_height_ = dvalue;

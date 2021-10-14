@@ -5,7 +5,7 @@ clop_generator:
     planning_frame: "base_link_path"
     storage_namespace: "saved_msgs"
     towr_model:
-        nlp_type: "zmp"
+        nlp_type: "zmp_phase"
         base:
             frame_id: "base_link"
             links: ["base_link", "base_link_inertia", "bone11", "bone12", "bone21", "bone22", "bone31", "bone32", "bone41", "bone42", "bone51", "bone52", "bone53", "bone54", "screen_left", "screen_right" ]
@@ -60,7 +60,7 @@ clop_generator:
         #dt_constraint_range_of_motion: 0.2
         #dt_constraint_base_motion: 0.0625
         duration_base_polynomial: 0.25
-        dt_constraint_dynamic: 0.05
+        dt_constraint_dynamic: 0.1
         dt_constraint_range_of_motion: 0.1
         dt_constraint_base_motion: 0.1
         ee_polynomials_per_swing_phase: 2
@@ -68,10 +68,11 @@ clop_generator:
         bound_phase_duration_min: 0.4
         bound_phase_duration_max: 2.0
         min_swing_height: 0.015
+        stability_margin: 0.02
         costs: # better for on-line synthesis
-            base_lin_motion: 0.00001
-            base_ang_motion: 0.0001
-            ee_motion: 0.000025
+            base_lin_motion: 0.1
+            base_ang_motion: 0.01
+            ee_motion: 0.025
         #costs: # turn costs off
         #    costbase_lin_motion: 0.0
         #    costbase_ang_motion: 0.0
@@ -84,7 +85,7 @@ clop_generator:
         linear_solver: "mumps"
         jacobian_approximation: "exact"
         derivative_test: "none"  # BEWARE! Test "first-order" breaks optimization process! 
-        max_cpu_time: 5.0
+        max_cpu_time: 20.0
         print_level: 5
-        max_iter: 20
+        max_iter: 30
 
