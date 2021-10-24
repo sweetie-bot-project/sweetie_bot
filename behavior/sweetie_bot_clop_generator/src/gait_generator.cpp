@@ -1215,7 +1215,7 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 		tf::vectorEigenToKDL(base_angular.GetAngularVelocityInWorld(t), point.twist.rot);
 		tf::vectorEigenToKDL(base_angular.GetAngularAccelerationInWorld(t), point.accel.rot);
 		// linear position, velocity and acceleration
-		towr::State lin_state =	solution.base_linear_->GetPoint(t);
+		auto lin_state = solution.base_linear_->GetPoint(t); // State<k3D, kAcc>
 		tf::vectorEigenToKDL(lin_state.at(kPos), base_frame.p);
 		tf::vectorEigenToKDL(lin_state.at(kVel), point.twist.vel);
 		tf::vectorEigenToKDL(lin_state.at(kAcc), point.accel.vel);
@@ -1241,7 +1241,7 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 			msg.ee_motion[ee].points.emplace_back();
 			sweetie_bot_control_msgs::RigidBodyTrajectoryPoint& point = msg.ee_motion[ee].points.back();
 			// get linear state
-			towr::State lin_state =	solution.ee_motion_.at(ee)->GetPoint(t);
+			auto lin_state = solution.ee_motion_.at(ee)->GetPoint(t);  // State<k3D, kAcc>
 			KDL::Vector p;
 
 			tf::vectorEigenToKDL(lin_state.at(kPos), p);
