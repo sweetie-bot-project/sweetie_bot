@@ -276,6 +276,10 @@ bool ClopGenerator::configureRobotModel()
 				this->formulation.reset(new towr::NlpFormulation());
 				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorRom, Parameters::Terrain, Parameters::Swing, Parameters::BaseAcc };
 			}
+			else if (static_cast<std::string>(nlp_type_param) == "jump") {
+				this->formulation.reset(new towr::NlpFormulation());
+				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorRom, Parameters::Terrain, Parameters::BaseAcc };
+			}
 			else if (static_cast<std::string>(nlp_type_param) == "planar") {
 				this->formulation.reset(new towr::NlpFormulationPlanar());
 				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorRom, Parameters::Swing, Parameters::BaseAcc };
@@ -767,6 +771,9 @@ static void SetGaitGeneratorCombo(towr::GaitGenerator& gait_gen, std::string gai
 		else if (gait_type == "gallop") {
 			combo.insert(combo.end(), n_steps-1, towr::GaitGenerator::Hop3);
 			combo.push_back(towr::GaitGenerator::Hop3E);
+		}
+		else if (gait_type == "pronk") {
+			combo.insert(combo.end(), n_steps, towr::GaitGenerator::Hop2);
 		}
 		else {
 			throw std::invalid_argument("Unknown gait type: " + gait_type + (fliplr_flag ? flip_postfix : "") );
