@@ -13,7 +13,7 @@ from sweetie_bot_clop_generator.msg import MoveBaseGoal as MoveBaseGoalBase
 class MoveBaseGoal(MoveBaseGoalBase):
     """Extends sweetie_bot_clop_generator.msg.MoveBaseGoal."""
 
-    def __init__(self, gait_type = "walk_overlap", n_steps = 4, duration = 4, nominal_height = 0.2025):
+    def __init__(self, gait_type = "walk_overlap", n_steps = 4, duration = 4, nominal_height = 0.215):
         """Create MoveBaseGoal message with default field values."""
 
         super(MoveBaseGoal, self).__init__()
