@@ -898,7 +898,10 @@ void ClopGenerator::setGaitFromGoalMsg(const MoveBaseGoal& msg)
 			params.ee_in_contact_at_start_.push_back(gait_gen->IsInContactAtStart(ee));
 		}
 		// add base phases
-		params.base_phase_durations_ = gait_gen->GetBasePhaseDurations(msg.duration);
+		bool bvalue;
+		if (ros::param::getCached(towr_parameters_ns + "/towr_parameters/base_phase_durations", bvalue)) {
+			if (bvalue) params.base_phase_durations_ = gait_gen->GetBasePhaseDurations(msg.duration);
+		}
 	}
 	// debug output
 	for (int ee = 0; ee < n_ee; ++ee) {

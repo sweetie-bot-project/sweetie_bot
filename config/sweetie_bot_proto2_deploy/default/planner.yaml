@@ -55,6 +55,7 @@ clop_generator:
             links: ["bone43", "bone44", "bone45"]
     towr_parameters: # see towr::Parameteres for desciption, are updated move request
         scale_per_step: false
+        base_phase_durations: true
         #duration_base_polynomial: 0.25
         #dt_constraint_dynamic: 0.25
         #dt_constraint_range_of_motion: 0.2
