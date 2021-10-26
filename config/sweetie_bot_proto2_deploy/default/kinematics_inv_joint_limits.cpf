@@ -8,7 +8,7 @@
      <simple name="Element2" type="double"><value>-0.0</value></simple>
      <simple name="Element3" type="double"><value>-1.7000</value></simple>
      <simple name="Element4" type="double"><value>-1.5708</value></simple>
-     <simple name="Element5" type="double"><value>-1.5708</value></simple>
+     <simple name="Element5" type="double"><value>-3.1416</value></simple>
   </struct>
   <struct name="leg1_q_max" type="array">
      <description>Upper joints limits</description>
@@ -17,7 +17,7 @@
      <simple name="Element2" type="double"><value>1.9000</value></simple>
      <simple name="Element3" type="double"><value>1.7000</value></simple>
      <simple name="Element4" type="double"><value>1.5708</value></simple>
-     <simple name="Element5" type="double"><value>1.5708</value></simple>
+     <simple name="Element5" type="double"><value>3.1416</value></simple>
   </struct>
   <struct name="leg3_q_min" type="array">
      <description>Lower joints limits</description>
@@ -26,7 +26,7 @@
      <simple name="Element2" type="double"><value>0.0</value></simple>
      <simple name="Element3" type="double"><value>-1.7000</value></simple>
      <simple name="Element4" type="double"><value>-1.5708</value></simple>
-     <simple name="Element5" type="double"><value>-1.5708</value></simple>
+     <simple name="Element5" type="double"><value>-3.1416</value></simple>
   </struct>
   <struct name="leg3_q_max" type="array">
      <description>Upper joints limits</description>
@@ -35,7 +35,7 @@
      <simple name="Element2" type="double"><value>1.9000</value></simple>
      <simple name="Element3" type="double"><value>1.7000</value></simple>
      <simple name="Element4" type="double"><value>1.5708</value></simple>
-     <simple name="Element5" type="double"><value>1.5708</value></simple>
+     <simple name="Element5" type="double"><value>3.1416</value></simple>
   </struct>
   <struct name="leg4_q_min" type="array">
      <description>Lower joints limits</description>
@@ -44,7 +44,7 @@
      <simple name="Element2" type="double"><value>0.0</value></simple>
      <simple name="Element3" type="double"><value>-1.7000</value></simple>
      <simple name="Element4" type="double"><value>-1.5708</value></simple>
-     <simple name="Element5" type="double"><value>-1.5708</value></simple>
+     <simple name="Element5" type="double"><value>-3.1416</value></simple>
   </struct>
   <struct name="leg4_q_max" type="array">
      <description>Upper joints limits</description>
@@ -53,7 +53,7 @@
      <simple name="Element2" type="double"><value>1.9000</value></simple>
      <simple name="Element3" type="double"><value>1.7000</value></simple>
      <simple name="Element4" type="double"><value>1.5708</value></simple>
-     <simple name="Element5" type="double"><value>1.5708</value></simple>
+     <simple name="Element5" type="double"><value>3.1416</value></simple>
   </struct>
   <struct name="leg2_q_min" type="array">
      <description>Lower joints limits</description>
@@ -62,7 +62,7 @@
      <simple name="Element2" type="double"><value>0.0</value></simple>
      <simple name="Element3" type="double"><value>-1.7000</value></simple>
      <simple name="Element4" type="double"><value>-1.5708</value></simple>
-     <simple name="Element5" type="double"><value>-1.5708</value></simple>
+     <simple name="Element5" type="double"><value>-3.1416</value></simple>
   </struct>
   <struct name="leg2_q_max" type="array">
      <description>Upper joints limits</description>
@@ -71,7 +71,7 @@
      <simple name="Element2" type="double"><value>1.9000</value></simple>
      <simple name="Element3" type="double"><value>1.7000</value></simple>
      <simple name="Element4" type="double"><value>1.5708</value></simple>
-     <simple name="Element5" type="double"><value>1.5708</value></simple>
+     <simple name="Element5" type="double"><value>3.1416</value></simple>
   </struct>
   <struct name="head_tolerance" type="array">
      <description>Head pose tolerance (x, y, z, rx, ry, rz)</description>
