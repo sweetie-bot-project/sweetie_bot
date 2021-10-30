@@ -1,0 +1,8 @@
+<!-- MODULE: run towr gait generator in current LOCAL context -->
+<launch>
+	<arg name="robot_ns" default="/" doc="Namspace where robot nodes and topics are located."/>
+	
+	<node name="clop_generator" pkg="sweetie_bot_clop_generator" type="towr_clop_generator" output="screen">
+		<remap from="step_sequence" to="$(arg robot_ns)/motion/controller/step_sequence" />     
+	</node>
+</launch>
