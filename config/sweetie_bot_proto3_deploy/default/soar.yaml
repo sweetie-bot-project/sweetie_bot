@@ -49,7 +49,8 @@ soar:
             topic: "motion/herkulex/servo_states"
             overheat_temperature: 80.0
     output:
-        nop: true
+        nop:
+            delay: 0.2
         textcmd: 
             topic: "control"
         flexbe:
