@@ -32,7 +32,7 @@ class Battery:
 
     def newBatteryStateCallback(self, msg):
         # buffer msg
-        self._battery_state_msg = msg
+        self._battery_state_msg = msg # should be atomic
 
     def update(self):
         # check if input was updated

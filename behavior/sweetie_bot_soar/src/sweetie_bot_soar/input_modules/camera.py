@@ -28,7 +28,7 @@ class Camera:
 
     def detectionCallback(self, msg):
         # buffer msg
-        self._detections_msg = msg
+        self._detections_msg = msg # should be atomic
 
     def update(self):
         # get current time

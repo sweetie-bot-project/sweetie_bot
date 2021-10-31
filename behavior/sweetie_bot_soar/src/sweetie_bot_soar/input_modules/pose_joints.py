@@ -62,7 +62,7 @@ class PoseJoints:
 
     def newJointStateCallback(self, msg):
         # buffer msg
-        self._joint_state_msg = msg
+        self._joint_state_msg = msg # should be atomic
 
     def update(self):
         # check if input was updated

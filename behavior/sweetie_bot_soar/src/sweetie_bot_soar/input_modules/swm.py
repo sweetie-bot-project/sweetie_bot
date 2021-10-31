@@ -171,7 +171,7 @@ class SpatialWorldModel:
 
     def __updateSpatialMemory(self, time_now):
         self._last_update_time = time_now
-        # iterate over objects, mark unseen invisible and and mark to remove outdated 
+        # iterate over objects, mark unseen invisible and mark to remove outdated 
         remove_list = []
         for key_tuple, mem_elem in self._memory_map.items():
             spatial_object = mem_elem.spatial_object

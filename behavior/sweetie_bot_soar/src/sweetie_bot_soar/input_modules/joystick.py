@@ -1,6 +1,7 @@
 from . import input_module
 
 from copy import copy
+from threading import Lock
 import rospy
 from sweetie_bot_joystick.msg import KeyPressed
 from .bins import BinsMap
@@ -19,6 +20,7 @@ class Joystick:
         # add joystick subscriber and buffer
         self._joy_sub = rospy.Subscriber(joy_topic, KeyPressed, self.joyCallback)
         # buffers
+        self._lock = Lock()
         self._pressed_keys = []
         self._pressed_keys_new_value = False
         # last activity timestamp
@@ -30,18 +32,21 @@ class Joystick:
         self._last_activity_id = self._sensor_id.CreateStringWME('last-activity', self._last_activity_bins_map(rospy.Time.now().to_sec()))
 
     def joyCallback(self, msg):
-        # buffer pressed key list
-        self._pressed_keys = msg.keys
-        self._pressed_keys_new_value = True
+        with self._lock:
+            # buffer pressed key list
+            self._pressed_keys = msg.keys
+            self._pressed_keys_new_value = True
 
     def update(self):
-        # check if input was updated
-        if not self._pressed_keys_new_value:
-            return
-        self._pressed_keys_new_value = False
-        # form list of WMEs for addition and deletion
-        add_key_list = copy(self._pressed_keys)
-        del_wme_list = []
+        with self._lock:
+            # check if input was updated
+            if not self._pressed_keys_new_value:
+                return
+            self._pressed_keys_new_value = False
+            # form list of WMEs for addition and deletion
+            add_key_list = copy(self._pressed_keys)
+            del_wme_list = []
+
         # iterate over child wme
         for i in range(self._sensor_id.GetNumberChildren()):
             child_id = self._sensor_id.GetChild(i)
