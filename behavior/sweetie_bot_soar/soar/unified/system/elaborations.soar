@@ -89,19 +89,19 @@ sp {elaborate*state-events-predicates-pool
 #
 
 sp {elaborate*delay
-	(state <s> ^superstate)
+	(state <s> ^superstate ^substate)
 -->
 	(<s> ^delay 1)
 }
 
 sp {elaborate*not-bottom-state
-	(state <s> ^superstate <ss> ^delay -^type cognition)
+	(state <s> ^superstate <ss> ^substate ^delay -^type cognition)
 -->
 	(<ss> ^bottom-state 0)
 }
 
 sp {elaborate*bottom-state
-	(state <s> ^superstate <ss> -^bottom-state 0 -^type cognition)
+	(state <s> ^superstate <ss> ^substate -^bottom-state 0 -^type cognition)
 -->
 	(<s> ^bottom-state 1)
 }
