@@ -52,6 +52,11 @@ std::ostream& operator<<(std::ostream& out, const towr::Sphere3d& sphere) {
 	return out;
 }
 
+std::ostream& operator<<(std::ostream& out, const towr::SphereShell3d& sphere) {
+	out << "center: (" << sphere.center().transpose() << "), r: " << sphere.radius_min() << ", R: " << sphere.radius_max();
+	return out;
+}
+
 namespace sweetie_bot {
 
 inline Eigen::Vector3d KDLToEigen(const KDL::Vector& v) {
@@ -71,7 +76,8 @@ static void DebugPrintFormulation(const NlpFormulationBase& formulation)
 		auto nominal_stance_B = formulation.model_.kinematic_model_->GetNominalStanceInBase(ee);
 		ROS_INFO_STREAM("EE (" << ee << ") nominal_pose = (" << nominal_stance_B.transpose() << ")");
 		ROS_INFO_STREAM("EE (" << ee << ") bounding_box = (" << formulation.model_.kinematic_model_->GetBoundingBox(ee) << ")");
-		ROS_INFO_STREAM("EE (" << ee << ") bounding_sphere = (" << formulation.model_.kinematic_model_->GetBoundingSphere(ee) << ")");
+		ROS_INFO_STREAM("EE (" << ee << ") bounding_sphere_shell = (" << formulation.model_.kinematic_model_->GetBoundingSphere(ee) << ")");
+		ROS_INFO_STREAM("EE collision ellipsoid half-axes = (" << formulation.model_.kinematic_model_->GetCollisionEllipsoid().transpose() << ")");
 	}
 
 	ROS_INFO_STREAM("DYNAMIC_MODEL");
@@ -276,6 +282,10 @@ bool ClopGenerator::configureRobotModel()
 				this->formulation.reset(new towr::NlpFormulation());
 				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorRom, Parameters::Terrain, Parameters::Swing, Parameters::BaseAcc };
 			}
+			else if (static_cast<std::string>(nlp_type_param) == "6d_free") {
+				this->formulation.reset(new towr::NlpFormulation());
+				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorCombinedRom, Parameters::Terrain, Parameters::Swing, Parameters::BaseAcc };
+			}
 			else if (static_cast<std::string>(nlp_type_param) == "jump") {
 				this->formulation.reset(new towr::NlpFormulation());
 				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorRom, Parameters::Terrain, Parameters::BaseAcc };
@@ -323,6 +333,21 @@ bool ClopGenerator::configureRobotModel()
 			}
 		}
 		 
+		// get collision ellipsoid if it is provided
+		{
+			XmlRpcValue& collision_ellipsoid = towr_model["ee_collision_ellipsoid"];
+			if (collision_ellipsoid.getType() != XmlRpcValue::TypeInvalid) {
+				if (collision_ellipsoid.getType() != XmlRpcValue::TypeArray || collision_ellipsoid.size() != 3 || collision_ellipsoid[0].getType() != XmlRpcValue::TypeDouble) {
+					throw std::string("towr model 'ee_collision_ellipsoid' must be double[3]");
+				}
+				Eigen::Vector3d ellips(collision_ellipsoid[0], collision_ellipsoid[1], collision_ellipsoid[2]);
+				kinematic_model->setCollisionEllipsoid(ellips);
+			}
+			else {
+				kinematic_model->setCollisionEllipsoid(Eigen::Vector3d::Zero());
+			}
+		}
+
 		// process end effectors
 		for(auto ee_it = end_effector_mapper.begin(); ee_it != end_effector_mapper.end(); ee_it++) {
 			XmlRpcValue& leg_param = towr_model[ee_it->first];
@@ -360,15 +385,17 @@ bool ClopGenerator::configureRobotModel()
 			}
 			// get bounding sphere
 			XmlRpcValue& bounding_sphere = leg_param["bounding_sphere"];
-			if (bounding_sphere.getType() != XmlRpcValue::TypeArray || bounding_sphere.size() != 4 || bounding_sphere[0].getType() != XmlRpcValue::TypeDouble) {
-				throw std::string(ee_it->first + " end effector description must contain 'bounding_sphere' double[4]");
+			if (bounding_sphere.getType() != XmlRpcValue::TypeArray || (bounding_sphere.size() != 4 && bounding_sphere.size() != 5) || bounding_sphere[0].getType() != XmlRpcValue::TypeDouble) {
+				throw std::string(ee_it->first + " end effector description must contain 'bounding_sphere' double[4] Sphere(x, y, z, R)  or double[5] SphereShell(x, y, z, R, r)");
 			}
 			Eigen::Vector3d center(bounding_sphere[0], bounding_sphere[1], bounding_sphere[2]);
-			double radius = bounding_sphere[3];
+			double radius_max = bounding_sphere[3];
+			double radius_min = 0.0;
+			if (bounding_sphere.size() == 5) radius_min = bounding_sphere[4];
 
 			// configure end effector: note that TOWR plans trajectory for CoM so kinematics model should be "shifted".
 			Eigen::Vector3d cog(base_inetria_tensor.getCOG().data);
-			kinematic_model->configureEndEffector(ee_info.towr_index, nominal_stance_p - cog, Eigen::AlignedBox3d(bounding_box_p1 - cog, bounding_box_p2 - cog), towr::Sphere3d(center - cog, radius) );
+			kinematic_model->configureEndEffector(ee_info.towr_index, nominal_stance_p - cog, Eigen::AlignedBox3d(bounding_box_p1 - cog, bounding_box_p2 - cog), towr::SphereShell3d(center - cog, radius_max, radius_min) );
 
 			// Get information about contact
 			XmlRpcValue& contact_point = leg_param["contact_point"];
@@ -393,7 +420,7 @@ bool ClopGenerator::configureRobotModel()
 			}
 			
 			ROS_INFO_STREAM("GeneralKinematicModel: " << ee_it->first << " (" << ee_info.frame_id << ", EE " << ee_info.towr_index << "): nominal_stance (" << nominal_stance_p.transpose() << 
-					"), bounding_box (" << Eigen::AlignedBox3d(bounding_box_p1, bounding_box_p2) << "), bounding_sphere (" << towr::Sphere3d(center, radius) << ")" );
+					"), bounding_box (" << Eigen::AlignedBox3d(bounding_box_p1, bounding_box_p2) << "), bounding_sphere (" << towr::SphereShell3d(center, radius_max, radius_min) << ")" );
 		}
 		// this is impossible!
 		if (!kinematic_model->isConfigured()) throw std::string("not all end effectors present");
@@ -525,12 +552,12 @@ bool ClopGenerator::checkEERangeConditions(const towr::BaseState& base_pose, con
 		const Vector3d& ee_pos_W = ee_pose[i];
 		Vector3d ee_pos_B = R.transpose() * (ee_pos_W - p);
 
-		if ( ! formulation->model_.kinematic_model_->GetBoundingBox(i).contains(ee_pos_B) ) { 
+		/*if ( ! formulation->model_.kinematic_model_->GetBoundingBox(i).contains(ee_pos_B) ) { 
 			ROS_ERROR_STREAM("Check pose: EE " << i << " (" << ee_pos_B.transpose() <<  ") outside bounding box (" << formulation->model_.kinematic_model_->GetBoundingBox(i) << ")");
 			return false;
-		}
+		}*/
 		if ( ! formulation->model_.kinematic_model_->GetBoundingSphere(i).contains(ee_pos_B) ) { 
-			ROS_ERROR_STREAM("Check pose: EE " << i << " (" << ee_pos_B.transpose() <<  ") outside bounding box (" << formulation->model_.kinematic_model_->GetBoundingSphere(i) << ")");
+			ROS_ERROR_STREAM("Check pose: EE " << i << " (" << ee_pos_B.transpose() <<  ") outside bounding shere shell (" << formulation->model_.kinematic_model_->GetBoundingSphere(i) << ")");
 			return false;
 		}
 	}

@@ -12,47 +12,48 @@ clop_generator:
         LF:
             name: "leg1"
             frame_id: "bone15"
-            nominal_stance: [ 0.08, 0.038, -0.1675 ]
+            nominal_stance: [ 0.08, 0.038, -0.1825 ]
             #bounding_box: [ 0.05, 0.025, -0.2075, 0.145, 0.08, -0.1575 ]
             bounding_box: [ 0.05, 0.025, -1.2075, 1.145, 0.08, -0.1575 ]
             #bounding_box: [ 0.05, 0.025, -1.2075, 1.145, 1.08, -0.1575 ]
             #bounding_box: [ -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ 0.08, 0.037, -0.0575, 0.17 ]
+            bounding_sphere: [ 0.08, 0.037, -0.0575, 0.17, 0.09 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone13", "bone14", "bone15"]
         RF:
             name: "leg2"
             frame_id: "bone25"
-            nominal_stance: [ 0.08, -0.038, -0.1675 ]
+            nominal_stance: [ 0.08, -0.038, -0.1825 ]
             #bounding_box: [ 0.05, -0.08, -0.2075, 0.145, -0.025, -0.1575 ]
             bounding_box: [ 0.05, -0.08, -1.2075, 1.145, -0.025, -0.1575 ]
             #bounding_box: [ 0.05, -1.08, -1.2075, 1.145, -0.025, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ 0.08, -0.037, -0.0575, 0.17 ]
+            bounding_sphere: [ 0.08, -0.037, -0.0575, 0.17, 0.09 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone23", "bone24", "bone25"]
         LH:
             name: "leg3"
             frame_id: "bone35"
-            nominal_stance: [ -0.08, 0.038, -0.1675 ]
+            nominal_stance: [ -0.08, 0.038, -0.1825 ]
             #bounding_box: [ -0.145, 0.025, -0.2075, -0.05, 0.08, -0.1575 ]
             bounding_box: [ -1.145, 0.025, -1.2075, -0.05, 0.08, -0.1575 ]
             #bounding_box: [ -1.145, 0.025, -1.2075, -0.05, 1.08, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ -0.08, 0.037, -0.0575, 0.17 ]
+            bounding_sphere: [ -0.08, 0.037, -0.0575, 0.17, 0.09 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone33", "bone34", "bone35"]
         RH: 
             name: "leg4"
             frame_id: "bone45"
-            nominal_stance: [ -0.08, -0.038, -0.1675 ]
+            nominal_stance: [ -0.08, -0.038, -0.1825 ]
             #bounding_box: [ -0.145, -0.08, -0.2075, -0.05, -0.025, -0.1575 ]
             bounding_box: [ -1.145, -0.08, -1.2075, -0.05, -0.025, -0.1575 ]
             #bounding_box: [ -1.145, -1.08, -1.2075, -0.05, -0.025, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ -0.08, -0.037, -0.0575, 0.17 ]
+            bounding_sphere: [ -0.08, -0.037, -0.0575, 0.17, 0.09 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone43", "bone44", "bone45"]
+        ee_collision_ellipsoid: [ 0.09, 0.05, 0.0 ]
     towr_parameters: # see towr::Parameteres for desciption, are updated move request
         scale_per_step: false
         base_phase_durations: true
