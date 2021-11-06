@@ -1,7 +1,8 @@
 from . import input_module
 
-import rospy
+from threading import Lock
 
+import rospy
 from sensor_msgs.msg import JointState
 
 from . import robot_pose
@@ -52,6 +53,7 @@ class PoseJoints:
         self._joint_state_sub = rospy.Subscriber(joint_state_topic, JointState, self.newJointStateCallback)
 
         # message buffers
+        self._lock = Lock()
         self._joint_state_msg = None
         # WME ids cache
         self._pose_wme_id = self._sensor_id.CreateStringWME("pose", "unknown")
@@ -62,19 +64,22 @@ class PoseJoints:
 
     def newJointStateCallback(self, msg):
         # buffer msg
-        self._joint_state_msg = msg # should be atomic
+        with self._lock:
+            self._joint_state_msg = msg
 
     def update(self):
         # check if input was updated
-        if self._joint_state_msg == None:
-            return
+        with self._lock:
+            if self._joint_state_msg == None:
+                return
+            joint_state_msg = self._joint_state_msg
 
         # get current time
         time_now = rospy.Time.now()
 
         # check current pose
         if self._last_pose_index != None:
-            if self._pose_list[self._last_pose_index].check(self._joint_state_msg):
+            if self._pose_list[self._last_pose_index].check(joint_state_msg):
                 # pose has not changed: only time update is needed
                 time_value = self._time_bins_map( (time_now - self._last_pose_change_time).to_sec() );
                 if time_value != self._time_wme_id.GetValue():
@@ -83,7 +88,7 @@ class PoseJoints:
 
         # find corresponding pose
         for pose_index in range(0, len(self._pose_list)):
-            if self._pose_list[pose_index].check( self._joint_state_msg ):
+            if self._pose_list[pose_index].check( joint_state_msg ):
                 # corresponding pose found
                 self._last_pose_index = pose_index
                 self._last_pose_change_time = time_now

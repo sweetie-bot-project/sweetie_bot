@@ -2,8 +2,10 @@ from . import input_module
 
 from copy import copy
 from threading import Lock
+
 import rospy
 from sweetie_bot_joystick.msg import KeyPressed
+
 from .bins import BinsMap
 
 class Joystick:
