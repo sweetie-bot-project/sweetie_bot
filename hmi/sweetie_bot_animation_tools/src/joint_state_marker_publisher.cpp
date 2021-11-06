@@ -259,7 +259,7 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "animation_control");
   ros::NodeHandle nh;
 
-  pub = nh.advertise<sensor_msgs::JointState>("/motion/controller/joint_state/in_joints_ref", 1);
+  pub = nh.advertise<sensor_msgs::JointState>("/motion/controller/joint_state/out_joints_src_reset", 1);
 
   tf_listener.reset(new tf2_ros::TransformListener(tf_buffer));
   server.reset(new interactive_markers::InteractiveMarkerServer("hmi","",false));

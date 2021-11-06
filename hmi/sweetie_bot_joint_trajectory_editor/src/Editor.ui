@@ -353,6 +353,16 @@
                   </widget>
                  </item>
                  <item>
+                  <widget class="QPushButton" name="updateRobotPoseButton">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
+                   <property name="text">
+                    <string>Update pose</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QPushButton" name="dublicatePoseButton">
                    <property name="enabled">
                     <bool>true</bool>
@@ -381,6 +391,16 @@
                     </size>
                    </property>
                   </spacer>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="autoSetPoseCheckBox">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
+                   <property name="text">
+                    <string>Auto-set pose</string>
+                   </property>
+                  </widget>
                  </item>
                  <item>
                   <widget class="QPushButton" name="setRobotPoseButton">

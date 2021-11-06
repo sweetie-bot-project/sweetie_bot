@@ -83,6 +83,7 @@ class TrajectoryEditor : public QMainWindow
 		void on_addRobotPoseButton_clicked();
 		void on_deletePoseButton_clicked();
 		void on_dublicatePoseButton_clicked();
+		void on_updateRobotPoseButton_clicked();
 		// robot control
 		void on_setRobotPoseButton_clicked();
 		void on_executeButton_clicked();

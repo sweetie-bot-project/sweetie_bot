@@ -56,7 +56,7 @@ TrajectoryEditor::~TrajectoryEditor()
 void TrajectoryEditor::jointsCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
 	joint_state_ = *msg;
-	if(!ui.addRobotPoseButton->isEnabled())
+	if (!ui.addRobotPoseButton->isEnabled())
 		ui.addRobotPoseButton->setEnabled(true);
 }
 
@@ -206,6 +206,18 @@ void TrajectoryEditor::on_dublicatePoseButton_clicked()
 	}
 }
 
+void TrajectoryEditor::on_updateRobotPoseButton_clicked() {
+	for (int i = 0; i < joint_state_.name.size(); i++) {
+		QModelIndex index = ui.pointsTableView->selectionModel()->currentIndex();
+		if (index.isValid() && index.row() < joint_trajectory_data_.pointCount()) {
+			auto joint_index = joint_trajectory_data_.getJointIndex(joint_state_.name[i]);
+			if (joint_index != -1) {
+				joint_trajectory_data_.setPointJointPosition(index.row(), joint_index, joint_state_.position[i]);
+			}
+		}
+	}
+}
+
 void TrajectoryEditor::on_saveTrajectoryButton_clicked()
 {
     loader_.setParam(trajectories_param_name + "/" + ui.comboBox->currentText().toStdString(), joint_trajectory_data_.getTrajectoryMsg());
@@ -327,6 +339,9 @@ void TrajectoryEditor::on_pointsTableView_clicked(const QModelIndex &index)
 		sensor_msgs::JointState msg = joint_trajectory_data_.getPointMsg(index.row());
 		ROS_DEBUG_STREAM("\n" << msg);
 		pub_joints_marker_set_.publish(msg);
+		if (ui.autoSetPoseCheckBox->isChecked()) {
+			 pub_joints_set_.publish(msg);
+		}
 	}
 }
 
@@ -339,6 +354,9 @@ void TrajectoryEditor::on_pointsTableView_doubleClicked(const QModelIndex &index
 		// set time_from_start
 		double time_from_start = joint_trajectory_data_.getPoint(index.row()).time_from_start;
 		ui.timeFromStartSpinBox->setValue(time_from_start + ui.timeIncrementSpinBox->value());
+		if (ui.autoSetPoseCheckBox->isChecked()) {
+			 pub_joints_set_.publish(msg);
+		}
 	}
 }
 
