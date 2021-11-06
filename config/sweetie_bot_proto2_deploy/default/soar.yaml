@@ -44,6 +44,11 @@ soar:
             pose_list: [ "head_nominal" ]
             tolerance: 0.174 # 10 degrees
             time_bins_map: { names: [ "recently", "long-time" ], values: [ 60.0 ] }
+        base-pose:
+            type: "pose_tf"
+            base_frame: "base_link"
+            world_frame: "odom_combined"
+            incline_bins_map: { names: [ "normal", "inclined", "on-side", "upside-down" ], values: [ 20.0, 45.0, 150.0 ] }
         battery:
             type: "battery"
             topic: "battery_state"
