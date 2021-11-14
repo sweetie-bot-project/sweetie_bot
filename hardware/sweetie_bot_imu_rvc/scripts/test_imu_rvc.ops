@@ -1,0 +1,27 @@
+# DEPLOY BASIC IMU_RVC SUBSYSTEM
+
+import("rtt_ros");
+import("rtt_roscomm")
+
+ros.import("rtt_rospack");
+ros.import("rtt_sensor_msgs");
+
+# LOAD LOGGER
+ros.import("sweetie_bot_logger");
+
+require("log4cpp"); # add log4cpp service
+log4cpp.default_root_category = "sweetie_bot.motion";
+
+ros.import("sweetie_bot_imu_rvc");
+
+loadComponent("imu_rvc","imu_rvc::IMURVCDriver");
+imu_rvc.frame_id = "map";
+imu_rvc.port_name = "/dev/ttyUSB0";
+imu_rvc.baudrate = 115200;
+
+stream("imu_rvc.out_imu", ros.comm.topic("/out_imu"))
+
+imu_rvc.configure();
+# Driver must be active when IMU is configurated.
+imu_rvc.start();
+

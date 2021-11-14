@@ -1,0 +1,32 @@
+<package format="2">
+  <name>sweetie_bot_imu_rvc</name>
+  <version>1.0.0</version>
+  <description>BNO080 RVC IMU driver for SweetieBot robot.</description>
+  <maintainer email="fsdfur@gmail.com">mutronics</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">https://sweetiebot.net</url>
+  <url type="website">https://gitlab.com/sweetie-bot/sweetie_doc/wikis</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>mutronics</author>
+
+  <!-- ROS and OROCOS packages -->
+  <depend>rtt</depend>
+  <depend>rtt_ros</depend>
+  <depend>tf2</depend>
+  <!-- ROS and OROCOS datatypes -->
+  <depend>sensor_msgs</depend>
+  <depend>rtt_sensor_msgs</depend>
+  <!-- SWEETIEBOT packages -->
+  <depend>sweetie_bot_logger</depend>
+  <!-- SWEETIEBOT datatypes -->
+
+  <export>
+	  <rtt_ros>
+		  <!-- Plugin deps are loaded automatically by the rtt_ros import service -->
+		  <plugin_depend>rtt_sensor_msgs</plugin_depend>
+	  </rtt_ros>
+  </export>
+</package>

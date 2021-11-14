@@ -1,0 +1,19 @@
+# root category logs to application (this level is also the default for all 
+# categories who's level is NOT explicitly set in this file)
+log4j.rootCategory=INFO
+ 
+# setup log level for RTT::Logger messages
+log4j.category.org.orocos.rtt=INFO
+log4j.additivity.org.orocos.rtt=false   # do not also log to parent categories
+
+# setup log level for different categories
+log4j.category.sweetie_bot.motion=DEBUG
+log4j.category.sweetie_bot.motion.imu_rvc=DEBUG
+
+# Define Console Appender    
+log4j.appender.console=org.apache.log4j.ConsoleAppender    
+#
+# # Define the layout for console appender. If you do not 
+# # define it, you will get an error    
+log4j.appender.console.layout=org.apache.log4j.PatternLayout
+#
