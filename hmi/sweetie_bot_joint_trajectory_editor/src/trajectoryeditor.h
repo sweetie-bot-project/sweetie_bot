@@ -11,6 +11,9 @@
 #include <actionlib/client/simple_action_client.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
 #include <sensor_msgs/JointState.h>
+#include <sweetie_bot_herkulex_msgs/ServoCommands.h>
+#include <sweetie_bot_herkulex_msgs/HerkulexState.h>
+#include <sweetie_bot_herkulex_msgs/HerkulexJointState.h>
 
 #include "ui_Editor.h"
 
@@ -43,6 +46,9 @@ class TrajectoryEditor : public QMainWindow
 		ros::Subscriber sub_joints_; 
 		ros::Publisher pub_joints_set_;
 		ros::Publisher pub_joints_marker_set_;
+		ros::Publisher pub_servo_commands_;
+		ros::Subscriber sub_servo_states_;
+		ros::Subscriber sub_servo_joint_states_;
 		// services
 		ros::ServiceClient torque_main_switch_;
 		// parameteres buffers
@@ -61,6 +67,16 @@ class TrajectoryEditor : public QMainWindow
 	private:
 		// ROS callbacks
 		void jointsCallback(const sensor_msgs::JointState::ConstPtr& msg);
+		void servoJointsCallback(const sweetie_bot_herkulex_msgs::HerkulexJointState::ConstPtr& msg);
+
+		enum JointTorqueState : uint8_t {
+			UNINITIALIZED,
+			TORQUE_ON,
+			TORQUE_OFF
+		};
+		std::unordered_map<std::string, JointTorqueState> is_joint_torque_on;
+
+		void servoStateCallback(const sweetie_bot_herkulex_msgs::HerkulexState::ConstPtr& msg);
 		void executeActionCallback(const actionlib::SimpleClientGoalState& state, const control_msgs::FollowJointTrajectoryActionResultConstPtr& result);
 
 		// parameters managment
@@ -70,11 +86,24 @@ class TrajectoryEditor : public QMainWindow
 		// helper functions
 		void setServoTorqueOn(bool value);
 
+		std::array<bool, 5> is_limb_on;
+		std::array<std::vector<std::string>, 5> limb_joint_names;
+		void handleLimbButtonToggle(int limb_index, QPushButton *button);
+		void setLimbServoTorqueOn(int limb_index, bool set_on);
+
+		void updateSelectedPose(bool update_only_disabled = false);
+
 	private slots:
 		void rosSpin();
 		// servo control
 		void on_turnAllServoOnButton_clicked();
 		void on_turnAllServoOffButton_clicked();
+		// legs servo control
+		void on_leg1ToggleButton_clicked();
+		void on_leg2ToggleButton_clicked();
+		void on_leg3ToggleButton_clicked();
+		void on_leg4ToggleButton_clicked();
+		void on_headToggleButton_clicked();
 		// trajectory managment
 		void on_loadTrajectoryButton_clicked();
 		void on_saveTrajectoryButton_clicked();

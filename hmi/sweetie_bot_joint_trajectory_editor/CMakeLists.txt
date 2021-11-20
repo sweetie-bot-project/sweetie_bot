@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   control_msgs
   std_msgs
+  sweetie_bot_herkulex_msgs
   actionlib
 )
 

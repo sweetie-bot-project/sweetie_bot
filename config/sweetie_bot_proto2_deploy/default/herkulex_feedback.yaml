@@ -70,5 +70,5 @@ herkulex:
             period_RT_read: 0.025
             period_CM: 0.007
             detailed_state: false
-            poll_list: [ joint51, joint52, joint52, joint54 ]
+            poll_list: [ joint51, joint52, joint53, joint54 ]
             poll_round_size: -1

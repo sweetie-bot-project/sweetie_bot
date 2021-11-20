@@ -6,6 +6,9 @@
      <remap from="joints_virtual" to="/sweetie_bot/joint_states" />
      <remap from="joints_virtual_set" to="/sweetie_bot/motion/controller/joint_state/out_joints_src_reset" />
      <remap from="joint_trajectory_virtual" to="/sweetie_bot/motion/controller/joint_trajectory" />
+     <remap from="servo_commands" to="/sweetie_bot/motion/herkulex/servo_commands" />
+     <remap from="servo_states" to="/sweetie_bot/motion/herkulex/servo_states" />
+     <remap from="servo_joint_states" to="/sweetie_bot/motion/herkulex/out_joints_ext" />
      <param name="trajectory_storage" value="/sweetie_bot_joint_trajectory_editor/trajectories" />
   </node>
 </launch>

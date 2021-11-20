@@ -45,6 +45,7 @@ end
 -- data flow (setup): herkulex/array -> aggregator_ref
 for name, group in pairs(herkulex) do
 	depl:connect("herkulex/"..name.."/array.out_joints", "aggregator_ref.in_joints", rtt.Variable("ConnPolicy"))
+	depl:stream("herkulex/"..name.."/array.commands", ros:topic("/motion/herkulex/servo_commands"))
 	group.array:publishJointStates()
 end
 

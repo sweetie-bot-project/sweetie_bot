@@ -1,48 +1,75 @@
 #include "trajectoryeditor.h"
 
 #include <cmath>
+#include <sstream>
 
 #include <QStandardItemModel>
 #include <QMessageBox>
 
 #include <std_srvs/SetBool.h>
 
-
 TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node, QWidget *parent) :
-    QMainWindow(parent),
-    node_(node),
-    loader_(node), // paramtere loader
+	QMainWindow(parent),
+	node_(node),
+	loader_(node), // paramtere loader
 	joint_trajectory_data_(), // data model
 	joint_list_table_model_(parent, joint_trajectory_data_), // joint list table model
 	joint_trajectory_point_table_model_(parent, joint_trajectory_data_) // trajectory points table model
 {
 	// setup GUI
-    ui.setupUi(this);
-    bootstrap();
+	ui.setupUi(this);
+	bootstrap();
 
 	// load parameters
 	if (!ros::param::get("~trajectory_storage", trajectories_param_name)) {
 		trajectories_param_name = "joint_trajectory";
 	}
-    ROS_INFO_STREAM( "Trajectory storage namespace: " << trajectories_param_name );
-    updateParamList();
+	ROS_INFO_STREAM( "Trajectory storage namespace: " << trajectories_param_name );
+	updateParamList();
 	ui.comboBox->setCurrentText("default");
 
+	// initialize limbs
+	for (auto &limb_on_state: is_limb_on) {
+		limb_on_state = true;
+	}
+	// @Note: Think of a better way to specify leg joints without hardcoding names
+	limb_joint_names = {
+		std::vector<std::string>({"joint11", "joint12", "joint13", "joint14", "joint15"}),
+		std::vector<std::string>({"joint21", "joint22", "joint23", "joint24", "joint25"}),
+		std::vector<std::string>({"joint31", "joint32", "joint33", "joint34", "joint35"}),
+		std::vector<std::string>({"joint41", "joint42", "joint43", "joint44", "joint45"}),
+		std::vector<std::string>({"joint51", "joint52", "joint53", "joint54"})
+	};
+
+	for (int i = 1; i <= 5; i++) {
+		for (int j = 1; j <= 5; j++) {
+			if (i == 5 && j == 5) break;
+
+			std::ostringstream joint_name;
+			joint_name << "joint" << i << j;
+			is_joint_torque_on.insert(std::pair<std::string, JointTorqueState>(joint_name.str(), UNINITIALIZED));
+		}
+	}
+
 	// initialize ROS interface
-    sub_joints_ = node.subscribe<sensor_msgs::JointState>("joint_states", 1, &TrajectoryEditor::jointsCallback, this);
+	sub_joints_ = node.subscribe<sensor_msgs::JointState>("joint_states", 1, &TrajectoryEditor::jointsCallback, this);
 	pub_joints_set_ = node.advertise<sensor_msgs::JointState>("joint_states_set", 1);
 	pub_joints_marker_set_ = node.advertise<sensor_msgs::JointState>("joints_marker_set", 1);
-    torque_main_switch_ = node.serviceClient<std_srvs::SetBool>("set_torque_off"); //TODO persistent connection and button disable
+	torque_main_switch_ = node.serviceClient<std_srvs::SetBool>("set_torque_off"); //TODO persistent connection and button disable
 
-    action_execute_trajectory_ = new ActionClient("joint_trajectory", true);
-    //action_execute_trajectory_->waitForServer();
-    //state_ = boost::make_shared<actionlib::SimpleClientGoalState>(client->getState());
-    //Client::ResultConstPtr result = *client->getResult();
+	pub_servo_commands_ = node.advertise<sweetie_bot_herkulex_msgs::ServoCommands>("servo_commands", 1);
+	sub_servo_states_ = node.subscribe<sweetie_bot_herkulex_msgs::HerkulexState>("servo_states", 1, &TrajectoryEditor::servoStateCallback, this);
+	sub_servo_joint_states_ = node.subscribe<sweetie_bot_herkulex_msgs::HerkulexJointState>("servo_joint_states", 1, &TrajectoryEditor::servoJointsCallback, this);
+
+	action_execute_trajectory_ = new ActionClient("joint_trajectory", true);
+	//action_execute_trajectory_->waitForServer();
+	//state_ = boost::make_shared<actionlib::SimpleClientGoalState>(client->getState());
+	//Client::ResultConstPtr result = *client->getResult();
 
 	// setup timer to signal rosSpin()
-    timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(rosSpin()));
-    timer->start(50);
+	timer = new QTimer(this);
+	connect(timer, SIGNAL(timeout()), this, SLOT(rosSpin()));
+	timer->start(50);
 
 }
 
@@ -56,28 +83,69 @@ TrajectoryEditor::~TrajectoryEditor()
 void TrajectoryEditor::jointsCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
 	joint_state_ = *msg;
-	if (!ui.addRobotPoseButton->isEnabled())
+	if (!ui.addRobotPoseButton->isEnabled()) {
 		ui.addRobotPoseButton->setEnabled(true);
+	}
+
+	if (ui.autoUpdatePoseCheckBox->isChecked()) {
+		updateSelectedPose(true);
+	}
+}
+
+void TrajectoryEditor::servoJointsCallback(const sweetie_bot_herkulex_msgs::HerkulexJointState::ConstPtr& msg) {
+	auto joint_state = *msg;
+
+	sensor_msgs::JointState joint_state_msg;
+	joint_state_msg.header = std_msgs::Header();
+	joint_state_msg.header.frame_id = "odom_combined";
+
+	// Publish positions of only disabled joints
+	for (int i = 0; i < joint_state.name.size(); i++) {
+		auto &joint_name = joint_state.name[i];
+		if (is_joint_torque_on[joint_name] == TORQUE_OFF) {
+			joint_state_msg.name.push_back(joint_name);
+			joint_state_msg.position.push_back(joint_state.pos[i]);
+		}
+	}
+	pub_joints_set_.publish(joint_state_msg);
+}
+
+void TrajectoryEditor::servoStateCallback(const sweetie_bot_herkulex_msgs::HerkulexState::ConstPtr& msg) {
+	bool is_torque_on = msg->status_detail & 0x40;
+	if (is_torque_on) {
+		is_joint_torque_on[msg->name] = TORQUE_ON;
+	} else {
+		is_joint_torque_on[msg->name] = TORQUE_OFF;
+	}
 }
 
 void TrajectoryEditor::updateParamList()
 {
-    QString tmp = ui.comboBox->currentText();
-    std::vector<std::string> trajectory_names = loader_.getNames(trajectories_param_name);
-    ui.comboBox->clear();
-    for(auto &tname: trajectory_names)
-    {
-        ui.comboBox->addItem(QString::fromStdString(tname));
-    }
-    if(tmp != "") ui.comboBox->setCurrentText(tmp);
+	QString tmp = ui.comboBox->currentText();
+	std::vector<std::string> trajectory_names = loader_.getNames(trajectories_param_name);
+	ui.comboBox->clear();
+	for(auto &tname: trajectory_names)
+	{
+		ui.comboBox->addItem(QString::fromStdString(tname));
+	}
+	if(tmp != "") ui.comboBox->setCurrentText(tmp);
 }
 
 void TrajectoryEditor::rosSpin()
 {
 	// TODO trottle checks down
-    ui.turnAllServoOnButton->setEnabled(torque_main_switch_.exists());
-    if(!ros::ok()) close();
-    ros::spinOnce();
+	ui.turnAllServoOnButton->setEnabled(torque_main_switch_.exists());
+
+	if (pub_servo_commands_.getNumSubscribers() > 0) {
+		ui.leg1ToggleButton->setEnabled(true);
+		ui.leg2ToggleButton->setEnabled(true);
+		ui.leg3ToggleButton->setEnabled(true);
+		ui.leg4ToggleButton->setEnabled(true);
+		ui.headToggleButton->setEnabled(true);
+	}
+
+	if(!ros::ok()) close();
+	ros::spinOnce();
 }
 
 
@@ -164,10 +232,59 @@ void TrajectoryEditor::on_turnAllServoOnButton_clicked()
 
 void TrajectoryEditor::on_turnAllServoOffButton_clicked()
 {
-
 	setServoTorqueOn(false);
 }
 
+void TrajectoryEditor::on_leg1ToggleButton_clicked()
+{
+	handleLimbButtonToggle(0, ui.leg1ToggleButton);
+}
+
+void TrajectoryEditor::on_leg2ToggleButton_clicked()
+{
+	handleLimbButtonToggle(1, ui.leg2ToggleButton);
+}
+
+void TrajectoryEditor::on_leg3ToggleButton_clicked()
+{
+	handleLimbButtonToggle(2, ui.leg3ToggleButton);
+}
+
+void TrajectoryEditor::on_leg4ToggleButton_clicked()
+{
+	handleLimbButtonToggle(3, ui.leg4ToggleButton);
+}
+
+void TrajectoryEditor::on_headToggleButton_clicked()
+{
+	handleLimbButtonToggle(4, ui.headToggleButton);
+}
+
+void TrajectoryEditor::handleLimbButtonToggle(int limb_index, QPushButton *button) {
+	if (is_limb_on[limb_index]) {
+		button->setText("ON");
+		is_limb_on[limb_index] = false;
+		setLimbServoTorqueOn(limb_index, is_limb_on[limb_index]);
+	} else {
+		button->setText("OFF");
+		is_limb_on[limb_index] = true;
+		setLimbServoTorqueOn(limb_index, is_limb_on[limb_index]);
+	}
+}
+
+void TrajectoryEditor::setLimbServoTorqueOn(int limb_index, bool set_on) 
+{
+	sweetie_bot_herkulex_msgs::ServoCommands command_msg;
+	if (set_on) {
+		command_msg.command = sweetie_bot_herkulex_msgs::ServoCommands::TORQUE_ON;
+	} else {
+		command_msg.command = sweetie_bot_herkulex_msgs::ServoCommands::TORQUE_OFF;
+	}
+	for (auto &joint_name: limb_joint_names[limb_index]) {
+		command_msg.name.push_back(joint_name);
+	}
+	pub_servo_commands_.publish(command_msg);
+}
 
 void TrajectoryEditor::on_addRobotPoseButton_clicked()
 {
@@ -206,11 +323,20 @@ void TrajectoryEditor::on_dublicatePoseButton_clicked()
 	}
 }
 
-void TrajectoryEditor::on_updateRobotPoseButton_clicked() {
+void TrajectoryEditor::on_updateRobotPoseButton_clicked()
+{
+	updateSelectedPose();
+}
+
+void TrajectoryEditor::updateSelectedPose(bool update_only_disabled)
+{
 	for (int i = 0; i < joint_state_.name.size(); i++) {
 		QModelIndex index = ui.pointsTableView->selectionModel()->currentIndex();
 		if (index.isValid() && index.row() < joint_trajectory_data_.pointCount()) {
-			auto joint_index = joint_trajectory_data_.getJointIndex(joint_state_.name[i]);
+			auto &joint_name = joint_state_.name[i];
+			if (update_only_disabled && !(is_joint_torque_on[joint_name] == TORQUE_ON))  continue;
+				
+			auto joint_index = joint_trajectory_data_.getJointIndex(joint_name);
 			if (joint_index != -1) {
 				joint_trajectory_data_.setPointJointPosition(index.row(), joint_index, joint_state_.position[i]);
 			}
@@ -220,10 +346,10 @@ void TrajectoryEditor::on_updateRobotPoseButton_clicked() {
 
 void TrajectoryEditor::on_saveTrajectoryButton_clicked()
 {
-    loader_.setParam(trajectories_param_name + "/" + ui.comboBox->currentText().toStdString(), joint_trajectory_data_.getTrajectoryMsg());
-    // std::string cmd = "rosparam dump `rospack find sweetie_bot_deploy`/joint_state_control/joint_trajectories.yaml " + trajectories_param_name;
-    // system( cmd.c_str() );
-    updateParamList();
+	loader_.setParam(trajectories_param_name + "/" + ui.comboBox->currentText().toStdString(), joint_trajectory_data_.getTrajectoryMsg());
+	// std::string cmd = "rosparam dump `rospack find sweetie_bot_deploy`/joint_state_control/joint_trajectories.yaml " + trajectories_param_name;
+	// system( cmd.c_str() );
+	updateParamList();
 }
 
 void TrajectoryEditor::on_deletePoseButton_clicked()
@@ -287,15 +413,15 @@ void TrajectoryEditor::on_addJointButton_clicked()
 	std::string name = ui.jointNameEditBox->text().toStdString();
 	if (name.compare(0,8,"support/") == 0) joint_trajectory_data_.addSupport(name.substr(8));
 	else joint_trajectory_data_.addJoint(name, ui.pathToleranceSpinBox->value(), ui.goalToleranceSpinBox->value());
-    joint_list_table_model_.reReadData();
-    joint_trajectory_point_table_model_.reReadData();
+	joint_list_table_model_.reReadData();
+	joint_trajectory_point_table_model_.reReadData();
 }
 
 void TrajectoryEditor::on_resetTolerancesButton_clicked()
 {
-    joint_trajectory_data_.setPathTolerance(ui.pathToleranceSpinBox->value());
-    joint_trajectory_data_.setGoalTolerance(ui.goalToleranceSpinBox->value());
-    joint_list_table_model_.reReadData();
+	joint_trajectory_data_.setPathTolerance(ui.pathToleranceSpinBox->value());
+	joint_trajectory_data_.setGoalTolerance(ui.goalToleranceSpinBox->value());
+	joint_list_table_model_.reReadData();
 }
 
 void TrajectoryEditor::on_delJointButton_clicked()
@@ -320,7 +446,7 @@ void TrajectoryEditor::on_delTrajectoryButton_clicked()
 
 void TrajectoryEditor::on_goalTimeToleranceSpinBox_valueChanged(double value)
 {
-    joint_trajectory_data_.setGoalTimeTolerance(value);
+	joint_trajectory_data_.setGoalTimeTolerance(value);
 }
 
 void TrajectoryEditor::on_setRobotPoseButton_clicked()
