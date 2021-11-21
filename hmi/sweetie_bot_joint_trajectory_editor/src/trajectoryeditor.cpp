@@ -32,6 +32,7 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 	for (auto &limb_on_state: is_limb_on) {
 		limb_on_state = true;
 	}
+    // :JointsInformationHardcode
 	// @Note: Think of a better way to specify leg joints without hardcoding names
 	limb_joint_names = {
 		std::vector<std::string>({"joint11", "joint12", "joint13", "joint14", "joint15"}),
@@ -41,6 +42,7 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 		std::vector<std::string>({"joint51", "joint52", "joint53", "joint54"})
 	};
 
+    // :JointsInformationHardcode
 	for (int i = 1; i <= 5; i++) {
 		for (int j = 1; j <= 5; j++) {
 			if (i == 5 && j == 5) break;
@@ -55,11 +57,9 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 	sub_joints_ = node.subscribe<sensor_msgs::JointState>("joint_states", 1, &TrajectoryEditor::jointsCallback, this);
 	pub_joints_set_ = node.advertise<sensor_msgs::JointState>("joint_states_set", 1);
 	pub_joints_marker_set_ = node.advertise<sensor_msgs::JointState>("joints_marker_set", 1);
-	torque_main_switch_ = node.serviceClient<std_srvs::SetBool>("set_torque_off"); //TODO persistent connection and button disable
 
 	pub_servo_commands_ = node.advertise<sweetie_bot_herkulex_msgs::ServoCommands>("servo_commands", 1);
-	sub_servo_states_ = node.subscribe<sweetie_bot_herkulex_msgs::HerkulexState>("servo_states", 1, &TrajectoryEditor::servoStateCallback, this);
-	sub_servo_joint_states_ = node.subscribe<sweetie_bot_herkulex_msgs::HerkulexJointState>("servo_joint_states", 1, &TrajectoryEditor::servoJointsCallback, this);
+	sub_servo_joint_states_ = node.subscribe<sweetie_bot_herkulex_msgs::HerkulexJointState>("servo_joint_states", 3, &TrajectoryEditor::servoJointsCallback, this);
 
 	action_execute_trajectory_ = new ActionClient("joint_trajectory", true);
 	//action_execute_trajectory_->waitForServer();
@@ -95,6 +95,15 @@ void TrajectoryEditor::jointsCallback(const sensor_msgs::JointState::ConstPtr& m
 void TrajectoryEditor::servoJointsCallback(const sweetie_bot_herkulex_msgs::HerkulexJointState::ConstPtr& msg) {
 	auto joint_state = *msg;
 
+	for (int i = 0; i < joint_state.name.size(); i++) {
+		bool is_torque_on = joint_state.status_detail[i] & 0x40;
+		if (is_torque_on) {
+			is_joint_torque_on[joint_state.name[i]] = TORQUE_ON;
+		} else {
+			is_joint_torque_on[joint_state.name[i]] = TORQUE_OFF;
+		}
+	}
+
 	sensor_msgs::JointState joint_state_msg;
 	joint_state_msg.header = std_msgs::Header();
 	joint_state_msg.header.frame_id = "odom_combined";
@@ -107,15 +116,9 @@ void TrajectoryEditor::servoJointsCallback(const sweetie_bot_herkulex_msgs::Herk
 			joint_state_msg.position.push_back(joint_state.pos[i]);
 		}
 	}
-	pub_joints_set_.publish(joint_state_msg);
-}
 
-void TrajectoryEditor::servoStateCallback(const sweetie_bot_herkulex_msgs::HerkulexState::ConstPtr& msg) {
-	bool is_torque_on = msg->status_detail & 0x40;
-	if (is_torque_on) {
-		is_joint_torque_on[msg->name] = TORQUE_ON;
-	} else {
-		is_joint_torque_on[msg->name] = TORQUE_OFF;
+	if (!joint_state_msg.name.empty()) {
+		pub_joints_set_.publish(joint_state_msg);
 	}
 }
 
@@ -133,15 +136,34 @@ void TrajectoryEditor::updateParamList()
 
 void TrajectoryEditor::rosSpin()
 {
-	// TODO trottle checks down
-	ui.turnAllServoOnButton->setEnabled(torque_main_switch_.exists());
-
 	if (pub_servo_commands_.getNumSubscribers() > 0) {
+		ui.turnAllServoOnButton->setEnabled(true);
+		ui.turnAllServoOffButton->setEnabled(true);
 		ui.leg1ToggleButton->setEnabled(true);
 		ui.leg2ToggleButton->setEnabled(true);
 		ui.leg3ToggleButton->setEnabled(true);
 		ui.leg4ToggleButton->setEnabled(true);
 		ui.headToggleButton->setEnabled(true);
+
+		bool is_any_on = false;
+		bool is_all_on = true;
+		for (auto state: is_joint_torque_on) {
+			if (state.second == TORQUE_ON)   is_any_on = true;
+			if (state.second == TORQUE_OFF)  is_all_on = false;
+		}
+
+		if (is_all_on) {
+			ui.servoStateLabel->setText("ALL ON");
+			ui.servoStateLabel->setStyleSheet("font-weight: bold; color: orange");
+		} else {
+			if (is_any_on) {
+				ui.servoStateLabel->setText("PARTIALLY ON");
+				ui.servoStateLabel->setStyleSheet("font-weight: bold; color: orange");
+			} else {
+				ui.servoStateLabel->setText("ALL OFF");
+				ui.servoStateLabel->setStyleSheet("font-weight: bold; color: green");
+			}
+		}
 	}
 
 	if(!ros::ok()) close();
@@ -193,46 +215,48 @@ void TrajectoryEditor::on_loadTrajectoryButton_clicked()
 }
 
 
-void TrajectoryEditor::setServoTorqueOn(bool value) 
+void TrajectoryEditor::setAllServoTorqueOn(bool set_on) 
 {
-	std_srvs::SetBool srv;
-	srv.request.data = value;
-
-	if (! torque_main_switch_.call(srv)) {
-		// Operation unavailable
-		ui.servoStateLabel->setText("UNAVALIBLE");
-		ui.servoStateLabel->setStyleSheet("font-weight: bold; color: red");
-		ROS_ERROR("TorqueMainSwitch setOperational service is not available.");
-		return;
+	sweetie_bot_herkulex_msgs::ServoCommands command_msg;
+	if (set_on) {
+		command_msg.command = sweetie_bot_herkulex_msgs::ServoCommands::TORQUE_ON;
+	} else {
+		command_msg.command = sweetie_bot_herkulex_msgs::ServoCommands::TORQUE_OFF;
 	}
-	if (!srv.response.success) {
-		// Operation failed
-		ui.servoStateLabel->setText("ERROR");
-		ui.servoStateLabel->setStyleSheet("font-weight: bold; color: red");
-		ROS_ERROR("TorqueMainSwitch setOperational service returned false: %s.", srv.response.message.c_str());
-		return;
+	for (auto &joint_name: joint_state_.name) {
+		command_msg.name.push_back(joint_name);
 	}
-	// Operation has succesed
-	ROS_INFO("TorqueMainSwitch setOperational call successed. Servos torque_off = %d.", (int) srv.request.data);
-	// Change button label
-	if (srv.request.data) {
-		ui.servoStateLabel->setText("ON");
-		ui.servoStateLabel->setStyleSheet("font-weight: bold; color: orange");
-	}
-	else {
-		ui.servoStateLabel->setText("OFF");
-		ui.servoStateLabel->setStyleSheet("font-weight: bold; color: green");
-	}
+	pub_servo_commands_.publish(command_msg);
 }
 
 void TrajectoryEditor::on_turnAllServoOnButton_clicked()
 {
-	setServoTorqueOn(true);
+	setAllServoTorqueOn(true);
+
+	ui.leg1ToggleButton->setText("OFF");
+	ui.leg2ToggleButton->setText("OFF");
+	ui.leg3ToggleButton->setText("OFF");
+	ui.leg4ToggleButton->setText("OFF");
+	ui.headToggleButton->setText("OFF");
+
+	for (int i = 0; i < 5; i++) {
+		is_limb_on[i] = true;
+	}
 }
 
 void TrajectoryEditor::on_turnAllServoOffButton_clicked()
 {
-	setServoTorqueOn(false);
+	setAllServoTorqueOn(false);
+
+	ui.leg1ToggleButton->setText("ON");
+	ui.leg2ToggleButton->setText("ON");
+	ui.leg3ToggleButton->setText("ON");
+	ui.leg4ToggleButton->setText("ON");
+	ui.headToggleButton->setText("ON");
+
+	for (int i = 0; i < 5; i++) {
+		is_limb_on[i] = false;
+	}
 }
 
 void TrajectoryEditor::on_leg1ToggleButton_clicked()

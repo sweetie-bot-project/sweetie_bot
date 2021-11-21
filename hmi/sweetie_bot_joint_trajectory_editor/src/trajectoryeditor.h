@@ -47,10 +47,7 @@ class TrajectoryEditor : public QMainWindow
 		ros::Publisher pub_joints_set_;
 		ros::Publisher pub_joints_marker_set_;
 		ros::Publisher pub_servo_commands_;
-		ros::Subscriber sub_servo_states_;
 		ros::Subscriber sub_servo_joint_states_;
-		// services
-		ros::ServiceClient torque_main_switch_;
 		// parameteres buffers
 		std::string trajectories_param_name;
 		// messages buffers
@@ -76,7 +73,6 @@ class TrajectoryEditor : public QMainWindow
 		};
 		std::unordered_map<std::string, JointTorqueState> is_joint_torque_on;
 
-		void servoStateCallback(const sweetie_bot_herkulex_msgs::HerkulexState::ConstPtr& msg);
 		void executeActionCallback(const actionlib::SimpleClientGoalState& state, const control_msgs::FollowJointTrajectoryActionResultConstPtr& result);
 
 		// parameters managment
@@ -84,7 +80,7 @@ class TrajectoryEditor : public QMainWindow
 		void updateParamList();
 	
 		// helper functions
-		void setServoTorqueOn(bool value);
+		void setAllServoTorqueOn(bool value);
 
 		std::array<bool, 5> is_limb_on;
 		std::array<std::vector<std::string>, 5> limb_joint_names;
