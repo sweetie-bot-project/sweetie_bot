@@ -188,7 +188,7 @@ class Soar:
 
             # check if everything ok
             if self._agent.HadError():
-                rospy.logerr("SOAR configuration failed: " + self.agent.GetLastErrorDescription())
+                rospy.logerr("SOAR configuration failed: " + self._agent.GetLastErrorDescription())
                 return False
 
             self._state = SoarState.STOPPED
