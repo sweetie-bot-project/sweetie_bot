@@ -56,7 +56,7 @@ sp {talk*propose*question-verbolization
 -->
 	(<s> ^operator <o> +)
 	(<o> ^name question-verbolization ^substate verbolize ^utility <utility> ^process-link <proc>)
-	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed>)
+	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^type question ^text <text> ^animation-tag <tag> ^result <res-succeed>)
 	(<res-succeed> ^status succeed ^add-process <proc-result>)
 	(<proc-result> ^name waiting-answer ^object <obj> ^topic <topic> ^utility <utility> ^type question ^deadline-time 20.0 ^subprocess-of <sp>)
 	(<res-succeed> ^print (concat |TALK: VERBOLIZED QUESTION | <topic> | WITH TEXT | <text> (crlf)))
@@ -69,7 +69,7 @@ sp {talk*propose*statement-verbolization
 -->
 	(<s> ^operator <o> +)
 	(<o> ^name statement-verbolization ^substate verbolize ^utility <utility> ^process-link <proc>)
-	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed>)
+	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^type statement ^text <text> ^animation-tag <tag> ^result <res-succeed>)
 	(<res-succeed> ^status succeed ^add-process <proc-result> )
 	(<proc-result> ^name waiting-answer ^object <obj> ^topic <topic> ^utility <utility> ^type statement ^deadline-time 5.0 ^subprocess-of <sp>)
 	(<res-succeed> ^print (concat |TALK: VERBOLIZED STATEMENT | <topic> | WITH TEXT | <text> (crlf)))
@@ -82,7 +82,7 @@ sp {talk*propose*reaction-verbolization
 -->
 	(<s> ^operator <o> +)
 	(<o> ^name reaction-verbolization ^substate verbolize ^utility <utility> ^process-link <proc>)
-	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed>)
+	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^type reaction ^text <text> ^animation-tag <tag> ^result <res-succeed>)
 	(<res-succeed> ^status succeed ^print (concat |TALK: VERBOLIZED REACTION | <topic> | WITH TEXT | <text> (crlf)))
 }
 
