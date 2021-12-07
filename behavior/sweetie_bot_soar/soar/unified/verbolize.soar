@@ -30,7 +30,7 @@
 # propose animations with 'talk': reuse current process to start animation
 sp {verbolize*propose*select-animation
 	(state <s> ^substate verbolize ^process-status pending ^args <args> ^mem.joint-trajectory <anim> ^process <proc>)
-	(<args> ^object <obj> ^topic <topic>)
+	(<args> ^object <obj> ^topic <topic> ^text <text>)
 	(<anim> ^name <animation-name> ^tag talk)
 -->
 	(<s> ^operator <op> +, =)
