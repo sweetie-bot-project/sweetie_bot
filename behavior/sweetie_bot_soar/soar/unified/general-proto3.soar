@@ -59,7 +59,7 @@ sp {curiosity*propose*attention
 
 # elaborate talking process link
 sp {social*elaborate*talk
-	(state <s> ^name social ^substate general ^{<<|talking-first-time| |talking-on-request| |talking-again|>>} <proc>)
+	(state <s> ^name social ^substate general ^{<<|talking-first-time| |talking-on-request| |talking-again| |mirror-gesture|>>} <proc>)
 -->
 	(<s> ^talking <proc>)
 }
@@ -67,9 +67,10 @@ sp {social*elaborate*talk
 # continue talk
 sp {talker*propose*talk-continue
 	(state <s> ^name social ^substate general ^talking <proc>)
+	(<proc> ^substate <substate>)
 -->
 	(<s> ^operator <o> +, =)
-   	(<o> ^name talking-continue ^substate talk ^process-link <proc>)
+   	(<o> ^name talking-continue ^substate <substate> ^process-link <proc>)
 }
 
 # SELECT HUMAN TO TALK
@@ -112,12 +113,83 @@ sp {social*propose*talk-again
 	(<a> ^object <obj>)
 }
 
+# mirror simple gestures
+sp {social*propose*mirror-brohoof
+	(state <s> ^name social ^substate general -^talking ^beliefs <b>)
+	(<b> ^object <obj>)
+	(<obj> ^type hand ^label brohoof -^have-response yes ^input-link.visible now)
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name mirror-gesture ^substate flexbe ^process-args <a>)
+	(<a> ^behavior ExecuteCompoundAction ^action_name brohoof_silent ^result <res>)
+	(<res> ^status succeed ^parent <obj> ^attribute have-response ^link-value yes)
+}
+
+# mirror simple gestures
+sp {social*propose*mirror-greeting
+	(state <s> ^name social ^substate general -^talking ^beliefs <b>)
+	(<b> ^object <obj>)
+	(<obj> ^type hand ^label hand_greeting -^have-response yes ^input-link.visible now)
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name mirror-gesture ^substate flexbe ^process-args <a>)
+	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory greeting2 ^text |Привет!| ^text_delay 1.0 ^result <res>)
+	(<res> ^status succeed ^parent <obj> ^attribute have-response ^link-value yes)
+}
+
+# react on pony
+sp {social*propose*greet-pony
+	(state <s> ^name social ^substate general -^talking ^beliefs <b>)
+	(<b> ^object <obj>)
+	(<obj> ^type pony ^input-link.visible now)
+    -{(<b> ^predicate <pred>) 
+      (<pred> ^name greeted-pony ^object <obj>)	
+    }
+-->
+	(<s> ^operator <op> +, =)
+   	(<op> ^name talking-first-time ^substate ask ^process-link <a>)
+    (<a> ^name talking-first-time ^substate ask ^object <obj> ^topic greet ^animation-tag greeting ^wait-time 4.0)
+	(<a> ^text |Привет, пони! Ты тоже потерян в этом двуногом мире?| |О! Рада увидеть четырехного сородича!| |Привет! Как дела в Эквестрии?|)
+   	#(<op> ^name talking-first-time ^substate verbolize ^process-link <a>)
+	#(<a> ^name talking-first-time ^substate verbolize ^object <obj> ^topic greet ^type statement ^animation-tag greeting ^text |Привет!|)
+}
+
+# initiate greeted-pony predicate
+sp {social*propose*greeted-pony-add
+	(state <s> ^bottom-state 1 ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^name talk-said ^topic greet -^processed initiate-greeted-pony ^object <obj>)
+	(<obj> ^type pony)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name initiate-greeted-pony ^type cognition automatic ^add-predicate <pred> ^mark-processed <ev>)
+	(<pred> ^name greeted-pony ^object <obj>) 
+}
+
+# terminate greeted-pony predicate
+sp {social*propose*greeted-pony-remove
+	(state <s> ^bottom-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name greeted-pony ^object.input-link <smo>)
+	(<smo> -^visible now -^visible just)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name terminate-greeted-pony ^type cognition automatic ^remove-predicate <pred>)
+}
+
 # PREFERENCES
 
 sp {social*prefer*talk-on-request
 	(state <s> ^name social ^substate general ^operator <op1> + ^operator {<> <op1> <op2>} +)
 	(<op1> ^name talking-on-request)
-	(<op2> -^name talking-on-request)
+	(<op2> -^name talking-on-request -^name mirror-gesture)
+-->
+	(<s> ^operator <op1> > <op2>)
+}
+
+sp {social*prefer*mirror-gesture
+	(state <s> ^name social ^substate general ^operator <op1> + ^operator {<> <op1> <op2>} +)
+	(<op1> ^name mirror-gesture)
+	(<op2> -^name mirror-gesture)
 -->
 	(<s> ^operator <op1> > <op2>)
 }

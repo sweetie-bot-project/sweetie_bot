@@ -5,9 +5,10 @@
 #
 
 # mirror swm object in belief space
+# Note! when hand pose triplet (id, label, type) changes object recreated
 sp {vision*elaborate*object
 	(state <s> ^top-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
-	(<swm-obj> ^id <id> ^label {<> None <label>} ^type {<<|human| |pony|>> <type>})
+	(<swm-obj> ^id <id> ^label {<> None <label>} ^type {<<|human| |pony| |hand|>> <type>})
 -->
 	(<b> ^object <obj>)
 	(<obj> ^name <label> ^id <id> ^label <label> ^type <type> ^input-link <swm-obj>)
@@ -26,28 +27,20 @@ sp {vision*elaborate*qr-code
 sp {vision*elaborate*qr-code-to-speech
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^event <ev>)
-	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text {<<|yes| |no| |greeting| |excuse| |goodbye|>> <text>})
+	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text {<<|yes| |no| |greeting| |excuse| |goodbye| |hello|>> <text>})
 -->
 	(<b> ^event <speech>)
 	(<speech> ^name speech ^topic <text> ^text <text> ^type qr)
 }
 
-sp {vision*elaborate*qr-code-to-speech*hello
+# traslate hand gesture into event
+sp {vision*elaborate*hand-gesture-to-speech
 	(state <s> ^top-state 1 ^beliefs <b>)
-	(<b> ^event <ev>)
-	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text hello)
+	(<b> ^object <obj>)
+	(<obj> ^label {<<|brohoof| |hand_greeting|>> <label>} ^type hand ^input-link.visible now)
 -->
-	(<b> ^event <speech>)
-	(<speech> ^name speech ^topic greeting ^text hello ^type qr)
-}
-
-sp {vision*elaborate*qr-code-to-speech*sorry
-	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^event <ev>)
-	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text sorry)
--->
-	(<b> ^event <speech>)
-	(<speech> ^name speech ^topic excuse ^text sorry ^type qr)
+	(<ev> ^name gesture ^label <label>)
 }
 
 ## QR codes are translated to sound events
