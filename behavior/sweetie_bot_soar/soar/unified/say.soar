@@ -56,9 +56,11 @@ sp {say*propose*say
 	(<pred> ^name looking-at ^object <obj>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name saying ^substate verbolize ^process-args <a>)
-    (<a> ^object <obj> ^topic <topic>  ^text <text> ^animation-tag <tag> ^result <r>)
+	(<op> ^name saying ^substate verbolize ^process-link <proc>)
+    (<proc> ^name saying ^substate verbolize ^object <obj> ^topic <topic>  ^text <text> ^animation-tag <tag> ^result <r>)
 	(<r> ^status succeed ^finish-status succeed ^finish-process <sp>)
+	#(<op> ^name saying ^substate verbolize ^process-args <a>)
+    #(<a> ^object <obj> ^topic <topic>  ^text <text> ^animation-tag <tag> ^result <r>)
 }
 
 # if 'saying' process is active continue its execution 
