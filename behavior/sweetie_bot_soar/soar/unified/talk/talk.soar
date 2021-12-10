@@ -196,6 +196,16 @@ sp {talk*propose*speech-reaction
 	(<ev-heard> ^name talk-heard ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
 }
 
+# interpret gesture if we are waiting greeting
+sp {talk*propose*gesture-greeting-to-talk-heard
+	(state <s> ^substate talk ^waiting-answer.topic greeting ^beliefs.predicate <pred> ^object <obj>)
+	(<pred> ^name gesture ^label {<<|brohoof| |hand_greeting|>>} -^processed gesture-greeting-to-talk-heard)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name gesture-greeting-to-talk-heard ^type cognition automatic ^add-event <ev-heard> ^mark-processed <pred>)
+	(<ev-heard> ^name talk-heard ^actor <obj> ^topic greeting ^memorization-time 3600.0)
+}
+
 # detect ignored event
 sp {talk*elaborate*question-is-ignored-event
 	(state <s> ^top-state 1 ^beliefs <b>)
