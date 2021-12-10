@@ -4,14 +4,53 @@
 # So at current versin of SWM input interpretation is simple mirroning b
 #
 
-# mirror swm object in belief space
-# Note! when hand pose triplet (id, label, type) changes object recreated
+## mirror swm object in belief space
+## Note! when hand pose triplet (id, label, type) changes object recreated
 sp {vision*elaborate*object
 	(state <s> ^top-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
-	(<swm-obj> ^id <id> ^label {<> None <label>} ^type {<<|human| |pony| |hand|>> <type>})
+	(<swm-obj> ^label {<> None <label>} ^type {<<|human| |pony_face| |pony| |hand|>> <type>})
 -->
 	(<b> ^object <obj>)
-	(<obj> ^name <label> ^id <id> ^label <label> ^type <type> ^input-link <swm-obj>)
+	(<obj> ^name <label> ^label <label> ^type <type> ^input-link <swm-obj>)
+}
+
+# special rule for detecting pony
+sp {vision*elaborate*pony
+	(state <s> ^top-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
+	(<swm-obj> ^label pony_face ^type object)
+-->
+	(<b> ^object <obj>)
+	(<obj> ^name unknown ^label unknown ^type pony ^input-link <swm-obj>)
+}
+
+#sp {vision*propose*create-object
+#	(state <s> ^bottom-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
+#	(<swm-obj> ^label {<> None <label>} ^type {<<|human| |pony_face| |pony| |hand|>> <type>})
+#	-{(<b> ^object <obj>) 
+#	  (<obj> ^label <label> ^type <type>)
+#    }
+#-->
+#	(<s> ^operator <op> +, =)
+#	(<op> ^name create-object ^type automatic cognition ^add-object <new-obj>)
+#	(<new-obj> ^name <label> ^label <label> ^type <type>)
+#}
+
+# link memory object to existing one
+#sp {vision*elaborate*object-input-link
+#	(state <s> ^top-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
+#	(<swm-obj> ^label {<> None <label>} ^type <type>)
+#	(<b> ^object <obj>)
+#	(<obj> ^label <label> ^type <type>)
+#-->
+#	(<obj> ^input-link <swm-obj>)
+#}
+
+# pony_face means pony
+sp {vision*elaborate*pony-face-is-pony
+	(state <s> ^top-state 1 ^beliefs <obj>)
+	(<obj> ^type pony_face)
+-->
+	(<obj> ^type pony)
 }
 
 # translate qr codes into objects
@@ -23,24 +62,38 @@ sp {vision*elaborate*qr-code
 	(<obj> ^name qr-code-is-visible ^text <label> ^input-link <swm-obj>)
 }
 
+sp {vision*elaborate*hello-is-greeting
+	(state <s> ^top-state 1 ^beliefs.predicate <obj>)
+	(<obj> ^name qr-code-is-visible ^text hello)
+-->
+	(<obj> ^text greeting)
+}
+
+sp {vision*elaborate*sorry-is-excuse
+	(state <s> ^top-state 1 ^beliefs.predicate <obj>)
+	(<obj> ^name qr-code-is-visible ^text sorry)
+-->
+	(<obj> ^text excuse)
+}
+
 # traslate qr codes initiated event into speech event
 sp {vision*elaborate*qr-code-to-speech
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^event <ev>)
-	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text {<<|yes| |no| |greeting| |excuse| |goodbye| |hello|>> <text>})
+	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text {<<|yes| |no| |greeting| |excuse| |goodbye| |qr_vaccine_code|>> <text>})
 -->
 	(<b> ^event <speech>)
 	(<speech> ^name speech ^topic <text> ^text <text> ^type qr)
 }
 
-# traslate hand gesture into event
-sp {vision*elaborate*hand-gesture-to-speech
+# traslate hand gesture into predicate
+sp {vision*elaborate*hand-object-to-gesture
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^object <obj>)
 	(<obj> ^label {<<|brohoof| |hand_greeting|>> <label>} ^type hand ^input-link.visible now)
 -->
-	(<b> ^event <ev>)
-	(<ev> ^name gesture ^label <label>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name gesture ^label <label>)
 }
 
 ## QR codes are translated to sound events

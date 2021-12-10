@@ -96,8 +96,8 @@ sp {social*propose*talk-to-stranger
 sp {social*propose*talk-on-greeting
 	(state <s> ^name social ^substate general -^talking ^beliefs-stable.predicate <pred> ^beliefs <b>)
 	(<pred> ^name looking-at ^object <obj>)
-	(<b> ^event <ev>)
-	(<ev> ^name speech ^topic greeting)
+	(<b> ^predicate <pred2>)
+	(<pred2> ^name qr-code-is-visible ^text greeting)
 -->
 	(<s> ^operator <o> +, =)
    	(<o> ^name talking-on-request ^substate talk ^process-args <a>)

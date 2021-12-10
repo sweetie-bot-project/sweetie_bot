@@ -74,11 +74,11 @@ sp {look-at*elaborate*looking-at
 sp {look-at*propose*start-look-at-behavior
 	(state <s> ^substate look-at ^args <args>)
 	(<args> ^object <obj> ^delay <delay> ^timeout <timeout>)
-	(<obj> ^id <id> ^label <label> ^type <type>)
+	(<obj> ^label <label> ^type <type>)
 -->
 	(<s> ^operator <op> +)
 	(<op> ^name focusing-at ^substate flexbe ^process-args <a> ^interruptable hard)
-	(<a> ^behavior ExecuteLookAt ^id <id> ^label <label> ^type <type> ^timeout (+ <delay> 1.0) ^delay <delay> ^object <obj>)
+	(<a> ^behavior ExecuteLookAt ^label <label> ^type <type> ^timeout (+ <delay> 1.0) ^delay <delay> ^object <obj>)
 }
 
 # COGNITION OPERATORS

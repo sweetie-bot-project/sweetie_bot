@@ -147,6 +147,9 @@ class SpatialWorldModel:
         with self._memory_lock:
             # iterate over detected objects 
             for detection_msg in msg.detections:
+                # quick fix for id change
+                detection_msg.id = 0
+
                 # extract information from detection message
                 timestamp = detection_msg.header.stamp.to_sec()
                 pose_stamped = PoseStamped(header = Header(frame_id = detection_msg.header.frame_id), pose = detection_msg.pose)

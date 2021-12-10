@@ -186,24 +186,59 @@ sp {talk*prefer*verbolization-avoid-recent-topics
 # COGNITION RULES
 
 # interpret speech event as talk-heard event 
-sp {talk*propose*speech-reaction
-	(state <s> ^substate talk ^beliefs <b> ^object <obj>)
-	(<b> ^event <ev>)
-	(<ev> ^name speech ^topic <topic> -^processed speech-to-talk-heard)
+#sp {talk*propose*speech-reaction
+#	(state <s> ^substate talk -^verbolizing -^waiting-answer ^beliefs <b> ^object <obj>)
+#	(<b> ^event <ev>)
+#	(<ev> ^name speech ^topic <topic> -^processed speech-to-talk-heard)
+#-->
+#	(<s> ^operator <op> +, =)
+#	(<op> ^name speech-to-talk-heard ^type cognition automatic ^add-event <ev-heard> ^mark-processed <ev>)
+#	(<ev-heard> ^name talk-heard ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
+#}
+
+# interpret qr-code-is-visible predicate if we are waiting answer
+sp {talk*propose*qr-code-is-visible-reaction*waiting-answer
+	(state <s> ^substate talk ^waiting-answer ^beliefs.predicate <pred> ^object <obj>)
+	(<pred> ^name qr-code-is-visible -^processed qr-code-to-talk-heard-waiting-answer)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name speech-to-talk-heard ^type cognition automatic ^add-event <ev-heard> ^mark-processed <ev>)
+	(<op> ^name qr-code-to-talk-heard-waiting-answer ^type cognition automatic ^add-event <ev-heard> ^mark-processed <pred>)
+	(<ev-heard> ^name talk-heard ^actor <obj> ^memorization-time 3600.0)
+}
+
+# copy all topics from qr-code to event talk-heard
+sp {talk*elaborate*qr-code-is-visible-reaction*topics
+	(state <s> ^substate talk ^operator <op> +)
+	(<op> ^name qr-code-to-talk-heard-waiting-answer ^add-event <ev-heard> ^mark-processed <pred>)
+	(<pred> ^text <topic>)
+-->
+	(<ev-heard> ^topic <topic>)
+}
+
+# when whaiting-answer terminated but qr-code is still visible interpret it again if corresponding topic was markered as irrelevant
+# may cause second time processing for some speaker remarks
+sp {talk*propose*qr-code-is-visible-reaction*pause
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^events <ev-pool>)
+	(<b> ^predicate <pred> ^event <ev1>)
+	(<pred> ^name qr-code-is-visible ^text <topic> -^processed qr-code-to-talk-heard-pause ^initiated-at <t-start>)
+	(<ev1> ^name waiting-answer ^reason {<<|terminted| |deadline|>>} ^process <proc>)
+	(<proc> ^object <obj> ^topic <q-topic>)
+	(<ev-pool> ^event <ev2>)
+	(<ev2> ^name talk-irrelevant ^actor <obj> ^question-topic <q-topic> ^topic <topic> ^initiated-at {>= <t-start>})
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name qr-code-to-talk-heard-pause ^type cognition automatic ^add-event <ev-heard> ^mark-processed <pred>)
 	(<ev-heard> ^name talk-heard ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
 }
 
-# interpret gesture if we are waiting greeting
+# interpret brohoof gesture
 sp {talk*propose*gesture-greeting-to-talk-heard
-	(state <s> ^substate talk ^waiting-answer.topic greeting ^beliefs.predicate <pred> ^object <obj>)
-	(<pred> ^name gesture ^label {<<|brohoof| |hand_greeting|>>} -^processed gesture-greeting-to-talk-heard)
+	(state <s> ^substate talk ^waiting-answer ^beliefs.predicate <pred> ^object <obj>)
+	(<pred> ^name gesture ^label {<<|brohoof|>>} -^processed gesture-greeting-to-talk-heard)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name gesture-greeting-to-talk-heard ^type cognition automatic ^add-event <ev-heard> ^mark-processed <pred>)
-	(<ev-heard> ^name talk-heard ^actor <obj> ^topic greeting ^memorization-time 3600.0)
+	(<ev-heard> ^name talk-heard ^actor <obj> ^topic greeting brohoof ^memorization-time 3600.0)
 }
 
 # detect ignored event
