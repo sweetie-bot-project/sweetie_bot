@@ -40,9 +40,10 @@ sp {ask*propose*say
 -->
 	(<s> ^operator <o> +, =)
 	(<o> ^name asking ^substate say ^process-args <a>)
-	(<a> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed>)
+	(<a> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^result <res-succeed> ^result <res-failed>)
 	(<res-succeed> ^status succeed ^add-process <proc>)
 	(<proc> ^name waiting-answer-ask ^object <obj> ^question-topic <topic> ^subprocess-of <sp> ^deadline-time <wait-time>)
+	(<res-failed> ^status failed ^remove-process <sp>)
 }
 
 # waiting for answer: look at object. If action is failed consider question is ignored and ask process finished
