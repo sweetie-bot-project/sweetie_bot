@@ -47,10 +47,20 @@ sp {automatic*apply**remove-all-values
 # (It is necessary only in top state where i-supported operator agumentation being copied to top-state preserves i-support)
 sp {automatic*apply*add-belief*o-support
 	(state <s> ^top-state 1 ^operator <op>)
-	(<op> ^type automatic ^{<<|add-predicate| |add-event| |add-process| |add-decision|>>} <pred>)
+	(<op> ^type automatic ^{<<|add-predicate| |add-event| |add-process| |add-decision| |add-object|>>} <pred>)
 	(<pred> ^<attr> <value>)
 -->
 	(<pred> ^<attr> <value>)
+}
+
+# add object: create object WME
+sp {automatic*apply*add-object
+	(state <s> ^operator <op> ^beliefs <b>)
+	(<op> ^type automatic ^add-object <obj>)
+	(<obj> ^name <name> ^type <type>)
+-->
+	(<b> ^object <obj>)
+	(log 1 (concat |CREATE OBJECT: | <name> | | <type> | | <obj> (crlf)))
 }
 
 # add predicate: create predicate WME, add `^initiated-at`, add to pending 
@@ -122,6 +132,16 @@ sp {automatic*apply*add-event*history
 #
 # BELIEFS REMOVAL
 #
+
+# remove object: delete WME
+sp {automatic*apply*remove-object
+	(state <s> ^operator <op> ^beliefs <b>)
+	(<op> ^type automatic ^remove-object <obj>)
+	(<obj> ^name <name> ^type <type>)
+-->
+	(<b> ^predicate <obj> -)
+	(log 1 (concat |REMOVE OBJECT: | <name> | | <type> | | <obj> (crlf)))
+}
 
 # remove predicate: delete WME, add `^terminated-at`
 sp {automatic*apply*remove-predicate
