@@ -47,7 +47,7 @@ soar:
         servos:
             type: "herkulex_servos"
             topic: "motion/herkulex/servo_states"
-            overheat_temperature: 80.0
+            overheat_temperature: 83.0
     output:
         nop:
             delay: 0.2

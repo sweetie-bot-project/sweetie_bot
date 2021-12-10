@@ -198,24 +198,32 @@ sp {social*prefer*mirror-gesture
 # SECURITY
 #
 
-# wait until overheat is over
-sp {security*propose*wait-if-overheat
-	(state <s> ^name security ^substate general ^io.input-link.servos.status overheat)
+# COGNITION OPERATORS
+
+# detect overheat
+sp {security*propose*detect-overheat
+	(state <s> ^name security ^substate general ^io.input-link.servos.status overheat ^beliefs <b>)
+	-{(<b> ^predicate <pred>)
+	  (<pred> ^name overheat)}
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name wait-overheat ^substate wait)
+	(<op> ^name initiate-overheat ^type cognition automatic ^add-predicate <new-pred>)
+	(<new-pred> ^name overheat ^deadline-time 30.0)
 }
 
-# place head in nominal position
-sp {security*propose*head-to-nominal-overheat
-	(state <s> ^name security ^substate general ^io.input-link <il>)
-	(<il> ^servos.status overheat ^head-pose.pose {<> head_nominal})
+# DECISION OPERATORS
+
+# place head in nominal position if something happened with servos
+sp {security*propose*head-to-nominal
+	(state <s> ^name security ^substate general ^io.input-link <il> )
+	(<il> ^servos.status {<<|overheat| |off|>>} ^head-pose.pose {<> head_nominal})
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name move-head-nominal-pose ^substate flexbe ^process-args <a>)
     (<a> ^behavior ExecuteSetPose ^pose head_nominal)
 }
 
+# say about overheat
 sp {security*propose*say-overheat
 	(state <s> ^name security ^substate general ^io.input-link.servos.status overheat ^beliefs <b>)
 	-{(<b> ^predicate <pred>) (<pred> ^name said-about-overheat)}
@@ -226,11 +234,40 @@ sp {security*propose*say-overheat
 	(<cmd> ^type |voice/say| ^command |Я перегрелась. Буду теперь отдыхать.|)
 }
 
-# say and pose change must be done before waiting
+# say about servos failure
+sp {security*propose*say-servo-failed
+	(state <s> ^name security ^substate general ^io.input-link.servos.status {<<|off|>>} ^beliefs <b>)
+	-{(<b> ^predicate <pred>) (<pred> ^name said-about-servo-failed)}
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name say-servo-failed ^type automatic ^add-predicate <pred-new> ^add-output-command textcmd ^output-command-args <cmd>)
+	(<pred-new> ^name said-about-servo-failed ^deadline-time 30.0)
+	(<cmd> ^type |voice/say| ^command |Отказ исполнительной системы! Отказ исполнительной системы! Спасайте меня.|)
+}
+
+# wait until servos are normal
+sp {security*propose*wait-if-servo-failed
+	(state <s> ^name security ^substate general ^io.input-link.servos.status {<<|off|>>})
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name wait-servo-failed ^substate wait)
+}
+
+# wait until overheat predicate is expired is over
+sp {security*propose*wait-if-overheat
+	(state <s> ^name security ^substate general ^beliefs.predicate.name overheat)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name wait-overheat ^substate wait)
+}
+
+# PREFERENCES
+
+# problem vocalization and pose change must be done before waiting
 sp {security*prefer*wait-is-last-chioce
 	(state <s> ^name security ^substate general ^operator <op1> + ^operator <op2> +)
-	(<op1> ^name wait-overheat)
-	(<op2> ^name {<<|move-head-nominal-pose| |say-overheat|>>})
+	(<op1> ^name {<<|wait-overheat| |wait-servo-failed|>>})
+	(<op2> ^name {<<|move-head-nominal-pose| |say-overheat| |say-servo-failed|>>})
 -->
 	(<s> ^operator <op1> < <op2>)
 }
