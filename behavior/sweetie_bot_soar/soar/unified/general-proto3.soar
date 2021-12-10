@@ -80,7 +80,8 @@ sp {social*propose*talk-to-stranger
 	(state <s> ^name social ^substate general -^talking ^beliefs-stable.predicate <pred> ^beliefs <b>)
 	(<pred> ^name looking-at ^object <obj>)
 	(<obj> ^type human)
-	-{(<b> ^predicate <p>) (<p> ^name acquitance ^object <obj>)}
+	-{(<b> ^predicate <pred1>) (<pred1> ^name acquitance ^object <obj>)}
+	-{(<b> ^predicate <pred2>) (<pred2> ^name greeted ^object <obj>)}
 -->
 	(<s> ^operator <o> +, =)
    	(<o> ^name talking-first-time ^substate talk ^process-args <a>)
