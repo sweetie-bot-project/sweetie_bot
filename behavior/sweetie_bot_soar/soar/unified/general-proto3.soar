@@ -173,7 +173,7 @@ sp {social*propose*greet-pony
 	(<s> ^operator <op> +, =)
 	(<op> ^name talking-pony ^substate ask ^process-args <a>)
 	(<a> ^object <obj> ^topic greet ^animation-tag greeting ^wait-time 4.0)
-	(<a> ^text |Привет, пони! Ты тоже потерян в этом двуногом мире?| |О! Рада увидеть четырехного сородича!| |Привет! Как дела в Эквестрии?|)
+	(<a> ^text |Привет, пони! Ты тоже потерян в этом двуногом мире?| |О! Рада увидеть четырехногово сородича!| |Привет! Как дела в Эквестрии?|)
 }
 
 # COGNITION OPERATORS

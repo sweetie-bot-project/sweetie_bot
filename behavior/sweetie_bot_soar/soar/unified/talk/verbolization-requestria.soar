@@ -53,7 +53,7 @@ sp {talk-answered*propose*speaker-likes-convention
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name like ^actor <obj> ^object convention)
 	(<s> ^reaction <r1>)
-	(<r1> ^topic reaction-speaker-like-convention ^type reaction ^text |Моя система полностью согласна с твоей. Сохраняй свой уровень веселья на максимальном уровне эфективности, и тогда мы вернем Эквестрию в её первозданный вид.| ^animation-tag confirmation)
+	(<r1> ^topic reaction-speaker-like-convention ^type reaction ^text |Моя система полностью согласна с твоей. Сохраняй свой уровень веселья на максимальном уровне эфективности.| ^animation-tag confirmation)
 }
 
 sp {talk-answered*propose*speaker-dislikes-convention

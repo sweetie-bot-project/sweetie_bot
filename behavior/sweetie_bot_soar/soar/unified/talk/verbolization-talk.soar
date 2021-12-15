@@ -84,7 +84,7 @@ sp {verbolization*elaborate*explanation-how-to-talk
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic explanation-how-to-talk ^type question ^utility 65 ^animation-tag long)
-	(<f> ^text |Видишь карточки передо мной? Чтобы ответить возьми одну и покажи мне. Все понятно? Используй карточки!|)
+	(<f> ^text |Видишь карточки передо мной? Чтобы ответить возьми одну и покажи мне. Ответь, используя карточки!|)
 }
 
 # verbal reactions
@@ -225,7 +225,7 @@ sp {verbolization*elaborate*remark-about-interruption
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic interrupt-remark ^utility 60 ^type reaction ^animation-tag notification)
-	(<f> ^text |Пожалуйста, не перебивай меня!| |Показывай карточку, когда я окончила говорить.|)
+	(<f> ^text |Пожалуйста, не перебивай меня! Показывай карточку, когда я жду ответа.| |Показывай карточку, когда я окончила говорить, а когда я ее увидела --- убирай.|)
 }
 
 sp {talk-said*propose*said-about-interruption
