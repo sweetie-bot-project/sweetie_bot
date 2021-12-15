@@ -256,7 +256,7 @@ sp {talk*elaborate*question-is-ignored-event
 
 # detect events which should be processed if verbolization 
 sp {talk*propose*event-reaction
-	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
+	(state <s> ^substate talk ^beliefs.event <ev>)
 	(<ev> ^name {<<|talk-said| |talk-heard| |talk-ignored| |talk-irrelevant| |talk-failed|>> <ev-name>} -^processed talk-event-reaction)
 -->
 	(<s> ^operator <op> +, =)
@@ -287,7 +287,7 @@ sp {talk*propose*missing-speaker-is-found
 
 # comlete talk if speaker is misiing and not found
 sp {talk*propose*missing-speaker-is-not-found
-	(state <s> ^bottom-state 1 talk ^beliefs <b> ^object <obj> ^process <proc>)
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^process <proc>)
 	(<b> ^event <ev> ^process <proc>)
 	(<ev> ^name missing-speaker ^reason deadline ^predicate.object <obj>)
 	(<proc> ^substate talk ^object <obj>)
