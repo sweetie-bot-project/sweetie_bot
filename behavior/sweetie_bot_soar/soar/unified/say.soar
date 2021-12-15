@@ -42,7 +42,7 @@ sp {say*propose*look-at
 -->
 	(<s> ^operator <op> +, <)
 	(<op> ^name focusing-to-say ^substate look-at ^process-args <a>)
-	(<a> ^object <obj> ^topic <topic> ^timeout 10.0 ^delay 2.0 ^result <r>)
+	(<a> ^object <obj> ^topic <topic> ^timeout 5.0 ^delay 1.0 ^result <r>)
 	(<r> ^status failed ^add-event <ev-new> ^finish-status failed ^finish-process <sp>)
 	(<ev-new> ^name talk-failed ^actor <obj> ^topic <topic>)
 }

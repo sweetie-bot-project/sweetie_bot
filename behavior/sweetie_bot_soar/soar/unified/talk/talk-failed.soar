@@ -35,6 +35,6 @@ sp {talk-failed*propose*add-missing-speaker
 	(state <s> ^substate talk-failed ^talk-has-started ^actor <obj> ^actions <a>)
 -->
 	(<a> ^add-predicate <pred>)
-	(<pred> ^name missing-speaker ^object <obj> ^deadline 6.0)
+	(<pred> ^name missing-speaker ^object <obj> ^deadline-time 3.0)
 }
 
