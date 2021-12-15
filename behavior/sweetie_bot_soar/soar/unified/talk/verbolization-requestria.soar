@@ -159,7 +159,7 @@ sp {requestria*elaborate*reamrk-about-like-convention
 }
 
 sp {requestria*elaborate*remark-about-like-convention*reaction*follower
-	(state <s> ^substate talk-heard ^question-topic remark-speaker-like-convention ^actor <obj> ^beliefs.predicate <pred>)
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-like-convention ^actor <obj> ^beliefs.predicate <pred>)
 	(<pred> ^name is-follower ^object <obj>)
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
@@ -170,7 +170,7 @@ sp {requestria*elaborate*remark-about-like-convention*reaction*follower
 }
 
 sp {requestria*elaborate*remark-about-like-convention*reaction*not-follower
-	(state <s> ^substate talk-heard ^question-topic remark-speaker-like-convention ^actor <obj> ^beliefs <b>)
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-like-convention ^actor <obj> ^beliefs <b>)
 	-{(<b> ^predicate <pred>) (<pred> ^name is-follower ^object <obj>)}
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
@@ -181,7 +181,7 @@ sp {requestria*elaborate*remark-about-like-convention*reaction*not-follower
 }
 
 sp {talk-answered*propose*change-convention-opinion-like-to-dislike
-	(state <s> ^substate talk-heard ^question-topic remark-speaker-like-convention ^answer-topic no ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-like-convention ^answer-topic no ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
 	(<pred> ^name like ^actor <obj> ^object convention)
 -->
 	(<a> ^add-predicate <pred-new> ^remove-predicate <pred>)
@@ -202,7 +202,7 @@ sp {requestria*elaborate*remark-about-dislike-convention
 }
 
 sp {requestria*elaborate*remark-about-dislike-convention*reaction*follower
-	(state <s> ^substate talk-heard ^question-topic remark-speaker-dislike-convention ^beliefs.predicate <pred> ^actor <obj>)
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-dislike-convention ^beliefs.predicate <pred> ^actor <obj>)
 	(<pred> ^name is-follower ^object <obj>)
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
@@ -213,7 +213,7 @@ sp {requestria*elaborate*remark-about-dislike-convention*reaction*follower
 }
 
 sp {requestria*elaborate*remark-about-dislike-convention*reaction*not-follower
-	(state <s> ^substate talk-heard ^question-topic remark-speaker-dislike-convention ^beliefs <b> ^actor <obj>)
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-dislike-convention ^beliefs <b> ^actor <obj>)
 	-{(<b> ^predicate <pred>) (<pred> ^name is-follower ^object <obj>)}
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
@@ -224,7 +224,7 @@ sp {requestria*elaborate*remark-about-dislike-convention*reaction*not-follower
 }
 
 sp {talk-answered*propose*change-convention-opinion-dislike-to-like
-	(state <s> ^substate talk-heard ^question-topic remark-speaker-dislike-convention ^answer-topic no ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-dislike-convention ^answer-topic no ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
 	(<pred> ^name dislike ^actor <obj> ^object convention)
 -->
 	(<a> ^add-predicate <pred-new> ^remove-predicate <pred>)
@@ -245,7 +245,7 @@ sp {requestria*elaborate*remark-about-being-follower
 }
 
 sp {requestria*elaborate*remark-about-being-follower*reaction
-	(state <s> ^substate talk-heard ^question-topic remark-is-follower)
+	(state <s> ^substate talk-answered ^question-topic remark-is-follower)
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
 	(<r1> ^answer-topic yes ^topic reaction-is-follwer ^type reaction ^animation-tag confirmation)
@@ -268,7 +268,7 @@ sp {requestria*elaborate*remark-reject-ponification
 }
 
 sp {requestria*elaborate*remark-reject-ponification*reaction
-	(state <s> ^substate talk-heard ^question-topic remark-reject-ponification)
+	(state <s> ^substate talk-answered ^question-topic remark-reject-ponification)
 -->
 	(<s> ^reaction-conditional <r1> <r2> <r3>)
 	(<r1> ^answer-topic yes ^topic reaction-reject-ponification ^type reaction ^animation-tag confirmation)
@@ -280,7 +280,7 @@ sp {requestria*elaborate*remark-reject-ponification*reaction
 }
 
 sp {talk-heard*propose*reconsider-reject-ponification-and-is-not-equestria-fan
-	(state <s> ^substate talk-heard ^question-topic remark-reject-ponification ^answer-topic excuse ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
+	(state <s> ^substate talk-answered ^question-topic remark-reject-ponification ^answer-topic excuse ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
 	(<pred> ^name {<< |rejects-ponification| |is-not-equestria-fan| >>} ^object <obj>)
 -->
 	(<a> ^remove-predicate <pred>)
@@ -300,7 +300,7 @@ sp {requestria*elaborate*remark-is-not-being-fan-of-equestria
 }
 
 sp {requestria*elaborate*remark-is-not-being-fan-of-equestria*reaction
-	(state <s> ^substate talk-heard ^question-topic remark-speaker-is-not-equestria-fan)
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-is-not-equestria-fan)
 -->
 	(<s> ^reaction-conditional <r1> <r2> <r3>)
 	(<r1> ^answer-topic yes ^topic reaction-speaker-is-not-equestria-fan ^type reaction ^animation-tag confirmation)
@@ -312,7 +312,7 @@ sp {requestria*elaborate*remark-is-not-being-fan-of-equestria*reaction
 }
 
 sp {talk-heard*propose*reconsider-is-not-equestria-fan-of-equestria
-	(state <s> ^substate talk-heard ^question-topic remark-speaker-is-not-equestria-fan ^answer-topic excuse ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-is-not-equestria-fan ^answer-topic excuse ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
 	(<pred> ^name {<< |rejects-ponification| |is-not-equestria-fan| >>} ^object <obj>)
 -->
 	(<a> ^remove-predicate <pred>)
