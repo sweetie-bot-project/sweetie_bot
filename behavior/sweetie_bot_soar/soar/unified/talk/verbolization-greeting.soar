@@ -168,6 +168,14 @@ sp {talk-heard*elaborate*greeting-acquitance-greeted-rejection
 	(<f> ^text |Хватит! Не хочу снова здороваться.| |Лимит приветсвий равен трем. Запрос отклонен.|)
 }
 
+# if speaker means use brohoof prefer correspoding animation
+sp {talk-heard*elaborate*greeting*brohoof-tag
+	(state <s> ^substate talk-heard ^topic greeting brohoof ^actor <obj> ^reaction <f>)
+	(<f> ^topic greeting ^animation-tag greeting)
+-->
+	(<f> ^animation-tag brohoof)
+}
+
 #
 # acquitance
 #
