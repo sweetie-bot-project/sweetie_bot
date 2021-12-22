@@ -60,12 +60,18 @@ class TextCommandHandler:
 
 
 class VoiceSynthesizer:
+    ENGLISH_ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNUPQRSTUVWXYZ'
+    RUSSIAN_ALPHABET = 'абвгдеёжзийклмнопрстуфхцчшщьыъэюяАВБГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ'
+
     ''' 
         Interfacing with RHVoice synthesizer and gstreamer pipeline providing desired sound of speech
     '''
-    def __init__(self, gstreamer_pipeline_string, relative_volume = 1.0, relative_rate = 1.0):
+    def __init__(self, gstreamer_pipeline_string, relative_volume = 1.0, relative_rate = 1.0, relative_pitch_russian = 1.0, relative_pitch_english = 1.0):
         self.relative_volume = relative_volume
         self.relative_rate   = relative_rate
+
+        self.relative_pitch_russian = relative_pitch_russian
+        self.relative_pitch_english = relative_pitch_english
 
         self.gstreamer_pipeline = Gst.parse_launch(gstreamer_pipeline_string)
         self.gstreamer_src = self.gstreamer_pipeline.get_by_name('source')
@@ -77,12 +83,30 @@ class VoiceSynthesizer:
 
         self.rhvoice_tts = TTS(threads=2)
 
+        self.rhvoice_tts.set_params(voice_profile='Anna+CLB', relative_rate=self.relative_rate, relative_volume=self.relative_volume)
 
     def generate_and_play(self, command_string):
         Gst.Event.new_flush_start()
 
+        # TODO: Think about if language should be specified manually
+        # Detect what language is used simply by the first letter
+        spaceless_command_string = ' '.join(command_string.split())
+        used_language = 'russian'
+        for character in spaceless_command_string:
+            if character in self.RUSSIAN_ALPHABET:
+                used_language = 'russian'
+                break
+            elif character in self.ENGLISH_ALPHABET:
+                used_language = 'english'
+                break
+
+        # Choose pitch correction depending on the language
+        if used_language == 'russian':
+            self.rhvoice_tts.set_params(relative_pitch=self.relative_pitch_russian)
+        else:
+            self.rhvoice_tts.set_params(relative_pitch=self.relative_pitch_english)
+
         # Get synthesized PCM sound from RHVoice server
-        self.rhvoice_tts.set_params(voice_profile='anna+clb', relative_rate=self.relative_rate, relative_volume=self.relative_volume)
         raw_sound = self.rhvoice_tts.get(command_string, format_='pcm')
 
         Gst.Event.new_flush_stop(True)
@@ -224,15 +248,8 @@ def main():
         rospy.logerr('"ladspa_path" parameter must be a string')
         sys.exit(1)
 
-    # Get path to java for robotize plugin
-    java_home = rospy.get_param('~java_home', "/lib/jvm/java-8-openjdk-amd64/")
-    if not isinstance(java_home, str):
-        rospy.logerr('"java_home" parameter must be a string')
-        sys.exit(1)
-
     # Set mandatory enviroment variables for used gstreamer plugins
     os.environ['LADSPA_PATH'] = ladspa_path
-    os.environ['JAVA_HOME'] = java_home
 
     # Apply some dirty fix to make sure gstreamer will work
     os.system("rm -f ~/.cache/gstreamer-1.0/registry.x86_64.bin")
@@ -252,6 +269,16 @@ def main():
             rospy.logerr('"rhvoice_relative_rate" parameter must be a float')
             sys.exit(2)
 
+        rhvoice_relative_pitch_russian = rospy.get_param('~relative_pitch_russian', 1.0) 
+        if not isinstance(rhvoice_relative_pitch_russian, float):
+            rospy.logerr('"rhvoice_relative_pitch_russian" parameter must be a float')
+            sys.exit(2)
+
+        rhvoice_relative_pitch_english = rospy.get_param('~relative_pitch_english', 1.0) 
+        if not isinstance(rhvoice_relative_pitch_english, float):
+            rospy.logerr('"rhvoice_relative_pitch_english" parameter must be a float')
+            sys.exit(2)
+
         pipeline_beginning = 'appsrc name=source ! audio/x-raw,format=S16LE,channels=1,rate=24000,layout=interleaved !'
 
         if tts_backend == 'rhvoice':
@@ -264,7 +291,7 @@ def main():
 
             auto_audio_sink_pipeline = pipeline_beginning + robotization_pipeline
 
-        voice_synthesizer = VoiceSynthesizer(auto_audio_sink_pipeline, rhvoice_relative_volume, rhvoice_relative_rate)
+        voice_synthesizer = VoiceSynthesizer(auto_audio_sink_pipeline, rhvoice_relative_volume, rhvoice_relative_rate, rhvoice_relative_pitch_russian, rhvoice_relative_pitch_english)
 
         TextActionServer('syn', voice_synthesizer)
 
