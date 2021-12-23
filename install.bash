@@ -23,6 +23,6 @@ apt-get update -qq
 echo
 echo "Now you're able to install SweetieBot packages. For instance, try to type:"
 echo
-echo "sudo apt-get install ros-melodic-sweetie-bot"
+echo "sudo apt-get install ros-noetic-sweetie-bot"
 echo
 echo
