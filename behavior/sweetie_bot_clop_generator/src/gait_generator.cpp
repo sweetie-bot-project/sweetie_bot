@@ -282,9 +282,25 @@ bool ClopGenerator::configureRobotModel()
 				this->formulation.reset(new towr::NlpFormulation());
 				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorRom, Parameters::Terrain, Parameters::Swing, Parameters::BaseAcc };
 			}
+			else if (static_cast<std::string>(nlp_type_param) == "6d_phase") {
+				this->formulation.reset(new towr::NlpFormulation());
+				this->formulation->params_.constraints_ = { Parameters::DynamicPhase, Parameters::Force, Parameters::EndeffectorRom, Parameters::Terrain, Parameters::Swing, Parameters::BaseAcc };
+			}
+			else if (static_cast<std::string>(nlp_type_param) == "6d_phase2") {
+				this->formulation.reset(new towr::NlpFormulation());
+				this->formulation->params_.constraints_ = { Parameters::DynamicPhase, Parameters::Force, Parameters::EndeffectorRomPhase, Parameters::Terrain, Parameters::Swing, Parameters::BaseAcc };
+			}
 			else if (static_cast<std::string>(nlp_type_param) == "6d_free") {
 				this->formulation.reset(new towr::NlpFormulation());
 				this->formulation->params_.constraints_ = { Parameters::Dynamic, Parameters::Force, Parameters::EndeffectorCombinedRom, Parameters::Terrain, Parameters::Swing, Parameters::BaseAcc };
+			}
+			else if (static_cast<std::string>(nlp_type_param) == "6d_free_phase") {
+				this->formulation.reset(new towr::NlpFormulation());
+				this->formulation->params_.constraints_ = { Parameters::DynamicPhase, Parameters::Force, Parameters::EndeffectorCombinedRom, Parameters::Terrain, Parameters::Swing, Parameters::BaseAcc };
+			}
+			else if (static_cast<std::string>(nlp_type_param) == "6d_free_phase2") {
+				this->formulation.reset(new towr::NlpFormulation());
+				this->formulation->params_.constraints_ = { Parameters::DynamicPhase, Parameters::Force, Parameters::EndeffectorCombinedRomPhase, Parameters::Terrain, Parameters::Swing, Parameters::BaseAcc };
 			}
 			else if (static_cast<std::string>(nlp_type_param) == "jump") {
 				this->formulation.reset(new towr::NlpFormulation());
@@ -301,6 +317,10 @@ bool ClopGenerator::configureRobotModel()
 			else if (static_cast<std::string>(nlp_type_param) == "zmp_phase") {
 				this->formulation.reset(new towr::NlpFormulationZMPPlanar());
 				this->formulation->params_.constraints_ = { Parameters::DynamicPhase, Parameters::EndeffectorRom, Parameters::Swing, Parameters::BaseAcc };
+			}
+			else if (static_cast<std::string>(nlp_type_param) == "zmp_phase2") {
+				this->formulation.reset(new towr::NlpFormulationZMPPlanar());
+				this->formulation->params_.constraints_ = { Parameters::DynamicPhase, Parameters::EndeffectorRomPhase, Parameters::Swing, Parameters::BaseAcc };
 			}
 			else {
 				throw std::string("'nlp_type' must be '6d', 'planar', 'zmp', 'zmp_phase'"); 
@@ -732,14 +752,23 @@ void getTowrParametersFromRos(towr::Parameters& params, const std::string& ns, d
 		params.force_polynomials_per_stance_phase_ = ivalue;
 	}
 	// get cost settings
-	if (ros::param::getCached(ns + "/costs/base_lin_motion", dvalue)) {
+	if (ros::param::getCached(ns + "/costs/base_lin_acc", dvalue)) {
 		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseLinAccCostID, dvalue) );
 	}
-	if (ros::param::getCached(ns + "/costs/base_ang_motion", dvalue)) {
+	if (ros::param::getCached(ns + "/costs/base_lin_motion", dvalue)) {
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseLinMotionCostID, dvalue) );
+	}
+	if (ros::param::getCached(ns + "/costs/base_ang_acc", dvalue)) {
 		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseAngAccCostID, dvalue) );
 	}
-	if (ros::param::getCached(ns + "/costs/ee_motion", dvalue)) {
+	if (ros::param::getCached(ns + "/costs/base_ang_motion", dvalue)) {
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::BaseAngMotionCostID, dvalue) );
+	}
+	if (ros::param::getCached(ns + "/costs/ee_acc", dvalue)) {
 		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::EEAccCostID, dvalue) );
+	}
+	if (ros::param::getCached(ns + "/costs/ee_motion", dvalue)) {
+		if (dvalue > 0.0) params.costs_.push_back( std::make_pair(towr::Parameters::EEMotionCostID, dvalue) );
 	}
 }
 

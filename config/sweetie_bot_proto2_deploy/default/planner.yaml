@@ -72,17 +72,17 @@ clop_generator:
         min_swing_height: 0.015
         stability_margin: 0.02
         costs: # better for on-line synthesis
-            base_lin_motion: 0.1
-            base_ang_motion: 0.01
-            ee_motion: 0.025
+            base_lin_acc: 0.1
+            base_ang_acc: 0.01
+            ee_acc: 0.025
         #costs: # turn costs off
-        #    costbase_lin_motion: 0.0
-        #    costbase_ang_motion: 0.0
-        #    costee_motion: 0.0
+        #    base_lin_acc: 0.0
+        #    base_ang_acc: 0.0
+        #    ee_acc: 0.0
         #costs: # better for synthesis for saving motions
-            #base_lin_motion: 0.0001
-            #base_ang_motion: 0.001
-            #ee_motion: 0.00025
+            #base_lin_acc: 0.0001
+            #base_ang_acc: 0.001
+            #ee_acc: 0.00025
     ipopt_solver_parameters:
         linear_solver: "mumps"
         jacobian_approximation: "exact"
