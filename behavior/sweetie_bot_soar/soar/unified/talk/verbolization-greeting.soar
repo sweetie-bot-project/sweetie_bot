@@ -210,9 +210,6 @@ sp {verbolization*elaborate*goodbye
 	(<f> ^text |У меня кончились темы для разговора. До встречи!| |Ты мне наскучил. Пока.|)
 }
 
-# elaborate predicate which marks that thera are no questions left
-sp {verbolization*elaborate*not-questions-left
-
 # register in beliefs that no questions left
 sp {verbolization*elaborate*no-questions-left*initiate
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
