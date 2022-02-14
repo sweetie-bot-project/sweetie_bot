@@ -46,7 +46,7 @@ class MoveBaseGoal(MoveBaseGoalBase):
     def setTargetBaseShift(self, x, y, angle):
         """Set target base pose in path coordinate system ("base_link_path" frame).
 
-        The origing of path coordinate system is always under robot base,
+        The origin of path coordinate system is always under robot base,
         x-axis is directed forward along the robot position and z-axis 
         is always directed upward.
         
