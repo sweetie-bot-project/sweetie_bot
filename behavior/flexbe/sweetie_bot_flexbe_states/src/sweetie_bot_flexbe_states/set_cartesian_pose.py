@@ -65,6 +65,8 @@ class SetCartesianPose(EventState):
             # desired pose should be provided via input key
             super(SetCartesianPose, self).__init__(outcomes = ['done', 'failed', 'timeout'], input_keys = ['pose'])
 
+            self._pose = None
+
         # Store topic parameter for later use.
         self._controller = controller 
         self._resources = resources
@@ -91,8 +93,8 @@ class SetCartesianPose(EventState):
     def on_enter(self, userdata):
         self._error = False
         # get pose from key 
-        if not self._pose:
-            if not isinstnce(userdata.pose, PoseStamped):
+        if self._pose is None:
+            if not isinstance(userdata.pose, PoseStamped):
                 Logger.logwarn('SetCartesianPose: "pose" key must contain PoseStamped msg, but %s received' % str(type(userdata.pose)))
                 self._error = True
                 return
