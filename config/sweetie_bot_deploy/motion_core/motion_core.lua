@@ -66,6 +66,7 @@ depl:connect(timer.aggregator.port, "aggregator_ref.sync_step", rtt.Variable("Co
 -- publish pose to ROS
 depl:stream("aggregator_ref.out_joints_sorted", ros:topic("~aggregator_ref/out_joints_sorted"))
 depl:stream("aggregator_ref.out_supports_sorted", ros:topic("~aggregator_ref/out_supports_sorted"))
+depl:stream("aggregator_ref.in_supports", ros:topic("~aggregator_ref/in_supports"))
 -- configure component
 aggregator_ref:configure()
 
