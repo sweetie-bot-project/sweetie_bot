@@ -7,7 +7,7 @@ voice_node:
 
     # Parameters for rhvoice and rhvoice_robotized backends:
     relative_volume:        1.0  # in percents devided by 100
-    relative_rate:          0.9  # in percents devided by 100
+    relative_rate:          0.75 # in percents devided by 100
     relative_pitch_russian: 0.70 # in percents devided by 100
     relative_pitch_english: 0.75 # in percents devided by 100
 

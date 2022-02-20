@@ -83,7 +83,7 @@ class VoiceSynthesizer:
 
         self.rhvoice_tts = TTS(threads=2)
 
-        self.rhvoice_tts.set_params(voice_profile='Anna+CLB', relative_rate=self.relative_rate, relative_volume=self.relative_volume)
+        self.rhvoice_tts.set_params(relative_rate=self.relative_rate, relative_volume=self.relative_volume)
 
     def generate_and_play(self, command_string):
         Gst.Event.new_flush_start()
@@ -95,8 +95,10 @@ class VoiceSynthesizer:
         for character in spaceless_command_string:
             if character in self.RUSSIAN_ALPHABET:
                 used_language = 'russian'
+                self.rhvoice_tts.set_params(voice_profile='Anna')
                 break
             elif character in self.ENGLISH_ALPHABET:
+                self.rhvoice_tts.set_params(voice_profile='CLB')
                 used_language = 'english'
                 break
 
