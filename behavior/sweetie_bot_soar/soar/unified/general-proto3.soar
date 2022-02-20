@@ -155,7 +155,7 @@ sp {social*propose*mirror-greeting
 -->
 	(<s> ^operator <o> +, =)
    	(<o> ^name mirror-gesture ^substate flexbe ^process-args <a>)
-	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory greeting2 ^text |Hello!| ^text_delay 1.0 ^result <res>)
+	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory greeting2 ^text |Привет!| ^text_delay 1.0 ^result <res>)
 	(<res> ^status succeed ^parent <obj> ^attribute have-response ^link-value yes)
 }
 
@@ -173,7 +173,7 @@ sp {social*propose*greet-pony
 	(<s> ^operator <op> +, =)
 	(<op> ^name talking-pony ^substate ask ^process-args <a>)
 	(<a> ^object <obj> ^topic greet ^animation-tag greeting ^wait-time 4.0)
-	(<a> ^text |Hello, pony! Are you lost in this bipedal world too?| |Oh! Glad to see a quadrupled relative!| |Hello! How are things in Equestria?|)
+	(<a> ^text |Привет, пони! Ты тоже потерян в этом двуногом мире?| |О! Рада увидеть четырехногово сородича!| |Привет! Как дела в Эквестрии?|)
 }
 
 # COGNITION OPERATORS
@@ -271,7 +271,7 @@ sp {security*propose*say-overheat
 	(<s> ^operator <op> +, =)
 	(<op> ^name say-overheat ^type automatic ^add-predicate <pred-new> ^add-output-command textcmd ^output-command-args <cmd>)
 	(<pred-new> ^name said-about-overheat ^deadline-time 30.0)
-	(<cmd> ^type |voice/say| ^command |I overheated. Now is time to rest.|)
+	(<cmd> ^type |voice/say| ^command |Я перегрелась. Буду теперь отдыхать.|)
 }
 
 # say about servos failure
@@ -282,7 +282,7 @@ sp {security*propose*say-servo-failed
 	(<s> ^operator <op> +, =)
 	(<op> ^name say-servo-failed ^type automatic ^add-predicate <pred-new> ^add-output-command textcmd ^output-command-args <cmd>)
 	(<pred-new> ^name said-about-servo-failed ^deadline-time 30.0)
-	(<cmd> ^type |voice/say| ^command |Executive system failure! Executive system failure! Save me.|)
+	(<cmd> ^type |voice/say| ^command |Отказ исполнительной системы! Отказ исполнительной системы! Спасайте меня.|)
 }
 
 # wait until servos are normal

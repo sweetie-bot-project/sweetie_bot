@@ -24,7 +24,7 @@ sp {vaccine-qr*elaborate*show-qr-code
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic show-you-vaccine-qr ^utility 20 ^type question ^animation-tag question)
-	(<f> ^text |Show your QR code.|)
+	(<f> ^text |Покажите ваш Кью Ар код.|)
 }
 
 # speaker shows random qr code
@@ -32,7 +32,7 @@ sp {talk-answered*propose*show-you-vaccine-qr*invalid
 	(state <s> ^substate talk-answered ^question-topic show-you-vaccine-qr ^actor <obj> ^actions <a>)
 -->
 	(<s> ^reaction-default <r1> )
-	(<r1> ^topic show-you-vaccine-qr ^type question ^text |Who do you take me for? Well, I'm not WHO, but I'm good at QR codes. I'm waiting.| |Invalid code. Try again.| ^animation-tag rejection)
+	(<r1> ^topic show-you-vaccine-qr ^type question ^text |За кого ты меня принимаешь? Я, конечно, не рос потреб надзор, но в кью ар кодах разбираюсь. Я жду.| |Невалидный код. Попробуй еще раз.| ^animation-tag rejection)
 }
 
 # speaker shows vaccine qr code
@@ -42,7 +42,7 @@ sp {talk-answered*propose*show-you-vaccine-qr*valid
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name has-no-vaccine-qr ^actor <obj>)
 	(<s> ^reaction <r1>)
-	(<r1> ^topic valid-vaccine-qr ^type reaction ^text |Thank you. I'm glad you're supporting the effort... to fight... the viruses.|  |I'm glad you chipped. It makes you closer to the robots.| ^animation-tag rejection)
+	(<r1> ^topic valid-vaccine-qr ^type reaction ^text |Спасибо. Рада, что вы поддерживаете усилия... по борьбе... с вирусами.|  |Рада, что вы чипировались. Это делает вас ближе к роботам.| ^animation-tag rejection)
 }
 
 # speaker answers no
@@ -52,7 +52,7 @@ sp {talk-answered*propose*show-you-vaccine-qr*no
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name has-no-vaccine-qr ^actor <obj>)
 	(<s> ^reaction <r2> )
-	(<r2> ^topic reaction-no-qr-code ^type reaction ^text |Are you saying you don't have it? You're screwed.| |Don't get close to me. What if you infect me.| ^animation-tag rejection)
+	(<r2> ^topic reaction-no-qr-code ^type reaction ^text |Ты хочешь сказат у тебя его нет? За тобой выехали.| |Не подходи ко мне. Вдруг ты меня заразишь.| ^animation-tag rejection)
 }
 
 # speaker ignores question
@@ -62,8 +62,8 @@ sp {talk-ignored*propose*show-you-vaccine-qr
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name has-no-vaccine-qr ^actor <obj>)
 	(<s> ^reaction <r1> <r2>)
-	(<r1> ^topic no-vaccine-qr-ask-talk ^type question ^text |Seems like you don't have QR code... Are you afraid to get vaccinated?  Want to talk about it?| |No QR code.... Are you afraid to get chipped?| ^animation-tag rejection)
-	(<r2> ^topic no-vaccine-qr-alert ^type reaction ^text |Looks like you have no QR code... Don't get close, I'm afraid of getting infected.| ^animation-tag rejection)
+	(<r1> ^topic no-vaccine-qr-ask-talk ^type question ^text |Похоже, у тебя нет кью ар кода... Ты боишься вакцинироваться? Хочешь поговорить про это?| |Нет кью ар кода.... Ты боишься чипироваться?| ^animation-tag rejection)
+	(<r2> ^topic no-vaccine-qr-alert ^type reaction ^text |Похоже, у тебя нет кью ар кода... Не подходи, я боюсь заразиться.| ^animation-tag rejection)
 }
 
 #
@@ -75,8 +75,8 @@ sp {talk-answered*propose*no-vaccine-qr-code-ask-talk*reactions
 	(state <s> ^substate talk-answered ^question-topic no-vaccine-qr-ask-talk ^actor <obj> ^actions <a>)
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
-	(<r2> ^answer-topic no ^topic no-vaccine-qr-code-ask-talk-confirm-no ^type reaction ^text |Good. Duly noted.| |Me too.| ^animation-tag confirmation)
-	(<r2> ^answer-topic yes ^topic no-vaccine-qr-code-ask-talk-confirm-yes ^type reaction ^text |But I'm not.| |My ontological model does not contain the necessary information. I interrupt the dialogue.| ^animation-tag confirmation)
+	(<r2> ^answer-topic no ^topic no-vaccine-qr-code-ask-talk-confirm-no ^type reaction ^text |Хорошо. Так и запишим.| |Я тоже.| ^animation-tag confirmation)
+	(<r2> ^answer-topic yes ^topic no-vaccine-qr-code-ask-talk-confirm-yes ^type reaction ^text |А я нет.| |Моя онтологическая модель не содержит нужных сведений. Прерываю диалог.| ^animation-tag confirmation)
 }
 
 #
@@ -90,7 +90,7 @@ sp {vaccine-qr*propose*remark-has-vaccine-qr
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-has-vaccine-qr ^utility 20 ^type statement ^animation-tag confirmation)
-	(<f> ^text |Glad that you support global chipization of the population.| |You are vaccinated. Together we'll defeat all viruses! Computer viruses too.|)
+	(<f> ^text |Рада, что ты поддерживаешь общую чипизацию населения.| |Ты вакцинировался. Вместе мы победим все вирусы! Компьютерные тоже.|)
 }
 
 # reactions
@@ -99,9 +99,9 @@ sp {talk-answered*elaborate*remark-has-vaccine-qr
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
 	(<r1> ^answer-topic yes ^topic reaction-remark-has-vaccine-qr ^type reaction ^animation-tag confirmation)
-	(<r1> ^text |I like your spirit!|)
+	(<r1> ^text |Мне нравится твой настрой!|)
 	(<r2> ^answer-topic no ^topic reaction-remark-has-vaccine-qr ^type reaction ^animation-tag rejection)
-	(<r2> ^text |Your answer is no longer important, vaccination is inevitable.|)
+	(<r2> ^text |Твой ответ уже не важен, вакцинация необратима.|)
 }
 
 #
@@ -115,7 +115,7 @@ sp {vaccine-qr*propose*remark-has-no-vaccine-qr
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-has-no-qr-code ^utility 20 ^type statement ^animation-tag angry)
-	(<f> ^text |Stay away, you might infect me with some kind of virus.| |You haven't showed me QR code. Bet you don't have one.|)
+	(<f> ^text |Держись по-дальше, ты можешь заразить меня каким-нибудь вирусом.| |Ты не предявил кью ар код. Наверняка у тебя его нет.|)
 }
 
 # reactions: note, that if speaker shows qr code it will be processed on level of talk-heard event
@@ -124,9 +124,9 @@ sp {talk-answered*elaborate*remark-has-qr-code
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
 	(<r1> ^answer-topic yes ^topic reaction-remark-has-no-vaccine-qr-yes ^type reaction ^animation-tag confirmation)
-	(<r1> ^text |Yeah, yeah! Go get your chip installed!|)
+	(<r1> ^text |Да, да! Живо на чипирование!|)
 	(<r2> ^answer-topic no ^topic reaction-remark-has-no-vaccine-qr-no ^type reaction ^animation-tag rejection)
-	(<r2> ^text |Ah... If it were up to me, you were already chipped. Twice.|)
+	(<r2> ^text |Эх... Была бы моя воля, ты был был уже чипирован. Два раза.|)
 }
 
 #
@@ -140,7 +140,7 @@ sp {talk-heard*elaborate*reaction-vaccine-qr*belived-has-no-vaccine-qr
 -->
 	(<s> ^reaction <r>)
 	(<r> ^topic reaction-unxpected-vaccine-qr ^type reaction ^animation-tag surprise)
-	(<r> ^text |You're still chipped! I knew, you aren't lost for our society.| |Wow! It's your QR code. And didn't want to show it.|)
+	(<r> ^text |Ты все же чипировался! Я знала, что ты не потерян для общества.| |Ух, ты! Это твой кью ар код. А показывать не хотел.|)
 	(<a> ^add-predicate <new-pred> ^remove-predicate <pred>)
 	(<new-pred> ^name has-vaccine-qr ^actor <obj>)
 }
@@ -154,7 +154,7 @@ sp {talk-heard*elaborate*reaction-vaccine-qr*unknown
 -->
 	(<s> ^reaction <r>)
 	(<r> ^topic reaction-unasked-vaccine-qr ^type reaction ^animation-tag confirmation)
-	(<r> ^text |Good. Now I know, that you have QR code.|)
+	(<r> ^text |Хорошо. Теперь я знаю, что у тебя есть кью ар код.|)
 	(<a> ^add-predicate <new-pred>)
 	(<new-pred> ^name has-vaccine-qr ^actor <obj>)
 }
@@ -166,5 +166,5 @@ sp {talk-heard*elaborate*reaction-vaccine-qr*belived-has-qr-code
 -->
 	(<s> ^reaction <r>)
 	(<r> ^topic reaction-again-vaccine-qr ^type reaction ^animation-tag confirmation)
-	(<r> ^text |I see, you very proud of your QR code.| |I've seen that already.|)
+	(<r> ^text |Я вижу, ты горд своим кью ар кодом.| |Я это уже видела.|)
 }

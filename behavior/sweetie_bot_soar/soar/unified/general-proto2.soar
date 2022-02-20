@@ -89,7 +89,7 @@ sp {security*propose*say-overheat
 	(<s> ^operator <op> +, =)
 	(<op> ^name say-overheat ^type automatic ^add-predicate <pred-new> ^add-output-command textcmd ^output-command-args <cmd>)
 	(<pred-new> ^name said-about-overheat ^deadline-time 30.0)
-	(<cmd> ^type |voice/say| ^command |I overheated. Now's time to rest.|)
+	(<cmd> ^type |voice/say| ^command |Я перегрелась. Буду теперь отдыхать.|)
 }
 
 # say and pose change must be done before waiting

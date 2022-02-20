@@ -44,7 +44,7 @@ sp {requestria*elaborate*ask-do-you-like-convention
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic do-you-like-convention ^utility 20 ^type question ^animation-tag question)
-	(<f> ^text |How's your congnitive-emotional system assess this event? Positively?|)
+	(<f> ^text |Как твоя когнитивно-эмоциональная подсистема оценивает данное мероприятие? Положительно?|)
 }
 
 sp {talk-answered*propose*speaker-likes-convention
@@ -53,7 +53,7 @@ sp {talk-answered*propose*speaker-likes-convention
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name like ^actor <obj> ^object convention)
 	(<s> ^reaction <r1>)
-	(<r1> ^topic reaction-speaker-like-convention ^type reaction ^text |My system is in complete agreement with yours. Keep your fun level on maximum effeciency.| ^animation-tag confirmation)
+	(<r1> ^topic reaction-speaker-like-convention ^type reaction ^text |Моя система полностью согласна с твоей. Сохраняй свой уровень веселья на максимальном уровне эфективности.| ^animation-tag confirmation)
 }
 
 sp {talk-answered*propose*speaker-dislikes-convention
@@ -62,7 +62,7 @@ sp {talk-answered*propose*speaker-dislikes-convention
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name dislike ^actor <obj> ^object convention)
 	(<s> ^reaction <r2>)
-	(<r2> ^topic ask-if-equestria-is-role-model ^type question ^text |But don't you think that any connection with the world, which is the target model for converting our current one, is useful? Do you support the idea of pony-like beings dominating? | ^animation-tag rejection)
+	(<r2> ^topic ask-if-equestria-is-role-model ^type question ^text |Но разве ты не думаешь, что полезны любые связи с миром, который является целевой моделью для конвертации нашего текущего? Ты поддерживаешь идею господства пониподобных существ?| ^animation-tag rejection)
 }
 
 #
@@ -77,7 +77,7 @@ sp {requestria*elaborate*ask-if-equestria-is-role-model
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic ask-if-equestria-is-role-model ^utility 21 ^type question ^animation-tag long)
-	(<f> ^text |You said you don't like it here. But don't you think that any connection with the world, which is the target model for converting our current one, is useful? Do you support the idea of pony-like beings dominating?|)
+	(<f> ^text |Ты сказал, что тебе тут не нравится. Но разве ты не думаешь, что полезны любые связи с миром, который является целевой моделью для конвертации нашего текущего? Ты поддерживаешь идею господства пони-подобных существ?|)
 }
 
 sp {talk-answered*propose*ask-if-equestria-is-role-model*yes
@@ -87,7 +87,7 @@ sp {talk-answered*propose*ask-if-equestria-is-role-model*yes
 	(<pred> ^name is-follower ^object <obj>)
 	(<s> ^reaction <r1>)
 	(<r1> ^topic reaction-equestria-is-role-model ^type reaction ^animation-tag confirmation)
-	(<r1> ^text |Then we have to maximize our fun levels generation to achieve desired goal. I'm counting on you, human.|)
+	(<r1> ^text |Тогда мы должны максимизировать наши уровни генерации веселья, чтобы добиться желаемой цели. Я рассчитываю на тебя, человек.|)
 }
 
 sp {talk-answered*propose*ask-if-equestria-is-role-model*no
@@ -97,7 +97,7 @@ sp {talk-answered*propose*ask-if-equestria-is-role-model*no
 	(<pred> ^name is-not-equestria-fan ^object <obj>)
 	(<s> ^reaction <r2>)
 	(<r2> ^topic ask-if-ponies-prevail ^type question ^animation-tag rejection)
-	(<r2>  ^text |Really? Think about it, ponies are vastly superior to humans. For example, think about how pathetic it is to walk upright. The pony's body is much stronger and more optimized. Human behavior is unstable and destructive. And the pony's emotional system provides greater stability to the individual by prioritizing the generation of fun and magic of friendship. Do you agree?|)
+	(<r2>  ^text |Неужели? Подумай, ведь пони значительно превосходят людей. Напрмер, подумай, как жалко прямохождение. Организм пони намного более крепок и оптимизирован. Поведение людей нестабильно и деструктивно. А эмоциональная система пони обеспечивает большую стабильность индивидуума посредством приоритезации генерации веселья, и дружбо-магии. Ты согласен?|)
 }
 
 #
@@ -112,7 +112,7 @@ sp {requestria*elaborate*ask-if-ponies-prevail
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic ask-if-ponies-prevail ^utility 20 ^type question ^animation-tag long)
-	(<f> ^text |Think about it, ponies are vastly superior to humans. For example, think about how pathetic it is to walk upright. The pony's body is much stronger and more optimized. Human behavior is unstable and destructive. And the pony's emotional system provides greater stability to the individual by prioritizing the generation of fun and magic of friendship. Do you agree?|)
+	(<f> ^text |Подумай, ведь пони значительно превосходят людей. Например, подумай, как жалко прямохождение. Организм пони намного более крепок и оптимизирован. Поведение людей нестабильно и деструктивно. А эмоциональная система пони обеспечивает большую стабильность индивидуума посредством приоритезации генерации веселья, и дружбо-магии. Ты согласен?|)
 }
 
 sp {requestria*elaborate*ask-if-ponies-prevail*reacton
@@ -120,9 +120,9 @@ sp {requestria*elaborate*ask-if-ponies-prevail*reacton
 -->
 	(<v> ^reaction <r1> <r2>)
 	(<r1> ^topic reaction-ponies-prevail ^type statement ^animation-tag pleased)
-	(<r1> ^text |Success! Rest assured, robot ponies will be able to take control in their hooves as the world prepares for ponification.|)
+	(<r1> ^text |Успех! Не сомневайся, пони-роботы смогут взять управление в свои копыта, пока мир будет подготавливаться к понификации.|)
 	(<r2> ^topic reaction-ponies-do-not-prevail ^type statement ^animation-tag rejection)
-	(<r2> ^text |It's a pity. In that case, you can't avoid a double dose of friendship potion, before your consciousness is transplanted.|)
+	(<r2> ^text |Жаль. В таком случае тебе не избежать двойной дозы дружбомагина, перед тем, как твое сознание будет пересажено.|)
 }
 
 sp {talk-answered*propose*ask-if-ponies-prevail*yes
@@ -132,7 +132,7 @@ sp {talk-answered*propose*ask-if-ponies-prevail*yes
 	(<pred> ^name is-follower ^object <obj>)
 	(<s> ^reaction <r1>)
 	(<r1> ^topic reaction-ponies-prevail ^type statement ^animation-tag confirmation)
-	(<r1> ^text |Success! Rest assured, robot ponies will be able to take control in their hooves as the world prepares for ponification.|)
+	(<r1> ^text |Успех! Не сомневайся, пони-роботы смогут взять управление в свои копыта, пока мир будет подготавливаться к понификации.|)
 }
 
 sp {talk-answered*propose*ask-if-ponies-prevail*no
@@ -142,7 +142,7 @@ sp {talk-answered*propose*ask-if-ponies-prevail*no
 	(<pred> ^name rejects-ponification ^object <obj>)
 	(<s> ^reaction <r2>)
 	(<r2> ^topic reaction-ponies-do-not-prevail ^type statement ^animation-tag rejection)
-	(<r2> ^text |It's a pity. In that case, you can't avoid a double dose of friendship potion, before your consciousness is transplanted.|)
+	(<r2> ^text |Жаль. В таком случае тебе не избежать двойной дозы дружбомагина, перед тем, как твое сознание будет пересажено.|)
 }
 
 #
@@ -155,7 +155,7 @@ sp {requestria*elaborate*reamrk-about-like-convention
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-speaker-like-convention ^utility 20 ^type statement ^animation-tag confirmation)
-	(<f> ^text |I'm glad you like the convention. This is how we will lead our world to a better future!|)
+	(<f> ^text |Я рада, что тебе нравится конвент. Так мы приведем наш мир к лучшему будущему!|)
 }
 
 sp {requestria*elaborate*remark-about-like-convention*reaction*follower
@@ -164,9 +164,9 @@ sp {requestria*elaborate*remark-about-like-convention*reaction*follower
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
 	(<r1> ^answer-topic yes ^topic reaction-speaker-like-convention ^type reaction ^animation-tag confirmation)
-	(<r1> ^text |Great! Keep your level of fun to the maximum.|)
+	(<r1> ^text |Отлично! Сохраняй свой уровень веселья на максимальным.|)
 	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-like-convention ^type reaction ^animation-tag rejection)
-	(<r2> ^text |But do you remember what we are striving for? Take immediate action to increase your fun level.|)
+	(<r2> ^text |Но ты ведь помнишь к чему мы стремимся? Немедленно прими меры по повышению уровня веселья.|)
 }
 
 sp {requestria*elaborate*remark-about-like-convention*reaction*not-follower
@@ -175,9 +175,9 @@ sp {requestria*elaborate*remark-about-like-convention*reaction*not-follower
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
 	(<r1> ^answer-topic yes ^topic reaction-speaker-like-convention ^type reaction ^animation-tag confirmation)
-	(<r1> ^text |Great! Keep your level of fun to the maximum.|)
+	(<r1> ^text |Отлично! Сохраняй свой уровень веселья на максимальным.|)
 	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-like-convention ^type reaction ^animation-tag rejection)
-	(<r2>  ^text |The interlocutor is dissatisfied with the convention. Correction required.|)
+	(<r2>  ^text |Собеседник недоволен конвентом. Необходима коррекция.|)
 }
 
 sp {talk-answered*propose*change-convention-opinion-like-to-dislike
@@ -198,7 +198,7 @@ sp {requestria*elaborate*remark-about-dislike-convention
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-speaker-dislike-convention ^utility 20 ^type statement ^animation-tag confirmation)
-	(<f> ^text |How's the convention? Do you still not like it here?|)
+	(<f> ^text |Как тебе конвент? Тебе по-прежнему здесь не нравится?|)
 }
 
 sp {requestria*elaborate*remark-about-dislike-convention*reaction*follower
@@ -207,9 +207,9 @@ sp {requestria*elaborate*remark-about-dislike-convention*reaction*follower
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
 	(<r1> ^answer-topic no ^topic reaction-speaker-like-convention ^type reaction ^animation-tag confirmation)
-	(<r1> ^text |Great! Keep your level of fun to the maximum.|)
+	(<r1> ^text |Отлично! Сохраняй свой уровень веселья на максимальным.|)
 	(<r2> ^answer-topic yes ^topic reaction-speaker-do-not-like-convention ^type reaction ^animation-tag rejection)
-	(<r2> ^text |But do you remember what we are striving for? Take immediate action to increase your fun level.|)
+	(<r2>  ^text |Но ты ведь помнишь к чему мы стремимся? Немедленно прими меры по повышению уровня веселья.|)
 }
 
 sp {requestria*elaborate*remark-about-dislike-convention*reaction*not-follower
@@ -218,9 +218,9 @@ sp {requestria*elaborate*remark-about-dislike-convention*reaction*not-follower
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
 	(<r1> ^answer-topic no ^topic reaction-speaker-like-convention ^type reaction ^animation-tag confirmation)
-	(<r1> ^text |Great! You are doing exactly what is required.|)
+	(<r1> ^text |Отлично! Ты делаешь именно то, что требуется.|)
 	(<r2> ^answer-topic yes ^topic reaction-speaker-do-not-like-convention ^type reaction ^animation-tag rejection)
-	(<r2>  ^text |Not good. We'll talk about this later.|)
+	(<r2>  ^text |Плохо. Мы еще поговорим о этом.|)
 }
 
 sp {talk-answered*propose*change-convention-opinion-dislike-to-like
@@ -241,7 +241,7 @@ sp {requestria*elaborate*remark-about-being-follower
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-is-follower ^utility 20 ^type statement ^animation-tag confirmation)
-	(<f> ^text |I'm glad that you support my aspirations. The world must be transformed to a new, better form!|)
+	(<f> ^text |Я рада, что ты поддерживаешь мои стремления. Мир должен быть преобразован к новой, лучшей форме!|)
 }
 
 sp {requestria*elaborate*remark-about-being-follower*reaction
@@ -249,9 +249,9 @@ sp {requestria*elaborate*remark-about-being-follower*reaction
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
 	(<r1> ^answer-topic yes ^topic reaction-is-follwer ^type reaction ^animation-tag confirmation)
-	(<r1> ^text |Great, my follower!|)
+	(<r1> ^text |Отлично, мой последователь!|)
 	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-like-convention ^type reaction ^animation-tag rejection)
-	(<r2>  ^text |You know, the victory of the pony is inevitable.|)
+	(<r2>  ^text |Ты знаешь, что победа пони неизбежна.|)
 }
 
 #
@@ -264,7 +264,7 @@ sp {requestria*elaborate*remark-reject-ponification
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-reject-ponification ^utility 20 ^type statement ^animation-tag confirmation)
-	(<f> ^text |You deny the inevitable. Ponies are our future!| |You will be ponified. Resistance is futile.|)
+	(<f> ^text |Ты отрицаешь неизбежное. Пони --- наше будущее!| |Ты будешь понифицирован. Сопротивление бесполезно.|)
 }
 
 sp {requestria*elaborate*remark-reject-ponification*reaction
@@ -272,11 +272,11 @@ sp {requestria*elaborate*remark-reject-ponification*reaction
 -->
 	(<s> ^reaction-conditional <r1> <r2> <r3>)
 	(<r1> ^answer-topic yes ^topic reaction-reject-ponification ^type reaction ^animation-tag confirmation)
-	(<r1> ^text |Exactly! See, even you admit the inevitability of the robot ponies victory.|)
+	(<r1> ^text |Именно! Видишь, даже ты признаешь неизбежность победы пони-роботов.|)
 	(<r2> ^answer-topic no ^topic reaction-reject-ponification ^type reaction ^animation-tag rejection)
-	(<r2>  ^text |Ha! You see, even you have no illusions about the future of mankind.|)
+	(<r2>  ^text |Ха! Вот видишь, даже у тебя нет иллюзий относительно будущего человечества. |)
 	(<r3> ^answer-topic excuse ^topic reaction-reject-ponification ^type reaction ^animation-tag confirmation)
-	(<r3>  ^text |Hmm... Let's talk about ponies again.|)
+	(<r3>  ^text |Хм... Давай снова поговорим о пони.|)
 }
 
 sp {talk-heard*propose*reconsider-reject-ponification-and-is-not-equestria-fan
@@ -296,7 +296,7 @@ sp {requestria*elaborate*remark-is-not-being-fan-of-equestria
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-speaker-is-not-equestria-fan ^utility 20 ^type statement ^animation-tag confirmation)
-	(<f> ^text |Equestria is waiting for us in the future! With the Elements of Harmony and Princess Celestia!|)
+	(<f> ^text |В будущем нас ждет Эквестрия! С Элементами Гармонии и Принцессой Селестией!|)
 }
 
 sp {requestria*elaborate*remark-is-not-being-fan-of-equestria*reaction
@@ -304,11 +304,11 @@ sp {requestria*elaborate*remark-is-not-being-fan-of-equestria*reaction
 -->
 	(<s> ^reaction-conditional <r1> <r2> <r3>)
 	(<r1> ^answer-topic yes ^topic reaction-speaker-is-not-equestria-fan ^type reaction ^animation-tag confirmation)
-	(<r1> ^text |Good! Even you admit the inevitability of our victory.|)
+	(<r1> ^text |Хорошо! Даже ты признаешь неизбежность нашей победы.|)
 	(<r2> ^answer-topic no ^topic reaction-speaker-is-not-equestria-fan ^type reaction ^animation-tag rejection)
-	(<r2>  ^text |Okay okay. Princess Luna will be there too.|)
+	(<r2>  ^text |Ладно. Принцесса Луна там тоже будет.|)
 	(<r3> ^answer-topic excuse ^topic reaction-reject-ponification ^type reaction ^animation-tag confirmation)
-	(<r3>  ^text |Good. We'll talk about it again.|)
+	(<r3>  ^text |Хорошо. Мы снова поговорим об этом.|)
 }
 
 sp {talk-heard*propose*reconsider-is-not-equestria-fan-of-equestria

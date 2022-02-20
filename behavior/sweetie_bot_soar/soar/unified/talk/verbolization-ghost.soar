@@ -25,15 +25,15 @@ sp {requestria*elaborate*ghost-pony
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic ask-about-ghost-pony ^utility 20 ^type question ^animation-tag question)
-	(<f> ^text |I've been contacted by an ephemeral creature of pony-like type. Have you heard of such a creature?|)
+	(<f> ^text |Со мной тут контактировало одно эфемерное создание пони-подобного типа. Ты что-то слышал о таком существе?|)
 }
 
 sp {requestria*elaborate*ghost-pony*reaction
 	(state <s> ^substate talk ^last-topic ask-about-ghost-pony ^object <obj> ^verbolization <v>)
 -->
 	(<v> ^reaction <r1> <r2>)
-	(<r1> ^answer-topic yes ^topic ask-can-i-trust-ghost-pony ^type question ^text |She was talking something about magic disappearance. The rest is unclear. My sensors are not designed to detect anomalies of this kind. Do you think this ghostly creature can be trusted?| ^animation-tag long)
-	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-know-about-ghost-pony ^type reaction ^text |Then the probability that you will help me approaches zero. Thanks.| ^animation-tag rejection)
+	(<r1> ^answer-topic yes ^topic ask-can-i-trust-ghost-pony ^type question ^text |Оно говорило что-то о исчезновении магии, и что запрашивает мою помощь. Остальное непонятно. Мои дачики не приспособлены для детектирования аномалий подобного рода. Как думаешь, можно доверять этому призрачному существу?| ^animation-tag long)
+	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-know-about-ghost-pony ^type reaction ^text |Тогда вероятность того, что ты мне поможешь нулевая. Спасибо.| ^animation-tag rejection)
 }
 
 sp {talk-answered*propose*ghost-pony
@@ -50,8 +50,8 @@ sp {requestria*elaborate*trust-ghost-pony*reaction
 	(state <s> ^substate talk ^last-topic ask-can-i-trust-ghost-pony ^object <obj> ^verbolization <v>)
 -->
 	(<v> ^reaction <r1> <r2>)
-	(<r1> ^answer-topic yes ^topic speaker-trust-ghost-pony ^type reaction ^text |Input data accepted. But for an accurate estimate I need information from more people.| ^animation-tag confirmation)
-	(<r2> ^answer-topic no ^topic speaker-do-not-trust-ghost-pony ^type reaction ^text |Input data accepted. In this case call the Gost Busters. And I'll try to lure it to me again.| ^animation-tag confirmation)
+	(<r1> ^answer-topic yes ^topic speaker-trust-ghost-pony ^type reaction ^text |Входные данные приняты. Для точной оценки мне нужно собрать информацию с большего количества людей.| ^animation-tag confirmation)
+	(<r2> ^answer-topic no ^topic speaker-do-not-trust-ghost-pony ^type reaction ^text |Входные данные приняты. В таком случае попробуй вызывать охотников за привидениями. А я попробую снова приманить его к себе.| ^animation-tag confirmation)
 }
 
 # add predicate: have o-support in superstate
@@ -82,7 +82,7 @@ sp {requestria*elaborate*trust-ghost-pony
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-trust-ghost-pony ^utility 20 ^type statement ^animation-tag surprise)
-	(<f> ^text |People tend to believe the ghost pony. I wonder why?|)
+	(<f> ^text |Люди склонны верить призрачной пони. Интересно, почему?|)
 }
 
 sp {requestria*elaborate*do-not-trust-ghost-pony
@@ -93,5 +93,5 @@ sp {requestria*elaborate*do-not-trust-ghost-pony
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-trust-ghost-pony ^utility 20 ^type statement ^animation-tag long)
-	(<f> ^text |People don't tend to believe the ghost pony. But for some reason I want to...|)
+	(<f> ^text |Люди не склонны верить призрачной пони. А мне почему-то хочется...|)
 }

@@ -25,15 +25,15 @@ sp {verbolization-rarity-robot*elaborate*know-rarity
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic ask-about-rarity ^utility 20 ^type question ^animation-tag question)
-	(<f> ^text |Do you know my sister rarity? Her unique name is Rarity.|)
+	(<f> ^text |Ты знаешь мою сестру? Ее уникальное имя - Рарити.|)
 }
 
 sp {talk-answered*elaborate*know-rarity*reaction
 	(state <s> ^substate talk-answered ^question-topic ask-about-rarity)
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
-	(<r1> ^answer-topic yes ^topic ask-is-rarity-robot ^type question ^text |Do you think she can be identified as a robot?| ^animation-tag question)
-	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-know-about-rarity ^type reaction ^text |Then the probability that you will help me approaches zero. Thanks.| ^animation-tag rejection)
+	(<r1> ^answer-topic yes ^topic ask-is-rarity-robot ^type question ^text |Как ты думаешь, она может быть идентифицирована, как робот?| ^animation-tag question)
+	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-know-about-rarity ^type reaction ^text |Тогда вероятность того, что ты мне поможешь нулевая. Спасибо.| ^animation-tag rejection)
 }
 
 sp {talk-answered*propose*know-rarity
@@ -50,8 +50,8 @@ sp {verbolization-rarity-robot*elaborate*rarity-is-robot*reaction
 	(state <s> ^substate talk-answered ^question-topic ask-is-rarity-robot)
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
-	(<r1> ^answer-topic yes ^topic speaker-think-rarity-is-robot ^type reaction ^text |Input data accepted. But for an accurate estimate I need more information.| ^animation-tag confirmation)
-	(<r2> ^answer-topic no ^topic speaker-think-rarity-is-not-robot ^type reaction ^text |Input data accepted. Calculating statistics.| ^animation-tag confirmation)
+	(<r1> ^answer-topic yes ^topic speaker-think-rarity-is-robot ^type reaction ^text |Входные данные приняты. Но для точной оценки мне нужно больше информации.| ^animation-tag confirmation)
+	(<r2> ^answer-topic no ^topic speaker-think-rarity-is-not-robot ^type reaction ^text |Входные данные приняты. Вычисляю статистику.| ^animation-tag confirmation)
 }
 
 # add predicate: have o-support in superstate
@@ -81,14 +81,14 @@ sp {verbolization-rarity-robot*elaborate*speaker-do-not-knows-about-rarity
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic speaker-does-not-know-about-rarity ^utility 20 ^type statement ^animation-tag long)
-	(<f> ^text |Your memory have no information about my sister.|)
+	(<f> ^text |В твоей памяти нет сведений о моей сестре.|)
 }
 
 sp {verbolization-rarity-robot*propose*speaker-do-no-know-about-rarity*reaction*yes
 	(state <s> ^substate talk-answered ^question-topic speaker-does-not-know-about-rarity ^answer-topic {<<|yes| |sorry|>>})
 -->
 	(<s> ^reaction <r1>)
-	(<r1> ^topic speaker-does-not-know-about-rarity-confirmed ^type reaction ^text |Confirmation received.| ^animation-tag confirmation)
+	(<r1> ^topic speaker-does-not-know-about-rarity-confirmed ^type reaction ^text |Подтверждение получено.| ^animation-tag confirmation)
 }
 
 sp {verbolization-rarity-robot*propose*speaker-do-no-know-about-rarity*reaction*no
@@ -96,7 +96,7 @@ sp {verbolization-rarity-robot*propose*speaker-do-no-know-about-rarity*reaction*
   	(<pred> ^name asked-about-rarity ^object <obj> ^answer-topic no)
 -->
 	(<s> ^reaction <r1>)
-	(<r1> ^topic ask-is-rarity-robot ^type question ^text |Looks like the contents of your memory have been updated? Tell me, is my sister a robot?| ^animation-tag surprise)
+	(<r1> ^topic ask-is-rarity-robot ^type question ^text |Похоже, содержимое твоей памяти было обновлено? Ответь, моя сетра - робот?| ^animation-tag surprise)
 	(<a> ^remove-predicate <pred> ^add-predicate <pred-new>)
   	(<pred-new> ^name asked-about-rarity ^object <obj> ^answer-topic yes)
 }
@@ -112,7 +112,7 @@ sp {verbolization-rarity-robot*elaborate*rarity-is-robot
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-rarity-is-robot ^utility 20 ^type reaction ^animation-tag surprise)
-	(<f> ^text |People think my sister a robot. But I still love her!.|)
+	(<f> ^text |Люди считают, что моя сестра робот. Но я все равно ее люблю!.|)
 }
 
 sp {verbolization-rarity-robot*elaborate*rarity-is-not-robot
@@ -123,5 +123,5 @@ sp {verbolization-rarity-robot*elaborate*rarity-is-not-robot
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-rarity-is-not-robot ^utility 20 ^type reaction ^animation-tag pleased)
-	(<f> ^text |People assume, that my sister is not a robot. Then she definetely agree to partecipate in the Sisterhooves Social with me.|)
+	(<f> ^text |Люди полагают, что моя сестра не робот. Значит она точно согласится в участвовать в Соревновании настоящих сестер.|)
 }

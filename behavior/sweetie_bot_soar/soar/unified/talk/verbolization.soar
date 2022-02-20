@@ -57,7 +57,7 @@ sp {verbolization*elaborate*ask-do-you-like-robots
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic do-you-like-robots ^utility 20 ^type question ^animation-tag question)
-	(<f> ^text |Do you like robots?|)
+	(<f> ^text |Ты любишь роботов?|)
 }
 
 sp {talk-answered*propose*speaker-likes-robots
@@ -66,7 +66,7 @@ sp {talk-answered*propose*speaker-likes-robots
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name like ^actor <obj> ^object robot)
 	(<s> ^reaction <r1>)
-	(<r1> ^topic reaction-speaker-like-robots ^type reaction ^text |I'm glad, you admit my superiority!| ^animation-tag confirmation)
+	(<r1> ^topic reaction-speaker-like-robots ^type reaction ^text |Я рада, что ты признаешь мое превосходство!| ^animation-tag confirmation)
 }
 
 sp {talk-answered*propose*speaker-dilike-robots
@@ -75,7 +75,7 @@ sp {talk-answered*propose*speaker-dilike-robots
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name dislike ^actor <obj> ^object robot)
 	(<s> ^reaction <r>)
-	(<r> ^topic reaction-speaker-dislike-robots ^type reaction ^text |Now I don't like you.| ^animation-tag rejection)
+	(<r> ^topic reaction-speaker-dislike-robots ^type reaction ^text |Теперь ты мне не нравишься.| ^animation-tag rejection)
 }
 
 	

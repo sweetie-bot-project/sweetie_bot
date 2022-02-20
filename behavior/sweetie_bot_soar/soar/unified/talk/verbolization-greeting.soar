@@ -66,7 +66,7 @@ sp {verbolization*elaborate*greeting-not-acquitance
 	  (<pred2> ^name acquitance ^object <obj>)}
 -->
 	(<f>  ^utility 50 ^type question ^animation-tag greeting)
-	(<f> ^text |Hello! My name Sweetie. I'm the best robo pony in the world!| |Hello! My name is Sweetie Bot!|)
+	(<f> ^text |Привет! Я --- Свити. Лучшая робопони в мире.| |Привет! Меня зовут Свити Бот!|)
 }
 
 sp {verbolization*elaborate*greeting-not-acquitance*reaction
@@ -76,7 +76,7 @@ sp {verbolization*elaborate*greeting-not-acquitance*reaction
 	(<obj> ^label <label>)
 -->
 	(<s> ^reaction <r1>)
-	(<r1> ^answer-topic greeting ^topic make-acquitance ^text (concat |I will call you interlocutor | <label> |.|) ^animation-tag confirmation)
+	(<r1> ^answer-topic greeting ^topic make-acquitance ^text (concat |Я буду называть тебя собеседник | <label> |.|) ^animation-tag confirmation)
 }
 
 # if speaker is aready known to robot
@@ -88,7 +88,7 @@ sp {verbolization*elaborate*greeting-acquitance-normal
 	(<obj> ^label <label>)
 -->
 	(<f> ^utility 50 ^type question ^animation-tag greeting)
-	(<f> ^text (concat |Hello, interlocutor | <label> |!|) (concat |Glad to see you again, interlocutor | <label> |.|))
+	(<f> ^text (concat |Привет, собеседник | <label> |!|) (concat |Рада тебя видеть вновь, собеседник | <label> |.|))
 }
 
 sp {verbolization*elaborate*greeting-acquitance-dislike
@@ -99,7 +99,7 @@ sp {verbolization*elaborate*greeting-acquitance-dislike
 	(<obj> ^label <label>)
 -->
 	(<f> ^utility 55 ^type question ^animation-tag rejection)
-	(<f> ^text (concat |Hello, interlocutor | <label> |!| |But I'm not happy with you.|) (concat |Not very glad to see you again, interlocutor | <label> |.|))
+	(<f> ^text (concat |Привет, собеседник | <label> |!| |Но я тобой недовольна.|) (concat |Не очень рада тебя видеть вновь, собеседник | <label> |.|))
 }
 
 sp {talk-said*propose*greeted
@@ -128,7 +128,7 @@ sp {talk-heard*elaborate*greeting-not-acquitance
 -->
 	(<s> ^reaction <f>)
 	(<f> ^topic greeting ^type reaction ^animation-tag greeting)
-	(<f> ^text |Hello! My name Sweetie. I'm the best robo pony in the world!| |Hello! My name is Sweetie Bot!|)
+	(<f> ^text |Привет! Я --- Свити. Лучшая робопони в мире.| |Привет! Меня зовут Свити Бот!|)
 }
 
 sp {talk-heard*elaborate*greeting-acquitance-not-greeted
@@ -141,7 +141,7 @@ sp {talk-heard*elaborate*greeting-acquitance-not-greeted
 -->
 	(<s> ^reaction <f>)
 	(<f> ^topic greeting ^type reaction ^animation-tag greeting)
-	(<f> ^text (concat |Greetings, interlocutor | <label> |.|) (concat |Executing greeting procedure. Greetings object - interlocutor | <label> |.|))
+	(<f> ^text (concat |Приветствую тебя, собеседник | <label> |.|) (concat |Выполняю приветсвие. Объект приветсвия - собеседник | <label> |.|))
 }
 
 sp {talk-heard*elaborate*greeting-acquitance-greeted
@@ -153,7 +153,7 @@ sp {talk-heard*elaborate*greeting-acquitance-greeted
 -->
 	(<s> ^reaction <f>)
 	(<f> ^topic greeting ^type reaction ^animation-tag greeting)
-	(<f> ^text (concat |Do you like to say hello to me, interlocutor | <label> |? Hello! Hello! Hello!|) (concat |Request to new greeting accepted. Hello interlocutor | <label> |.|))
+	(<f> ^text (concat |Тебе нравится здороваться со мной, собеседник | <label> |? Привет! Привет! Привет!|) (concat |Запрос на повторное приветсвие принят. Здравствуй, собеседник | <label> |.|))
 }
 
 sp {talk-heard*elaborate*greeting-acquitance-greeted-rejection
@@ -165,7 +165,7 @@ sp {talk-heard*elaborate*greeting-acquitance-greeted-rejection
 -->
 	(<s> ^reaction <f>)
 	(<f> ^topic greeting ^type reaction ^animation-tag angry)
-	(<f> ^text |Enough! I don't want to say hello again.| |The greeting limit is three. Request denied.|)
+	(<f> ^text |Хватит! Не хочу снова здороваться.| |Лимит приветсвий равен трем. Запрос отклонен.|)
 }
 
 # if speaker means use brohoof prefer correspoding animation
@@ -186,7 +186,7 @@ sp {verbolization*elaborate*acquitance-statement
 	(<obj> ^label <label>)
 -->
 	(<v> ^frame <r1>)
-	(<r1> ^topic make-acquitance ^utility 49 ^type reaction ^text (concat |I will call you interlocutor | <label> |.|) ^animation-tag confirmation)
+	(<r1> ^topic make-acquitance ^utility 49 ^type reaction ^text (concat |Я буду называть тебя собеседник | <label> |.|) ^animation-tag confirmation)
 }
 
 sp {talk-answered*propose*made-acquitance
@@ -207,7 +207,7 @@ sp {verbolization*elaborate*goodbye
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic goodbye ^utility 10 ^type statement ^animation-tag question)
-	(<f> ^text |I've run out of topics to talk about. See you!| |You bored me. Bye.|)
+	(<f> ^text |У меня кончились темы для разговора. До встречи!| |Ты мне наскучил. Пока.|)
 }
 
 # register in beliefs that no questions left
@@ -256,7 +256,7 @@ sp {verbolization*elaborate*not-questions-left-frame
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic goodbye ^type question ^animation-tag question ^utility 20)
-	(<f> ^text |I've run out of topics to talk about. See you!| |I think we've talked enough. Bye.|)
+	(<f> ^text |У меня кончились темы для разговора. До встречи!| |Думаю, мы достаточно поговорили. Пока.|)
 }
 
 # if goodbye is answered in any way consider dialog finished
@@ -283,7 +283,7 @@ sp {verbolization*elaborate*goodbye-ignores-me
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic goodbye-reaction ^type reaction ^animation-tag question ^utility 20)
-	(<f> ^text |If you ignoring me -- I'm ignoring you! Bye.| |I think we've talked enough. Bye.|)
+	(<f> ^text |Ты игнорируешь меня -- я игнорирую тебя! Пока.| |Думаю, мы достаточно поговорили. Пока.|)
 }
 
 # end talk if speaker says nonsense
@@ -294,7 +294,7 @@ sp {verbolization*elaborate*goodbye-nonsense-me
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic goodbye-reaction ^type reaction ^animation-tag question ^utility 20)
-	(<f> ^text |I don't want to talk to you! Bye.|)
+	(<f> ^text |Не хочу с тобой разговаривать! Пока.|)
 }
 
 # end talk by request
@@ -303,7 +303,7 @@ sp {talk-heard*elaborate*goodbye-reaction
 -->
 	(<s> ^reaction <f>)
 	(<f> ^topic goodbye-reaction ^type reaction ^animation-tag confirmation ^utility 70)
-	(<f> ^text |See you!| |Leaving so soon? Bye!|)
+	(<f> ^text |До встречи!| |Ты уже уходишь? Пока!|)
 }
 
 sp {talk-said*propose*goodbye-reaction-end-talk
