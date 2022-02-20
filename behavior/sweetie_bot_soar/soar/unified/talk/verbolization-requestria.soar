@@ -177,7 +177,7 @@ sp {requestria*elaborate*remark-about-like-convention*reaction*not-follower
 	(<r1> ^answer-topic yes ^topic reaction-speaker-like-convention ^type reaction ^animation-tag confirmation)
 	(<r1> ^text |Great! Keep your level of fun to the maximum.|)
 	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-like-convention ^type reaction ^animation-tag rejection)
-	(<r2>  ^text |The interlocutor is dissatisfied with the convention. Correction required.|)
+	(<r2>  ^text |The friend is dissatisfied with the convention. Correction required.|)
 }
 
 sp {talk-answered*propose*change-convention-opinion-like-to-dislike

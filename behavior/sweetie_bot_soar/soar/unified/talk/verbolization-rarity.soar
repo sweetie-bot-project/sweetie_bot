@@ -25,7 +25,7 @@ sp {verbolization-rarity-robot*elaborate*know-rarity
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic ask-about-rarity ^utility 20 ^type question ^animation-tag question)
-	(<f> ^text |Do you know my sister rarity? Her unique name is Rarity.|)
+	(<f> ^text |Do you know my sister? Her unique name is Rarity.|)
 }
 
 sp {talk-answered*elaborate*know-rarity*reaction

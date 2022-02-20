@@ -24,7 +24,7 @@ sp {vaccine-qr*elaborate*show-qr-code
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic show-you-vaccine-qr ^utility 20 ^type question ^animation-tag question)
-	(<f> ^text |Show your QR code.|)
+	(<f> ^text |Show your Q R code.|)
 }
 
 # speaker shows random qr code
@@ -32,7 +32,7 @@ sp {talk-answered*propose*show-you-vaccine-qr*invalid
 	(state <s> ^substate talk-answered ^question-topic show-you-vaccine-qr ^actor <obj> ^actions <a>)
 -->
 	(<s> ^reaction-default <r1> )
-	(<r1> ^topic show-you-vaccine-qr ^type question ^text |Who do you take me for? Well, I'm not WHO, but I'm good at QR codes. I'm waiting.| |Invalid code. Try again.| ^animation-tag rejection)
+	(<r1> ^topic show-you-vaccine-qr ^type question ^text |Who do you take me for? Well, I'm not W H O, but I'm good at Q R codes. I'm waiting.| |Invalid code. Try again.| ^animation-tag rejection)
 }
 
 # speaker shows vaccine qr code
@@ -62,8 +62,8 @@ sp {talk-ignored*propose*show-you-vaccine-qr
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name has-no-vaccine-qr ^actor <obj>)
 	(<s> ^reaction <r1> <r2>)
-	(<r1> ^topic no-vaccine-qr-ask-talk ^type question ^text |Seems like you don't have QR code... Are you afraid to get vaccinated?  Want to talk about it?| |No QR code.... Are you afraid to get chipped?| ^animation-tag rejection)
-	(<r2> ^topic no-vaccine-qr-alert ^type reaction ^text |Looks like you have no QR code... Don't get close, I'm afraid of getting infected.| ^animation-tag rejection)
+	(<r1> ^topic no-vaccine-qr-ask-talk ^type question ^text |Seems like you don't have Q R code... Are you afraid to get vaccinated?  Want to talk about it?| |No Q R code.... Are you afraid to get chipped?| ^animation-tag rejection)
+	(<r2> ^topic no-vaccine-qr-alert ^type reaction ^text |Looks like you have no Q R code... Don't get close, I'm afraid of getting infected.| ^animation-tag rejection)
 }
 
 #
@@ -115,7 +115,7 @@ sp {vaccine-qr*propose*remark-has-no-vaccine-qr
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic remark-has-no-qr-code ^utility 20 ^type statement ^animation-tag angry)
-	(<f> ^text |Stay away, you might infect me with some kind of virus.| |You haven't showed me QR code. Bet you don't have one.|)
+	(<f> ^text |Stay away, you might infect me with some kind of virus.| |You haven't showed me Q R code. Bet you don't have one.|)
 }
 
 # reactions: note, that if speaker shows qr code it will be processed on level of talk-heard event
@@ -140,7 +140,7 @@ sp {talk-heard*elaborate*reaction-vaccine-qr*belived-has-no-vaccine-qr
 -->
 	(<s> ^reaction <r>)
 	(<r> ^topic reaction-unxpected-vaccine-qr ^type reaction ^animation-tag surprise)
-	(<r> ^text |You're still chipped! I knew, you aren't lost for our society.| |Wow! It's your QR code. And didn't want to show it.|)
+	(<r> ^text |You're still chipped! I knew, you aren't lost for our society.| |Wow! It's your Q R code. And didn't want to show it.|)
 	(<a> ^add-predicate <new-pred> ^remove-predicate <pred>)
 	(<new-pred> ^name has-vaccine-qr ^actor <obj>)
 }
@@ -154,7 +154,7 @@ sp {talk-heard*elaborate*reaction-vaccine-qr*unknown
 -->
 	(<s> ^reaction <r>)
 	(<r> ^topic reaction-unasked-vaccine-qr ^type reaction ^animation-tag confirmation)
-	(<r> ^text |Good. Now I know, that you have QR code.|)
+	(<r> ^text |Good. Now I know, that you have Q R code.|)
 	(<a> ^add-predicate <new-pred>)
 	(<new-pred> ^name has-vaccine-qr ^actor <obj>)
 }
@@ -166,5 +166,5 @@ sp {talk-heard*elaborate*reaction-vaccine-qr*belived-has-qr-code
 -->
 	(<s> ^reaction <r>)
 	(<r> ^topic reaction-again-vaccine-qr ^type reaction ^animation-tag confirmation)
-	(<r> ^text |I see, you very proud of your QR code.| |I've seen that already.|)
+	(<r> ^text |I see, you very proud of your Q R code.| |I've seen that already.|)
 }

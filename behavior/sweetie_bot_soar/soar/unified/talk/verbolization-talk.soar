@@ -307,7 +307,7 @@ sp {verbolization*elaborate*missing-speaker*acquitance
 	(<pred> ^name acquitance ^object <obj>)
 	(<obj> ^label <label>)
 -->
-	(<f> ^text (concat |Where are you? Where have you gone, interlocutor? | <label> |?|))
+	(<f> ^text (concat |Where are you? Where have you gone, friend? | <label> |?|))
 }
 
 sp {verbolization*elaborate*missing-speaker*not-greeted
@@ -315,5 +315,5 @@ sp {verbolization*elaborate*missing-speaker*not-greeted
 	(<f> ^topic missing-speaker)
 	(<proc> ^name waiting-answer ^topic greeting ^object <obj>)
 -->
-	(<f> ^text |Looks like he ran away. What a shy interlocutor.|)
+	(<f> ^text |Looks like he ran away. What a shy person.|)
 }

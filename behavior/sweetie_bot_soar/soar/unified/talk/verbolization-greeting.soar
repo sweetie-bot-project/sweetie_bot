@@ -76,7 +76,7 @@ sp {verbolization*elaborate*greeting-not-acquitance*reaction
 	(<obj> ^label <label>)
 -->
 	(<s> ^reaction <r1>)
-	(<r1> ^answer-topic greeting ^topic make-acquitance ^text (concat |I will call you interlocutor | <label> |.|) ^animation-tag confirmation)
+	(<r1> ^answer-topic greeting ^topic make-acquitance ^text (concat |I will call you friend | <label> |.|) ^animation-tag confirmation)
 }
 
 # if speaker is aready known to robot
@@ -88,7 +88,7 @@ sp {verbolization*elaborate*greeting-acquitance-normal
 	(<obj> ^label <label>)
 -->
 	(<f> ^utility 50 ^type question ^animation-tag greeting)
-	(<f> ^text (concat |Hello, interlocutor | <label> |!|) (concat |Glad to see you again, interlocutor | <label> |.|))
+	(<f> ^text (concat |Hello, friend | <label> |!|) (concat |Glad to see you again, friend | <label> |.|))
 }
 
 sp {verbolization*elaborate*greeting-acquitance-dislike
@@ -99,7 +99,7 @@ sp {verbolization*elaborate*greeting-acquitance-dislike
 	(<obj> ^label <label>)
 -->
 	(<f> ^utility 55 ^type question ^animation-tag rejection)
-	(<f> ^text (concat |Hello, interlocutor | <label> |!| |But I'm not happy with you.|) (concat |Not very glad to see you again, interlocutor | <label> |.|))
+	(<f> ^text (concat |Hello, friend | <label> |!| |But I'm not happy with you.|) (concat |Not so much pleased to see you again, friend | <label> |.|))
 }
 
 sp {talk-said*propose*greeted
@@ -141,7 +141,7 @@ sp {talk-heard*elaborate*greeting-acquitance-not-greeted
 -->
 	(<s> ^reaction <f>)
 	(<f> ^topic greeting ^type reaction ^animation-tag greeting)
-	(<f> ^text (concat |Greetings, interlocutor | <label> |.|) (concat |Executing greeting procedure. Greetings object - interlocutor | <label> |.|))
+	(<f> ^text (concat |Greetings, friend | <label> |.|) (concat |Executing greeting procedure. Greetings object - friend | <label> |.|))
 }
 
 sp {talk-heard*elaborate*greeting-acquitance-greeted
@@ -153,7 +153,7 @@ sp {talk-heard*elaborate*greeting-acquitance-greeted
 -->
 	(<s> ^reaction <f>)
 	(<f> ^topic greeting ^type reaction ^animation-tag greeting)
-	(<f> ^text (concat |Do you like to say hello to me, interlocutor | <label> |? Hello! Hello! Hello!|) (concat |Request to new greeting accepted. Hello interlocutor | <label> |.|))
+	(<f> ^text (concat |Do you like to say hello to me, friend | <label> |? Hello! Hello! Hello!|) (concat |Request to new greeting accepted. Hello friend | <label> |.|))
 }
 
 sp {talk-heard*elaborate*greeting-acquitance-greeted-rejection
@@ -186,7 +186,7 @@ sp {verbolization*elaborate*acquitance-statement
 	(<obj> ^label <label>)
 -->
 	(<v> ^frame <r1>)
-	(<r1> ^topic make-acquitance ^utility 49 ^type reaction ^text (concat |I will call you interlocutor | <label> |.|) ^animation-tag confirmation)
+	(<r1> ^topic make-acquitance ^utility 49 ^type reaction ^text (concat |I will call you friend | <label> |.|) ^animation-tag confirmation)
 }
 
 sp {talk-answered*propose*made-acquitance
@@ -283,7 +283,7 @@ sp {verbolization*elaborate*goodbye-ignores-me
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic goodbye-reaction ^type reaction ^animation-tag question ^utility 20)
-	(<f> ^text |If you ignoring me -- I'm ignoring you! Bye.| |I think we've talked enough. Bye.|)
+	(<f> ^text |If you're ignoring me -- I'm ignoring you! Bye.| |I think we've talked enough. Bye.|)
 }
 
 # end talk if speaker says nonsense
