@@ -1,0 +1,34 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2708";
+
+    fragment@0 {
+        target = <&i2c0>;
+
+        __overlay__ {
+            status = "okay";
+            #address-cells = <1>;
+            #size-cells = <0>;
+
+            gpio_pcf857x: gpio-pcf857x {
+                compatible = "nxp,pca8575";
+                reg = <0x20>;
+                #gpio-cells = <2>;
+
+/* - lines-initial-states: Bitmask that specifies the initial state of each
+  line. When a bit is set to zero, the corresponding line will be initialized to
+  the input (pulled-up) state. When the  bit is set to one, the line will be
+  initialized the low-level output state. If the property is not specified
+  all lines will be initialized to the input state. */
+
+                lines-initial-states = <0x08>;
+                status = "okay";
+            };
+        };
+    };
+
+};
+
+
