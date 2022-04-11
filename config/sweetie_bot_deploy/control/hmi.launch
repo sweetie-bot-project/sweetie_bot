@@ -64,12 +64,7 @@
 		<group>
 			<remap from="joint_states" to="$(arg robot_ns)/joint_states"/>
 			<remap from="control" to="$(arg robot_ns)/control"/>
-			<node name="eye_left_rviz" pkg="sweetie_bot_eyes" type="eye">
-				<param name="is_left" value="true"/>
-				<param name="publish_pixmap" value="true"/>
-			</node>
-			<node name="eye_right_rviz" pkg="sweetie_bot_eyes" type="eye">
-				<param name="is_left" value="false"/>
+			<node name="eyes_rviz" pkg="sweetie_bot_eyes" type="eyes">
 				<param name="publish_pixmap" value="true"/>
 			</node>
 		</group>

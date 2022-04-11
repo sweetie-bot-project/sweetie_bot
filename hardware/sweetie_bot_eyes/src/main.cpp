@@ -1,24 +1,32 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include <QHBoxLayout>
 
-#include <QDebug>
+#include "consts.h"
 
 #include "ros/ros.h"
 
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
-    QStringList args = a.arguments();
 
-    bool isLeftEye = false;
-    if(args.count() >= 2) {
-        if(args.at(1) == "-l") {
-            isLeftEye = true;
-        }
-    }
+    ros::init(argc, argv, "eyes");
 
-    ros::init(argc, argv, "eye");
+    QWidget w;
+    auto right_eye = new MainWindow(false, &w);
+    auto left_eye = new MainWindow(true, &w);
 
-    MainWindow w(isLeftEye);
+    w.setAttribute(Qt::WA_Hover);
+    right_eye->setAttribute(Qt::WA_Hover);
+    left_eye->setAttribute(Qt::WA_Hover);
+
+    auto hlay = new QHBoxLayout(&w);
+    hlay->addWidget(right_eye);
+    hlay->addWidget(left_eye);
+    hlay->setMargin(0);
+    hlay->setSpacing(0);
+
+    w.resize(2 * WIDTH, HEIGHT);
+    // w.resize(640,240);
     w.show();
 
     return a.exec();

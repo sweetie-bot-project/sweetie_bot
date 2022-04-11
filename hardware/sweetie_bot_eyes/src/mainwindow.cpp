@@ -2,15 +2,21 @@
 #include "qmath.h"
 #include <QPainter>
 #include <QKeyEvent>
+#include <QMouseEvent>
+
 
 #include "consts.h"
+
+// Convertion proportions for new eye resolution
+// 320x240 -> 800x800
+// 2.5x3.3333333333333335
 
 MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     m_isLeftEye(isLeftEye),
 	m_publishPixmap(false),
 
-    m_c(QPointF(160,120)),
-    m_R(125.0),
+    m_c(QPointF(WIDTH/2.,HEIGHT/2.)),
+    m_R(125.0*2.5),
     m_relR8(0.6),
     m_alpha(0.0),
     m_rot(0.0),
@@ -59,7 +65,9 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     m_endTopEyelidHeight(0.0),
     m_stepTopEyelidHeight(0.0),
     m_endEyelidRotation(0.0),
-    m_stepEyelidRotation(0.0)
+    m_stepEyelidRotation(0.0),
+
+    m_isMouseHovered(false)
 
     // ROS
     //node_(new ros::NodeHandle)
@@ -71,11 +79,13 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     m_Pout.fill(QPointF(), SIDES);
     m_eyePaths.fill(QPainterPath(), EyePathCount);
 
-    setFixedSize(320,240);
+    setFixedSize(WIDTH, HEIGHT);
 
     countEyeTransform();
     countEyelidTransform();
     countFrame();
+
+    parent->installEventFilter(this);
 
     m_blinkTimer->setInterval(m_msUpdateMove);
     m_moveTimer->setInterval(m_msUpdateMove);
@@ -89,7 +99,6 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
 
 	// NODE INTERFACE 
 	// parameteres
-	ros::param::get("~is_left", m_isLeftEye);
 	ros::param::get("~publish_pixmap", m_publishPixmap);
 	// subscribers
     sub_control_ = node_.subscribe<sweetie_bot_text_msgs::TextCommand>("control", 1, &MainWindow::controlCallback, this, ros::TransportHints().tcpNoDelay());
@@ -210,8 +219,8 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
                 x = msg->position[n];
   }
 
-  float eyeToX = 160 - (160 * x) / 2;
-  float eyeToY = 120 - (120 * y) / 2;
+  float eyeToX = WIDTH/2 - (WIDTH/2 * x) / 2;
+  float eyeToY = HEIGHT/2 - (HEIGHT/2 * y) / 2;
 
   //ROS_INFO_STREAM(m_isLeftEye << "eye: ("<< x << "," << y << ") " << eyeToX << " " << eyeToY);
 
@@ -236,7 +245,7 @@ QPointF MainWindow::rotatePoint(QPointF point, QPointF center, float angle) {
     return QPointF(newx,newy);
 }
 
-void MainWindow::paintEvent(QPaintEvent *) {
+void MainWindow::paintEvent(QPaintEvent *e) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
@@ -264,7 +273,9 @@ void MainWindow::paintEvent(QPaintEvent *) {
         painter.drawPath(m_bottomEyelidPath);
     }
 
-    painter.drawImage(0, 0, *overlay_);
+    // @Temporary: Removed overlay as it needs to be redone for the new eyes
+    // painter.drawImage(0, 0, *overlay_);
+    QWidget::paintEvent(e);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *e) {
@@ -381,7 +392,7 @@ void MainWindow::keyPressEvent(QKeyEvent *e) {
         }
     }
     else if(e->key() == Qt::Key_M) {
-        if(m_topEyelidY < 120) {
+        if(m_topEyelidY < HEIGHT/2) {
             m_topEyelidY++;
             countFrame();
         }
@@ -396,6 +407,7 @@ void MainWindow::keyPressEvent(QKeyEvent *e) {
             m_isMoveWithBlink = false;
         }
     }
+    QWidget::keyPressEvent(e);
 }
 
 void MainWindow::countMove() {
@@ -753,4 +765,16 @@ void MainWindow::countEyelidTransform() {
         m_eyelidTransform.rotate(-m_topEyelidRotation);
     }
     m_eyelidTransform.translate(-WIDTH/2, -m_topEyelidY);
+}
+
+bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
+  switch (event->type()) {
+  case QEvent::KeyPress:
+    if (m_isMouseHovered) {
+      QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+      keyPressEvent(keyEvent);
+    }
+    break;
+  }
+  return QObject::eventFilter(watched, event);
 }

@@ -19,6 +19,8 @@ private:
     bool m_isLeftEye;
     bool m_publishPixmap;
 
+    bool m_isMouseHovered;
+
     QPointF m_c;     //Center of eye
     float m_R;       //Radius1 of eye
     float m_R2;      //Radius2 of eye (it is elliptic)
@@ -154,6 +156,10 @@ public:
 
     void paintEvent(QPaintEvent *);
     void keyPressEvent(QKeyEvent *e);
+    void enterEvent(QMouseEvent *e);
+    void leaveEvent(QMouseEvent *e);
+
+    bool eventFilter(QObject *obj, QEvent *event);
 
 
 private slots:

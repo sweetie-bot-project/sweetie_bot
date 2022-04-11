@@ -142,15 +142,15 @@ include_directories(${catkin_INCLUDE_DIRS})
 ## Declare a C++ executable
 # add_executable(sweetie_bot_eyes_node src/sweetie_bot_eyes_node.cpp)
 
-add_executable(eye src/main.cpp src/mainwindow.cpp)
+add_executable(eyes src/main.cpp src/mainwindow.cpp)
 
-qt5_use_modules(eye Widgets)
+qt5_use_modules(eyes Widgets)
 
-add_dependencies(eye
+add_dependencies(eyes
   ${catkin_EXPORTED_TARGETS}
 )
 
-target_link_libraries(eye
+target_link_libraries(eyes
    ${catkin_LIBRARIES}
 )
 
@@ -178,7 +178,7 @@ target_link_libraries(eye
 # )
 
 # Mark executables and/or libraries for installation
- install(TARGETS eye
+ install(TARGETS eyes
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

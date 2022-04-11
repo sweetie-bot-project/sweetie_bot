@@ -16,11 +16,7 @@
 		<include if="$(arg run_real)" file="$(arg robot_profile_path)/robot_module.launch" />
 		<!-- eyes: start eyes in non-ismulation for debug purpose  -->
 		<group unless="$(arg run_real)">
-			<node name="eye_left"  pkg="sweetie_bot_eyes" type="eye">
-				<param name="is_left" value="true"/>
-			</node>
-			<node name="eye_right" pkg="sweetie_bot_eyes" type="eye">
-				<param name="is_left" value="false"/>
+			<node name="eyes"  pkg="sweetie_bot_eyes" type="eyes">
 			</node>
 		</group>
 	</group>
