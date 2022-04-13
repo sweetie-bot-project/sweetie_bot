@@ -2,8 +2,7 @@
 #include "qmath.h"
 #include <QPainter>
 #include <QKeyEvent>
-#include <QMouseEvent>
-
+#include <QApplication>
 
 #include "consts.h"
 
@@ -13,13 +12,13 @@
 
 MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     m_isLeftEye(isLeftEye),
-	m_publishPixmap(false),
+    m_publishPixmap(false),
 
-    m_c(QPointF(WIDTH/2.,HEIGHT/2.)),
-    m_R(125.0*2.5),
+    m_c(QPointF(WIDTH/2.,HEIGHT/2. - 15)), // -15 for new screen center correction
+    m_R(115.0*2.5),
     m_relR8(0.6),
     m_alpha(0.0),
-    m_rot(0.0),
+    m_rot(40.83*0.9),
     m_scale(0.8),
 
     m_blinkLength(150),
@@ -41,7 +40,7 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
 
     m_currentMovingTime(0),
     m_movingTime(0),
-    m_msUpdateMove(20),
+    m_msUpdateMove(16),
 
     m_moveFlags((MoveFlags)0),
 
@@ -65,15 +64,18 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     m_endTopEyelidHeight(0.0),
     m_stepTopEyelidHeight(0.0),
     m_endEyelidRotation(0.0),
-    m_stepEyelidRotation(0.0),
-
-    m_isMouseHovered(false)
+    m_stepEyelidRotation(0.0)
 
     // ROS
     //node_(new ros::NodeHandle)
 {
 
     setWindowFlags(Qt::FramelessWindowHint);
+
+    if (m_isLeftEye) {
+        m_rot = -m_rot;
+    }
+    m_rot += 180; // @Temporary: Fix for flipped screens
 
     m_Pin.fill(QPointF(), SIDES + 1);
     m_Pout.fill(QPointF(), SIDES);
@@ -85,7 +87,9 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     countEyelidTransform();
     countFrame();
 
-    parent->installEventFilter(this);
+    // Should be set on the widget to accept keyPressEvent as a child
+    // or there's no way to set focus on the individual eye
+    setFocusPolicy(Qt::StrongFocus);
 
     m_blinkTimer->setInterval(m_msUpdateMove);
     m_moveTimer->setInterval(m_msUpdateMove);
@@ -97,23 +101,17 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     connect(timer,SIGNAL(timeout()),this,SLOT(rosSpin()));
     timer->start(10);
 
-	// NODE INTERFACE 
-	// parameteres
-	ros::param::get("~publish_pixmap", m_publishPixmap);
-	// subscribers
+    // NODE INTERFACE 
+    // parameteres
+    ros::param::get("~publish_pixmap", m_publishPixmap);
+    // subscribers
     sub_control_ = node_.subscribe<sweetie_bot_text_msgs::TextCommand>("control", 1, &MainWindow::controlCallback, this, ros::TransportHints().tcpNoDelay());
     sub_joint_state_ = node_.subscribe<sensor_msgs::JointState>("joint_states", 1, &MainWindow::moveCallback, this, ros::TransportHints().tcpNoDelay());
-	// publishers
+    // publishers
     std::string image_eye_topic_name = (m_isLeftEye) ? "eye_image_left" : "eye_image_right";
     pub_eye_image_ = node_.advertise<sensor_msgs::Image>(image_eye_topic_name, 1);
 
     path_ =  QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") );
-    if(m_isLeftEye) {
-        overlay_ = new QImage(path_ + "/overlays/leftEyeOverlay.png");
-    }
-    else {
-        overlay_ = new QImage(path_ + "/overlays/rightEyeOverlay.png");
-    }
 }
 
 MainWindow::~MainWindow() {
@@ -121,7 +119,7 @@ MainWindow::~MainWindow() {
 
 void MainWindow::rosSpin()
 {
-    if(!ros::ok()) close();
+    if(!ros::ok()) QApplication::quit();
     ros::spinOnce();
 }
 
@@ -226,7 +224,7 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
 
   m_isMoveWithBlink = false;
 
-  move((MoveFlags)1, 30,
+  move((MoveFlags)1, 16,
          eyeToX, eyeToY, 0, 0, 0,
          0, 0, 0,
          0, 0,
@@ -273,14 +271,12 @@ void MainWindow::paintEvent(QPaintEvent *e) {
         painter.drawPath(m_bottomEyelidPath);
     }
 
-    // @Temporary: Removed overlay as it needs to be redone for the new eyes
-    // painter.drawImage(0, 0, *overlay_);
     QWidget::paintEvent(e);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *e) {
     if(e->key() == Qt::Key_Escape) {
-        this->close();
+        QApplication::quit();
     }
     else if(e->key() == Qt::Key_D) {
         m_c.setX(m_c.x() + 1);
@@ -407,7 +403,6 @@ void MainWindow::keyPressEvent(QKeyEvent *e) {
             m_isMoveWithBlink = false;
         }
     }
-    QWidget::keyPressEvent(e);
 }
 
 void MainWindow::countMove() {
@@ -767,14 +762,3 @@ void MainWindow::countEyelidTransform() {
     m_eyelidTransform.translate(-WIDTH/2, -m_topEyelidY);
 }
 
-bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
-  switch (event->type()) {
-  case QEvent::KeyPress:
-    if (m_isMouseHovered) {
-      QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-      keyPressEvent(keyEvent);
-    }
-    break;
-  }
-  return QObject::eventFilter(watched, event);
-}
