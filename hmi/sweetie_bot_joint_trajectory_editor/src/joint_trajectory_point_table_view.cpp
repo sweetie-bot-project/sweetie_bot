@@ -14,12 +14,12 @@ JointTrajectoryPointTableModel::JointTrajectoryPointTableModel(QObject *parent, 
 
 int JointTrajectoryPointTableModel::rowCount(const QModelIndex & /*parent*/) const
 {
-   return trajectory_data_.pointCount();
+	return trajectory_data_.pointCount();
 }
 
 int JointTrajectoryPointTableModel::columnCount(const QModelIndex & /*parent*/) const
 {
-    return 2 + trajectory_data_.supportCount() + trajectory_data_.jointCount();
+	return 2 + trajectory_data_.supportCount() + trajectory_data_.jointCount();
 }
 
 QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -45,9 +45,9 @@ QVariant JointTrajectoryPointTableModel::headerData(int section, Qt::Orientation
 				break;
 			/*case Qt::TextAlignmentRole:
 				return Qt::AlignLeft + Qt::AlignVCenter;*/
-    	}
+		}
 	}
-    return QVariant();
+	return QVariant();
 }
 
 const std::vector<std::string> JointTrajectoryPointTableModel::symbols = {
@@ -96,8 +96,8 @@ QVariant JointTrajectoryPointTableModel::data(const QModelIndex &index, int role
 				case 1: 
 					return QBrush(QColor(163,223,249));
 			}
-    }
-    return QVariant();
+	}
+	return QVariant();
 }
 
 Qt::ItemFlags JointTrajectoryPointTableModel::flags (const QModelIndex &index) const
@@ -138,22 +138,42 @@ bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVa
 	switch (index.column()) {
 		case 0:
 			return false;
-		case 1:
+		case 1: {
+			auto& point = trajectory_data_.getPoint(index.row());
+			double old_time_from_start = point.time_from_start;
+
 			// edit time_from_start
 			trajectory_data_.setPointTimeFromStart(index.row(), d);
+
+			emit itemChangedWithOldValue(index, old_time_from_start);
 			emit dataChanged(index, index);
 			return true;
+		}
 		default: 
 			if (index.column() < 2 + trajectory_data_.supportCount()) {
+				auto support_index = index.column() - 2;
+
+				auto& point = trajectory_data_.getPoint(index.row());
+				double old_support_state = point.supports[support_index];
+
 				// edit support state
-				if (role == Qt::CheckStateRole)	trajectory_data_.setPointSupport(index.row(), index.column() - 2, (Qt::CheckState)value.toInt() == Qt::Checked ? 1.0 : 0.0);
-				else trajectory_data_.setPointSupport(index.row(), index.column() - 2, d);
+				if (role == Qt::CheckStateRole)	trajectory_data_.setPointSupport(index.row(), support_index, (Qt::CheckState)value.toInt() == Qt::Checked ? 1.0 : 0.0);
+				else trajectory_data_.setPointSupport(index.row(), support_index, d);
+
+				emit itemChangedWithOldValue(index, old_support_state);
 				emit dataChanged(index, index);
 				return true;
 			}
 			else {
+				auto position_value_index = index.column() - 2 - trajectory_data_.supportCount();
+
+				auto& point = trajectory_data_.getPoint(index.row());
+				double old_position = point.positions[position_value_index];
+
 				// edit joint position
-				trajectory_data_.setPointJointPosition(index.row(), index.column() - 2 - trajectory_data_.supportCount(), d);
+				trajectory_data_.setPointJointPosition(index.row(), position_value_index, d);
+
+				emit itemChangedWithOldValue(index, old_position);
 				emit dataChanged(index, index);
 				return true;
 			}

@@ -334,9 +334,20 @@ void JointTrajectoryData::setPointSupport(unsigned int index, unsigned int suppo
 void JointTrajectoryData::setPointTimeFromStart(unsigned int index, double time_from_start)
 {
 	TrajectoryPoint& point = trajectory_points_.at(index);
-	if (time_from_start < 0.0) return; // TODO exception?
+	if (time_from_start < 0.0) return;
 	point.time_from_start = time_from_start;
 	sort(trajectory_points_.begin(), trajectory_points_.end());
+}
+
+void JointTrajectoryData::shiftPointsTimeFromStart(unsigned int start_index, unsigned int end_index, double offset_value)
+{
+  for (auto index = start_index; index <= end_index; index++) {
+	TrajectoryPoint& point = trajectory_points_.at(index);
+    auto new_time_from_start = point.time_from_start + offset_value;
+
+	if (new_time_from_start < 0.0)  new_time_from_start = 0.0;
+    point.time_from_start = new_time_from_start;
+  }
 }
 
 void JointTrajectoryData::scaleTrajectory(double scale) 

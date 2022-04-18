@@ -71,6 +71,7 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 	connect(timer, SIGNAL(timeout()), this, SLOT(rosSpin()));
 	timer->start(50);
 
+	connect(&joint_trajectory_point_table_model_, SIGNAL(itemChangedWithOldValue(const QModelIndex &, double)), this, SLOT(on_pointsTableView_itemChangedWithOldValue(const QModelIndex &, double)));
 }
 
 TrajectoryEditor::~TrajectoryEditor() 
@@ -509,6 +510,40 @@ void TrajectoryEditor::on_pointsTableView_doubleClicked(const QModelIndex &index
 		}
 	}
 }
+
+void TrajectoryEditor::on_pointsTableView_itemChangedWithOldValue(const QModelIndex &index, double old_time_from_start)
+{
+	if (index.isValid()) {
+		if (index.column() == 1) {
+			double time_from_start = joint_trajectory_data_.getPoint(index.row()).time_from_start;
+			double change_delta = time_from_start - old_time_from_start;
+
+			switch (ui.shiftTimeSynchronouslyComboBox->currentIndex()) {
+			default:
+			case 0: // No shift
+			break;
+
+			case 1: // Shift time values above cell
+				if (index.row() - 1 >= 0)
+					joint_trajectory_data_.shiftPointsTimeFromStart(0, index.row() - 1, change_delta);
+				break;
+
+			case 2: // Shift time values below cell
+				if (index.row() + 1 < joint_trajectory_data_.pointCount())
+					joint_trajectory_data_.shiftPointsTimeFromStart(index.row() + 1, joint_trajectory_data_.pointCount() - 1, change_delta);
+				break;
+
+			case 3: // Shift all time values
+				if (index.row() - 1 >= 0)
+					joint_trajectory_data_.shiftPointsTimeFromStart(0, index.row() - 1, change_delta);
+				if (index.row() + 1 < joint_trajectory_data_.pointCount())
+					joint_trajectory_data_.shiftPointsTimeFromStart(index.row() + 1, joint_trajectory_data_.pointCount() - 1, change_delta);
+				break;
+			}
+		}
+	}
+}
+
 
 
 void TrajectoryEditor::on_applyScaleButton_clicked() 

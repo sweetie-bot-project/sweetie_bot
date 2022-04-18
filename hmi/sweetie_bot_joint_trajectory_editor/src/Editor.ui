@@ -453,6 +453,33 @@
                   </widget>
                  </item>
                  <item>
+                  <widget class="QComboBox" name="shiftTimeSynchronouslyComboBox">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>No time value shifts</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Shift time values above cell</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Shift time values below cell</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Shift all time values</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QPushButton" name="addRobotPoseButton">
                    <property name="enabled">
                     <bool>false</bool>

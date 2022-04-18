@@ -26,6 +26,8 @@ class JointTrajectoryPointTableModel : public QAbstractTableModel
 		Qt::ItemFlags flags (const QModelIndex &index) const override;
 		bool setData(const QModelIndex &index, const QVariant &value, int role);
 		bool reReadData();
+	signals:
+		void itemChangedWithOldValue(const QModelIndex &index, double old_value);
 };
 
 } // namespace hmi
