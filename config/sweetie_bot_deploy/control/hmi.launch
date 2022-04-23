@@ -64,9 +64,23 @@
 		<group>
 			<remap from="joint_states" to="$(arg robot_ns)/joint_states"/>
 			<remap from="control" to="$(arg robot_ns)/control"/>
-			<node name="eyes_rviz" pkg="sweetie_bot_eyes" type="eyes">
-				<param name="publish_pixmap" value="true"/>
-			</node>
+
+			<group if="$(eval arg('robot_name') == 'sweetie_bot_proto2')"/>
+				<node name="eye_left_rviz" pkg="sweetie_bot_eyes" type="eye">
+					<param name="is_left" value="true"/>
+					<param name="publish_pixmap" value="true"/>
+				</node>
+				<node name="eye_right_rviz" pkg="sweetie_bot_eyes" type="eye">
+					<param name="is_left" value="false"/>
+					<param name="publish_pixmap" value="true"/>
+				</node>
+			</group>
+
+			<group if="$(eval arg('robot_name') == 'sweetie_bot_proto3')"/>
+				<node name="eyes_rviz" pkg="sweetie_bot_eyes" type="proto3_eyes">
+					<param name="publish_pixmap" value="true"/>
+				</node>
+			</group>
 		</group>
 		<!-- visualizes gait generaot goal, opt. parameters and cartesian base state, endeffector positions and forces -->
 		<!--<group>-->
