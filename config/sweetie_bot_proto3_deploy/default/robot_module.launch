@@ -7,6 +7,10 @@
 		<remap from="detections" to="$(arg robot_ns)/detections" />
 		<remap from="markers" to="$(arg robot_ns)/hmi/detections" />
 	</node>
+
+	<!-- run eyes on fb device -->
+	<node machine="sweetiebot" name="eyes"  pkg="sweetie_bot_eyes" type="proto3_eyes" args="-platform linuxfb:fb=/dev/fb0"></node>
+
 	<!-- run battery monitor -->
 	<node ns="hardware" machine="sweetiebot" name="battery_monitor" pkg="sweetie_bot_battery_monitor" type="battery_monitor">
 		<remap from="battery_state" to="$(arg robot_ns)/battery_state" />

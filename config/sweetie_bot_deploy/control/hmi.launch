@@ -3,6 +3,7 @@
 	<arg name="rviz_config" default="$(find sweetie_bot_deploy)/control/joint_space_control.rviz" doc="Rviz configuration file."/>
 	<arg name="run_rviz" default="true" doc="Set true to start rviz. (Use as walkaround for rviz crash on Debina/Jessie)."/>
 	<arg name="robot_ns" default="/" doc="Namspace where robot nodes and topics are located."/>
+        <arg name="robot_name" default="sweetie_bot_proto2" doc="Robot-specific configuration packages prefix (e.g. set 'sweetie_bot_proto2' for 'sweetie_bot_proto2_description', 'sweetie_bot_proto2_moveit_config', 'sweetie_bot_proto2_deploy' packages)."/>
 
 	<group ns="$(arg robot_ns)/hmi">
 		<!-- global remapping -->

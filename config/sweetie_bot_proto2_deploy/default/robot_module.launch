@@ -2,14 +2,10 @@
 <!-- run_real and robot launch parameters are always assumed. -->
 <launch>
 	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
+
 	<!-- run eyes on fb device -->
-	<group if="$(eval arg('robot_name') == 'sweetie_bot_proto2')">
-		<node machine="sweetiebot" name="eye_left"  pkg="sweetie_bot_eyes" type="proto2_eye" args="-l -platform linuxfb:fb=/dev/fb0"></node>
-		<node machine="sweetiebot" name="eye_rigth" pkg="sweetie_bot_eyes" type="proto2_eye" args="-r -platform linuxfb:fb=/dev/fb1"></node>
-	</group>
-	<group if="$(eval arg('robot_name') == 'sweetie_bot_proto3')">
-		<node machine="sweetiebot" name="eyes"  pkg="sweetie_bot_eyes" type="proto3_eyes" args="-platform linuxfb:fb=/dev/fb0"></node>
-	</group>
+	<node machine="sweetiebot" name="eye_left"  pkg="sweetie_bot_eyes" type="proto2_eye" args="-l -platform linuxfb:fb=/dev/fb0"></node>
+	<node machine="sweetiebot" name="eye_rigth" pkg="sweetie_bot_eyes" type="proto2_eye" args="-r -platform linuxfb:fb=/dev/fb1"></node>
 	<!-- run battery monitor -->
 	<node ns="hardware" machine="sweetiebot" name="battery_monitor" pkg="sweetie_bot_battery_monitor" type="battery_monitor">
 		<remap from="battery_state" to="$(arg robot_ns)/battery_state" />
