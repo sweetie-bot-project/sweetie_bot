@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 3.2.8)
 # http://habrahabr.ru/post/181838/ 
 project(sweetie_bot_eyes)
 
@@ -142,15 +142,24 @@ include_directories(${catkin_INCLUDE_DIRS})
 ## Declare a C++ executable
 # add_executable(sweetie_bot_eyes_node src/sweetie_bot_eyes_node.cpp)
 
-add_executable(eye src/main.cpp src/mainwindow.cpp)
-
-qt5_use_modules(eye Widgets)
-
-add_dependencies(eye
+# proto2 eyes
+add_executable(proto2_eye src/proto2/main.cpp src/proto2/mainwindow.cpp)
+qt5_use_modules(proto2_eye Widgets)
+add_dependencies(proto2_eye
   ${catkin_EXPORTED_TARGETS}
 )
+target_link_libraries(proto2_eye
+   ${catkin_LIBRARIES}
+)
 
-target_link_libraries(eye
+
+# proto3 eyes
+add_executable(proto3_eyes src/proto3/main.cpp src/proto3/mainwindow.cpp)
+qt5_use_modules(proto3_eyes Widgets)
+add_dependencies(proto3_eyes
+  ${catkin_EXPORTED_TARGETS}
+)
+target_link_libraries(proto3_eyes
    ${catkin_LIBRARIES}
 )
 
@@ -178,7 +187,13 @@ target_link_libraries(eye
 # )
 
 # Mark executables and/or libraries for installation
- install(TARGETS eye
+ install(TARGETS proto2_eye
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
+
+ install(TARGETS proto3_eyes
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

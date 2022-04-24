@@ -3,6 +3,7 @@
 	<arg name="rviz_config" default="$(find sweetie_bot_deploy)/control/joint_space_control.rviz" doc="Rviz configuration file."/>
 	<arg name="run_rviz" default="true" doc="Set true to start rviz. (Use as walkaround for rviz crash on Debina/Jessie)."/>
 	<arg name="robot_ns" default="/" doc="Namspace where robot nodes and topics are located."/>
+        <arg name="robot_name" default="sweetie_bot_proto2" doc="Robot-specific configuration packages prefix (e.g. set 'sweetie_bot_proto2' for 'sweetie_bot_proto2_description', 'sweetie_bot_proto2_moveit_config', 'sweetie_bot_proto2_deploy' packages)."/>
 
 	<group ns="$(arg robot_ns)/hmi">
 		<!-- global remapping -->
@@ -64,14 +65,23 @@
 		<group>
 			<remap from="joint_states" to="$(arg robot_ns)/joint_states"/>
 			<remap from="control" to="$(arg robot_ns)/control"/>
-			<node name="eye_left_rviz" pkg="sweetie_bot_eyes" type="eye">
-				<param name="is_left" value="true"/>
-				<param name="publish_pixmap" value="true"/>
-			</node>
-			<node name="eye_right_rviz" pkg="sweetie_bot_eyes" type="eye">
-				<param name="is_left" value="false"/>
-				<param name="publish_pixmap" value="true"/>
-			</node>
+
+			<group if="$(eval arg('robot_name') == 'sweetie_bot_proto2')">
+				<node name="eye_left_rviz" pkg="sweetie_bot_eyes" type="proto2_eye">
+					<param name="is_left" value="true"/>
+					<param name="publish_pixmap" value="true"/>
+				</node>
+				<node name="eye_right_rviz" pkg="sweetie_bot_eyes" type="proto2_eye">
+					<param name="is_left" value="false"/>
+					<param name="publish_pixmap" value="true"/>
+				</node>
+			</group>
+
+			<group if="$(eval arg('robot_name') == 'sweetie_bot_proto3')">
+				<node name="eyes_rviz" pkg="sweetie_bot_eyes" type="proto3_eyes">
+					<param name="publish_pixmap" value="true"/>
+				</node>
+			</group>
 		</group>
 		<!-- visualizes gait generaot goal, opt. parameters and cartesian base state, endeffector positions and forces -->
 		<!--<group>-->
