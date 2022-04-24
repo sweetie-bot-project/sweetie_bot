@@ -1,6 +1,6 @@
 <launch>
 
-  <node name="sweetie_bot_eyes"  pkg="sweetie_bot_eyes" type="eyes" output="screen" args="-platform linuxfb:fb=/dev/fb0 ">
+  <node name="sweetie_bot_eyes"  pkg="sweetie_bot_eyes" type="proto3_eyes" output="screen" args="-platform linuxfb:fb=/dev/fb0 ">
 	<remap from="joint_states" to="motion/aggregator_ref/out_joints_sorted" />
   </node>
 

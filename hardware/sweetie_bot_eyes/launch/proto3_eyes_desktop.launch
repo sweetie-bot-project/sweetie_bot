@@ -1,6 +1,6 @@
 <launch>
 
-  <node name="sweetie_bot_eyes"  pkg="sweetie_bot_eyes" type="eyes" output="screen" args="-l">
+  <node name="sweetie_bot_eyes"  pkg="sweetie_bot_eyes" type="proto3_eyes" output="screen" args="-l">
         <remap from="joint_state" to="motion/aggregator_ref/out_joints_sorted" />
         <param name="publish_pixmap" value="true"/>
   </node>
