@@ -8,13 +8,14 @@ from sweetie_bot_text_msgs.msg import TextCommand
 from sweetie_bot_text_msgs.msg import TextActionAction as TextAction
 from sweetie_bot_text_msgs.msg import TextActionGoal, TextActionFeedback, TextActionResult
 
+import speechd
 from rhvoice_wrapper import TTS
-
 import gi
-
 gi.require_version('Gst', '1.0')
-
 from gi.repository import Gst
+
+
+
 
 
 class TextCommandHandler:
@@ -25,6 +26,9 @@ class TextCommandHandler:
         self.soundhandle = SoundClient()
         self.sounds = sounds
         self.playback_command = playback_command
+
+        self.speechd = speechd.SSIPClient('ros_speech_dispatcher_client')
+        self.speechd.set_output_module('rhvoice')
 
         self.tts_backend = tts_backend
         self.voice_synthesizer = voice_synthesizer
@@ -54,6 +58,9 @@ class TextCommandHandler:
                 # Pass request to sound play server
                 snd = self.soundhandle.voiceSound(cmd.command)
                 snd.play()
+            elif self.tts_backend == 'speechd':
+                # Pass request to speech dispatcher
+                self.speechd.speak(cmd.command)
             # Use RHVoice synthesizer
             elif self.tts_backend == 'rhvoice' or self.tts_backend == 'rhvoice_robotized':
                 self.voice_synthesizer.generate_and_play(cmd.command)
@@ -81,9 +88,9 @@ class VoiceSynthesizer:
 
         self.gstreamer_pipeline.set_state(Gst.State.PLAYING)
 
-        self.rhvoice_tts = TTS(threads=2)
+        #self.rhvoice_tts = TTS(threads=2)
 
-        self.rhvoice_tts.set_params(relative_rate=self.relative_rate, relative_volume=self.relative_volume)
+        #self.rhvoice_tts.set_params(relative_rate=self.relative_rate, relative_volume=self.relative_volume)
 
     def generate_and_play(self, command_string):
         Gst.Event.new_flush_start()
@@ -222,7 +229,7 @@ def main():
     
     # TTS backend
     tts_backend = rospy.get_param('~tts_backend', 'sound_play') 
-    if not isinstance(tts_backend, str) or tts_backend not in ('sound_play', 'rhvoice', 'rhvoice_robotized'):
+    if not isinstance(tts_backend, str) or tts_backend not in ('sound_play', 'speechd', 'rhvoice', 'rhvoice_robotized'):
         rospy.logerr('"tts_backend" parameter must be a "sound_play", "rhvoice", "rhvoice_robotized".')
         sys.exit(2)
 
