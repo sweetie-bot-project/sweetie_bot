@@ -16,7 +16,7 @@
 		<include if="$(arg run_real)" file="$(arg robot_profile_path)/robot_module.launch" />
 		<!-- eyes: start eyes in non-ismulation for debug purpose  -->
 		<group unless="$(arg run_real)">
-			<group if="$(eval arg('robot_name') == 'sweetie_bot_proto2')"/>
+			<group if="$(eval arg('robot_name') == 'sweetie_bot_proto2')">
 
 				<node name="eye_left"  pkg="sweetie_bot_eyes" type="proto2_eye">
 					<param name="is_left" value="true"/>
@@ -27,7 +27,7 @@
 
 			</group>
 
-			<group if="$(eval arg('robot_name') == 'sweetie_bot_proto3')"/>
+			<group if="$(eval arg('robot_name') == 'sweetie_bot_proto3')">
 
 				<node name="eye_left"  pkg="sweetie_bot_eyes" type="proto3_eyes">
 				</node>
