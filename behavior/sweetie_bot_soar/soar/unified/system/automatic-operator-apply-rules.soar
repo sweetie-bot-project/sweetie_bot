@@ -39,6 +39,30 @@ sp {automatic*apply**remove-all-values
 	(<p> ^<attr> <value> -)
 }
 
+# add simple WME value (second)
+sp {automatic*apply*link-value-2
+	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
+	(<op> ^type automatic ^parent-2 <p> ^attribute-2 <attr> ^link-value-2 <value>)
+-->
+	(<p> ^<attr> <value>)
+}
+
+# copy i-supported structure with one level of attribution (second)
+sp {automatic*apply*copy-value-one-leve-2
+	(state <s> ^operator <op>)
+	(<op> ^type automatic ^parent-2 <p> ^attribute-2 <attr> ^copy-value-one-level-2 <value>)
+-->
+	(<p> ^<attr> (copy-one-level <value>))
+}
+
+# remove attribute with specific value (second)
+sp {automatic*apply*remove-value-2
+	(state <s> ^operator <op>)
+	(<op> ^type automatic ^parent-2 <p> ^attribute-2 <attr> ^remove-value-2 {<> |__all__| <value>})
+-->
+	(<p> ^<attr> <value> -)
+}
+
 #
 # BELIEF ADDITION
 #
