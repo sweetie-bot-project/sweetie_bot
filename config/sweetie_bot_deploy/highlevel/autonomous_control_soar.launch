@@ -40,14 +40,10 @@
 		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch">
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 		</include>
-		<!-- voice  -->
-		<group ns="voice">
-			<!-- voice node  -->
-			<node pkg="sweetie_bot_voice" type="voice" name="voice_node">
-				<remap from="control" to="$(arg robot_ns)/control" />
-			</node>
-			<!-- sound_play server -->
-			<include file="$(find sound_play)/soundplay_node.launch" />
+		<!-- voice node  -->
+		<node pkg="sweetie_bot_voice" type="voice" name="voice">
+			<remap from="control" to="$(arg robot_ns)/control" />
+		</node>
 		</group>
 		<!-- joystick -->
 		<group if="$(eval not host and robot)">

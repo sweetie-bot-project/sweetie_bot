@@ -213,7 +213,7 @@ class VoiceNode():
         sound_packages.append('sweetie_bot_voice')
         rospy.loginfo('Sound packages: ' + repr(sound_packages))
         # Get language settings
-        lang_prefixes = rospy.get_param('lang', 'ru,en')
+        lang_prefixes = rospy.get_param('~lang', 'ru,en')
         if not isinstance(lang_prefixes, str):
             rospy.logerr('"lang" parameter must be a string.')
             sys.exit(2)

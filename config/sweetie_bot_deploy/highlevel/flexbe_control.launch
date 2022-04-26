@@ -60,15 +60,10 @@
 			<node name="clop_generator" pkg="sweetie_bot_clop_generator" type="towr_clop_generator" output="screen">
 				<remap from="step_sequence" to="motion/controller/step_sequence" />     
 			</node>
-			<!-- voice  -->
-			<group ns="voice">
-				<!-- voice node  -->
-				<node pkg="sweetie_bot_voice" type="voice" name="voice_node">
-					<remap from="control" to="$(arg robot_ns)/control" />
-				</node>
-				<!-- sound_play server -->
-				<include file="$(find sound_play)/soundplay_node.launch" />
-			</group>
+			<!-- voice node  -->
+			<node pkg="sweetie_bot_voice" type="voice" name="voice">
+				<remap from="control" to="$(arg robot_ns)/control" />
+			</node>
 			<!-- FLEXBE: control node and action server -->
 			<group if="$(arg run_flexbe)">
 				<include file="$(find sweetie_bot_deploy)/highlevel/flexbe.launch" >
