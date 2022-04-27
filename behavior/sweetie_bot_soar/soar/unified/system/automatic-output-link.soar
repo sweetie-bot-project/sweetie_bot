@@ -4,12 +4,20 @@
 
 # APPLY RULES FOR OUTPUT COMMAND ADDITION
 
-# put textcmd command structure to output link
+# put structure to output link
 sp {automatic*apply*add-output-command
 	(state <s> ^operator <op> ^io.output-link <ol>)
 	(<op> ^type automatic ^add-output-command <name> ^output-command-args <args>)
 -->
 	(<ol> ^<name> <args>)
+}
+
+# remove output command
+sp {automatic*apply*remove-output-command
+	(state <s> ^operator <op> ^io.output-link <ol>)
+	(<op> ^type automatic ^remove-output-command <cmd> ^output-command-args <args>)
+-->
+	(<ol> ^<cmd> <args> -)
 }
 
 # OUTPUT COMMAND AUTO DELETION
