@@ -64,3 +64,5 @@ soar:
             topic: "control"
         flexbe:
             action_ns: "flexbe/flexbe/execute_behavior"
+        text-action:
+            action_ns: "voice/syn"
