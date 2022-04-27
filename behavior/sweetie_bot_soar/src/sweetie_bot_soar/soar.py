@@ -4,7 +4,7 @@ from . import input_modules
 from . import output_modules
 
 import os, threading
-import rospy, rospkg
+import rospy, rospkg, tf
 from enum import Enum
 
 class SoarState(Enum):
@@ -165,6 +165,9 @@ class Soar:
                 return False
             except KeyError as e:
                 rospy.logerr("SOAR configuration: input/output link initialization failed: " + str(e))
+                return False
+            except tf.Exception as e:
+                rospy.logerr("SOAR configuration: tf exception: " + str(e))
                 return False
         
             # load reasoning rules
