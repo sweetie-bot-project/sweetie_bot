@@ -66,3 +66,5 @@ soar:
             action_ns: "flexbe/flexbe/execute_behavior"
         text-action:
             action_ns: "voice/syn"
+        speech-visualization:
+            topic: "hmi/speech_visualization"
