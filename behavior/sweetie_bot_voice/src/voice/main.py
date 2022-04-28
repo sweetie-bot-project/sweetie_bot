@@ -50,9 +50,8 @@ class TTSRhvoiceWrapper(TTSInterface):
 
     def __del__(self):
         self._rhvoice = None
-        self._gstreamer_pipeline.set_state(Gst.State.NULL)
-        #bus = self._gstreamer_pipeline.get_bus()
-        #bus.timed_pop_filtered(100*Gst.MSECOND, Gst.MessageType.STATE_CHANGE) 
+        if hasattr(self, '_gstreamer_pipeline'):
+            self._gstreamer_pipeline.set_state(Gst.State.NULL)
 
     def speak(self, text):
         Gst.Event.new_flush_start()
@@ -83,6 +82,7 @@ class TTSRhvoiceWrapper(TTSInterface):
             msg = bus.timed_pop_filtered(100*Gst.MSECOND, (Gst.MessageType.ERROR | Gst.MessageType.EOS)) 
             if msg is not None:
                 break
+        self._gstreamer_pipeline.set_state(Gst.State.NULL)
         # check result message: it is ERROR or NULL
         if msg.type == Gst.MessageType.ERROR:
             err, _ = msg.parse_error()
@@ -115,9 +115,8 @@ class PlayerGstreamer():
         self._player.set_property("video-sink", fakesink)
 
     def __del__(self):
-        self._player.set_state(Gst.State.NULL)
-        #bus = self._gstreamer_pipeline.get_bus()
-        #bus.timed_pop_filtered(100*Gst.MSECOND, Gst.MessageType.STATE_CHANGE) 
+        if hasattr(self, '_player'):
+            self._player.set_state(Gst.State.NULL)
 
     def play(self, name):
         filename = self._sounds.get(name)
@@ -136,6 +135,7 @@ class PlayerGstreamer():
             msg = bus.timed_pop_filtered(100*Gst.MSECOND, (Gst.MessageType.ERROR | Gst.MessageType.EOS)) 
             if msg is not None:
                 break
+        self._player.set_state(Gst.State.NULL)
         # check result message: it is ERROR or NULL
         if msg.type == Gst.MessageType.ERROR:
             err, _ = msg.parse_error()
