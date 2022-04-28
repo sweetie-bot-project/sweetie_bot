@@ -143,6 +143,18 @@ sp {talk-answered*propose*question-valid-answer
 	(<a> ^parent-2 <pred> ^attribute-2 segment-id ^remove-value-2 <id> ^link-value-2 0)
 }
 
+# if any answer is valid assume question answered and proceed to next state
+# this is default reaction, it has lower priority then specific answer
+sp {talk-answered*propose*question-default-answer
+	(state <s> ^substate talk-answered ^question-topic quest -^conclusion answer-specific-reaction ^actor <obj> ^beliefs.predicate <pred> ^actions <a>)
+	(<pred> ^name quest ^object <obj> ^state <state> ^segment-id <id> ^state-frame.choice <choice>)
+	(<choice> ^answer-topic default-reaction ^next-state <next-state>)
+-->
+	(<s> ^conclusion answer-default-reaction)
+	(<a> ^parent <pred> ^attribute state ^remove-value <state> ^link-value <next-state>)
+	(<a> ^parent-2 <pred> ^attribute-2 segment-id ^remove-value-2 <id> ^link-value-2 0)
+}
+
 # if question is ignored procced to ignor-id segment
 sp {talk-answered*propose*question-ignored
 	(state <s> ^substate talk-ignored ^question-topic quest ^actor <obj> ^beliefs.predicate <pred> ^actions <a>)
