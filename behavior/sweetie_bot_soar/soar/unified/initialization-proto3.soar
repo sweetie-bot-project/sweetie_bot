@@ -66,7 +66,7 @@ sp {initialization*apply*joint-trajectory
 	(<c3> ^name head_suprised ^tag question suprise  ^tag general ^tag talk ^relative yes)
 	(<c4> ^name head_look_around ^tag long ^tag general ^tag talk)
 	(<c5> ^name hoof_stamp ^tag rejection angry ^tag talk)
-	(<c6> ^name greeting2 ^tag greeting brohoof ^tag talk)
+	(<c6> ^name greeting ^tag greeting brohoof ^tag talk)
 }
 
 #sp {initialization*apply*compound*action
