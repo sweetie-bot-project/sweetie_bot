@@ -195,6 +195,22 @@ sp {automatic*apply*remove-process
 	(log 1 (concat |TERMINATE PROCESS: | <name> | | <pred> (crlf)))
 }
 
+# terminate super processes: delete WME, add `^terminated-at`, set status
+# NOTE: process may have many super processes due to automatic state recovery and assotiation
+# NOTE: this operator terminates all of them
+sp {automatic*apply*finish-super-process
+	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
+	(<op> ^type automatic ^finish-status <status> ^finish-super-process-of.subprocess-of <pred>)
+	(<b> ^process <pred>)
+	(<pred> ^name <name>)
+-->
+	(<b> ^process <pred> -)
+	(<pred> ^terminated-at <time> ^status <status>)
+	(<b> ^event <ev>)
+	(<ev> ^name <name> ^reason terminated ^status <status> ^process <pred> ^initiated-at <time>)
+	(log 1 (concat |FINISH PROCESS | <name> | | <pred> | WITH STATUS | <status> (crlf)))
+}
+
 # terminate process: delete WME, add `^terminated-at`, set status
 sp {automatic*apply*finish-process
 	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)

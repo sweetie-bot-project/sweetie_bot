@@ -90,10 +90,9 @@ sp {look-at*propose*completion-failed
 	-{(<bs> ^predicate <pred>)
 	  (<pred> ^name looking-at ^focusing-proccess <proc>)
     }
-	(<proc> ^subprocess-of <sp>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name look-at-focus-failed ^type cognition automatic ^finish-status failed ^finish-process <sp> ^mark-processed <ev>) 
+	(<op> ^name look-at-focus-failed ^type cognition automatic ^finish-status failed ^finish-super-process-of <proc> ^mark-processed <ev>) 
 }
 
 # detect look-at succeed situation: focusing-at is expired (due to timeout, abort or execution failure) but looking-at holds
@@ -102,8 +101,7 @@ sp {look-at*propose*completion-succeed
 	(<ev> ^name focusing-at ^reason {<< |deadline| |terminated| >>} -^processed look-at-focus-succeed ^process <proc>)
 	(<bs> ^predicate <pred>)
 	(<pred> ^name looking-at ^focusing-proccess <proc>)
-	(<proc> ^subprocess-of <sp>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name look-at-focus-succeed ^type cognition automatic ^finish-status succeed ^finish-process <sp> ^mark-processed <ev>) 
+	(<op> ^name look-at-focus-succeed ^type cognition automatic ^finish-status succeed ^finish-super-process-of <proc> ^mark-processed <ev>) 
 }

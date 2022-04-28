@@ -64,10 +64,10 @@ sp {ask*propose*look-at-waiting
 sp {ask*propose*question-is-ignored-event
 	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
 	(<ev> ^name waiting-answer-ask ^reason deadline -^processed ask-question-is-ignored ^process <proc>)
-	(<proc> ^object <obj> ^question-topic <topic> ^subprocess-of <sp>)
+	(<proc> ^object <obj> ^question-topic <topic>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name ask-question-is-ignored ^type cognition automatic ^add-event <ev-ignored> ^mark-processed <ev> ^finish-status failed ^finish-process <sp>)
+	(<op> ^name ask-question-is-ignored ^type cognition automatic ^add-event <ev-ignored> ^mark-processed <ev> ^finish-status failed ^finish-super-process-of <proc>)
 	(<ev-ignored> ^name talk-ignored ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
 }
 
