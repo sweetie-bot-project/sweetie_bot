@@ -95,9 +95,18 @@ sp {quest*elaborate*verbolize-current-segment*parts
 sp {talk-said*propose*reaction-next-segment
 	(state <s> ^substate talk-said ^topic quest ^object <obj> ^beliefs.predicate <pred> ^actions <a>)
 	(<pred> ^name quest ^object <obj> ^segment-id <id> ^scene-frame.segment <segment>)
-   	(<segment> ^id <id> ^type reaction ^next-id <next-id>)
+   	(<segment> ^id <id> ^type reaction -^next-scene ^next-id <next-id>)
 -->
 	(<a> ^parent <pred> ^attribute segment-id  ^remove-value <id> ^link-value <next-id>)
+}
+
+sp {talk-said*propose*reaction-next-scene
+	(state <s> ^substate talk-said ^topic quest ^object <obj> ^beliefs.predicate <pred> ^actions <a>)
+	(<pred> ^name quest ^object <obj> ^scene <scene> ^segment-id <id> ^scene-frame.segment <segment>)
+   	(<segment> ^id <id> ^type reaction ^next-scene <next-scene>)
+-->
+	(<a> ^parent <pred> ^attribute scene ^remove-value <scene> ^link-value <next-scene>)
+	(<a> ^parent-2 <pred> ^attribute-2 segment-id ^remove-value-2 <id> ^link-value-2 0)
 }
 
 # if final reaction segment was verbolized end the quest: remove quest predicate and add quest-finished predicate

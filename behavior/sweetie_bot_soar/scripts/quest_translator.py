@@ -24,8 +24,8 @@ with open(sys.argv[1]) as f:
 for scene, scene_desc in quest_desc.items():
     # check scene
     last_segment_desc = scene_desc[-1]
-    if 'replica' in last_segment_desc and 'ending' not in last_segment_desc:
-        raise QuestParseError(scene, len(scene_desc), "Last replica in scene must contain ending attribute.")
+    if 'replica' in last_segment_desc and len(set(['ending', 'next-scene']).intersection(last_segment_desc.keys())) != 1:
+        raise QuestParseError(scene, len(scene_desc), "Last replica in scene must contain 'ending' or 'next-scene' attribute but not both of them.")
     # header
     print("sp {quest*elaborate*scene*%s" % scene)
     # rule lhs
@@ -47,7 +47,7 @@ for scene, scene_desc in quest_desc.items():
 
         if 'replica' in segment_desc:
             # process replica
-            optional_attributes = str.join(' ', [ get_attribute(segment_desc, attr) for attr in ['animation-tag', 'character', 'ending'] ])
+            optional_attributes = str.join(' ', [ get_attribute(segment_desc, attr) for attr in ['animation-tag', 'character', 'ending', 'next-scene'] ])
             segments_rhs += "\t(%s ^id %d ^type reaction %s ^next-id %d)\n" % (wme_id, segment_id, optional_attributes, next_segemnt_id)
             segments_rhs += "\t(%s ^text |%s|)\n" % (wme_id, segment_desc['replica'])
             if 'sound' in segment_desc:
