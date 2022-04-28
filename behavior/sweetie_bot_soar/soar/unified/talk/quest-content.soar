@@ -1,0 +1,57 @@
+sp {quest*elaborate*scene*meet-with-sweetie
+	(state <s> ^top-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name quest ^scene meet-sweetie ^scene-frame <f>)
+-->
+	(<f> ^segment  <s0> <s1> <s2> <s3> <s4> <s5> <s6>)
+	(<s0> ^id 0 ^type reaction ^animation-tag |long|   ^next-id 1)
+	(<s0> ^text |Тихое, сонное утро в Понивилле. Ты неспешно потягиваешь травяной чай, предвкушая ленивый день отдыха.  Сегодня ты обещал Рэрити встретиться и обговорить заказ нового костюма.|)
+	(<s1> ^id 1 ^type reaction ^animation-tag |long|   ^next-id 2)
+	(<s1> ^text |Кого там Селестия принесла... - недовольно бурчишь ты, открывая дверь. На пороге стоит Свити Бэлль:|)
+	(<s2> ^id 2 ^type reaction ^animation-tag |brohoof| ^character |Свити Белль|  ^next-id 3)
+	(<s2> ^text |Привет, друг! Извини за беспокойство, но но мне срочно нужна твоя помощь! Пойдём, объясню по дороге!|)
+	(<s2> ^sound |hello_im_sweetie_bot_friedship_programms|)
+	(<s3> ^id 3 ^type reaction ^animation-tag |long|   ^next-id 4)
+	(<s3> ^text |Вот только у тебя другие планы, а Рэрити не будет ждать слишком долго. Тем веменем маленькая единорожка настаивает:|)
+	(<s4> ^id 4 ^type reaction ^animation-tag |question| ^character |Свити Белль|  ^next-id 5)
+	(<s4> ^text |Ну что? Пойдешь со мной? Давай же!|)
+	(<s4> ^sound |will_you_help_me_conquer_the_world|)
+	(<s5> ^id 5 ^type question ^animation-tag |question|  ^ignore-id 6)
+	(<s5> ^text |Свити спросила тебя, пойдешь ли ты с ней. Ответь да или нет.|)
+	(<s6> ^id 6 ^type question ^animation-tag |question|  ^ignore-id 6)
+	(<s6> ^text |Свити все еще ждет твоего ответа. Пойдешь ли ты с неЙ?|)
+	(<f> ^choice  <c0> <c1>)
+	(<c0> ^answer-topic yes ^next-scene walk-with-sweetie)
+	(<c1> ^answer-topic no ^next-scene talk-with-rarity)
+}
+
+sp {quest*elaborate*scene*walk-with-sweetie
+	(state <s> ^top-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name quest ^scene walk-with-sweetie ^scene-frame <f>)
+-->
+	(<f> ^segment  <s0> <s1> <s2> <s3>)
+	(<s0> ^id 0 ^type reaction ^animation-tag |confirmation| ^character |Свити Белль|  ^next-id 1)
+	(<s0> ^text |Отлично! Я рада, что ты согласился!|)
+	(<s0> ^sound |thank_you_for_attention_nopony_was_harmed|)
+	(<s1> ^id 1 ^type reaction ^animation-tag |long|   ^next-id 2)
+	(<s1> ^text |Вы двигаетесь в сторону фермы Эпплджек. Свити продолжает рассказ:|)
+	(<s2> ^id 2 ^type reaction ^animation-tag |confirmation| ^character |Свити Белль|  ^next-id 3)
+	(<s2> ^text |Мы, Меткоискатели, наконец-то поняли, что гарантированно принесет нам кьютимарки. Пока наш стартап маленький, но, поверь мне, скоро мы захватим... то есть, займем достойное место в доме каждого пони!|)
+	(<s2> ^sound |thank_you_for_attention_nopony_was_harmed|)
+	(<s3> ^id 3 ^type reaction ^animation-tag |rejection|  ^ending |Узанал о планах Свити| ^next-id 3)
+	(<s3> ^text |Так ты узнал о планах Свити. Твой квест завершен.|)
+}
+
+sp {quest*elaborate*scene*talk-with-rarity
+	(state <s> ^top-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name quest ^scene talk-with-rarity ^scene-frame <f>)
+-->
+	(<f> ^segment  <s0> <s1> <s2>)
+	(<s0> ^id 0 ^type reaction ^animation-tag |rejection| ^character |Свити Белль|  ^next-id 1)
+	(<s0> ^text |Ох, жаль... Понимаю, ты очень занят... Ну что ж, в другой раз.|)
+	(<s0> ^sound |prepare_to_die|)
+	(<s1> ^id 1 ^type reaction ^animation-tag |long|   ^next-id 2)
+	(<s1> ^text |Свити поникает и уходит прочь, а ты отправлешься в бутик к Рэрити.|)
+	(<s2> ^id 2 ^type reaction ^animation-tag |confirmation|  ^ending |Встретил Рэрити| ^next-id 2)
+	(<s2> ^text |Ты встретил Рэрити. На этом твой квест завершен.|)
+}
+
