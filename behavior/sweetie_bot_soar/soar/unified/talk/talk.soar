@@ -52,38 +52,48 @@ sp {talk-event*elaborate-recent-talk-said-events
 # propose question verbolization
 sp {talk*propose*question-verbolization
 	(state <s> ^substate talk ^looking-at -^verbolizing -^waiting-answer ^verbolization.frame <q> ^object <obj> ^process <sp>)
-	(<q> ^type question ^topic <topic> ^text <text> ^animation-tag <tag> ^utility <utility>)
+	(<q> ^type question ^topic <topic> ^utility <utility>)
 -->
 	(<s> ^operator <o> +)
-	(<o> ^name question-verbolization ^substate verbolize ^utility <utility> ^process-link <proc>)
-	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^type question ^text <text> ^animation-tag <tag> ^result <res-succeed>)
+	(<o> ^name question-verbolization ^substate verbolize ^utility <utility> ^process-link <proc> ^frame <q>)
+	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^type question ^result <res-succeed>)
 	(<res-succeed> ^status succeed ^add-process <proc-result>)
 	(<proc-result> ^name waiting-answer ^object <obj> ^topic <topic> ^utility <utility> ^type question ^deadline-time 12.0 ^subprocess-of <sp>)
-	(<res-succeed> ^print (concat |TALK: VERBOLIZED QUESTION | <topic> | WITH TEXT | <text> (crlf)))
+	(<res-succeed> ^print (concat |TALK: VERBOLIZED QUESTION | <topic> (crlf)))
 }
 
 # propose statement verbolization: statement can be vebolized even if we are waiting answer
 sp {talk*propose*statement-verbolization
 	(state <s> ^substate talk ^looking-at -^verbolizing -^waiting-answer  ^verbolization.frame <q> ^object <obj> ^process <sp>)
-	(<q> ^type statement ^topic <topic> ^text <text> ^animation-tag <tag> ^utility <utility>)
+	(<q> ^type statement ^topic <topic> ^utility <utility>)
 -->
 	(<s> ^operator <o> +)
-	(<o> ^name statement-verbolization ^substate verbolize ^utility <utility> ^process-link <proc>)
-	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^type statement ^text <text> ^animation-tag <tag> ^result <res-succeed>)
+	(<o> ^name statement-verbolization ^substate verbolize ^utility <utility> ^process-link <proc> ^frame <q>)
+	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^type statement ^result <res-succeed>)
 	(<res-succeed> ^status succeed ^add-process <proc-result> )
 	(<proc-result> ^name waiting-answer ^object <obj> ^topic <topic> ^utility <utility> ^type statement ^deadline-time 6.0 ^subprocess-of <sp>)
-	(<res-succeed> ^print (concat |TALK: VERBOLIZED STATEMENT | <topic> | WITH TEXT | <text> (crlf)))
+	(<res-succeed> ^print (concat |TALK: VERBOLIZED STATEMENT | <topic> (crlf)))
 }
 
 # propose reaction verbolization
 sp {talk*propose*reaction-verbolization
 	(state <s> ^substate talk ^looking-at -^verbolizing ^verbolization.frame <q> ^object <obj>)
-	(<q> ^type reaction ^topic <topic> ^text <text> ^animation-tag <tag> ^utility <utility>)
+	(<q> ^type reaction ^topic <topic> ^utility <utility>)
 -->
 	(<s> ^operator <o> +)
-	(<o> ^name reaction-verbolization ^substate verbolize ^utility <utility> ^process-link <proc>)
-	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^type reaction ^text <text> ^animation-tag <tag> ^result <res-succeed>)
-	(<res-succeed> ^status succeed ^print (concat |TALK: VERBOLIZED REACTION | <topic> | WITH TEXT | <text> (crlf)))
+	(<o> ^name reaction-verbolization ^substate verbolize ^utility <utility> ^process-link <proc> ^frame <q>)
+	(<proc> ^name verbolizing ^substate verbolize ^object <obj> ^topic <topic> ^type reaction ^result <res-succeed>)
+	(<res-succeed> ^status succeed ^print (concat |TALK: VERBOLIZED REACTION | <topic> (crlf)))
+}
+
+# copy verbolization frame attributes
+# TODO: pass link to verbolization frame
+sp {talk*elaborate*verbolization-attributes
+	(state <s> ^substate talk ^operator <op> +)
+	(<op> ^substate verbolize ^process-link <proc> ^frame <q>)
+	(<q> ^{<<|text| |animation-tag| |sound| |scene| |character|>> <attr>} <value>)
+-->
+	(<proc> ^<attr> <value>)
 }
 
 # wait until verbolization process is finished

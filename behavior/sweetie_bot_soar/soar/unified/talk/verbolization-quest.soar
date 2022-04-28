@@ -16,19 +16,21 @@ sp {quest*elaborate*scene-meet-sweetie
 	(state <s> ^top-state 1 ^beliefs.predicate <pred>)
    	(<pred> ^name quest ^scene meet-sweetie ^scene-frame <f>)
 -->
-	(<f> ^segment <s1> <s2> <s3> <s4> <s5>)
+	(<f> ^segment <s1> <s2> <s3> <s4> <s5> <s6>)
    	(<s1> ^id 0 ^type reaction ^animation-tag long ^next-id 1)
    	(<s1> ^text |Тихое, сонное утро в Понивилле. Ты неспешно потягиваешь травяной чай, предвкушая ленивый день отдыха.  Сегодня ты обещал Рэрити встретиться и обговорить заказ нового костюма. Тут раздается стук в дверь:|)
    	(<s2> ^id 1 ^type reaction ^animation-tag question ^next-id 2)
-   	(<s2> ^text |Кого там Селестия принесла... - недовольно бурчишь ты, открывая дверь. На пороге стоит Свити Белль:|)
-   	(<s3> ^id 2 ^type reaction ^animation-tag greeting ^next-id 3)
+   	(<s2> ^text |Кого там Селестия принесла... - недовольно бурчишь ты, открывая дверь. На пороге стоит Свити Бэлль:|)
+   	(<s3> ^id 2 ^type reaction ^animation-tag greeting ^character |Свити Белль| ^next-id 3)
    	(<s3> ^text |Привет, друг! Извини за беспокойство, но но мне срочно нужна твоя помощь! Пойдём, объясню по дороге!|)
+   	(<s3> ^sound |hello_im_sweetie_bot_friedship_programms|)
    	(<s4> ^id 3 ^type reaction ^animation-tag rejection ^next-id 4)
    	(<s4> ^text |Вот только у тебя другие планы, а Рэрити не будет ждать слишком долго. Единорожка спрашивает:|)
-   	(<s5> ^id 4 ^type question ^animation-tag question)
-   	(<s5> ^text |Ну что? Пойдешь со мной? Давай же!| ^ignore-id 5)
-   	(<s5> ^id 5 ^type question ^animation-tag question)
-   	(<s5> ^text |Свити спросила тебя, пойдешь ли ты с ней? Ответь да или нет.| ^ignore-id 5)
+   	(<s5> ^id 4 ^type reaction ^animation-tag question ^character |Свити Белль| ^next-id 5)
+   	(<s5> ^text |Ну что? Пойдешь со мной? Давай же!|)
+   	(<s5> ^sound |will_you_help_me_conquer_the_world|)
+   	(<s6> ^id 5 ^type question ^animation-tag question)
+   	(<s6> ^text |Свити спросила тебя, пойдешь ли ты с ней? Ответь да или нет.| ^ignore-id 5)
    	(<f> ^choice <c1> <c2>)
    	(<c1> ^answer-topic yes ^next-scene walk-with-sweetie)
    	(<c2> ^answer-topic no ^next-scene talk-with-rarity)
@@ -126,10 +128,19 @@ sp {talk-answered*propose*ask-about-quest*yes*terminate-quest-finished
 sp {quest*elaborate*verbolize-current-segment
 	(state <s> ^substate talk ^beliefs.predicate <pred> ^object <obj> ^verbolization <v>)
 	(<pred> ^name quest ^object <obj> ^scene <scene> ^segment-id <id> ^scene-frame.segment <segment>)
-   	(<segment> ^id <id> ^type <type> ^animation-tag <tag> ^text <text>)
+   	(<segment> ^id <id> ^type <type>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic quest ^utility 30 ^type <type> ^animation-tag <tag> ^text <text>)
+	(<f> ^topic quest ^utility 30 ^type <type> ^scene <scene> ^quest-segment <segment>)
+}
+
+# copy text data to frame
+sp {quest*elaborate*verbolize-current-segment*parts
+	(state <s> ^substate talk ^verbolization.frame <f>)
+	(<f> ^topic quest ^quest-segment <segment>)
+	(<segment> ^{<<|text| |sound| |animation-tag| |character|>> <attr>} <value>)
+-->
+	(<f> ^<attr> <value>)
 }
 
 # EVENT PROCESSING
