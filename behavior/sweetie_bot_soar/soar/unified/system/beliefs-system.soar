@@ -156,7 +156,7 @@ sp {beliefs*propose*update
 	(<b> ^timestamp {< <time> <ts>})
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name beliefs-update ^type system ^timestamp <ts> ^time <time> ^time-stable (- <time> 0.25))
+	(<op> ^name beliefs-update ^type system ^timestamp <ts> ^time <time> ^time-stable (- <time> 0.5))
 }
 
 # update timestamp

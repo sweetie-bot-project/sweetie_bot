@@ -1,334 +1,278 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import rospy, actionlib, roslib, rospkg, os, sys, random
-from sound_play.libsoundplay import SoundClient
+import os, sys, copy
+import rospy, actionlib, roslib, rospkg
+from threading import Event
 
 from sweetie_bot_text_msgs.msg import TextCommand
 from sweetie_bot_text_msgs.msg import TextActionAction as TextAction
 from sweetie_bot_text_msgs.msg import TextActionGoal, TextActionFeedback, TextActionResult
 
-import speechd
-from rhvoice_wrapper import TTS
 import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst
 
+class TTSInterface:
+    def speak(self, text):
+        pass
 
+class TTSSpeechDispatcher(TTSInterface):
+    def __init__(self, module = 'rhvoice', lang = 'ru'):
+        import speechd
+        self._client = speechd.SSIPClient('ros_speech_dispatcher_client')
+        self._client.set_output_module(module)
+        self._client.set_language(lang)
 
+    def speak(self, text):
+        ev = Event()
+        self._client.speak(text, callback = lambda cb_type: ev.set(), event_types=(speechd.CallbackType.CANCEL, speechd.CallbackType.END))
+        ev.wait()
+        return True
 
+class TTSRhvoiceWrapper(TTSInterface):
 
-class TextCommandHandler:
-    ''' 
-        Handling TextCommand, which provide no way to detect when sound stop playing
-    '''
-    def __init__(self, sounds, playback_command, tts_backend = 'sound_play', voice_synthesizer = None):
-        self.soundhandle = SoundClient()
-        self.sounds = sounds
-        self.playback_command = playback_command
+    def __init__(self, rhvoice_params, gstreamer_pipeline_string = None):
+        from rhvoice_wrapper import TTS
+        # create and configure rhvoice client
+        self._rhvoice= TTS()
+        self._rhvoice.set_params(**rhvoice_params)
+        # create gstreamer pipeline and configure it
+        pipeline_list = ['appsrc name=source ! audio/x-raw,format=S16LE,channels=1,rate=24000,layout=interleaved']
+        if gstreamer_pipeline_string is not None:
+            pipeline_list.append(gstreamer_pipeline_string)
+        pipeline_list.append('autoaudiosink')
+        self._gstreamer_pipeline = Gst.parse_launch(str.join(' ! ', pipeline_list))
+        self._gstreamer_src = self._gstreamer_pipeline.get_by_name('source')
+        # Important, as we will produce timestamped buffers
+        self._gstreamer_pipeline.set_state(Gst.State.PLAYING)
+        self._gstreamer_src.set_property('format', Gst.Format.TIME)
 
-        self.speechd = speechd.SSIPClient('ros_speech_dispatcher_client')
-        self.speechd.set_output_module('rhvoice')
+    def __del__(self):
+        self._rhvoice = None
+        if hasattr(self, '_gstreamer_pipeline'):
+            self._gstreamer_pipeline.set_state(Gst.State.NULL)
 
-        self.tts_backend = tts_backend
-        self.voice_synthesizer = voice_synthesizer
-
-
-    def command_callback(self, cmd):
-        # Check command type
-        if cmd.type == 'voice/play_wav':
-            # Play specified sound file
-            if cmd.command in self.sounds:
-                filename = self.sounds[cmd.command]
-                rospy.loginfo('Playing sound: {0} ({1}).'.format(cmd.command, filename))
-                # Playback selection
-                if not self.playback_command:
-                    # Use sound client
-                    snd = self.soundhandle.waveSound(filename)
-                    snd.play()
-                else:
-                    # Use system command
-                    os.system(self.playback_command + ' ' + filename)
-            else:
-                rospy.logerr('Unknown play_wav sound: ' + cmd.command)
-
-        elif cmd.type == 'voice/say':
-            # Invoke text-to-speech subsystem
-            if self.tts_backend == 'sound_play':
-                # Pass request to sound play server
-                snd = self.soundhandle.voiceSound(cmd.command)
-                snd.play()
-            elif self.tts_backend == 'speechd':
-                # Pass request to speech dispatcher
-                self.speechd.speak(cmd.command)
-            # Use RHVoice synthesizer
-            elif self.tts_backend == 'rhvoice' or self.tts_backend == 'rhvoice_robotized':
-                self.voice_synthesizer.generate_and_play(cmd.command)
-
-
-class VoiceSynthesizer:
-    ENGLISH_ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNUPQRSTUVWXYZ'
-    RUSSIAN_ALPHABET = 'абвгдеёжзийклмнопрстуфхцчшщьыъэюяАВБГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ'
-
-    ''' 
-        Interfacing with RHVoice synthesizer and gstreamer pipeline providing desired sound of speech
-    '''
-    def __init__(self, gstreamer_pipeline_string, relative_volume = 1.0, relative_rate = 1.0, relative_pitch_russian = 1.0, relative_pitch_english = 1.0):
-        self.relative_volume = relative_volume
-        self.relative_rate   = relative_rate
-
-        self.relative_pitch_russian = relative_pitch_russian
-        self.relative_pitch_english = relative_pitch_english
-
-        self.gstreamer_pipeline = Gst.parse_launch(gstreamer_pipeline_string)
-        self.gstreamer_src = self.gstreamer_pipeline.get_by_name('source')
-
-        # @Note: Important, as we will produce timestamped buffers
-        self.gstreamer_src.set_property('format', Gst.Format.TIME)
-
-        self.gstreamer_pipeline.set_state(Gst.State.PLAYING)
-
-        #self.rhvoice_tts = TTS(threads=2)
-
-        #self.rhvoice_tts.set_params(relative_rate=self.relative_rate, relative_volume=self.relative_volume)
-
-    def generate_and_play(self, command_string):
+    def speak(self, text):
         Gst.Event.new_flush_start()
 
-        # TODO: Think about if language should be specified manually
-        # Detect what language is used simply by the first letter
-        spaceless_command_string = ' '.join(command_string.split())
-        used_language = 'russian'
-        for character in spaceless_command_string:
-            if character in self.RUSSIAN_ALPHABET:
-                used_language = 'russian'
-                self.rhvoice_tts.set_params(voice_profile='Anna')
-                break
-            elif character in self.ENGLISH_ALPHABET:
-                self.rhvoice_tts.set_params(voice_profile='CLB')
-                used_language = 'english'
-                break
-
-        # Choose pitch correction depending on the language
-        if used_language == 'russian':
-            self.rhvoice_tts.set_params(relative_pitch=self.relative_pitch_russian)
-        else:
-            self.rhvoice_tts.set_params(relative_pitch=self.relative_pitch_english)
-
         # Get synthesized PCM sound from RHVoice server
-        raw_sound = self.rhvoice_tts.get(command_string, format_='pcm')
+        raw_sound = self._rhvoice.get(text, format_='pcm')
 
         Gst.Event.new_flush_stop(True)
-
-        # @Note: Pipeline must be restarted exactly like this. Otherwise it will not push buffer after EOS signal
-        self.gstreamer_pipeline.set_state(Gst.State.READY)
-        self.gstreamer_pipeline.set_state(Gst.State.PLAYING)
-
+        # Pipeline must be restarted exactly like this. Otherwise it will not push buffer after EOS signal
+        self._gstreamer_pipeline.set_state(Gst.State.READY)
+        self._gstreamer_pipeline.set_state(Gst.State.PLAYING)
         # Allocate new buffer
         buf = Gst.Buffer.new_allocate(None, len(raw_sound), None)
         buf.fill(0, raw_sound)
-
         # We cannot know duration of generated audio from rhvoice wrapper API
         buf.duration = Gst.CLOCK_TIME_NONE
         buf.pts = Gst.CLOCK_TIME_NONE
-
         # Push buffer on appsrc
-        gst_flow_return = self.gstreamer_src.emit('push-buffer', buf)
-
+        gst_flow_return = self._gstreamer_src.emit('push-buffer', buf)
         # Propagate End Of Stream event downstream to the sink
-        self.gstreamer_src.emit('end-of-stream')
-
+        self._gstreamer_src.emit('end-of-stream')
         if gst_flow_return != Gst.FlowReturn.OK:
-            rospy.logerr('Gstreamer error. Failed to process synthesized voice')
+            rospy.logerr('TTSRhvoiceWrapper: gstreamer flow error.')
+            return False
+        # wait
+        bus = self._gstreamer_pipeline.get_bus()
+        while True:
+            msg = bus.timed_pop_filtered(100*Gst.MSECOND, (Gst.MessageType.ERROR | Gst.MessageType.EOS)) 
+            if msg is not None:
+                break
+        self._gstreamer_pipeline.set_state(Gst.State.NULL)
+        # check result message: it is ERROR or NULL
+        if msg.type == Gst.MessageType.ERROR:
+            err, _ = msg.parse_error()
+            rospy.logerr('TTSRhvoiceWrapper: gstreamer failed: %s' % err)
+            return False
+        # result message was NULL
+        rospy.loginfo('TTSRhvoiceWrapper: succeed.')
+        return True
 
+class PlayerGstreamer():
+    def __init__(self, sound_packages, lang_prefixes):
+        # List sound files
+        self._sounds = {}
+        rospack = rospkg.RosPack()
+        for pkg in sound_packages:
+            try:
+                sounds_path = os.path.join(rospack.get_path(pkg), 'sounds')
+            except rospkg.ResourceNotFound:
+                rospy.logerr('Sound package `%s` is not found.' % pkg)
+                continue
 
-class TextActionServer:
-    ''' 
-        Handling TextAction, which detects end time of a sound (useful, for example, for FlexBe states)
-    '''
-    feedback = TextActionFeedback()
-    result = TextActionResult()
+            for prefix in lang_prefixes:
+                path = os.path.join(sounds_path, prefix)
+       
+                self._sounds.update(PlayerGstreamer._file_dict(path, 'wav'))
+                self._sounds.update(PlayerGstreamer._file_dict(path, 'ogg'))
+        # get ROS sound client
+        self._player = Gst.ElementFactory.make("playbin", "ros_player")
+        fakesink = Gst.ElementFactory.make("fakesink", "fakesink")
+        self._player.set_property("video-sink", fakesink)
 
-    def __init__(self, name, voice_synthesizer):
-        self.voice_synthesizer = voice_synthesizer
+    def __del__(self):
+        if hasattr(self, '_player'):
+            self._player.set_state(Gst.State.NULL)
 
-        self.action_name = name
-        self.action_server = actionlib.SimpleActionServer(self.action_name, TextAction, execute_cb=self.execute_cb, auto_start=False)
-        self.action_server.start()
+    def play(self, name):
+        filename = self._sounds.get(name)
+        if filename is None:
+            rospy.logerr('Unknown play_wav sound: ' + name)
+            return False
+        # paly sound
+        rospy.loginfo('Playing sound: {0} ({1}).'.format(name, filename))
+        # invoke gstreamer pipe
+        self._player.set_property("uri", "file://" + filename)
+        self._player.set_state(Gst.State.READY)
+        self._player.set_state(Gst.State.PLAYING)
+        # wait for completion
+        bus = self._player.get_bus()
+        while True:
+            msg = bus.timed_pop_filtered(100*Gst.MSECOND, (Gst.MessageType.ERROR | Gst.MessageType.EOS)) 
+            if msg is not None:
+                break
+        self._player.set_state(Gst.State.NULL)
+        # check result message: it is ERROR or NULL
+        if msg.type == Gst.MessageType.ERROR:
+            err, _ = msg.parse_error()
+            rospy.logerr('PlayerGstreamer: gstreamer failed: %s' % err)
+            return False
+        # result message was NULL
+        rospy.loginfo('PlayerGstreamer: succeed.')
+        return True
 
+    @staticmethod
+    def _file_dict(directory, ext):
+        ''' Return list of files with given extension.
 
-    def execute_cb(self, goal):
-        # @Note: Currently TextAction provide only voice/say message type for rhvoice synthesis
-        if goal.command.type != 'voice/say':
-            rospy.logerr('{}: unsupported command type for TextAction'.format(goal.command.type))
+            Paramters:
+                directory (string) --- directory name,
+                ext (string) --- file extension,
+
+            Return: list of strings.
+        '''
+        files = {} 
+        try:
+            for f in os.listdir(directory):
+                basename, extension = os.path.splitext(f)
+                if extension.endswith(ext):
+                    files[basename] = os.path.join(directory, f)
+        except OSError as e:
+            rospy.logwarn('Unable to list `%s` directory.' % directory)
+            return []
+        return files
+
+class VoiceNode():
+    def __init__(self):
+        rospy.init_node('voice', anonymous = True)
+
+        profiles_config = rospy.get_param('~voice_profile') 
+        if profiles_config is None or not isinstance(profiles_config, dict):
+            rospy.logerr('Incorrect or missing "~voice_profiles" subtree')
+            sys.exit(2)
+
+        # load voice profiles
+        self._voice_profile = {}
+        for name, profile_config in profiles_config.items():
+            profile_type = profile_config.get('type')
+            if profile_type == 'rhvoice':
+                # apply LADSPA fix
+                VoiceNode._ladspa_fix()
+                # configure rhvoice_wrapper synthesyzer
+                gstreamer_pipeline = profile_config.get('gstreamer_pipeline')
+                rhvoice_params = profile_config.get('rhvoice_params')
+                self._voice_profile[name] = TTSRhvoiceWrapper(rhvoice_params, gstreamer_pipeline)
+            elif profile_type == 'speechd':
+                speechd_params = copy.deepcopy(profile_config)
+                del speechd_params['type']
+                self._voice_profile[name] = TTSSpeechDispatcher(**speechd_params)
+            else:
+                rospy.logerr('Unknown voice profile "%s" of type: %s' % (name, profile_type))
+                sys.exit(2)
+
+        if len(self._voice_profile) == 0:
+            rospy.logerr('At least one voice profile must be specified.')
+            sys.exit(2)
+
+        # get default profile
+        default_profile = rospy.get_param("~default_voice_profile", None)
+        if default_profile == None:
+            self._default_profile = next(iter(self._voice_profile.values())) # get 'first' value
         else:
+            self._default_profile = self._voice_profile[default_profile]
 
-            action_finished = True
+        # get and configure player
+        sound_packages = rospy.get_param('~sound_packages', [])
+        if not isinstance(sound_packages, list):
+            rospy.logerr('"sound_packages" parameter must contain a list of packages\' names.')
+            sys.exit(2)
+        sound_packages.append('sweetie_bot_voice')
+        rospy.loginfo('Sound packages: ' + repr(sound_packages))
+        # Get language settings
+        lang_prefixes = rospy.get_param('~lang', 'ru,en')
+        if not isinstance(lang_prefixes, str):
+            rospy.logerr('"lang" parameter must be a string.')
+            sys.exit(2)
+        lang_prefixes = str.split(lang_prefixes, ',')
+        rospy.loginfo('Sound prefixes: ' + repr(lang_prefixes))
+        
+        self._player = PlayerGstreamer(sound_packages, lang_prefixes)
 
-            # @Hack: Not very helpful status message at all
-            self.feedback.status = 'speaking'
+        # register ROS interface
+        rospy.Subscriber('control', TextCommand, self.command_cb)
+        self._action_server = actionlib.SimpleActionServer('~syn', TextAction, execute_cb=self.action_cb, auto_start=False)
+        rospy.sleep(0.2)
+        self._action_server.start()
+        rospy.on_shutdown(self.shutdown_cb)
+            
+    def _execute_text_command(self, cmd):
+        # Check command type
+        if cmd.type == 'voice/play_wav':
+            # Play specified sound file
+            return self._player.play(cmd.command)
+        elif cmd.type == 'voice/say':
+            # Invoke text-to-speech subsystem
+            return self._default_profile.speak(cmd.command)
+        return False
 
-            bus = self.voice_synthesizer.gstreamer_pipeline.get_bus()
+    def command_cb(self, cmd):
+        # execute command 
+        self._execute_text_command(cmd)
 
-            # Discard all previous EOS messages on the pipeline's bus
-            while bus.pop_filtered(Gst.MessageType.EOS) is not None:
-                pass
+    def action_cb(self, goal):
+        # execute command
+        result = self._execute_text_command(goal.command)
 
-            self.voice_synthesizer.generate_and_play(goal.command.command)
+        if result:
+            self._action_server.set_succeeded(TextActionResult(error_code = 0, error_string = 'Succeed'))
+        else:
+            self._action_server.set_aborted(TextActionResult(error_code = 1, error_string = 'Failed'))
 
-            while True:
-                if self.action_server.is_preempt_requested():
-                    rospy.loginfo('{}: Preempted'.format(self.action_name))
-                    self.action_server.set_preempted()
-                    action_finished = False
-                    break
+    def shutdown_cb(self):
+        self._voice_profile = None
+        self._player = None
 
-                self.action_server.publish_feedback(self.feedback)
+    @staticmethod
+    def _ladspa_fix():    
+        # Get path to ladspa plugins directory
+        ladspa_path = rospy.get_param('~ladspa_path', "~/.ladspa/")
+        if not isinstance(ladspa_path, str):
+            rospy.logerr('"ladspa_path" parameter must be a string')
+            sys.exit(2)
 
-                # Wait for the end of stream
-                result = bus.poll(Gst.MessageType.EOS, 10 * Gst.MSECOND)
-                if result is not None:
-                    break
+        # Set mandatory enviroment variables for used gstreamer plugins
+        os.environ['LADSPA_PATH'] = ladspa_path
 
-            if action_finished:
-                self.result.error_code = 0
-                self.result.error_string = ''
-
-                rospy.loginfo('{}: Succeeded'.format(self.action_name))
-                self.action_server.set_succeeded(self.result)
-
-
-def file_dict(directory, ext):
-    ''' Return list of files with given extension.
-
-        Paramters:
-            directory (string) --- directory name,
-            ext (string) --- file extension,
-
-        Return: list of strings.
-    '''
-    files = {} 
-    try:
-        for f in os.listdir(directory):
-            basename, extension = os.path.splitext(f)
-            if extension.endswith(ext):
-                files[basename] = os.path.join(directory, f)
-    except OSError as e:
-        rospy.logwarn('Unable to list `%s` directory.' % directory)
-        return []
-    return files
+        # Apply some dirty fix to make sure gstreamer will work
+        os.system("rm -f ~/.cache/gstreamer-1.0/registry.x86_64.bin")
 
 
 def main():
-    rospy.init_node('voice', anonymous = True)
-
-    playback_command = rospy.get_param('~playback_command', None) 
-    if playback_command != None and not isinstance(playback_command, str):
-        rospy.logerr('"playback_command" parameter must be a string.')
-        sys.exit(2)
-    
-    # TTS backend
-    tts_backend = rospy.get_param('~tts_backend', 'sound_play') 
-    if not isinstance(tts_backend, str) or tts_backend not in ('sound_play', 'speechd', 'rhvoice', 'rhvoice_robotized'):
-        rospy.logerr('"tts_backend" parameter must be a "sound_play", "rhvoice", "rhvoice_robotized".')
-        sys.exit(2)
-
-    # Get language settings
-    lang_prefixes = rospy.get_param('lang', 'ru,en')
-    if not isinstance(lang_prefixes, str):
-        rospy.logerr('"lang_prefixes" parameter must be a string.')
-        sys.exit(2)
-
-    lang_prefixes = str.split(lang_prefixes, ',')
-    rospy.loginfo('Sound prefixes: ' + repr(lang_prefixes))
-   
-    # Get sounds location
-    sound_packages = rospy.get_param('~sound_packages', [])
-    if not isinstance(sound_packages, list):
-        rospy.logerr('"sound_packages" parameter must contain a list of packages\' names.')
-        sys.exit(2)
-
-    sound_packages.append('sweetie_bot_voice')
-    rospy.loginfo('Sound packages: ' + repr(sound_packages))
-
-    # Get path to ladspa plugins directory
-    ladspa_path = rospy.get_param('~ladspa_path', "~/.ladspa/")
-    if not isinstance(ladspa_path, str):
-        rospy.logerr('"ladspa_path" parameter must be a string')
-        sys.exit(1)
-
-    # Set mandatory enviroment variables for used gstreamer plugins
-    os.environ['LADSPA_PATH'] = ladspa_path
-
-    # Apply some dirty fix to make sure gstreamer will work
-    os.system("rm -f ~/.cache/gstreamer-1.0/registry.x86_64.bin")
-
-    # Initialize gstreamer
-    voice_synthesizer = None
-    if tts_backend == 'rhvoice' or tts_backend == 'rhvoice_robotized':
-        Gst.init(None)
-
-        rhvoice_relative_volume = rospy.get_param('~relative_volume', 1.0) 
-        if not isinstance(rhvoice_relative_volume, float):
-            rospy.logerr('"relative_volume" parameter must be a float')
-            sys.exit(2)
-
-        rhvoice_relative_rate = rospy.get_param('~relative_rate', 1.0) 
-        if not isinstance(rhvoice_relative_rate, float):
-            rospy.logerr('"rhvoice_relative_rate" parameter must be a float')
-            sys.exit(2)
-
-        rhvoice_relative_pitch_russian = rospy.get_param('~relative_pitch_russian', 1.0) 
-        if not isinstance(rhvoice_relative_pitch_russian, float):
-            rospy.logerr('"rhvoice_relative_pitch_russian" parameter must be a float')
-            sys.exit(2)
-
-        rhvoice_relative_pitch_english = rospy.get_param('~relative_pitch_english', 1.0) 
-        if not isinstance(rhvoice_relative_pitch_english, float):
-            rospy.logerr('"rhvoice_relative_pitch_english" parameter must be a float')
-            sys.exit(2)
-
-        pipeline_beginning = 'appsrc name=source ! audio/x-raw,format=S16LE,channels=1,rate=24000,layout=interleaved !'
-
-        if tts_backend == 'rhvoice':
-            auto_audio_sink_pipeline = pipeline_beginning + 'autoaudiosink'
-        elif tts_backend == 'rhvoice_robotized':
-            robotization_pipeline = rospy.get_param('~robotization_pipeline', 'autoaudiosink')
-            if not isinstance(robotization_pipeline, str):
-                rospy.logerr('"robotization_pipeline" parameter must be a string')
-                sys.exit(2)
-
-            auto_audio_sink_pipeline = pipeline_beginning + robotization_pipeline
-
-        voice_synthesizer = VoiceSynthesizer(auto_audio_sink_pipeline, rhvoice_relative_volume, rhvoice_relative_rate, rhvoice_relative_pitch_russian, rhvoice_relative_pitch_english)
-
-        TextActionServer('syn', voice_synthesizer)
-
-    # List sound files
-    sounds = {}
-    rospack = rospkg.RosPack()
-    for pkg in sound_packages:
-        try:
-            sounds_path = os.path.join(rospack.get_path(pkg), 'sounds')
-        except rospkg.ResourceNotFound:
-            rospy.logerr('Sound package `%s` is not found.' % pkg)
-            continue
-
-        for prefix in lang_prefixes:
-            path = os.path.join(sounds_path, prefix)
-   
-            sounds.update(file_dict(path, 'wav'))
-            sounds.update(file_dict(path, 'ogg'))
-
-    # Initialize TextCommand handler
-    text_command_subscriber = TextCommandHandler(sounds, playback_command, tts_backend, voice_synthesizer)
-    rospy.Subscriber('control', TextCommand, text_command_subscriber.command_callback)
-
-    rospy.loginfo('Registered sounds: ' + repr(sounds))
-    rospy.loginfo('Registered %d sounds.' % len(sounds))
-    rospy.loginfo('TTS backend: %s.' % tts_backend)
-
-    rospy.sleep(1)
-    text_command_subscriber.soundhandle.stopAll()
-
+    Gst.init(None)
+    node = VoiceNode()
     rospy.spin()
+

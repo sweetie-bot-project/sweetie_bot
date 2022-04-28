@@ -155,6 +155,18 @@ sp {verbolization*elaborate*remark-about-ignor-topic
 }
 
 #
+# if topic have relevant answer it is not ignored anymo
+#
+sp {talk-answered*propose*terminate-ignor-topic
+	(state <s> ^substate talk-answered ^conclusion {<<|answer-specific-reaction| |answer-general-reaction|>>} ^question-topic <topic> ^actor <obj> ^beliefs <b> ^actions <a>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name ignor-topic ^actor <obj> ^topic <topic>)
+-->
+	(<a> ^remove-predicate <pred>)	
+}
+
+
+#
 # make remark about systematic ignorance
 #
 
@@ -276,15 +288,11 @@ sp {talk-answered*elaborate*nonsense-me-excused
 
 # detect that speaker say nonsense no more
 sp {talk-answered*propose*terminate-nonsense-me
-	(state <s> ^substate talk-answered ^conclusion {<<|answer-specific-reaction| |answer-general-reaction|>>} ^event <ev1> ^actor <obj> ^beliefs <b> ^actions <a>)
+	(state <s> ^substate talk-answered ^conclusion {<<|answer-specific-reaction| |answer-general-reaction|>>} ^actor <obj> ^beliefs <b> ^actions <a>)
 	(<b> ^predicate <pred>)
 	(<pred> ^name nonsense-me ^actor <obj>)
-	(<s> ^talk-answered <ev-answered> ^talk-irrelevant <ev-irrelevant>)
-	(<ev-answered> ^event {<> <ev1>})
-    (<ev-irrelevant> -^event)
 -->
 	(<a> ^remove-predicate <pred>)	
-	(<a> ^add-predicate <pred-reaction>)
 	(<s> ^reaction <r>)
 	(<r> ^topic nonsense-me-terminated ^type reaction ^animation-tag surprise)
 	(<r> ^text |Ты научился пользоваться карточками! Силен!| |Теперь ты умеешь пользоваться карточками. Люди поддаются дрессировке!.|)

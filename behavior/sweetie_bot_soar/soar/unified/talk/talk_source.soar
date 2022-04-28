@@ -13,6 +13,9 @@ source verbolization.soar
 # talk substate definition
 source talk.soar
 # verbolization rules
-source verbolization-requestria.soar
-source verbolization-rarity.soar
-source verbolization-vaccine-qr-code.soar
+#source verbolization-requestria.soar
+#source verbolization-rarity.soar
+source verbolization-quest.soar
+#source verbolization-vaccine-qr-code.soar
+# content
+source quest-content.soar
