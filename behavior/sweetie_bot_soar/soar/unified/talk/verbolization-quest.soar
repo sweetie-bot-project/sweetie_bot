@@ -57,7 +57,7 @@ sp {talk-answered*propose*ask-about-quest*yes
 	(state <s> ^substate talk-answered ^question-topic ask-about-quest ^answer-topic yes ^actor <obj> ^actions <a>)
 -->
 	(<a> ^add-predicate <pred>)
-	(<pred> ^name quest ^object <obj> ^scene meet-sweetie ^segment-id 0 ^scene-frame <f> ^deadline-time 600.0)
+	(<pred> ^name quest ^object <obj> ^state meet-with-sweetie ^segment-id 0 ^state-frame <f> ^deadline-time 600.0)
 }
 
 sp {talk-answered*propose*ask-about-quest*yes*terminate-quest-finished
@@ -70,23 +70,36 @@ sp {talk-answered*propose*ask-about-quest*yes*terminate-quest-finished
 
 # QUEST SEGMENT VERBOLIZATION
 
-# translate scene segment to verbolization frame
+# translate state segment to verbolization frame
 sp {quest*elaborate*verbolize-current-segment
 	(state <s> ^substate talk ^beliefs.predicate <pred> ^object <obj> ^verbolization <v>)
-	(<pred> ^name quest ^object <obj> ^scene <scene> ^segment-id <id> ^scene-frame.segment <segment>)
+	(<pred> ^name quest ^object <obj> ^state <state> ^segment-id <id> ^state-frame.segment <segment>)
    	(<segment> ^id <id> ^type <type>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic quest ^utility 30 ^type <type> ^scene <scene> ^quest-segment <segment>)
+	(<f> ^topic quest ^utility 30 ^type <type> ^state <state> ^quest-segment <segment>)
 }
 
 # copy text data to frame
 sp {quest*elaborate*verbolize-current-segment*parts
 	(state <s> ^substate talk ^verbolization.frame <f>)
 	(<f> ^topic quest ^quest-segment <segment>)
-	(<segment> ^{<<|text| |sound| |animation-tag| |character|>> <attr>} <value>)
+	(<segment> ^{<<|text| |sound| |animation-tag| |character| |scene|>> <attr>} <value>)
 -->
 	(<f> ^<attr> <value>)
+}
+
+# elaborate defult scene
+# TODO: move to quest script?
+sp {quest*elaborate*default-scene
+	(state <s> ^top-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name quest ^state-frame <f>)
+	(<f> ^segment <segment1> <segment2>)
+   	(<segment1> ^scene <scene> ^{<<|next-id| |ignor-id|>>} <id>)
+	(<segment2> ^id <id>)
+	-(<segment2> ^scene {<> <scene>})
+-->
+	(<segment2> ^scene <scene>)
 }
 
 # EVENT PROCESSING
@@ -94,46 +107,46 @@ sp {quest*elaborate*verbolize-current-segment*parts
 # if reaction segment was verbolized proceed to next segment: increase id by one
 sp {talk-said*propose*reaction-next-segment
 	(state <s> ^substate talk-said ^topic quest ^object <obj> ^beliefs.predicate <pred> ^actions <a>)
-	(<pred> ^name quest ^object <obj> ^segment-id <id> ^scene-frame.segment <segment>)
-   	(<segment> ^id <id> ^type reaction -^next-scene ^next-id <next-id>)
+	(<pred> ^name quest ^object <obj> ^segment-id <id> ^state-frame.segment <segment>)
+   	(<segment> ^id <id> ^type reaction -^next-state ^next-id <next-id>)
 -->
 	(<a> ^parent <pred> ^attribute segment-id  ^remove-value <id> ^link-value <next-id>)
 }
 
-sp {talk-said*propose*reaction-next-scene
+sp {talk-said*propose*reaction-next-state
 	(state <s> ^substate talk-said ^topic quest ^object <obj> ^beliefs.predicate <pred> ^actions <a>)
-	(<pred> ^name quest ^object <obj> ^scene <scene> ^segment-id <id> ^scene-frame.segment <segment>)
-   	(<segment> ^id <id> ^type reaction ^next-scene <next-scene>)
+	(<pred> ^name quest ^object <obj> ^state <state> ^segment-id <id> ^state-frame.segment <segment>)
+   	(<segment> ^id <id> ^type reaction ^next-state <next-state>)
 -->
-	(<a> ^parent <pred> ^attribute scene ^remove-value <scene> ^link-value <next-scene>)
+	(<a> ^parent <pred> ^attribute state ^remove-value <state> ^link-value <next-state>)
 	(<a> ^parent-2 <pred> ^attribute-2 segment-id ^remove-value-2 <id> ^link-value-2 0)
 }
 
 # if final reaction segment was verbolized end the quest: remove quest predicate and add quest-finished predicate
 sp {talk-said*propose*reaction-ending-segment
 	(state <s> ^substate talk-said ^topic quest ^object <obj> ^beliefs.predicate <pred> ^actions <a>)
-	(<pred> ^name quest ^object <obj> ^segment-id <id> ^scene-frame.segment <segment>)
+	(<pred> ^name quest ^object <obj> ^segment-id <id> ^state-frame.segment <segment>)
    	(<segment> ^id <id> ^type reaction ^ending <ending>)
 -->
 	(<a> ^remove-predicate <pred> ^add-predicate <pred1>)
    	(<pred1> ^name quest-finished ^actor <obj> ^ending <ending>)
 }
 
-# if valid answer was received assume question answered and proceed to next scene
+# if valid answer was received assume question answered and proceed to next state
 sp {talk-answered*propose*question-valid-answer
 	(state <s> ^substate talk-answered ^question-topic quest ^answer-topic <answer> ^actor <obj> ^beliefs.predicate <pred> ^actions <a>)
-	(<pred> ^name quest ^object <obj> ^scene <scene> ^segment-id <id> ^scene-frame.choice <choice>)
-   	(<choice> ^answer-topic <answer> ^next-scene <next-scene>)
+	(<pred> ^name quest ^object <obj> ^state <state> ^segment-id <id> ^state-frame.choice <choice>)
+   	(<choice> ^answer-topic <answer> ^next-state <next-state>)
 -->
 	(<s> ^conclusion answer-specific-reaction)
-	(<a> ^parent <pred> ^attribute scene ^remove-value <scene> ^link-value <next-scene>)
+	(<a> ^parent <pred> ^attribute state ^remove-value <state> ^link-value <next-state>)
 	(<a> ^parent-2 <pred> ^attribute-2 segment-id ^remove-value-2 <id> ^link-value-2 0)
 }
 
-# if question is ignored procced to ignore-id segment
+# if question is ignored procced to ignor-id segment
 sp {talk-answered*propose*question-ignored
 	(state <s> ^substate talk-ignored ^question-topic quest ^actor <obj> ^beliefs.predicate <pred> ^actions <a>)
-	(<pred> ^name quest ^object <obj> ^segment-id <id> ^scene-frame.segment <segment>)
+	(<pred> ^name quest ^object <obj> ^segment-id <id> ^state-frame.segment <segment>)
    	(<segment> ^id <id> ^type reaction ^ignor-id <next-id>)
 -->
 	(<a> ^parent <pred> ^attribute segment-id  ^remove-value <id> ^link-value <next-id>)
