@@ -68,6 +68,48 @@ sp {talk-answered*propose*ask-about-quest*yes*terminate-quest-finished
 	(<a> ^remove-predicate <pred>)
 }
 
+# prepend next quest phrase with pharse about reterning to quest
+sp {quest*elaborate*say-about-returning-to-quest
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name quest ^object <obj>)
+	(<s> -^last-said-topic {<<|quest| |say-return-to-quest| |reaction-speaker-agreed-to-quest|>>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic say-return-to-quest ^utility 31 ^type reaction ^animation-tag none ^text |Я продолжу наш квест!| |Вернемся к квесту.|)
+}
+
+# propose another speaker continue quest if it was abandoned resently
+sp {quest*elaborate*ask-continue-quest-for-other-speaker
+	(state <s> ^substate talk ^object <obj> ^beliefs <b> ^events <ev-pool> ^verbolization <v> ^time <clock>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name quest ^object {<> <obj> <other>})
+	(<ev-pool> ^event <ev>)
+	(<ev> ^name talk-said ^topic quest ^object <other> ^initiated-at <time>)
+	-(<clock> ^recently {>= <time>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic ask-continue-quest-for-other-seaker ^utility 30 ^type question ^animation-tag question ^text |Хочешь продолжить квест, который проходил другой собеседник?|)
+}
+
+sp {talk-answered*elaborate*ask-continue-quest-for-other-speaker*reaction
+	(state <s> ^substate talk-answered ^question-topic ask-continue-quest-for-other-seaker)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic reaction-speaker-agreed-to-quest ^type reaction ^text |Отлично! Тогда я начинаю!| ^animation-tag confirmation)
+	(<r2> ^answer-topic no ^topic reaction-speaker-agreed-to-quest ^type reaction ^text |Ты явно боишься получить плохую концовку.| |Не хочешь -- как хочешь.| ^animation-tag rejection)
+}
+
+sp {talk-answered*propose*ask-continue-quest-for-other-speaker*yes
+	(state <s> ^substate talk-answered ^question-topic ask-continue-quest-for-other-seaker ^answer-topic yes ^actor <obj> ^beliefs <b> ^actions <a>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name quest ^object {<> <obj> <other>} ^initiated-at <time>)
+	-{(<b> ^predicate {<> <pred> <pred2>}) 
+	  (<pred2> ^name quest ^initiated-at {> <time>})}
+-->
+	(<a> ^parent <pred> ^attribute object ^remove-value <other> ^link-value <obj>)
+}
+
 # QUEST SEGMENT VERBOLIZATION
 
 # translate state segment to verbolization frame
