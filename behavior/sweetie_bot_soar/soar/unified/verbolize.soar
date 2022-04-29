@@ -11,12 +11,24 @@
 #
 # Say person <obj> about <topic> with <text> or <sound-file> and using animation tagged with <tag>.
 #
+# Set ^animation-tag to none to skip animation. Multiply ^animation-tag may be specified. 
+# Substate consider only animation tagged with talk tag. Animation preferences are following:
+#  * two tags is matched (most preferable)
+#  * one tag is matched
+#  * animation have ^teg general
+#
+# State publishes SpeechVisualization message with attributes text, sound, character, scene.
+#
+#
 # PROCESS RESULT STATUSES
 #
-# Substate aguments supplied process with flexbe substate arguments and reuse it as flexbe substate process.
-# Result statuses are the same as for flexbe sustate.
+# * succeed --- text action succced and animation outcome is received
 #
 # SIDE EFFECTS
+#
+# Substates:
+#
+# tect-action, flexbe, look-at
 #
 # Process:
 #
@@ -109,11 +121,20 @@ sp {verbolize*elaborate*animation-matching-tag
 	(<s> ^animation <anim>)
 }
 
+# animation-tag none disables animation: succeed it immediately
+sp {verbolize*propose*ditch-animation
+	(state <s> ^substate verbolize -^performing-animation ^args.animation-tag none ^process <proc>)
+	(<proc> -^animation-status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name ditch-animation ^type automatic ^priority 40 ^parent <proc> ^attribute animation-status ^link-value succeed)
+}
+
 # propose animations, agument process predicate if animation succeed
 sp {verbolize*propose*animation
 	(state <s> ^substate verbolize -^performing-animation ^animation <anim> ^process <proc>)
-	(<anim> ^name <animation-name>)
 	(<proc> -^animation-status)
+	(<anim> ^name <animation-name>)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name performing-animation ^substate flexbe ^animation <anim> ^process-args <a>)
@@ -128,6 +149,7 @@ sp {verbolize*elaborate*say-execute-animation-is-relative
 -->
 	(<args> ^is_relative True)
 }
+
 
 # WAITING 
 # TODO: correct implementation of parallel processe: both substates should be placed in stack
@@ -153,6 +175,7 @@ sp {verbolize*elaborate*waiting
 # PREFERENCES 
 #
 # Utility:
+# ditch aniamtion --- 40
 # perform aniamtion 
 #     two matching tags --- 32
 #     one matching tags --- 31
