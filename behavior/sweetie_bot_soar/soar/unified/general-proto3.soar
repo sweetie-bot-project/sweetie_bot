@@ -155,7 +155,7 @@ sp {social*propose*mirror-greeting
 -->
 	(<s> ^operator <o> +, =)
    	(<o> ^name mirror-gesture ^substate flexbe ^process-args <a>)
-	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory greeting2 ^text |Привет!| ^text_delay 1.0 ^result <res>)
+	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory greeting ^text |Привет!| ^text_delay 1.0 ^result <res>)
 	(<res> ^status succeed ^parent <obj> ^attribute have-response ^link-value yes)
 }
 

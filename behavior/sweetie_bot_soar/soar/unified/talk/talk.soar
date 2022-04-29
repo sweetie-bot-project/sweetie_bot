@@ -157,7 +157,7 @@ sp {talk*prefer*waiting-operators
 }
 
 # searching missing speaker is preferable then trying to look at him
-sp {talk*prefer*waiting-operators
+sp {talk*prefer*search-missing
 	(state <s> ^substate talk ^operator <op1> + ^operator {<> <op1> <op2>} +)
 	(<op1> ^name search-missing-speaker)
 	(<op2> ^substate look-at)
