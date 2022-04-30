@@ -64,7 +64,7 @@ sp {initialization*apply*joint-trajectory
 	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7>)
 	(<c1> ^name head_node ^tag confirmation greeting pleased ^tag general ^tag talk ^relative yes)
 	(<c2> ^name head_shake ^tag rejection ^tag talk ^relative yes)
-	(<c3> ^name head_suprised ^tag question suprise  ^tag general ^tag talk ^relative yes)
+	(<c3> ^name head_suprised ^tag question surprise  ^tag general ^tag talk ^relative yes)
 	(<c4> ^name head_look_around ^tag long ^tag general ^tag talk)
 	(<c5> ^name hoof_stamp ^tag rejection angry ^tag talk)
 	(<c6> ^name greeting ^tag greeting brohoof ^tag talk)
@@ -91,7 +91,7 @@ sp {initialization*apply*joint-trajectory
 #	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5>)
 #	(<c1> ^name head_node ^tag confirmation ^tag talk ^relative yes)
 #	(<c2> ^name head_shake ^tag rejection ^tag talk ^relative yes)
-#	(<c3> ^name head_suprised ^tag question ^tag suprise  ^tag general ^tag talk ^relative yes)
+#	(<c3> ^name head_suprised ^tag question ^tag surprise  ^tag general ^tag talk ^relative yes)
 #	(<c4> ^name greeting ^tag greet ^tag general ^tag talk)
 #	(<c5> ^name applause ^tag confirmation rejection ^tag talk)
 #}
