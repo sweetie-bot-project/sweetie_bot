@@ -68,6 +68,13 @@ sp {talk-answered*propose*ask-about-quest*yes*terminate-quest-finished
 	(<a> ^remove-predicate <pred>)
 }
 
+sp {talk-answered*propose*ask-about-quest*no
+	(state <s> ^substate talk-answered ^question-topic ask-about-quest ^answer-topic no ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name reject-talk-topic ^object <obj> ^topic ask-about-quest ^deadline-time 60.0)
+}
+
 # prepend next quest phrase with pharse about reterning to quest
 sp {quest*elaborate*say-about-returning-to-quest
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
@@ -149,6 +156,13 @@ sp {talk-answered*propose*ask-continue-quest-for-other-speaker*yes
 	  (<pred2> ^name quest ^initiated-at {> <time>})}
 -->
 	(<a> ^parent <pred> ^attribute object ^remove-value <other> ^link-value <obj>)
+}
+
+sp {talk-answered*propose*ask-continue-quest-for-other-speaker*no
+	(state <s> ^substate talk-answered ^question-topic ask-continue-quest-for-other-seaker ^answer-topic no ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name reject-talk-topic ^object <obj> ^topic ask-continue-quest-for-other-seaker ^deadline-time 120.0)
 }
 
 # QUEST SEGMENT VERBOLIZATION
