@@ -167,6 +167,15 @@ sp {talk*prefer*search-missing
 
 # TODO use impasse
 
+# reject topic marked to be rejected
+sp {talk*prefer*reject-talk-topic 
+	(state <s> ^substate talk ^operator <op> + ^beliefs.predicate <pred> ^object <obj>)
+	(<op> ^name {<<|question-verbolization| |statement-verbolization| |reaction-verbolization|>>} ^process-link.topic <topic>)
+	(<pred> ^name reject-talk-topic ^topic <topic> ^object <obj>)
+-->
+	(<s> ^operator <op> ~)
+}
+
 # numeric preferences for verbolize operators
 sp {talk*prefer*verbolization-numerical-base
 	(state <s> ^substate talk ^operator <op> + )
