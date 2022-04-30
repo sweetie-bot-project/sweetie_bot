@@ -118,6 +118,19 @@ sp {social*propose*talk-again
 	(<a> ^object <obj>)
 }
 
+# select acquitance if he have important topic to talk (quest)
+sp {social*propose*talk-important-topic
+	(state <s> ^name social ^substate general -^talking ^beliefs <b>)
+	(<b> ^object <obj>)
+	(<obj> ^type human ^input-link.visible now)
+	(<b> ^predicate <pred1>)
+	(<pred1> ^name quest ^object <obj>)
+-->
+	(<s> ^operator <o> +, =)
+	(<o> ^name talking-important ^substate talk ^process-args <a>)
+	(<a> ^object <obj>)
+}
+
 # DECISION OPERATORS: GESTURE SUPPORT
 
 # look at active gesture

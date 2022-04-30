@@ -76,10 +76,51 @@ sp {quest*elaborate*say-about-returning-to-quest
 	(<s> -^last-said-topic {<<|quest| |say-return-to-quest| |reaction-speaker-agreed-to-quest|>>})
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic say-return-to-quest ^utility 31 ^type reaction ^animation-tag none ^text |Я продолжу наш квест!| |Вернемся к квесту.|)
+	(<f> ^topic say-return-to-quest ^utility 31 ^type reaction ^animation-tag none ^text |Я продолжу наш квест!| |Вернемся к квесту, который мы прервали.|)
 }
 
+#
+# propose contine quest interupted long time ago
+#
+sp {quest*elaborate*ask-about-returning-to-quest
+	(state <s> ^substate talk ^beliefs <b> ^object <obj>  ^events <ev-pool> ^verbolization <v> ^time <clock>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name quest ^object <obj>)
+	(<ev-pool> ^event <ev>)
+	(<ev> ^name talk-said ^topic quest ^object <obj> ^initiated-at <time>)
+	-(<clock> ^recently {< <time>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic ask-return-to-quest ^utility 31 ^type question ^animation-tag question ^text |Наш квест прервался, может, продолжим?|)
+}
+
+sp {talk-answered*elaborate*ask-about-returning-to-quest*reaction
+	(state <s> ^substate talk-answered ^question-topic ask-about-returning-to-quest)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic reaction-speaker-agreed-to-quest ^type reaction ^text |Отлично! Тогда я начинаю!| ^animation-tag confirmation)
+	(<r2> ^answer-topic no ^topic reaction-speaker-agreed-to-quest ^type reaction ^text |Тогда я сброшу твой прогресс.| |Не хочешь -- как хочешь. В следующий раз начнешь заново.| ^animation-tag rejection)
+}
+
+sp {talk-answered*propose*ask-continue-quest-for-other-speaker*yes
+	(state <s> ^substate talk-answered ^question-topic ask-about-returning-to-quest ^answer-topic yes ^actor <obj> ^beliefs <b> ^actions <a> ^time.now <now>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name quest ^object <obj> ^initiated-at <old>)
+-->
+	(<a> ^parent <pred> ^attribute initiated-at ^remove-value <old> ^link-value <now>)
+}
+
+sp {talk-answered*propose*ask-about-returning-to-quest*no
+	(state <s> ^substate talk-answered ^question-topic ask-about-returning-to-quest ^answer-topic no ^actor <obj> ^beliefs <b> ^actions <a>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name quest ^object <obj>)
+-->
+	(<a> ^remove-predicate <pred>)
+}
+
+#
 # propose another speaker continue quest if it was abandoned resently
+#
 sp {quest*elaborate*ask-continue-quest-for-other-speaker
 	(state <s> ^substate talk ^object <obj> ^beliefs <b> ^events <ev-pool> ^verbolization <v> ^time <clock>)
 	(<b> ^predicate <pred>)
