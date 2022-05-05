@@ -93,12 +93,14 @@ sp {quest*elaborate*ask-about-returning-to-quest
 	(state <s> ^substate talk ^beliefs <b> ^object <obj>  ^events <ev-pool> ^verbolization <v> ^time <clock>)
 	(<b> ^predicate <pred>)
 	(<pred> ^name quest ^object <obj>)
-	(<ev-pool> ^event <ev>)
-	(<ev> ^name talk-said ^topic quest ^object <obj> ^initiated-at <time>)
-	-(<clock> ^recently {< <time>})
+	(<s> -^last-said-topic {<<|quest| |say-return-to-quest| |reaction-speaker-agreed-to-quest|>>})
+	-{(<ev-pool> ^event <ev>)
+	  (<ev> ^name talk-said ^topic quest ^object <obj> ^initiated-at <time>)
+	  (<clock> ^recently {< <time>})
+    }
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic ask-return-to-quest ^utility 31 ^type question ^animation-tag question ^text |Наш квест прервался, может, продолжим?|)
+	(<f> ^topic ask-about-returning-to-quest ^utility 31 ^type question ^animation-tag question ^text |Наш квест прервался, может, продолжим?|)
 }
 
 sp {talk-answered*elaborate*ask-about-returning-to-quest*reaction
