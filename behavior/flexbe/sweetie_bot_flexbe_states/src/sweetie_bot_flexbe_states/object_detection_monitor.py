@@ -152,7 +152,7 @@ class ObjectDetectionMonitor(EventState):
                     Logger.logwarn('ObjectDetectionMonitor: unable to transform from %s to %s: %s' % (match.header.frame_id, self._frame_id, e))
                     return 'failure'
                 except tf.ExtrapolationException as e:
-                    # Logger.logwarn('ObjectDetectionMonitor skip transform: %s' % e)
+                    Logger.logwarn('ObjectDetectionMonitor skip transform: %s' % e)
                     pass
 
             # match_detection state
