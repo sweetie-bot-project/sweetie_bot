@@ -7,10 +7,9 @@ Panels:
         - /RobotModel1/Links1
         - /TF1/Frames1
         - /EyeLeft1
-        - /EyeLeft1/Status1
-        - /EyeRight1/Status1
+        - /EyeRight1
       Splitter Ratio: 0.4801381826400757
-    Tree Height: 657
+    Tree Height: 383
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -650,36 +649,36 @@ Visualization Manager:
       Update Interval: 0
       Value: false
       Visual Enabled: true
-    - Align plane: YZ
+    - Align plane: Quaternion
       Class: rviz_textured_quads/MeshDisplayCustom
       Enabled: true
       Horisontal flip: false
-      Image Topic: /eye_image_left
+      Image Topic: /hmi/eye_image_left
       Meters per pixel: 9.000000136438757e-05
       Name: EyeLeft
       Quad Frame: eye_l_link
       Quaternion:
-        W: 1
-        X: 0
-        Y: 0
-        Z: 0
-      Rotate 180: true
+        W: 0.6710600256919861
+        X: -0.2228900045156479
+        Y: 0.2228900045156479
+        Z: 0.6710600256919861
+      Rotate 180: false
       Value: true
       Vertical flip: false
-    - Align plane: YZ
+    - Align plane: Quaternion
       Class: rviz_textured_quads/MeshDisplayCustom
       Enabled: true
       Horisontal flip: false
-      Image Topic: /eye_image_right
+      Image Topic: /hmi/eye_image_right
       Meters per pixel: 9.000000136438757e-05
       Name: EyeRight
       Quad Frame: eye_r_link
       Quaternion:
-        W: 1
-        X: 0
-        Y: 0
-        Z: 0
-      Rotate 180: true
+        W: -0.6710600256919861
+        X: -0.2228900045156479
+        Y: 0.2228900045156479
+        Z: -0.6710600256919861
+      Rotate 180: false
       Value: true
       Vertical flip: false
     - Alpha: 1

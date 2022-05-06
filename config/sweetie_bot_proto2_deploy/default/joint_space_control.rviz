@@ -486,7 +486,7 @@ Visualization Manager:
       Enabled: true
       Horisontal flip: false
       Image Topic: /hmi/eye_image_left
-      Meters per pixel: 7.520000217482447e-05
+      Meters per pixel: 0.0001880000054370612
       Name: EyeLeft
       Quad Frame: screen_left
       Quaternion:
@@ -502,7 +502,7 @@ Visualization Manager:
       Enabled: true
       Horisontal flip: false
       Image Topic: /hmi/eye_image_right
-      Meters per pixel: 7.520000217482447e-05
+      Meters per pixel: 0.0001880000054370612
       Name: EyeRight
       Quad Frame: screen_right
       Quaternion:

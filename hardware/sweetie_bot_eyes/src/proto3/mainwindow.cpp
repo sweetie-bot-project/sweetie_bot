@@ -83,7 +83,6 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     if (m_isLeftEye) {
         m_rot = -m_rot;
     }
-    m_rot += 180; // @Temporary: Fix for flipped screens
 
     m_Pin.fill(QPointF(), SIDES + 1);
     m_Pout.fill(QPointF(), SIDES);
@@ -169,9 +168,6 @@ void MainWindow::paintGL() {
     }
 
     painter.end();
-
-    // @Temporary: Removed overlay as it needs to be redone for the new eyes
-    // painter.drawImage(0, 0, *overlay_);
 }
 
 void MainWindow::PublishImage()
