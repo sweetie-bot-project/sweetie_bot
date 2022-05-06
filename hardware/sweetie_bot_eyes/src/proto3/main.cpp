@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
 
     ros::init(argc, argv, "eyes");
 
-    QWidget w;
+    QOpenGLWidget w;
     auto right_eye = new MainWindow(false, &w);
     auto left_eye = new MainWindow(true, &w);
 

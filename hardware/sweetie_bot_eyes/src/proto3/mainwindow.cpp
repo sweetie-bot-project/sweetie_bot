@@ -10,7 +10,7 @@
 // 320x240 -> 800x800
 // 2.5x3.3333333333333335
 
-MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
+MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     m_isLeftEye(isLeftEye),
     m_publishPixmap(false),
 
@@ -69,6 +69,14 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
     // ROS
     //node_(new ros::NodeHandle)
 {
+    setAutoFillBackground(false);
+
+    QSurfaceFormat format;
+    format.setRenderableType(QSurfaceFormat::OpenGL);
+    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    format.setSwapInterval(16);
+    format.setSamples(8);
+    setFormat(format);
 
     setWindowFlags(Qt::FramelessWindowHint);
 
@@ -115,6 +123,7 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QWidget(parent),
 }
 
 MainWindow::~MainWindow() {
+    delete m_fbo;
 }
 
 void MainWindow::rosSpin()
@@ -123,11 +132,62 @@ void MainWindow::rosSpin()
     ros::spinOnce();
 }
 
-void MainWindow::PublishImage() 
+void MainWindow::initializeGL() {
+    QOpenGLFramebufferObjectFormat format;
+    format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+
+    m_fbo = new QOpenGLFramebufferObject(width(), height(), format);
+}
+
+void MainWindow::paintGL() {
+    QOpenGLPaintDevice fboPaintDev(width(), height());
+    QPainter painter(&fboPaintDev);
+    painter.setRenderHints(QPainter::Antialiasing);
+
+    painter.setPen(QPen(m_eyeColor));
+    painter.setBrush(QColor(m_eyeColor));
+    painter.drawPath(m_eyePaths[GreenEllipse]);
+
+    painter.setPen(QPen(Qt::black, 3));
+    painter.setBrush(QColor(Qt::black));
+    painter.drawPath(m_eyePaths[BlackOctagonAndLines]);
+
+    painter.setPen(QPen(Qt::white, 0));
+    painter.setBrush(QColor(Qt::white));
+    painter.drawPath(m_eyePaths[WhiteArea]);
+
+    for(int i = 0; i < m_shinesPaths.size(); i++) {
+        painter.drawPath(m_shinesPaths.at(i));
+    }
+
+    painter.setPen(QPen(m_eyelidOutlineColor, 2));
+    painter.setBrush(m_eyelidColor);
+
+    painter.drawPath(m_topEyelidPath);
+    if(m_isBlinking) {
+        painter.drawPath(m_bottomEyelidPath);
+    }
+
+    painter.end();
+
+    // @Temporary: Removed overlay as it needs to be redone for the new eyes
+    // painter.drawImage(0, 0, *overlay_);
+}
+
+void MainWindow::PublishImage()
 {
-    QPixmap pixmap(this->size());
-    this->render(&pixmap);
-    QImage image = pixmap.toImage().convertToFormat(QImage::Format_RGBA8888);
+    makeCurrent();
+    m_fbo->bind();
+
+    paintGL();
+
+    m_fbo->release();
+
+    QImage fboImage(m_fbo->toImage().convertToFormat(QImage::Format_RGBA8888));
+    QImage image(fboImage.constBits(), fboImage.width(), fboImage.height(), QImage::Format_RGBA8888);
+
+    doneCurrent();
+
     sensor_msgs::Image img;
     img.header.stamp = ros::Time::now();
     img.width = image.width();
@@ -241,37 +301,6 @@ QPointF MainWindow::rotatePoint(QPointF point, QPointF center, float angle) {
     newx = newx + center.x();
     newy = newy + center.y();
     return QPointF(newx,newy);
-}
-
-void MainWindow::paintEvent(QPaintEvent *e) {
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-
-    painter.setPen(QPen(m_eyeColor));
-    painter.setBrush(QColor(m_eyeColor));
-    painter.drawPath(m_eyePaths[GreenEllipse]);
-
-    painter.setPen(QPen(Qt::black, 3));
-    painter.setBrush(QColor(Qt::black));
-    painter.drawPath(m_eyePaths[BlackOctagonAndLines]);
-
-    painter.setPen(QPen(Qt::white, 0));
-    painter.setBrush(QColor(Qt::white));
-    painter.drawPath(m_eyePaths[WhiteArea]);
-
-    for(int i = 0; i < m_shinesPaths.size(); i++) {
-        painter.drawPath(m_shinesPaths.at(i));
-    }
-
-    painter.setPen(QPen(m_eyelidOutlineColor, 2));
-    painter.setBrush(m_eyelidColor);
-
-    painter.drawPath(m_topEyelidPath);
-    if(m_isBlinking) {
-        painter.drawPath(m_bottomEyelidPath);
-    }
-
-    QWidget::paintEvent(e);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *e) {

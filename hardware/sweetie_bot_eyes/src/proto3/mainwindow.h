@@ -4,6 +4,9 @@
 #include <QWidget>
 #include <QPainter>
 #include <QTimer>
+#include <QOpenGLWidget>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLPaintDevice>
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -12,12 +15,14 @@
 #include <sensor_msgs/Image.h>
 #include <sweetie_bot_text_msgs/TextCommand.h>
 
-class MainWindow : public QWidget {
+class MainWindow : public QOpenGLWidget {
     Q_OBJECT
 
 private:
     bool m_isLeftEye;
     bool m_publishPixmap;
+
+    QOpenGLFramebufferObject *m_fbo;
 
     QPointF m_c;     //Center of eye
     float m_R;       //Radius1 of eye
@@ -151,8 +156,10 @@ public:
     void setEndPositions();
     void blink(int ms);
 
-    void paintEvent(QPaintEvent *);
     void keyPressEvent(QKeyEvent *e);
+
+    void initializeGL();
+    void paintGL();
 
 private slots:
     void updateMovingState();
