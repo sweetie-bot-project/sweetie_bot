@@ -1,5 +1,5 @@
 lang: "ru,en"
-sound_packages: [ sweetie_bot_sounds ]
+sound_packages: [ sweetie_bot_sounds, sweetie_bot_sounds_quest_become_pony ]
 default_profile: 'rhvoice'
 ladspa_path: ~/.ladspa/
 voice_profile:
