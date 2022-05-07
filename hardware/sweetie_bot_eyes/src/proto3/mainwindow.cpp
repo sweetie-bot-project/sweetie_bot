@@ -14,7 +14,7 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     m_isLeftEye(isLeftEye),
     m_publishPixmap(false),
 
-    m_c(QPointF(WIDTH/2.,HEIGHT/2. - 15)), // -15 for new screen center correction
+    m_c(QPointF(WIDTH/2.,HEIGHT/2. + 10)), // +10 for new screen center correction
     m_R(115.0*2.5),
     m_relR8(0.6),
     m_alpha(0.0),
@@ -31,8 +31,8 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     m_msBetweenMovement(3000),
     m_randomMoveTimer(new QTimer(this)),
 
-    m_topEyelidRotation(10.0),
-    m_topEyelidY(20.0),
+    m_topEyelidRotation(-5.0),
+    m_topEyelidY(135.0),
     m_oldTopEyelidY(0.0),
 
     m_blinkTimer(new QTimer(this)),
@@ -74,7 +74,7 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     QSurfaceFormat format;
     format.setRenderableType(QSurfaceFormat::OpenGL);
     format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-    format.setSwapInterval(16);
+    format.setSwapInterval(10);
     format.setSamples(8);
     setFormat(format);
 
@@ -280,7 +280,7 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
 
   m_isMoveWithBlink = false;
 
-  move((MoveFlags)1, 16,
+  move((MoveFlags)1, 30,
          eyeToX, eyeToY, 0, 0, 0,
          0, 0, 0,
          0, 0,
