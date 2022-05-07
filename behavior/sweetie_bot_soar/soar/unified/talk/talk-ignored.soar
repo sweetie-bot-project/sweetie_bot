@@ -36,12 +36,15 @@ sp {talk-ignore*elaborate*specific-reaction
 	(<pred> ^name talk-possible-reaction ^object <obj> ^reaction <r> ^event <ev> ^deadline-time 60.0)
 }
 
-# thera are at least two even related to given topic
+# thera are at least two talk-ignored event related to given topic and there is no talk-answered event between them
 sp {talk-ignore*elaborate*ignor-topic
-	(state <s> ^substate talk-ignored ^event <ev> ^talk-ignored <c>)
+	(state <s> ^substate talk-ignored ^event <ev> ^talk-ignored <c> ^talk-answered <a>)
 	(<c> ^event {<> <ev> <ev1>})
 	(<ev> ^topic <topic>)
-	(<ev1> ^topic <topic>)
+	(<ev1> ^topic <topic> ^initiated-at <time>)
+	-{(<a> ^event <ev2>) 
+	  (<ev2> ^topic <topic> ^initiated-at {> <time>})
+	}
 -->
 	(<s> ^conclusion ignor-topic)
 }

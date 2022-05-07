@@ -32,9 +32,11 @@ sp {talk-failed*propose*finish-talk-before-it-started
 
 # detect that speaker is missing (in talk-failed substate)
 sp {talk-failed*propose*add-missing-speaker
-	(state <s> ^substate talk-failed ^talk-has-started ^actor <obj> ^actions <a>)
+	(state <s> ^substate talk-failed ^talk-has-started ^actor <obj> ^beliefs <b> ^actions <a>)
+	-{(<b> ^predicate <pred>)
+	  (<pred> ^name missing-speaker ^object <obj>)}
 -->
 	(<a> ^add-predicate <pred>)
-	(<pred> ^name missing-speaker ^object <obj> ^deadline-time 3.0)
+	(<pred> ^name missing-speaker ^object <obj> ^deadline-time 6.0)
 }
 

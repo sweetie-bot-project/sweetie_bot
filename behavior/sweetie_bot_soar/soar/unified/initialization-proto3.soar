@@ -41,6 +41,7 @@ sp {initialization*apply*flexbe-commands
 	(<c1> ^name ExecuteLookAt ^param id label type timeout)
 	(<c2> ^name ExecuteCompoundAction ^param action_name)
 	(<c3> ^name ExecuteStepSequence ^param action_name)
+	(<c4> ^name ExecuteJointTrajectory ^param joint_trajectory is_relative)
 	(<c4> ^name ExecuteJointTrajectoryAndSay ^param joint_trajectory text text_delay is_relative)
 	(<c5> ^name ExecuteSetPose ^param pose)
 }
@@ -60,13 +61,15 @@ sp {initialization*apply*joint-trajectory
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7>)
+	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9>)
 	(<c1> ^name head_node ^tag confirmation greeting pleased ^tag general ^tag talk ^relative yes)
 	(<c2> ^name head_shake ^tag rejection ^tag talk ^relative yes)
-	(<c3> ^name head_suprised ^tag question suprise  ^tag general ^tag talk ^relative yes)
+	(<c3> ^name head_suprised ^tag question surprise  ^tag general ^tag talk ^relative yes)
 	(<c4> ^name head_look_around ^tag long ^tag general ^tag talk)
 	(<c5> ^name hoof_stamp ^tag rejection angry ^tag talk)
-	(<c6> ^name greeting2 ^tag greeting brohoof ^tag talk)
+	(<c6> ^name greeting ^tag greeting brohoof ^tag talk)
+	(<c7> ^name get_unconscious ^tag faint ^tag talk)
+	(<c8> ^name dance_stamp ^tag dance ^tag talk)
 }
 
 #sp {initialization*apply*compound*action
@@ -90,7 +93,7 @@ sp {initialization*apply*joint-trajectory
 #	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5>)
 #	(<c1> ^name head_node ^tag confirmation ^tag talk ^relative yes)
 #	(<c2> ^name head_shake ^tag rejection ^tag talk ^relative yes)
-#	(<c3> ^name head_suprised ^tag question ^tag suprise  ^tag general ^tag talk ^relative yes)
+#	(<c3> ^name head_suprised ^tag question ^tag surprise  ^tag general ^tag talk ^relative yes)
 #	(<c4> ^name greeting ^tag greet ^tag general ^tag talk)
 #	(<c5> ^name applause ^tag confirmation rejection ^tag talk)
 #}

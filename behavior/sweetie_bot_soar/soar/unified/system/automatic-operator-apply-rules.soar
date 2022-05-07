@@ -39,6 +39,30 @@ sp {automatic*apply**remove-all-values
 	(<p> ^<attr> <value> -)
 }
 
+# add simple WME value (second)
+sp {automatic*apply*link-value-2
+	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
+	(<op> ^type automatic ^parent-2 <p> ^attribute-2 <attr> ^link-value-2 <value>)
+-->
+	(<p> ^<attr> <value>)
+}
+
+# copy i-supported structure with one level of attribution (second)
+sp {automatic*apply*copy-value-one-leve-2
+	(state <s> ^operator <op>)
+	(<op> ^type automatic ^parent-2 <p> ^attribute-2 <attr> ^copy-value-one-level-2 <value>)
+-->
+	(<p> ^<attr> (copy-one-level <value>))
+}
+
+# remove attribute with specific value (second)
+sp {automatic*apply*remove-value-2
+	(state <s> ^operator <op>)
+	(<op> ^type automatic ^parent-2 <p> ^attribute-2 <attr> ^remove-value-2 {<> |__all__| <value>})
+-->
+	(<p> ^<attr> <value> -)
+}
+
 #
 # BELIEF ADDITION
 #
@@ -169,6 +193,22 @@ sp {automatic*apply*remove-process
 	(<b> ^event <ev>)
 	(<ev> ^name <name> ^reason terminated ^process <pred> ^initiated-at <time>)
 	(log 1 (concat |TERMINATE PROCESS: | <name> | | <pred> (crlf)))
+}
+
+# terminate super processes: delete WME, add `^terminated-at`, set status
+# NOTE: process may have many super processes due to automatic state recovery and assotiation
+# NOTE: this operator terminates all of them
+sp {automatic*apply*finish-super-process
+	(state <s> ^operator <op> ^beliefs <b> ^time.now <time>)
+	(<op> ^type automatic ^finish-status <status> ^finish-super-process-of.subprocess-of <pred>)
+	(<b> ^process <pred>)
+	(<pred> ^name <name>)
+-->
+	(<b> ^process <pred> -)
+	(<pred> ^terminated-at <time> ^status <status>)
+	(<b> ^event <ev>)
+	(<ev> ^name <name> ^reason terminated ^status <status> ^process <pred> ^initiated-at <time>)
+	(log 1 (concat |FINISH PROCESS | <name> | | <pred> | WITH STATUS | <status> (crlf)))
 }
 
 # terminate process: delete WME, add `^terminated-at`, set status

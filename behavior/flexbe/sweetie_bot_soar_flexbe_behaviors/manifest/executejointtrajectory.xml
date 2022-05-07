@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<behavior name="ExecuteJointTrajectory">
+
+	<executable package_path="sweetie_bot_soar_flexbe_behaviors.executejointtrajectory_sm" class="ExecuteJointTrajectorySM" />
+	<tagstring>SOAR</tagstring>
+	<author>disRecord</author>
+	<date>2022</date>
+	<description>
+		Execute JointTrajectory absolute or rel.ative.
+	</description>
+
+
+	<!-- Contained Behaviors -->
+
+	<!-- Available Parameters -->
+	<params>
+
+		<param type="text" name="joint_trajectory" default="head_node" label="joint_trajectory" hint="Joint trajectory name. May be empty if no movement is needed." />
+
+		<param type="boolean" name="is_relative" default="False" label="is_relative" hint="Set true if trajectory is relative (ExecuteJointTrajectoryRelative)." />
+
+	</params>
+
+
+</behavior>

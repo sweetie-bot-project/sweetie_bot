@@ -59,21 +59,30 @@ sp {vision*elaborate*qr-code
 	(<swm-obj> ^label <label> ^type {<<|qrcode| |qr|>>} ^visible now)
 -->
 	(<b> ^predicate <obj>)
-	(<obj> ^name qr-code-is-visible ^text <label> ^input-link <swm-obj>)
+	(<obj> ^name qr-code-is-visible ^text-unfiltered <label> ^input-link <swm-obj>)
 }
 
+# qr code text translation rules
 sp {vision*elaborate*hello-is-greeting
 	(state <s> ^top-state 1 ^beliefs.predicate <obj>)
-	(<obj> ^name qr-code-is-visible ^text hello)
+	(<obj> ^name qr-code-is-visible ^text-unfiltered hello)
 -->
 	(<obj> ^text greeting)
 }
 
 sp {vision*elaborate*sorry-is-excuse
 	(state <s> ^top-state 1 ^beliefs.predicate <obj>)
-	(<obj> ^name qr-code-is-visible ^text sorry)
+	(<obj> ^name qr-code-is-visible ^text-unfiltered sorry)
 -->
 	(<obj> ^text excuse)
+}
+
+# if no text translation rule is provided, then directly translate unfiltered to filtered 
+sp {vision*elaborate*text-filter-default
+	(state <s> ^top-state 1 ^beliefs.predicate <obj>)
+	(<obj> ^name qr-code-is-visible ^text-unfiltered <text> -^text {<> <text>})
+-->
+	(<obj> ^text <text>)
 }
 
 # traslate qr codes initiated event into speech event

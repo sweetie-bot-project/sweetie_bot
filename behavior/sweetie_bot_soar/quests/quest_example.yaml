@@ -1,0 +1,71 @@
+meet-with-sweetie:
+    - replica: "Тихое, сонное утро в Понивилле. Ты неспешно потягиваешь травяной чай, предвкушая ленивый день отдыха.  Сегодня ты обещал Рэрити встретиться и обговорить заказ нового костюма."
+      animation-tag: "long"
+      scene: "home"
+
+    - replica: "Кого там Селестия принесла... - недовольно бурчишь ты, открывая дверь. На пороге стоит Свити Бэлль:"
+      animation-tag: "long" 
+
+    - replica: "Привет, друг! Извини за беспокойство, но но мне срочно нужна твоя помощь! Пойдём, объясню по дороге!"
+      character: "Свити Белль"
+      sound: "hello_im_sweetie_bot_friedship_programms"
+      animation-tag: "brohoof" 
+
+    - replica: "Вот только у тебя другие планы, а Рэрити не будет ждать слишком долго. Тем веменем маленькая единорожка настаивает:"
+      animation-tag: "long" 
+
+    - replica: "Ну что? Пойдешь со мной? Давай же!"
+      character: "Свити Белль"
+      sound: "will_you_help_me_conquer_the_world"
+      animation-tag: "question" 
+
+    - question: "Свити спросила тебя, пойдешь ли ты с ней. Ответь да или нет."
+      animation-tag: "question" 
+      choices:
+        "yes": "walk-with-sweetie"
+        "no": "talk-with-rarity"
+
+    - question: "Свити все еще ждет твоего ответа. Пойдешь ли ты с неЙ?"
+      animation-tag: "question" 
+
+
+
+walk-with-sweetie:
+    - replica: "Отлично! Я рада, что ты согласился!"
+      character: "Свити Белль"
+      sound: "thank_you_for_attention_nopony_was_harmed"
+      animation-tag: "confirmation"
+      scene: "home"
+      
+    - replica: "Вы двигаетесь в сторону фермы Эпплджек. Свити продолжает рассказ:"
+      animation-tag: "long"
+      scene: "road"
+
+    - replica: "Мы, Меткоискатели, наконец-то поняли, что гарантированно принесет нам кьютимарки. Пока наш стартап маленький, но, поверь мне, скоро мы захватим... то есть, займем достойное место в доме каждого пони!"
+      character: "Свити Белль"
+      sound: "thank_you_for_attention_nopony_was_harmed"
+      animation-tag: "confirmation"
+      scene: "clubhouse"
+
+    - replica: "Так ты узнал о планах Свити. Твой квест завершен."
+      animation-tag: "rejection"
+      ending: "Узанал о планах Свити"
+
+
+
+talk-with-rarity:
+    - replica: "Ох, жаль... Понимаю, ты очень занят... Ну что ж, в другой раз."
+      character: "Свити Белль"
+      sound: "prepare_to_die"
+      animation-tag: "rejection"
+      scene: "home"
+
+    - replica: "Свити поникает и уходит прочь, а ты отправлешься в бутик к Рэрити."
+      animation-tag: "long" 
+
+    - replica: "Ты встретил Рэрити. На этом твой квест завершен."
+      animation-tag: "confirmation" 
+      ending: "Встретил Рэрити"
+      scene: "boutique"
+
+

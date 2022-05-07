@@ -17,7 +17,7 @@ clop_generator:
             bounding_box: [ 0.05, 0.025, -1.2075, 1.145, 0.08, -0.1575 ]
             #bounding_box: [ 0.05, 0.025, -1.2075, 1.145, 1.08, -0.1575 ]
             #bounding_box: [ -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ 0.08, 0.037, -0.0575, 0.17, 0.09 ]
+            bounding_sphere: [ 0.08, 0.037, -0.0575, 0.17, 0.105 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone13", "bone14", "bone15"]
         RF:
@@ -28,7 +28,7 @@ clop_generator:
             bounding_box: [ 0.05, -0.08, -1.2075, 1.145, -0.025, -0.1575 ]
             #bounding_box: [ 0.05, -1.08, -1.2075, 1.145, -0.025, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ 0.08, -0.037, -0.0575, 0.17, 0.09 ]
+            bounding_sphere: [ 0.08, -0.037, -0.0575, 0.17, 0.105 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone23", "bone24", "bone25"]
         LH:
@@ -39,7 +39,7 @@ clop_generator:
             bounding_box: [ -1.145, 0.025, -1.2075, -0.05, 0.08, -0.1575 ]
             #bounding_box: [ -1.145, 0.025, -1.2075, -0.05, 1.08, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ -0.08, 0.037, -0.0575, 0.17, 0.09 ]
+            bounding_sphere: [ -0.08, 0.037, -0.0575, 0.17, 0.105 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone33", "bone34", "bone35"]
         RH: 
@@ -50,7 +50,7 @@ clop_generator:
             bounding_box: [ -1.145, -0.08, -1.2075, -0.05, -0.025, -0.1575 ]
             #bounding_box: [ -1.145, -1.08, -1.2075, -0.05, -0.025, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ -0.08, -0.037, -0.0575, 0.17, 0.09 ]
+            bounding_sphere: [ -0.08, -0.037, -0.0575, 0.17, 0.105 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone43", "bone44", "bone45"]
         ee_collision_ellipsoid: [ 0.09, 0.05, 0.0 ]

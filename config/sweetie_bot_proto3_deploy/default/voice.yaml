@@ -1,39 +1,43 @@
-lang: "en,ru"
-voice_node:
-    playback_command: "mpv"
-    sound_packages: [ sweetie_bot_sounds ]
-    # Options are: sound_play, rhvoice, rhvoice_robotized
-    tts_backend: rhvoice_robotized
-
-    # Parameters for rhvoice and rhvoice_robotized backends:
-    relative_volume:        1.0  # in percents devided by 100
-    relative_rate:          0.75 # in percents devided by 100
-    relative_pitch_russian: 0.70 # in percents devided by 100
-    relative_pitch_english: 0.75 # in percents devided by 100
-
-    # Parameters for rhvoice_robotized backend:
-    ladspa_path: ~/.ladspa/
-    # Next parameter is a part of gstreamer audio pipeline, that follows common beginning:
-    # appsrc name=source ! audio/x-raw,format=S16LE,channels=1,rate=24000,layout=interleaved !
-    robotization_pipeline: 'audioconvert ! audioresample
-        ! ladspa-autotalent-so-autotalent
-                concert-a="440.00"
-                fixed-pitch="0.0"
-                pull-to-fixed-pitch="0.193"
-                a="-1" ab="0" b="0" bb="-1"
-                c="0" d="-1" db="-1" e="-1"
-                eb="0" f="0" g="-1" gb="-1"
-                correction-strength="1"
-                correction-smoothness="0"
-                pitch-shift="0.2"
-                output-scale-rotate="0"
-                lfo-depth="0"
-                lfo-rate="2.29"
-                lfo-shape="0"
-                lfo-symmetry="0.2"
-                lfo-quantization="0"
-                formant-correction="1"
-                formant-warp="0.4"
-                mix="1.0"
-        ! autoaudiosink'
+lang: "ru,en"
+sound_packages: [ sweetie_bot_sounds, sweetie_bot_sounds_quest_become_pony ]
+default_profile: 'rhvoice'
+ladspa_path: ~/.ladspa/
+voice_profile:
+    rhvoice:
+        type: rhvoice
+        rhvoice_params:
+            relative_volume:        1.0  # in percents devided by 100
+            relative_rate:          0.9  # in percents devided by 100
+            relative_pitch:         0.6 # in percents devided by 100
+            #relative_pitch_russian: 0.60 # in percents devided by 100
+            #relative_pitch_english: 0.75 # in percents devided by 100
+    rhvoice_robotized:
+        type: rhvoice
+        rhvoice_params:
+            relative_volume:        1.0  # in percents devided by 100
+            relative_rate:          0.9  # in percents devided by 100
+            relative_pitch:         0.6 # in percents devided by 100
+        gstreamer_pipeline: 'audioconvert ! audioresample
+            ! ladspa-autotalent-so-autotalent
+                    concert-a="440.00"
+                    fixed-pitch="0.0"
+                    pull-to-fixed-pitch="0.193"
+                    a="-1" ab="0" b="0" bb="-1"
+                    c="0" d="-1" db="-1" e="-1"
+                    eb="0" f="0" g="-1" gb="-1"
+                    correction-strength="1"
+                    correction-smoothness="0"
+                    pitch-shift="0.2"
+                    output-scale-rotate="0"
+                    lfo-depth="0"
+                    lfo-rate="2.29"
+                    lfo-shape="0"
+                    lfo-symmetry="0.2"
+                    lfo-quantization="0"
+                    formant-correction="1"
+                    formant-warp="0.4"
+                    mix="1.0"'
+    speechd:
+        type: 'speechd'
+        module: 'rhvoice'
 

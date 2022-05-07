@@ -20,6 +20,7 @@ add_message_files(
   CompoundAction.msg
   Detection.msg
   DetectionArray.msg
+  SpeechVisualization.msg
 )
 
 ## Generate services in the 'srv' folder
