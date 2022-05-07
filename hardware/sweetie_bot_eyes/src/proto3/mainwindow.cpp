@@ -223,8 +223,8 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 			switch(str2hash(msg->command.c_str())){
 				case str2hash("normal"):
 									//ROS_INFO("normal");
-									m_topEyelidRotation = 10;
-									m_topEyelidY = 20;
+									m_topEyelidRotation = -5;
+									m_topEyelidY = 135;
 
 									m_eyeColor = QColor(Qt::green);
 									m_eyelidColor = QColor(143,210,143);
@@ -238,13 +238,13 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 									break;
 				case str2hash("sad_look"):
 									//ROS_INFO("sad_look");
-									m_topEyelidRotation = 30;
-									m_topEyelidY = 0;
+									m_topEyelidRotation = 15;
+									m_topEyelidY = 150;
 									break;
 				case str2hash("evil_look"):
 									//ROS_INFO("evil_look");
 									m_topEyelidRotation = -30;
-									m_topEyelidY = 60;
+									m_topEyelidY = 200;
 									break;
 			}				
 			break;
