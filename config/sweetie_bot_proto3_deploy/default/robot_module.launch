@@ -13,7 +13,7 @@
 	<node machine="sweetiebot" name="eyes"  pkg="sweetie_bot_eyes" type="proto3_eyes"></node>
 
 	<!-- Check if path to battery exists -->
-	<arg name="battery_path" default="$(eval eval('_' + '_import_' + '_(\'rospy\')').get_param('/hardware/battery_monitor/sysfs_path'))" />
+	<arg name="battery_path" default="$(eval eval('_' + '_import_' + '_(\'rospy\')').get_param('/hardware/battery_monitor/sysfs_path', ''))" />
 	<arg name="is_battery_exists" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists('$(arg battery_path)') else 'false')" />
 
 	<!-- run battery monitor -->
