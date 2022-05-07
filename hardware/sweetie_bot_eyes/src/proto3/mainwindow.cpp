@@ -80,7 +80,7 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
 
     setWindowFlags(Qt::FramelessWindowHint);
 
-    if (m_isLeftEye) {
+    if (!m_isLeftEye) {
         m_rot = -m_rot;
     }
 

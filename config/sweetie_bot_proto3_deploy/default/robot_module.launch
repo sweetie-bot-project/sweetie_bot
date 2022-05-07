@@ -8,10 +8,10 @@
 		<remap from="markers" to="$(arg robot_ns)/hmi/detections" />
 	</node>
 
-        <env name="QT_QPA_EGLFS_KMS_CONFIG" value="$(find sweetie_bot_eyes)/config/eglfs.json" />
-        <env name="QT_QPA_PLATFORM" value="eglfs" />
-        <env name="QT_QPA_EGLFS_ALWAYS_SET_MODE" value="1" />
-        <env name="QT_QPA_EGLFS_KMS_ATOMIC" value="1" />
+	<env name="QT_QPA_EGLFS_KMS_CONFIG" value="$(find sweetie_bot_eyes)/config/eglfs.json" />
+	<env name="QT_QPA_PLATFORM" value="eglfs" />
+	<env name="QT_QPA_EGLFS_ALWAYS_SET_MODE" value="1" />
+	<env name="QT_QPA_EGLFS_KMS_ATOMIC" value="1" />
 
 	<!-- run eyes on fb device -->
 	<node machine="sweetiebot" name="eyes"  pkg="sweetie_bot_eyes" type="proto3_eyes"></node>

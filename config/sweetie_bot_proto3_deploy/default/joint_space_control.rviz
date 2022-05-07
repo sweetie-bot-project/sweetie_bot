@@ -658,10 +658,10 @@ Visualization Manager:
       Name: EyeLeft
       Quad Frame: eye_l_link
       Quaternion:
-        W: 0.6710600256919861
+        W: -0.6710600256919861
         X: -0.2228900045156479
         Y: 0.2228900045156479
-        Z: 0.6710600256919861
+        Z: -0.6710600256919861
       Rotate 180: false
       Value: true
       Vertical flip: false
@@ -674,10 +674,10 @@ Visualization Manager:
       Name: EyeRight
       Quad Frame: eye_r_link
       Quaternion:
-        W: -0.6710600256919861
+        W: 0.6710600256919861
         X: -0.2228900045156479
         Y: 0.2228900045156479
-        Z: -0.6710600256919861
+        Z: 0.6710600256919861
       Rotate 180: false
       Value: true
       Vertical flip: false
