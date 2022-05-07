@@ -86,17 +86,6 @@
 			</group>
 		</group>
 
-		<!-- SIMULATED HARDWARE -->
-			
-		<group unless="$(arg run_real)" ns="$(arg robot_ns)/hardware/simulated">
-			<!-- OpenMV camera node (in run_real mode it is started by hardware module) -->
-			<!-- <node pkg="sweetie_bot_openmv" type="openmv_node" name="openmv_node">
-				<remap from="detections" to="$(arg robot_ns)/detections" />
-				<remap from="markers" to="$(arg robot_ns)/hmi/detections" />
-				<param name="camera_frame" value="camera_link_simulation" />
-			</node>-->
-		</group>
-
 		<!-- HMI: launch operator GUI -->
 
 		<!-- joystick (should connected to host) -->
