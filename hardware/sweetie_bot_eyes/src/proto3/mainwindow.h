@@ -119,6 +119,8 @@ private:
     float m_stepEyelidRotation;
 
     QString path_;
+    QImage *overlay_;
+    bool m_debug_mode_enabled = false;
 
     // ROS
     ros::NodeHandle node_;

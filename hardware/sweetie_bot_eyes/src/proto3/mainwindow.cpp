@@ -119,6 +119,19 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     pub_eye_image_ = node_.advertise<sensor_msgs::Image>(image_eye_topic_name, 1);
 
     path_ =  QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") );
+
+    // Set debug mode
+    auto args = QApplication::arguments();
+    m_debug_mode_enabled = args.contains("-debug");
+    
+    if (m_debug_mode_enabled) {
+        if(m_isLeftEye) {
+            overlay_ = new QImage(path_ + "/overlays/proto3_leftEyeOverlay.png");
+        }
+        else {
+            overlay_ = new QImage(path_ + "/overlays/proto3_rightEyeOverlay.png");
+        }
+    }
 }
 
 MainWindow::~MainWindow() {
@@ -165,6 +178,20 @@ void MainWindow::paintGL() {
     painter.drawPath(m_topEyelidPath);
     if(m_isBlinking) {
         painter.drawPath(m_bottomEyelidPath);
+    }
+
+    if (m_debug_mode_enabled) {
+        painter.drawImage(0, 0, *overlay_);
+
+        QString eye_info = QString("eye :: x,y: %1, %2; ang: %3; x_scale: %4; radius: %5").arg(QString::number(m_c.x()), QString::number(m_c.y()), QString::number(m_rot), QString::number(m_scale), QString::number(m_R));
+        QString aperture_info = QString("aperture :: ang: %1; contraction: %3\n").arg(QString::number(m_alpha), QString::number(m_relR8));
+        QString top_eyelid_info = QString("top_eyelid :: y: %1; ang: %3\n").arg(QString::number(m_topEyelidY), QString::number(m_topEyelidRotation));
+        QString bottom_eyelid_info = QString("bottom_eyelid :: y: %1; ang: %3\n").arg(QString::number(m_topEyelidY), QString::number(m_topEyelidRotation));
+    
+        painter.drawText(10, 10, eye_info);
+        painter.drawText(10, 20, aperture_info);
+        painter.drawText(10, 30, top_eyelid_info);
+        painter.drawText(10, 40, bottom_eyelid_info);
     }
 
     painter.end();
