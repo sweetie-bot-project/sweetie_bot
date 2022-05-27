@@ -37,8 +37,8 @@ private:
     QVector<QPointF>m_Pout;
 
     //blinking
-    int m_blinkLength;
-    int m_blinkingTime;
+    int m_blinkDefaultDuration;
+    int m_blinkDuration;
     int m_currentBlinkingTime;
     bool m_isBlinking;
     bool m_isGoingDown;
@@ -55,10 +55,10 @@ private:
     float m_bottomEyelidY;
 
     // For blinking
-    float m_savedBottomEyelidY;
-    float m_savedBottomEyelidRotation;
-    float m_savedTopEyelidY;
-    float m_savedTopEyelidRotation;
+    float m_startBottomEyelidY;
+    float m_startBottomEyelidRotation;
+    float m_startTopEyelidY;
+    float m_startTopEyelidRotation;
 
     QPainterPath m_topEyelidPath;
     QPainterPath m_bottomEyelidPath;
@@ -122,10 +122,10 @@ private:
     float m_endPupilRotation;
     float m_stepPupilRotation;
 
-    float m_endTopEyelidHeight;
+    float m_endTopEyelidY;
     float m_stepTopEyelidHeight;
 
-    float m_endBottomEyelidHeight;
+    float m_endBottomEyelidY;
     float m_stepBottomEyelidHeight;
 
     float m_endTopEyelidRotation;

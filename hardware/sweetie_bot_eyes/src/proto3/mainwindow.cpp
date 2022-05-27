@@ -21,8 +21,8 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     m_rot(40.83*0.9),
     m_scale(0.8),
 
-    m_blinkLength(150),
-    m_blinkingTime(0),
+    m_blinkDefaultDuration(150),
+    m_blinkDuration(0),
     m_currentBlinkingTime(0),
     m_isBlinking(false),
     m_isGoingDown(false),
@@ -33,11 +33,11 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
 
     m_topEyelidRotation(-5.0),
     m_topEyelidY(135.0),
-    m_savedTopEyelidY(0.0),
+    m_startTopEyelidY(0.0),
 
     m_bottomEyelidRotation(0.0),
-    m_bottomEyelidY(720.0),
-    m_savedBottomEyelidY(0.0),
+    m_bottomEyelidY(730.0),
+    m_startBottomEyelidY(0.0),
 
     m_blinkTimer(new QTimer(this)),
     m_moveTimer(new QTimer(this)),
@@ -66,12 +66,12 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     m_stepPupilRelativeSize(0.0),
     m_endPupilRotation(0.0),
     m_stepPupilRotation(0.0),
-    m_endTopEyelidHeight(0.0),
+    m_endTopEyelidY(0.0),
     m_stepTopEyelidHeight(0.0),
     m_endTopEyelidRotation(0.0),
     m_stepTopEyelidRotation(0.0),
 
-    m_endBottomEyelidHeight(0.0),
+    m_endBottomEyelidY(0.0),
     m_stepBottomEyelidHeight(0.0),
     m_endBottomEyelidRotation(0.0),
     m_stepBottomEyelidRotation(0.0)
@@ -571,7 +571,7 @@ void MainWindow::keyPressEvent(QKeyEvent *e) {
 
     // Single blink initiation
     case Qt::Key_B:
-        blink(m_blinkLength);
+        blink(m_blinkDefaultDuration);
     	break;
 
     // Random movements control
@@ -711,8 +711,8 @@ void MainWindow::move(MoveFlags flags, int ms,
         m_stepPupilRotation = (m_endPupilRotation - m_alpha) * frac;
     }
     if(m_moveFlags & EyelidHeight && !m_isBlinking) {
-        m_endTopEyelidHeight = eyelidHeight;
-        m_stepTopEyelidHeight = (m_endTopEyelidHeight - m_topEyelidY) * frac;
+        m_endTopEyelidY = eyelidHeight;
+        m_stepTopEyelidHeight = (m_endTopEyelidY - m_topEyelidY) * frac;
     }
     if(m_moveFlags & EyelidRotation && !m_isMoveWithBlink) {
         m_endTopEyelidRotation = eyelidRotation;
@@ -723,7 +723,7 @@ void MainWindow::move(MoveFlags flags, int ms,
         m_moveTimer->start();
     }
     else {
-        blink(m_blinkLength);
+        blink(m_blinkDefaultDuration);
     }
 }
 
@@ -752,7 +752,7 @@ void MainWindow::updateMovingState() {
             m_alpha = m_endPupilRotation;
         }
         if(m_moveFlags & EyelidHeight && !m_isBlinking) {
-            m_topEyelidY = m_endTopEyelidHeight;
+            m_topEyelidY = m_endTopEyelidY;
         }
         if(m_moveFlags & EyelidRotation) {
             m_topEyelidRotation = m_endTopEyelidRotation;
@@ -799,38 +799,31 @@ void MainWindow::updateMovingState() {
     countFrame();
 }
 
-float lerp(float first_value, float second_value, float t) {
-    return first_value * t + second_value * (1 - t);
+inline float lerp(float first_value, float second_value, float t) {
+    return first_value * (1 - t) + second_value * t;
 }
 
 void MainWindow::blink(int ms) {
     if (m_isBlinking)  return;
 
     m_isGoingDown = true;
-    m_blinkingTime = ms;
+    m_blinkDuration = 2 * ms; // Moving forward and backward is 2 times longer
 
-    m_savedTopEyelidY = m_topEyelidY;
-    m_savedBottomEyelidY = m_bottomEyelidY;
+    // Save current eyelids state
+    m_startTopEyelidY = m_topEyelidY;
+    m_startBottomEyelidY = m_bottomEyelidY;
+    m_startTopEyelidRotation = m_topEyelidRotation;
+    m_startBottomEyelidRotation = m_bottomEyelidRotation;
 
-    m_savedTopEyelidRotation = m_topEyelidRotation;
-    m_savedBottomEyelidRotation = m_bottomEyelidRotation;
-
-    float frac = m_msUpdateMove/(float)m_blinkingTime;
-    float eyelidsTouchHightRatio = 0.2;
+    // Compute target eyelids state
+    float eyelidsTouchHightRatio = 0.8;
     float eyelidsTouchHight = lerp(m_topEyelidY, m_bottomEyelidY, eyelidsTouchHightRatio);
     float eyelidsTouchRotation = (m_topEyelidRotation + m_bottomEyelidRotation) * .5;
 
-    m_endTopEyelidHeight = eyelidsTouchHight;
-    m_stepTopEyelidHeight = (m_endTopEyelidHeight - m_topEyelidY) * frac;
-
-    m_endBottomEyelidHeight = eyelidsTouchHight;
-    m_stepBottomEyelidHeight = (m_endBottomEyelidHeight - m_bottomEyelidY) * frac;
-
+    m_endTopEyelidY = eyelidsTouchHight;
+    m_endBottomEyelidY = eyelidsTouchHight;
     m_endTopEyelidRotation = eyelidsTouchRotation;
-    m_stepTopEyelidRotation = (m_endTopEyelidRotation - m_topEyelidRotation) * frac;
-
     m_endBottomEyelidRotation = eyelidsTouchRotation;
-    m_stepBottomEyelidRotation = (m_endBottomEyelidRotation - m_bottomEyelidRotation) * frac;
 
     m_blinkTimer->start();
 }
@@ -838,27 +831,11 @@ void MainWindow::blink(int ms) {
 void MainWindow::updateBlinkState() {
     m_currentBlinkingTime += m_msUpdateMove;
 
-    if(m_isGoingDown && m_currentBlinkingTime > m_blinkingTime) {
+    if(m_isGoingDown && m_currentBlinkingTime > m_blinkDuration * 0.5) {
+        // Change direction of eyelid movement
         m_isGoingDown = false;
-        m_topEyelidY = m_endTopEyelidHeight;
-        m_bottomEyelidY = m_endBottomEyelidHeight;
-        m_bottomEyelidRotation = m_endBottomEyelidRotation;
-        m_topEyelidRotation = m_endTopEyelidRotation;
 
-        float frac = m_msUpdateMove/(float)m_blinkingTime;
-
-        m_endTopEyelidHeight = m_savedTopEyelidY;
-        m_stepTopEyelidHeight = (m_endTopEyelidHeight - m_topEyelidY) * frac;
-
-        m_endBottomEyelidHeight = m_savedBottomEyelidY;
-        m_stepBottomEyelidHeight = (m_endBottomEyelidHeight - m_bottomEyelidY) * frac;
-
-        m_endTopEyelidRotation = m_savedTopEyelidRotation;
-        m_stepTopEyelidRotation = (m_endTopEyelidRotation - m_topEyelidRotation) * frac;
-
-        m_endBottomEyelidRotation = m_savedBottomEyelidRotation;
-        m_stepBottomEyelidRotation = (m_endBottomEyelidRotation - m_bottomEyelidRotation) * frac;
-
+        // @Cleanup
         if(m_isMoveWithBlink) {
             if(m_moveFlags & EyePosition) {
                 m_c = m_endEyePosition;
@@ -875,24 +852,29 @@ void MainWindow::updateBlinkState() {
             }
             countFrame();
         }
-    }
-    else if(!m_isGoingDown && m_currentBlinkingTime > m_blinkingTime * 2) {
-        m_topEyelidY = m_endTopEyelidHeight;
-        m_bottomEyelidY = m_endBottomEyelidHeight;
-
-        m_bottomEyelidRotation = m_endBottomEyelidRotation;
-        m_topEyelidRotation = m_endTopEyelidRotation;
+    } else if(!m_isGoingDown && m_currentBlinkingTime > m_blinkDuration) {
+        // Stop movement
+        m_topEyelidY = m_startTopEyelidY;
+        m_bottomEyelidY = m_startBottomEyelidY;
+        m_bottomEyelidRotation = m_startBottomEyelidRotation;
+        m_topEyelidRotation = m_startTopEyelidRotation;
 
         m_currentBlinkingTime = 0;
         m_isBlinking = false;
         m_blinkTimer->stop();
-    }
-    else {
-        m_topEyelidY += m_stepTopEyelidHeight;
-        m_bottomEyelidY += m_stepBottomEyelidHeight;
+    } else {
+        auto relativeBlinkingTime = 2 * m_currentBlinkingTime / (float)m_blinkDuration; // defined on [0;2] range
 
-        m_bottomEyelidRotation += m_stepBottomEyelidRotation;
-        m_topEyelidRotation += m_stepTopEyelidRotation;
+        // Reversing interpolation, after [0;1] range overflow
+        if (relativeBlinkingTime > 1.0) {
+            relativeBlinkingTime = 2.0 - relativeBlinkingTime;
+        }
+
+        m_topEyelidY    = lerp(m_startTopEyelidY, m_endTopEyelidY, relativeBlinkingTime);
+        m_bottomEyelidY = lerp(m_startBottomEyelidY, m_endBottomEyelidY, relativeBlinkingTime);
+
+        m_topEyelidRotation    = lerp(m_startTopEyelidRotation, m_endTopEyelidRotation, relativeBlinkingTime);
+        m_bottomEyelidRotation = lerp(m_startBottomEyelidRotation, m_endBottomEyelidRotation, relativeBlinkingTime);
     }
 
     countEyelidTransform();
