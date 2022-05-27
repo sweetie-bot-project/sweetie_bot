@@ -51,10 +51,19 @@ private:
     //eyelid
     float m_topEyelidRotation;
     float m_topEyelidY;
-    float m_oldTopEyelidY;          //for blinking
+    float m_bottomEyelidRotation;
+    float m_bottomEyelidY;
+
+    // For blinking
+    float m_savedBottomEyelidY;
+    float m_savedBottomEyelidRotation;
+    float m_savedTopEyelidY;
+    float m_savedTopEyelidRotation;
+
     QPainterPath m_topEyelidPath;
-    QPainterPath m_bottomEyelidPath; //for blinking
-    QTransform m_eyelidTransform;
+    QPainterPath m_bottomEyelidPath;
+    QTransform m_topEyelidTransform;
+    QTransform m_bottomEyelidTransform;
 
     QTimer* m_blinkTimer;
     QTimer* m_moveTimer;
@@ -116,8 +125,14 @@ private:
     float m_endTopEyelidHeight;
     float m_stepTopEyelidHeight;
 
-    float m_endEyelidRotation;
-    float m_stepEyelidRotation;
+    float m_endBottomEyelidHeight;
+    float m_stepBottomEyelidHeight;
+
+    float m_endTopEyelidRotation;
+    float m_stepTopEyelidRotation;
+
+    float m_endBottomEyelidRotation;
+    float m_stepBottomEyelidRotation;
 
     QString path_;
     QImage *overlay_;

@@ -15,7 +15,7 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     m_publishPixmap(false),
 
     m_c(QPointF(WIDTH/2.,HEIGHT/2. + 10)), // +10 for new screen center correction
-    m_R(115.0*2.5),
+    m_R(287.5),
     m_relR8(0.6),
     m_alpha(0.0),
     m_rot(40.83*0.9),
@@ -33,7 +33,11 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
 
     m_topEyelidRotation(-5.0),
     m_topEyelidY(135.0),
-    m_oldTopEyelidY(0.0),
+    m_savedTopEyelidY(0.0),
+
+    m_bottomEyelidRotation(0.0),
+    m_bottomEyelidY(720.0),
+    m_savedBottomEyelidY(0.0),
 
     m_blinkTimer(new QTimer(this)),
     m_moveTimer(new QTimer(this)),
@@ -64,8 +68,13 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     m_stepPupilRotation(0.0),
     m_endTopEyelidHeight(0.0),
     m_stepTopEyelidHeight(0.0),
-    m_endEyelidRotation(0.0),
-    m_stepEyelidRotation(0.0)
+    m_endTopEyelidRotation(0.0),
+    m_stepTopEyelidRotation(0.0),
+
+    m_endBottomEyelidHeight(0.0),
+    m_stepBottomEyelidHeight(0.0),
+    m_endBottomEyelidRotation(0.0),
+    m_stepBottomEyelidRotation(0.0)
 
     // ROS
     //node_(new ros::NodeHandle)
@@ -179,9 +188,7 @@ void MainWindow::paintGL() {
     painter.setBrush(m_eyelidColor);
 
     painter.drawPath(m_topEyelidPath);
-    if(m_isBlinking) {
-        painter.drawPath(m_bottomEyelidPath);
-    }
+    painter.drawPath(m_bottomEyelidPath);
 
     if (m_debug_mode_enabled) {
         painter.drawImage(0, 0, *overlay_);
@@ -189,7 +196,7 @@ void MainWindow::paintGL() {
         QString eye_info = QString("eye :: x,y: %1, %2; ang: %3; x_scale: %4; radius: %5").arg(QString::number(m_c.x()), QString::number(m_c.y()), QString::number(m_rot), QString::number(m_scale), QString::number(m_R));
         QString aperture_info = QString("aperture :: ang: %1; contraction: %3\n").arg(QString::number(m_alpha), QString::number(m_relR8));
         QString top_eyelid_info = QString("top_eyelid :: y: %1; ang: %3\n").arg(QString::number(m_topEyelidY), QString::number(m_topEyelidRotation));
-        QString bottom_eyelid_info = QString("bottom_eyelid :: y: %1; ang: %3\n").arg(QString::number(m_topEyelidY), QString::number(m_topEyelidRotation));
+        QString bottom_eyelid_info = QString("bottom_eyelid :: y: %1; ang: %3\n").arg(QString::number(m_bottomEyelidY), QString::number(m_bottomEyelidRotation));
     
         painter.drawText(10, 10, eye_info);
         painter.drawText(10, 20, aperture_info);
@@ -255,6 +262,8 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
                                     m_relR8 = 0.6;
 									m_topEyelidRotation = -5;
 									m_topEyelidY = 135;
+									m_bottomEyelidRotation = -5;
+									m_bottomEyelidY = 725;
 
 									m_eyeColor = QColor(Qt::green);
 									m_eyelidColor = QColor(143,210,143);
@@ -295,6 +304,12 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 									m_topEyelidY = 114;
                                     m_R = 254.5;
                                     m_relR8 = 0.78;
+									break;
+				case str2hash("tender_look"):
+									m_topEyelidRotation = 4;
+									m_topEyelidY = 170;
+									m_bottomEyelidRotation = -5;
+									m_bottomEyelidY = 600;
 									break;
 				case str2hash("high_look"):
 									m_topEyelidRotation = 6;
@@ -386,125 +401,192 @@ QPointF MainWindow::rotatePoint(QPointF point, QPointF center, float angle) {
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *e) {
-    if(e->key() == Qt::Key_Escape) {
+    switch (e->key()) {
+    case Qt::Key_Escape:
         QApplication::quit();
-    }
-    else if(e->key() == Qt::Key_D) {
-        m_c.setX(m_c.x() + 1);
-        countFrame();
-    }
-    else if(e->key() == Qt::Key_A) {
-        m_c.setX(m_c.x() - 1);
-        countFrame();
-    }
-    else if(e->key() == Qt::Key_S) {
-        m_c.setY(m_c.y() + 1);
-        countFrame();
-    }
-    else if(e->key() == Qt::Key_W) {
+    	break;
+
+    // Eye position control
+    case Qt::Key_W:
         m_c.setY(m_c.y() - 1);
         countEyeTransform();
         countFrame();
-    }
-    else if(e->key() == Qt::Key_Q) {
+    	break;
+
+    case Qt::Key_A:
+        m_c.setX(m_c.x() - 1);
+        countFrame();
+    	break;
+
+    case Qt::Key_S:
+        m_c.setY(m_c.y() + 1);
+        countFrame();
+    	break;
+
+    case Qt::Key_D:
+        m_c.setX(m_c.x() + 1);
+        countFrame();
+    	break;
+
+
+    // Whole eye rotation control (including eyelid)
+    case Qt::Key_Q:
         m_rot -= 1;
         if(m_rot == -1)
             m_rot = 359;
         countEyeTransform();
         countFrame();
-    }
-    else if(e->key() == Qt::Key_E) {
+    	break;
+
+    case Qt::Key_E:
         m_rot += 1;
         if(m_rot == 360)
             m_rot = 0;
         countEyeTransform();
         countFrame();
-    }
-    else if(e->key() == Qt::Key_T) {
+    	break;
+
+
+    // Aperture rotation control
+    case Qt::Key_T:
         m_alpha += 1;
         if(m_alpha == 360)
             m_alpha = 0;
         countFrame();
-    }
-    else if(e->key() == Qt::Key_R) {
+    	break;
+
+    case Qt::Key_R:
         m_alpha -= 1;
         if(m_alpha == -1)
             m_alpha = 359;
         countFrame();
-    }
-    else if(e->key() == Qt::Key_F) {
-        if(m_scale > 0) {
-            m_scale -= 0.01;
-            countFrame();
-        }
-    }
-    else if(e->key() == Qt::Key_G) {
-        if(m_scale < 1) {
-            m_scale += 0.01;
-            countFrame();
-        }
-    }
-    else if(e->key() == Qt::Key_Z) {
-        if(m_R > 1) {
-            m_R -= 1;
-            countFrame();
-        }
-    }
-    else if(e->key() == Qt::Key_X) {
-        m_R += 1;
-        countFrame();
-    }
-    else if(e->key() == Qt::Key_C) {
+    	break;
+
+    // Aperture contraction control
+    case Qt::Key_C:
         if(m_relR8 > 0) {
             m_relR8 -= 0.01;
             countFrame();
         }
-    }
-    else if(e->key() == Qt::Key_V) {
+    	break;
+
+    case Qt::Key_V:
         if(m_relR8 < 1) {
             m_relR8 += 0.01;
             countFrame();
         }
-    }
-    else if(e->key() == Qt::Key_B) {
-        blink(m_blinkLength);
-    }
-    else if(e->key() == Qt::Key_Y) {
-        if(m_msBetweenMovement >= 1000) {
-            m_msBetweenMovement -= 500;
-            m_randomMoveTimer->setInterval(m_msBetweenMovement);
+    	break;
+
+
+    // Eye horizontal radius control
+    case Qt::Key_F:
+        if(m_scale > 0) {
+            m_scale -= 0.01;
+            countFrame();
         }
-    }
-    else if(e->key() == Qt::Key_U) {
-        m_msBetweenMovement += 500;
-    }
-    else if(e->key() == Qt::Key_H) {
+    	break;
+
+    case Qt::Key_G:
+        if(m_scale < 1) {
+            m_scale += 0.01;
+            countFrame();
+        }
+    	break;
+
+    // Eye scale control
+    case Qt::Key_Z:
+        if(m_R > 1) {
+            m_R -= 1;
+            countFrame();
+        }
+    	break;
+
+    case Qt::Key_X:
+        m_R += 1;
+        countFrame();
+    	break;
+
+    // Top eyelid control
+    case Qt::Key_H:
         if(m_topEyelidRotation > -30) {
             m_topEyelidRotation--;
             countEyelidTransform();
             countFrame();
         }
-    }
-    else if(e->key() == Qt::Key_J) {
+    	break;
+
+    case Qt::Key_J:
         if(m_topEyelidRotation < 30) {
             m_topEyelidRotation++;
             countEyelidTransform();
             countFrame();
         }
-    }
-    else if(e->key() == Qt::Key_N) {
+    	break;
+
+    case Qt::Key_N:
         if(m_topEyelidY > 0) {
             m_topEyelidY--;
             countFrame();
         }
-    }
-    else if(e->key() == Qt::Key_M) {
+    	break;
+
+    case Qt::Key_M:
         if(m_topEyelidY < HEIGHT/2) {
             m_topEyelidY++;
             countFrame();
         }
-    }
-    else if(e->key() == Qt::Key_P) {
+    	break;
+
+
+    // Bottom eyelid control
+    case Qt::Key_K:
+        if(m_bottomEyelidRotation > -30) {
+            m_bottomEyelidRotation--;
+            countEyelidTransform();
+            countFrame();
+        }
+    	break;
+
+    case Qt::Key_L:
+        if(m_bottomEyelidRotation < 30) {
+            m_bottomEyelidRotation++;
+            countEyelidTransform();
+            countFrame();
+        }
+    	break;
+
+    case Qt::Key_Comma:
+        if(m_bottomEyelidY > HEIGHT/2) {
+            m_bottomEyelidY--;
+            countFrame();
+        }
+    	break;
+
+    case Qt::Key_Period:
+        if(m_bottomEyelidY < HEIGHT) {
+            m_bottomEyelidY++;
+            countFrame();
+        }
+    	break;
+
+    // Single blink initiation
+    case Qt::Key_B:
+        blink(m_blinkLength);
+    	break;
+
+    // Random movements control
+    case Qt::Key_Y:
+        if(m_msBetweenMovement >= 1000) {
+            m_msBetweenMovement -= 500;
+            m_randomMoveTimer->setInterval(m_msBetweenMovement);
+        }
+    	break;
+
+    case Qt::Key_U:
+        m_msBetweenMovement += 500;
+    	break;
+
+    case Qt::Key_P:
         if(!m_randomMoveTimer->isActive()) {
             m_randomMoveTimer->start();
             countMove();
@@ -513,6 +595,7 @@ void MainWindow::keyPressEvent(QKeyEvent *e) {
             m_randomMoveTimer->stop();
             m_isMoveWithBlink = false;
         }
+    	break;
     }
 }
 
@@ -557,15 +640,15 @@ void MainWindow::countEyelid() {
     m_topEyelidPath.lineTo(xLeft, m_topEyelidY);
     m_topEyelidPath.lineTo(xRight, m_topEyelidY);
     m_topEyelidPath.lineTo(xRight, yUp);
-    m_topEyelidPath = m_eyelidTransform.map(m_topEyelidPath);
+    m_topEyelidPath = m_topEyelidTransform.map(m_topEyelidPath);
     m_topEyelidPath = m_eyeTransform.map(m_topEyelidPath);
 
     m_bottomEyelidPath = QPainterPath();
     m_bottomEyelidPath.moveTo(xLeft, yDown);
-    m_bottomEyelidPath.lineTo(xLeft, 2 * BLINK_HEIGHT - m_topEyelidY);
-    m_bottomEyelidPath.lineTo(xRight, 2 * BLINK_HEIGHT - m_topEyelidY);
+    m_bottomEyelidPath.lineTo(xLeft, m_bottomEyelidY);
+    m_bottomEyelidPath.lineTo(xRight, m_bottomEyelidY);
     m_bottomEyelidPath.lineTo(xRight, yDown);
-    m_bottomEyelidPath = m_eyelidTransform.map(m_bottomEyelidPath);
+    m_bottomEyelidPath = m_bottomEyelidTransform.map(m_bottomEyelidPath);
     m_bottomEyelidPath = m_eyeTransform.map(m_bottomEyelidPath);
 }
 
@@ -632,8 +715,8 @@ void MainWindow::move(MoveFlags flags, int ms,
         m_stepTopEyelidHeight = (m_endTopEyelidHeight - m_topEyelidY) * frac;
     }
     if(m_moveFlags & EyelidRotation && !m_isMoveWithBlink) {
-        m_endEyelidRotation = eyelidRotation;
-        m_stepEyelidRotation = (m_endEyelidRotation - m_topEyelidRotation) * frac;
+        m_endTopEyelidRotation = eyelidRotation;
+        m_stepTopEyelidRotation = (m_endTopEyelidRotation - m_topEyelidRotation) * frac;
     }
 
     if(!m_isMoveWithBlink) {
@@ -672,7 +755,7 @@ void MainWindow::updateMovingState() {
             m_topEyelidY = m_endTopEyelidHeight;
         }
         if(m_moveFlags & EyelidRotation) {
-            m_topEyelidRotation = m_endEyelidRotation;
+            m_topEyelidRotation = m_endTopEyelidRotation;
             recountEyelidTransform = true;
         }
 
@@ -701,7 +784,7 @@ void MainWindow::updateMovingState() {
             m_topEyelidY += m_stepTopEyelidHeight;
         }
         if(m_moveFlags & EyelidRotation) {
-            m_topEyelidRotation += m_stepEyelidRotation;
+            m_topEyelidRotation += m_stepTopEyelidRotation;
             recountEyelidTransform = true;
         }
     }
@@ -716,23 +799,41 @@ void MainWindow::updateMovingState() {
     countFrame();
 }
 
-void MainWindow::blink(int ms) {
-    if(m_isBlinking) {
-        return;
-    }
+float lerp(float first_value, float second_value, float t) {
+    return first_value * t + second_value * (1 - t);
+}
 
-    m_isBlinking = true;
+void MainWindow::blink(int ms) {
+    if (m_isBlinking)  return;
+
     m_isGoingDown = true;
     m_blinkingTime = ms;
-    m_oldTopEyelidY = m_topEyelidY;
+
+    m_savedTopEyelidY = m_topEyelidY;
+    m_savedBottomEyelidY = m_bottomEyelidY;
+
+    m_savedTopEyelidRotation = m_topEyelidRotation;
+    m_savedBottomEyelidRotation = m_bottomEyelidRotation;
 
     float frac = m_msUpdateMove/(float)m_blinkingTime;
-    m_endTopEyelidHeight = BLINK_HEIGHT;
+    float eyelidsTouchHightRatio = 0.2;
+    float eyelidsTouchHight = lerp(m_topEyelidY, m_bottomEyelidY, eyelidsTouchHightRatio);
+    float eyelidsTouchRotation = (m_topEyelidRotation + m_bottomEyelidRotation) * .5;
+
+    m_endTopEyelidHeight = eyelidsTouchHight;
     m_stepTopEyelidHeight = (m_endTopEyelidHeight - m_topEyelidY) * frac;
+
+    m_endBottomEyelidHeight = eyelidsTouchHight;
+    m_stepBottomEyelidHeight = (m_endBottomEyelidHeight - m_bottomEyelidY) * frac;
+
+    m_endTopEyelidRotation = eyelidsTouchRotation;
+    m_stepTopEyelidRotation = (m_endTopEyelidRotation - m_topEyelidRotation) * frac;
+
+    m_endBottomEyelidRotation = eyelidsTouchRotation;
+    m_stepBottomEyelidRotation = (m_endBottomEyelidRotation - m_bottomEyelidRotation) * frac;
 
     m_blinkTimer->start();
 }
-
 
 void MainWindow::updateBlinkState() {
     m_currentBlinkingTime += m_msUpdateMove;
@@ -740,10 +841,23 @@ void MainWindow::updateBlinkState() {
     if(m_isGoingDown && m_currentBlinkingTime > m_blinkingTime) {
         m_isGoingDown = false;
         m_topEyelidY = m_endTopEyelidHeight;
+        m_bottomEyelidY = m_endBottomEyelidHeight;
+        m_bottomEyelidRotation = m_endBottomEyelidRotation;
+        m_topEyelidRotation = m_endTopEyelidRotation;
 
         float frac = m_msUpdateMove/(float)m_blinkingTime;
-        m_endTopEyelidHeight = m_oldTopEyelidY;
+
+        m_endTopEyelidHeight = m_savedTopEyelidY;
         m_stepTopEyelidHeight = (m_endTopEyelidHeight - m_topEyelidY) * frac;
+
+        m_endBottomEyelidHeight = m_savedBottomEyelidY;
+        m_stepBottomEyelidHeight = (m_endBottomEyelidHeight - m_bottomEyelidY) * frac;
+
+        m_endTopEyelidRotation = m_savedTopEyelidRotation;
+        m_stepTopEyelidRotation = (m_endTopEyelidRotation - m_topEyelidRotation) * frac;
+
+        m_endBottomEyelidRotation = m_savedBottomEyelidRotation;
+        m_stepBottomEyelidRotation = (m_endBottomEyelidRotation - m_bottomEyelidRotation) * frac;
 
         if(m_isMoveWithBlink) {
             if(m_moveFlags & EyePosition) {
@@ -764,14 +878,24 @@ void MainWindow::updateBlinkState() {
     }
     else if(!m_isGoingDown && m_currentBlinkingTime > m_blinkingTime * 2) {
         m_topEyelidY = m_endTopEyelidHeight;
+        m_bottomEyelidY = m_endBottomEyelidHeight;
+
+        m_bottomEyelidRotation = m_endBottomEyelidRotation;
+        m_topEyelidRotation = m_endTopEyelidRotation;
+
         m_currentBlinkingTime = 0;
         m_isBlinking = false;
         m_blinkTimer->stop();
     }
     else {
         m_topEyelidY += m_stepTopEyelidHeight;
+        m_bottomEyelidY += m_stepBottomEyelidHeight;
+
+        m_bottomEyelidRotation += m_stepBottomEyelidRotation;
+        m_topEyelidRotation += m_stepTopEyelidRotation;
     }
 
+    countEyelidTransform();
     countEyelid();
     update();
 }
@@ -862,14 +986,24 @@ void MainWindow::countEyeTransform() {
 
 
 void MainWindow::countEyelidTransform() {
-    m_eyelidTransform.reset();
-    m_eyelidTransform.translate(WIDTH/2, m_topEyelidY);
+    m_topEyelidTransform.reset();
+    m_topEyelidTransform.translate(WIDTH/2, m_topEyelidY);
     if(m_isLeftEye) {
-        m_eyelidTransform.rotate(m_topEyelidRotation);
+        m_topEyelidTransform.rotate(m_topEyelidRotation);
     }
     else {
-        m_eyelidTransform.rotate(-m_topEyelidRotation);
+        m_topEyelidTransform.rotate(-m_topEyelidRotation);
     }
-    m_eyelidTransform.translate(-WIDTH/2, -m_topEyelidY);
+    m_topEyelidTransform.translate(-WIDTH/2, -m_topEyelidY);
+
+    m_bottomEyelidTransform.reset();
+    m_bottomEyelidTransform.translate(WIDTH/2, m_bottomEyelidY);
+    if(m_isLeftEye) {
+        m_bottomEyelidTransform.rotate(m_bottomEyelidRotation);
+    }
+    else {
+        m_bottomEyelidTransform.rotate(-m_bottomEyelidRotation);
+    }
+    m_bottomEyelidTransform.translate(-WIDTH/2, -m_bottomEyelidY);
 }
 
