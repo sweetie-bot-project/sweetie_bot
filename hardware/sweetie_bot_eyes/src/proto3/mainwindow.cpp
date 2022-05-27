@@ -52,10 +52,11 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     m_stepEyeRadius(0.0),
     m_endEyeRadiusScale(0.0),
     m_stepEyeRadiusScale(0.0),
-    m_eyeColor(QColor(0, 255, 0)),
 
+    m_eyeColor(QColor(0, 255, 0)),
     m_eyelidColor(QColor(143,210,143)),
     m_eyelidOutlineColor(QColor(116,169,116)),
+    m_whiteAreaColor(Qt::white),
 
     m_endPupilRelativeSize(0.0),
     m_stepPupilRelativeSize(0.0),
@@ -164,10 +165,12 @@ void MainWindow::paintGL() {
     painter.setBrush(QColor(Qt::black));
     painter.drawPath(m_eyePaths[BlackOctagonAndLines]);
 
-    painter.setPen(QPen(Qt::white, 0));
-    painter.setBrush(QColor(Qt::white));
+    painter.setPen(QPen(m_whiteAreaColor));
+    painter.setBrush(m_whiteAreaColor);
     painter.drawPath(m_eyePaths[WhiteArea]);
 
+    painter.setPen(QPen(Qt::white));
+    painter.setBrush(Qt::white);
     for(int i = 0; i < m_shinesPaths.size(); i++) {
         painter.drawPath(m_shinesPaths.at(i));
     }
@@ -235,13 +238,12 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 		case str2hash("eyes/action"):
 			switch(str2hash(msg->command.c_str())){
 				case str2hash("blink"):
-									//ROS_INFO("blink");
 									blink(100);
 									break;
 				case str2hash("slow_blink"):
-									//ROS_INFO("slow_blink");
 									blink(1000);
 									break;
+                // TODO: Add eyes close
 
 			}				
 			break;
@@ -249,29 +251,86 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 		case str2hash("eyes/emotion"):
 			switch(str2hash(msg->command.c_str())){
 				case str2hash("normal"):
-									//ROS_INFO("normal");
+                                    m_R = 287.5;
+                                    m_relR8 = 0.6;
 									m_topEyelidRotation = -5;
 									m_topEyelidY = 135;
 
 									m_eyeColor = QColor(Qt::green);
 									m_eyelidColor = QColor(143,210,143);
 									m_eyelidOutlineColor = QColor(116,169,116);
+                                    m_whiteAreaColor = QColor(Qt::white);
+									break;
+				case str2hash("green_eyes"):
+									m_eyeColor = QColor(Qt::green);
+									m_eyelidColor = QColor(143,210,143);
+									m_eyelidOutlineColor = QColor(116,169,116);
+                                    m_whiteAreaColor = QColor(Qt::white);
 									break;
 				case str2hash("red_eyes"):
-									//ROS_INFO("red_eyes");
 									m_eyeColor = QColor(Qt::red);
 									m_eyelidColor = QColor(166,32,55);
 									m_eyelidOutlineColor = QColor(0,0,0);
+                                    m_whiteAreaColor = QColor(Qt::white);
 									break;
 				case str2hash("sad_look"):
-									//ROS_INFO("sad_look");
-									m_topEyelidRotation = 15;
+									m_topEyelidRotation = 17;
 									m_topEyelidY = 150;
+                                    m_R = 287.5;
+                                    m_relR8 = 0.6;
 									break;
-				case str2hash("evil_look"):
-									//ROS_INFO("evil_look");
+				case str2hash("unamused_look"):
+									m_topEyelidRotation = -2;
+									m_topEyelidY = 290;
+                                    m_R = 287.5;
+                                    m_relR8 = 0.6;
+									break;
+				case str2hash("surprised_look"):
+									m_topEyelidRotation = -5;
+									m_topEyelidY = 114;
+                                    m_R = 254.5;
+									break;
+				case str2hash("pleasure_look"):
+									m_topEyelidRotation = -5;
+									m_topEyelidY = 114;
+                                    m_R = 254.5;
+                                    m_relR8 = 0.78;
+									break;
+				case str2hash("high_look"):
+									m_topEyelidRotation = 6;
+									m_topEyelidY = 310;
+                                    m_R = 290.5;
+                                    m_relR8 = 0.87;
+                                    m_whiteAreaColor = QColor(255,183,195);
+                                    // TODO: Try to add bottom eyelid here?
+									break;
+				case str2hash("very_scared_look"):
+									m_topEyelidRotation = 5;
+									m_topEyelidY = 135;
+                                    m_R = 122.5;
+                                    m_relR8 = 0.6;
+									break;
+               case str2hash("raised_right_eyebrow_look"): {
+                                    m_R = 287.5;
+                                    m_topEyelidRotation = -5;
+                                    m_relR8 = 0.6;
+                                    if (m_isLeftEye)  m_topEyelidY = 119;
+                                    else              m_topEyelidY = 263;
+									break;
+               }
+               case str2hash("raised_left_eyebrow_look"): {
+                                    m_R = 287.5;
+                                    m_topEyelidRotation = -5;
+                                    m_relR8 = 0.6;
+                                    if (!m_isLeftEye)  m_topEyelidY = 119;
+                                    else               m_topEyelidY = 263;
+									break;
+               }
+			   case str2hash("evil_look"):
 									m_topEyelidRotation = -30;
 									m_topEyelidY = 200;
+                                    m_R = 287.5;
+                                    m_relR8 = 0.6;
 									break;
 			}				
 			break;

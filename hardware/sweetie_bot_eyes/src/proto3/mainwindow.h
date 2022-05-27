@@ -105,6 +105,7 @@ private:
     QColor m_eyeColor;
     QColor m_eyelidColor;
     QColor m_eyelidOutlineColor;
+    QColor m_whiteAreaColor;
 
     float m_endPupilRelativeSize;
     float m_stepPupilRelativeSize;
