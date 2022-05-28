@@ -74,7 +74,7 @@ private:
         BlackOctagonAndLines,
         WhiteArea,
 
-        EyePathCount
+        EyePathCount = 3
     };
     QVector<QPainterPath> m_eyePaths;
     QTransform m_eyeTransform;
@@ -159,13 +159,13 @@ public:
     void resetEyePositions();
     void resetEyeColors();
 
-    void countFrame();
-    void countEye();
-    void countEyeTransform();
-    void countEyelidTransform();
-    void countShines();
-    void countEyelid();
-    QPainterPath countShinePath(int dx, int dy, int r1, int r2, int angle);
+    void computeFrame();
+    void computeEye();
+    void computeEyeTransform();
+    void computeEyelidTransform();
+    void computeShines();
+    void computeEyelid();
+    QPainterPath computeShinePath(int dx, int dy, int r1, int r2, int angle);
 
     void move(MoveFlags flags, int ms,
               float eyeToX, float eyeToY, float eyeRotation,
@@ -188,7 +188,7 @@ private slots:
     void updateBlinkState();
 
     //delete in next versions
-    void countMove();
+    void computeMove();
 
     // ROS
     void rosSpin();
