@@ -156,6 +156,9 @@ public:
 
     QPointF rotatePoint(QPointF point, QPointF center, float angle);
 
+    void resetEyePositions();
+    void resetEyeColors();
+
     void countFrame();
     void countEye();
     void countEyeTransform();

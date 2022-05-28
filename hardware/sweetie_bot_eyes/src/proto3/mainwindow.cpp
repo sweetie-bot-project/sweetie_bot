@@ -238,119 +238,154 @@ constexpr unsigned int str2hash(const char* str, int h = 0)
     return !str[h] ? 5381 : (str2hash(str, h+1)*33) ^ str[h];
 }
 
+void MainWindow::resetEyePositions() {
+    m_R = 287.5;
+    m_relR8 = 0.6;
+    m_topEyelidRotation = -5;
+    m_topEyelidY = 135;
+    m_bottomEyelidRotation = -5;
+    m_bottomEyelidY = 725;
+}
+
+void MainWindow::resetEyeColors() {
+    m_eyeColor = QColor(Qt::green);
+    m_eyelidColor = QColor(143,210,143);
+    m_eyelidOutlineColor = QColor(116,169,116);
+    m_whiteAreaColor = QColor(Qt::white);
+}
+
 void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::ConstPtr& msg)
 {
 	//ROS_INFO_STREAM("\n" << *msg);
-	switch(str2hash(msg->type.c_str()))
-	{
-		case str2hash("eyes/action"):
-			switch(str2hash(msg->command.c_str())){
-				case str2hash("blink"):
-									blink(100);
-									break;
-				case str2hash("slow_blink"):
-									blink(1000);
-									break;
-                // TODO: Add eyes close
+	switch(str2hash(msg->type.c_str())) {
+    case str2hash("eyes/action"):
+        switch(str2hash(msg->command.c_str())){
+        case str2hash("blink"):
+            blink(100);
+            break;
+        case str2hash("slow_blink"):
+            blink(1000);
+            break;
+            // TODO: Add eye roll
+            // TODO: Add eyes close
 
-			}				
-			break;
+        }				
+        break;
 
-		case str2hash("eyes/emotion"):
-			switch(str2hash(msg->command.c_str())){
-				case str2hash("normal"):
-                                    m_R = 287.5;
-                                    m_relR8 = 0.6;
-									m_topEyelidRotation = -5;
-									m_topEyelidY = 135;
-									m_bottomEyelidRotation = -5;
-									m_bottomEyelidY = 725;
+    case str2hash("eyes/emotion"):
+        switch(str2hash(msg->command.c_str())){
+        case str2hash("normal"):
+            resetEyeColors();
+            break;
 
-									m_eyeColor = QColor(Qt::green);
-									m_eyelidColor = QColor(143,210,143);
-									m_eyelidOutlineColor = QColor(116,169,116);
-                                    m_whiteAreaColor = QColor(Qt::white);
-									break;
-				case str2hash("green_eyes"):
-									m_eyeColor = QColor(Qt::green);
-									m_eyelidColor = QColor(143,210,143);
-									m_eyelidOutlineColor = QColor(116,169,116);
-                                    m_whiteAreaColor = QColor(Qt::white);
-									break;
-				case str2hash("red_eyes"):
-									m_eyeColor = QColor(Qt::red);
-									m_eyelidColor = QColor(166,32,55);
-									m_eyelidOutlineColor = QColor(0,0,0);
-                                    m_whiteAreaColor = QColor(Qt::white);
-									break;
-				case str2hash("sad_look"):
-									m_topEyelidRotation = 17;
-									m_topEyelidY = 150;
-                                    m_R = 287.5;
-                                    m_relR8 = 0.6;
-									break;
-				case str2hash("unamused_look"):
-									m_topEyelidRotation = -2;
-									m_topEyelidY = 290;
-                                    m_R = 287.5;
-                                    m_relR8 = 0.6;
-									break;
-				case str2hash("surprised_look"):
-									m_topEyelidRotation = -5;
-									m_topEyelidY = 114;
-                                    m_R = 254.5;
-									break;
-				case str2hash("pleasure_look"):
-									m_topEyelidRotation = -5;
-									m_topEyelidY = 114;
-                                    m_R = 254.5;
-                                    m_relR8 = 0.78;
-									break;
-				case str2hash("tender_look"):
-									m_topEyelidRotation = 4;
-									m_topEyelidY = 170;
-									m_bottomEyelidRotation = -5;
-									m_bottomEyelidY = 600;
-									break;
-				case str2hash("high_look"):
-									m_topEyelidRotation = 6;
-									m_topEyelidY = 310;
-                                    m_R = 290.5;
-                                    m_relR8 = 0.87;
-                                    m_whiteAreaColor = QColor(255,183,195);
-                                    // TODO: Try to add bottom eyelid here?
-									break;
-				case str2hash("very_scared_look"):
-									m_topEyelidRotation = 5;
-									m_topEyelidY = 135;
-                                    m_R = 122.5;
-                                    m_relR8 = 0.6;
-									break;
-               case str2hash("raised_right_eyebrow_look"): {
-                                    m_R = 287.5;
-                                    m_topEyelidRotation = -5;
-                                    m_relR8 = 0.6;
-                                    if (m_isLeftEye)  m_topEyelidY = 119;
-                                    else              m_topEyelidY = 263;
-									break;
-               }
-               case str2hash("raised_left_eyebrow_look"): {
-                                    m_R = 287.5;
-                                    m_topEyelidRotation = -5;
-                                    m_relR8 = 0.6;
-                                    if (!m_isLeftEye)  m_topEyelidY = 119;
-                                    else               m_topEyelidY = 263;
-									break;
-               }
-			   case str2hash("evil_look"):
-									m_topEyelidRotation = -30;
-									m_topEyelidY = 200;
-                                    m_R = 287.5;
-                                    m_relR8 = 0.6;
-									break;
-			}				
-			break;
-	}
+        case str2hash("green_eyes"):
+            resetEyeColors();
+            m_eyeColor = QColor(Qt::green);
+            m_eyelidColor = QColor(143,210,143);
+            m_eyelidOutlineColor = QColor(116,169,116);
+            m_whiteAreaColor = QColor(Qt::white);
+            break;
+
+        case str2hash("red_eyes"):
+            resetEyeColors();
+            m_eyeColor = QColor(Qt::red);
+            m_eyelidColor = QColor(166,32,55);
+            m_eyelidOutlineColor = QColor(0,0,0);
+            m_whiteAreaColor = QColor(Qt::white);
+            break;
+
+        case str2hash("sad_look"):
+            resetEyePositions();
+            m_topEyelidRotation = 17;
+            m_topEyelidY = 150;
+            break;
+
+        case str2hash("unamused_look"):
+            resetEyePositions();
+            m_topEyelidRotation = -2;
+            m_topEyelidY = 290;
+            break;
+
+        case str2hash("surprised_look"):
+            resetEyePositions();
+            m_topEyelidY = 114;
+            m_R = 254.5;
+            break;
+
+        case str2hash("pleasure_look"):
+            resetEyePositions();
+            m_topEyelidY = 114;
+            m_relR8 = 0.78;
+            break;
+
+        case str2hash("happy_look"):
+            resetEyePositions();
+            m_bottomEyelidY = 555;
+            break;
+
+        case str2hash("tender_look"):
+            resetEyePositions();
+            m_topEyelidRotation = 4;
+            m_topEyelidY = 170;
+            m_bottomEyelidY = 600;
+            break;
+
+        case str2hash("high_look"):
+            resetEyePositions();
+            m_topEyelidRotation = 6;
+            m_topEyelidY = 310;
+            m_R = 290.5;
+            m_relR8 = 0.87;
+
+            resetEyeColors();
+            m_whiteAreaColor = QColor(255,183,195);
+            break;
+
+        case str2hash("scared_look"):
+            resetEyePositions();
+            m_topEyelidRotation = 5;
+            m_bottomEyelidY = 670;
+            m_bottomEyelidRotation = -5;
+            m_R = 200.5;
+            m_relR8 = 0.46;
+            break;
+
+        case str2hash("very_scared_look"):
+            resetEyePositions();
+            m_topEyelidRotation = 5;
+            m_R = 122.5;
+            m_relR8 = 0.4;
+            break;
+
+        case str2hash("raised_right_eyebrow_look"):
+            resetEyePositions();
+            if (m_isLeftEye) {
+                m_topEyelidY = 119;
+            } else {
+                m_topEyelidY = 263;
+                m_bottomEyelidY = 680;
+            }
+            break;
+
+        case str2hash("raised_left_eyebrow_look"):
+            resetEyePositions();
+            if (!m_isLeftEye) {
+                m_topEyelidY = 119;
+            } else {
+                m_topEyelidY = 263;
+                m_bottomEyelidY = 680;
+            }
+            break;
+
+        case str2hash("evil_look"):
+            resetEyePositions();
+            m_topEyelidRotation = -30;
+            m_topEyelidY = 200;
+            break;
+        }
+        break;
+    }
+
 	countEyelidTransform();
 	countFrame();
 	if (m_publishPixmap) PublishImage();
