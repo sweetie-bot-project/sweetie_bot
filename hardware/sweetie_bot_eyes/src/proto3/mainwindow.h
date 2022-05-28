@@ -15,6 +15,55 @@
 #include <sensor_msgs/Image.h>
 #include <sweetie_bot_text_msgs/TextCommand.h>
 
+
+#include "consts.h"
+
+struct EyeState {
+    QPointF center = QPointF(WIDTH/2.,HEIGHT/2. + 10); // +10 for new screen center correction
+
+    // Eye configuraton
+    float radius       = 287.5;       // Eye's first radius
+    float radius2      = radius * radiusRatio;  // Eye's second radius (it is elliptic)
+    float pupilRadius  = 0.6;         // Pupil contraction radius
+    float pupilAngle   = 0;           // Pupil rotation
+    float angle        = 40.83*0.9;   // Eye rotation angle
+    float radiusRatio  = 0.8;         // Radius1/Radius2
+
+    // Eyelids
+    float topEyelidAngle       = -5;
+    float topEyelidY           = 135;
+    float bottomEyelidAngle    = -5;
+    float bottomEyelidY        = 725;
+
+    // Colors
+    QColor eyeColor            = Qt::green;
+    QColor eyelidColor         = QColor(143, 210, 143);
+    QColor eyelidOutlineColor  = QColor(116, 169, 116);
+    QColor whiteAreaColor      = Qt::white;
+
+    inline void resetConfiguration() {
+        radiusRatio       = 0.8;
+        radius            = 287.5;
+        radius2           = radius * radiusRatio;
+        pupilRadius       = 0.6;
+        pupilAngle        = 0;
+        angle             = 40.83*0.9;
+
+        topEyelidAngle    = -5;
+        topEyelidY        = 135;
+        bottomEyelidAngle = -5;
+        bottomEyelidY     = 725;
+    }
+
+    inline void resetColors() {
+        eyeColor           = Qt::green;
+        eyelidColor        = QColor(143, 210, 143);
+        eyelidOutlineColor = QColor(116, 169, 116);
+        whiteAreaColor     = Qt::white;
+    }
+};
+
+
 class MainWindow : public QOpenGLWidget {
     Q_OBJECT
 
@@ -24,13 +73,7 @@ private:
 
     QOpenGLFramebufferObject *m_fbo;
 
-    QPointF m_c;     //Center of eye
-    float m_R;       //Radius1 of eye
-    float m_R2;      //Radius2 of eye (it is elliptic)
-    float m_relR8;   //Pupil radius
-    float m_alpha;   //Pupil rotation
-    float m_rot;     //Rotation of eye
-    float m_scale;   //Radius1/Radius2
+    EyeState m_state;
 
     //octagon points
     QVector<QPointF>m_Pin;
@@ -48,12 +91,6 @@ private:
     //delete in next versions
     int m_msBetweenMovement;
     QTimer* m_randomMoveTimer;
-
-    //eyelid
-    float m_topEyelidRotation;
-    float m_topEyelidY;
-    float m_bottomEyelidRotation;
-    float m_bottomEyelidY;
 
     // For blinking
     float m_startBottomEyelidY;
@@ -115,11 +152,6 @@ private:
     float m_endEyeRadiusScale;
     float m_stepEyeRadiusScale;
 
-    QColor m_eyeColor;
-    QColor m_eyelidColor;
-    QColor m_eyelidOutlineColor;
-    QColor m_whiteAreaColor;
-
     float m_endPupilRelativeSize;
     float m_stepPupilRelativeSize;
 
@@ -160,9 +192,6 @@ public:
     void PublishImage();
 
     QPointF rotatePoint(QPointF point, QPointF center, float angle);
-
-    void resetEyePositions();
-    void resetEyeColors();
 
     void computeFrame();
     void computeEye();
