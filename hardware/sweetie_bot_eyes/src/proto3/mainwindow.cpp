@@ -23,6 +23,7 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
 
     m_blinkDefaultDuration(150),
     m_blinkDuration(0),
+    m_blinkDelay(100),
     m_currentBlinkingTime(0),
     m_isBlinking(false),
     m_isGoingDown(false),
@@ -349,9 +350,9 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 									break;
 			}				
 			break;
-
 	}
 	countEyelidTransform();
+	countFrame();
 	if (m_publishPixmap) PublishImage();
 }
 
@@ -803,11 +804,21 @@ inline float lerp(float first_value, float second_value, float t) {
     return first_value * (1 - t) + second_value * t;
 }
 
-void MainWindow::blink(int ms) {
+inline float bezier_1d_cubic(float u0, float u1, float t) {
+    float square = t * t;
+    float cube = square * t;
+
+    float inv = 1 - t;
+    float inv_square = inv * (1 - t);
+
+    return 3*inv_square*t*u0 + 3*inv*square*u1 + cube;
+}
+
+void MainWindow::blink(int duration_ms) {
     if (m_isBlinking)  return;
 
     m_isGoingDown = true;
-    m_blinkDuration = 2 * ms; // Moving forward and backward is 2 times longer
+    m_blinkDuration = 2 * duration_ms; // Moving forward and backward is 2 times longer
 
     // Save current eyelids state
     m_startTopEyelidY = m_topEyelidY;
@@ -831,7 +842,7 @@ void MainWindow::blink(int ms) {
 void MainWindow::updateBlinkState() {
     m_currentBlinkingTime += m_msUpdateMove;
 
-    if(m_isGoingDown && m_currentBlinkingTime > m_blinkDuration * 0.5) {
+    if(m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration * 0.5 + m_blinkDelay)) {
         // Change direction of eyelid movement
         m_isGoingDown = false;
 
@@ -852,7 +863,7 @@ void MainWindow::updateBlinkState() {
             }
             countFrame();
         }
-    } else if(!m_isGoingDown && m_currentBlinkingTime > m_blinkDuration) {
+    } else if(!m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration + m_blinkDelay)) {
         // Stop movement
         m_topEyelidY = m_startTopEyelidY;
         m_bottomEyelidY = m_startBottomEyelidY;
@@ -865,6 +876,13 @@ void MainWindow::updateBlinkState() {
     } else {
         auto relativeBlinkingTime = 2 * m_currentBlinkingTime / (float)m_blinkDuration; // defined on [0;2] range
 
+        // Incorporating delay between up and down motions
+        if (m_currentBlinkingTime > (m_blinkDuration * 0.5 + m_blinkDelay)) {
+            relativeBlinkingTime -= 2 * m_blinkDelay / (float)m_blinkDuration;
+        } else if (m_currentBlinkingTime > m_blinkDuration * 0.5) {
+            relativeBlinkingTime = 1.0;
+        }
+
         // Reversing interpolation, after [0;1] range overflow
         if (relativeBlinkingTime > 1.0) {
             relativeBlinkingTime = 2.0 - relativeBlinkingTime;
@@ -873,6 +891,7 @@ void MainWindow::updateBlinkState() {
         m_topEyelidY    = lerp(m_startTopEyelidY, m_endTopEyelidY, relativeBlinkingTime);
         m_bottomEyelidY = lerp(m_startBottomEyelidY, m_endBottomEyelidY, relativeBlinkingTime);
 
+        relativeBlinkingTime   = bezier_1d_cubic(0.1, -0.25, relativeBlinkingTime);
         m_topEyelidRotation    = lerp(m_startTopEyelidRotation, m_endTopEyelidRotation, relativeBlinkingTime);
         m_bottomEyelidRotation = lerp(m_startBottomEyelidRotation, m_endBottomEyelidRotation, relativeBlinkingTime);
     }

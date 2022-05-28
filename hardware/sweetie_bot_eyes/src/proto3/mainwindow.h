@@ -39,6 +39,7 @@ private:
     //blinking
     int m_blinkDefaultDuration;
     int m_blinkDuration;
+    int m_blinkDelay;
     int m_currentBlinkingTime;
     bool m_isBlinking;
     bool m_isGoingDown;
