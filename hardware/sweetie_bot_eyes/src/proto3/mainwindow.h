@@ -60,6 +60,7 @@ private:
     float m_startBottomEyelidRotation;
     float m_startTopEyelidY;
     float m_startTopEyelidRotation;
+    float m_startApertureContraction;
 
     QPainterPath m_topEyelidPath;
     QPainterPath m_bottomEyelidPath;
@@ -134,6 +135,8 @@ private:
 
     float m_endBottomEyelidRotation;
     float m_stepBottomEyelidRotation;
+
+    float m_endApertureContraction;
 
     QString path_;
     QImage *overlay_;

@@ -23,7 +23,7 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
 
     m_blinkDefaultDuration(150),
     m_blinkDuration(0),
-    m_blinkDelay(100),
+    m_blinkDelay(50),
     m_currentBlinkingTime(0),
     m_isBlinking(false),
     m_isGoingDown(false),
@@ -276,6 +276,7 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
         switch(str2hash(msg->command.c_str())){
         case str2hash("normal"):
             resetEyeColors();
+            resetEyePositions();
             break;
 
         case str2hash("green_eyes"):
@@ -359,22 +360,14 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 
         case str2hash("raised_right_eyebrow_look"):
             resetEyePositions();
-            if (m_isLeftEye) {
-                m_topEyelidY = 119;
-            } else {
-                m_topEyelidY = 263;
-                m_bottomEyelidY = 680;
-            }
+            if (m_isLeftEye)  m_topEyelidY = 119;
+            else              m_topEyelidY = 263;
             break;
 
         case str2hash("raised_left_eyebrow_look"):
             resetEyePositions();
-            if (!m_isLeftEye) {
-                m_topEyelidY = 119;
-            } else {
-                m_topEyelidY = 263;
-                m_bottomEyelidY = 680;
-            }
+            if (!m_isLeftEye)  m_topEyelidY = 119;
+            else               m_topEyelidY = 263;
             break;
 
         case str2hash("evil_look"):
@@ -860,6 +853,7 @@ void MainWindow::blink(int duration_ms) {
     m_startBottomEyelidY = m_bottomEyelidY;
     m_startTopEyelidRotation = m_topEyelidRotation;
     m_startBottomEyelidRotation = m_bottomEyelidRotation;
+    m_startApertureContraction = m_relR8;
 
     // Compute target eyelids state
     float eyelidsTouchHightRatio = 0.8;
@@ -870,6 +864,7 @@ void MainWindow::blink(int duration_ms) {
     m_endBottomEyelidY = eyelidsTouchHight;
     m_endTopEyelidRotation = eyelidsTouchRotation;
     m_endBottomEyelidRotation = eyelidsTouchRotation;
+    m_endApertureContraction = 0.0;
 
     m_blinkTimer->start();
 }
@@ -904,6 +899,7 @@ void MainWindow::updateBlinkState() {
         m_bottomEyelidY = m_startBottomEyelidY;
         m_bottomEyelidRotation = m_startBottomEyelidRotation;
         m_topEyelidRotation = m_startTopEyelidRotation;
+        m_relR8 = m_startApertureContraction;
 
         m_currentBlinkingTime = 0;
         m_isBlinking = false;
@@ -929,10 +925,16 @@ void MainWindow::updateBlinkState() {
         relativeBlinkingTime   = bezier_1d_cubic(0.1, -0.25, relativeBlinkingTime);
         m_topEyelidRotation    = lerp(m_startTopEyelidRotation, m_endTopEyelidRotation, relativeBlinkingTime);
         m_bottomEyelidRotation = lerp(m_startBottomEyelidRotation, m_endBottomEyelidRotation, relativeBlinkingTime);
+
+        // Contract aperture while blinking
+        auto relativeContractionTime = 6 * relativeBlinkingTime;
+        m_relR8 = lerp(m_startApertureContraction, m_endApertureContraction, relativeContractionTime);
+        m_relR8 = std::max(m_relR8, m_endApertureContraction);
     }
 
     computeEyelidTransform();
     computeEyelid();
+    computeEye();
     update();
 }
 
