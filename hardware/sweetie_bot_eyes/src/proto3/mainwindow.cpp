@@ -113,7 +113,7 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     m_moveTimer->setInterval(m_msUpdateMove);
     connect(m_moveTimer, SIGNAL(timeout()), this, SLOT(updateMovingState()));
     connect(m_blinkTimer, SIGNAL(timeout()), this, SLOT(updateBlinkState()));
-    connect(m_randomMoveTimer, SIGNAL(timeout()), this, SLOT(computeMove()));
+    connect(m_randomMoveTimer, SIGNAL(timeout()), this, SLOT(computeRandomMove()));
 
     QTimer *timer = new QTimer(this);
     connect(timer,SIGNAL(timeout()),this,SLOT(rosSpin()));
@@ -410,9 +410,10 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
 
   m_isMoveWithBlink = false;
 
-  move((MoveFlags)1, 30,
+  move(EyePosition, 30,
          eyeToX, eyeToY, 0, 0, 0,
          0, 0, 0,
+         0, 0,
          0, 0,
          0, 0);
 
@@ -618,7 +619,7 @@ void MainWindow::keyPressEvent(QKeyEvent *e) {
     case Qt::Key_P:
         if(!m_randomMoveTimer->isActive()) {
             m_randomMoveTimer->start();
-            computeMove();
+            computeRandomMove();
         }
         else {
             m_randomMoveTimer->stop();
@@ -628,28 +629,31 @@ void MainWindow::keyPressEvent(QKeyEvent *e) {
     }
 }
 
-void MainWindow::computeMove() {
+void MainWindow::computeRandomMove() {
     int ms = qrand()%301 + 100;                       //from 100 to 400
-    float eyeToX = qrand()%161 + 80;                  //from 80  to 240
-    float eyeToY = qrand()%81 + 100;                  //from 100 to 180
+    float eyeToX = qrand()%400 + 200;                 //from 200 to 600
+    float eyeToY = qrand()%200 + 300;                 //from 300 to 500
     float eyeRotation = qrand()%41 - 20;              //from -20 to 20
-    float eyeRadius = (qrand()%51 + 100);             //from 100 to 150
+    float eyeRadius = (qrand()%101 + 290);            //from 190 to 290
     float eyeScale = (qrand()%51 + 50) / 100.0;       //from 0.5 to 1
     int eyeColorR = qrand()%256;                      //from 0   to 255
     int eyeColorG = qrand()%256;                      //from 0   to 255
     int eyeColorB = qrand()%256;                      //from 0   to 255
     float pupilRelSize = (qrand()%61 + 20) / 100.0;   //from 0.2 to 0.8
     float pupilRotation = qrand()%360;                //from 0   to 359
-    float eyelidHeight = qrand()%101;                 //from 0   to 100
-    float eyelidRotation = qrand()%61 - 30;           //from -30 to 30
+    float topEyelidHeight = qrand()%101 + 100;        //from 100 to 200
+    float topEyelidRotation = qrand()%21 - 10;        //from -10 to 10
+    float bottomEyelidHeight = qrand()%101 + 630;     //from 630 to 730 
+    float bottomEyelidRotation = qrand()%21 - 10;     //from -10 to 10
 
     m_isMoveWithBlink = qrand()%2;
 
-    move((MoveFlags)1, ms,
+    move((MoveFlags)EyePosition, ms,
          eyeToX, eyeToY, eyeRotation, eyeRadius, eyeScale,
          eyeColorR, eyeColorG, eyeColorB,
          pupilRelSize, pupilRotation,
-         eyelidHeight, eyelidRotation);
+         topEyelidHeight, topEyelidRotation,
+         bottomEyelidHeight, bottomEyelidRotation);
 
     m_randomMoveTimer->setInterval(m_msBetweenMovement);
 }
@@ -705,8 +709,10 @@ void MainWindow::move(MoveFlags flags, int ms,
                       int eyeColorR, int eyeColorG, int eyeColorB,
                       float pupilRelativeSize,
                       float pupilRotation,
-                      float eyelidHeight,
-                      float eyelidRotation) {
+                      float topEyelidHeight,
+                      float topEyelidRotation,
+                      float bottomEyelidHeight,
+                      float bottomEyelidRotation) {
     m_currentMovingTime = 0;
     m_movingTime = ms;
     m_moveFlags = flags;
@@ -739,13 +745,22 @@ void MainWindow::move(MoveFlags flags, int ms,
         m_endPupilRotation = pupilRotation;
         m_stepPupilRotation = (m_endPupilRotation - m_alpha) * frac;
     }
-    if(m_moveFlags & EyelidHeight && !m_isBlinking) {
-        m_endTopEyelidY = eyelidHeight;
+
+    if(m_moveFlags & TopEyelidHeight && !m_isBlinking) {
+        m_endTopEyelidY = topEyelidHeight;
         m_stepTopEyelidHeight = (m_endTopEyelidY - m_topEyelidY) * frac;
     }
-    if(m_moveFlags & EyelidRotation && !m_isMoveWithBlink) {
-        m_endTopEyelidRotation = eyelidRotation;
+    if(m_moveFlags & TopEyelidRotation && !m_isMoveWithBlink) {
+        m_endTopEyelidRotation = topEyelidRotation;
         m_stepTopEyelidRotation = (m_endTopEyelidRotation - m_topEyelidRotation) * frac;
+    }
+    if(m_moveFlags & BottomEyelidHeight && !m_isBlinking) {
+        m_endBottomEyelidY = bottomEyelidHeight;
+        m_stepBottomEyelidHeight = (m_endBottomEyelidY - m_bottomEyelidY) * frac;
+    }
+    if(m_moveFlags & BottomEyelidRotation && !m_isMoveWithBlink) {
+        m_endBottomEyelidRotation = bottomEyelidRotation;
+        m_stepBottomEyelidRotation = (m_endBottomEyelidRotation - m_bottomEyelidRotation) * frac;
     }
 
     if(!m_isMoveWithBlink) {
@@ -780,11 +795,19 @@ void MainWindow::updateMovingState() {
         if(m_moveFlags & PupilRotation) {
             m_alpha = m_endPupilRotation;
         }
-        if(m_moveFlags & EyelidHeight && !m_isBlinking) {
+
+        if(m_moveFlags & TopEyelidHeight && !m_isBlinking) {
             m_topEyelidY = m_endTopEyelidY;
         }
-        if(m_moveFlags & EyelidRotation) {
+        if(m_moveFlags & TopEyelidRotation) {
             m_topEyelidRotation = m_endTopEyelidRotation;
+            recomputeEyelidTransform = true;
+        }
+        if(m_moveFlags & BottomEyelidHeight && !m_isBlinking) {
+            m_bottomEyelidY = m_endBottomEyelidY;
+        }
+        if(m_moveFlags & BottomEyelidRotation) {
+            m_bottomEyelidRotation = m_endBottomEyelidRotation;
             recomputeEyelidTransform = true;
         }
 
@@ -809,11 +832,19 @@ void MainWindow::updateMovingState() {
         if(m_moveFlags & PupilRotation) {
             m_alpha += m_stepPupilRotation;
         }
-        if(m_moveFlags & EyelidHeight && !m_isBlinking) {
+
+        if(m_moveFlags & TopEyelidHeight && !m_isBlinking) {
             m_topEyelidY += m_stepTopEyelidHeight;
         }
-        if(m_moveFlags & EyelidRotation) {
+        if(m_moveFlags & TopEyelidRotation) {
             m_topEyelidRotation += m_stepTopEyelidRotation;
+            recomputeEyelidTransform = true;
+        }
+        if(m_moveFlags & BottomEyelidHeight && !m_isBlinking) {
+            m_bottomEyelidY += m_stepBottomEyelidHeight;
+        }
+        if(m_moveFlags & BottomEyelidRotation) {
+            m_bottomEyelidRotation += m_stepBottomEyelidRotation;
             recomputeEyelidTransform = true;
         }
     }

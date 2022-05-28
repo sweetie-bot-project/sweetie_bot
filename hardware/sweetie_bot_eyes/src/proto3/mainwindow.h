@@ -83,14 +83,16 @@ private:
     QVector<QPainterPath> m_shinesPaths;
 
     enum MoveFlags {
-        EyePosition = 1,
-        EyeRotation = 2,
-        EyeSize = 4,
-        EyeColor = 8,
-        PupilSize = 16,
-        PupilRotation = 32,
-        EyelidHeight = 64,
-        EyelidRotation = 128
+        EyePosition           =  0x001,
+        EyeRotation           =  0x002,
+        EyeSize               =  0x004,
+        EyeColor              =  0x008,
+        PupilSize             =  0x010,
+        PupilRotation         =  0x020,
+        TopEyelidHeight       =  0x040,
+        TopEyelidRotation     =  0x080,
+        BottomEyelidHeight    =  0x100,
+        BottomEyelidRotation  =  0x200,
     };
 
 
@@ -176,9 +178,10 @@ public:
               int eyeColorR, int eyeColorG, int eyeColorB,
               float pupilRelativeSize,
               float pupilRotation,
-              float eyelidHeight,
-              float eyelidRotation);
-    void setEndPositions();
+              float topEyelidHeight,
+              float topEyelidRotation,
+              float bottomEyelidHeight,
+              float bottomEyelidRotation);
     void blink(int ms);
 
     void keyPressEvent(QKeyEvent *e);
@@ -191,7 +194,7 @@ private slots:
     void updateBlinkState();
 
     //delete in next versions
-    void computeMove();
+    void computeRandomMove();
 
     // ROS
     void rosSpin();
