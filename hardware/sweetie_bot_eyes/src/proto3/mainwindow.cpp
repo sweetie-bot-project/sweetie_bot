@@ -348,12 +348,9 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
 
   m_isMoveWithBlink = false;
 
-  move(EyePosition, 30,
-         eyeToX, eyeToY, 0, 0, 0,
-         0, 0, 0,
-         0, 0,
-         0, 0,
-         0, 0);
+  EyeState state;
+  state.center = QPointF(eyeToX, eyeToY);
+  move(EyePosition, 30, state);
 
   if (m_publishPixmap) PublishImage();
 }
@@ -570,30 +567,33 @@ void MainWindow::keyPressEvent(QKeyEvent *e) {
 }
 
 void MainWindow::computeRandomMove() {
-    int ms = qrand()%301 + 100;                       //from 100 to 400
-    float eyeToX = qrand()%400 + 200;                 //from 200 to 600
-    float eyeToY = qrand()%200 + 300;                 //from 300 to 500
-    float eyeRotation = qrand()%41 - 20;              //from -20 to 20
-    float eyeRadius = (qrand()%101 + 290);            //from 190 to 290
-    float eyeScale = (qrand()%51 + 50) / 100.0;       //from 0.5 to 1
-    int eyeColorR = qrand()%256;                      //from 0   to 255
-    int eyeColorG = qrand()%256;                      //from 0   to 255
-    int eyeColorB = qrand()%256;                      //from 0   to 255
-    float pupilRelSize = (qrand()%61 + 20) / 100.0;   //from 0.2 to 0.8
-    float pupilRotation = qrand()%360;                //from 0   to 359
-    float topEyelidHeight = qrand()%101 + 100;        //from 100 to 200
-    float topEyelidRotation = qrand()%21 - 10;        //from -10 to 10
-    float bottomEyelidHeight = qrand()%101 + 630;     //from 630 to 730 
-    float bottomEyelidRotation = qrand()%21 - 10;     //from -10 to 10
+    int ms = qrand()%301 + 100;                                   //from 100 to 400
+
+    EyeState randomState;
+    randomState.center            = QPointF(qrand()%200 + 300,    //from 300 to 500
+                                            qrand()%400 + 200);   //from 200 to 600
+
+    randomState.angle             = qrand()%41 - 20;              //from -20 to 20
+    randomState.radius            = qrand()%201 + 90;             //from 90 to 290
+    randomState.radiusRatio       = (qrand()%51 + 50) / 100.0;    //from 0.5 to 1
+
+    randomState.eyeColor          = QColor(qrand()%256,           // from 0 to 255
+                                           qrand()%256,           // from 0 to 255
+                                           qrand()%256);          // from 0 to 255
+
+    randomState.pupilRadius       = (qrand()%61 + 20) / 100.0;    //from 0.2 to 0.8
+    randomState.pupilAngle        = qrand()%360;                  //from 0   to 359
+
+    randomState.topEyelidY        = qrand()%101 + 100;            //from 100 to 200
+    randomState.topEyelidAngle    = qrand()%21 - 10;              //from -10 to 10
+    randomState.bottomEyelidY     = qrand()%101 + 630;            //from 630 to 730 
+    randomState.bottomEyelidAngle = qrand()%21 - 10;              //from -10 to 10
 
     m_isMoveWithBlink = qrand()%2;
 
-    move((MoveFlags)EyePosition, ms,
-         eyeToX, eyeToY, eyeRotation, eyeRadius, eyeScale,
-         eyeColorR, eyeColorG, eyeColorB,
-         pupilRelSize, pupilRotation,
-         topEyelidHeight, topEyelidRotation,
-         bottomEyelidHeight, bottomEyelidRotation);
+    // nocommit
+    // move((MoveFlags)(EyePosition | PupilSize | PupilRotation | TopEyelidHeight | TopEyelidRotation | BottomEyelidHeight | BottomEyelidRotation), ms, randomState);
+    move((MoveFlags)0xFFFF, ms, randomState);
 
     m_randomMoveTimer->setInterval(m_msBetweenMovement);
 }
@@ -643,72 +643,30 @@ QPainterPath MainWindow::computeShinePath(int dx, int dy, int r1, int r2, int an
     return path;
 }
 
-void MainWindow::move(MoveFlags flags, int ms,
-                      float eyeToX, float eyeToY, float eyeRotation,
-                      float eyeRadius, float eyeRadiusScale,
-                      int eyeColorR, int eyeColorG, int eyeColorB,
-                      float pupilRelativeSize,
-                      float pupilRotation,
-                      float topEyelidHeight,
-                      float topEyelidRotation,
-                      float bottomEyelidHeight,
-                      float bottomEyelidRotation) {
+void MainWindow::move(MoveFlags flags, int ms, EyeState targetState) {
     m_currentMovingTime = 0;
     m_movingTime = ms;
     m_moveFlags = flags;
 
-    float frac = m_msUpdateMove/(float)m_movingTime;
+    // Disabling certain movement to not race with blink motion
+    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~EyeRotation);
+    if (m_isBlinking)       flags = (MoveFlags)(flags & ~TopEyelidHeight);
+    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~TopEyelidRotation);
+    if (m_isBlinking)       flags = (MoveFlags)(flags & ~BottomEyelidHeight);
+    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~BottomEyelidRotation);
 
-    auto &s = m_state;
+    auto &currentState = m_state;
+    m_startAnimationState.assignSelectively(currentState, flags);
+    m_endAnimationState.assignSelectively(targetState, flags);
 
-    if(m_moveFlags & EyePosition) {
-        m_endEyePosition = QPointF(eyeToX, eyeToY);
-        m_stepEyePosition = (m_endEyePosition - s.center) * frac;
-    }
-    if(m_moveFlags & EyeRotation && !m_isMoveWithBlink) {
-        m_endEyeRotation = eyeRotation;
-        m_stepEyeRotation = (m_endEyeRotation - s.angle) * frac;
-    }
-    if(m_moveFlags & EyeSize) {
-        m_endEyeRadius = eyeRadius;
-        m_stepEyeRadius = (m_endEyeRadius - s.radius) * frac;
-
-        m_endEyeRadiusScale = eyeRadiusScale;
-        m_stepEyeRadiusScale = (m_endEyeRadiusScale - s.radiusRatio) * frac;
-    }
-    if(m_moveFlags & EyeColor) {
-        s.eyeColor = QColor(eyeColorR, eyeColorG, eyeColorB);
-    }
-    if(m_moveFlags & PupilSize) {
-        m_endPupilRelativeSize = pupilRelativeSize;
-        m_stepPupilRelativeSize = (m_endPupilRelativeSize - s.pupilRadius) * frac;
-    }
-    if(m_moveFlags & PupilRotation) {
-        m_endPupilRotation = pupilRotation;
-        m_stepPupilRotation = (m_endPupilRotation - s.pupilAngle) * frac;
+    // Assign color immediately to the current state, without animating
+    if (flags & EyeColor) {
+        currentState.eyeColor = targetState.eyeColor;
     }
 
-    if(m_moveFlags & TopEyelidHeight && !m_isBlinking) {
-        m_endTopEyelidY = topEyelidHeight;
-        m_stepTopEyelidHeight = (m_endTopEyelidY - s.topEyelidY) * frac;
-    }
-    if(m_moveFlags & TopEyelidRotation && !m_isMoveWithBlink) {
-        m_endTopEyelidRotation = topEyelidRotation;
-        m_stepTopEyelidRotation = (m_endTopEyelidRotation - s.topEyelidAngle) * frac;
-    }
-    if(m_moveFlags & BottomEyelidHeight && !m_isBlinking) {
-        m_endBottomEyelidY = bottomEyelidHeight;
-        m_stepBottomEyelidHeight = (m_endBottomEyelidY - s.bottomEyelidY) * frac;
-    }
-    if(m_moveFlags & BottomEyelidRotation && !m_isMoveWithBlink) {
-        m_endBottomEyelidRotation = bottomEyelidRotation;
-        m_stepBottomEyelidRotation = (m_endBottomEyelidRotation - s.bottomEyelidAngle) * frac;
-    }
-
-    if(!m_isMoveWithBlink) {
+    if (!m_isMoveWithBlink) {
         m_moveTimer->start();
-    }
-    else {
+    } else {
         blink(m_blinkDefaultDuration);
     }
 }
@@ -716,130 +674,53 @@ void MainWindow::move(MoveFlags flags, int ms,
 void MainWindow::updateMovingState() {
     m_currentMovingTime += m_msUpdateMove;
 
-    bool recomputeEyeTransform = false;
-    bool recomputeEyelidTransform = false;
+    // Disabling certain movement to not race with blink motion
+    MoveFlags flags = m_moveFlags;
+    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~EyeRotation);
+    if (m_isBlinking)       flags = (MoveFlags)(flags & ~TopEyelidHeight);
+    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~TopEyelidRotation);
+    if (m_isBlinking)       flags = (MoveFlags)(flags & ~BottomEyelidHeight);
+    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~BottomEyelidRotation);
 
-    auto &s = m_state;
-
-    if(m_currentMovingTime > m_movingTime) {
-        if(m_moveFlags & EyePosition) {
-            s.center = m_endEyePosition;
-        }
-        if(m_moveFlags & EyeRotation) {
-            s.angle = m_endEyeRotation;
-            recomputeEyeTransform = true;
-        }
-        if(m_moveFlags & EyeSize) {
-            s.radius = m_endEyeRadius;
-            s.radiusRatio = m_endEyeRadiusScale;
-        }
-        if(m_moveFlags & PupilSize) {
-            s.pupilRadius = m_endPupilRelativeSize;
-        }
-        if(m_moveFlags & PupilRotation) {
-            s.pupilAngle = m_endPupilRotation;
-        }
-
-        if(m_moveFlags & TopEyelidHeight && !m_isBlinking) {
-            s.topEyelidY = m_endTopEyelidY;
-        }
-        if(m_moveFlags & TopEyelidRotation) {
-            s.topEyelidAngle = m_endTopEyelidRotation;
-            recomputeEyelidTransform = true;
-        }
-        if(m_moveFlags & BottomEyelidHeight && !m_isBlinking) {
-            s.bottomEyelidY = m_endBottomEyelidY;
-        }
-        if(m_moveFlags & BottomEyelidRotation) {
-            s.bottomEyelidAngle = m_endBottomEyelidRotation;
-            recomputeEyelidTransform = true;
-        }
+    if (m_currentMovingTime > m_movingTime) {
+        // Making sure current state is in the end position
+        m_state.assignSelectively(m_endAnimationState, flags);
 
         m_currentMovingTime = 0;
         m_moveTimer->stop();
-    }
-    else {
-        if(m_moveFlags & EyePosition) {
-            s.center += m_stepEyePosition;
-        }
-        if(m_moveFlags & EyeRotation) {
-            s.angle += m_stepEyeRotation;
-            recomputeEyeTransform = true;
-        }
-        if(m_moveFlags & EyeSize) {
-            s.radius += m_stepEyeRadius;
-            s.radiusRatio += m_stepEyeRadiusScale;
-        }
-        if(m_moveFlags & PupilSize) {
-            s.pupilRadius += m_stepPupilRelativeSize;
-        }
-        if(m_moveFlags & PupilRotation) {
-            s.pupilAngle += m_stepPupilRotation;
-        }
+    } else {
+        auto relativeMovingTime = m_currentMovingTime / (float)m_movingTime;
+        auto interpolatedState = lerp(m_startAnimationState, m_endAnimationState, relativeMovingTime);
 
-        if(m_moveFlags & TopEyelidHeight && !m_isBlinking) {
-            s.topEyelidY += m_stepTopEyelidHeight;
-        }
-        if(m_moveFlags & TopEyelidRotation) {
-            s.topEyelidAngle += m_stepTopEyelidRotation;
-            recomputeEyelidTransform = true;
-        }
-        if(m_moveFlags & BottomEyelidHeight && !m_isBlinking) {
-            s.bottomEyelidY += m_stepBottomEyelidHeight;
-        }
-        if(m_moveFlags & BottomEyelidRotation) {
-            s.bottomEyelidAngle += m_stepBottomEyelidRotation;
-            recomputeEyelidTransform = true;
-        }
+        m_state.assignSelectively(interpolatedState, flags);
     }
 
-    if(recomputeEyeTransform) {
-        computeEyeTransform();
-    }
-    if(recomputeEyelidTransform) {
-        computeEyelidTransform();
-    }
+    if (m_moveFlags & EyeRotation)  computeEyeTransform();
+    if (m_moveFlags & (TopEyelidRotation | BottomEyelidRotation))  computeEyelidTransform();
 
     computeFrame();
-}
-
-inline float lerp(float first_value, float second_value, float t) {
-    return first_value * (1 - t) + second_value * t;
-}
-
-inline float bezier_1d_cubic(float u0, float u1, float t) {
-    float square = t * t;
-    float cube = square * t;
-
-    float inv = 1 - t;
-    float inv_square = inv * (1 - t);
-
-    return 3*inv_square*t*u0 + 3*inv*square*u1 + cube;
 }
 
 void MainWindow::blink(int duration_ms) {
     if (m_isBlinking)  return;
 
+    m_isBlinking = true;
     m_isGoingDown = true;
-    m_blinkDuration = 2 * duration_ms; // Moving forward and backward is 2 times longer
+    m_blinkDuration = 2 * duration_ms; // Moving forward and backward takes 2 times longer
 
     // Save current eyelids state
-    m_startTopEyelidY = m_state.topEyelidY;
-    m_startBottomEyelidY = m_state.bottomEyelidY;
-    m_startTopEyelidRotation = m_state.topEyelidAngle;
-    m_startBottomEyelidRotation = m_state.bottomEyelidAngle;
-    m_startApertureContraction = m_state.pupilRadius;
+    m_startAnimationState.assignOnlyBlinkState(m_state);
 
     // Compute target eyelids state
     float eyelidsTouchHightRatio = 0.8;
     float eyelidsTouchHight = lerp(m_state.topEyelidY, m_state.bottomEyelidY, eyelidsTouchHightRatio);
-    float eyelidsTouchRotation = (m_state.topEyelidAngle + m_state.bottomEyelidAngle) * .5;
+    float eyelidsTouchAngle = (m_state.topEyelidAngle + m_state.bottomEyelidAngle) * .5;
 
-    m_endTopEyelidY = eyelidsTouchHight;
-    m_endBottomEyelidY = eyelidsTouchHight;
-    m_endTopEyelidRotation = eyelidsTouchRotation;
-    m_endBottomEyelidRotation = eyelidsTouchRotation;
-    m_endApertureContraction = 0.0;
+    m_endAnimationState.topEyelidY = eyelidsTouchHight;
+    m_endAnimationState.bottomEyelidY = eyelidsTouchHight;
+    m_endAnimationState.topEyelidAngle = eyelidsTouchAngle;
+    m_endAnimationState.bottomEyelidAngle = eyelidsTouchAngle;
+    m_endAnimationState.pupilRadius = 0;
 
     m_blinkTimer->start();
 }
@@ -847,35 +728,20 @@ void MainWindow::blink(int duration_ms) {
 void MainWindow::updateBlinkState() {
     m_currentBlinkingTime += m_msUpdateMove;
 
-    if(m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration * 0.5 + m_blinkDelay)) {
+    if (m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration * 0.5 + m_blinkDelay)) {
         // Change direction of eyelid movement
         m_isGoingDown = false;
 
-        // @Cleanup
         if(m_isMoveWithBlink) {
-            if(m_moveFlags & EyePosition) {
-                m_state.center = m_endEyePosition;
-            }
-            if(m_moveFlags & EyeSize) {
-                m_state.radius = m_endEyeRadius;
-                m_state.radiusRatio = m_endEyeRadiusScale;
-            }
-            if(m_moveFlags & PupilSize) {
-                m_state.pupilRadius = m_endPupilRelativeSize;
-            }
-            if(m_moveFlags & PupilRotation) {
-                m_state.pupilAngle = m_endPupilRotation;
-            }
+            auto moveOnBlinkConfig = (MoveFlags)(m_moveFlags & (EyePosition | EyeSize | PupilSize | PupilRotation));
+            m_state.assignSelectively(m_endAnimationState, moveOnBlinkConfig);
             computeFrame();
         }
-    } else if(!m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration + m_blinkDelay)) {
-        // Stop movement
-        m_state.topEyelidY = m_startTopEyelidY;
-        m_state.bottomEyelidY = m_startBottomEyelidY;
-        m_state.bottomEyelidAngle = m_startBottomEyelidRotation;
-        m_state.topEyelidAngle = m_startTopEyelidRotation;
-        m_state.pupilRadius = m_startApertureContraction;
+    } else if (!m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration + m_blinkDelay)) {
+        // Make sure end blink state match starting state
+        m_state.assignOnlyBlinkState(m_startAnimationState);
 
+        // Stop movement
         m_currentBlinkingTime = 0;
         m_isBlinking = false;
         m_blinkTimer->stop();
@@ -894,17 +760,17 @@ void MainWindow::updateBlinkState() {
             relativeBlinkingTime = 2.0 - relativeBlinkingTime;
         }
 
-        m_state.topEyelidY    = lerp(m_startTopEyelidY, m_endTopEyelidY, relativeBlinkingTime);
-        m_state.bottomEyelidY = lerp(m_startBottomEyelidY, m_endBottomEyelidY, relativeBlinkingTime);
+        m_state.topEyelidY    = lerp(m_startAnimationState.topEyelidY, m_endAnimationState.topEyelidY, relativeBlinkingTime);
+        m_state.bottomEyelidY = lerp(m_startAnimationState.bottomEyelidY, m_endAnimationState.bottomEyelidY, relativeBlinkingTime);
 
-        relativeBlinkingTime   = bezier_1d_cubic(0.1, -0.25, relativeBlinkingTime);
-        m_state.topEyelidAngle    = lerp(m_startTopEyelidRotation, m_endTopEyelidRotation, relativeBlinkingTime);
-        m_state.bottomEyelidAngle = lerp(m_startBottomEyelidRotation, m_endBottomEyelidRotation, relativeBlinkingTime);
+        relativeBlinkingTime      = bezier_1d_cubic(0.1, -0.25, relativeBlinkingTime);
+        m_state.topEyelidAngle    = lerp(m_startAnimationState.topEyelidAngle, m_endAnimationState.topEyelidAngle, relativeBlinkingTime);
+        m_state.bottomEyelidAngle = lerp(m_startAnimationState.bottomEyelidAngle, m_endAnimationState.bottomEyelidAngle, relativeBlinkingTime);
 
         // Contract aperture while blinking
         auto relativeContractionTime = 6 * relativeBlinkingTime;
-        m_state.pupilRadius = lerp(m_startApertureContraction, m_endApertureContraction, relativeContractionTime);
-        m_state.pupilRadius = std::max(m_state.pupilRadius, m_endApertureContraction);
+        m_state.pupilRadius = lerp(m_startAnimationState.pupilRadius, m_endAnimationState.pupilRadius, relativeContractionTime);
+        m_state.pupilRadius = std::max(m_state.pupilRadius, m_endAnimationState.pupilRadius);
     }
 
     computeEyelidTransform();
@@ -926,7 +792,7 @@ void MainWindow::computeEye() {
     QPointF V = QPointF(m_state.center.x(), m_state.center.y() - absR8);
 
     m_Pin[0] = V;
-    for(int i = 1; i < SIDES; i++) {
+    for (int i = 1; i < SIDES; i++) {
         m_Pin[i] = rotatePoint(m_Pin[i - 1], m_state.center, PI/4);
     }
 
@@ -938,19 +804,19 @@ void MainWindow::computeEye() {
     float dy = l*sin(betta);
 
     m_Pout[0] = QPointF(V.x() - dx, V.y() - dy);
-    for(int i = 1; i < SIDES; i++) {
+    for (int i = 1; i < SIDES; i++) {
         m_Pout[i] = rotatePoint(m_Pout[i - 1], m_state.center, PI/4);
     }
 
-    if(m_state.pupilAngle != 0) {
-        for(int i = 0; i < SIDES; i++) {
+    if (m_state.pupilAngle != 0) {
+        for (int i = 0; i < SIDES; i++) {
             m_Pin[i] = rotatePoint(m_Pin[i], m_state.center, alpha);
             m_Pout[i] = rotatePoint(m_Pout[i], m_state.center, alpha);
         }
     }
 
-    if(m_state.radiusRatio != 1.0) {
-        for(int i = 0; i < SIDES; i++) {
+    if (m_state.radiusRatio != 1.0) {
+        for (int i = 0; i < SIDES; i++) {
             float newXin = m_Pin[i].x();
             newXin -= m_state.center.x();
             newXin *= m_state.radiusRatio;
@@ -969,21 +835,21 @@ void MainWindow::computeEye() {
     }
 
     //computePath
-    for(int i = 0; i < EyePathCount; i++) {
+    for (int i = 0; i < EyePathCount; i++) {
         m_eyePaths[i] = QPainterPath();
     }
     m_eyePaths[GreenEllipse].addEllipse(m_state.center, m_state.radius2, m_state.radius);
 
     m_Pin[SIDES] = m_Pin[0];
     m_eyePaths[BlackOctagonAndLines].addPolygon(QPolygonF(m_Pin));
-    for(int i = 0; i < SIDES; i++) {
+    for (int i = 0; i < SIDES; i++) {
         m_eyePaths[BlackOctagonAndLines].moveTo(m_Pout[i]);
         m_eyePaths[BlackOctagonAndLines].lineTo(m_Pin[i]);
     }
 
     m_eyePaths[WhiteArea].addEllipse(m_state.center, m_state.radius2, m_state.radius);
-    if(m_state.angle != 0) {
-        for(int i = 0; i < EyePathCount; i++) {
+    if (m_state.angle != 0) {
+        for (int i = 0; i < EyePathCount; i++) {
             m_eyePaths[i] = m_eyeTransform.map(m_eyePaths[i]);
         }
     }
