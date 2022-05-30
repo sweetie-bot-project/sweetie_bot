@@ -11,7 +11,7 @@ enum MoveFlags {
     EyePosition           =  0x001,
     EyeRotation           =  0x002,
     EyeSize               =  0x004,
-    EyeColor              =  0x008,
+    EyeColors             =  0x008,
     PupilSize             =  0x010,
     PupilRotation         =  0x020,
     TopEyelidHeight       =  0x040,
@@ -20,9 +20,16 @@ enum MoveFlags {
     BottomEyelidRotation  =  0x200,
 };
 
+enum EyeSide {
+    UNSET,
+    LEFT,
+    RIGHT
+};
 
 struct EyeState {
-    QPointF center = QPointF(WIDTH/2.,HEIGHT/2. + 10); // +10 for new screen center correction
+    QPointF center = QPointF(WIDTH/2.,HEIGHT/2.);
+
+    EyeSide side = UNSET;
 
     // Eye configuraton
     float radius       = 287.5;       // Eye's first radius
@@ -44,6 +51,13 @@ struct EyeState {
     QColor eyelidOutlineColor  = QColor(116, 169, 116);
     QColor whiteAreaColor      = Qt::white;
 
+    EyeState(bool isLeftEye = false) {
+        if (isLeftEye)  side = LEFT;
+        else            side = RIGHT; 
+
+        resetConfiguration();
+    }
+
     inline void resetConfiguration() {
         radiusRatio       = 0.8;
         radius            = 287.5;
@@ -51,6 +65,7 @@ struct EyeState {
         pupilRadius       = 0.6;
         pupilAngle        = 0;
         angle             = 40.83*0.9;
+        if (side == RIGHT)  angle = -angle;
 
         topEyelidAngle    = -5;
         topEyelidY        = 135;
@@ -73,6 +88,8 @@ struct EyeState {
         bottomEyelidY     = source.bottomEyelidY;
     }
 
+    // @Note: All color assigned at once, so they all must be valid!
+    //        May be should rethink the process later.
     inline void assignSelectively(EyeState source, MoveFlags f) {
         if (f & EyePosition)  center = source.center;
         if (f & EyeRotation)  angle  = source.angle;
@@ -80,13 +97,19 @@ struct EyeState {
             radius      = source.radius;
             radiusRatio = source.radiusRatio;
         }
-        if (f & EyeColor)              eyeColor          = source.eyeColor;
         if (f & PupilSize)             pupilRadius       = source.pupilRadius;
         if (f & PupilRotation)         pupilAngle        = source.pupilAngle;
         if (f & TopEyelidHeight)       topEyelidY        = source.topEyelidY;
         if (f & TopEyelidRotation)     topEyelidAngle    = source.topEyelidAngle;
         if (f & BottomEyelidHeight)    bottomEyelidY     = source.bottomEyelidY;
         if (f & BottomEyelidRotation)  bottomEyelidAngle = source.bottomEyelidAngle;
+
+        if (f & EyeColors) {
+            eyeColor            = source.eyeColor;
+            eyelidColor         = source.eyelidColor;
+            eyelidOutlineColor  = source.eyelidOutlineColor;
+            whiteAreaColor      = source.whiteAreaColor;
+        }
     }
 };
 

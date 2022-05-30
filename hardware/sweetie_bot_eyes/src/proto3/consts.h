@@ -20,7 +20,7 @@ const double PI = 3.14159265;
 const int WIDTH = 800;
 const int HEIGHT = 800;
 
-const int SIDES = 8;
+const int APERTURE_EDGE_COUNT = 8;
 
 
 #endif // CONSTS_H

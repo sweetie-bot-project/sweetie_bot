@@ -9,8 +9,9 @@
 // 2.5x3.3333333333333335
 
 MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
-    m_isLeftEye(isLeftEye),
     m_publishPixmap(false),
+
+    m_state(isLeftEye),
 
     m_blinkDefaultDuration(150),
     m_blinkDuration(0),
@@ -43,12 +44,8 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
 
     setWindowFlags(Qt::FramelessWindowHint);
 
-    if (!m_isLeftEye) {
-        m_state.angle = -m_state.angle;
-    }
-
-    m_Pin.fill(QPointF(), SIDES + 1);
-    m_Pout.fill(QPointF(), SIDES);
+    m_Pin.fill(QPointF(), APERTURE_EDGE_COUNT + 1);
+    m_Pout.fill(QPointF(), APERTURE_EDGE_COUNT);
     m_eyePaths.fill(QPainterPath(), EyePathCount);
 
     setFixedSize(WIDTH, HEIGHT);
@@ -78,7 +75,11 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     sub_control_ = node_.subscribe<sweetie_bot_text_msgs::TextCommand>("control", 1, &MainWindow::controlCallback, this, ros::TransportHints().tcpNoDelay());
     sub_joint_state_ = node_.subscribe<sensor_msgs::JointState>("joint_states", 1, &MainWindow::moveCallback, this, ros::TransportHints().tcpNoDelay());
     // publishers
-    std::string image_eye_topic_name = (m_isLeftEye) ? "eye_image_left" : "eye_image_right";
+    std::string image_eye_topic_name;
+    switch (m_state.side) {
+    case LEFT:  image_eye_topic_name = "eye_image_left";  break;
+    case RIGHT: image_eye_topic_name = "eye_image_right"; break;
+    }
     pub_eye_image_ = node_.advertise<sensor_msgs::Image>(image_eye_topic_name, 1);
 
     path_ =  QString::fromStdString( ros::package::getPath("sweetie_bot_eyes") );
@@ -88,11 +89,13 @@ MainWindow::MainWindow(bool isLeftEye, QWidget *parent) : QOpenGLWidget(parent),
     m_debug_mode_enabled = args.contains("-debug");
     
     if (m_debug_mode_enabled) {
-        if(m_isLeftEye) {
+        switch (m_state.side) {
+        case LEFT:
             overlay_ = new QImage(path_ + "/overlays/proto3_leftEyeOverlay.png");
-        }
-        else {
+            break;
+        case RIGHT:
             overlay_ = new QImage(path_ + "/overlays/proto3_rightEyeOverlay.png");
+            break;
         }
     }
 }
@@ -162,6 +165,8 @@ void MainWindow::paintGL() {
 
 void MainWindow::PublishImage()
 {
+    // @Speed: It's slow to render offscreen buffer in current thread
+    //         But it only happens on host machine, so we can fix this later.
     makeCurrent();
     m_fbo->bind();
 
@@ -209,9 +214,14 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
         break;
 
     case str2hash("eyes/emotion"):
-        auto &s = m_state;
+        auto s = m_state;
 
         switch(str2hash(msg->command.c_str())){
+        case str2hash("reset"): // Reset without smooth transition
+            m_state.resetColors();
+            m_state.resetConfiguration();
+            break;
+
         case str2hash("normal"):
             s.resetColors();
             s.resetConfiguration();
@@ -276,7 +286,6 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
             s.radius = 290.5;
             s.pupilRadius = 0.87;
 
-            s.resetColors();
             s.whiteAreaColor = QColor(255,183,195);
             break;
 
@@ -298,14 +307,14 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 
         case str2hash("raised_right_eyebrow_look"):
             s.resetConfiguration();
-            if (m_isLeftEye)  s.topEyelidY = 119;
-            else              s.topEyelidY = 263;
+            if (m_state.side == LEFT)  s.topEyelidY = 119;
+            else                       s.topEyelidY = 263;
             break;
 
         case str2hash("raised_left_eyebrow_look"):
             s.resetConfiguration();
-            if (!m_isLeftEye)  s.topEyelidY = 119;
-            else               s.topEyelidY = 263;
+            if (m_state.side == RIGHT)  s.topEyelidY = 119;
+            else                        s.topEyelidY = 263;
             break;
 
         case str2hash("evil_look"):
@@ -314,6 +323,11 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
             s.topEyelidY = 200;
             break;
         }
+
+        // Smoothing transition between emotions
+        if (str2hash(msg->command.c_str()) != str2hash("reset")) {
+            move((MoveFlags)(~EyePosition), 200, s);
+        }
         break;
     }
 
@@ -321,7 +335,6 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 	computeFrame();
 	if (m_publishPixmap) PublishImage();
 }
-
 
 void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
@@ -344,13 +357,17 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg)
   float eyeToX = WIDTH/2 - (WIDTH/2 * x) / 2;
   float eyeToY = HEIGHT/2 - (HEIGHT/2 * y) / 2;
 
-  //ROS_INFO_STREAM(m_isLeftEye << "eye: ("<< x << "," << y << ") " << eyeToX << " " << eyeToY);
+  //ROS_INFO_STREAM(m_state.side == LEFT << "eye: ("<< x << "," << y << ") " << eyeToX << " " << eyeToY);
 
   m_isMoveWithBlink = false;
 
-  EyeState state;
-  state.center = QPointF(eyeToX, eyeToY);
-  move(EyePosition, 30, state);
+  auto diff_x = abs(eyeToX - m_state.center.x());
+  auto diff_y = abs(eyeToY - m_state.center.y());
+  if (diff_x > 1.0 || diff_y > 1.0) {
+      EyeState state;
+      state.center = QPointF(eyeToX, eyeToY);
+      move(EyePosition, 30, state);
+  }
 
   if (m_publishPixmap) PublishImage();
 }
@@ -591,9 +608,7 @@ void MainWindow::computeRandomMove() {
 
     m_isMoveWithBlink = qrand()%2;
 
-    // nocommit
-    // move((MoveFlags)(EyePosition | PupilSize | PupilRotation | TopEyelidHeight | TopEyelidRotation | BottomEyelidHeight | BottomEyelidRotation), ms, randomState);
-    move((MoveFlags)0xFFFF, ms, randomState);
+    move((MoveFlags)(PupilSize | PupilRotation | TopEyelidHeight | TopEyelidRotation | BottomEyelidHeight | BottomEyelidRotation), ms, randomState);
 
     m_randomMoveTimer->setInterval(m_msBetweenMovement);
 }
@@ -660,8 +675,8 @@ void MainWindow::move(MoveFlags flags, int ms, EyeState targetState) {
     m_endAnimationState.assignSelectively(targetState, flags);
 
     // Assign color immediately to the current state, without animating
-    if (flags & EyeColor) {
-        currentState.eyeColor = targetState.eyeColor;
+    if (flags & EyeColors) {
+        currentState.assignSelectively(targetState, (MoveFlags)EyeColors);
     }
 
     if (!m_isMoveWithBlink) {
@@ -792,7 +807,7 @@ void MainWindow::computeEye() {
     QPointF V = QPointF(m_state.center.x(), m_state.center.y() - absR8);
 
     m_Pin[0] = V;
-    for (int i = 1; i < SIDES; i++) {
+    for (int i = 1; i < APERTURE_EDGE_COUNT; i++) {
         m_Pin[i] = rotatePoint(m_Pin[i - 1], m_state.center, PI/4);
     }
 
@@ -804,19 +819,19 @@ void MainWindow::computeEye() {
     float dy = l*sin(betta);
 
     m_Pout[0] = QPointF(V.x() - dx, V.y() - dy);
-    for (int i = 1; i < SIDES; i++) {
+    for (int i = 1; i < APERTURE_EDGE_COUNT; i++) {
         m_Pout[i] = rotatePoint(m_Pout[i - 1], m_state.center, PI/4);
     }
 
     if (m_state.pupilAngle != 0) {
-        for (int i = 0; i < SIDES; i++) {
+        for (int i = 0; i < APERTURE_EDGE_COUNT; i++) {
             m_Pin[i] = rotatePoint(m_Pin[i], m_state.center, alpha);
             m_Pout[i] = rotatePoint(m_Pout[i], m_state.center, alpha);
         }
     }
 
     if (m_state.radiusRatio != 1.0) {
-        for (int i = 0; i < SIDES; i++) {
+        for (int i = 0; i < APERTURE_EDGE_COUNT; i++) {
             float newXin = m_Pin[i].x();
             newXin -= m_state.center.x();
             newXin *= m_state.radiusRatio;
@@ -840,9 +855,9 @@ void MainWindow::computeEye() {
     }
     m_eyePaths[GreenEllipse].addEllipse(m_state.center, m_state.radius2, m_state.radius);
 
-    m_Pin[SIDES] = m_Pin[0];
+    m_Pin[APERTURE_EDGE_COUNT] = m_Pin[0];
     m_eyePaths[BlackOctagonAndLines].addPolygon(QPolygonF(m_Pin));
-    for (int i = 0; i < SIDES; i++) {
+    for (int i = 0; i < APERTURE_EDGE_COUNT; i++) {
         m_eyePaths[BlackOctagonAndLines].moveTo(m_Pout[i]);
         m_eyePaths[BlackOctagonAndLines].lineTo(m_Pin[i]);
     }
@@ -867,21 +882,17 @@ void MainWindow::computeEyeTransform() {
 void MainWindow::computeEyelidTransform() {
     m_topEyelidTransform.reset();
     m_topEyelidTransform.translate(WIDTH/2, m_state.topEyelidY);
-    if(m_isLeftEye) {
-        m_topEyelidTransform.rotate(m_state.topEyelidAngle);
-    }
-    else {
-        m_topEyelidTransform.rotate(-m_state.topEyelidAngle);
+    switch (m_state.side) {
+    case LEFT:   m_topEyelidTransform.rotate(m_state.topEyelidAngle); break;
+    case RIGHT:  m_topEyelidTransform.rotate(-m_state.topEyelidAngle); break;
     }
     m_topEyelidTransform.translate(-WIDTH/2, -m_state.topEyelidY);
 
     m_bottomEyelidTransform.reset();
     m_bottomEyelidTransform.translate(WIDTH/2, m_state.bottomEyelidY);
-    if(m_isLeftEye) {
-        m_bottomEyelidTransform.rotate(m_state.bottomEyelidAngle);
-    }
-    else {
-        m_bottomEyelidTransform.rotate(-m_state.bottomEyelidAngle);
+    switch (m_state.side) {
+    case LEFT:   m_bottomEyelidTransform.rotate(m_state.bottomEyelidAngle); break;
+    case RIGHT:  m_bottomEyelidTransform.rotate(-m_state.bottomEyelidAngle); break;
     }
     m_bottomEyelidTransform.translate(-WIDTH/2, -m_state.bottomEyelidY);
 }
