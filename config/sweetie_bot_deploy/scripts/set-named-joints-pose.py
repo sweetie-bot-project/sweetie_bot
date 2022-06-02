@@ -23,7 +23,9 @@ FlexBe subsustem so flexbe node should be running.
 rospy.init_node('set_pose')
 # connect to flexbe behavior server
 client = actionlib.SimpleActionClient('flexbe/flexbe/execute_behavior', BehaviorExecutionAction)
-client.wait_for_server()
+if not client.wait_for_server(timeout=rospy.Duration(3.0)):
+    rospy.logerr('flexbe/flexbe/execute_behavior action is not available.')
+    sys.exit(-1)
 # construct request
 goal = BehaviorExecutionGoal()
 goal.behavior_name = "ExecuteSetPose"
