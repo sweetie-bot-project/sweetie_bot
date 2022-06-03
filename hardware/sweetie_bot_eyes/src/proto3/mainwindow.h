@@ -16,11 +16,16 @@
 
 #include "eyewindow.h"
 
+#include <boost/math/distributions/lognormal.hpp>
+#include <random>
+
 class MainWindow : public QOpenGLWidget {
     Q_OBJECT
 
 private:
     bool m_publishPixmap = false;
+
+    int m_autoBlinkDelay;
 
     EyeWindow *m_leftEye;
     EyeWindow *m_rightEye;
@@ -28,7 +33,18 @@ private:
 
     QTimer *m_moveTimer;
     QTimer *m_blinkTimer;
-    QTimer *m_updateTimer;
+    QTimer *m_randomBlinkingTimer;
+
+    // Natural random blinkng generation
+    int m_blinkGenerationTime;
+    int m_msBlinkGenerationInterval;
+    int m_timeUntilNextBlink;
+
+    boost::math::lognormal_distribution<> m_blinkTimeDistribution;
+    std::uniform_real_distribution<double> m_uniformDist;
+    std::random_device m_rd;
+    std::default_random_engine m_noiseGenerator;
+
 
     // ROS
     ros::NodeHandle node_;
@@ -40,6 +56,7 @@ private:
 
 public:
     MainWindow(QWidget *parent = 0);
+    ~MainWindow();
 
     void moveBothEyes(MoveFlags flags, int ms, EyeState targetStateLeft, EyeState targetStateRight, bool moveWithBlink = false);
     void blinkBothEyes(int ms);
@@ -47,8 +64,10 @@ public:
     EyeState generateEmotion(const EyeState &baseState, const char *emotionName);
 
 private slots:
+    void randomBlinkingGeneration();
 
-    void Update();
+    void updateBlink();
+    void updateMove();
 
     // ROS
     void rosSpin();

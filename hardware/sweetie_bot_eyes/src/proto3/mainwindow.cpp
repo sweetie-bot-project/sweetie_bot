@@ -7,7 +7,18 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_moveTimer(new QTimer(this)),
     m_blinkTimer(new QTimer(this)),
-    m_updateTimer(new QTimer(this)),
+    m_randomBlinkingTimer(new QTimer(this)),
+
+    m_msBlinkGenerationInterval(500),
+    m_blinkGenerationTime(0),
+    m_timeUntilNextBlink(0),
+
+    // TODO: In future provide several options for simulating different
+    // concentration levels during resting, converstaion and searching behavious
+    m_blinkTimeDistribution(2.0, 0.65),
+    m_uniformDist(0, 1.0),
+
+    m_autoBlinkDelay(50),
 
     m_rightEye(new EyeWindow(false, this)),
     m_leftEye(new EyeWindow(true, this)),
@@ -32,18 +43,32 @@ MainWindow::MainWindow(QWidget *parent) :
     m_rightEye->connectBlinkTimer(m_blinkTimer);
 
     int msUpdateInterval = 16;
-    m_moveTimer->setInterval(msUpdateInterval),
-    m_blinkTimer->setInterval(msUpdateInterval),
+    m_moveTimer->setInterval(msUpdateInterval);
+    m_blinkTimer->setInterval(msUpdateInterval);
+    m_randomBlinkingTimer->setInterval(m_msBlinkGenerationInterval);
 
-    connect(m_updateTimer, SIGNAL(timeout()), this, SLOT(Update()));
-    m_updateTimer->start(msUpdateInterval);
+    connect(m_blinkTimer, SIGNAL(timeout()), this, SLOT(updateBlink()));
+    connect(m_moveTimer, SIGNAL(timeout()), this, SLOT(updateMove()));
+    connect(m_randomBlinkingTimer, SIGNAL(timeout()), this, SLOT(randomBlinkingGeneration()));
 
     ros::param::get("~publish_pixmap", m_publishPixmap);
+
+    bool blinkingGenerationEnabled = false;
+    ros::param::get("~start_blinking", blinkingGenerationEnabled);
+    ros::param::get("~auto_blink_delay", m_autoBlinkDelay);
+
+    m_noiseGenerator.seed(m_rd());
+    if (blinkingGenerationEnabled)  m_randomBlinkingTimer->start();
+
 
     // Start ros and abandon it
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(rosSpin()));
     timer->start(10);
+}
+
+MainWindow::~MainWindow() {
+    m_randomBlinkingTimer->stop();
 }
 
 void MainWindow::rosSpin()
@@ -173,6 +198,13 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
 	switch(str2hash(msg->type.c_str())) {
     case str2hash("eyes/action"):
         switch(str2hash(msg->command.c_str())){
+        case str2hash("start_blinking"):
+            m_randomBlinkingTimer->start();
+            break;
+        case str2hash("stop_blinking"):
+            m_randomBlinkingTimer->stop();
+            break;
+
         case str2hash("blink"):
             blinkBothEyes(100);
             break;
@@ -284,16 +316,29 @@ void MainWindow::blinkBothEyes(int ms) {
     }
 }
 
-void MainWindow::Update() {
-    if (m_blinkTimer->isActive()) {
-        if (!m_leftEye->isBlinking() && !m_rightEye->isBlinking()) {
-            m_blinkTimer->stop();
-        }
-    }
+void MainWindow::randomBlinkingGeneration() {
+    m_blinkGenerationTime += m_msBlinkGenerationInterval;
 
-    if (m_moveTimer->isActive()) {
-        if (!m_leftEye->isMoving() && !m_rightEye->isMoving()) {
-            m_moveTimer->stop();
-        }
+    if (m_blinkGenerationTime >= m_timeUntilNextBlink && !m_blinkTimer->isActive()) {
+        m_blinkGenerationTime = 0;
+
+        auto probability = m_uniformDist(m_noiseGenerator);
+
+        m_timeUntilNextBlink = 1000 * floor(boost::math::quantile(m_blinkTimeDistribution, probability));
+        m_timeUntilNextBlink = std::max(1000, m_timeUntilNextBlink);
+
+        blinkBothEyes(m_autoBlinkDelay);
+    }
+}
+
+void MainWindow::updateBlink() {
+    if (!m_leftEye->isBlinking() && !m_rightEye->isBlinking()) {
+        m_blinkTimer->stop();
+    }
+}
+
+void MainWindow::updateMove() {
+    if (!m_leftEye->isMoving() && !m_rightEye->isMoving()) {
+        m_moveTimer->stop();
     }
 }
