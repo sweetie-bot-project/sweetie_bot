@@ -45,7 +45,6 @@ catkin_install_python(PROGRAMS
     scripts/servos_models_cpf_generator.pl
     scripts/set-base-link-height.py
     scripts/set-named-joints-pose.py
-    scripts/step-sequence-execute
     scripts/step-sequence-strip
     scripts/step-sequence-strip-supports
     scripts/store
