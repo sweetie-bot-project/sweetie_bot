@@ -706,9 +706,10 @@ void EyeWindow::computeEye() {
 
 void EyeWindow::computeEyeTransform() {
     m_eyeTransform.reset();
-    m_eyeTransform.translate(m_state.center.x(), m_state.center.y());
+    // @Temporary: Add separate rotation points for eyeTransform and eye itself
+    m_eyeTransform.translate(WIDTH/2, HEIGHT/2);
     m_eyeTransform.rotate(m_state.angle);
-    m_eyeTransform.translate(-m_state.center.x(), -m_state.center.y());
+    m_eyeTransform.translate(-WIDTH/2, -HEIGHT/2);
 }
 
 
