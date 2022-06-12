@@ -482,31 +482,30 @@ void EyeWindow::move(MoveFlags flags, int ms, EyeState targetState, bool moveWit
     // @Note: Right now we don't allow several simultanious motions to execute.
     //        But in the long run, it will be preferable to enable asyncronious
     //        movements, as it'll more smoothly integrate with other parts of the robot system.
-    if (m_isMoving)  return;
+    if (m_isMoving || m_isMoveDryRunning)  return;
 
-    m_isMoving = true;
     m_isMoveDryRunning = dryRun;
 
-    m_currentMovingTime = 0;
     m_movingTime = ms;
     m_moveFlags = flags;
+    m_currentMovingTime = 0;
 
     m_isMoveWithBlink = moveWithBlink;
 
     // Disabling certain movement to not race with blink motion
-    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~EyeRotation);
-    if (m_isBlinking)       flags = (MoveFlags)(flags & ~TopEyelidHeight);
-    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~TopEyelidRotation);
-    if (m_isBlinking)       flags = (MoveFlags)(flags & ~BottomEyelidHeight);
-    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~BottomEyelidRotation);
+    if (!dryRun) {
+        if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~EyeRotation);
+        if (m_isBlinking)       flags = (MoveFlags)(flags & ~TopEyelidHeight);
+        if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~TopEyelidRotation);
+        if (m_isBlinking)       flags = (MoveFlags)(flags & ~BottomEyelidHeight);
+        if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~BottomEyelidRotation);
+    }
 
-    auto &currentState = m_state;
-    m_startAnimationState.assignSelectively(currentState, flags);
     m_endAnimationState.assignSelectively(targetState, flags);
 
     // Assign color immediately to the current state, without animating
     if (flags & EyeColors) {
-        currentState.assignSelectively(targetState, (MoveFlags)EyeColors);
+        m_state.assignSelectively(targetState, (MoveFlags)EyeColors);
     }
 
     if (!m_isMoveWithBlink) {
@@ -517,15 +516,25 @@ void EyeWindow::move(MoveFlags flags, int ms, EyeState targetState, bool moveWit
 }
 
 void EyeWindow::updateMovingState() {
-    m_currentMovingTime += m_msUpdateMove;
-
     // Disabling certain movement to not race with blink motion
-    MoveFlags flags = m_moveFlags;
-    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~EyeRotation);
-    if (m_isBlinking)       flags = (MoveFlags)(flags & ~TopEyelidHeight);
-    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~TopEyelidRotation);
-    if (m_isBlinking)       flags = (MoveFlags)(flags & ~BottomEyelidHeight);
-    if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~BottomEyelidRotation);
+    auto &flags = m_moveFlags;
+    if (!m_isMoveDryRunning) {
+        if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~EyeRotation);
+        if (m_isBlinking)       flags = (MoveFlags)(flags & ~TopEyelidHeight);
+        if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~TopEyelidRotation);
+        if (m_isBlinking)       flags = (MoveFlags)(flags & ~BottomEyelidHeight);
+        if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~BottomEyelidRotation);
+    }
+
+
+    // Assign start animation state at first iteration, so it would be up to date in the case of delayed move
+    if (m_currentMovingTime == 0) {
+        m_isMoving = true;
+
+        m_startAnimationState.assignSelectively(m_state, flags);
+    }
+
+    m_currentMovingTime += m_msUpdateMove;
 
     if (m_currentMovingTime > m_movingTime) {
         // Making sure current state is in the end position
@@ -533,7 +542,9 @@ void EyeWindow::updateMovingState() {
 
         m_currentMovingTime = 0;
         m_isMoving = false;
+
         if (!m_isMoveDryRunning)  m_moveTimer->stop();
+        m_isMoveDryRunning = false;
     } else {
         auto relativeMovingTime = m_currentMovingTime / (float)m_movingTime;
         auto interpolatedState = lerp(m_startAnimationState, m_endAnimationState, relativeMovingTime);
@@ -548,32 +559,38 @@ void EyeWindow::updateMovingState() {
 }
 
 void EyeWindow::blink(int duration_ms, bool dryRun) {
-    if (m_isBlinking)  return;
+    if (m_isBlinking || m_isBlinkDryRunning)  return;
 
     m_isBlinkDryRunning = dryRun;
 
-    m_isBlinking = true;
     m_isGoingDown = true;
     m_blinkDuration = 2 * duration_ms; // Moving forward and backward takes 2 times longer
-
-    // Save current eyelids state
-    m_startAnimationState.assignOnlyBlinkState(m_state);
-
-    // Compute target eyelids state
-    float eyelidsTouchHightRatio = 0.8;
-    float eyelidsTouchHight = lerp(m_state.topEyelidY, m_state.bottomEyelidY, eyelidsTouchHightRatio);
-    float eyelidsTouchAngle = (m_state.topEyelidAngle + m_state.bottomEyelidAngle) * .5;
-
-    m_endAnimationState.topEyelidY = eyelidsTouchHight;
-    m_endAnimationState.bottomEyelidY = eyelidsTouchHight;
-    m_endAnimationState.topEyelidAngle = eyelidsTouchAngle;
-    m_endAnimationState.bottomEyelidAngle = eyelidsTouchAngle;
-    m_endAnimationState.pupilRadius = 0;
+    m_currentBlinkingTime = 0;
 
     if (!dryRun)  m_blinkTimer->start();
 }
 
 void EyeWindow::updateBlinkState() {
+    // Assign start animation state at first iteration as well as dependent end animation state,
+    // so they would be up to date in the calse of delayed move
+    if (m_currentBlinkingTime == 0) {
+        m_isBlinking = true;
+
+        auto initState = m_state;
+        m_startBlinkAnimationState.assignOnlyBlinkState(initState);
+
+        // Compute target eyelids state
+        float eyelidsTouchHightRatio = 0.8;
+        float eyelidsTouchHight = lerp(initState.topEyelidY, initState.bottomEyelidY, eyelidsTouchHightRatio);
+        float eyelidsTouchAngle = (initState.topEyelidAngle + initState.bottomEyelidAngle) * .5;
+
+        m_endBlinkAnimationState.topEyelidY = eyelidsTouchHight;
+        m_endBlinkAnimationState.bottomEyelidY = eyelidsTouchHight;
+        m_endBlinkAnimationState.topEyelidAngle = eyelidsTouchAngle;
+        m_endBlinkAnimationState.bottomEyelidAngle = eyelidsTouchAngle;
+        m_endBlinkAnimationState.pupilRadius = 0;
+    }
+
     m_currentBlinkingTime += m_msUpdateMove;
 
     if (m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration * 0.5 + m_blinkDelay)) {
@@ -582,17 +599,19 @@ void EyeWindow::updateBlinkState() {
 
         if(m_isMoveWithBlink) {
             auto moveOnBlinkConfig = (MoveFlags)(m_moveFlags & (EyePosition | EyeSize | PupilSize | PupilRotation));
-            m_state.assignSelectively(m_endAnimationState, moveOnBlinkConfig);
+            m_state.assignSelectively(m_endBlinkAnimationState, moveOnBlinkConfig);
             computeFrame();
         }
     } else if (!m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration + m_blinkDelay)) {
         // Make sure end blink state match starting state
-        m_state.assignOnlyBlinkState(m_startAnimationState);
+        m_state.assignOnlyBlinkState(m_startBlinkAnimationState);
 
         // Stop movement
         m_currentBlinkingTime = 0;
         m_isBlinking = false;
+
         if (!m_isBlinkDryRunning)  m_blinkTimer->stop();
+        m_isBlinkDryRunning = false;
     } else {
         auto relativeBlinkingTime = 2 * m_currentBlinkingTime / (float)m_blinkDuration; // defined on [0;2] range
 
@@ -608,23 +627,28 @@ void EyeWindow::updateBlinkState() {
             relativeBlinkingTime = 2.0 - relativeBlinkingTime;
         }
 
-        m_state.topEyelidY    = lerp(m_startAnimationState.topEyelidY, m_endAnimationState.topEyelidY, relativeBlinkingTime);
-        m_state.bottomEyelidY = lerp(m_startAnimationState.bottomEyelidY, m_endAnimationState.bottomEyelidY, relativeBlinkingTime);
+        m_state.topEyelidY    = lerp(m_startBlinkAnimationState.topEyelidY, m_endBlinkAnimationState.topEyelidY, relativeBlinkingTime);
+        m_state.bottomEyelidY = lerp(m_startBlinkAnimationState.bottomEyelidY, m_endBlinkAnimationState.bottomEyelidY, relativeBlinkingTime);
 
         relativeBlinkingTime      = bezier_1d_cubic(0.1, -0.25, relativeBlinkingTime);
-        m_state.topEyelidAngle    = lerp(m_startAnimationState.topEyelidAngle, m_endAnimationState.topEyelidAngle, relativeBlinkingTime);
-        m_state.bottomEyelidAngle = lerp(m_startAnimationState.bottomEyelidAngle, m_endAnimationState.bottomEyelidAngle, relativeBlinkingTime);
+        m_state.topEyelidAngle    = lerp(m_startBlinkAnimationState.topEyelidAngle, m_endBlinkAnimationState.topEyelidAngle, relativeBlinkingTime);
+        m_state.bottomEyelidAngle = lerp(m_startBlinkAnimationState.bottomEyelidAngle, m_endBlinkAnimationState.bottomEyelidAngle, relativeBlinkingTime);
 
         // Contract aperture while blinking
         auto relativeContractionTime = 6 * relativeBlinkingTime;
-        m_state.pupilRadius = lerp(m_startAnimationState.pupilRadius, m_endAnimationState.pupilRadius, relativeContractionTime);
-        m_state.pupilRadius = std::max(m_state.pupilRadius, m_endAnimationState.pupilRadius);
+        m_state.pupilRadius = lerp(m_startBlinkAnimationState.pupilRadius, m_endBlinkAnimationState.pupilRadius, relativeContractionTime);
+        m_state.pupilRadius = std::max(m_state.pupilRadius, m_endBlinkAnimationState.pupilRadius);
     }
 
     computeEyelidTransform();
     computeEyelid();
     computeEye();
     update();
+}
+
+void EyeWindow::resetState() {
+    m_state.resetColors();
+    m_state.resetConfiguration();
 }
 
 void EyeWindow::computeFrame() {

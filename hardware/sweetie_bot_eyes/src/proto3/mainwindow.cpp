@@ -2,6 +2,8 @@
 #include "consts.h"
 #include "eye_state.h"
 
+#include <QThread>
+
 MainWindow::MainWindow(QWidget *parent) :
     QOpenGLWidget(parent),
 
@@ -222,6 +224,9 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
         break;
 
     case str2hash("eyes/emotion"): {
+        bool restartAutoblink = m_randomBlinkingTimer->isActive();
+        if (restartAutoblink)  m_randomBlinkingTimer->stop();
+
         auto emotionName = msg->command.c_str();
 
         auto &leftState  = m_leftEye->getState();
@@ -234,12 +239,11 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
         if (str2hash(msg->command.c_str()) != str2hash("reset")) {
             moveBothEyes((MoveFlags)(~EyePosition), 200, targetLeftState, targetRightState);
         } else {
-            leftState.resetColors();
-            leftState.resetConfiguration();
-
-            rightState.resetColors();
-            rightState.resetConfiguration();
+            m_leftEye->resetState();
+            m_rightEye->resetState();
         }
+
+        if (restartAutoblink)  m_randomBlinkingTimer->start();
         break;
     }
     }
@@ -299,24 +303,34 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg) {
 }
 
 void MainWindow::moveBothEyes(MoveFlags flags, int ms, EyeState targetStateLeft, EyeState targetStateRight, bool moveWithBlink) {
-    if (!m_moveTimer->isActive()) {
+    if (!m_leftEye->isMoving() && !m_rightEye->isMoving()) {
         bool dryRun = true; // Running moves in dry mode, without starting a timer
         m_leftEye->move(flags, ms, targetStateLeft, moveWithBlink, dryRun);
         m_rightEye->move(flags, ms, targetStateRight, moveWithBlink, dryRun);
 
-        // Only now fire up move on both eyes simultaneously
-        m_moveTimer->start();
+        if (flags & ~EyePosition && m_blinkTimer->isActive()) {
+            // Delay move start until blink's finished
+            m_delayedMoveWaiting = true;
+        } else {
+            // Only now fire up move on both eyes simultaneously
+            m_moveTimer->start();
+        }
     }
 }
 
 void MainWindow::blinkBothEyes(int ms) {
-    if (!m_blinkTimer->isActive()) {
+    if (!m_leftEye->isBlinking() && !m_rightEye->isBlinking()) {
         bool dryRun = true; // Running blinks in dry mode, without starting a timer
         m_leftEye->blink(ms, dryRun);
         m_rightEye->blink(ms, dryRun);
 
-        // Only now fire up blink on both eyes simultaneously
-        m_blinkTimer->start();
+        if (m_moveTimer->isActive()) {
+            // Delay blink start until move's finished
+            m_delayedBlinkWaiting = true;
+        } else {
+            // Only now fire up blink on both eyes simultaneously
+            m_blinkTimer->start();
+        }
     }
 }
 
@@ -338,11 +352,23 @@ void MainWindow::randomBlinkingGeneration() {
 void MainWindow::updateBlink() {
     if (!m_leftEye->isBlinking() && !m_rightEye->isBlinking()) {
         m_blinkTimer->stop();
+
+        // Run waiting move
+        if (m_delayedMoveWaiting) {
+            m_delayedMoveWaiting = false;
+            m_moveTimer->start();
+        }
     }
 }
 
 void MainWindow::updateMove() {
     if (!m_leftEye->isMoving() && !m_rightEye->isMoving()) {
         m_moveTimer->stop();
+
+        // Run waiting blink
+        if (m_delayedBlinkWaiting) {
+            m_delayedBlinkWaiting = false;
+            m_blinkTimer->start();
+        }
     }
 }

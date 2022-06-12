@@ -89,7 +89,7 @@ struct EyeState {
     }
 
     // @Note: All color assigned at once, so they all must be valid!
-    //        May be should rethink the process later.
+    //        Maybe should rethink the process later.
     inline void assignSelectively(EyeState source, MoveFlags f) {
         if (f & EyePosition)  center = source.center;
         if (f & EyeRotation)  angle  = source.angle;

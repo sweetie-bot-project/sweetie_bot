@@ -35,6 +35,9 @@ private:
     QTimer *m_blinkTimer;
     QTimer *m_randomBlinkingTimer;
 
+    bool m_delayedBlinkWaiting = false;
+    bool m_delayedMoveWaiting  = false;
+
     // Natural random blinkng generation
     int m_blinkGenerationTime;
     int m_msBlinkGenerationInterval;

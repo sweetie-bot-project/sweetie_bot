@@ -26,8 +26,11 @@ private:
     QOpenGLFramebufferObject *m_fbo;
 
     EyeState m_state;
+
     EyeState m_startAnimationState;
     EyeState m_endAnimationState;
+    EyeState m_startBlinkAnimationState;
+    EyeState m_endBlinkAnimationState;
 
     //octagon points
     QVector<QPointF>m_Pin;
@@ -112,6 +115,7 @@ public:
     bool isBlinking() const { return m_isBlinking; }
 
     EyeState & getState() { return m_state; }
+    void resetState();
 
     void initializeGL();
     void paintGL();
