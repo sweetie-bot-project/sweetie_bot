@@ -154,7 +154,7 @@ target_link_libraries(proto2_eye
 
 
 # proto3 eyes
-add_executable(proto3_eyes src/proto3/main.cpp src/proto3/mainwindow.cpp)
+add_executable(proto3_eyes src/proto3/main.cpp src/proto3/mainwindow.cpp src/proto3/eyewindow.cpp)
 qt5_use_modules(proto3_eyes Widgets)
 add_dependencies(proto3_eyes
   ${catkin_EXPORTED_TARGETS}
