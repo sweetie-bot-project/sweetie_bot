@@ -103,6 +103,22 @@ sp {verbolize*elaborate*speech-visualization-tags
 	(<cmd> ^tag <value>)
 }
 
+# SEND EMOTION MESSAGE
+
+# speech visualization: construct SpeechVisualization command
+sp {verbolize*propose*emotion
+	(state <s> ^substate verbolize ^args <args> ^process <proc> ^mem.emotion <emotion>)
+	(<proc> -^emotion-is-displayed)
+	(<args> ^animation-tag <tag>)
+	(<emotion> ^tag <tag> ^name <name>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name emotion ^type automatic ^priority 24)
+	(<op> ^parent <proc> ^attribute emotion-is-displayed ^link-value yes)
+	(<op> ^add-output-command textcmd ^output-command-args <cmd>)
+	(<cmd> ^type |eyes/emotion| ^command <name>)
+}
+
 # SELECT AND PERFORM ANIMATION
 
 # select general animations
@@ -231,6 +247,17 @@ sp {verbolize*propose*terminate-verbolize
 	(<s> ^operator <op> +, =)
 	(<op> ^name terminate-verbolize ^type cognition automatic ^finish-process <proc> ^finish-status succeed ^add-event <ev-new>)
 	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
+}
+
+# terminate emotion if it is displayed
+# TODO: react on event
+sp {verbolize*elaborate*terminate-emotion
+	(state <s> ^bottom-state 1 ^operator <op> +)
+	(<op> ^name terminate-verbolize ^type cognition automatic ^finish-process <proc>)
+	(<proc> ^emotion-is-displayed)
+-->
+	(<op> ^add-output-command textcmd ^output-command-args <cmd>)
+	(<cmd> ^type |eyes/emotion| ^command normal)
 }
 
 #sp {verbolize*propose*on-text-action-succeed
