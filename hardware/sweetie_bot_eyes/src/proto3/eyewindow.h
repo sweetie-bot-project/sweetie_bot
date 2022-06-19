@@ -22,13 +22,18 @@ private:
     bool m_isLeftEye;
     bool m_publishPixmap;
     bool m_debug_mode_enabled = false;
+    bool m_mouseEnabled;
 
     QOpenGLFramebufferObject *m_fbo;
 
     EyeState m_state;
 
-    EyeState m_startAnimationState;
-    EyeState m_endAnimationState;
+    EyeAnimation  m_tempAnimation;
+    EyeAnimation *m_playingAnimation;
+    int m_currentAnimationStateId;
+
+    EyeState m_lastAnimationState;
+
     EyeState m_startBlinkAnimationState;
     EyeState m_endBlinkAnimationState;
 
@@ -107,9 +112,11 @@ public:
     void connectBlinkTimer(QTimer *timer);
 
     void move(MoveFlags flags, int ms, EyeState targetState, bool moveWithBlink = false, bool dryRun = false);
+    void move(MoveFlags flags, EyeAnimation *targetSequence, bool moveWithBlink = false, bool dryRun = false);
     void blink(int ms, bool dryRun = false);
 
     void keyPressEvent(QKeyEvent *e);
+    void mouseMoveEvent(QMouseEvent *e);
 
     bool isMoving() const { return m_isMoving; }
     bool isBlinking() const { return m_isBlinking; }

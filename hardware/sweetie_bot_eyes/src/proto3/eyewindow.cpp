@@ -12,6 +12,7 @@ EyeWindow::EyeWindow(bool isLeftEye, QWidget *parent) :
     QOpenGLWidget(parent),
 
     m_publishPixmap(false),
+    m_mouseEnabled(false),
 
     m_state(isLeftEye),
 
@@ -202,6 +203,25 @@ QPointF EyeWindow::rotatePoint(QPointF point, QPointF center, float angle) {
     return QPointF(newx,newy);
 }
 
+void EyeWindow::mouseMoveEvent(QMouseEvent *e) {
+    if (!m_mouseEnabled)  return;
+
+    QPointF new_position;
+    switch (m_state.side) {
+    case RIGHT:
+        new_position = QPointF(HEIGHT - e->y(), e->x());
+        break;
+    case LEFT:
+        new_position = QPointF(e->y(), WIDTH - e->x());
+        break;
+    }
+
+    new_position = rotatePoint(new_position, QPointF(WIDTH/2., HEIGHT/2.), -m_state.angle);
+    m_state.center = new_position;
+
+    computeFrame();
+}
+
 void EyeWindow::keyPressEvent(QKeyEvent *e) {
     auto &s = m_state;
 
@@ -378,6 +398,11 @@ void EyeWindow::keyPressEvent(QKeyEvent *e) {
         blink(m_blinkDefaultDuration);
     	break;
 
+        // Mouse toggle
+    case Qt::Key_O:
+        m_mouseEnabled = !m_mouseEnabled;
+        break;
+
     // Random movements control
     case Qt::Key_Y:
         if(m_msBetweenMovement >= 1000) {
@@ -479,33 +504,39 @@ QPainterPath EyeWindow::computeShinePath(int dx, int dy, int r1, int r2, int ang
 }
 
 void EyeWindow::move(MoveFlags flags, int ms, EyeState targetState, bool moveWithBlink, bool dryRun) {
+    if (m_isMoving || m_isMoveDryRunning)  return;
+
+    m_tempAnimation.clear();
+    m_tempAnimation.appendState(targetState, ms);
+    move(flags, &m_tempAnimation, moveWithBlink, dryRun);
+}
+
+void EyeWindow::move(MoveFlags flags, EyeAnimation *targetSequence, bool moveWithBlink, bool dryRun) {
     // @Note: Right now we don't allow several simultanious motions to execute.
     //        But in the long run, it will be preferable to enable asyncronious
     //        movements, as it'll more smoothly integrate with other parts of the robot system.
     if (m_isMoving || m_isMoveDryRunning)  return;
 
-    m_isMoveDryRunning = dryRun;
+    assert(targetSequence->msDurations.size() == targetSequence->states.size());
+    auto statesCount = targetSequence->states.size();
+    if (statesCount == 0)  return;
 
-    m_movingTime = ms;
+    // Currently we're not allow move with blink for more than one animation state
+    assert(!moveWithBlink || statesCount == 1);
+
+    m_isMoveDryRunning = dryRun;
+    m_isMoveWithBlink = moveWithBlink;
     m_moveFlags = flags;
+
+    m_currentAnimationStateId = 0;
     m_currentMovingTime = 0;
 
-    m_isMoveWithBlink = moveWithBlink;
-
-    // Disabling certain movement to not race with blink motion
-    if (!dryRun) {
-        if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~EyeRotation);
-        if (m_isBlinking)       flags = (MoveFlags)(flags & ~TopEyelidHeight);
-        if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~TopEyelidRotation);
-        if (m_isBlinking)       flags = (MoveFlags)(flags & ~BottomEyelidHeight);
-        if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~BottomEyelidRotation);
-    }
-
-    m_endAnimationState.assignSelectively(targetState, flags);
+    m_movingTime = targetSequence->msDurations[m_currentAnimationStateId];
+    m_playingAnimation = targetSequence;
 
     // Assign color immediately to the current state, without animating
     if (flags & EyeColors) {
-        m_state.assignSelectively(targetState, (MoveFlags)EyeColors);
+        m_state.assignSelectively(targetSequence->states[statesCount - 1], (MoveFlags)EyeColors);
     }
 
     if (!m_isMoveWithBlink) {
@@ -516,7 +547,7 @@ void EyeWindow::move(MoveFlags flags, int ms, EyeState targetState, bool moveWit
 }
 
 void EyeWindow::updateMovingState() {
-    // Disabling certain movement to not race with blink motion
+    // Disabling certain movements to not race with blink motion
     auto &flags = m_moveFlags;
     if (!m_isMoveDryRunning) {
         if (m_isMoveWithBlink)  flags = (MoveFlags)(flags & ~EyeRotation);
@@ -531,23 +562,31 @@ void EyeWindow::updateMovingState() {
     if (m_currentMovingTime == 0) {
         m_isMoving = true;
 
-        m_startAnimationState.assignSelectively(m_state, flags);
+        m_lastAnimationState.assignSelectively(m_state, flags);
     }
 
     m_currentMovingTime += m_msUpdateMove;
 
     if (m_currentMovingTime > m_movingTime) {
         // Making sure current state is in the end position
-        m_state.assignSelectively(m_endAnimationState, flags);
-
+        m_state.assignSelectively(m_playingAnimation->states[m_currentAnimationStateId], flags);
         m_currentMovingTime = 0;
-        m_isMoving = false;
 
-        if (!m_isMoveDryRunning)  m_moveTimer->stop();
-        m_isMoveDryRunning = false;
+        if (m_currentAnimationStateId < (m_playingAnimation->states.size() - 1)) {
+            // Continue to the next animation state
+            m_currentAnimationStateId++;
+
+            m_movingTime = m_playingAnimation->msDurations[m_currentAnimationStateId];
+        } else {
+            m_isMoving = false;
+
+            if (!m_isMoveDryRunning)  m_moveTimer->stop();
+            m_isMoveDryRunning = false;
+        }
     } else {
         auto relativeMovingTime = m_currentMovingTime / (float)m_movingTime;
-        auto interpolatedState = lerp(m_startAnimationState, m_endAnimationState, relativeMovingTime);
+        auto &nextAnimationState = m_playingAnimation->states[m_currentAnimationStateId];
+        auto interpolatedState = lerp(m_lastAnimationState, nextAnimationState, relativeMovingTime);
 
         m_state.assignSelectively(interpolatedState, flags);
     }

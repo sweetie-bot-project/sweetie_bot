@@ -2,6 +2,7 @@
 #define EYESTATE_H
 
 #include "consts.h"
+#include <vector>
 
 class QPointF;
 class QColor;
@@ -112,6 +113,32 @@ struct EyeState {
         }
     }
 };
+
+struct EyeAnimation {
+    std::vector<EyeState> states;
+    std::vector<int> msDurations;
+
+    void appendState(EyeState state, int ms) {
+        states.push_back(state);
+        msDurations.push_back(ms);
+    }
+
+    void clear() {
+        states.clear();
+        msDurations.clear();
+    }
+};
+
+struct EyesAnimation {
+    EyeAnimation leftEyeAnimation;
+    EyeAnimation rightEyeAnimation;
+
+    void appendState(EyeState leftState, EyeState rightState, int ms) {
+        leftEyeAnimation.appendState(leftState, ms);
+        rightEyeAnimation.appendState(rightState, ms);
+    }
+};
+
 
 inline float lerp(float first_value, float second_value, float t) {
     return first_value * (1 - t) + second_value * t;

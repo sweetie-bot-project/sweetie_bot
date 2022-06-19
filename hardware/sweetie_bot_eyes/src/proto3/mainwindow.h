@@ -19,6 +19,8 @@
 #include <boost/math/distributions/lognormal.hpp>
 #include <random>
 
+#include <unordered_map>
+
 class MainWindow : public QOpenGLWidget {
     Q_OBJECT
 
@@ -48,6 +50,7 @@ private:
     std::random_device m_rd;
     std::default_random_engine m_noiseGenerator;
 
+    std::unordered_map<std::string, EyesAnimation *> m_animations;
 
     // ROS
     ros::NodeHandle node_;

@@ -219,6 +219,8 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
             break;
             // TODO: Add eye roll
             // TODO: Add eyes close
+            // TODO: Add aperture movements
+            // TODO: Add randomized eye jumps
 
         }				
         break;
