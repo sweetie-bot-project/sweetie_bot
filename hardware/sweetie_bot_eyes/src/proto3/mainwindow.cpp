@@ -102,7 +102,7 @@ EyeState MainWindow::generateEmotion(const EyeState &baseState, const char *emot
     case str2hash("red_eyes"):
         s.resetColors();
         s.eyeColor = QColor(Qt::red);
-        s.eyelidColor = QColor(166,32,55);
+        s.eyelidColor = QColor(117,15,32);
         s.eyelidOutlineColor = QColor(0,0,0);
         s.whiteAreaColor = QColor(Qt::white);
         break;
@@ -116,7 +116,7 @@ EyeState MainWindow::generateEmotion(const EyeState &baseState, const char *emot
     case str2hash("unamused_look"):
         s.resetConfiguration();
         s.topEyelidAngle = -2;
-        s.topEyelidY = 290;
+        s.topEyelidY = 320;
         break;
 
     case str2hash("surprised_look"):
@@ -134,14 +134,16 @@ EyeState MainWindow::generateEmotion(const EyeState &baseState, const char *emot
     case str2hash("happy_look"):
         s.resetConfiguration();
         s.topEyelidY = 100;
-        s.bottomEyelidY = 555;
+        s.bottomEyelidY = 590;
+        s.bottomEyelidAngle = -3;
         break;
 
     case str2hash("tender_look"):
         s.resetConfiguration();
         s.topEyelidAngle = 4;
-        s.topEyelidY = 170;
-        s.bottomEyelidY = 600;
+        s.topEyelidY = 150;
+        s.bottomEyelidAngle = -7;
+        s.bottomEyelidY = 620;
         break;
 
     case str2hash("high_look"):
@@ -172,14 +174,16 @@ EyeState MainWindow::generateEmotion(const EyeState &baseState, const char *emot
 
     case str2hash("raised_right_eyebrow_look"):
         s.resetConfiguration();
+	s.topEyelidAngle = -2;
         if (baseState.side == LEFT)  s.topEyelidY = 119;
-        else                         s.topEyelidY = 263;
+        else                         s.topEyelidY = 320;
         break;
 
     case str2hash("raised_left_eyebrow_look"):
         s.resetConfiguration();
+	s.topEyelidAngle = -2;
         if (baseState.side == RIGHT)  s.topEyelidY = 119;
-        else                          s.topEyelidY = 263;
+        else                          s.topEyelidY = 320;
         break;
 
     case str2hash("evil_look"):

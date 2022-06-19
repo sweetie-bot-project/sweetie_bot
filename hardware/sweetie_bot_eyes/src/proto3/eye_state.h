@@ -43,7 +43,7 @@ struct EyeState {
     float topEyelidAngle       = -5;
     float topEyelidY           = 135;
     float bottomEyelidAngle    = -5;
-    float bottomEyelidY        = 725;
+    float bottomEyelidY        = 740;
 
     // Colors
     QColor eyeColor            = Qt::green;
@@ -70,7 +70,7 @@ struct EyeState {
         topEyelidAngle    = -5;
         topEyelidY        = 135;
         bottomEyelidAngle = -5;
-        bottomEyelidY     = 725;
+        bottomEyelidY     = 740;
     }
 
     inline void resetColors() {
