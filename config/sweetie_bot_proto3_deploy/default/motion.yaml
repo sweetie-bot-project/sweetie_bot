@@ -9,11 +9,14 @@ aggregator_ref:
 kinematics_inv:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
-    eps_pos: 0.0001
-    timeout_pos: 0.003
     eps_vel: 0.01
     zero_vel_at_singularity: true
     max_joint_velocity: 18.7 # 60 grad per discretization period
+    services: [ solver_ik_factory_trac_ik ]
+    solver_ik_factory_trac_ik:
+        kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
+        eps_pos: 0.0001
+        timeout_pos: 0.003
 kinematics_fwd:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
@@ -30,13 +33,11 @@ kinematics_fwd_real:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head ]
 imu_real:
-    priority: 40
-    activity_period: 0.002
     imu_frame: 'base_link'
+    port_name: '/dev/ttyUSB0'
+    baudrate: 115200
     odometry_frame: 'odom_combined'
     tf_prefix: 'real'
-    compass_enable: true
-    pose_publish_divider: 23
 dynamics_inv:
     priority: 20
     legs: [ leg1, leg3, leg4, leg2 ]

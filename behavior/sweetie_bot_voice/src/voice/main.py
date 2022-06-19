@@ -11,7 +11,7 @@ from sweetie_bot_text_msgs.msg import TextActionGoal, TextActionFeedback, TextAc
 
 import gi
 gi.require_version('Gst', '1.0')
-from gi.repository import Gst
+from gi.repository import Gst, GLib
 
 class TTSInterface:
     def speak(self, text):
@@ -178,21 +178,23 @@ class VoiceNode():
         # load voice profiles
         self._voice_profile = {}
         for name, profile_config in profiles_config.items():
-            profile_type = profile_config.get('type')
-            if profile_type == 'rhvoice':
-                # apply LADSPA fix
-                VoiceNode._ladspa_fix()
-                # configure rhvoice_wrapper synthesyzer
-                gstreamer_pipeline = profile_config.get('gstreamer_pipeline')
-                rhvoice_params = profile_config.get('rhvoice_params')
-                self._voice_profile[name] = TTSRhvoiceWrapper(rhvoice_params, gstreamer_pipeline)
-            elif profile_type == 'speechd':
-                speechd_params = copy.deepcopy(profile_config)
-                del speechd_params['type']
-                self._voice_profile[name] = TTSSpeechDispatcher(**speechd_params)
-            else:
-                rospy.logerr('Unknown voice profile "%s" of type: %s' % (name, profile_type))
-                sys.exit(2)
+            try:
+                profile_type = profile_config.get('type')
+                if profile_type == 'rhvoice':
+                    # apply LADSPA fix
+                    VoiceNode._ladspa_fix()
+                    # configure rhvoice_wrapper synthesyzer
+                    gstreamer_pipeline = profile_config.get('gstreamer_pipeline')
+                    rhvoice_params = profile_config.get('rhvoice_params')
+                    self._voice_profile[name] = TTSRhvoiceWrapper(rhvoice_params, gstreamer_pipeline)
+                elif profile_type == 'speechd':
+                    speechd_params = copy.deepcopy(profile_config)
+                    del speechd_params['type']
+                    self._voice_profile[name] = TTSSpeechDispatcher(**speechd_params)
+                else:
+                    rospy.logwarn('Unknown voice profile "%s" of type: %s' % (name, profile_type))
+            except GLib.Error as e:
+                rospy.logwarn("Profile '%s' initalization failed: %s" % (name, e.message))
 
         if len(self._voice_profile) == 0:
             rospy.logerr('At least one voice profile must be specified.')
@@ -203,7 +205,13 @@ class VoiceNode():
         if default_profile == None:
             self._default_profile = next(iter(self._voice_profile.values())) # get 'first' value
         else:
-            self._default_profile = self._voice_profile[default_profile]
+            profile = self._voice_profile.get(default_profile)
+            # check if profile exists
+            if profile is not None:
+                self._default_profile = profile
+            else:
+                rospy.logwarn("Profile '%s' does not exist. Use fallback." % (default_profile,))
+                self._default_profile = next(iter(self._voice_profile.values())) 
 
         # get and configure player
         sound_packages = rospy.get_param('~sound_packages', [])

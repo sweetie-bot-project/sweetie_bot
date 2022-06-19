@@ -93,7 +93,7 @@ kinematics_fwd:configure()
 --
 
 ros:import("sweetie_bot_kinematics")
-depl:loadComponent("kinematics_inv", "sweetie_bot::motion::KinematicsInvTracIK")
+depl:loadComponent("kinematics_inv", "sweetie_bot::motion::KinematicsInv")
 kinematics_inv = depl:getPeer("kinematics_inv")
 -- load configuration from cpf
 kinematics_inv:loadService("marshalling")

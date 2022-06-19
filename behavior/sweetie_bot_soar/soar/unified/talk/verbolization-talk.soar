@@ -83,7 +83,7 @@ sp {verbolization*elaborate*explanation-how-to-talk
 	(<pred1> ^name maybe-do-not-know-how-to-talk ^object <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic explanation-how-to-talk ^type question ^utility 65 ^animation-tag long)
+	(<f> ^topic explanation-how-to-talk ^type question ^utility 65 ^animation-tag long question)
 	(<f> ^text |Видишь карточки передо мной? Чтобы ответить возьми одну и покажи мне. Ответь, используя карточки!|)
 }
 
@@ -130,7 +130,7 @@ sp {verbolization*elaborate*remark-about-ignorance
 	(<pred1> ^name ignor-possibility ^actor <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic ignorance-remark ^utility 60 ^type reaction ^animation-tag notification)
+	(<f> ^topic ignorance-remark ^utility 60 ^type reaction ^animation-tag angry)
 	(<f> ^text |Ты не слышишь меня? Я обратилась к тебе!| |Не надо меня игнорировать.|)
 }
 
@@ -150,7 +150,7 @@ sp {verbolization*elaborate*remark-about-ignor-topic
 	(<pred1> ^name ignor-topic ^actor <obj> ^topic <topic>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic ignor-topic-remark ^utility 60 ^type reaction ^animation-tag notification)
+	(<f> ^topic ignor-topic-remark ^utility 60 ^type reaction ^animation-tag rejection)
 	(<f> ^text |Похоже, тебе не нравится эта тема.| |Хорошо, попробую спросить что-то еще.|)
 }
 
@@ -178,7 +178,7 @@ sp {verbolization*elaborate*remark-about-ignor-me-addition
 	-(<clock> ^just {>= <time>})
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic ignor-me-remark ^utility 70 ^type statement ^animation-tag rejection)
+	(<f> ^topic ignor-me-remark ^utility 70 ^type statement ^animation-tag angry)
 	(<f> ^text |Ты игнорируешь меня!| |Ты не отвечаешь! Невозможно с тобой разговаривать!|)
 }
 
@@ -189,7 +189,7 @@ sp {verbolization*elaborate*remark-about-ignor-me
 	(<pred> ^name ignor-me ^actor <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic ignor-me-remark ^utility 20 ^type statement ^animation-tag rejection)
+	(<f> ^topic ignor-me-remark ^utility 20 ^type statement ^animation-tag angry)
 	(<f> ^text |Я помню, как ты игнорировал меня и не извинился!|)
 }
 
@@ -200,7 +200,7 @@ sp {talk-answered*elaborate*ignor-me-excused
 	(<pred> ^name ignor-me ^actor <obj>)
 -->
 	(<s> ^reaction <r>)
-	(<r> ^topic ignor-me-excused ^type reaction ^animation-tag confirmation)
+	(<r> ^topic ignor-me-excused ^type reaction ^animation-tag confirmation pleased)
 	(<r> ^text |Извинения приняты!|)
 	(<a> ^remove-predicate <pred>)
 }
@@ -216,7 +216,7 @@ sp {verbolization*elaborate*remark-about-nonsense
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic nonsense-remark ^utility 60 ^type reaction ^animation-tag surprise)
-	(<f> ^text |И что ты хотел этим сказать? Не надо просто так махать карточками.| |Не понимаю тебя. Дождись, пока я задам вопрос, потом отвечай.| |Просто покажи карточку с ответом, когда я задам ворос.|)
+	(<f> ^text |И что ты хотел этим сказать? Не надо просто так махать карточками.| |Не понимаю тебя. Дождись, пока я задам вопрос, потом отвечай.| |Просто покажи карточку с ответом, когда я задам вопрос.|)
 }
 
 sp {talk-said*propose*said-about-nonsense
@@ -236,7 +236,7 @@ sp {verbolization*elaborate*remark-about-interruption
 	(<pred1> ^name interrupted-me ^actor <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic interrupt-remark ^utility 60 ^type reaction ^animation-tag notification)
+	(<f> ^topic interrupt-remark ^utility 60 ^type reaction ^animation-tag angry)
 	(<f> ^text |Пожалуйста, не перебивай меня! Показывай карточку, когда я жду ответа.| |Показывай карточку, когда я окончила говорить, а когда я ее увидела --- убирай.|)
 }
 
@@ -259,7 +259,7 @@ sp {verbolization*elaborate*remark-about-nonsense-me-addition
 	-(<clock> ^just {>= <time>})
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic nonsense-me-remark ^utility 60 ^type statement ^animation-tag anger)
+	(<f> ^topic nonsense-me-remark ^utility 60 ^type statement ^animation-tag angry)
 	(<f> ^text |Прекрати говорить чушь!| |Хватит! У меня болит голова от твоих карточек!|)
 }
 
@@ -281,7 +281,7 @@ sp {talk-answered*elaborate*nonsense-me-excused
 	(<pred> ^name nonsense-me ^actor <obj>)
 -->
 	(<s> ^reaction <r>)
-	(<r> ^topic nonsense-me-excused ^type reaction ^animation-tag confirmation)
+	(<r> ^topic nonsense-me-excused ^type reaction ^animation-tag confirmation pleased)
 	(<r> ^text |Извинения приняты!|)
 	(<a> ^remove-predicate <pred>)
 }
@@ -294,7 +294,7 @@ sp {talk-answered*propose*terminate-nonsense-me
 -->
 	(<a> ^remove-predicate <pred>)	
 	(<s> ^reaction <r>)
-	(<r> ^topic nonsense-me-terminated ^type reaction ^animation-tag surprise)
+	(<r> ^topic nonsense-me-terminated ^type reaction ^animation-tag surprise happy)
 	(<r> ^text |Ты научился пользоваться карточками! Силен!| |Теперь ты умеешь пользоваться карточками. Люди поддаются дрессировке!.|)
 }
 
@@ -321,7 +321,7 @@ sp {verbolization*elaborate*missing-speaker*acquitance
 sp {verbolization*elaborate*missing-speaker*not-greeted
 	(state <s> ^substate talk ^object <obj> ^process <proc> ^verbolization.frame <f>)
 	(<f> ^topic missing-speaker)
-	(<proc> ^name waiting-answer ^topic greeting ^object <obj>)
+	(<proc> ^name waiting-answer ^topic surprise ^object <obj>)
 -->
 	(<f> ^text |Похоже, убежал. Робкий собеседник.|)
 }

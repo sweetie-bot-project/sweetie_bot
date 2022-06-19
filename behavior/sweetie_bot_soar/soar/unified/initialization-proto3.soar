@@ -72,6 +72,23 @@ sp {initialization*apply*joint-trajectory
 	(<c8> ^name dance_stamp ^tag dance ^tag talk)
 }
 
+sp {initialization*apply*animation-tag-emotion-mapping
+	(state <s> ^name initialization ^operator <op> ^mem <m>)
+	(<op> ^name initialization ^stage 2)
+-->
+	(<m> ^emotion <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10>)
+	(<c1> ^name normal ^tag general confirmation rejection question greeting pleased)
+	(<c2> ^name unamused_look ^tag rejection)
+	(<c3> ^name surprised_look ^tag surprise greeting brohoof)
+	(<c4> ^name pleasure_look ^tag pleased)
+	(<c5> ^name happy_look ^tag pleased confirmation dance)
+	(<c6> ^name tender_look ^tag pleased greeting brohoof)
+	(<c7> ^name scared_look ^tag scared)
+	(<c8> ^name raised_right_eyebrow_look ^tag surprise question)
+	(<c9> ^name raised_left_eyebrow_look ^tag surprise question)
+	(<c10> ^name evil_look ^tag angry rejection)
+}
+
 #sp {initialization*apply*compound*action
 #	(state <s> ^name initialization ^operator <op> ^mem <m>)
 #	(<op> ^name initialization ^stage 2)

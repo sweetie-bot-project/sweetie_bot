@@ -18,10 +18,10 @@
 		<group unless="$(arg run_real)">
 			<group if="$(eval arg('robot_name') == 'sweetie_bot_proto2')">
 
-				<node name="eye_left"  pkg="sweetie_bot_eyes" type="proto2_eye">
+				<node name="eye_spi_left"  pkg="sweetie_bot_eyes" type="proto2_eye">
 					<param name="is_left" value="true"/>
 				</node>
-				<node name="eye_right" pkg="sweetie_bot_eyes" type="proto2_eye">
+				<node name="eye_spi_right" pkg="sweetie_bot_eyes" type="proto2_eye">
 					<param name="is_left" value="false"/>
 				</node>
 
@@ -29,7 +29,7 @@
 
 			<group if="$(eval arg('robot_name') == 'sweetie_bot_proto3')">
 
-				<node name="eye_left"  pkg="sweetie_bot_eyes" type="proto3_eyes">
+				<node name="eyes_gl"  pkg="sweetie_bot_eyes" type="proto3_eyes">
 				</node>
 
 			</group>

@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import rospy, os, sys
-import xmlrpclib
+from xmlrpc.client import Binary
 from rospy import ServiceProxy
 from actionlib import SimpleActionClient
 
@@ -12,20 +12,20 @@ from sweetie_bot_control_msgs.msg import FollowStepSequenceAction, FollowStepSeq
 from rtt_ros_msgs.srv import Eval, EvalRequest, EvalResponse
 
 def print_help():
-	print 'Usage: {0} STEP_SEQ1 [ STEP_SEQ2 ... ]'.format(sys.argv[0])
-	print '''
+    print('Usage: {0} STEP_SEQ1 [ STEP_SEQ2 ... ]'.format(sys.argv[0]))
+    print('''
 Start servo identification (call "motion/servo_ident" OROCOS component "startIdentification()" opeartion), 
 execute FollowStepSequence stored in STEP_SEQ1, STEP_SEQ2, ... parameters from namespace "/saved_msgs/step_sequence/" 
 and stop then identification. If result is satispying (see log) then servo models of "motion/servo_inv" is updated.
-'''
-	sys.exit(0)
+''')
+    sys.exit(0)
 
 def execute_step_sequence_param(action_client, param):
     # add default parameter path
     param = '/saved_msgs/step_sequence/' + param
     # get ROS parameter value
     param_value = rospy.get_param(param, None)
-    if not isinstance(param_value, xmlrpclib.Binary):
+    if not isinstance(param_value, Binary):
         rospy.logerr('ROS parameter "%s" type is not Binary or it is not defined.' % param)
         return False
     # deserialize message

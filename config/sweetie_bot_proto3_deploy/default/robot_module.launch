@@ -2,12 +2,8 @@
 <!-- run_real and robot launch parameters are always assumed. -->
 <launch>
 	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
-	<!-- openmv camera-->
-	<node ns="hardware" pkg="sweetie_bot_openmv" type="openmv_node" name="openmv_node">
-		<remap from="detections" to="$(arg robot_ns)/detections" />
-		<remap from="markers" to="$(arg robot_ns)/hmi/detections" />
-	</node>
 
+	<!-- Environment for OpenGL eyes  -->
 	<env name="QT_QPA_EGLFS_KMS_CONFIG" value="$(find sweetie_bot_eyes)/config/eglfs.json" />
 	<env name="QT_QPA_PLATFORM" value="eglfs" />
 	<env name="QT_QPA_EGLFS_ALWAYS_SET_MODE" value="1" />
@@ -16,8 +12,12 @@
 	<!-- run eyes on fb device -->
 	<node machine="sweetiebot" name="eyes"  pkg="sweetie_bot_eyes" type="proto3_eyes"></node>
 
+	<!-- Check if path to battery exists -->
+	<arg name="battery_path" default="$(eval eval('_' + '_import_' + '_(\'rospy\')').get_param('/hardware/battery_monitor/sysfs_path', ''))" />
+	<arg name="is_battery_exists" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists('$(arg battery_path)') else 'false')" />
+
 	<!-- run battery monitor -->
-	<node ns="hardware" machine="sweetiebot" name="battery_monitor" pkg="sweetie_bot_battery_monitor" type="battery_monitor">
+	<node ns="hardware" machine="sweetiebot" name="battery_monitor" pkg="sweetie_bot_battery_monitor" type="battery_monitor" if="$(arg is_battery_exists)">
 		<remap from="battery_state" to="$(arg robot_ns)/battery_state" />
 	</node>
 </launch>

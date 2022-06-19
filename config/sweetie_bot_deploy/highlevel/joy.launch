@@ -2,17 +2,24 @@
 <launch>
 	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
 
-	<node ns="$(arg robot_ns)/hmi" pkg="joy" type="joy_node" name="ps3_joy" output="screen" >
-		<remap from="joy" to="joystick" />
-		<param name="dev" type="string" value="/dev/input/js0" />
-		<param name="deadzone" value="0.0012" />
-		<param name="autorepeat_rate" value="5" />
-		<param name="coalesce_interval" value="0.0000" />
-	</node>
-	<node ns="$(arg robot_ns)/hmi" pkg="sweetie_bot_joystick" type="joystick_decoder" name="joy_decoder" output="screen" >
-		<remap from="~config" to="$(arg robot_ns)/conf_file/joystick_config_yaml" />
-		<remap from="~joystick" to="joystick" />
-		<remap from="~eyes_joints_ref" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset" />
-		<remap from="~head_joints_ref" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset" />
-	</node>
+        <!-- Check if device is connected -->
+        <arg name="dev" default="$(eval eval('_' + '_import_' + '_(\'rospy\')').get_param('/hardware/joystick/sysfs_path', ''))" />
+        <arg name="is_dev_exists" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists('$(arg dev)') else 'false')" />
+
+        <group if="$(arg is_dev_exists)">
+		<node ns="$(arg robot_ns)/hmi" pkg="joy" type="joy_node" name="ps3_joy" output="screen" >
+			<remap from="joy" to="joystick" />
+			<param name="dev" type="string" value="/dev/input/js0" />
+			<param name="deadzone" value="0.0012" />
+			<param name="autorepeat_rate" value="5" />
+			<param name="coalesce_interval" value="0.0000" />
+		</node>
+		<node ns="$(arg robot_ns)/hmi" pkg="sweetie_bot_joystick" type="joystick_decoder" name="joy_decoder" output="screen" >
+			<remap from="~config" to="$(arg robot_ns)/conf_file/joystick_config_yaml" />
+			<remap from="~joystick" to="joystick" />
+			<remap from="~eyes_joints_ref" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset" />
+			<remap from="~head_joints_ref" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset" />
+		</node>
+        </group>
+
 </launch>
