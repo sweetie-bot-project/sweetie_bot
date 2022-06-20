@@ -1,0 +1,11 @@
+[Unit]
+Description=Sweetie bot self test
+
+[Service]
+Type=oneshot
+User=sweetie
+Group=sudo
+ExecStart=-/bin/bash -c "source /opt/ros/sweetie_bot/setup.bash && rosrun sweetie_bot_self_test test"
+
+[Install]
+WantedBy=multi-user.target
