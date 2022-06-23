@@ -521,7 +521,7 @@ void EyeWindow::move(MoveFlags flags, EyeAnimation *targetSequence, bool moveWit
     auto statesCount = targetSequence->states.size();
     if (statesCount == 0)  return;
 
-    // Currently we're not allow move with blink for more than one animation state
+    // Currently we're not allowing move with blink for more than one animation state
     assert(!moveWithBlink || statesCount == 1);
 
     m_isMoveDryRunning = dryRun;
@@ -632,15 +632,25 @@ void EyeWindow::updateBlinkState() {
 
     m_currentBlinkingTime += m_msUpdateMove;
 
+    if (m_isGoingDown && m_currentBlinkingTime > m_blinkDuration * 0.5) {
+        if(m_isMoveWithBlink) {
+            auto moveOnBlinkConfig = (MoveFlags)(m_moveFlags & (EyePosition | EyeSize | PupilSize | PupilRotation));
+
+            auto &moveState = m_playingAnimation->states[m_currentAnimationStateId];
+            m_state.assignSelectively(moveState, moveOnBlinkConfig);
+            computeFrame();
+        }
+    }
+
     if (m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration * 0.5 + m_blinkDelay)) {
         // Change direction of eyelid movement
         m_isGoingDown = false;
 
-        if(m_isMoveWithBlink) {
-            auto moveOnBlinkConfig = (MoveFlags)(m_moveFlags & (EyePosition | EyeSize | PupilSize | PupilRotation));
-            m_state.assignSelectively(m_endBlinkAnimationState, moveOnBlinkConfig);
-            computeFrame();
-        }
+        // TODO: Enable more complex animations which involve eyelid movements
+        // Change starting position in which blink will return on move-with-blink motion
+        // if (m_isMoveWithBlink) {
+        //     m_startBlinkAnimationState.assignOnlyBlinkState(m_playingAnimation->states[m_playingAnimation->states.size() - 1]); 
+        // }
     } else if (!m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration + m_blinkDelay)) {
         // Make sure end blink state match starting state
         m_state.assignOnlyBlinkState(m_startBlinkAnimationState);
@@ -651,6 +661,10 @@ void EyeWindow::updateBlinkState() {
 
         if (!m_isBlinkDryRunning)  m_blinkTimer->stop();
         m_isBlinkDryRunning = false;
+
+        // Reset move dry run mode after move-with-blink execution
+        if (m_isMoveWithBlink && m_isMoveDryRunning)  m_isMoveDryRunning = false;
+        m_isMoveWithBlink = false;
     } else {
         auto relativeBlinkingTime = 2 * m_currentBlinkingTime / (float)m_blinkDuration; // defined on [0;2] range
 

@@ -15,6 +15,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_blinkGenerationTime(0),
     m_timeUntilNextBlink(0),
 
+    m_playingAnimation(nullptr),
+
     // TODO: In future provide several options for simulating different
     // concentration levels during resting, converstaion and searching behavious
     m_blinkTimeDistribution(2.0, 0.65),
@@ -62,6 +64,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_noiseGenerator.seed(m_rd());
     if (blinkingGenerationEnabled)  m_randomBlinkingTimer->start();
 
+    initAnimations();
+
 
     // Start ros and abandon it
     QTimer *timer = new QTimer(this);
@@ -77,6 +81,85 @@ void MainWindow::rosSpin()
 {
     if(!ros::ok()) QApplication::quit();
     ros::spinOnce();
+}
+
+// @Hardcode
+void MainWindow::initAnimations() {
+    EyeState stateRight(false);
+    EyeState stateLeft(true);
+    int ms = 50;
+
+    m_animations.insert(std::make_pair<std::string, EyesAnimation *>("eye_roll", new EyesAnimation()));
+
+    // 0
+    stateRight.center = QPointF(209, 400);
+    stateLeft.center = QPointF(209, 400);
+    // stateRight.topEyelidY = 180;
+    // stateLeft.topEyelidY = 180;
+
+    m_animations["eye_roll"]->setInitialStates(stateLeft, stateRight);
+
+    // 1
+    stateRight.center = QPointF(240, 325);
+    stateLeft.center = QPointF(240, 325);
+
+    m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
+
+    // 2
+    stateRight.center = QPointF(253, 270);
+    stateLeft.center = QPointF(253, 270);
+
+    m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
+
+    // 3
+    stateRight.center = QPointF(292, 235);
+    stateLeft.center = QPointF(292, 235);
+
+    m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
+
+    // 4
+    stateRight.center = QPointF(330, 222);
+    stateLeft.center = QPointF(330, 222);
+
+    m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
+
+    // 5
+    stateRight.center = QPointF(376, 216);
+    stateLeft.center = QPointF(376, 216);
+
+    m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
+
+    // 6
+    stateRight.center = QPointF(430, 216);
+    stateLeft.center = QPointF(430, 216);
+
+    m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
+
+    // 7
+    stateRight.center = QPointF(484, 230);
+    stateLeft.center = QPointF(484, 230);
+
+    m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
+
+    // 8
+    stateRight.center = QPointF(537, 266);
+    stateLeft.center = QPointF(537, 266);
+
+    m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
+
+    // 9
+    stateRight.center = QPointF(582, 297);
+    stateLeft.center = QPointF(582, 297);
+
+    m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
+
+    // 10
+    stateRight.center = QPointF(582, 297);
+    stateLeft.center = QPointF(582, 297);
+
+    ms = 500;
+    m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
+
 }
 
 constexpr unsigned int str2hash(const char* str, int h = 0)
@@ -217,17 +300,20 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
         case str2hash("slow_blink"):
             blinkBothEyes(1000);
             break;
-            // TODO: Add eye roll
+
+        case str2hash("eye_roll"):
+            playAnimation(m_animations["eye_roll"]);
+            break;
+
             // TODO: Add eyes close
             // TODO: Add aperture movements
             // TODO: Add randomized eye jumps
-
         }				
         break;
 
     case str2hash("eyes/emotion"): {
-        bool restartAutoblink = m_randomBlinkingTimer->isActive();
-        if (restartAutoblink)  m_randomBlinkingTimer->stop();
+        m_restartAutoblink = m_randomBlinkingTimer->isActive();
+        if (m_restartAutoblink)  m_randomBlinkingTimer->stop();
 
         auto emotionName = msg->command.c_str();
 
@@ -244,8 +330,6 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
             m_leftEye->resetState();
             m_rightEye->resetState();
         }
-
-        if (restartAutoblink)  m_randomBlinkingTimer->start();
         break;
     }
     }
@@ -288,14 +372,17 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg) {
     auto diffRight_x = abs(eyeToX - m_leftEye->getState().center.x());
     auto diffRight_y = abs(eyeToY - m_leftEye->getState().center.y());
 
-    // @Hack: Instead, should've implemented unified update-loop where
-    //        all updating takes place without turning timer on and off at each
-    //        received joint_state mesage, which is not effective at all.
-    if (diffLeft_x  > 1.0 || diffLeft_y  > 1.0 ||
-        diffRight_x > 1.0 || diffRight_y > 1.0) {
-        EyeState state;
-        state.center = QPointF(eyeToX, eyeToY);
-        moveBothEyes(EyePosition, 30, state, state);
+    bool isControllOverrided = m_animationStage > 0 || m_leftEye->isMouseEnabled() || m_rightEye->isMouseEnabled();
+    if (!isControllOverrided) {
+        // @Hack: Instead, should've implemented unified update-loop where
+        //        all updating takes place without turning timer on and off at each
+        //        received joint_state mesage, which is not effective at all.
+        if (diffLeft_x  > 1.0 || diffLeft_y  > 1.0 ||
+            diffRight_x > 1.0 || diffRight_y > 1.0) {
+            EyeState state;
+            state.center = QPointF(eyeToX, eyeToY);
+            moveBothEyes(EyePosition, 30, state, state);
+        }
     }
 
     if (m_publishPixmap) {
@@ -304,11 +391,37 @@ void MainWindow::moveCallback(const sensor_msgs::JointState::ConstPtr& msg) {
     }
 }
 
-void MainWindow::moveBothEyes(MoveFlags flags, int ms, EyeState targetStateLeft, EyeState targetStateRight, bool moveWithBlink) {
+void MainWindow::playAnimation(EyesAnimation *animation) {
+    if (!m_leftEye->isMoving() && !m_rightEye->isMoving()) {
+        m_animationStage = 1;
+        m_playingAnimation = animation;
+
+        m_restartAutoblink = false;
+        if (m_randomBlinkingTimer->isActive()) {
+            m_randomBlinkingTimer->stop();
+            m_restartAutoblink = true;
+        }
+
+        // Saved current states to restore them later
+        m_leftSavedState = m_leftEye->getState();
+        m_rightSavedState = m_rightEye->getState();
+
+        auto &startLeftState = animation->leftEyeAnimation.initState;
+        auto &startRightState = animation->rightEyeAnimation.initState; 
+        bool moveWithBlink = true;
+
+        // :AnimationStages
+        // Animation Stage 1. Initialize first position with blink motion
+        moveBothEyes((MoveFlags)0xFFFF, 30, startLeftState, startRightState, moveWithBlink);
+    }
+}
+
+void MainWindow::moveBothEyes(MoveFlags flags, EyeAnimation *targetSequenceLeft, EyeAnimation *targetSequenceRight) {
     if (!m_leftEye->isMoving() && !m_rightEye->isMoving()) {
         bool dryRun = true; // Running moves in dry mode, without starting a timer
-        m_leftEye->move(flags, ms, targetStateLeft, moveWithBlink, dryRun);
-        m_rightEye->move(flags, ms, targetStateRight, moveWithBlink, dryRun);
+        bool moveWithBlink = false;
+        m_leftEye->move(flags, targetSequenceLeft, moveWithBlink, dryRun);
+        m_rightEye->move(flags, targetSequenceRight, moveWithBlink, dryRun);
 
         if (flags & ~EyePosition && m_blinkTimer->isActive()) {
             // Delay move start until blink's finished
@@ -320,13 +433,37 @@ void MainWindow::moveBothEyes(MoveFlags flags, int ms, EyeState targetStateLeft,
     }
 }
 
+void MainWindow::moveBothEyes(MoveFlags flags, int ms, EyeState targetStateLeft, EyeState targetStateRight, bool moveWithBlink) {
+    if (!m_leftEye->isMoving() && !m_rightEye->isMoving()) {
+        bool dryRun = true; // Running moves in dry mode, without starting a timer
+        m_leftEye->move(flags, ms, targetStateLeft, moveWithBlink, dryRun);
+        m_rightEye->move(flags, ms, targetStateRight, moveWithBlink, dryRun);
+
+        if (flags & ~EyePosition && m_blinkTimer->isActive()) {
+            // Delay move start until blink's finished
+            if (moveWithBlink) {
+                m_delayedBlinkWaiting = true;
+            } else {
+                m_delayedMoveWaiting = true;
+            }
+        } else {
+            if (moveWithBlink) {
+                m_blinkTimer->start();
+            } else {
+                // Only now fire up move on both eyes simultaneously
+                m_moveTimer->start();
+            }
+        }
+    }
+}
+
 void MainWindow::blinkBothEyes(int ms) {
     if (!m_leftEye->isBlinking() && !m_rightEye->isBlinking()) {
         bool dryRun = true; // Running blinks in dry mode, without starting a timer
         m_leftEye->blink(ms, dryRun);
         m_rightEye->blink(ms, dryRun);
 
-        if (m_moveTimer->isActive()) {
+        if (m_moveTimer->isActive() || m_animationStage > 0) {
             // Delay blink start until move's finished
             m_delayedBlinkWaiting = true;
         } else {
@@ -360,6 +497,20 @@ void MainWindow::updateBlink() {
             m_delayedMoveWaiting = false;
             m_moveTimer->start();
         }
+
+        // :AnimationStages
+        // Animation Stage 2. Continue playing main animation sequence
+        if (m_animationStage == 1 && m_playingAnimation != nullptr) {
+            m_animationStage = 2;
+            moveBothEyes((MoveFlags)0xFFFF, &m_playingAnimation->leftEyeAnimation, &m_playingAnimation->rightEyeAnimation);
+        } else if (m_animationStage == 3) {
+            m_animationStage = 0; // Stop animation
+        }
+
+        if (m_animationStage == 0 && m_restartAutoblink) {
+            // Restore autoblink, but not in the middle of animation
+            m_randomBlinkingTimer->start();
+        }
     }
 }
 
@@ -368,9 +519,22 @@ void MainWindow::updateMove() {
         m_moveTimer->stop();
 
         // Run waiting blink
-        if (m_delayedBlinkWaiting) {
+        if (m_delayedBlinkWaiting && m_animationStage == 0) {
             m_delayedBlinkWaiting = false;
             m_blinkTimer->start();
+        }
+
+        // :AnimationStages
+        // Animation Stage 3. Finish animation by restoring saved position with blink motion
+        if (m_animationStage == 2) {
+            m_animationStage = 3;
+            bool moveWithBlink = true;
+            moveBothEyes((MoveFlags)0xFFFF, 30, m_leftSavedState, m_rightSavedState, moveWithBlink);
+        }
+
+        // In the end of animation restore saved position with a blink
+        if (m_animationStage == 0 && m_restartAutoblink) {
+            m_randomBlinkingTimer->start();
         }
     }
 }

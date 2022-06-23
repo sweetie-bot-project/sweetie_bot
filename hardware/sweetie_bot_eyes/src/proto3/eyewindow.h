@@ -120,6 +120,7 @@ public:
 
     bool isMoving() const { return m_isMoving; }
     bool isBlinking() const { return m_isBlinking; }
+    bool isMouseEnabled() const { return m_mouseEnabled; }
 
     EyeState & getState() { return m_state; }
     void resetState();

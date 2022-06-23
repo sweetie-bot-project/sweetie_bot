@@ -115,8 +115,14 @@ struct EyeState {
 };
 
 struct EyeAnimation {
+    EyeState initState;
+
     std::vector<EyeState> states;
     std::vector<int> msDurations;
+
+    void setInitialState(EyeState state) {
+        initState = state;
+    }
 
     void appendState(EyeState state, int ms) {
         states.push_back(state);
@@ -133,7 +139,12 @@ struct EyesAnimation {
     EyeAnimation leftEyeAnimation;
     EyeAnimation rightEyeAnimation;
 
-    void appendState(EyeState leftState, EyeState rightState, int ms) {
+    void setInitialStates(EyeState leftState, EyeState rightState) {
+        leftEyeAnimation.setInitialState(leftState);
+        rightEyeAnimation.setInitialState(rightState);
+    }
+
+    void appendStates(EyeState leftState, EyeState rightState, int ms) {
         leftEyeAnimation.appendState(leftState, ms);
         rightEyeAnimation.appendState(rightState, ms);
     }

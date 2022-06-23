@@ -37,6 +37,14 @@ private:
     QTimer *m_blinkTimer;
     QTimer *m_randomBlinkingTimer;
 
+    EyeState m_leftSavedState;
+    EyeState m_rightSavedState;
+
+    EyesAnimation *m_playingAnimation;
+
+    int  m_animationStage   = 0; // Zero means animation not running
+    bool m_restartAutoblink = false;
+
     bool m_delayedBlinkWaiting = false;
     bool m_delayedMoveWaiting  = false;
 
@@ -64,6 +72,11 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void initAnimations();
+    void playAnimation(EyesAnimation *animation);
+    void animationUpdate();
+
+    void moveBothEyes(MoveFlags flags, EyeAnimation *targetSequenceLeft, EyeAnimation *targetSequenceRight);
     void moveBothEyes(MoveFlags flags, int ms, EyeState targetStateLeft, EyeState targetStateRight, bool moveWithBlink = false);
     void blinkBothEyes(int ms);
 
