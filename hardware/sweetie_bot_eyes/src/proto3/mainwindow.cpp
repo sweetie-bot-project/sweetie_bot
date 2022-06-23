@@ -93,6 +93,9 @@ void MainWindow::initAnimations() {
     auto savedRightState = stateRight;
     auto savedLeftState = stateLeft;
 
+    // random_saccades allocation for future usage
+    m_animations.insert(std::make_pair<std::string, EyesAnimation *>("random_saccades", new EyesAnimation()));
+
     // eye_roll
     m_animations.insert(std::make_pair<std::string, EyesAnimation *>("eye_roll", new EyesAnimation()));
 
@@ -177,12 +180,12 @@ void MainWindow::initAnimations() {
     // 0
     m_animations["aperture_calibration"]->setInitialStates(stateLeft, stateRight);
 
+    ms = 200;
 
     // 1
     stateLeft.pupilRadius = 0.65;
     stateRight.pupilRadius = 0.65;
 
-    ms = 200;
     m_animations["aperture_calibration"]->appendStates(stateLeft, stateRight, ms);
 
 
@@ -353,8 +356,6 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
             break;
 
             // TODO: Add eyes close
-            // TODO: Add aperture movements
-            // TODO: Add randomized eye jumps
         }				
         break;
 
@@ -376,6 +377,11 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
         } else {
             m_leftEye->resetState();
             m_rightEye->resetState();
+        }
+
+        if (m_restartAutoblink) {
+            m_randomMovementTimer->start();
+            m_restartAutoblink = false;
         }
         break;
     }
@@ -486,7 +492,7 @@ void MainWindow::moveBothEyes(MoveFlags flags, int ms, EyeState targetStateLeft,
         m_leftEye->move(flags, ms, targetStateLeft, moveWithBlink, dryRun);
         m_rightEye->move(flags, ms, targetStateRight, moveWithBlink, dryRun);
 
-        if (flags & ~EyePosition && m_blinkTimer->isActive()) {
+        if (flags & ~EyePosition && m_blinkTimer->isActive() && m_animationStage == 0) {
             // Delay move start until blink's finished
             if (moveWithBlink) {
                 m_delayedBlinkWaiting = true;
@@ -532,10 +538,62 @@ void MainWindow::randomMovementGeneration() {
         m_timeUntilNextBlink = std::max(1000, m_timeUntilNextBlink);
 
         blinkBothEyes(m_autoBlinkDelay);
+        return;
     }
 
-    if (rand() % 100 == 0) {
+    if (rand() % 100 == 0 && !m_blinkTimer->isActive()) {
         playAnimation(m_animations["aperture_calibration"]);
+        return;
+    }
+
+    if (rand() % 40 == 0 && !m_leftEye->isMoving() && !m_rightEye->isMoving()) {
+        // Activating animation mode, so control whould be overrided during following animation generation
+        m_animationStage = 1;
+
+        m_animations["random_saccades"]->clear();
+
+        m_animations["random_saccades"]->isInitializedWithBlink = false;
+        m_animations["random_saccades"]->animationFlags = (MoveFlags)EyePosition;
+
+        int saccadesCount = rand() % 3 + 3;
+
+        auto currentLeftState = m_leftEye->getState();
+        auto currentRightState = m_rightEye->getState();
+
+        m_animations["random_saccades"]->setInitialStates(currentLeftState, currentRightState);
+
+        EyeState stateRight(false);
+        EyeState stateLeft(true);
+
+        int ms;
+        auto previousShift = QPointF(0, 0);
+        auto secondPreviousShift = QPointF(0, 0);
+        for (int i = 0; i < saccadesCount; i++) {
+            auto maxShift = 30;
+            auto shift = QPointF(rand() % 2*maxShift - maxShift, rand() % 2*maxShift - maxShift);
+
+            if (secondPreviousShift.x() * shift.x() > 0)  shift.setX(-shift.x());
+            if (secondPreviousShift.y() * shift.y() > 0)  shift.setY(-shift.y());
+
+            secondPreviousShift = previousShift;
+            previousShift = shift;
+
+            stateRight.center = currentRightState.center + shift;
+            stateLeft.center  = currentLeftState.center + shift;
+
+            ms = 30;
+            m_animations["random_saccades"]->appendStates(stateLeft, stateRight, ms);
+
+            // Pause between saccades
+            ms = rand() % 100 + 200;
+            m_animations["random_saccades"]->appendStates(stateLeft, stateRight, ms);
+        }
+
+        ms = 30;
+        m_animations["random_saccades"]->appendStates(currentLeftState, currentRightState, ms);
+
+        playAnimation(m_animations["random_saccades"]);
+        return;
     }
 }
 
@@ -562,6 +620,7 @@ void MainWindow::updateBlink() {
         // Continue autoblink, but not in the middle of animation
         if (m_animationStage == 0 && m_restartAutoblink) {
             m_randomMovementTimer->start();
+            m_restartAutoblink = false;
         }
     }
 }
@@ -594,9 +653,12 @@ void MainWindow::updateMove() {
             moveBothEyes(animationFlags, 100, m_leftSavedState, m_rightSavedState, m_playingAnimation->isInitializedWithBlink);
         }
 
-        if (m_animationStage == 3) {
+        if (m_animationStage == 3 || m_animationStage == 0) {
             m_animationStage = 0;
-            if (m_restartAutoblink)  m_randomMovementTimer->start();
+            if (m_restartAutoblink) {
+                m_randomMovementTimer->start();
+                m_restartAutoblink = false;
+            }
         }
 
     }

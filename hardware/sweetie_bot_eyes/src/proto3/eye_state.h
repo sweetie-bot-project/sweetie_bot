@@ -151,6 +151,14 @@ struct EyesAnimation {
         leftEyeAnimation.appendState(leftState, ms);
         rightEyeAnimation.appendState(rightState, ms);
     }
+
+    void clear() {
+        leftEyeAnimation.clear();
+        rightEyeAnimation.clear();
+
+        animationFlags = (MoveFlags)0xFFFF;
+        isInitializedWithBlink = true;
+    }
 };
 
 
