@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_moveTimer(new QTimer(this)),
     m_blinkTimer(new QTimer(this)),
-    m_randomBlinkingTimer(new QTimer(this)),
+    m_randomMovementTimer(new QTimer(this)),
 
     m_msBlinkGenerationInterval(500),
     m_blinkGenerationTime(0),
@@ -49,20 +49,21 @@ MainWindow::MainWindow(QWidget *parent) :
     int msUpdateInterval = 16;
     m_moveTimer->setInterval(msUpdateInterval);
     m_blinkTimer->setInterval(msUpdateInterval);
-    m_randomBlinkingTimer->setInterval(m_msBlinkGenerationInterval);
+    m_randomMovementTimer->setInterval(m_msBlinkGenerationInterval);
 
     connect(m_blinkTimer, SIGNAL(timeout()), this, SLOT(updateBlink()));
     connect(m_moveTimer, SIGNAL(timeout()), this, SLOT(updateMove()));
-    connect(m_randomBlinkingTimer, SIGNAL(timeout()), this, SLOT(randomBlinkingGeneration()));
+    connect(m_randomMovementTimer, SIGNAL(timeout()), this, SLOT(randomMovementGeneration()));
 
     ros::param::get("~publish_pixmap", m_publishPixmap);
 
-    bool blinkingGenerationEnabled = false;
-    ros::param::get("~start_blinking", blinkingGenerationEnabled);
+    bool generationEnabled = false;
+    // TODO: Rename parameter to start_random_movements later
+    ros::param::get("~start_blinking", generationEnabled);
     ros::param::get("~auto_blink_delay", m_autoBlinkDelay);
 
     m_noiseGenerator.seed(m_rd());
-    if (blinkingGenerationEnabled)  m_randomBlinkingTimer->start();
+    if (generationEnabled)  m_randomMovementTimer->start();
 
     initAnimations();
 
@@ -74,7 +75,7 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 MainWindow::~MainWindow() {
-    m_randomBlinkingTimer->stop();
+    m_randomMovementTimer->stop();
 }
 
 void MainWindow::rosSpin()
@@ -89,6 +90,10 @@ void MainWindow::initAnimations() {
     EyeState stateLeft(true);
     int ms = 50;
 
+    auto savedRightState = stateRight;
+    auto savedLeftState = stateLeft;
+
+    // eye_roll
     m_animations.insert(std::make_pair<std::string, EyesAnimation *>("eye_roll", new EyesAnimation()));
 
     // 0
@@ -160,6 +165,44 @@ void MainWindow::initAnimations() {
     ms = 500;
     m_animations["eye_roll"]->appendStates(stateLeft, stateRight, ms);
 
+    // aperture_calibration
+    stateLeft = savedLeftState;
+    stateRight = savedRightState;
+
+    m_animations.insert(std::make_pair<std::string, EyesAnimation *>("aperture_calibration", new EyesAnimation()));
+
+    m_animations["aperture_calibration"]->isInitializedWithBlink = false;
+    m_animations["aperture_calibration"]->animationFlags = (MoveFlags)(PupilSize | PupilRotation);
+
+    // 0
+    m_animations["aperture_calibration"]->setInitialStates(stateLeft, stateRight);
+
+
+    // 1
+    stateLeft.pupilRadius = 0.65;
+    stateRight.pupilRadius = 0.65;
+
+    ms = 200;
+    m_animations["aperture_calibration"]->appendStates(stateLeft, stateRight, ms);
+
+
+    // 2
+    stateLeft.pupilRadius = 0.55;
+    stateRight.pupilRadius = 0.55;
+
+    m_animations["aperture_calibration"]->appendStates(stateLeft, stateRight, ms);
+
+    // 3
+    stateLeft.pupilAngle = 5;
+    stateRight.pupilAngle = 5;
+
+    m_animations["aperture_calibration"]->appendStates(stateLeft, stateRight, ms);
+
+    // 4
+    stateLeft.pupilAngle = -5;
+    stateRight.pupilAngle = -5;
+
+    m_animations["aperture_calibration"]->appendStates(stateLeft, stateRight, ms);
 }
 
 constexpr unsigned int str2hash(const char* str, int h = 0)
@@ -259,14 +302,14 @@ EyeState MainWindow::generateEmotion(const EyeState &baseState, const char *emot
 
     case str2hash("raised_right_eyebrow_look"):
         s.resetConfiguration();
-	s.topEyelidAngle = -2;
+        s.topEyelidAngle = -2;
         if (baseState.side == LEFT)  s.topEyelidY = 119;
         else                         s.topEyelidY = 320;
         break;
 
     case str2hash("raised_left_eyebrow_look"):
         s.resetConfiguration();
-	s.topEyelidAngle = -2;
+        s.topEyelidAngle = -2;
         if (baseState.side == RIGHT)  s.topEyelidY = 119;
         else                          s.topEyelidY = 320;
         break;
@@ -288,10 +331,10 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
     case str2hash("eyes/action"):
         switch(str2hash(msg->command.c_str())){
         case str2hash("start_blinking"):
-            m_randomBlinkingTimer->start();
+            m_randomMovementTimer->start();
             break;
         case str2hash("stop_blinking"):
-            m_randomBlinkingTimer->stop();
+            m_randomMovementTimer->stop();
             break;
 
         case str2hash("blink"):
@@ -305,6 +348,10 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
             playAnimation(m_animations["eye_roll"]);
             break;
 
+        case str2hash("aperture_calibration"):
+            playAnimation(m_animations["aperture_calibration"]);
+            break;
+
             // TODO: Add eyes close
             // TODO: Add aperture movements
             // TODO: Add randomized eye jumps
@@ -312,8 +359,8 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
         break;
 
     case str2hash("eyes/emotion"): {
-        m_restartAutoblink = m_randomBlinkingTimer->isActive();
-        if (m_restartAutoblink)  m_randomBlinkingTimer->stop();
+        m_restartAutoblink = m_randomMovementTimer->isActive();
+        if (m_restartAutoblink)  m_randomMovementTimer->stop();
 
         auto emotionName = msg->command.c_str();
 
@@ -397,8 +444,8 @@ void MainWindow::playAnimation(EyesAnimation *animation) {
         m_playingAnimation = animation;
 
         m_restartAutoblink = false;
-        if (m_randomBlinkingTimer->isActive()) {
-            m_randomBlinkingTimer->stop();
+        if (m_randomMovementTimer->isActive()) {
+            m_randomMovementTimer->stop();
             m_restartAutoblink = true;
         }
 
@@ -408,11 +455,11 @@ void MainWindow::playAnimation(EyesAnimation *animation) {
 
         auto &startLeftState = animation->leftEyeAnimation.initState;
         auto &startRightState = animation->rightEyeAnimation.initState; 
-        bool moveWithBlink = true;
 
         // :AnimationStages
         // Animation Stage 1. Initialize first position with blink motion
-        moveBothEyes((MoveFlags)0xFFFF, 30, startLeftState, startRightState, moveWithBlink);
+        auto animationFlags = m_playingAnimation->isInitializedWithBlink ? (MoveFlags)0xFFFF : m_playingAnimation->animationFlags;
+        moveBothEyes(animationFlags, 100, startLeftState, startRightState, m_playingAnimation->isInitializedWithBlink);
     }
 }
 
@@ -473,7 +520,7 @@ void MainWindow::blinkBothEyes(int ms) {
     }
 }
 
-void MainWindow::randomBlinkingGeneration() {
+void MainWindow::randomMovementGeneration() {
     m_blinkGenerationTime += m_msBlinkGenerationInterval;
 
     if (m_blinkGenerationTime >= m_timeUntilNextBlink && !m_blinkTimer->isActive()) {
@@ -485,6 +532,10 @@ void MainWindow::randomBlinkingGeneration() {
         m_timeUntilNextBlink = std::max(1000, m_timeUntilNextBlink);
 
         blinkBothEyes(m_autoBlinkDelay);
+    }
+
+    if (rand() % 100 == 0) {
+        playAnimation(m_animations["aperture_calibration"]);
     }
 }
 
@@ -502,14 +553,15 @@ void MainWindow::updateBlink() {
         // Animation Stage 2. Continue playing main animation sequence
         if (m_animationStage == 1 && m_playingAnimation != nullptr) {
             m_animationStage = 2;
-            moveBothEyes((MoveFlags)0xFFFF, &m_playingAnimation->leftEyeAnimation, &m_playingAnimation->rightEyeAnimation);
+            auto animationFlags = m_playingAnimation->isInitializedWithBlink ? (MoveFlags)0xFFFF : m_playingAnimation->animationFlags;
+            moveBothEyes(animationFlags, &m_playingAnimation->leftEyeAnimation, &m_playingAnimation->rightEyeAnimation);
         } else if (m_animationStage == 3) {
             m_animationStage = 0; // Stop animation
         }
 
+        // Continue autoblink, but not in the middle of animation
         if (m_animationStage == 0 && m_restartAutoblink) {
-            // Restore autoblink, but not in the middle of animation
-            m_randomBlinkingTimer->start();
+            m_randomMovementTimer->start();
         }
     }
 }
@@ -525,16 +577,27 @@ void MainWindow::updateMove() {
         }
 
         // :AnimationStages
-        // Animation Stage 3. Finish animation by restoring saved position with blink motion
-        if (m_animationStage == 2) {
-            m_animationStage = 3;
-            bool moveWithBlink = true;
-            moveBothEyes((MoveFlags)0xFFFF, 30, m_leftSavedState, m_rightSavedState, moveWithBlink);
+        // Animation Stage 2 without blink initialization. Continue playing main animation sequence
+        if (m_animationStage == 1 && m_playingAnimation != nullptr) {
+            m_animationStage = 2;
+            auto animationFlags = m_playingAnimation->isInitializedWithBlink ? (MoveFlags)0xFFFF : m_playingAnimation->animationFlags;
+            moveBothEyes(animationFlags, &m_playingAnimation->leftEyeAnimation, &m_playingAnimation->rightEyeAnimation);
+            return;
         }
 
-        // In the end of animation restore saved position with a blink
-        if (m_animationStage == 0 && m_restartAutoblink) {
-            m_randomBlinkingTimer->start();
+
+        // :AnimationStages
+        // Animation Stage 3. Finish animation by restoring saved position with blink motion
+        if (m_animationStage == 2 && m_playingAnimation != nullptr) {
+            m_animationStage = 3;
+            auto animationFlags = m_playingAnimation->isInitializedWithBlink ? (MoveFlags)0xFFFF : m_playingAnimation->animationFlags;
+            moveBothEyes(animationFlags, 100, m_leftSavedState, m_rightSavedState, m_playingAnimation->isInitializedWithBlink);
         }
+
+        if (m_animationStage == 3) {
+            m_animationStage = 0;
+            if (m_restartAutoblink)  m_randomMovementTimer->start();
+        }
+
     }
 }

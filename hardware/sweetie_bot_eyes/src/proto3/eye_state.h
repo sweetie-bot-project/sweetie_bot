@@ -139,6 +139,9 @@ struct EyesAnimation {
     EyeAnimation leftEyeAnimation;
     EyeAnimation rightEyeAnimation;
 
+    MoveFlags animationFlags = (MoveFlags)0xFFFF;
+    bool isInitializedWithBlink = true;
+
     void setInitialStates(EyeState leftState, EyeState rightState) {
         leftEyeAnimation.setInitialState(leftState);
         rightEyeAnimation.setInitialState(rightState);

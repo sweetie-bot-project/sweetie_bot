@@ -35,16 +35,16 @@ private:
 
     QTimer *m_moveTimer;
     QTimer *m_blinkTimer;
-    QTimer *m_randomBlinkingTimer;
+    QTimer *m_randomMovementTimer;
 
     EyeState m_leftSavedState;
     EyeState m_rightSavedState;
 
     EyesAnimation *m_playingAnimation;
 
-    int  m_animationStage   = 0; // Zero means animation not running
-    bool m_restartAutoblink = false;
+    int  m_animationStage = 0; // Zero means animation is not running
 
+    bool m_restartAutoblink = false;
     bool m_delayedBlinkWaiting = false;
     bool m_delayedMoveWaiting  = false;
 
@@ -83,7 +83,7 @@ public:
     EyeState generateEmotion(const EyeState &baseState, const char *emotionName);
 
 private slots:
-    void randomBlinkingGeneration();
+    void randomMovementGeneration();
 
     void updateBlink();
     void updateMove();
