@@ -35,7 +35,7 @@ class TTSRhvoiceWrapper(TTSInterface):
     def __init__(self, rhvoice_params, gstreamer_pipeline_string = None):
         from rhvoice_wrapper import TTS
         # create and configure rhvoice client
-        self._rhvoice= TTS()
+        self._rhvoice = TTS(threads=2)
         self._rhvoice.set_params(**rhvoice_params)
         # create gstreamer pipeline and configure it
         pipeline_list = ['appsrc name=source ! audio/x-raw,format=S16LE,channels=1,rate=24000,layout=interleaved']
