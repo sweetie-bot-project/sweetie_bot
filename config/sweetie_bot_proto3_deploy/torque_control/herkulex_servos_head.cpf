@@ -133,5 +133,62 @@
         <value>1500</value>
       </simple>
     </struct>
+    <struct name="mouth_joint" type="PropertyBag">
+      <description>Servo description.</description>
+      <simple name="servo_id" type="ulong">
+        <description>Servo hardware ID.</description>
+        <value>100</value>
+      </simple>
+      <simple name="offset" type="ulong">
+        <description>Servo zero position offset (raw).</description>
+        <value>0</value>
+      </simple>
+      <simple name="scale" type="double">
+        <description>Servo postion scale factor.</description>
+        <value>0.2</value>
+      </simple>
+      <simple name="reverse" type="boolean">
+        <description>Reverse direction flag.</description>
+        <value>1</value>
+      </simple>
+    </struct>
+    <struct name="ear_l_joint" type="PropertyBag">
+      <description>Servo description.</description>
+      <simple name="servo_id" type="ulong">
+        <description>Servo hardware ID.</description>
+        <value>103</value>
+      </simple>
+      <simple name="offset" type="ulong">
+        <description>Servo zero position offset (raw).</description>
+        <value>0</value>
+      </simple>
+      <simple name="scale" type="double">
+        <description>Servo postion scale factor.</description>
+        <value>0.3</value>
+      </simple>
+      <simple name="reverse" type="boolean">
+        <description>Reverse direction flag.</description>
+        <value>1</value>
+      </simple>
+    </struct>
+    <struct name="ear_r_joint" type="PropertyBag">
+      <description>Servo description.</description>
+      <simple name="servo_id" type="ulong">
+        <description>Servo hardware ID.</description>
+        <value>101</value>
+      </simple>
+      <simple name="offset" type="ulong">
+        <description>Servo zero position offset (raw).</description>
+        <value>512</value>
+      </simple>
+      <simple name="scale" type="double">
+        <description>Servo postion scale factor.</description>
+        <value>0.3</value>
+      </simple>
+      <simple name="reverse" type="boolean">
+        <description>Reverse direction flag.</description>
+        <value>0</value>
+      </simple>
+    </struct>
   </struct>
 </properties>
