@@ -3,7 +3,7 @@
 	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
 
         <!-- Check if device is connected -->
-        <arg name="dev" default="$(eval eval('_' + '_import_' + '_(\'rospy\')').get_param('/hardware/joystick/sysfs_path', ''))" />
+        <arg name="dev" default="false" />
         <arg name="is_dev_exists" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists('$(arg dev)') else 'false')" />
 
         <group if="$(arg is_dev_exists)">
