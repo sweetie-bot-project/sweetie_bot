@@ -49,6 +49,7 @@ private:
     bool m_delayedMoveWaiting  = false;
 
     // Natural random blinkng generation
+    bool m_generationEnabled = false;
     int m_blinkGenerationTime;
     int m_msBlinkGenerationInterval;
     int m_timeUntilNextBlink;

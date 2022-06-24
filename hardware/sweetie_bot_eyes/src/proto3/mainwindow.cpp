@@ -57,13 +57,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ros::param::get("~publish_pixmap", m_publishPixmap);
 
-    bool generationEnabled = false;
+    m_generationEnabled = false;
     // TODO: Rename parameter to start_random_movements later
-    ros::param::get("~start_blinking", generationEnabled);
+    ros::param::get("~start_blinking", m_generationEnabled);
     ros::param::get("~auto_blink_delay", m_autoBlinkDelay);
 
     m_noiseGenerator.seed(m_rd());
-    if (generationEnabled)  m_randomMovementTimer->start();
+    if (m_generationEnabled)  m_randomMovementTimer->start();
 
     initAnimations();
 
@@ -345,9 +345,11 @@ void MainWindow::controlCallback(const sweetie_bot_text_msgs::TextCommand::Const
     case str2hash("eyes/action"):
         switch(str2hash(msg->command.c_str())){
         case str2hash("start_blinking"):
+            m_generationEnabled = true;
             m_randomMovementTimer->start();
             break;
         case str2hash("stop_blinking"):
+            m_generationEnabled = false;
             m_randomMovementTimer->stop();
             break;
 
@@ -633,6 +635,11 @@ void MainWindow::updateBlink() {
             m_randomMovementTimer->start();
             m_restartAutoblink = false;
         }
+
+        // @Hack: Restart random movement if it accidentally had been stopped
+        if (m_generationEnabled && !m_randomMovementTimer->isActive()) {
+            m_randomMovementTimer->start();
+        }
     }
 }
 
@@ -672,5 +679,9 @@ void MainWindow::updateMove() {
             }
         }
 
+        // @Hack: Restart random movement if it accidentally had been stopped
+        if (m_generationEnabled && !m_randomMovementTimer->isActive()) {
+            m_randomMovementTimer->start();
+        }
     }
 }
