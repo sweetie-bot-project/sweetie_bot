@@ -260,6 +260,7 @@ EyeState MainWindow::generateEmotion(const EyeState &baseState, const char *emot
         s.resetConfiguration();
         s.topEyelidY = 114;
         s.pupilRadius = 0.78;
+        s.radius = 314.5;
         break;
 
     case str2hash("happy_look"):
@@ -321,6 +322,16 @@ EyeState MainWindow::generateEmotion(const EyeState &baseState, const char *emot
         s.resetConfiguration();
         s.topEyelidAngle = -30;
         s.topEyelidY = 200;
+        break;
+
+    case str2hash("begging_look"):
+        s.resetConfiguration();
+        s.topEyelidY = 95;
+        s.topEyelidAngle = 10;
+        s.bottomEyelidY = 688;
+        s.bottomEyelidAngle = -7;
+        s.pupilRadius = 0.8;
+        s.radius = 322.5;
         break;
     }
 
