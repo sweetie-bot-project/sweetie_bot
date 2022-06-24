@@ -7,13 +7,8 @@
 	<node machine="sweetiebot" name="eye_left"  pkg="sweetie_bot_eyes" type="proto2_eye" args="-l -platform linuxfb:fb=/dev/fb0"></node>
 	<node machine="sweetiebot" name="eye_rigth" pkg="sweetie_bot_eyes" type="proto2_eye" args="-r -platform linuxfb:fb=/dev/fb1"></node>
 
-
-        <!-- Check if path to battery exists -->
-        <arg name="battery_path" default="$(eval eval('_' + '_import_' + '_(\'rospy\')').get_param('/hardware/battery_monitor/sysfs_path', ''))" />
-        <arg name="is_battery_exists" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists('$(arg battery_path)') else 'false')" />
-
 	<!-- run battery monitor -->
-	<node ns="hardware" machine="sweetiebot" name="battery_monitor" pkg="sweetie_bot_battery_monitor" type="battery_monitor" if="$(arg is_battery_exists)">
+	<node ns="hardware" machine="sweetiebot" name="battery_monitor" pkg="sweetie_bot_battery_monitor" type="battery_monitor" if="false">
 		<remap from="battery_state" to="$(arg robot_ns)/battery_state" />
 	</node>
 </launch>
