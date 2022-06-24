@@ -18,7 +18,7 @@ EyeWindow::EyeWindow(bool isLeftEye, QWidget *parent) :
 
     m_blinkDefaultDuration(150),
     m_blinkDuration(0),
-    m_blinkDelay(50),
+    m_blinkPause(50),
     m_currentBlinkingTime(0),
     m_isBlinking(false),
     m_isGoingDown(false),
@@ -542,7 +542,7 @@ void EyeWindow::move(MoveFlags flags, EyeAnimation *targetSequence, bool moveWit
     if (!m_isMoveWithBlink) {
         if (!dryRun)  m_moveTimer->start();
     } else {
-        blink(m_blinkDefaultDuration, dryRun);
+        blink(50, dryRun, 10);
     }
 }
 
@@ -597,13 +597,14 @@ void EyeWindow::updateMovingState() {
     computeFrame();
 }
 
-void EyeWindow::blink(int duration_ms, bool dryRun) {
+void EyeWindow::blink(int duration_ms, bool dryRun, int pause_ms) {
     if (m_isBlinking || m_isBlinkDryRunning)  return;
 
     m_isBlinkDryRunning = dryRun;
 
     m_isGoingDown = true;
     m_blinkDuration = 2 * duration_ms; // Moving forward and backward takes 2 times longer
+    m_blinkPause = pause_ms;
     m_currentBlinkingTime = 0;
 
     if (!dryRun)  m_blinkTimer->start();
@@ -642,16 +643,16 @@ void EyeWindow::updateBlinkState() {
         }
     }
 
-    if (m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration * 0.5 + m_blinkDelay)) {
+    if (m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration * 0.5 + m_blinkPause)) {
         // Change direction of eyelid movement
         m_isGoingDown = false;
 
         // TODO: Enable more complex animations which involve eyelid movements
-        // Change starting position in which blink will return on move-with-blink motion
+        // Change starting position to which eyelids will return on move-with-blink motion
         // if (m_isMoveWithBlink) {
         //     m_startBlinkAnimationState.assignOnlyBlinkState(m_playingAnimation->states[m_playingAnimation->states.size() - 1]); 
         // }
-    } else if (!m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration + m_blinkDelay)) {
+    } else if (!m_isGoingDown && m_currentBlinkingTime > (m_blinkDuration + m_blinkPause)) {
         // Make sure end blink state match starting state
         m_state.assignOnlyBlinkState(m_startBlinkAnimationState);
 
@@ -669,8 +670,8 @@ void EyeWindow::updateBlinkState() {
         auto relativeBlinkingTime = 2 * m_currentBlinkingTime / (float)m_blinkDuration; // defined on [0;2] range
 
         // Incorporating delay between up and down motions
-        if (m_currentBlinkingTime > (m_blinkDuration * 0.5 + m_blinkDelay)) {
-            relativeBlinkingTime -= 2 * m_blinkDelay / (float)m_blinkDuration;
+        if (m_currentBlinkingTime > (m_blinkDuration * 0.5 + m_blinkPause)) {
+            relativeBlinkingTime -= 2 * m_blinkPause / (float)m_blinkDuration;
         } else if (m_currentBlinkingTime > m_blinkDuration * 0.5) {
             relativeBlinkingTime = 1.0;
         }

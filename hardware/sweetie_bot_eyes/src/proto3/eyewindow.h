@@ -44,7 +44,7 @@ private:
     //blinking
     int m_blinkDefaultDuration;
     int m_blinkDuration;
-    int m_blinkDelay;
+    int m_blinkPause;
     int m_currentBlinkingTime;
     bool m_isBlinking;
     bool m_isGoingDown;
@@ -113,7 +113,7 @@ public:
 
     void move(MoveFlags flags, int ms, EyeState targetState, bool moveWithBlink = false, bool dryRun = false);
     void move(MoveFlags flags, EyeAnimation *targetSequence, bool moveWithBlink = false, bool dryRun = false);
-    void blink(int ms, bool dryRun = false);
+    void blink(int ms, bool dryRun = false, int ms_pause = 50);
 
     void keyPressEvent(QKeyEvent *e);
     void mouseMoveEvent(QMouseEvent *e);

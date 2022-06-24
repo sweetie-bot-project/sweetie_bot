@@ -88,7 +88,7 @@ void MainWindow::rosSpin()
 void MainWindow::initAnimations() {
     EyeState stateRight(false);
     EyeState stateLeft(true);
-    int ms = 50;
+    int ms = 40;
 
     auto savedRightState = stateRight;
     auto savedLeftState = stateLeft;
@@ -465,7 +465,7 @@ void MainWindow::playAnimation(EyesAnimation *animation) {
         // :AnimationStages
         // Animation Stage 1. Initialize first position with blink motion
         auto animationFlags = m_playingAnimation->isInitializedWithBlink ? (MoveFlags)0xFFFF : m_playingAnimation->animationFlags;
-        moveBothEyes(animationFlags, 100, startLeftState, startRightState, m_playingAnimation->isInitializedWithBlink);
+        moveBothEyes(animationFlags, 50, startLeftState, startRightState, m_playingAnimation->isInitializedWithBlink);
     }
 }
 
@@ -650,7 +650,7 @@ void MainWindow::updateMove() {
         if (m_animationStage == 2 && m_playingAnimation != nullptr) {
             m_animationStage = 3;
             auto animationFlags = m_playingAnimation->isInitializedWithBlink ? (MoveFlags)0xFFFF : m_playingAnimation->animationFlags;
-            moveBothEyes(animationFlags, 100, m_leftSavedState, m_rightSavedState, m_playingAnimation->isInitializedWithBlink);
+            moveBothEyes(animationFlags, 50, m_leftSavedState, m_rightSavedState, m_playingAnimation->isInitializedWithBlink);
         }
 
         if (m_animationStage == 3 || m_animationStage == 0) {
