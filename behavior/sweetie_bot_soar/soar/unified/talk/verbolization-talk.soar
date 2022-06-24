@@ -294,7 +294,7 @@ sp {talk-answered*propose*terminate-nonsense-me
 -->
 	(<a> ^remove-predicate <pred>)	
 	(<s> ^reaction <r>)
-	(<r> ^topic nonsense-me-terminated ^type reaction ^animation-tag surprise happy)
+	(<r> ^topic nonsense-me-terminated ^type reaction ^animation-tag surprise pleased)
 	(<r> ^text |Ты научился пользоваться карточками! Силен!| |Теперь ты умеешь пользоваться карточками. Люди поддаются дрессировке!.|)
 }
 
