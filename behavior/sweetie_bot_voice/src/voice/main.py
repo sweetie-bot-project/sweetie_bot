@@ -232,6 +232,7 @@ class VoiceNode():
 
         # register ROS interface
         rospy.Subscriber('control', TextCommand, self.command_cb)
+        self.pub = rospy.Publisher('mouth', TextCommand, queue_size=1)
         self._action_server = actionlib.SimpleActionServer('~syn', TextAction, execute_cb=self.action_cb, auto_start=False)
         rospy.sleep(0.2)
         self._action_server.start()
@@ -239,13 +240,18 @@ class VoiceNode():
             
     def _execute_text_command(self, cmd):
         # Check command type
+        self.pub.publish('mouth/speech', 'begin')
+
+        ret = False
         if cmd.type == 'voice/play_wav':
             # Play specified sound file
-            return self._player.play(cmd.command)
+            ret = self._player.play(cmd.command)
         elif cmd.type == 'voice/say':
             # Invoke text-to-speech subsystem
-            return self._default_profile.speak(cmd.command)
-        return False
+            ret = self._default_profile.speak(cmd.command)
+
+        self.pub.publish('mouth/speech', 'end')
+        return ret
 
     def command_cb(self, cmd):
         # execute command 
