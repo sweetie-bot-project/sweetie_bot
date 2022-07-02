@@ -311,6 +311,16 @@ void TrajectoryEditor::setLimbServoTorqueOn(int limb_index, bool set_on)
 	pub_servo_commands_.publish(command_msg);
 }
 
+void TrajectoryEditor::on_resetAllServoButton_clicked()
+{
+	sweetie_bot_herkulex_msgs::ServoCommands command_msg;
+    command_msg.command = sweetie_bot_herkulex_msgs::ServoCommands::RESET;
+	for (auto &joint_name: joint_state_.name) {
+		command_msg.name.push_back(joint_name);
+	}
+	pub_servo_commands_.publish(command_msg);
+}
+
 void TrajectoryEditor::on_addRobotPoseButton_clicked()
 {
 	double time_from_start = ui.timeFromStartSpinBox->value();

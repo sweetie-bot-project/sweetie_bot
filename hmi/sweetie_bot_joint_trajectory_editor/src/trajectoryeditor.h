@@ -94,6 +94,7 @@ class TrajectoryEditor : public QMainWindow
 		// servo control
 		void on_turnAllServoOnButton_clicked();
 		void on_turnAllServoOffButton_clicked();
+		void on_resetAllServoButton_clicked();
 		// legs servo control
 		void on_leg1ToggleButton_clicked();
 		void on_leg2ToggleButton_clicked();
