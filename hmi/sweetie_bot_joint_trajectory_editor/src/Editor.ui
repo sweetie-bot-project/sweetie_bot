@@ -514,16 +514,6 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="autoUpdatePoseCheckBox">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
-                   <property name="text">
-                    <string>Auto-update pose</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
                   <widget class="QPushButton" name="dublicatePoseButton">
                    <property name="enabled">
                     <bool>true</bool>

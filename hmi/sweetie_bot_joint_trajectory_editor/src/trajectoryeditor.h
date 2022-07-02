@@ -87,7 +87,7 @@ class TrajectoryEditor : public QMainWindow
 		void handleLimbButtonToggle(int limb_index, QPushButton *button);
 		void setLimbServoTorqueOn(int limb_index, bool set_on);
 
-		void updateSelectedPose(bool update_only_disabled = false);
+		void updateSelectedPose();
 
 	private slots:
 		void rosSpin();

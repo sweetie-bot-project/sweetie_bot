@@ -87,10 +87,6 @@ void TrajectoryEditor::jointsCallback(const sensor_msgs::JointState::ConstPtr& m
 	if (!ui.addRobotPoseButton->isEnabled()) {
 		ui.addRobotPoseButton->setEnabled(true);
 	}
-
-	if (ui.autoUpdatePoseCheckBox->isChecked()) {
-		updateSelectedPose(true);
-	}
 }
 
 void TrajectoryEditor::servoJointsCallback(const sweetie_bot_herkulex_msgs::HerkulexJointState::ConstPtr& msg) {
@@ -363,13 +359,12 @@ void TrajectoryEditor::on_updateRobotPoseButton_clicked()
 	updateSelectedPose();
 }
 
-void TrajectoryEditor::updateSelectedPose(bool update_only_disabled)
+void TrajectoryEditor::updateSelectedPose()
 {
 	for (int i = 0; i < joint_state_.name.size(); i++) {
 		QModelIndex index = ui.pointsTableView->selectionModel()->currentIndex();
 		if (index.isValid() && index.row() < joint_trajectory_data_.pointCount()) {
 			auto &joint_name = joint_state_.name[i];
-			if (update_only_disabled && !(is_joint_torque_on[joint_name] == TORQUE_ON))  continue;
 				
 			auto joint_index = joint_trajectory_data_.getJointIndex(joint_name);
 			if (joint_index != -1) {
