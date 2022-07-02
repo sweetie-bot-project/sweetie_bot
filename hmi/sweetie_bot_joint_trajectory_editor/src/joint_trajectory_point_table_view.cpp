@@ -132,7 +132,7 @@ bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVa
 	if (!value.isValid()) return false;
 	if (value.toString() == "") return false;
 	if (!value.canConvert(QMetaType::Double)) return false;
-	double d = value.toDouble();
+	double new_value = value.toDouble();
 	//ROS_INFO("%f %s", d, value.toString().toStdString().c_str());
 
 	switch (index.column()) {
@@ -142,10 +142,11 @@ bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVa
 			auto& point = trajectory_data_.getPoint(index.row());
 			double old_time_from_start = point.time_from_start;
 
-			// edit time_from_start
-			trajectory_data_.setPointTimeFromStart(index.row(), d);
+			emit itemAboutToChange(index, old_time_from_start, new_value);
 
-			emit itemChangedWithOldValue(index, old_time_from_start);
+			// edit time_from_start
+			trajectory_data_.setPointTimeFromStart(index.row(), new_value);
+
 			emit dataChanged(index, index);
 			return true;
 		}
@@ -156,11 +157,12 @@ bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVa
 				auto& point = trajectory_data_.getPoint(index.row());
 				double old_support_state = point.supports[support_index];
 
+				emit itemAboutToChange(index, old_support_state, new_value);
+
 				// edit support state
 				if (role == Qt::CheckStateRole)	trajectory_data_.setPointSupport(index.row(), support_index, (Qt::CheckState)value.toInt() == Qt::Checked ? 1.0 : 0.0);
-				else trajectory_data_.setPointSupport(index.row(), support_index, d);
+				else trajectory_data_.setPointSupport(index.row(), support_index, new_value);
 
-				emit itemChangedWithOldValue(index, old_support_state);
 				emit dataChanged(index, index);
 				return true;
 			}
@@ -170,10 +172,11 @@ bool JointTrajectoryPointTableModel::setData(const QModelIndex &index, const QVa
 				auto& point = trajectory_data_.getPoint(index.row());
 				double old_position = point.positions[position_value_index];
 
-				// edit joint position
-				trajectory_data_.setPointJointPosition(index.row(), position_value_index, d);
+				emit itemAboutToChange(index, old_position, new_value);
 
-				emit itemChangedWithOldValue(index, old_position);
+				// edit joint position
+				trajectory_data_.setPointJointPosition(index.row(), position_value_index, new_value);
+
 				emit dataChanged(index, index);
 				return true;
 			}

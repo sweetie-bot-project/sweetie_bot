@@ -27,7 +27,7 @@ class JointTrajectoryPointTableModel : public QAbstractTableModel
 		bool setData(const QModelIndex &index, const QVariant &value, int role);
 		bool reReadData();
 	signals:
-		void itemChangedWithOldValue(const QModelIndex &index, double old_value);
+		void itemAboutToChange(const QModelIndex &index, double old_value, double new_value);
 };
 
 } // namespace hmi

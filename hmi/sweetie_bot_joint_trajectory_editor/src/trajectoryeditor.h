@@ -126,7 +126,7 @@ class TrajectoryEditor : public QMainWindow
 		void on_jointsTableView_clicked(const QModelIndex &index);
 		void on_pointsTableView_clicked(const QModelIndex &index);
 		void on_pointsTableView_doubleClicked(const QModelIndex &index);
-		void on_pointsTableView_itemChangedWithOldValue(const QModelIndex &index, double old_value);
+		void on_pointsTableView_itemAboutToChange(const QModelIndex &index, double old_value, double new_value);
 };
 
 #endif // TRAJECTORYEDITOR_H

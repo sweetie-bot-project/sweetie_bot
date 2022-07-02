@@ -71,7 +71,7 @@ TrajectoryEditor::TrajectoryEditor(int argc, char *argv[], ros::NodeHandle node,
 	connect(timer, SIGNAL(timeout()), this, SLOT(rosSpin()));
 	timer->start(50);
 
-	connect(&joint_trajectory_point_table_model_, SIGNAL(itemChangedWithOldValue(const QModelIndex &, double)), this, SLOT(on_pointsTableView_itemChangedWithOldValue(const QModelIndex &, double)));
+	connect(&joint_trajectory_point_table_model_, SIGNAL(itemAboutToChange(const QModelIndex &, double, double)), this, SLOT(on_pointsTableView_itemAboutToChange(const QModelIndex &, double, double)));
 }
 
 TrajectoryEditor::~TrajectoryEditor() 
@@ -511,12 +511,12 @@ void TrajectoryEditor::on_pointsTableView_doubleClicked(const QModelIndex &index
 	}
 }
 
-void TrajectoryEditor::on_pointsTableView_itemChangedWithOldValue(const QModelIndex &index, double old_time_from_start)
+void TrajectoryEditor::on_pointsTableView_itemAboutToChange(const QModelIndex &index, double old_time_from_start, double new_time_from_start)
 {
 	if (index.isValid()) {
+        // We're care only about timestamp changes for bulk-shifting other timestamps
 		if (index.column() == 1) {
-			double time_from_start = joint_trajectory_data_.getPoint(index.row()).time_from_start;
-			double change_delta = time_from_start - old_time_from_start;
+			double change_delta = new_time_from_start - old_time_from_start;
 
 			switch (ui.shiftTimeSynchronouslyComboBox->currentIndex()) {
 			default:
