@@ -33,7 +33,7 @@ External dependencies:
     * [`felexbe_general_states`](https://github.com/FlexBE/generic_flexbe_states).
 * QT5 development packages (`libqt5-dev`).
 
-Let's assume that all build requirements are satisfied. Or you can install them from binary package `ros-melodic-sweetie-bot-base`.
+Let's assume that all build requirements are satisfied. Or you can install them from binary package `ros-noetic-sweetie-bot-base`.
 
 Create ROS workspace:
 ```
@@ -41,7 +41,7 @@ mkdir -p ~/ros/sweetie_bot/src
 ```
 
 Clone dependencies if necessary and generate typekit packages if they not installed. 
-If you are using `ros-melodic-sweetie-bot-base` package only FlexBe and `rviz_textured_quads` are needed.
+If you are using `ros-noetic-sweetie-bot-base` package only FlexBe and `rviz_textured_quads` are needed.
 ```
 cd ~/ros/sweetie_bot/src; mkdir inc; cd inc
 git clone https://github.com/lucasw/rviz_textured_quads.git
@@ -66,7 +66,7 @@ rosrun rtt_roscomm create_rtt_msgs tf2_msgs
 ```
 Compile:
 ```
-source /opt/ros/melodic/setup.bash
+source /opt/ros/noetic/setup.bash
 cd ~/ros/sweetie_bot
 catkin_make
 ``` 

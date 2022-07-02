@@ -1,14 +1,14 @@
 # Sweetie Bot base movement request.
 # 
 # * gait_type --- one of possible gaits.
-# * duration --- movement duration
+# * duration --- movement duration in seconds.
 # * steps --- the number of step cycles.
 # * base_goal --- goal pose of the robot base in header.frame_id frame.
 # * base_goal_bounds --- defines which components of goal pose are fixed or fixed.
 #      Zero bits indicate fixed coordinates, coordinates order (from low to high) is (R,Y,P,X,Y,Z).
-# * ee_goal --- goal poses for end effector. For free gait their order defines step sequece.
-# * position_tolerance --- admissable position error.
-# * orientation_tolerance  --- admissable orientaton error.
+# * ee_goal --- goal poses for end effector. For free gait their order defines step sequence.
+# * position_tolerance --- admissible position error.
+# * orientation_tolerance  --- admissible orientation error.
 # * visualize_only --- plan movement but do not execute it.
 # * execute_only --- execute last planned movement (supplied goal ignored except for tolerances).
 #

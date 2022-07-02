@@ -5,62 +5,64 @@ clop_generator:
     planning_frame: "base_link_path"
     storage_namespace: "saved_msgs"
     towr_model:
-        nlp_type: "zmp"
+        nlp_type: "zmp_phase"
         base:
             frame_id: "base_link"
             links: ["base_link", "base_link_inertia", "bone11", "bone12", "bone21", "bone22", "bone31", "bone32", "bone41", "bone42", "bone51", "bone52", "bone53", "bone54", "screen_left", "screen_right" ]
         LF:
             name: "leg1"
             frame_id: "bone15"
-            nominal_stance: [ 0.08, 0.038, -0.1675 ]
+            nominal_stance: [ 0.08, 0.038, -0.1825 ]
             #bounding_box: [ 0.05, 0.025, -0.2075, 0.145, 0.08, -0.1575 ]
             bounding_box: [ 0.05, 0.025, -1.2075, 1.145, 0.08, -0.1575 ]
             #bounding_box: [ 0.05, 0.025, -1.2075, 1.145, 1.08, -0.1575 ]
             #bounding_box: [ -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ 0.08, 0.037, -0.0575, 0.17 ]
+            bounding_sphere: [ 0.08, 0.037, -0.0575, 0.17, 0.105 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone13", "bone14", "bone15"]
         RF:
             name: "leg2"
             frame_id: "bone25"
-            nominal_stance: [ 0.08, -0.038, -0.1675 ]
+            nominal_stance: [ 0.08, -0.038, -0.1825 ]
             #bounding_box: [ 0.05, -0.08, -0.2075, 0.145, -0.025, -0.1575 ]
             bounding_box: [ 0.05, -0.08, -1.2075, 1.145, -0.025, -0.1575 ]
             #bounding_box: [ 0.05, -1.08, -1.2075, 1.145, -0.025, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ 0.08, -0.037, -0.0575, 0.17 ]
+            bounding_sphere: [ 0.08, -0.037, -0.0575, 0.17, 0.105 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone23", "bone24", "bone25"]
         LH:
             name: "leg3"
             frame_id: "bone35"
-            nominal_stance: [ -0.08, 0.038, -0.1675 ]
+            nominal_stance: [ -0.08, 0.038, -0.1825 ]
             #bounding_box: [ -0.145, 0.025, -0.2075, -0.05, 0.08, -0.1575 ]
             bounding_box: [ -1.145, 0.025, -1.2075, -0.05, 0.08, -0.1575 ]
             #bounding_box: [ -1.145, 0.025, -1.2075, -0.05, 1.08, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ -0.08, 0.037, -0.0575, 0.17 ]
+            bounding_sphere: [ -0.08, 0.037, -0.0575, 0.17, 0.105 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone33", "bone34", "bone35"]
         RH: 
             name: "leg4"
             frame_id: "bone45"
-            nominal_stance: [ -0.08, -0.038, -0.1675 ]
+            nominal_stance: [ -0.08, -0.038, -0.1825 ]
             #bounding_box: [ -0.145, -0.08, -0.2075, -0.05, -0.025, -0.1575 ]
             bounding_box: [ -1.145, -0.08, -1.2075, -0.05, -0.025, -0.1575 ]
             #bounding_box: [ -1.145, -1.08, -1.2075, -0.05, -0.025, -0.1575 ]
             #bounding_box: [  -1.0, -1.0, -1.0, 1.0, 1.0, -0.1575 ]
-            bounding_sphere: [ -0.08, -0.037, -0.0575, 0.17 ]
+            bounding_sphere: [ -0.08, -0.037, -0.0575, 0.17, 0.105 ]
             contact_point: [ 0.0, 0.0, -0.03 ]
             links: ["bone43", "bone44", "bone45"]
+        ee_collision_ellipsoid: [ 0.09, 0.05, 0.0 ]
     towr_parameters: # see towr::Parameteres for desciption, are updated move request
         scale_per_step: false
+        base_phase_durations: true
         #duration_base_polynomial: 0.25
         #dt_constraint_dynamic: 0.25
         #dt_constraint_range_of_motion: 0.2
         #dt_constraint_base_motion: 0.0625
         duration_base_polynomial: 0.25
-        dt_constraint_dynamic: 0.05
+        dt_constraint_dynamic: 0.1
         dt_constraint_range_of_motion: 0.1
         dt_constraint_base_motion: 0.1
         ee_polynomials_per_swing_phase: 2
@@ -68,23 +70,24 @@ clop_generator:
         bound_phase_duration_min: 0.4
         bound_phase_duration_max: 2.0
         min_swing_height: 0.015
+        stability_margin: 0.02
         costs: # better for on-line synthesis
-            base_lin_motion: 0.00001
-            base_ang_motion: 0.0001
-            ee_motion: 0.000025
+            base_lin_acc: 0.1
+            base_ang_acc: 0.01
+            ee_acc: 0.025
         #costs: # turn costs off
-        #    costbase_lin_motion: 0.0
-        #    costbase_ang_motion: 0.0
-        #    costee_motion: 0.0
+        #    base_lin_acc: 0.0
+        #    base_ang_acc: 0.0
+        #    ee_acc: 0.0
         #costs: # better for synthesis for saving motions
-            #base_lin_motion: 0.0001
-            #base_ang_motion: 0.001
-            #ee_motion: 0.00025
+            #base_lin_acc: 0.0001
+            #base_ang_acc: 0.001
+            #ee_acc: 0.00025
     ipopt_solver_parameters:
         linear_solver: "mumps"
         jacobian_approximation: "exact"
         derivative_test: "none"  # BEWARE! Test "first-order" breaks optimization process! 
-        max_cpu_time: 5.0
+        max_cpu_time: 20.0
         print_level: 5
-        max_iter: 20
+        max_iter: 30
 

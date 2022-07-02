@@ -68,9 +68,13 @@ class FlexBe(output_module.OutputModule):
         # Goal is completed.
         if status == GoalStatus.SUCCEEDED:
             result = self._action_client.get_result()
-            cmd_id.CreateStringWME("outcome", result.outcome)
-            rospy.loginfo("flexbe output module: behavior outcome is %s.", result.outcome)
-            return result.outcome
+            if result != None:
+                cmd_id.CreateStringWME("outcome", result.outcome)
+                rospy.loginfo("flexbe output module: behavior outcome is %s.", result.outcome)
+                return result.outcome
+            else:
+                cmd_id.CreateStringWME("outcome", "succeed")
+                rospy.logwarn("flexbe output module: goal status SUCCEEDED, action result is None, assume behavior outcome is succeed.")
         if status in [ GoalStatus.RECALLED, GoalStatus.PREEMPTED ]:
             rospy.loginfo("flexbe output module:  behavior execution was preempted.")
             return "aborted"

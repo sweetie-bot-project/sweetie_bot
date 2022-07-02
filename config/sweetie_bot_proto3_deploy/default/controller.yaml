@@ -54,8 +54,9 @@ controller:
         controlled_chains: [ head, eyes ]
         use_kinematics_inv_port: false # deployment parameter: do not connect stance to kinematics_inv IK service, use port interface instead
         pitch_yaw_joints: [ eyes_pitch, eyes_yaw ]
+        viewpoint_z_shift: 0.08
         filter_joint_state_exp_individual:
-            transient_time: 2
+            transient_time: 4.0
             joints_override: [ eyes_pitch, eyes_yaw ]
             transient_time_override: [ 0.3, 0.3 ]
         filter_rigid_body_state_pd:

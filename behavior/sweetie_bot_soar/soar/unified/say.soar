@@ -6,14 +6,17 @@
 #
 # DECISION OPERATOR
 #
-# (<op> ^name @name@ ^substate say ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+# (<op> ^name @name@ ^substate say ^process-args <args>)
+#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
 #
-# Say person about <topic> with <text> and using animation tagged with <tag>.
+# Say person <obj> about <topic> with <text> and using animation tagged with <tag>.
 #
-# RESULT STATUSES
+# PROCESS RESULT STATUSES
 #
 # * succeed --- desired phrase is said to <object>.
 # * failed --- was unable to focus on <object>.
+#
+# Execution failure will cause new attemt to perform action.
 #
 # SIDE EFFECTS
 #
@@ -39,9 +42,9 @@ sp {say*propose*look-at
 -->
 	(<s> ^operator <op> +, <)
 	(<op> ^name focusing-to-say ^substate look-at ^process-args <a>)
-	(<a> ^object <obj> ^topic <topic> ^timeout 10.0 ^delay 2.0 ^result <r>)
+	(<a> ^object <obj> ^topic <topic> ^timeout 5.0 ^delay 1.0 ^result <r>)
 	(<r> ^status failed ^add-event <ev-new> ^finish-status failed ^finish-process <sp>)
-	(<ev-new> ^name talk-failed ^object <obj> ^topic <topic>)
+	(<ev-new> ^name talk-failed ^actor <obj> ^topic <topic>)
 }
 
 # PERFORM TALK ANIMATION
@@ -53,9 +56,11 @@ sp {say*propose*say
 	(<pred> ^name looking-at ^object <obj>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name saying ^substate verbolize ^process-args <a>)
-    (<a> ^object <obj> ^topic <topic>  ^text <text> ^animation-tag <tag> ^result <r>)
+	(<op> ^name saying ^substate verbolize ^process-link <proc>)
+    (<proc> ^name saying ^substate verbolize ^object <obj> ^topic <topic>  ^text <text> ^animation-tag <tag> ^result <r>)
 	(<r> ^status succeed ^finish-status succeed ^finish-process <sp>)
+	#(<op> ^name saying ^substate verbolize ^process-args <a>)
+    #(<a> ^object <obj> ^topic <topic>  ^text <text> ^animation-tag <tag> ^result <r>)
 }
 
 # if 'saying' process is active continue its execution 

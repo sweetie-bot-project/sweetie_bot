@@ -46,6 +46,7 @@
 	<!-- launch operator GUI -->
 	<group if="$(arg host)">
 		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
+			<arg name="robot_name" value="$(arg robot_name)" />
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 			<arg name="rviz_config" value="$(arg robot_profile_path)/joint_space_control.rviz" /> 
 		</include>

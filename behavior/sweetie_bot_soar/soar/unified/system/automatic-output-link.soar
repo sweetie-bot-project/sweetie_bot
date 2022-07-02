@@ -1,0 +1,43 @@
+#
+# RULES FOR AUTOMATIC OUTPUT LINK MANIPULATION
+#
+
+# APPLY RULES FOR OUTPUT COMMAND ADDITION
+
+# put structure to output link
+sp {automatic*apply*add-output-command
+	(state <s> ^operator <op> ^io.output-link <ol>)
+	(<op> ^type automatic ^add-output-command <name> ^output-command-args <args>)
+-->
+	(<ol> ^<name> <args>)
+}
+
+# remove output command
+sp {automatic*apply*remove-output-command
+	(state <s> ^operator <op> ^io.output-link <ol>)
+	(<op> ^type automatic ^remove-output-command <cmd> ^output-command-args <args>)
+-->
+	(<ol> ^<cmd> <args> -)
+}
+
+# OUTPUT COMMAND AUTO DELETION
+
+# remove executed command marked with automatic-remove attribute
+sp {automatic*propose*remove-output-link-cmd
+	(state <s> ^bottom-state 1 ^io.output-link <ol>)
+	(<ol> ^<cmd-attr> <cmd>)
+	(<cmd> ^automatic-remove ^status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name automatic-remove-output-link-cmd ^type cognition automatic ^parent <ol> ^attribute <cmd-attr> ^remove-value <cmd>)
+}
+
+# output link elements are removed after all cognition operators are appllied but before decision operators 
+sp {prefer*remove-output-link-cmd
+	(state <s> ^operator <op1> + ^operator {<> <op1> <op2>} +)
+	(<op1> ^name automatic-remove-output-link-cmd)
+	(<op2> ^type cognition)
+-->
+	(<s> ^operator <op1> < <op2>)
+}
+

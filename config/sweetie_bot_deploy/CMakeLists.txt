@@ -37,5 +37,17 @@ install(DIRECTORY motion_core
 install(DIRECTORY common
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 # python scripts installation
-catkin_install_python(PROGRAMS scripts/store
-	  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+catkin_install_python(PROGRAMS
+    scripts/execute-joint-trajectory
+    scripts/execute-step-sequence
+    scripts/servo-identification
+    scripts/servos_cpf_generator.pl
+    scripts/servos_models_cpf_generator.pl
+    scripts/set-base-link-height.py
+    scripts/set-named-joints-pose.py
+    scripts/step-sequence-strip
+    scripts/step-sequence-strip-supports
+    scripts/store
+    scripts/update_servo_offsets
+	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

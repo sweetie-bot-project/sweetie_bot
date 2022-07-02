@@ -1,5 +1,7 @@
 from . import input_module
 
+from threading import Lock
+
 import rospy
 from sensor_msgs.msg import BatteryState
 
@@ -26,21 +28,24 @@ class Battery:
         self._battery_state_sub = rospy.Subscriber(battery_state_topic, BatteryState, self.newBatteryStateCallback)
 
         # message buffers
+        self._lock = Lock()
         self._battery_state_msg = None
         # WME ids cache
         self._level_wme_id = self._sensor_id.CreateStringWME("level", self._battery_levels_bins_map(100))
 
     def newBatteryStateCallback(self, msg):
         # buffer msg
-        self._battery_state_msg = msg
+        with self._lock:
+            self._battery_state_msg = msg
 
     def update(self):
-        # check if input was updated
-        if self._battery_state_msg == None:
-            return
+        with self._lock:
+            # check if input was updated
+            if self._battery_state_msg == None:
+                return
+            # update battery level
+            level = self._battery_levels_bins_map( battery_state_msg.percentage )
 
-        # update battery level
-        level = self._battery_levels_bins_map( self._battery_state_msg.percentage )
         if level != self._level_wme_id.GetValue():
             self._level_wme_id.Update(level)
 

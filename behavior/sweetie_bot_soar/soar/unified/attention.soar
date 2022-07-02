@@ -10,17 +10,15 @@
 #
 # (<op> ^name @name@ ^substate attention)
 #
-# RESULT STATUSES
+# PROCESS RESULT STATUSES
+#
+# Does not finish corresponding process or set its status. Use ^deadline-time attribute to limit it duration.
 #
 # SIDE EFFECTS
 #
 # Output link: 
 #
 # * flexbe behavior
-#
-# Decision:
-#
-# * (^name attention-focus ^substate attention ^object <obj>) --- object is selected as attention focus.
 #
 
 # UTILITY ELABORATION

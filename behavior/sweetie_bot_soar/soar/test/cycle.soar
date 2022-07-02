@@ -8,7 +8,7 @@ sp {propose*skip
 
 sp {apply*operator*skip
 	(state <s> ^operator <op> ^io.output-link <ol>)
-   	(<op> ^name )
+   	(<op> ^name skip)
 -->
 	(write |skip cycle|)
 	(<ol> ^nop <nop>)

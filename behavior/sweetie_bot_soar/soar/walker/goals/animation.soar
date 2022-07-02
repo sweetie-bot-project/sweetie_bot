@@ -17,10 +17,10 @@ sp {propose*goal*animation*execution
 }
 
 # aniation completion hook
-sp {apply*flexbe*cmd*completed*hook*goal*step-sequence
+sp {apply*flexbe*cmd*completed*hook*goal*animation
 	(state <s> ^operator <op>)
    	(<op> ^name flexbe-completed ^cmd <cmd>)
-	(<cmd> ^status completed ^outcome finished ^operator.goal <g>)
+	(<cmd> ^status succeed ^operator.goal <g>)
 	(<g> ^name animation)
 -->
 	(<s> ^goal <g> -)

@@ -1,0 +1,142 @@
+# JOYSTICK SUBSTATE
+#
+# Robots movements are controlled by joystick.
+#  
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate joystick)
+#
+# DESCRIPTION
+#
+# Depending on buttons pressed select animation or step sequence.
+#
+# RESULT STATUSES
+#
+# Corresponding process is not terminated automatically. Use ^deadline-time or manually written rules.
+#
+# SIDE EFFECTS
+#
+# None
+#
+
+# 
+# ELABORATIONS
+#
+
+# map between buttons and animations tags
+sp {joystick*elaborate*key-maps-animations
+	(state <s> ^substate joystick) 
+-->
+	(<s> ^mapping <m1> <m2> <m3> <m4>)
+	(<m1> ^key |1| ^type animation ^tag greet)
+	(<m2> ^key |2| ^type animation ^tag talk)
+	(<m3> ^key |3| ^type animation ^tag alone)
+	(<m4> ^key |4| ^type animation ^tag angry)
+}
+
+# map between buttons and step sequences (proto2)
+sp {joystick*elaborate*key-maps-step-sequence
+	(state <s> ^substate joystick) 
+-->
+	(<s> ^mapping <m1> <m2> <m3> <m4> <m5> <m6> <m7> <m8> <m9> <m10> <m11> <m12> <m13> <m14> <m15>)
+	(<m1> ^key |left| ^type step-sequence ^name |turn_left_45|)
+	(<m2> ^key |right| ^type step-sequence ^name |turn_right_45|)
+	(<m3> ^key |down| ^type step-sequence ^name |walk_back_20|)
+	(<m4> ^key |up| ^type step-sequence ^name |walk_fwd_40|)
+	(<m5> ^key |left| |up| ^type step-sequence ^name |turn_left_20_20_45|)
+	(<m6> ^key |right| |up| ^type step-sequence ^name |turn_right_20_20_45|)
+	(<m7> ^key |L1| |up| ^type step-sequence ^name |walk_fwd_60|)
+	(<m8> ^key |L1| |left| ^type step-sequence ^name |turn_left_90|)
+	(<m9> ^key |L1| |right| ^type step-sequence ^name |turn_right_90|)
+	(<m10> ^key |L1| |left| |down| ^type step-sequence ^name |backslide_left_20_20_90|)
+	(<m11> ^key |L1| |right| |down| ^type step-sequence ^name |backslide_right_20_20_90|)
+	(<m12> ^key |L2| |left| ^type step-sequence ^name |drift_left|)
+	(<m13> ^key |L2| |right| ^type step-sequence ^name |drift_right|)
+	(<m14> ^key |L2| |right| |down| ^type step-sequence ^name |backslide_right_10_00_45|)
+	(<m15> ^key |L2| |left| |down| ^type step-sequence ^name |backslide_left_10_00_45|)
+}
+
+# convert pressed button to action according to mapping (1 button)
+sp {joystick*elaborate*action-match-1
+	(state <s> ^substate joystick ^io.input-link.joystick <joy> ^mapping <m>) 
+	(<m> ^key <k1> -^key {<> <k1>})
+	(<joy> ^pressed <k1>)
+-->
+	(<s> ^action <m>)
+	(<m> ^priority 1)
+}
+
+# convert pressed button to action according to mapping (2 buttons)
+sp {joystick*elaborate*action-match-2
+	(state <s> ^substate joystick ^io.input-link.joystick <joy> ^mapping <m>) 
+	(<m> ^key <k1> ^key {<> <k1> <k2>} -^key {<> <k1> <> <k2>})
+	(<joy> ^pressed <k1> <k2>)
+-->
+	(<s> ^action <m>)
+	(<m> ^priority 2)
+}
+
+# convert pressed button to action according to mapping (3 buttons)
+sp {joystick*elaborate*action-match-3
+	(state <s> ^substate joystick ^io.input-link.joystick <joy> ^mapping <m>) 
+	(<m> ^key <k1> ^key {<> <k1> <k2>} ^key {<> <k1> <> <k2> <k3>})
+	(<joy> ^pressed <k1> <k2> <k3>)
+-->
+	(<s> ^action <m>)
+	(<m> ^priority 3)
+}
+
+#
+# DECISION OPERATORS
+#
+
+# wait if nothing to do
+sp {joystick*propose*wait
+	(state <s> ^substate joystick)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name waiting-joystick-command ^substate wait ^priority 0)
+}
+
+# animation
+sp {joystick*propose*animation
+	(state <s> ^substate joystick ^action <a>)
+	(<a> ^type animation ^tag <tag> ^priority <pri>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name executing-joystick-command ^substate animation ^process-args <arg> ^priority <pri>)
+	(<arg> ^tag <tag>)
+}
+
+# step sequence
+sp {joystick*propose*step-sequence
+	(state <s> ^substate joystick ^action <a>)
+	(<a> ^type step-sequence ^name <name> ^priority <pri>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name executing-joystick-command ^substate flexbe ^process-args <arg> ^priority <pri>)
+	(<arg> ^behavior ExecuteStepSequence ^action_name <name>)
+}
+
+# wait execution of animation or step sequence
+sp {joystick*propose*wait-execution
+	(state <s> ^substate joystick ^executing-joystick-command <proc>)
+	(<proc> ^substate <substate>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name waiting-execution-joystick-command ^substate <substate> ^process-link <proc> ^priority 10)
+}
+
+#
+# PREFERENCES
+#
+
+# prefer action which are produced by more specific mapping
+sp {joystick*prefer*priority
+	(state <s> ^substate joystick ^operator <op1> + ^operator <op2> +)
+	(<op1> ^priority <pri1>)
+	(<op2> ^priority  {< <pri1>})
+-->
+	(<s> ^operator <op2> < <op1>)
+}
+

@@ -168,6 +168,14 @@ sp {talk-heard*elaborate*greeting-acquitance-greeted-rejection
 	(<f> ^text |Хватит! Не хочу снова здороваться.| |Лимит приветсвий равен трем. Запрос отклонен.|)
 }
 
+# if speaker means use brohoof prefer correspoding animation
+sp {talk-heard*elaborate*greeting*brohoof-tag
+	(state <s> ^substate talk-heard ^topic greeting brohoof ^actor <obj> ^reaction <f>)
+	(<f> ^topic greeting ^animation-tag greeting)
+-->
+	(<f> ^animation-tag brohoof)
+}
+
 #
 # acquitance
 #
@@ -202,10 +210,49 @@ sp {verbolization*elaborate*goodbye
 	(<f> ^text |У меня кончились темы для разговора. До встречи!| |Ты мне наскучил. Пока.|)
 }
 
-# elaborate predicate which marks that thera are no questions left
-sp {verbolization*elaborate*not-questions-left
+# register in beliefs that no questions left
+sp {verbolization*elaborate*no-questions-left*initiate
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
-	-{(<v> ^frame <f>) (<f> ^type question ^topic {<> goodbye <topic>}) -{(<b> ^predicate <p>) (<p> ^name ignor-topic ^topic <topic>)}}
+	-{(<v> ^frame <f>) 
+	  (<f> ^type question ^topic {<> goodbye <topic>}) 
+	  -{(<b> ^predicate <p>) 
+	    (<p> ^name ignor-topic ^actor <obj> ^topic <topic>)
+	   }
+    }
+	-{(<b> ^predicate <pred>)
+	  (<pred> ^name no-questions-for-speaker ^object <obj>)
+    }
+-->	
+	(<s> ^operator <op> +, =)
+	(<op> ^type cognition automatic ^add-predicate <pred>)
+	(<pred> ^name no-questions-for-speaker ^object <obj> ^deadline-time 180.0 ^talk-deadline-time (rand-float 0.0 180.0))
+}
+
+sp {verbolization*elaborate*no-questions-left*talk-deadline
+	(state <s> ^bottom-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name no-questions-for-speaker ^initiated-at <itime> ^talk-deadline-time <dtime>)
+-->
+	(<pred> ^talk-terminate-time (+ <itime> <dtime>))
+}
+
+# remove beliefs that no questions left
+sp {verbolization*elaborate*no-questions-left*terminate
+	(state <s> ^substate talk ^belifs <b> ^object <obj> ^verbolization.frame <f>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name no-questions-for-speaker ^object <obj>)
+	(<f> ^type question ^topic {<> goodbye <topic>}) 
+	-{(<b> ^predicate <p>) 
+	  (<p> ^name ignor-topic ^actor <obj> ^topic <topic>)
+	}
+-->	
+	(<s> ^operator <op> +, =)
+	(<op> ^type cognition automatic ^remove-predicate <pred>)
+}
+
+# add verolization frame for no questions left for speaker
+sp {verbolization*elaborate*not-questions-left-frame
+	(state <s> ^substate talk ^beliefs.predicate <pred> ^object <obj> ^verbolization <v>)
+	(<pred> ^name no-questions-for-speaker ^object <obj>)
 -->
 	(<v> ^frame <f>)
 	(<f> ^topic goodbye ^type question ^animation-tag question ^utility 20)

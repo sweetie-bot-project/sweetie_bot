@@ -1,17 +1,20 @@
 # ANIMATION SUBSTATE
+#
+# Start animation with given tags
 #  
 # DECISION OPERATOR
 #
-# (<op> ^name @name@ ^substate animation {^tag <tag> ... }
+# (<op> ^name @name@ ^substate animation ^process-args <args>)
+#   (<args> ^tag @tag1@ [@tag2])
 #
 # DESCRIPTION
 #
-# Selects animation tagged with provided tags and executes it. Two tags maximum is supported.
+# Selects animation tagged with provided tags and executes it. One or two tags must be supplied.
 #
-# RESULT STATUSES
+# PROCESS RESULT STATUSES
 #
-#	* succeed --- animation is performed.
-#	* failed --- flexbe substate failed with invalid_pose or failed status.
+# Agument supplied process with flexbe arguments and use it flexbe substate for behavior ExecuteCompoundAction.
+# Can produce corresponding results.
 #
 # SIDE EFFECTS
 #

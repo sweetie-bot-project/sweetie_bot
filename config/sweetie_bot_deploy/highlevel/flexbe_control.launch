@@ -54,21 +54,16 @@
 			<!-- moveit -->
 			<include if="$(arg run_moveit)" file="$(find sweetie_bot_deploy)/control/moveit.launch">
 				<arg name="robot_ns" value="$(arg robot_ns)" /> 
-				<arg name="robot_name" value="$(arg robot_name)" /> 
+				<arg name="robot_name" value="$(arg robot_name)" />
 			</include>
 			<!-- gait generator -->
 			<node name="clop_generator" pkg="sweetie_bot_clop_generator" type="towr_clop_generator" output="screen">
 				<remap from="step_sequence" to="motion/controller/step_sequence" />     
 			</node>
-			<!-- voice  -->
-			<group ns="voice">
-				<!-- voice node  -->
-				<node pkg="sweetie_bot_voice" type="voice" name="voice_node">
-					<remap from="control" to="$(arg robot_ns)/control" />
-				</node>
-				<!-- sound_play server -->
-				<include file="$(find sound_play)/soundplay_node.launch" />
-			</group>
+			<!-- voice node  -->
+			<node pkg="sweetie_bot_voice" type="voice" name="voice">
+				<remap from="control" to="$(arg robot_ns)/control" />
+			</node>
 			<!-- FLEXBE: control node and action server -->
 			<group if="$(arg run_flexbe)">
 				<include file="$(find sweetie_bot_deploy)/highlevel/flexbe.launch" >
@@ -91,17 +86,6 @@
 			</group>
 		</group>
 
-		<!-- SIMULATED HARDWARE -->
-			
-		<group unless="$(arg run_real)" ns="$(arg robot_ns)/hardware/simulated">
-			<!-- OpenMV camera node (in run_real mode it is started by hardware module) -->
-			<!-- <node pkg="sweetie_bot_openmv" type="openmv_node" name="openmv_node">
-				<remap from="detections" to="$(arg robot_ns)/detections" />
-				<remap from="markers" to="$(arg robot_ns)/hmi/detections" />
-				<param name="camera_frame" value="camera_link_simulation" />
-			</node>-->
-		</group>
-
 		<!-- HMI: launch operator GUI -->
 
 		<!-- joystick (should connected to host) -->
@@ -118,6 +102,7 @@
 
 		<!-- rviz and markers -->
 		<include file="$(find sweetie_bot_deploy)/control/hmi.launch">
+			<arg name="robot_name" value="$(arg robot_name)" />
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 			<arg name="rviz_config" value="$(arg robot_profile_path)/joint_space_control.rviz" /> 
 		</include>

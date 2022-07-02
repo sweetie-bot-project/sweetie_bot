@@ -1,0 +1,15 @@
+<launch>
+
+  <node name="sweetie_bot_eye_left"  pkg="sweetie_bot_eyes" type="proto2_eye" output="screen" args="-l">
+        <remap from="joint_state" to="motion/aggregator_ref/out_joints_sorted" />
+        <param name="is_left" value="true"/>
+        <param name="publish_pixmap" value="true"/>
+  </node>
+  <node name="sweetie_bot_eye_rigth" pkg="sweetie_bot_eyes" type="proto2_eye" output="screen" args="-r">
+        <remap from="joint_state" to="motion/aggregator_ref/out_joints_sorted" />
+        <param name="is_left" value="false"/>
+        <param name="publish_pixmap" value="true"/>
+  </node>
+
+</launch>
+

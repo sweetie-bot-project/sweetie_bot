@@ -1,4 +1,24 @@
-# OVERALL BEHAVIOR SELECTION
+# GENERAL BEHAVIORS
+#
+# Form stack of substate corresponding for different drives based in their importance.
+#
+# DESCRIPTION
+#
+# Drive description
+#
+#    (<s> ^mem <m>)
+#        (<m> ^drive <d1> <d2>)
+#             (<d1> drive1 ^importance 1)
+#             (<d2> drive2 ^importance 2)
+#
+# will form the following substate stack
+#
+#    (S1 ^name drive2 ^substate general ^superstate nil)
+#        (S2 ^name drive1 ^substate general ^superstate S1)
+#
+# Change of drive importance results in stack regeneration.
+# Rules which implements drives should be placed in coresponding substate. 
+# 
 
 # ELABORATIONS
 
@@ -43,7 +63,9 @@ sp {general*elaborate*create-top-level-process
 	(<proc> ^name <name> ^substate general)
 }
 
-# DEFAULT DECISION RULE
+#
+# DECISION RULES
+#
 
 # the worst possible choice: select next drive
 sp {general*propose*select-next-drive
@@ -53,7 +75,7 @@ sp {general*propose*select-next-drive
 	(<op> ^name top-level-goal)
 }
 
-# the worst possible choice: wait of no drives left
+# the worst possible choice: wait if no drives left
 sp {general*propose*wait
 	(state <s> -^name ^substate general)
 -->
@@ -61,160 +83,3 @@ sp {general*propose*wait
 	(<op> ^name waiting ^substate wait)
 }
 
-#
-# MOVEMENT DRIVE
-#
-
-# Propose perform animation (no one around)
-sp {movement*propose*decide-animation
-	(state <s> ^name movement ^substate general -^performing-animation)
--->
-	(<s> ^operator <op> +, =)
-   	(<op> ^name performing-animation ^substate animation ^process-args <a>)
-	(<a> ^tag alone ^deadline-time 30.0)
-}
-
-# invoke RandHeadMovements for random timeout instead of animation 
-sp {movement*propose*rand*head*movements
-	(state <s> ^name movement ^substate general -^moving-head)
--->
-	(<s> ^operator <op> +, =)
-   	(<op> ^name moving-head ^substate flexbe ^process-args <a> ^interruptable hard)
-   	(<a> ^behavior ExecuteRandHeadMovements ^timeout (+ 5 (rand-int 15))) 
-}
-
-# wait 
-sp {movement*propose*wait
-	(state <s> ^name movement ^substate general ^{<<|performing-animation| |moving-head|>>} <proc>)
-	(<proc> ^substate <substate>)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name wait-proccess ^substate <substate> ^drive movement ^process-link <proc>)
-}
-
-#
-# CURIOSITY DRIVE
-#
-
-# SWITCH ATTENTION OVER MULTIPLE OBJECTS
-
-sp {curiosity*propose*attention
-	(state <s> ^name curiosity ^substate general ^beliefs.object <obj>)
-	(<obj> ^input-link.visible now)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name look-at-multiple-objects ^substate attention ^process-args <a>)
-}
-
-#
-# SOCIAL DRIVE
-# 
-
-# elaborate talking process link
-sp {social*elaborate*talk
-	(state <s> ^name social ^substate general ^{<<|talking-first-time| |talking-on-request| |talking-again|>>} <proc>)
--->
-	(<s> ^talking <proc>)
-}
-
-# continue talk
-sp {talker*propose*talk-continue
-	(state <s> ^name social ^substate general ^talking <proc>)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name talking-continue ^substate talk ^process-link <proc>)
-}
-
-# SELECT HUMAN TO TALK
-
-# select stranger if we are looking at him
-sp {social*propose*talk-to-stranger
-	(state <s> ^name social ^substate general -^talking ^beliefs-stable.predicate <pred> ^beliefs <b>)
-	(<pred> ^name looking-at ^object <obj>)
-	(<obj> ^type human)
-	-{(<b> ^predicate <p>) (<p> ^name acquitance ^object <obj>)}
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name talking-first-time ^substate talk ^process-args <a>)
-	(<a> ^object <obj>)
-}
-
-# start talk if being greeted
-sp {social*propose*talk-on-greeting
-	(state <s> ^name social ^substate general -^talking ^beliefs-stable.predicate <pred> ^beliefs <b>)
-	(<pred> ^name looking-at ^object <obj>)
-	(<b> ^event <ev>)
-	(<ev> ^name speech ^topic greeting)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name talking-on-request ^substate talk ^process-args <a>)
-	(<a> ^object <obj>)
-}
-
-# select acquitance if the last greeting is expired
-sp {social*propose*talk-again
-	(state <s> ^name social ^substate general -^talking ^beliefs <b>)
-	(<b> ^object <obj>)
-	(<obj> ^type human ^input-link.visible now)
-	(<b> ^predicate <pred1>)
-	(<pred1> ^name acquitance ^object <obj>)
-	-{(<b> ^predicate <pred2>) (<pred2> ^name greeted ^object <obj>)}
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name talking-again ^substate talk ^process-args <a>)
-	(<a> ^object <obj>)
-}
-
-#
-# SECURITY
-#
-
-sp {security*propose*wait-if-overheat
-	(state <s> ^name security ^substate general ^io.input-link.servos.status overheat)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name wait-overheat ^substate wait)
-}
-
-sp {security*propose*wait-if-overheat
-	(state <s> ^name security ^substate general ^io.input-link <il>)
-	(<il> ^servos.status overheat ^head-pose.pose {<> head_nominal})
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name move-head-nominal-pose ^substate flexbe ^process-args <a>)
-    (<a> ^behavior ExecuteSetPose ^pose head_nominal)
-}
-
-sp {security*propose*say-overheat
-	(state <s> ^name security ^substate general ^io.input-link.servos.status overheat ^beliefs <b>)
-	-{(<b> ^predicate <pred>) (<pred> ^name said-about-overheat)}
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name say-overheat ^type automatic ^add-predicate <pred-new>)
-	(<pred-new> ^name said-about-overheat ^deadline-time 30.0)
-}
-
-sp {security*apply*say-overheat
-	(state <s> ^name security ^substate general ^operator <op> ^io.output-link.textcmd <cmd>)
-	(<op> ^name say-overheat)
--->
-	(<cmd> ^type |voice/say| ^command |Я перегрелась. Буду теперь отдыхать.|)
-}
-
-sp {security*prefer*wait-is-last-chioce
-	(state <s> ^name security ^substate general ^operator <op1> + ^operator <op2> +)
-	(<op1> ^name wait-overheat)
-	(<op2> ^name {<<|move-head-nominal-pose| |say-overheat|>>})
--->
-	(<s> ^operator <op1> < <op2>)
-}
-
-# PREFERENCES
-
-sp {social*prefer*talk-on-request
-	(state <s> ^name social ^substate general ^operator <op1> + ^operator {<> <op1> <op2>} +)
-	(<op1> ^name talking-on-request)
-	(<op2> -^name talking-on-request)
--->
-	(<s> ^operator <op1> > <op2>)
-}

@@ -156,7 +156,7 @@ sp {beliefs*propose*update
 	(<b> ^timestamp {< <time> <ts>})
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name beliefs-update ^type system ^timestamp <ts> ^time <time>)
+	(<op> ^name beliefs-update ^type system ^timestamp <ts> ^time <time> ^time-stable (- <time> 0.5))
 }
 
 # update timestamp
@@ -171,7 +171,7 @@ sp {beliefs*apply*update*timestamp
 # remove old events
 sp {beliefs*apply*update*remove-events
 	(state <s> ^operator <op> ^beliefs <b>)
-	(<op> ^name beliefs-update ^time <time>)
+	(<op> ^name beliefs-update ^time-stable <time>)
 	(<b> ^event <ev>)
 	(<ev> ^initiated-at {< <time>})
 -->
@@ -180,29 +180,20 @@ sp {beliefs*apply*update*remove-events
 
 # move predicates in pending to belief-stable (if they are not terminated)
 sp {beliefs*apply*update*beliefs-stable-pending
-	(state <s> ^operator.name beliefs-update ^beliefs-stable <bs>)
+	(state <s> ^operator <op> ^beliefs-stable <bs>)
+	(<op> ^name beliefs-update ^time-stable <time>)
   	(<bs> ^pending <p>) 
 	(<p> ^<belief-type> <belief>)
-	(<belief> -^terminated-at)
+	(<belief> ^initiated-at {< <time>})
 -->
 	(<p> ^<belief-type> <belief> -)
 	(<bs> ^<belief-type> <belief>)
 }
 
-# remove predicate in pending if they are terminated
-sp {beliefs*apply*update*belief-stable-pending-terminated
-	(state <s> ^operator.name beliefs-update ^beliefs-stable <bs>)
-  	(<bs> ^pending <p>) 
-	(<p> ^<belief-type> <belief>)
-	(<belief> -^terminated-at)
--->
-	(<p> ^<belief-type> <belief> -)
-}
-	
 # remove terminated predicates from beliefs-stable
 sp {beliefs*apply*update*belief-stable-remove-terminated
 	(state <s> ^operator <op> ^beliefs-stable <bs>)
-	(<op> ^name beliefs-update ^time <time>)
+	(<op> ^name beliefs-update ^time-stable <time>)
 	(<bs> ^<pred-type> <pred>)
 	(<pred> ^terminated-at {< <time>})
 -->

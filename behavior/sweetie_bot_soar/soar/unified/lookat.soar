@@ -7,14 +7,16 @@
 #
 # DECISION OPERATOR
 #
-# (<op> ^name @name@ ^substate look-at ^object <obj> ^delay <delay>  ^timeout <timeout>)
+# (<op> ^name @name@ ^substate look-at ^process-args <args>)
+#   (<args> ^object <obj> ^delay <delay>  ^timeout <timeout>)
 #
 # Look at <obj>.  Result it success if object is visible and is located in center of viewfield for at least <delay> time (may fire multiple times)
 # If success condition is not met not after <timeout> seconds then result is failure. 
 #
-# RESULT STATUSES
+# PROCESS RESULT STATUSES
 #
-# * failed -- <timeout> seconds has passed but object is still is not center of view.
+# * success -- <timeout> seconds has passed but object is in the center of view.
+# * failed -- <timeout> seconds has passed but object is still not in center of view.
 #
 # SIDE EFFECTS
 #
@@ -72,11 +74,11 @@ sp {look-at*elaborate*looking-at
 sp {look-at*propose*start-look-at-behavior
 	(state <s> ^substate look-at ^args <args>)
 	(<args> ^object <obj> ^delay <delay> ^timeout <timeout>)
-	(<obj> ^id <id> ^label <label> ^type <type>)
+	(<obj> ^label <label> ^type <type>)
 -->
 	(<s> ^operator <op> +)
 	(<op> ^name focusing-at ^substate flexbe ^process-args <a> ^interruptable hard)
-	(<a> ^behavior ExecuteLookAt ^id <id> ^label <label> ^type <type> ^timeout (+ <delay> 1.0) ^delay <delay> ^object <obj>)
+	(<a> ^behavior ExecuteLookAt ^label <label> ^type <type> ^timeout (+ <delay> 1.0) ^delay <delay> ^object <obj>)
 }
 
 # COGNITION OPERATORS
@@ -88,20 +90,18 @@ sp {look-at*propose*completion-failed
 	-{(<bs> ^predicate <pred>)
 	  (<pred> ^name looking-at ^focusing-proccess <proc>)
     }
-	(<proc> ^subprocess-of <sp>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name look-at-focus-failed ^type cognition automatic ^finish-status failed ^finish-process <sp> ^mark-processed <ev>) 
+	(<op> ^name look-at-focus-failed ^type cognition automatic ^finish-status failed ^finish-super-process-of <proc> ^mark-processed <ev>) 
 }
 
-# detect look-at succeed situation: focusing-at is expired (due to timeout, abort or execution failure) but looking-at does not holds
+# detect look-at succeed situation: focusing-at is expired (due to timeout, abort or execution failure) but looking-at holds
 sp {look-at*propose*completion-succeed
 	(state <s> ^bottom-state 1 ^beliefs.event <ev> ^beliefs-stable <bs>)
 	(<ev> ^name focusing-at ^reason {<< |deadline| |terminated| >>} -^processed look-at-focus-succeed ^process <proc>)
 	(<bs> ^predicate <pred>)
 	(<pred> ^name looking-at ^focusing-proccess <proc>)
-	(<proc> ^subprocess-of <sp>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name look-at-focus-succeed ^type cognition automatic ^finish-status succeed ^finish-process <sp> ^mark-processed <ev>) 
+	(<op> ^name look-at-focus-succeed ^type cognition automatic ^finish-status succeed ^finish-super-process-of <proc> ^mark-processed <ev>) 
 }

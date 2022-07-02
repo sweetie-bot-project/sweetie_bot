@@ -36,11 +36,18 @@ sp {talk-event*elaborate*waiting-answer
 
 # schedule talk-answered event to be added
 sp {talk-heard*propose*talk-answered-event
-	(state <s> ^substate talk-heard ^waiting-answer.topic <q-topic> ^topic <a-topic> ^actor <obj> ^actions <a>)
+	(state <s> ^substate talk-heard ^waiting-answer.topic <q-topic> ^actor <obj> ^actions <a>)
 -->
 	(<a> ^add-event <ev>)
-	(<ev> ^name talk-answered ^question-topic <q-topic> ^answer-topic <a-topic> ^actor <obj>)
+	(<ev> ^name talk-answered ^question-topic <q-topic> ^actor <obj> ^memorization-time 3600.0)
 	(<s> ^talk-answered-event <ev>)
+}
+
+sp {talk-heard*propose*talk-answered-event*-answer-topics
+	(state <s> ^substate talk-heard ^waiting-answer.topic <q-topic> ^topic <a-topic> ^actor <obj> ^actions.add-event <ev>)
+	(<ev> ^name talk-answered)
+-->
+	(<ev> ^answer-topic <a-topic>)
 }
 
 # process scheduled talk-answered event, 
@@ -76,6 +83,13 @@ sp {talk-heard*propose*irrelevant-phrase
 -->
 	(<a> ^add-event <ev-irrelevant>)
 	(<ev-irrelevant> ^name talk-irrelevant ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
+}
+
+sp {talk-heard*propose*talk-irrelevant-event*answer-topics
+	(state <s> ^substate talk-heard ^waiting-answer.topic <q-topic> ^topic <a-topic> ^actor <obj> ^actions.add-event <ev>)
+	(<ev> ^name talk-irrelevant)
+-->
+	(<ev> ^topic <a-topic>)
 }
 
 # agument irrelevant event with question/statement topic

@@ -28,6 +28,7 @@ Configuration parameters:
 
 * `~agent_package` (`string`), `~agent_file` (`string`) --- SOAR productions files to be loaded.
 * `~soar_period` (`string`) --- major reasoning cycle period.
+* `~reconfiguration_attempts` (`int`) --- how many times node attempts to configure itself during startup. Pause between attempts is 5 seconds.
 * `~autostart` (`bool`) --- start reason cycle after component is loaded.
 * `~input` --- input modules configurations in format `{ <module_name>: { <parameter1>: <value1>, <parameter2>: <value2> ... }, ... }.
 	Note that only modules mentioned in map are loaded.

@@ -8,13 +8,14 @@
 #
 # Waits indefinetely. All operators have the worst preference, so they can be added to another substate.
 #
-# RESULT STATUSES:
+# PROCESS RESULT STATUSES
+#
+# Substate does not initiate process.
 #
 # SIDE EFFECTS
 #
+# None.
 #
-# IMPLEMENTATION
-# 
 
 # ELABORATIONS
 
@@ -23,30 +24,16 @@ sp {wait*propose*wait-behavior-create
 	(<ol> -^nop)
 -->
 	(<s> ^operator <op> +, <)
-	(<op> ^name wait-behavior-create)
+	(<op> ^name wait-behavior-create ^type automatic ^add-output-command nop ^output-command-args <cmd>)
+	(<cmd> ^automatic-remove yes ^cycle 1)
 }
 
-sp {wait*apply*wait*behavior-create
-	(state <s> ^substate wait ^operator <op> ^io.output-link <ol>)
-	(<op> ^name wait-behavior-create)
--->
-	(<ol> ^nop <cmd>)
-	(<cmd> ^cycle 1)
-}
-
-sp {wait*propose*wait-behavior
+sp {wait*propose*wait-behavior-cycle
 	(state <s> ^substate wait ^io.output-link.nop <cmd>)
-	(<cmd> ^cycle <c>)
+	(<cmd> -^status ^cycle <cycle>)
 -->
 	(<s> ^operator <op> +, <)
-	(<op> ^name wait-behavior ^cmd <cmd> ^cycle <c>)
+   	(<op> ^name wait-behavior-cycle ^type automatic ^parent <cmd> ^attribute cycle ^remove-value <cycle> ^link-value (+ <cycle> 1))
 }
 
-sp {wait*apply*wait-behavior
-	(state <s> ^substate wait ^operator <op>)
-	(<op> ^name wait-behavior ^cmd <cmd> ^cycle <c>)
--->
-	(<cmd> ^cycle <c> -)
-	(<cmd> ^cycle (+ <c> 1))
-}
 

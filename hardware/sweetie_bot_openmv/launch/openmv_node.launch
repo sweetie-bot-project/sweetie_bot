@@ -1,8 +1,0 @@
-<!-- Start the face recognition JSON bridge for OpenMV -->
-<launch>
-  <!-- Node configuration -->
-  <rosparam command="load" file="$(find sweetie_bot_openmv)/launch/camera.yaml" ></rosparam>
-  <!-- Face recognition JSON bridge (output on the screen) -->
-  <node pkg="sweetie_bot_openmv" type="openmv_node" name="openmv_node" output="screen" respawn="true">
-  </node>
-</launch>

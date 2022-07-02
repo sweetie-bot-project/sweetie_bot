@@ -1,5 +1,6 @@
 from . import input_module
 
+from threading import Lock
 from copy import copy
 import rospy
 import tf
@@ -23,18 +24,23 @@ class Camera:
         # add topic subscriber and tf buffer
         self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
         # message buffers
+        self._lock = Lock()
         self._detections_msg = []
         self._detections_wme_map = {}
 
     def detectionCallback(self, msg):
         # buffer msg
-        self._detections_msg = msg
+        with self._lock:
+            self._detections_msg = msg
 
     def update(self):
+        # get message
+        with self._lock:
+            detections_msg = self._detections_msg
         # get current time
         time_now = rospy.Time.now().to_sec();
         # iterate detected objects
-        for detection_msg in self._detections_msg.detections:
+        for detection_msg in detections_msg.detections:
             key_tuple = (detection_msg.id, detection_msg.label, detection_msg.type)
             # check if corrsponding wme exists
             value_tuple = self._detections_wme_map.get(key_tuple)
