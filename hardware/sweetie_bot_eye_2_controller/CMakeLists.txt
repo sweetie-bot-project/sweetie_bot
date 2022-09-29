@@ -1,0 +1,164 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(sweetie_bot_eye_2_controller)
+
+## Add support for C++11, supported in ROS Kinetic and newer
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+# Tell CMake to run moc when necessary:
+set(CMAKE_AUTOMOC ON)
+# As moc files are generated in the binary dir, tell CMake
+# to always look for includes there:
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+ # sensor_msgs
+ # control_msgs
+ # std_msgs
+  sweetie_bot_text_msgs
+  #actionlib
+)
+
+# QT packages
+find_package(Qt5Widgets REQUIRED)
+
+SET(eye_2_controller_SOURCES
+    src/ros_publisher_widget.cpp
+    src/ros_subscriber_widget.cpp
+    src/main.cpp
+    src/cleanexit.cpp
+    src/mouse_eye_mover.cpp
+    src/lid_manual_control.cpp
+    src/ros_connect_widget.cpp
+    src/eye_2_controller_form.cpp)
+#SET(motor_state_viewer_HEADERS src/motor_state_display.h src/connect_widget.h src/state_viewer_form.h src/joint_trajectory_data.h src/joint_trajectory_point_table_view.h src/joint_list_table_view.h)
+SET(eye_2_controller_FORMS
+    src/ros_publisher_widget.ui
+    src/ros_subscriber_widget.ui
+    src/ros_connect_widget.ui
+    src/lid_manual_control.ui
+    src/eye_2_controller_form.ui)
+
+#set(eye_2_controller_RESOURCE resource.qrc)
+
+## System dependencies are found with CMake's conventions
+# find_package(Boost REQUIRED COMPONENTS system)
+
+## Uncomment this if the package has a setup.py. This macro ensures
+## modules and global scripts declared therein get installed
+## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+# catkin_python_setup()
+
+###################################
+## catkin specific configuration ##
+###################################
+## The catkin_package macro generates cmake config files for your package
+## Declare things to be passed to dependent projects
+## INCLUDE_DIRS: uncomment this if you package contains header files
+## LIBRARIES: libraries you create in this project that dependent projects also need
+## CATKIN_DEPENDS: catkin_packages dependent projects also need
+## DEPENDS: system dependencies of this project that dependent projects also need
+catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES sweetie_bot_joint_trajectory_editor
+#  CATKIN_DEPENDS other_catkin_pkg
+#  DEPENDS system_lib
+)
+
+###########
+## Build ##
+###########
+
+# Qt specific
+qt5_wrap_ui(eye_2_controller_FORMS_HDRS ${eye_2_controller_FORMS})
+#qt5_add_resources(eye_2_controllerr_RCC ${eye_2_controller_RESOURCE})
+
+## Specify additional locations of header files
+## Your package locations should be listed before other locations
+include_directories(include)
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
+
+## Declare a C++ library
+# add_library(${PROJECT_NAME}
+#   src/${PROJECT_NAME}/sweetie_bot_joint_trajectory_editor.cpp
+# )
+
+## Add cmake target dependencies of the library
+## as an example, code may need to be generated before libraries
+## either from message generation or dynamic reconfigure
+# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Declare a C++ executable
+## With catkin_make all packages are built within a single CMake context
+## The recommended prefix ensures that target names across packages don't collide
+add_executable(eye_2_controller ${eye_2_controller_SOURCES} ${eye_2_controller_FORMS_HDRS})# ${eye_2_controller_RCC})
+
+## Rename C++ executable without prefix
+## The above recommended prefix causes long target names, the following renames the
+## target back to the shorter version for ease of user use
+## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
+# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
+
+## Add cmake target dependencies of the executable
+## same as for the library above
+add_dependencies(eye_2_controller
+  ${catkin_EXPORTED_TARGETS}
+  ${sweetie_bot_eye_2_controller_EXPORTED_TARGETS}
+)
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(eye_2_controller
+   ${catkin_LIBRARIES}
+   ${Qt5Widgets_LIBRARIES}
+)
+
+#############
+## Install ##
+#############
+
+# all install targets should use catkin DESTINATION variables
+# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
+
+## Mark executable scripts (Python etc.) for installation
+## in contrast to setup.py, you can choose the destination
+# install(PROGRAMS
+#   scripts/my_python_script
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+
+## Mark executables and/or libraries for installation
+install(TARGETS eye_2_controller
+# ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+	
+## Mark cpp header files for installation
+# install(DIRECTORY include/${PROJECT_NAME}/
+#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#   FILES_MATCHING PATTERN "*.h"
+#   PATTERN ".svn" EXCLUDE
+# )
+
+## Mark other files for installation (e.g. launch and bag files, etc.)
+# install(FILES
+#   # myfile1
+#   # myfile2
+#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+# )
+
+#############
+## Testing ##
+#############
+
+## Add gtest based cpp test target and link libraries
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_sweetie_bot_joint_trajectory_editor.cpp)
+# if(TARGET ${PROJECT_NAME}-test)
+#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+# endif()
+
+## Add folders to be run by python nosetests
+# catkin_add_nosetests(test)
