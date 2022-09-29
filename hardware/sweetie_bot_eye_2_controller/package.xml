@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package>
+  <name>sweetie_bot_eye_2_controller</name>
+  <version>0.1.0</version>
+  <description>The sweetie_bot_eye_2_controller package</description>
+
+  <maintainer email="tokifuko@gmail.com">tokifuko</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://sweetiebot.net</url>
+  <url type="website">https://gitlab.com/sweetie-bot/sweetie_doc/wikis/components-animation-stored-move</url>
+
+  <author email="fsdfur@gmail.com">mutronics</author>
+  <author email="goncharovoi@yandex.ru">disRecord</author>
+  <author email="tokifuko@gmail.com">tokifuko</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sweetie_bot_text_msgs</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>sweetie_bot_text_msgs</run_depend>
+
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>
