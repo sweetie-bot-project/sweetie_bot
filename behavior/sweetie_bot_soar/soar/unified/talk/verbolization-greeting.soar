@@ -55,17 +55,17 @@ sp {verbolization*elaborate*greeting-base
 	  (<pred1> ^name greeted ^object <obj>)}
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic greeting)
+	(<f> ^topic greeting ^type question)
 }
 
 # if not acquiatance
 sp {verbolization*elaborate*greeting-not-acquitance
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization.frame <f>)
-	(<f> ^topic greeting)
+	(<f> ^topic greeting ^type question)
 	-{(<b> ^predicate <pred2>)
 	  (<pred2> ^name acquitance ^object <obj>)}
 -->
-	(<f>  ^utility 50 ^type question ^animation-tag greeting)
+	(<f>  ^utility 50 ^animation-tag greeting)
 	(<f> ^text |Привет! Я --- Свити. Лучшая робопони в мире.| |Привет! Меня зовут Свити Бот!|)
 }
 
@@ -82,12 +82,12 @@ sp {verbolization*elaborate*greeting-not-acquitance*reaction
 # if speaker is aready known to robot
 sp {verbolization*elaborate*greeting-acquitance-normal
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization.frame <f>)
-	(<f> ^topic greeting)
+	(<f> ^topic greeting ^type question)
 	(<b> ^predicate <pred2>)
 	(<pred2> ^name acquitance ^object <obj>)
 	(<obj> ^label <label>)
 -->
-	(<f> ^utility 50 ^type question ^animation-tag greeting)
+	(<f> ^utility 50 ^animation-tag greeting)
 	(<f> ^text (concat |Привет, собеседник | <label> |!|) (concat |Рада тебя видеть вновь, собеседник | <label> |.|))
 }
 
@@ -122,7 +122,7 @@ sp {talk-said*propose*greeted-add-counter
 #
 
 sp {talk-heard*elaborate*greeting-not-acquitance
-	(state <s> ^substate talk-heard -^waiting-answer-type question ^topic greeting ^actor <obj> ^beliefs <b>)
+	(state <s> ^substate talk-heard ^topic greeting ^actor <obj> ^beliefs <b>)
 	-{(<b> ^predicate <pred2>)
 	  (<pred2> ^name acquitance ^object <obj>)}
 -->
@@ -132,7 +132,7 @@ sp {talk-heard*elaborate*greeting-not-acquitance
 }
 
 sp {talk-heard*elaborate*greeting-acquitance-not-greeted
-	(state <s> ^substate talk-heard -^waiting-answer-type question ^topic greeting ^actor <obj> ^beliefs <b>)
+	(state <s> ^substate talk-heard ^topic greeting ^actor <obj> ^beliefs <b>)
 	(<b> ^predicate <pred2>)
 	(<pred2> ^name acquitance ^object <obj>)
 	-{(<b> ^predicate <pred1>)
@@ -145,7 +145,7 @@ sp {talk-heard*elaborate*greeting-acquitance-not-greeted
 }
 
 sp {talk-heard*elaborate*greeting-acquitance-greeted
-	(state <s> ^substate talk-heard -^waiting-answer-type question ^topic greeting ^actor <obj> ^beliefs <b>)
+	(state <s> ^substate talk-heard ^topic greeting ^actor <obj> ^beliefs <b>)
 	(<b> ^predicate <pred2> <pred1>)
 	(<pred2> ^name acquitance ^object <obj>)
   	(<pred1> ^name greeted ^object <obj> ^counter {<= 3})
@@ -157,7 +157,7 @@ sp {talk-heard*elaborate*greeting-acquitance-greeted
 }
 
 sp {talk-heard*elaborate*greeting-acquitance-greeted-rejection
-	(state <s> ^substate talk-heard -^waiting-answer-type question ^topic greeting ^actor <obj> ^beliefs <b>)
+	(state <s> ^substate talk-heard ^topic greeting ^actor <obj> ^beliefs <b>)
 	(<b> ^predicate <pred2> <pred1>)
 	(<pred2> ^name acquitance ^object <obj>)
   	(<pred1> ^name greeted ^object <obj> ^counter {> 3})
@@ -206,7 +206,7 @@ sp {verbolization*elaborate*goodbye
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic goodbye ^utility 10 ^type statement ^animation-tag question)
+	(<f> ^topic goodbye ^utility 10 ^type question ^animation-tag question)
 	(<f> ^text |У меня кончились темы для разговора. До встречи!| |Ты мне наскучил. Пока.|)
 }
 
