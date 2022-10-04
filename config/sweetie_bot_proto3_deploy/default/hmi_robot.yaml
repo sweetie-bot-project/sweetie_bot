@@ -41,5 +41,5 @@ voice:
         speechd:
             type: 'speechd'
             module: 'rhvoice'
-eyes_gl: 
+eyes:
     start_blinking: true
