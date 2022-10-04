@@ -71,7 +71,7 @@ sp {talk-heard*elaborate*possible-reaction
 
 # select conditional reaction 
 sp {talk-heard*elaboration*reaction-conditional
-	(state <s> ^substate talk-answered ^topic <topic> ^reaction-conditional <r>)
+	(state <s> ^substate talk-heard ^topic <topic> ^reaction-conditional <r>)
 	(<r> ^answer-topic <topic>)
 -->
 	(<s> ^reaction <r>)
