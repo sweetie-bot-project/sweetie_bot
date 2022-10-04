@@ -77,6 +77,33 @@ sp {talk-heard*elaboration*reaction-conditional
 	(<s> ^reaction <r>)
 }
 
+# produce talk-postponed event if question was asked but answer is not relevant to it
+sp {talk-heard*elaborate*talk-postponed-topic
+	(state <s> ^substate talk-heard ^conclusion phrase-specific-reaction ^waiting-answer-type question ^question-topic <topic> ^actor <obj> ^beliefs <b> ^actions <a>)
+	-{(<b> ^predicate <pred>)
+	  (<pred> ^name talk-postponed-topic ^object <obj> ^topic <topic>)
+	}
+-->
+	(<a> ^add-predicate <pred1>)
+	(<pred1> ^name talk-postponed-topic ^object <obj> ^topic <topic> ^deadline-time 60.0)
+}
+
+# if question is postponed again then consider it ignored
+sp {talk-heard*elaborate*ignor-topic
+	(state <s> ^substate talk-heard ^conclusion phrase-specific-reaction ^waiting-answer-type question ^question-topic <topic> ^actor <obj> ^beliefs.predicate <pred1> ^actions <a>)
+	(<pred1> ^name talk-postponed-topic ^object <obj> ^topic <topic>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name ignor-topic ^actor <obj> ^topic <topic> ^deadline-time 600.0)
+}
+
+# remove waiting-answer process if relevant answer is heard even if it is not answer-specific.
+sp {talk-heard*elaborate*remove-waiting-answer
+	(state <s> ^substate talk-heard ^conclusion phrase-specific-reaction ^waiting-answer <proc> ^actions <a>)
+-->
+	(<a> ^remove-process <proc>)
+}
+
 # emit irrelevant event -- nor one options above
 sp {talk-heard*propose*irrelevant-phrase
 	(state <s> ^substate talk-heard -^conclusion ^actor <obj> ^topic <topic> ^actions <a>)

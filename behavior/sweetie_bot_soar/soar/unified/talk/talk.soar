@@ -156,6 +156,16 @@ sp {talk*prefer*waiting-operators
 	(<s> ^operator <op1> > <op2>)
 }
 
+# postponed topic is preferable
+sp {talk*prefer*postponed-topics
+	(state <s> ^substate talk ^operator <op1> + ^operator {<> <op1> <op2>} + ^object <obj> ^beliefs.predicate <pred>)
+	(<pred> ^name talk-postponed-topic ^topic <topic> ^object <obj>)
+	(<op1> ^substate verbolize ^utility <utility> ^process-link.topic <topic>)
+	(<op2> ^substate verbolize ^utility <utility> ^process-link.topic {<> <topic>})
+-->
+	(<s> ^operator <op1> > <op2>)
+}
+
 # searching missing speaker is preferable then trying to look at him
 sp {talk*prefer*search-missing
 	(state <s> ^substate talk ^operator <op1> + ^operator {<> <op1> <op2>} +)
