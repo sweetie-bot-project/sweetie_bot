@@ -295,7 +295,7 @@ sp {security*propose*say-servo-failed
 	(<s> ^operator <op> +, =)
 	(<op> ^name say-servo-failed ^type automatic ^add-predicate <pred-new> ^add-output-command textcmd ^output-command-args <cmd>)
 	(<pred-new> ^name said-about-servo-failed ^deadline-time 30.0)
-	(<cmd> ^type |voice/say| ^command |Отказ исполнительной системы! Отказ исполнительной системы! Спасайте меня.|)
+	(<cmd> ^type |voice/say| ^command |Отказ исполнительной системы! Отказ исполнительной системы! Спасайте меня.| ^automatic-remove yes)
 }
 
 # wait until servos are normal

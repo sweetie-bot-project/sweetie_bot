@@ -36,7 +36,7 @@ sp {automatic*propose*remove-output-link-cmd
 sp {prefer*remove-output-link-cmd
 	(state <s> ^operator <op1> + ^operator {<> <op1> <op2>} +)
 	(<op1> ^name automatic-remove-output-link-cmd)
-	(<op2> ^type cognition)
+	(<op2> ^type cognition ^name {<> automatic-remove-output-link-cmd})
 -->
 	(<s> ^operator <op1> < <op2>)
 }
