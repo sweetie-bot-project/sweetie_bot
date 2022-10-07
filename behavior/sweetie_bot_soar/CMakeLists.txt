@@ -177,6 +177,7 @@ catkin_install_python(PROGRAMS
    scripts/quest_translator.py
    scripts/quest_animation_tags.py
    scripts/quest_check_sounds.py
+   scripts/quiz_translator.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
