@@ -77,6 +77,15 @@ sp {talk-heard*elaboration*reaction-conditional
 	(<s> ^reaction <r>)
 }
 
+# select unique reaction
+sp {talk-heard*elaboration*reaction-unique
+	(state <s> ^substate talk-heard ^answer-topic <topic> ^reaction-unique <r> -^selected-unique-reaction)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name select-unique-rection ^type cognition automatic)
+	(<op> ^parent <s> ^attribute reaction selected-unique-reaction ^link-value <r>)
+}
+
 # produce talk-postponed event if question was asked but answer is not relevant to it
 sp {talk-heard*elaborate*talk-postponed-topic
 	(state <s> ^substate talk-heard ^conclusion phrase-specific-reaction ^waiting-answer-type question ^question-topic <topic> ^actor <obj> ^beliefs <b> ^actions <a>)
