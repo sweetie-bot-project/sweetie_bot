@@ -1,3 +1,10 @@
+sp {quiz*elaborate*quiz
+	(state <s> ^top-state 1 ^mem <m>)
+-->
+	(<m> ^quiz <q>)
+}
+
+
 sp {quiz*elaborate*question-0
 	(state <s> ^top-state 1 ^mem.quiz <quiz>)
 -->
