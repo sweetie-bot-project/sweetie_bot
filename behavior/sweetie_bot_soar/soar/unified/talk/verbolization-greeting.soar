@@ -215,9 +215,8 @@ sp {verbolization*elaborate*no-questions-left*initiate
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
 	-{(<v> ^frame <f>) 
 	  (<f> ^type question ^topic {<> goodbye <topic>}) 
-	  -{(<b> ^predicate <p>) 
-	    (<p> ^name ignor-topic ^actor <obj> ^topic <topic>)
-	   }
+	  -(<v> ^ignor-topic <topic>) 
+	  -(<v> ^reject-topic <topic>) 
     }
 	-{(<b> ^predicate <pred>)
 	  (<pred> ^name no-questions-for-speaker ^object <obj>)
@@ -237,13 +236,13 @@ sp {verbolization*elaborate*no-questions-left*talk-deadline
 
 # remove beliefs that no questions left
 sp {verbolization*elaborate*no-questions-left*terminate
-	(state <s> ^substate talk ^belifs <b> ^object <obj> ^verbolization.frame <f>)
+	(state <s> ^substate talk ^belifs <b> ^object <obj> ^verbolization <v>)
 	(<b> ^predicate <pred>)
 	(<pred> ^name no-questions-for-speaker ^object <obj>)
+	(<v> ^frame <f>)
 	(<f> ^type question ^topic {<> goodbye <topic>}) 
-	-{(<b> ^predicate <p>) 
-	  (<p> ^name ignor-topic ^actor <obj> ^topic <topic>)
-	}
+	-(<v> ^ignor-topic <topic>) 
+	-(<v> ^reject-topic <topic>) 
 -->	
 	(<s> ^operator <op> +, =)
 	(<op> ^type cognition automatic ^remove-predicate <pred>)

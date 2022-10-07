@@ -177,14 +177,37 @@ sp {talk*prefer*search-missing
 
 # TODO use impasse
 
-# reject topic marked to be rejected
-sp {talk*prefer*reject-talk-topic 
-	(state <s> ^substate talk ^operator <op> + ^beliefs.predicate <pred> ^object <obj>)
-	(<op> ^name {<<|question-verbolization| |statement-verbolization| |reaction-verbolization|>>} ^process-link.topic <topic>)
+#
+# translate predicates to verbolization modifiers
+#
+
+sp {talk*elaborate*verbolization-ignor-topic
+	(state <s> ^substate talk ^beliefs.predicate <pred> ^object <obj> ^verbolization <v>)
+	(<pred> ^name ignor-topic ^topic <topic> ^actor <obj>)
+-->
+	(<v> ^ignor-topic <topic>)
+}
+
+# reject topic marked to be rejected with predicate
+sp {talk*elaborate*verbolization-reject-topic
+	(state <s> ^substate talk ^beliefs.predicate <pred> ^object <obj> ^verbolization <v>)
 	(<pred> ^name reject-talk-topic ^topic <topic> ^object <obj>)
+-->
+	(<v> ^reject-topic <topic>)
+}
+
+#
+# topic selection preferences
+#
+
+# reject topic via verbolization
+sp {talk*prefer*reject-reject-topic 
+	(state <s> ^substate talk ^operator <op> + ^verbolization.reject-topic <topic>)
+	(<op> ^name {<<|question-verbolization| |statement-verbolization| |reaction-verbolization|>>} ^process-link.topic <topic>)
 -->
 	(<s> ^operator <op> ~)
 }
+
 
 # numeric preferences for verbolize operators
 sp {talk*prefer*verbolization-numerical-base
@@ -196,11 +219,10 @@ sp {talk*prefer*verbolization-numerical-base
 
 # avoid ignored topics
 sp {talk*prefer*verbolization-avoid-ignored-topics
-	(state <s> ^substate talk ^operator <op> + ^beliefs.predicate <pred> ^object <obj>)
+	(state <s> ^substate talk ^operator <op> + ^verbolization.ignor-topic <topic>)
 	(<op> ^name {<<|question-verbolization| |statement-verbolization| |reaction-verbolization|>>} ^process-link.topic <topic>)
-	(<pred> ^name ignor-topic ^topic <topic> ^actor <obj>)
 -->
-	(<s> ^operator <op> = -50)
+	(<s> ^operator <op> = -70)
 }
 
 # avoid mentioned topics
@@ -209,7 +231,7 @@ sp {talk*prefer*verbolization-avoid-recent-topics
 	(<op> ^name {<<|question-verbolization| |statement-verbolization| |reaction-verbolization|>>} ^process-link.topic <topic>)
 	(<ev> ^topic <topic>)
 -->
-	(<s> ^operator <op> = -30)
+	(<s> ^operator <op> = -50)
 }
 
 # COGNITION RULES
