@@ -85,21 +85,21 @@ sp {quiz*elaborate*ask-about-quiz-again*prefect
 
 sp {quiz*elaborate*ask-about-quiz-again*good
 	(state <s> ^substate talk ^verbolization.frame <f>)
-	(<f> ^topic ask-about-quiz ^quest-finised-score {< 1.0 > 0.5})
+	(<f> ^topic ask-about-quiz ^quest-finised-score {< 1.0 > 0.1})
 -->
 	(<f> ^text |Хочешь снова поучаствовать в викторине? Ты неплохо отвечал, но не все ответы были верными.|)
 }
 
 sp {quiz*elaborate*ask-about-quiz-again*bad
 	(state <s> ^substate talk ^verbolization.frame <f>)
-	(<f> ^topic ask-about-quiz ^quest-finised-score {< 0.5  > -1.0})
+	(<f> ^topic ask-about-quiz ^quest-finised-score {<= 0.1  > -1.0})
 -->
 	(<f> ^text |Хочешь снова поучаствовать в викторине? Твой прошлый результат был... не очень.|)
 }
 
 sp {quiz*elaborate*ask-about-quiz-again*abysmal
 	(state <s> ^substate talk ^verbolization.frame <f>)
-	(<f> ^topic ask-about-quiz ^quest-finised-score {< 0.5  > -1.0})
+	(<f> ^topic ask-about-quiz ^quest-finised-score -1.0)
 -->
 	(<f> ^text |Хочешь снова поучаствовать в викторине? Твой прошлый результат был так плох, что я подозреваю, что ты отвечал неправильно специально.|)
 }
@@ -301,14 +301,14 @@ sp {quiz*elaorate*quiz-finished-verbolization-perfect
 
 sp {quiz*elaorate*quiz-finished-verbolization-good
 	(state <s> ^substate talk ^verbolization.frame <f>)
-	(<f> ^quiz-score {< 1.0 > 0.5})
+	(<f> ^quiz-score {< 1.0 > 0.1})
 -->
 	(<f> ^topic quiz-finished ^type statement ^animation-tag confirmation ^text |Викторина завершена. Неплохой результат... Но можно было лучше.|)
 }
 
 sp {quiz*elaorate*quiz-finished-verbolization-bad
 	(state <s> ^substate talk ^verbolization.frame <f>)
-	(<f> ^quiz-score {< 0.5 > -1.0})
+	(<f> ^quiz-score {<= 0.1 > -1.0})
 -->
 	(<f> ^topic quiz-finished ^type statement ^animation-tag confirmation ^text |Викторина завершена. Возможно, вам стоит попробовать еще раз...|)
 }
