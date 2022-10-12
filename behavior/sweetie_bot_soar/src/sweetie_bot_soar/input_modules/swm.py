@@ -157,7 +157,7 @@ class SpatialWorldModel:
                 try:
                     pose_stamped = self._tf_listener.transformPose(self._world_frame, pose_stamped)
                 except tf.ExtrapolationException:
-                    rospy.logwarn("SWM: unable to extrapolate (%s, %s) detection pose in %s s in the past. Detection is skipped.", detection_msg.label, detection_msg.type, ropsy.Time.now() - detection_msg.header.stamp)
+                    rospy.logwarn("SWM: unable to extrapolate (%s, %s) detection pose in %s s in the past. Detection is skipped.", detection_msg.label, detection_msg.type, rospy.Time.now() - detection_msg.header.stamp)
                     continue
 
                 # search detected object in index

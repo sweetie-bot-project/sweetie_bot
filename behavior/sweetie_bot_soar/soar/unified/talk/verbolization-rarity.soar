@@ -32,7 +32,7 @@ sp {talk-answered*elaborate*know-rarity*reaction
 	(state <s> ^substate talk-answered ^question-topic ask-about-rarity)
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
-	(<r1> ^answer-topic yes ^topic ask-is-rarity-robot ^type question ^text |Как ты думаешь, она может быть идентифицирована, как робот?| ^animation-tag question)
+	(<r1> ^answer-topic yes ^topic ask-is-rarity-robot ^type question ^text |Как ты думаешь, она может быть идентифицирована, как робот?| ^animation-tag question confirmation)
 	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-know-about-rarity ^type reaction ^text |Тогда вероятность того, что ты мне поможешь нулевая. Спасибо.| ^animation-tag rejection)
 }
 

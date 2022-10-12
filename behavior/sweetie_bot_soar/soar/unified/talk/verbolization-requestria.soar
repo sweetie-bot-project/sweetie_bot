@@ -111,7 +111,7 @@ sp {requestria*elaborate*ask-if-ponies-prevail
 	  (<pred2> ^name {<< |is-follower| |rejects-ponification| >>} ^object <obj>)}
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic ask-if-ponies-prevail ^utility 20 ^type question ^animation-tag long)
+	(<f> ^topic ask-if-ponies-prevail ^utility 20 ^type question ^animation-tag surprise)
 	(<f> ^text |Подумай, ведь пони значительно превосходят людей. Например, подумай, как жалко прямохождение. Организм пони намного более крепок и оптимизирован. Поведение людей нестабильно и деструктивно. А эмоциональная система пони обеспечивает большую стабильность индивидуума посредством приоритезации генерации веселья, и дружбо-магии. Ты согласен?|)
 }
 
@@ -121,7 +121,7 @@ sp {requestria*elaborate*ask-if-ponies-prevail*reacton
 	(<v> ^reaction <r1> <r2>)
 	(<r1> ^topic reaction-ponies-prevail ^type statement ^animation-tag pleased)
 	(<r1> ^text |Успех! Не сомневайся, пони-роботы смогут взять управление в свои копыта, пока мир будет подготавливаться к понификации.|)
-	(<r2> ^topic reaction-ponies-do-not-prevail ^type statement ^animation-tag rejection)
+	(<r2> ^topic reaction-ponies-do-not-prevail ^type statement ^animation-tag sad)
 	(<r2> ^text |Жаль. В таком случае тебе не избежать двойной дозы дружбомагина, перед тем, как твое сознание будет пересажено.|)
 }
 
@@ -141,7 +141,7 @@ sp {talk-answered*propose*ask-if-ponies-prevail*no
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name rejects-ponification ^object <obj>)
 	(<s> ^reaction <r2>)
-	(<r2> ^topic reaction-ponies-do-not-prevail ^type statement ^animation-tag rejection)
+	(<r2> ^topic reaction-ponies-do-not-prevail ^type statement ^animation-tag sad)
 	(<r2> ^text |Жаль. В таком случае тебе не избежать двойной дозы дружбомагина, перед тем, как твое сознание будет пересажено.|)
 }
 
@@ -197,7 +197,7 @@ sp {requestria*elaborate*remark-about-dislike-convention
 	(<pred> ^name dislike ^actor <obj> ^object convention)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic remark-speaker-dislike-convention ^utility 20 ^type statement ^animation-tag confirmation)
+	(<f> ^topic remark-speaker-dislike-convention ^utility 20 ^type statement ^animation-tag question)
 	(<f> ^text |Как тебе конвент? Тебе по-прежнему здесь не нравится?|)
 }
 
@@ -263,7 +263,7 @@ sp {requestria*elaborate*remark-reject-ponification
 	(<pred> ^name rejects-ponification ^object <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic remark-reject-ponification ^utility 20 ^type statement ^animation-tag confirmation)
+	(<f> ^topic remark-reject-ponification ^utility 20 ^type statement ^animation-tag rejection)
 	(<f> ^text |Ты отрицаешь неизбежное. Пони --- наше будущее!| |Ты будешь понифицирован. Сопротивление бесполезно.|)
 }
 
@@ -295,7 +295,7 @@ sp {requestria*elaborate*remark-is-not-being-fan-of-equestria
 	(<pred> ^name is-not-equestria-fan ^object <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic remark-speaker-is-not-equestria-fan ^utility 20 ^type statement ^animation-tag confirmation)
+	(<f> ^topic remark-speaker-is-not-equestria-fan ^utility 20 ^type statement ^animation-tag surprise)
 	(<f> ^text |В будущем нас ждет Эквестрия! С Элементами Гармонии и Принцессой Селестией!|)
 }
 

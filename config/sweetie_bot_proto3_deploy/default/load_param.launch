@@ -25,6 +25,7 @@
 	<!-- other configuraton -->
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/hardware.yaml" ></rosparam>
 	<rosparam command="load" ns="hmi" file="$(find sweetie_bot_proto3_deploy)/default/hmi_host.yaml" ></rosparam> 
+	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/vision.yaml" ></rosparam>
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/hmi_host.yaml" ></rosparam> 
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/planner.yaml" ></rosparam>
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/soar.yaml" ></rosparam>

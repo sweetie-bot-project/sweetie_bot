@@ -58,6 +58,15 @@ sp {talk-answered*elaboration*reaction-conditional
 	(<s> ^reaction <r>)
 }
 
+# select unique reaction
+sp {talk-answered*elaboration*reaction-unique
+	(state <s> ^substate talk-answered ^answer-topic <topic> ^reaction-unique <r> -^selected-unique-reaction)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name select-unique-rection ^type cognition automatic)
+	(<op> ^parent <s> ^attribute reaction selected-unique-reaction ^link-value <r>)
+}
+
 # remove waiting-answer predicate
 sp {talk-answered*propose*remove-waiting-answer
 	(state <s> ^substate talk-answered ^conclusion {<<|answer-specific-reaction| |answer-default-reaction|>>} ^waiting-answer <proc> ^actions <a>)

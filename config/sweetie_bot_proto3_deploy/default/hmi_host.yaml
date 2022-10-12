@@ -75,5 +75,5 @@ object_detection_marker:
     frame: odom_combined
     scale: 0.5
     nominal_height: 0.4
-eyes_gl_rviz: 
+eyes_rviz: 
     start_blinking: true
