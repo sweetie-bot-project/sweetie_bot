@@ -33,10 +33,9 @@ class BodyLanguageNode():
         self.msg.name = ['mouth_joint']
         self.msg.position = [-random.uniform(0.2,m)]
         self.pub.publish(self.msg)
-        rospy.loginfo(self.msg)
+        #rospy.loginfo(self.msg)
 
     def control_cb(self, cmd):
-        #rospy.loginfo(cmd)
         self.msg.header.stamp = rospy.Time.now()
         self.msg.header.seq += 1
         if cmd.type == 'eyes/emotion':
@@ -55,7 +54,7 @@ class BodyLanguageNode():
                self.msg.name = ['ear_l_joint', 'ear_r_joint']
                self.msg.position = [-random.uniform(0.0,1.1), -random.uniform(0.0,1.1)]
 
-            rospy.loginfo(f"r={led.r}, g={led.g}, b={led.b}, R={self.msg.position[0]}, L={self.msg.position[1]}")
+            rospy.logdebug(f"r={led.r}, g={led.g}, b={led.b}, R={self.msg.position[0]}, L={self.msg.position[1]}")
             self.horn(leds)
             self.pub.publish(self.msg)
 
@@ -66,19 +65,14 @@ class BodyLanguageNode():
             if cmd.command == 'begin':
                self.msg.name = ['mouth_joint']
                self.msg.position = [-0.15]
-               #if not self.mouth_timer.is_alive():
-               #    self.mouth_timer.start()
             elif cmd.command == 'end':
                self.msg.name = ['mouth_joint']
                self.msg.position = [-0.0]
-               #if self.mouth_timer.is_alive():
-               #    self.mouth_timer.cancel()
             else:
                self.msg.name = []
                self.msg.position = []
 
-            #rospy.loginfo(self.msg)
-            rospy.loginfo(f"M={self.msg.position[0]}")
+            rospy.logdebug(f"M={self.msg.position[0]}")
             self.pub.publish(self.msg)
 
 def main():
