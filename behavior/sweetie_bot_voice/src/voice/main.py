@@ -240,17 +240,19 @@ class VoiceNode():
             
     def _execute_text_command(self, cmd):
         # Check command type
-        self.pub.publish('mouth/speech', 'begin')
 
         ret = False
         if cmd.type == 'voice/play_wav':
             # Play specified sound file
+            self.pub.publish('mouth/speech', 'begin')
             ret = self._player.play(cmd.command)
+            self.pub.publish('mouth/speech', 'end')
         elif cmd.type == 'voice/say':
             # Invoke text-to-speech subsystem
+            self.pub.publish('mouth/speech', 'begin')
             ret = self._default_profile.speak(cmd.command)
+            self.pub.publish('mouth/speech', 'end')
 
-        self.pub.publish('mouth/speech', 'end')
         return ret
 
     def command_cb(self, cmd):
