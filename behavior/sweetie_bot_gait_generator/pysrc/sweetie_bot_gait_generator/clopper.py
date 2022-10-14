@@ -1,4 +1,4 @@
-"""Helper module for invoking sweetie_bot_clop_generator using actionlib."""
+"""Helper module for invoking sweetie_bot_gait_generator using actionlib."""
 
 import rospy
 import actionlib
@@ -7,11 +7,11 @@ from tf.transformations import quaternion_from_euler
 
 import std_msgs.msg
 import geometry_msgs.msg
-from sweetie_bot_clop_generator.msg import MoveBaseAction, EndEffectorGoal
-from sweetie_bot_clop_generator.msg import MoveBaseGoal as MoveBaseGoalBase
+from sweetie_bot_gait_generator.msg import MoveBaseAction, EndEffectorGoal
+from sweetie_bot_gait_generator.msg import MoveBaseGoal as MoveBaseGoalBase
 
 class MoveBaseGoal(MoveBaseGoalBase):
-    """Extends sweetie_bot_clop_generator.msg.MoveBaseGoal."""
+    """Extends sweetie_bot_gait_generator.msg.MoveBaseGoal."""
 
     def __init__(self, gait_type = "walk_overlap", n_steps = 4, duration = 4, nominal_height = 0.215):
         """Create MoveBaseGoal message with default field values."""
@@ -90,7 +90,7 @@ class MoveBaseGoal(MoveBaseGoalBase):
         Keyword arguments:
         ee_names -- names of end effectors (default: ["leg1", "leg2", "leg3", "leg4"])
         frame_type -- how geat generator should interpret target position,
-            see sweetie_bot_clop_generator.msg.EndEffectorGoal, default: NOMINAL_POSE
+            see sweetie_bot_gait_generator.msg.EndEffectorGoal, default: NOMINAL_POSE
         """
         self.ee_goal = []
         for name in ee_names:
@@ -113,7 +113,7 @@ class MoveBaseGoal(MoveBaseGoalBase):
            Zero bits means that coresponding coordinate is fixed. The order of coordinates is (X,Y,Z) from low bit to high.
         contact --- set true if at the end of motion leg is in contact.
         frame_type -- how gait generator should interpret target position,
-            see sweetie_bot_clop_generator.msg.EndEffectorGoal, default: NOMINAL_POSE
+            see sweetie_bot_gait_generator.msg.EndEffectorGoal, default: NOMINAL_POSE
 
         """
         for ee_goal in self.ee_goal:
@@ -134,15 +134,15 @@ class MoveBaseGoal(MoveBaseGoalBase):
         raise AttributeError
 
 class Clopper:
-    """sweetie_bot_clop_generator MoveBase aclionlib client."""
+    """sweetie_bot_gait_generator MoveBase aclionlib client."""
 
     def __init__(self, topic):
-        """Init ROS node and connect to sweetie_bot_clop_generator.msg.MoveBaseAction action server.
+        """Init ROS node and connect to sweetie_bot_gait_generator.msg.MoveBaseAction action server.
         
         Keyword arguments:
         topic -- actionlib topic
         """
-        rospy.init_node('clop_generator_client_aka_clopper')
+        rospy.init_node('gait_generator_client_aka_clopper')
         # connect to gait generation server
         self.client = actionlib.SimpleActionClient(topic, MoveBaseAction)
         self.client.wait_for_server()
@@ -151,7 +151,7 @@ class Clopper:
         """Send MoveBaseGoal to gait generator and print result.
         
         Keyword arguments:
-        msg --- sweetie_bot_clop_generator.msg.MoveBaseGoal message.
+        msg --- sweetie_bot_gait_generator.msg.MoveBaseGoal message.
         """
         # send goal to server
         msg.header.stamp = Time.now()

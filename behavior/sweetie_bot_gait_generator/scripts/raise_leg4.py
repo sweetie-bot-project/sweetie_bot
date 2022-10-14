@@ -8,8 +8,8 @@
 #
 
 from math import pi
-from sweetie_bot_clop_generator.clopper import Clopper, MoveBaseGoal
-from sweetie_bot_clop_generator.msg import EndEffectorGoal
+from sweetie_bot_gait_generator.clopper import Clopper, MoveBaseGoal
+from sweetie_bot_gait_generator.msg import EndEffectorGoal
 
 if __name__ == '__main__':
     # create message
@@ -21,5 +21,5 @@ if __name__ == '__main__':
     print(msg)
 
     # send message to server
-    clop = Clopper("clop_generator")
+    clop = Clopper("gait_generator")
     clop.invokeClopGenerator(msg)

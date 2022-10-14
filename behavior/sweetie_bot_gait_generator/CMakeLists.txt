@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sweetie_bot_clop_generator)
+project(sweetie_bot_gait_generator)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -95,9 +95,9 @@ include_directories(${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ executable
      
-add_executable(towr_clop_generator src/gait_generator.cpp src/towr_trajectory_visualizer.cpp src/rigid_body_inertia_calculator.cpp)
-target_link_libraries(towr_clop_generator ${catkin_LIBRARIES})
-add_dependencies(towr_clop_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_executable(towr_gait_generator src/gait_generator.cpp src/towr_trajectory_visualizer.cpp src/rigid_body_inertia_calculator.cpp)
+target_link_libraries(towr_gait_generator ${catkin_LIBRARIES})
+add_dependencies(towr_gait_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Rename C++ executable without prefix
 # set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
@@ -117,7 +117,7 @@ add_dependencies(towr_clop_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catki
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS towr_clop_generator
+install(TARGETS towr_gait_generator
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

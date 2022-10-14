@@ -20,7 +20,7 @@ uint32 n_steps
 
 geometry_msgs/Pose base_goal
 uint32 base_goal_bounds
-sweetie_bot_clop_generator/EndEffectorGoal[] ee_goal
+sweetie_bot_gait_generator/EndEffectorGoal[] ee_goal
 
 float64 position_tolerance
 float64 orientation_tolerance

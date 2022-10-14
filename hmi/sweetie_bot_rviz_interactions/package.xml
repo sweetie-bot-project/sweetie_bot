@@ -23,7 +23,7 @@
   <depend>geometry_msgs</depend>
   <depend>visualization_msgs</depend>
 
-  <depend>sweetie_bot_clop_generator</depend>
+  <depend>sweetie_bot_gait_generator</depend>
 
   <depend>sweetie_bot_control_msgs</depend>
   <depend>sweetie_bot_text_msgs</depend>

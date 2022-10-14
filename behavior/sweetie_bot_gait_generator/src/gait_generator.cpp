@@ -1340,9 +1340,9 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 
 int main(int argc, char **argv)
 {
-	ros::init(argc, argv, "clop_generator");
+	ros::init(argc, argv, "gait_generator");
 
-	sweetie_bot::ClopGenerator generator("clop_generator");
+	sweetie_bot::ClopGenerator generator("gait_generator");
 
 	ros::spin();
 

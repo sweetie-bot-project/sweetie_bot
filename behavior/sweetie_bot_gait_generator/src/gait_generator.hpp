@@ -6,8 +6,8 @@
 #include <towr/nlp_formulation_base.h>
 #include <ifopt/ipopt_solver.h>
 
-#include <sweetie_bot_clop_generator/MoveBaseAction.h>
-#include <sweetie_bot_clop_generator/SaveTrajectory.h>
+#include <sweetie_bot_gait_generator/MoveBaseAction.h>
+#include <sweetie_bot_gait_generator/SaveTrajectory.h>
 #include <sweetie_bot_control_msgs/FollowStepSequenceAction.h>
 
 namespace sweetie_bot {
@@ -16,12 +16,12 @@ class ClopGenerator
 {
 	protected:
 		// MoveBase action server typdefs
-		typedef sweetie_bot_clop_generator::EndEffectorGoal EndEffectorGoal;
+		typedef sweetie_bot_gait_generator::EndEffectorGoal EndEffectorGoal;
 
-		typedef sweetie_bot_clop_generator::MoveBaseAction MoveBaseAction;
-		typedef sweetie_bot_clop_generator::MoveBaseGoal MoveBaseGoal;
-		typedef sweetie_bot_clop_generator::MoveBaseResult MoveBaseResult;
-		typedef sweetie_bot_clop_generator::MoveBaseGoalConstPtr MoveBaseGoalConstPtr;
+		typedef sweetie_bot_gait_generator::MoveBaseAction MoveBaseAction;
+		typedef sweetie_bot_gait_generator::MoveBaseGoal MoveBaseGoal;
+		typedef sweetie_bot_gait_generator::MoveBaseResult MoveBaseResult;
+		typedef sweetie_bot_gait_generator::MoveBaseGoalConstPtr MoveBaseGoalConstPtr;
 
 		// FollowStepSequence action server typdefs
 		typedef sweetie_bot_control_msgs::FollowStepSequenceAction FollowStepSequenceAction;
@@ -29,8 +29,8 @@ class ClopGenerator
 		typedef sweetie_bot_control_msgs::FollowStepSequenceResult FollowStepSequenceResult;
 
 		// SaveTrajectory service
-		typedef sweetie_bot_clop_generator::SaveTrajectory::Response SaveTrajectoryResponse;
-		typedef sweetie_bot_clop_generator::SaveTrajectory::Request SaveTrajectoryRequest;
+		typedef sweetie_bot_gait_generator::SaveTrajectory::Response SaveTrajectoryResponse;
+		typedef sweetie_bot_gait_generator::SaveTrajectory::Request SaveTrajectoryRequest;
 	
 	protected:
 		struct EndEffectorInfo {

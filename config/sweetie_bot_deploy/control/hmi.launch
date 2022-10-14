@@ -50,7 +50,7 @@
 		</node>
 		<!-- robot position control -->
 		<node name="destination_marker" pkg="sweetie_bot_rviz_interactions" type="destination_marker" >
-			<remap from="move_base_action" to="$(arg robot_ns)/clop_generator"/>
+			<remap from="move_base_action" to="$(arg robot_ns)/gait_generator"/>
 		</node>
 		<!-- object detection imitation -->
 		<node name="object_detection_marker" pkg="sweetie_bot_rviz_interactions" type="object_detection_marker" >

@@ -105,10 +105,10 @@ Upon activation it activates corresponding controller via `SetOperational` actio
 `destination_marker` node
 -------------------------
 
-This node contains `InteractiveMarker` which invoke `MoveBase` action allowing you to control the gait generator (`clop_generator`) by publishing `sweetie_bot_clop_generator::MoveBaseGoal` message.
+This node contains `InteractiveMarker` which invoke `MoveBase` action allowing you to control the gait generator (`gait_generator`) by publishing `sweetie_bot_gait_generator::MoveBaseGoal` message.
 Marker itself can be placed in desired gait target position. Arrow above the marker points in the direction of the robot gaze after it reaches the goal.
-Every time when gait gets executed, resulting trajectories recorded into `saved_msgs/step_sequence/recorded_trajectory` and `saved_msgs/move_base/recorded_trajectory` ROS parameters. It happens by calling `clop_generator/save_trajectory` service with `sweetie_bot_clop_generator::SaveTrajectory` message.
-Context menu contains `clop_generator` settings (type of gait, number of steps, gait duration), allows to change name of recorded trajectory, as well as invoke `clop_generator`.
+Every time when gait gets executed, resulting trajectories recorded into `saved_msgs/step_sequence/recorded_trajectory` and `saved_msgs/move_base/recorded_trajectory` ROS parameters. It happens by calling `gait_generator/save_trajectory` service with `sweetie_bot_gait_generator::SaveTrajectory` message.
+Context menu contains `gait_generator` settings (type of gait, number of steps, gait duration), allows to change name of recorded trajectory, as well as invoke `gait_generator`.
 
 ### ROS interface
 
@@ -123,11 +123,11 @@ Context menu contains `clop_generator` settings (type of gait, number of steps, 
 
 #### Called services
 
-* Client: `/clop_generator/save_trajectory` (`SaveTrajectory`) --- service which saves last executed gait as trajectories in ROS parameters.
+* Client: `/gait_generator/save_trajectory` (`SaveTrajectory`) --- service which saves last executed gait as trajectories in ROS parameters.
 
 #### Actionlib
 
-* Client: `move_base_action` (`MoveBase`) --- invokes `clop_generator` with end effectors described in parameters.
+* Client: `move_base_action` (`MoveBase`) --- invokes `gait_generator` with end effectors described in parameters.
 
 #### Parameters
 
@@ -141,7 +141,7 @@ Context menu contains `clop_generator` settings (type of gait, number of steps, 
 * `~duration` (`double`) --- duration of the gait in seconds. User can change its value in context menu. Default: `4.0`.
 * `~nominal_height` (`double`) --- target height of the robot base after reaching the position. Default: `0.1825`.
 * `~recorded_trajectory_name` (`string`) --- default recorded trajectory name. Default: `'recorded_trajectory'`
-* `~ee_names` (`string[]`) --- the set of `clop_generator` end effector names.
+* `~ee_names` (`string[]`) --- the set of `gait_generator` end effector names.
     Default: `[]`
 
 

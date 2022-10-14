@@ -7,7 +7,7 @@ and do not have many features (planar gaits, end-effector position control and s
 this package depends on following fork: https://github.com/sweetie-bot-project/sweetie_bot
 
 
-`clop_generator` node
+`gait_generator` node
 ---------------------
 
 This node receives motion requests via actionlib, performs motion generation and then moves robot by passing 
@@ -45,7 +45,7 @@ Current robot pose received via `tf` subsystem is used as initial pose. Legs tha
 
 ### Target pose 
 
-Desired pose is specified with `sweetie_bot_clop_generator/MoveBaseGoal` message. For more information see message specification.
+Desired pose is specified with `sweetie_bot_gait_generator/MoveBaseGoal` message. For more information see message specification.
 
 The most important fields^
 * `gait_type` is one of supported gait: `free`, `stand`, `walk[_right]`, `walk_overlap[_right]`, `trot[_right]`, `pace[_right]`, `pronk[_right]`.  Gait type specifies leg movement sequence:
@@ -104,13 +104,13 @@ The most important fileds:
 
 **Provides**:
 
-* `save_trajectory` (`sweetie_bot_clop_generator/SaveTrajectory`) --- save the last generated trajectory in ROS parameter with given name in namespace specified by  `storage_namespace` parameter.
+* `save_trajectory` (`sweetie_bot_gait_generator/SaveTrajectory`) --- save the last generated trajectory in ROS parameter with given name in namespace specified by  `storage_namespace` parameter.
 
 #### Actionlib
 
 **Provides**:
 
-* `.` (`sweetie_bot_clop_generator/MoveBase`, actionlib server) --- receive move requests, perform motion planning and execute resulting trajectory.
+* `.` (`sweetie_bot_gait_generator/MoveBase`, actionlib server) --- receive move requests, perform motion planning and execute resulting trajectory.
 
 **Requires**:
 
@@ -169,8 +169,8 @@ See source code for documentation in docstring format and `scripts` directory fo
 
 Typical usage pattern:
 
-    from sweetie_bot_clop_generator.clopper import Clopper, MoveBaseGoal
-    # create message (clopper.MoveBaseGoal is subclass of sweetie_bot_clop_generator.MoveBaseGoal)
+    from sweetie_bot_gait_generator.clopper import Clopper, MoveBaseGoal
+    # create message (clopper.MoveBaseGoal is subclass of sweetie_bot_gait_generator.MoveBaseGoal)
 	# set gait type, number of steps and movement duration
     msg = MoveBaseGoal(gait_type = "walk_overlap", n_steps = 4, duration = 3.4)
 	# set realtive shift of base link
@@ -179,6 +179,6 @@ Typical usage pattern:
     msg.addEndEffectorsTargets(["leg1","leg2","leg3","leg4"]) 
 
     # send message to server
-    clop = Clopper("clop_generator") # "clop_generator" is gait generator node name
+    clop = Clopper("gait_generator") # "gait_generator" is gait generator node name
     clop.invokeClopGenerator(msg) 
 

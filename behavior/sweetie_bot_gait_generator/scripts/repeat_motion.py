@@ -8,13 +8,14 @@
 #
 
 from math import pi
-from sweetie_bot_clop_generator.clopper import Clopper, MoveBaseGoal
+from sweetie_bot_gait_generator.clopper import Clopper, MoveBaseGoal
+from sweetie_bot_gait_generator.msg import EndEffectorGoal
 
 if __name__ == '__main__':
     # create message
-    msg = MoveBaseGoal(gait_type = "walk_overlap", n_steps = 4, duration = 3.4)
-    msg.setTargetBaseShift(x = 0.4, y = 0.0, angle = 0.0) 
+    msg = MoveBaseGoal()
+    msg.execute_only = True
 
     # send message to server
-    clop = Clopper("clop_generator")
+    clop = Clopper("gait_generator")
     clop.invokeClopGenerator(msg)

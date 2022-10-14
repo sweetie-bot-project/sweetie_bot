@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>sweetie_bot_clop_generator</name>
+  <name>sweetie_bot_gait_generator</name>
   <version>0.0.0</version>
   <description>TOWR based gait generator for SweetieBot robot.</description>
 
