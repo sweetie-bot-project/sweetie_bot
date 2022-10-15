@@ -2,6 +2,7 @@
 #define EYESTATE_H
 
 #include "consts.h"
+#include <vector>
 
 class QPointF;
 class QColor;
@@ -43,7 +44,7 @@ struct EyeState {
     float topEyelidAngle       = -5;
     float topEyelidY           = 135;
     float bottomEyelidAngle    = -5;
-    float bottomEyelidY        = 725;
+    float bottomEyelidY        = 740;
 
     // Colors
     QColor eyeColor            = Qt::green;
@@ -70,7 +71,7 @@ struct EyeState {
         topEyelidAngle    = -5;
         topEyelidY        = 135;
         bottomEyelidAngle = -5;
-        bottomEyelidY     = 725;
+        bottomEyelidY     = 740;
     }
 
     inline void resetColors() {
@@ -89,7 +90,7 @@ struct EyeState {
     }
 
     // @Note: All color assigned at once, so they all must be valid!
-    //        May be should rethink the process later.
+    //        Maybe should rethink the process later.
     inline void assignSelectively(EyeState source, MoveFlags f) {
         if (f & EyePosition)  center = source.center;
         if (f & EyeRotation)  angle  = source.angle;
@@ -112,6 +113,54 @@ struct EyeState {
         }
     }
 };
+
+struct EyeAnimation {
+    EyeState initState;
+
+    std::vector<EyeState> states;
+    std::vector<int> msDurations;
+
+    void setInitialState(EyeState state) {
+        initState = state;
+    }
+
+    void appendState(EyeState state, int ms) {
+        states.push_back(state);
+        msDurations.push_back(ms);
+    }
+
+    void clear() {
+        states.clear();
+        msDurations.clear();
+    }
+};
+
+struct EyesAnimation {
+    EyeAnimation leftEyeAnimation;
+    EyeAnimation rightEyeAnimation;
+
+    MoveFlags animationFlags = (MoveFlags)0xFFFF;
+    bool isInitializedWithBlink = true;
+
+    void setInitialStates(EyeState leftState, EyeState rightState) {
+        leftEyeAnimation.setInitialState(leftState);
+        rightEyeAnimation.setInitialState(rightState);
+    }
+
+    void appendStates(EyeState leftState, EyeState rightState, int ms) {
+        leftEyeAnimation.appendState(leftState, ms);
+        rightEyeAnimation.appendState(rightState, ms);
+    }
+
+    void clear() {
+        leftEyeAnimation.clear();
+        rightEyeAnimation.clear();
+
+        animationFlags = (MoveFlags)0xFFFF;
+        isInitializedWithBlink = true;
+    }
+};
+
 
 inline float lerp(float first_value, float second_value, float t) {
     return first_value * (1 - t) + second_value * t;
