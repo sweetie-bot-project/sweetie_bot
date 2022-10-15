@@ -116,7 +116,7 @@ sp {verbolize*propose*emotion
 	(<op> ^name emotion ^type automatic ^priority 24)
 	(<op> ^parent <proc> ^attribute emotion-is-displayed ^link-value yes)
 	(<op> ^add-output-command textcmd ^output-command-args <cmd>)
-	(<cmd> ^type |eyes/emotion| ^command <name>)
+	(<cmd> ^type |eyes/emotion| ^command <name> ^automatic-remove yes)
 }
 
 # SELECT AND PERFORM ANIMATION
@@ -257,7 +257,7 @@ sp {verbolize*elaborate*terminate-emotion
 	(<proc> ^emotion-is-displayed)
 -->
 	(<op> ^add-output-command textcmd ^output-command-args <cmd>)
-	(<cmd> ^type |eyes/emotion| ^command normal)
+	(<cmd> ^type |eyes/emotion| ^command normal ^automatic-remove yes)
 }
 
 #sp {verbolize*propose*on-text-action-succeed

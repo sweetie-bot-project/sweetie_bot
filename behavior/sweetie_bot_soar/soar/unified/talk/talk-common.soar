@@ -23,6 +23,13 @@ sp {talk-event*elaborate-recent-events
 	(<c> ^event <ev>)
 }
 
+# access to verbolization frames
+sp {talk-event*elaborate*verbolization
+	(state <s> ^substate talk-event ^superstate.verbolization <v>)
+-->
+	(<s> ^verbolization <v>)
+}
+
 # DEBUG
 
 # ptint topic and conclusion

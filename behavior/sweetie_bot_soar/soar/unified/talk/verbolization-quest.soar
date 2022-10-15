@@ -87,6 +87,30 @@ sp {quest*elaborate*say-about-returning-to-quest
 }
 
 #
+# speaker initiated quest
+#
+
+# ask speaker if he want to play in quest
+sp {talk-heard*elaborate*quest-request-during-question
+	(state <s> ^substate talk-heard ^topic quest ^waiting-answer-type question ^actor <obj> ^beliefs <b>)
+	-{(<b> ^predicate <pred2>)
+	  (<pred2> ^name quest ^object <obj>)}
+-->
+	(<s> ^reaction <f>)
+	(<f> ^topic ask-about-quest ^type question ^animation-tag question ^text |Хочешь поиграть со мной в квест? Но ты не ответил на вопрос...|)
+}
+
+# ask speaker if he want to play in quest
+sp {talk-heard*elaborate*quest-request-during-statement
+	(state <s> ^substate talk-heard ^topic quest -^waiting-answer-type question ^actor <obj> ^beliefs <b>)
+	-{(<b> ^predicate <pred2>)
+	  (<pred2> ^name quest ^object <obj>)}
+-->
+	(<s> ^reaction <f>)
+	(<f> ^topic ask-about-quest ^type question ^animation-tag question ^text |Хочешь поиграть со мной в квест?|)
+}
+
+#
 # propose contine quest interupted long time ago
 #
 sp {quest*elaborate*ask-about-returning-to-quest

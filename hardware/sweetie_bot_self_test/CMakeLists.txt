@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(sweetie_bot_soar)
+cmake_minimum_required(VERSION 3.0.2)
+project(sweetie_bot_self_test)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -9,12 +9,6 @@ project(sweetie_bot_soar)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   rospy
-  actionlib
-  control_msgs
-  geometry_msgs
-  flexbe_msgs
-  sweetie_bot_control_msgs
-  sweetie_bot_joystick
 )
 
 ## System dependencies are found with CMake's conventions
@@ -74,7 +68,7 @@ catkin_python_setup()
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   control_msgs#   geometry_msgs#   sweetie_bot_control_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
 
 ################################################
@@ -107,17 +101,9 @@ catkin_python_setup()
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS src
-#  LIBRARIES sweetie_bot_soar
-  CATKIN_DEPENDS 
-    rospy
-    actionlib
-    control_msgs
-    geometry_msgs
-    flexbe_msgs
-    sweetie_bot_control_msgs
-    sweetie_bot_text_msgs
-    sweetie_bot_joystick
+#  INCLUDE_DIRS include
+#  LIBRARIES sweetie_bot_self_test
+#  CATKIN_DEPENDS rospy
 #  DEPENDS system_lib
 )
 
@@ -127,14 +113,14 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-#include_directories(
+include_directories(
 # include
-#  ${catkin_INCLUDE_DIRS}
-#)
+  ${catkin_INCLUDE_DIRS}
+)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/sweetie_bot_soar.cpp
+#   src/${PROJECT_NAME}/sweetie_bot_self_test.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -145,7 +131,7 @@ catkin_package(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/sweetie_bot_soar_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/sweetie_bot_self_test_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -166,24 +152,22 @@ catkin_package(
 ## Install ##
 #############
 
+install(PROGRAMS
+   scripts/test
+   scripts/gui
+   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-catkin_install_python(PROGRAMS
-   scripts/soar
-   scripts/soar-launcher
-   scripts/quest_translator.py
-   scripts/quest_animation_tags.py
-   scripts/quest_check_sounds.py
-   scripts/quiz_translator.py
-   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# catkin_install_python(PROGRAMS
+#   scripts/my_python_script
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
-install(DIRECTORY soar
-	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
 # install(TARGETS ${PROJECT_NAME}_node
@@ -217,7 +201,7 @@ install(DIRECTORY soar
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_sweetie_bot_soar.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_sweetie_bot_self_test.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
