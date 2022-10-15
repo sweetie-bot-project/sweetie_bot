@@ -19,6 +19,8 @@
 #include <boost/math/distributions/lognormal.hpp>
 #include <random>
 
+#include <unordered_map>
+
 class MainWindow : public QOpenGLWidget {
     Q_OBJECT
 
@@ -33,9 +35,21 @@ private:
 
     QTimer *m_moveTimer;
     QTimer *m_blinkTimer;
-    QTimer *m_randomBlinkingTimer;
+    QTimer *m_randomMovementTimer;
+
+    EyeState m_leftSavedState;
+    EyeState m_rightSavedState;
+
+    EyesAnimation *m_playingAnimation;
+
+    int  m_animationStage = 0; // Zero means animation is not running
+
+    bool m_restartAutoblink = false;
+    bool m_delayedBlinkWaiting = false;
+    bool m_delayedMoveWaiting  = false;
 
     // Natural random blinkng generation
+    bool m_generationEnabled = false;
     int m_blinkGenerationTime;
     int m_msBlinkGenerationInterval;
     int m_timeUntilNextBlink;
@@ -45,6 +59,7 @@ private:
     std::random_device m_rd;
     std::default_random_engine m_noiseGenerator;
 
+    std::unordered_map<std::string, EyesAnimation *> m_animations;
 
     // ROS
     ros::NodeHandle node_;
@@ -58,13 +73,18 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void initAnimations();
+    void playAnimation(EyesAnimation *animation);
+    void animationUpdate();
+
+    void moveBothEyes(MoveFlags flags, EyeAnimation *targetSequenceLeft, EyeAnimation *targetSequenceRight);
     void moveBothEyes(MoveFlags flags, int ms, EyeState targetStateLeft, EyeState targetStateRight, bool moveWithBlink = false);
     void blinkBothEyes(int ms);
 
     EyeState generateEmotion(const EyeState &baseState, const char *emotionName);
 
 private slots:
-    void randomBlinkingGeneration();
+    void randomMovementGeneration();
 
     void updateBlink();
     void updateMove();
