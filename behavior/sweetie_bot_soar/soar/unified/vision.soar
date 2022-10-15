@@ -89,7 +89,7 @@ sp {vision*elaborate*text-filter-default
 sp {vision*elaborate*qr-code-to-speech
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^event <ev>)
-	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text {<<|yes| |no| |greeting| |excuse| |goodbye| |qr_vaccine_code| |quest|>> <text>})
+	(<ev> ^name qr-code-is-visible ^reason initiated ^predicate.text {<<|yes| |no| |greeting| |excuse| |goodbye| |qr_vaccine_code| |quest| |quiz|>> <text>})
 -->
 	(<b> ^event <speech>)
 	(<speech> ^name speech ^topic <text> ^text <text> ^type qr)

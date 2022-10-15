@@ -51,8 +51,9 @@ sp {initialization*apply*compound*action
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^compound-action <c5> <c6> <c7>)
-	(<c5> ^name push_up ^tag alone)
+#	(<m> ^compound-action <c5> <c6> <c7>)
+	(<m> ^compound-action <c6> <c7>)
+#	(<c5> ^name push_up ^tag alone) # Disabled push_up as it produces outliers due to working joint_state_publisher
 	(<c6> ^name show_off ^tag alone)
 	(<c7> ^name head_bored ^tag alone)
 }

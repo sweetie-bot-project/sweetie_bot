@@ -4,9 +4,10 @@ controller:
         controlled_chains: [ leg1, leg2, leg3, leg4, head, eyes, ears, mouth ]
         activation_delay: 2
         publish_supports: true
-        services: [ filter_joint_state_exp ]
-        filter_joint_state_exp:
+        filter_joint_state_exp_individual:
             transient_time: 1
+            joints_override: [ ear_l_joint, ear_r_joint, mouth_joint, eyes_yaw, eyes_pitch ]
+            transient_time_override: [ 0.2, 0.2, 0.2, 0.3, 0.3 ]
     joint_state_head:
         priority: 20
         controlled_chains: [ head, eyes, ears, mouth ]
