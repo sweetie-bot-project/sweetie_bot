@@ -32,7 +32,7 @@ sp {talk-answered*elaborate*know-rarity*reaction
 	(state <s> ^substate talk-answered ^question-topic ask-about-rarity)
 -->
 	(<s> ^reaction-conditional <r1> <r2>)
-	(<r1> ^answer-topic yes ^topic ask-is-rarity-robot ^type question ^text |Как ты думаешь, она может быть идентифицирована, как робот?| ^animation-tag question)
+	(<r1> ^answer-topic yes ^topic ask-is-rarity-robot ^type question ^text |Как ты думаешь, она может быть идентифицирована, как робот?| ^animation-tag question confirmation)
 	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-know-about-rarity ^type reaction ^text |Тогда вероятность того, что ты мне поможешь нулевая. Спасибо.| ^animation-tag rejection)
 }
 
@@ -93,7 +93,7 @@ sp {verbolization-rarity-robot*propose*speaker-do-no-know-about-rarity*reaction*
 
 sp {verbolization-rarity-robot*propose*speaker-do-no-know-about-rarity*reaction*no
 	(state <s> ^substate talk-answered ^question-topic speaker-does-not-know-about-rarity ^answer-topic no ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
-  	(<pred1> ^name asked-about-rarity ^object <obj> ^answer-topic no)
+  	(<pred> ^name asked-about-rarity ^object <obj> ^answer-topic no)
 -->
 	(<s> ^reaction <r1>)
 	(<r1> ^topic ask-is-rarity-robot ^type question ^text |Похоже, содержимое твоей памяти было обновлено? Ответь, моя сетра - робот?| ^animation-tag surprise)

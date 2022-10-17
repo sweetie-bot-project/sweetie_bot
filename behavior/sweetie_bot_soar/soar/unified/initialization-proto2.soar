@@ -1,0 +1,103 @@
+# INITIALIZATION
+
+
+#
+# FIRST STAGE
+#
+# create basic structures in memory
+#
+
+sp {initialization*apply*debug-time
+	(state <s> ^name initialization ^operator <op> -^io.input-link.clock)
+	(<op> ^name initialization ^stage 1)
+-->
+	(<s> ^time <t>)
+	(<t> ^now 100)
+	(<t> ^cycle 1)
+}
+
+# SECOND STAGE
+#
+# put things into memory
+#
+sp {initialization*apply*drives
+	(state <s> ^name initialization ^operator <op> ^mem <m>)
+	(<op> ^name initialization ^stage 2)
+-->
+	(<m> ^drive <d1> <d2> <d3> <d4>)
+	(<d1> ^name movement ^activation 0 ^importance 2) 
+	(<d2> ^name obey ^activation 0 ^importance 8)
+	(<d3> ^name security ^activation 0 ^importance 10)
+	(<d4> ^name curiosity ^activation 0 ^importance 5) 
+}
+
+
+sp {initialization*apply*compound*action
+	(state <s> ^name initialization ^operator <op> ^mem <m>)
+	(<op> ^name initialization ^stage 2)
+-->
+	(<m> ^compound-action <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12> <c13> <c14> <c15> <c16> <c17> <c18> <c19>)
+	(<c1> ^name brohoof_acquitance_procedure ^tag greet)
+	(<c2> ^name prance_maximum_fun ^tag alone ^tag talk)
+	(<c3> ^name menace_prepare_to_die ^tag angry)
+	(<c4> ^name brohoof_do_you_want ^tag greet)
+	(<c5> ^name hoof_stamp_do_you_want_attention ^tag angry)
+	(<c6> ^name point_control_you ^tag angry)
+	(<c7> ^name brohoof ^tag greet ^tag alone )
+	(<c8> ^name introduce_herself_friendship ^tag greet)
+	(<c9> ^name point_do_not_touch ^tag angry)
+	(<c10> ^name greeting_friendship_programs ^tag greet)
+	(<c11> ^name menace ^tag angry ^tag alone)
+	(<c12> ^name head_ask_about_sister ^tag talk)
+	(<c13> ^name sing_song1 ^tag talk ^tag alone )
+	(<c14> ^name sing_song2 ^tag talk ^tag alone )
+	(<c15> ^name complex_hybrid_state_machines ^tag talk ^tag alone)
+	(<c16> ^name seizure_cutie_mark_acquisition ^tag talk  ^tag alone)
+	(<c17> ^name applause_you_must_be_upgraded ^tag angry )
+	(<c18> ^name point_i_have_remembered_you ^tag angry )
+	(<c19> ^name head_shake_dizzy ^tag alone )
+}
+
+sp {apply*initialization*mem*step-sequences
+	(state <s> ^name initialization ^operator <op> ^mem <m>)
+	(<op> ^name initialization ^stage 2)
+-->
+	(<m> ^step-sequence <s1> <s2> <s3> <s4> <s5> <s6> <s7> <s8> <s9> <s10> <s11> <s12> <s13>)
+	(<s1> ^name turn_right_20_20_45 ^next <s2> ^enter-point yes)
+	(<s2> ^name turn_left_45 ^next <s3>)
+	(<s3> ^name turn_left_20_20_45)
+	(<s4> ^name turn_right_45 ^next <s5> ^enter-point yes)
+	(<s5> ^name walk_fwd_40 ^next <s6>)
+	(<s6> ^name turn_left_20_20_90)
+	(<s7> ^name turn_left_90 ^next <s8>)
+	(<s8> ^name walk_fwd_40 ^next <s9>)
+	(<s9> ^name turn_right_45 ^next <s10>)
+	(<s10> ^name turn_right_45 ^next <s11>)
+	(<s11> ^name backslide_right_10_00_45 ^next <s12>)
+	(<s12> ^name walk_back_20 ^next <s13>)
+	(<s13> ^name backslide_right_20_20_90 ^next <s1>)
+}
+
+sp {initialization*apply*flexbe-commands
+	(state <s> ^name initialization ^operator <op> ^mem <m>)
+	(<op> ^name initialization ^stage 2)
+-->
+	(<m> ^flexbe-command <c1> <c2> <c3> <c4> <c5>)
+	(<c1> ^name ExecuteLookAt ^param id label type timeout)
+	(<c2> ^name ExecuteCompoundAction ^param action_name)
+	(<c3> ^name ExecuteStepSequence ^param action_name)
+	(<c4> ^name ExecuteJointTrajectoryAndSay ^param joint_trajectory text text_delay is_relative)
+	(<c5> ^name ExecuteSetPose ^param pose)
+}
+
+#
+# FINISH INITIALIZATION
+#
+# set state name
+
+sp {apply*initialization-second-stage*name
+	(state <s> ^name initialization ^operator <op>)
+	(<op> ^name initialization ^stage 3)
+-->
+	(<s> ^substate general) 
+}

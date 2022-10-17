@@ -5,7 +5,7 @@ from flexbe_core import Logger
 # Superclass is imported as EventState to allow to parse state definition FlexApp correctly.
 class GenerateStepSequenceKey(EventState):
     '''
-    Generate stored sweetie_bot_clop_generator::MoveBase action. Goal is stored on ROS parameter server in serialized form.
+    Generate stored sweetie_bot_gait_generator::MoveBase action. Goal is stored on ROS parameter server in serialized form.
     This state receives ROS parameter name via input key.
 
     -- controller          string    Action server to execute action.
@@ -22,7 +22,7 @@ class GenerateStepSequenceKey(EventState):
 
     '''
 
-    def __init__(self, controller = 'clop_generator', trajectory_ns = 'saved_msgs/move_base'):
+    def __init__(self, controller = 'gait_generator', trajectory_ns = 'saved_msgs/move_base'):
         # Declare outcomes and output keys
     super(GenerateStepSequenceKey, self).__init__(controller = controller, outcomes = ['success', 'solution_not_found', 'partial_movement', 'invalid_pose', 'failure'], input_keys = ['trajectory_param'])
     # Save parameter namespace

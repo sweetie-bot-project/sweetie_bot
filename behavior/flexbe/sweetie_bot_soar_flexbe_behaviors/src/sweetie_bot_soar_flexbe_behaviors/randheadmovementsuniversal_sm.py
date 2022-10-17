@@ -73,7 +73,7 @@ class RandHeadMovementsUniversalSM(Behavior):
 
 			# x:286 y:122
 			OperatableStateMachine.add('RandPose',
-										RandPoseGenerator(topic='motion/controller/look_at/in_pose_ref', duration=self.timeout, interval=[1.0,4.0], maxXYZ=[1,0.3,0.6], minXYZ=[1.0,-0.3,0.2], frame_xyz='base_link', frame_out='odom_combined'),
+										RandPoseGenerator(topic='motion/controller/look_at/in_pose_ref', duration=self.timeout, interval=[1.0,4.0], maxXYZ=[1.0,2.0,0.6], minXYZ=[1.0,-2.0,0.2], frame_xyz='base_link', frame_out='odom_combined'),
 										transitions={'done': 'finished', 'failure': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failure': Autonomy.Off})
 

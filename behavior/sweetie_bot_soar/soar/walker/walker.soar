@@ -23,7 +23,7 @@ sp {walker*propose*rand*head*movements
 -->
 	(<s> ^operator <o> = 1 +)
    	(<o> ^name flexbe ^drive <d>)
-   	(<o> ^behavior ExecuteRandHeadMovements ^param <p>)
+   	(<o> ^behavior RandHeadMovementsUniversal ^param <p>)
 	(<p> ^timeout (+ 5 (rand-int 15)))
 }
 

@@ -2,6 +2,7 @@ from . import input_module
 
 import math
 import rospy
+import tf
 from threading import Lock
 
 from std_msgs.msg import Header
@@ -147,10 +148,17 @@ class SpatialWorldModel:
         with self._memory_lock:
             # iterate over detected objects 
             for detection_msg in msg.detections:
+                # quick fix for id change
+                detection_msg.id = 0
+
                 # extract information from detection message
                 timestamp = detection_msg.header.stamp.to_sec()
                 pose_stamped = PoseStamped(header = Header(frame_id = detection_msg.header.frame_id), pose = detection_msg.pose)
-                pose_stamped = self._tf_listener.transformPose(self._world_frame, pose_stamped)
+                try:
+                    pose_stamped = self._tf_listener.transformPose(self._world_frame, pose_stamped)
+                except tf.ExtrapolationException:
+                    rospy.logwarn("SWM: unable to extrapolate (%s, %s) detection pose in %s s in the past. Detection is skipped.", detection_msg.label, detection_msg.type, rospy.Time.now() - detection_msg.header.stamp)
+                    continue
 
                 # search detected object in index
                 key_tuple = (detection_msg.id, detection_msg.label, detection_msg.type)
@@ -171,7 +179,7 @@ class SpatialWorldModel:
 
     def __updateSpatialMemory(self, time_now):
         self._last_update_time = time_now
-        # iterate over objects, mark unseen invisible and and mark to remove outdated 
+        # iterate over objects, mark unseen invisible and mark to remove outdated 
         remove_list = []
         for key_tuple, mem_elem in self._memory_map.items():
             spatial_object = mem_elem.spatial_object

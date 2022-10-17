@@ -1,0 +1,3 @@
+pushd unified
+source proto3_source.soar
+popd

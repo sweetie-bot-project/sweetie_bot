@@ -13,3 +13,30 @@ sp {talk-failed*elaborate*substate
 	(<s> ^substate talk-event)
 	(<s> ^topic <topic> ^actor <obj>)
 }
+
+# detect if robot said somthing to object
+sp {talk-failed*elaborate*talk-has-started
+	(state <s> ^substate talk-failed ^actor <obj> ^events.event <ev> ^time.recently <time>)
+	(<ev> ^name talk-said ^object <obj> ^initiated-at {>= <time>})	
+-->
+	(<s> ^talk-has-started yes)
+}
+
+# detect that speaker is not present (talk has not started) and finish corresponding talk process
+sp {talk-failed*propose*finish-talk-before-it-started
+	(state <s> ^substate talk-failed -^talk-has-started ^beliefs.process <proc> ^actor <obj> ^actions <a>)
+	(<proc> ^substate talk ^object <obj>)
+-->
+	(<a> ^finish-status failed ^finish-process <proc>)
+}
+
+# detect that speaker is missing (in talk-failed substate)
+sp {talk-failed*propose*add-missing-speaker
+	(state <s> ^substate talk-failed ^talk-has-started ^actor <obj> ^beliefs <b> ^actions <a>)
+	-{(<b> ^predicate <pred>)
+	  (<pred> ^name missing-speaker ^object <obj>)}
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name missing-speaker ^object <obj> ^deadline-time 6.0)
+}
+

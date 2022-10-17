@@ -39,15 +39,10 @@
 		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch">
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 		</include>
-		<!-- voice  -->
-		<group ns="voice">
-			<!-- voice node  -->
-			<node pkg="sweetie_bot_voice" type="voice" name="voice_node">
-				<remap from="control" to="$(arg robot_ns)/control" />
-			</node>
-			<!-- sound_play server -->
-			<include file="$(find sound_play)/soundplay_node.launch" />
-		</group>
+		<!-- voice node  -->
+		<node pkg="sweetie_bot_voice" type="voice" name="voice">
+			<remap from="control" to="$(arg robot_ns)/control" />
+		</node>
 		<!-- FLEXBE: control node and action server -->
 		<group if="$(arg run_flexbe)">
 			<include file="$(find sweetie_bot_deploy)/highlevel/flexbe.launch" >
@@ -77,7 +72,7 @@
 				<arg name="robot_name" value="$(arg robot_name)" /> 
 			</include>
 			<!-- gait generator -->
-			<node name="clop_generator" pkg="sweetie_bot_clop_generator" type="towr_clop_generator" output="screen">
+			<node name="gait_generator" pkg="sweetie_bot_gait_generator" type="towr_gait_generator" output="screen">
 				<remap from="step_sequence" to="motion/controller/step_sequence" />     
 			</node>
 		</group>

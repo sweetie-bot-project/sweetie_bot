@@ -24,10 +24,11 @@
 	<param name="conf_file/herkulex_servos_leg34_cpf" textfile="$(find sweetie_bot_proto3_deploy)/default/herkulex_servos_leg34.cpf" ></param>
 	<!-- other configuraton -->
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/hardware.yaml" ></rosparam>
-	<rosparam command="load" ns="hmi" file="$(find sweetie_bot_proto3_deploy)/default/hmi.yaml" ></rosparam> 
-	<rosparam command="load" ns="voice" file="$(find sweetie_bot_proto3_deploy)/default/voice.yaml" ></rosparam> 
+	<rosparam command="load" ns="hmi" file="$(find sweetie_bot_proto3_deploy)/default/hmi_host.yaml" ></rosparam> 
+	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/vision.yaml" ></rosparam>
+	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/hmi_host.yaml" ></rosparam> 
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/planner.yaml" ></rosparam>
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/soar.yaml" ></rosparam>
-	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/vision.yaml" ></rosparam>
+	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/hmi_robot.yaml" ></rosparam>
 	<param name="conf_file/joystick_config_yaml" textfile="$(find sweetie_bot_proto3_deploy)/default/joystick_config.yaml" ></param>
 </launch>

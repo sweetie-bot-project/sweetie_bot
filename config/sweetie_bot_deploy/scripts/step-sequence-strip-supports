@@ -1,32 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import rospy, os, sys
-import xmlrpclib
-import StringIO
+from xmlrpc.client import Binary
+from io import BytesIO
 
 from sweetie_bot_control_msgs.msg import FollowStepSequenceGoal
 from geometry_msgs.msg import Pose
 from kdl_msgs.msg import Twist
 
 def print_help():
-	print 'Usage: {0} PARAM'.format(sys.argv[0])
-	print '''
+    print('Usage: {0} PARAM'.format(sys.argv[0]))
+    print('''
 
 In sweetie_bot_control_msgs/FollowStepSequenceGoal base position, speed and acceleration are set to zero,
-contacts indication is also removed. Resulting trajectory can be used for servo model identification.
-'''
-	sys.exit(0)
+contacts indication is also removed. Resulting trajectory can be used for servo model identification in 
+setup where robot base is fixed and legs are in air.
+''')
+    sys.exit(0)
 
 # parse command line arguments
 if len(sys.argv) < 2:
-	print_help()
+    print_help()
 
 # get ROS parameter name
 param = sys.argv[1]
 param_value = rospy.get_param(param, None)
-if not isinstance(param_value, xmlrpclib.Binary):
-    raise KeyError, 'ROS parameter type is not Binary.'
+if not isinstance(param_value, Binary):
+    raise KeyError('ROS parameter does not exist or its type is not Binary.')
 # deserialize message
 msg = FollowStepSequenceGoal()
 msg.deserialize(param_value.data)
@@ -40,9 +41,8 @@ for ee in range(len(msg.ee_motion)):
     for k in range(len(msg.ee_motion[ee].points)):
         msg.ee_motion[ee].points[k].contact = False
 # serialize and save message
-buf = StringIO.StringIO()
+buf = BytesIO()
 msg.serialize(buf)
-rospy.set_param(param, xmlrpclib.Binary(buf.getvalue()))
+rospy.set_param(param, Binary(buf.getvalue()))
 
 sys.exit(0)
-

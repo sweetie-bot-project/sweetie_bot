@@ -90,7 +90,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>353</value>
+            <value>402</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -267,7 +267,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>717</value>
+            <value>638</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -444,7 +444,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>831</value>
+            <value>773</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -467,7 +467,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>498</value>
+            <value>482</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -475,7 +475,7 @@
         </simple>
         <simple name="position_kp" type="ulong">
             <description>Position KP</description>
-            <value>64</value>
+            <value>40</value>
         </simple>
         <simple name="position_kd" type="ulong">
             <description>Position Kd</description>
@@ -490,7 +490,7 @@
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
-            <value>486</value>
+            <value>379</value>
         </simple>
         <simple name="reverse" type="boolean">
             <description>Reverse direction flag.</description>
@@ -498,7 +498,7 @@
         </simple>
         <simple name="position_kp" type="ulong">
             <description>Position KP</description>
-            <value>64</value>
+            <value>40</value>
         </simple>
         <simple name="position_kd" type="ulong">
             <description>Position Kd</description>

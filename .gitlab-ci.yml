@@ -151,14 +151,14 @@ pages:
       cat > conf/distributions <<EOF
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: buster
-      Architectures: armhf amd64
+      Architectures: armhf arm64 amd64
       Components: main
       Description: no description
       SignWith: yes
 
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: focal
-      Architectures: armhf amd64
+      Architectures: armhf arm64 amd64
       Components: main
       Description: no description
       SignWith: yes

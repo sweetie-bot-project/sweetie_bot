@@ -24,6 +24,7 @@ class ExecuteJointTrajectory(EventState):
 
         # Load FollowJointTrajectoryGoal from Parameter Server
         self._goal = self.load_goal_msg(trajectory_ns, trajectory_param)
+        self._trajectory_info = trajectory_param
 
 
     def on_enter(self, userdata):

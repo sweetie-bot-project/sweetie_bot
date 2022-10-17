@@ -87,7 +87,7 @@ class OutputModule(object):
         return None
 
     def updateHook(self, cmd_id):
-        return "completed"
+        return "succeed"
 
     def abortHook(self):
         pass

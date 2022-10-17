@@ -10,8 +10,8 @@ Also see [`CONTRIBUTING`](CONTRIBUTING.md) page for details.
 
 Build status               | master branch  |
 ---------------------------|----------------|
-ros-melodic-sweetie-bot-base | [![Build Status](https://gitlab.com/slavanap/ros-build/badges/master/build.svg)](https://gitlab.com/slavanap/ros-build/pipelines) | 
-ros-melodic-sweetie-bot      | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/master/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/master) | 
+ros-noetic-sweetie-bot-base | [![Build Status](https://gitlab.com/slavanap/ros-build/badges/master/build.svg)](https://gitlab.com/slavanap/ros-build/pipelines) | 
+ros-noetic-sweetie-bot      | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/master/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/master) | 
 
 ## Overview
 
@@ -52,7 +52,7 @@ The following instruction describes the installation process from binary package
 
 Check your system before install:
 
-* OS: Ubuntu Bionic (18.04) or Debian Stretch. For Windows and Mac users we recommend virtual machine with linux installed in it. Windows users can try [WSL](https://janbernloehr.de/2017/06/10/ros-windows) but it is less supported method.
+* OS: Ubuntu Focal (20.04) or Debian Buster. For Windows and Mac users we recommend virtual machine with linux installed in it. Windows users can try [WSL](https://janbernloehr.de/2017/06/10/ros-windows) but it is less supported method.
 * CPU: x86-64 2 GHz dual core processor or better
 * RAM: 4 GB system memory
 * GPU: Almost any modern GPU with OpenGL 2.1 hardware acceleration support
@@ -73,42 +73,42 @@ wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/install.bash | sudo bash
 
 Install software packages
 ```
-sudo apt install ros-melodic-sweetie-bot
+sudo apt install ros-noetic-sweetie-bot
 ```
 
 2. Add apt repositories manually 
 
-Alternatively you can install the ROS Melodic repository as listed in official ['ROS instruction'](http://wiki.ros.org/melodic/Installation/Ubuntu) and Sweetie Bot repository.
+Alternatively you can install the ROS Noetic repository as listed in official ['ROS instruction'](http://wiki.ros.org/noetic/Installation/Ubuntu) and Sweetie Bot repository.
 
 ```
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-sudo sh -c 'echo deb http://sweetie-bot.gitlab.io/sweetie_bot $(lsb_release -sc) main > /etc/apt/sources.list.d/sweetie-bot.list
+sudo sh -c 'echo deb http://sweetie-bot.gitlab.io/sweetie_bot $(lsb_release -sc) main > /etc/apt/sources.list.d/sweetie-bot.list'
 ```
 
 Next you have to set up your keys:
 ```
-sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 wget -qO - https://sweetie-bot.gitlab.io/sweetie_bot/repository.key | sudo apt-key add -
 ```
 
 Upgrade and install software packages
 ```
 sudo apt update && sudo apt upgrade
-sudo apt install ros-melodic-sweetie-bot
+sudo apt install ros-noetic-sweetie-bot
 ```
 
 3. Download packages manually
 
 Alternatively you can download deb packages manually.
 
-First of all refer ['ROS Installation instruction'](http://wiki.ros.org/melodic/Installation/Ubuntu) manual to add official ROS repositary.
+First of all refer ['ROS Installation instruction'](http://wiki.ros.org/noetic/Installation/Ubuntu) manual to add official ROS repositary.
 
 Download zip from [here](https://gitlab.com/sweetie-bot/sweetie_bot/pipelines).
 Click on first green check mark ✓ and choose your OS, click "Download" at the next page.
 Unpack zip file and install both .deb packages included.
 
 ```
-unzip sweetie-bot-bionic-amd64.zip
+unzip sweetie-bot-focal-amd64.zip
 sudo dpkg -i sweetie-bot-*.deb
 sudo apt install -f
 ```
@@ -156,7 +156,7 @@ roslaunch sweetie_bot_deploy joint_space_control.launch
 Following command starts MoveIt! `move_group` and FlexBe subsystem:
 
 ```
-roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=true
+roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe_gui:=true run_moveit:=true
 ```
 
 For more details see [`sweetie_bot_deploy` package](config/sweetie_bot_deploy).

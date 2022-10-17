@@ -1,4 +1,4 @@
-clop_generator:
+gait_generator:
     period: 0.056
     contact_height_tolerance: 0.005
     world_frame: "odom_combined"
@@ -57,17 +57,9 @@ clop_generator:
         bound_phase_duration_max: 2.0
         min_swing_height: 0.01
         costs: # better for on-line synthesis
-            base_lin_motion: 0.00001
-            base_ang_motion: 0.0001
-            ee_motion: 0.000025
-        #costs: # turn costs off
-            #costcostbase_lin_motion: 0.0
-            #costcostbase_ang_motion: 0.0
-            #costcostee_motion: 0.0
-        #costs: # better for synthesis for saving motions
-            #base_lin_motion: 0.0001
-            #base_ang_motion: 0.001
-            #ee_motion: 0.00025
+            base_lin_acc: 0.01
+            base_ang_acc: 0.1
+            ee_acc: 0.025
     ipopt_solver_parameters:
         linear_solver: "mumps"
         jacobian_approximation: "exact"

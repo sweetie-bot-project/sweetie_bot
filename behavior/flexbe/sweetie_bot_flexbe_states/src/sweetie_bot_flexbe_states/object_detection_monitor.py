@@ -26,10 +26,10 @@ class ObjectDetectionMonitor(EventState):
 
     #> pose                                  object          Object pose before exit.
 
-    <= no_detections 	                     Nothing have been detected for detection_period.
-    <= have_detections 	                     Objects were detected, but not of them matches (label, type)
-    <= detecton_matches	                     Object presents and it is moving. `pose` key contains last pose.
-    <= failure	                             Runtime error.
+    <= no_detections                          Nothing have been detected for detection_period.
+    <= have_detections                          Objects were detected, but not of them matches (label, type)
+    <= detecton_matches                         Object presents and it is moving. `pose` key contains last pose.
+    <= failure                                 Runtime error.
 
     '''
 
@@ -144,15 +144,17 @@ class ObjectDetectionMonitor(EventState):
                 # transform to frame_id
                 try:
                     # transform
-		    # TODO use message 
                     pose_stamped = PoseStamped(pose = match.pose, header = Header(frame_id = match.header.frame_id, stamp = match.header.stamp - rospy.Duration(self._transform_delay)))
                     self._pose = self._tf_listener.transformPose(self._frame_id, pose_stamped)
-                except tf.Exception as e:
-                    delay = rospy.Time.now() - pose_stamped.header.stamp
-                    Logger.logwarn('Unable to transform from %s to %s, effective match time delay %f.' % (match.header.frame_id, self._frame_id, delay))
+                    # publish
+                    self._pose_publisher.publish(self._pose_topic, self._pose)
+                except (tf.LookupException, tf.ConnectivityException) as e:
+                    Logger.logwarn('ObjectDetectionMonitor: unable to transform from %s to %s: %s' % (match.header.frame_id, self._frame_id, e))
                     return 'failure'
-                # publish
-                self._pose_publisher.publish(self._pose_topic, self._pose)
+                except tf.ExtrapolationException as e:
+                    Logger.logwarn('ObjectDetectionMonitor skip transform: %s' % e)
+                    pass
+
             # match_detection state
             if 'detection_matches' in self._exit_states:
                 Logger.loginfo('ObjectDetectionMonitor: match.')

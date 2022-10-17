@@ -18,6 +18,8 @@
 
 		<param type="text" name="pose" default="head_nominal" label="pose" hint="Sets the pose" />
 
+		<param type="boolean" name="set_supports" default="False" label="set_supports" hint="All legs should be marked as supports." />
+
 	</params>
 
 

@@ -10,9 +10,9 @@
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Header.h>
 
-#include <sweetie_bot_clop_generator/MoveBaseGoal.h>
-#include <sweetie_bot_clop_generator/EndEffectorGoal.h>
-#include <sweetie_bot_clop_generator/SaveTrajectory.h>
+#include <sweetie_bot_gait_generator/MoveBaseGoal.h>
+#include <sweetie_bot_gait_generator/EndEffectorGoal.h>
+#include <sweetie_bot_gait_generator/SaveTrajectory.h>
 
 #include <QInputDialog>
 #include <QDesktopWidget>
@@ -117,14 +117,14 @@ void DestinationMarker::actionDoneCallback(const GoalState& state, const ResultC
   action_client->cancelAllGoals();
   // Pretty print of the error cause
   switch (result->error_code) {
-  case sweetie_bot_clop_generator::MoveBaseResult::SUCCESS:
+  case sweetie_bot_gait_generator::MoveBaseResult::SUCCESS:
     {
       ROS_INFO_STREAM("Clop generator completed successfully");
 
       // Save executed trajectory
       ros::NodeHandle n;
-      ros::ServiceClient client = n.serviceClient<sweetie_bot_clop_generator::SaveTrajectory>("/clop_generator/save_trajectory");
-      sweetie_bot_clop_generator::SaveTrajectory srv;
+      ros::ServiceClient client = n.serviceClient<sweetie_bot_gait_generator::SaveTrajectory>("/gait_generator/save_trajectory");
+      sweetie_bot_gait_generator::SaveTrajectory srv;
       srv.request.name = trajectory_name;
 
       if (!client.exists()) {
@@ -138,22 +138,22 @@ void DestinationMarker::actionDoneCallback(const GoalState& state, const ResultC
       }
     }
    break;
-  case sweetie_bot_clop_generator::MoveBaseResult::SOLUTION_NOT_FOUND:
+  case sweetie_bot_gait_generator::MoveBaseResult::SOLUTION_NOT_FOUND:
     ROS_ERROR_STREAM("Clop generator couldn't find a solution");
     break;
-  case sweetie_bot_clop_generator::MoveBaseResult::INVALID_GOAL:
+  case sweetie_bot_gait_generator::MoveBaseResult::INVALID_GOAL:
     ROS_ERROR_STREAM("MoveBase goal message invalid");
     break;
-  case sweetie_bot_clop_generator::MoveBaseResult::INTERNAL_ERROR:
+  case sweetie_bot_gait_generator::MoveBaseResult::INTERNAL_ERROR:
     ROS_ERROR_STREAM("Clop generator has stopped due to internal error");
     break;
-  case sweetie_bot_clop_generator::MoveBaseResult::TOLERANCE_VIOLATED:
+  case sweetie_bot_gait_generator::MoveBaseResult::TOLERANCE_VIOLATED:
     ROS_ERROR_STREAM("Clop generator has stopped due to violation of tolerance bounds");
     break;
-  case sweetie_bot_clop_generator::MoveBaseResult::INVALID_INITIAL_POSE:
+  case sweetie_bot_gait_generator::MoveBaseResult::INVALID_INITIAL_POSE:
     ROS_ERROR_STREAM("Initial robot pose invalid. For walk starting you need bended knees and legs in nominal positions");
     break;
-  case sweetie_bot_clop_generator::MoveBaseResult::EXECUTION_FAILED:
+  case sweetie_bot_gait_generator::MoveBaseResult::EXECUTION_FAILED:
     ROS_ERROR_STREAM("Execution of generated movement failed");
     break;
   }
@@ -168,7 +168,7 @@ void DestinationMarker::actionActiveCallback()
 
 MoveBaseGoal DestinationMarker::buildMoveBaseGoal(const std::string& frame_id, const std::string& gait_type, double duration, unsigned n_steps, bool execute_only)
 {
-  sweetie_bot_clop_generator::MoveBaseGoal goal;
+  sweetie_bot_gait_generator::MoveBaseGoal goal;
 
   goal.header = std_msgs::Header();
   goal.header.frame_id = frame_id;
@@ -196,11 +196,11 @@ void DestinationMarker::setEndEffectorTargets(std::vector<EndEffectorGoal>& ee_g
   // Add end effector targets
   ee_goals.clear();
   for (std::string name : ee_names) {
-    sweetie_bot_clop_generator::EndEffectorGoal ee_goal;
+    sweetie_bot_gait_generator::EndEffectorGoal ee_goal;
     ee_goal.name = name;
     ee_goal.frame_type = frame_type;
     ee_goal.contact = true;
-    ee_goal.position_bounds = sweetie_bot_clop_generator::EndEffectorGoal::POSITION_FREE_Z;
+    ee_goal.position_bounds = sweetie_bot_gait_generator::EndEffectorGoal::POSITION_FREE_Z;
     ee_goals.push_back(ee_goal);
   }
 }
@@ -216,7 +216,7 @@ void DestinationMarker::invokeClopGenerator(const geometry_msgs::Pose& base_goal
 {
   ROS_INFO_STREAM("Invoking clop generator by interactive marker");
 
-  sweetie_bot_clop_generator::MoveBaseGoal goal;
+  sweetie_bot_gait_generator::MoveBaseGoal goal;
 
   goal = buildMoveBaseGoal(world_frame, gait_type, duration, n_steps, execute_only);
   setBaseGoal(goal, base_goal, nominal_height);
@@ -224,7 +224,7 @@ void DestinationMarker::invokeClopGenerator(const geometry_msgs::Pose& base_goal
   if (!ee_names.empty()) {
     // end effector goals
     static bool is_ee_goals_init = false;
-    static std::vector<sweetie_bot_clop_generator::EndEffectorGoal> ee_goals;
+    static std::vector<sweetie_bot_gait_generator::EndEffectorGoal> ee_goals;
     if (!is_ee_goals_init) {
       setEndEffectorTargets(ee_goals, ee_names);
 
@@ -241,7 +241,7 @@ void DestinationMarker::invokeClopGenerator(const geometry_msgs::Pose& base_goal
 void DestinationMarker::toNominal()
 {
   static bool is_goal_init = false;
-  static sweetie_bot_clop_generator::MoveBaseGoal goal;
+  static sweetie_bot_gait_generator::MoveBaseGoal goal;
 
   if (!is_goal_init) {
     goal = buildMoveBaseGoal("base_link_path", "free", 3.0, 0, false);
@@ -251,8 +251,8 @@ void DestinationMarker::toNominal()
     // Add end effector targets to message
     if (!ee_names.empty()) {
       // end effector goals
-      std::vector<sweetie_bot_clop_generator::EndEffectorGoal> ee_goals;
-      setEndEffectorTargets(ee_goals, ee_names, sweetie_bot_clop_generator::EndEffectorGoal::PATH_FINAL);
+      std::vector<sweetie_bot_gait_generator::EndEffectorGoal> ee_goals;
+      setEndEffectorTargets(ee_goals, ee_names, sweetie_bot_gait_generator::EndEffectorGoal::PATH_FINAL);
 
       setEndEffectorPosition(ee_goals[0],  0.080425,  0.0386, 0.0);
       setEndEffectorPosition(ee_goals[1],  0.080425, -0.0386, 0.0);

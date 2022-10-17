@@ -6,71 +6,268 @@
 #
 # DECISION OPERATOR
 #
-# (<op> ^name @name@ ^substate verbolize ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>)
+# (<op> ^name @name@ ^substate verbolize ^process-args <args>) 
+#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> [^sound <sound-file>] [^scene <scene>] [^character <character>])
 #
-# Say person <obj> about <topic> with <text> and using animation tagged with <tag>.
+# Say person <obj> about <topic> with <text> or <sound-file> and using animation tagged with <tag>.
 #
-# RESULT STATUSES
+# Set ^animation-tag to none to skip animation. Multiply ^animation-tag may be specified. 
+# Substate consider only animation tagged with talk tag. Animation preferences are following:
+#  * two tags is matched (most preferable)
+#  * one tag is matched
+#  * animation have ^teg general
 #
-# * succeed --- desired phrase is said to <object>.
+# State publishes SpeechVisualization message with attributes text, sound, character, scene.
+#
+#
+# PROCESS RESULT STATUSES
+#
+# * succeed --- text action succced and animation outcome is received
 #
 # SIDE EFFECTS
 #
-# Events:
+# Substates:
+#
+# tect-action, flexbe, look-at
+#
+# Process:
 #
 # * (^name talk-said ^object <object> ^topic <topic>) --- said to <object> about <topic>.
 #
 
 # DECISION RULES
 
-# PERFORM TALK ANIMATION
+# PERFORM TEXT ACTION
 
-# propose animations with 'talk': reuse current process to start animation
-sp {verbolize*propose*select-animation
-	(state <s> ^substate verbolize ^process-status pending ^args <args> ^mem.joint-trajectory <anim> ^process <proc>)
-	(<args> ^object <obj> ^topic <topic>)
-	(<anim> ^name <animation-name> ^tag talk)
+# text action: play sound file  
+# if text has not been verbolzed and is not being verbolized and we have not failed with sound verbolization befor
+# synthesis has lower priority then predefined sounds
+sp {verbolize*propose*text-action-sound
+	(state <s> ^substate verbolize -^performing-text-action ^args <args> ^process <proc>)
+	(<args> ^sound <file>)
+	(<proc> -^text-action-status -^text-action-sound-failed)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name select-animation ^substate flexbe ^animation <anim> ^process-link <proc> ^additional-process-args <a>)
-    (<a> ^object <obj> ^topic <topic> ^behavior ExecuteJointTrajectoryAndSay ^text <text> ^joint_trajectory <animation-name> ^text_delay 0.2 ^result <r>)
-	(<r> ^status succeed ^add-event <ev-new> ^finish-status succeed ^finish-process <sp>)
-	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
+	(<op> ^name performing-text-action ^substate text-action ^process-args <a> ^priority 27)
+    (<a> ^type |voice/play_wav| ^command <file> ^result <r-succeed> <r-failed>)
+	(<r-succeed> ^status succeed ^parent <proc> ^attribute text-action-status ^link-value succeed)
+	(<r-succeed> ^print (concat |TALK: text action play file: | <file> (crlf)))
+	(<r-failed> ^status failed ^parent <proc> ^attribute text-action-sound-failed ^link-value yes)
 }
 
-# elaborate is_relative ExecuteJointTrajectoryAndSay parameter
+# text action: speech synthesis
+# propose it if text has not been verbolized and is not being verbolized
+# synthesis has lower priority then predefined sounds
+sp {verbolize*propose*text-action-text
+	(state <s> ^substate verbolize -^performing-text-action ^args <args> ^process <proc>)
+	(<args> ^text <text>)
+	(<proc> -^text-action-status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name performing-text-action ^substate text-action ^process-args <a> ^priority 25)
+    (<a> ^type |voice/say| ^command <text> ^result <r>)
+	(<r> ^status succeed ^parent <proc> ^attribute text-action-status ^link-value succeed)
+	(<r> ^print (concat |TALK: text action say: | <text> (crlf)))
+}
+
+# SEND VISUALIZATION MESSAGE
+
+# speech visualization: construct SpeechVisualization command
+sp {verbolize*propose*speech-visualization
+	(state <s> ^substate verbolize ^args <args> ^process <proc>)
+	(<args> ^text <text> ^object <obj> ^topic <topic>)
+	(<proc> -^text-is-visualized)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name visualize-speech ^type automatic ^priority 23)
+	(<op> ^parent <proc> ^attribute text-is-visualized ^link-value yes)
+	(<op> ^add-output-command speech-visualization ^output-command-args <cmd>)
+	(<cmd> ^text <text> ^automatic-remove yes)
+}
+
+# copy scene and character attributes
+sp {verbolize*elaborate*speech-visualization-scene-character
+	(state <s> ^substate verbolize ^operator <op> ^args <args>)
+	(<op> ^name visualize-speech ^output-command-args <cmd>)
+	(<args> ^{<<|scene| |character|>> <attr>} <value>)
+-->
+	(<cmd> ^<attr> <value>)
+}
+
+# copy animation-tag attributes
+sp {verbolize*elaborate*speech-visualization-tags
+	(state <s> ^substate verbolize ^operator <op> ^args <args>)
+	(<op> ^name visualize-speech ^output-command-args <cmd>)
+	(<args> ^animation-tag <value>)
+-->
+	(<cmd> ^tag <value>)
+}
+
+# SEND EMOTION MESSAGE
+
+# speech visualization: construct SpeechVisualization command
+sp {verbolize*propose*emotion
+	(state <s> ^substate verbolize ^args <args> ^process <proc> ^mem.emotion <emotion>)
+	(<proc> -^emotion-is-displayed)
+	(<args> ^animation-tag <tag>)
+	(<emotion> ^tag <tag> ^name <name>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name emotion ^type automatic ^priority 24)
+	(<op> ^parent <proc> ^attribute emotion-is-displayed ^link-value yes)
+	(<op> ^add-output-command textcmd ^output-command-args <cmd>)
+	(<cmd> ^type |eyes/emotion| ^command <name> ^automatic-remove yes)
+}
+
+# SELECT AND PERFORM ANIMATION
+
+# select general animations
+sp {verbolize*elaborate*animation-general
+	(state <s> ^substate verbolize ^mem.joint-trajectory <anim>)
+	(<anim> ^tag talk general)
+-->
+	(<s> ^animation <anim>)
+}
+
+# select all matching animations
+sp {verbolize*elaborate*animation-matching-tag
+	(state <s> ^substate verbolize ^args.animation-tag <tag> ^mem.joint-trajectory <anim>)
+	(<anim> ^tag talk <tag>)
+-->
+	(<s> ^animation <anim>)
+}
+
+# animation-tag none disables animation: succeed it immediately
+sp {verbolize*propose*ditch-animation
+	(state <s> ^substate verbolize -^performing-animation ^args.animation-tag none ^process <proc>)
+	(<proc> -^animation-status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name ditch-animation ^type automatic ^priority 40 ^parent <proc> ^attribute animation-status ^link-value succeed)
+}
+
+# propose animations, agument process predicate if animation succeed
+sp {verbolize*propose*animation
+	(state <s> ^substate verbolize -^performing-animation ^animation <anim> ^process <proc>)
+	(<proc> -^animation-status)
+	(<anim> ^name <animation-name>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name performing-animation ^substate flexbe ^animation <anim> ^process-args <a>)
+    (<a> ^behavior ExecuteJointTrajectory ^joint_trajectory <animation-name> ^result <r>)
+	(<r> ^status succeed invalid_pose failed ^parent <proc> ^attribute animation-status ^link-value succeed)
+}
+
+# elaborate is_relative ExecuteJointTrajectory parameter
 sp {verbolize*elaborate*say-execute-animation-is-relative
 	(state <s> ^substate verbolize ^operator <op> +)
-	(<op> ^name select-animation ^additional-process-args <args> ^animation.relative) 
+	(<op> ^name performing-animation ^process-args <args> ^animation.relative) 
 -->
 	(<args> ^is_relative True)
 }
 
-# if 'saying' process is active continue its execution (looking-at is not necessary)
-sp {verbolize*propose*execute-animation-continue
-	(state <s> ^substate verbolize ^process-status active ^process <proc>)
+
+# WAITING 
+# TODO: correct implementation of parallel processe: both substates should be placed in stack
+
+# look at speaker if animation is finished
+sp {verbolize*propose*looking-at-speaker
+	(state <s> ^substate verbolize ^process <proc>)
+	(<proc> ^animation-status succeed ^object <obj>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name saying-continue ^substate flexbe ^process-link <proc>)
+	(<op> ^name looking-at-speaker ^substate look-at ^process-args <a> ^priority 20)
+	(<a> ^object <obj> ^timeout 5.0 ^delay 1.0)
+}
+
+# waiting is worst choice
+sp {verbolize*elaborate*waiting
+	(state <s> ^substate verbolize)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name waiting ^substate wait)
 }
 
 # PREFERENCES 
+#
+# Utility:
+# ditch aniamtion --- 40
+# perform aniamtion 
+#     two matching tags --- 32
+#     one matching tags --- 31
+#     no  matching tags --- 30
+# perform text action --- 25
+# looking at speaker --- 20
+# waiting --- worst
+#
 
-# prefer animation with tag matching supplied as substate parameter
-sp {verbolize*prefer*select-animation-tag
-	(state <s> ^substate verbolize ^operator <op1> + ^operator {<> <op1> <op2>} ^superstate.operator.animation-tag <tag>)
-	(<op1> ^name select-animation ^animation.tag <tag>)
-	(<op2> ^name select-animation ^animation <anim2>)
-	(<anim2> -^tag <tag>)
+# calculate animation priority: two tags
+sp {verbolize*elaborate*animation-two-tag-priority
+	(state <s> ^substate verbolize ^operator <op> + ^args <args>)
+	(<args> ^animation-tag <tag1> ^animation-tag {<> <tag1> <tag2>})
+	(<op> ^name performing-animation ^animation <anim>)
+	(<anim> ^tag <tag1> ^tag <tag2>)
+-->
+	(<op> ^priority 32)
+}
+
+# calculate animation priority: one tag
+sp {verbolize*elaborate*animation-one-tag-priority
+	(state <s> ^substate verbolize ^operator <op> + ^args.animation-tag <tag>)
+	(<op> ^name performing-animation ^animation.tag <tag> -^priority 32)
+-->
+	(<op> ^priority 31)
+}
+
+# calculate animation priority: no tags
+sp {verbolize*elaborate*animation-no-tag-priority
+	(state <s> ^substate verbolize ^operator <op> +)
+	(<op> ^name performing-animation -^priority 32 -^priority 31)
+-->
+	(<op> ^priority 30)
+}
+
+# prefer operator with higher priority
+sp {verbolize*prefer*priority
+	(state <s> ^substate verbolize ^operator <op1> + ^operator {<> <op1> <op2>} ^args <args>)
+	(<op1> ^priority <value>)
+	(<op2> ^priority {< <value>})
 -->
 	(<s> ^operator <op1> > <op2>)
 }
 
-# reject animations which are not tagged as general 
-sp {verbolize*prefer*select-animation-general-tag
-	(state <s> ^substate verbolize ^operator <op> + ^superstate.operator.animation-tag <tag>)
-	(<op> ^name select-animation ^animation <anim2>)
-	(<anim2> -^tag <tag> -^tag general)
+# COGNITION OPERTORS
+
+# assume verbolize process finished if animation and text-action succeed
+sp {verbolize*propose*terminate-verbolize
+	(state <s> ^bottom-state 1 ^beliefs <b>)
+	(<b> ^process <proc>)
+	(<proc> ^substate verbolize ^text-action-status succeed ^animation-status ^object <obj> ^topic <topic>)
 -->
-	(<s> ^operator <op> ~)
+	(<s> ^operator <op> +, =)
+	(<op> ^name terminate-verbolize ^type cognition automatic ^finish-process <proc> ^finish-status succeed ^add-event <ev-new>)
+	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
 }
+
+# terminate emotion if it is displayed
+# TODO: react on event
+sp {verbolize*elaborate*terminate-emotion
+	(state <s> ^bottom-state 1 ^operator <op> +)
+	(<op> ^name terminate-verbolize ^type cognition automatic ^finish-process <proc>)
+	(<proc> ^emotion-is-displayed)
+-->
+	(<op> ^add-output-command textcmd ^output-command-args <cmd>)
+	(<cmd> ^type |eyes/emotion| ^command normal ^automatic-remove yes)
+}
+
+#sp {verbolize*propose*on-text-action-succeed
+#	(state <s> ^bottom-state 1 ^beliefs <b>)
+#	(<b> ^event <ev>)
+#	(<ev> ^substate text-action ^status succeed ^process.text <text>)
+#	(<b> ^process <proc>)
+#	(<proc> ^substate verbolize ^text <text>)
+#-->
+#	(<s> ^operator <op> +, =)
+#	(<op> ^name on-text-action-succeed ^type cognition automatic ^parent <proc> ^attribute text-action-status ^link-value succeed)
+#}
+

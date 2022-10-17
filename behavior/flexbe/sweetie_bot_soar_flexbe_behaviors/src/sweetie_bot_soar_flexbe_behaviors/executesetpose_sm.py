@@ -8,10 +8,13 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
+from flexbe_states.decision_state import DecisionState
+from flexbe_states.wait_state import WaitState
+from sweetie_bot_flexbe_states.publisher_state import PublisherState
 from sweetie_bot_flexbe_states.set_joint_state import SetJointState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
-
+from sweetie_bot_kinematics_msgs.msg import SupportState
 # [/MANUAL_IMPORT]
 
 
@@ -31,6 +34,7 @@ class ExecuteSetPoseSM(Behavior):
 
 		# parameters of this behavior
 		self.add_parameter('pose', 'head_nominal')
+		self.add_parameter('set_supports', False)
 
 		# references to used behaviors
 
@@ -44,8 +48,9 @@ class ExecuteSetPoseSM(Behavior):
 
 
 	def create(self):
-		# x:30 y:475, x:329 y:467
+		# x:207 y:429, x:737 y:257
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
+		_state_machine.userdata.set_supports = self.set_supports
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -57,8 +62,27 @@ class ExecuteSetPoseSM(Behavior):
 			# x:164 y:166
 			OperatableStateMachine.add('SetPose',
 										SetJointState(controller='motion/controller/joint_state_head', pose_param=self.pose, pose_ns='saved_msgs/joint_state', tolerance=0.017, timeout=10.0, joint_topic="joint_states"),
-										transitions={'done': 'finished', 'failed': 'failed', 'timeout': 'failed'},
+										transitions={'done': 'CheckSetSupports', 'failed': 'failed', 'timeout': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
+
+			# x:459 y:441
+			OperatableStateMachine.add('PublishSupports',
+										PublisherState(topic='motion/aggregator_ref/in_supports', msg_type=SupportState, value={'name':['leg1','leg2','leg3','leg4'], 'support':[1.0,1.0,1.0,1.0]}),
+										transitions={'done': 'finished', 'failed': 'failed'},
+										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:513 y:354
+			OperatableStateMachine.add('Wait',
+										WaitState(wait_time=0.5),
+										transitions={'done': 'PublishSupports'},
+										autonomy={'done': Autonomy.Off})
+
+			# x:399 y:292
+			OperatableStateMachine.add('CheckSetSupports',
+										DecisionState(outcomes=['true', 'false'], conditions=lambda x: 'true' if x else 'false'),
+										transitions={'true': 'Wait', 'false': 'finished'},
+										autonomy={'true': Autonomy.Off, 'false': Autonomy.Off},
+										remapping={'input_value': 'set_supports'})
 
 
 		return _state_machine

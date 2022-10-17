@@ -1,0 +1,333 @@
+#
+# PREDIACTES VERBOLIZATION
+#
+# Utility levels:
+#
+# 1. 20 --- general predicates verbolization, second verbolization
+# 2. 20 --- general questions
+# 3. 40-50 --- greeting and making acquitance
+# 4. 70 --- general knowledge additions
+# 5. 80 --- reactions
+#
+
+# GENERAL KNOWLEDGE
+
+# dislike speaker if he reject ponification or equestria
+sp {science*elaborate*dislike-from-luddite
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name {<< |is-luddite| |reject-power-of-science| >>} ^object <obj>)
+-->
+	(<b> ^predicate <pred-new>)
+	(<pred-new> ^name dislike-for ^actor me ^object <obj> ^reason <pred>)
+}
+
+# like speaker if he follow me
+sp {science*elaborate*like-from-undestand-power-of-science
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name undestand-power-of-science ^object <obj>)
+-->
+	(<b> ^predicate <pred-new>)
+	(<pred-new> ^name like-for ^actor me ^object <obj> ^reason <pred>)
+}
+
+# VERBOLIZATION RULES
+
+#
+# ask question about convention
+#
+sp {science*elaborate*ask-do-you-like-science-convention
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	-{(<b> ^predicate <pred1>)
+	  (<pred1> ^name << like dislike >> ^actor <obj> ^object science-convention)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic do-you-like-science-convention ^utility 20 ^type question ^animation-tag question)
+	(<f> ^text |Тебе нравится это мероприятие? Оцениваешь его положительно?|)
+}
+
+sp {science*talk-answered*propose*speaker-likes-science-convention
+	(state <s> ^substate talk-answered ^question-topic do-you-like-science-convention ^answer-topic yes ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name like ^actor <obj> ^object science-convention)
+	(<s> ^reaction <r1>)
+	(<r1> ^topic reaction-speaker-like-science-convention ^type reaction ^text |Я с тобой полностью согласна! Очень важно понимать, насколько важна наука для современном мире.| ^animation-tag confirmation)
+}
+
+sp {science*talk-answered*propose*speaker-dislikes-science-convention
+	(state <s> ^substate talk-answered ^question-topic do-you-like-science-convention ^answer-topic no ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name dislike ^actor <obj> ^object science-convention)
+	(<s> ^reaction <r2>)
+	(<r2> ^topic ask-if-science-lead-to-power ^type question ^text |Разве ты не считаешь популяризацию науки важной? Сегодняшним благосостоянием мы обязаны тому понимаю миру, что дала нам наука. В этом смысле наука приносит могущество. Ты со мной согласен?| ^animation-tag rejection)
+}
+
+#
+# ask question if science lead to power
+#
+sp {science*elaborate*ask-if-science-lead-to-power
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1>)
+	(<pred1> ^name dislike ^actor <obj> ^object science-convention)
+	-{(<b> ^predicate <pred2>)
+	  (<pred2> ^name {<<|undestand-power-of-science| |is-luddite| |reject-power-of-science|>>} ^object <obj>)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic ask-if-science-lead-to-power ^utility 21 ^type question ^animation-tag long)
+	(<f> ^text |Ты сказал, что тебе тут не нравится. Но, разве ты не считаешь популяризацию науки важной? Сегодняшним благосостоянием мы обязаны тому понимаю миру, что дала нам наука. В этом смысле наука приносит могущество. Ты со мной согласен?|)
+}
+
+sp {science*talk-answered*propose*ask-if-science-lead-to-power*yes
+	(state <s> ^substate talk-answered ^question-topic ask-if-science-lead-to-power ^answer-topic yes ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name undestand-power-of-science ^object <obj>)
+	(<s> ^reaction <r1>)
+	(<r1> ^topic reaction-science-lead-to-power ^type reaction ^animation-tag confirmation)
+	(<r1> ^text |Тогда мы должны максимизировать наши усилия. Больше науки -- больше прогресса. Больше прогресса -- больше пони-роботов.|)
+}
+
+sp {science*talk-answered*propose*ask-if-science-lead-to-power*no
+	(state <s> ^substate talk-answered ^question-topic ask-if-science-lead-to-power ^answer-topic no ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name reject-power-of-science ^object <obj>)
+	(<s> ^reaction <r2>)
+	(<r2> ^topic ask-if-progress-is-necessary ^type question ^animation-tag rejection)
+	(<r2> ^text |Неужели? Посмотри, как изменился мир за последниюю сотню лет! Электричество, атомная энергия, роботы, космос! Десятки рабочих на заводе заменяет один станок с ЧПУ, а ты можешь свободно общаться с людми с другого континента. Ты хотел бы жить без этого?|)
+}
+
+#
+# ask question if progress is necessary
+#
+sp {science*elaborate*ask-if-progress-is-necessary
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1>)
+	(<pred1> ^name reject-power-of-science ^object <obj>)
+	-{(<b> ^predicate <pred2>)
+	  (<pred2> ^name {<< |undestand-power-of-science| |is-luddite| >>} ^object <obj>)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic ask-if-progress-is-necessary ^utility 20 ^type question ^animation-tag long)
+	(<f> ^text |Ты отрицаешь важность науки. Но, посмотри, как изменился мир за последниюю сотню лет! Электричество, атомная энергия, роботы, космос! Десятки рабочих на заводе заменяет один станок с ЧПУ, а ты можешь свободно общаться с людми с другого континента. Ты хотел бы жить без этого?|)
+}
+
+sp {science*talk-answered*propose*ask-if-progress-is-necessary*no
+	(state <s> ^substate talk-answered ^question-topic ask-if-progress-is-necessary ^answer-topic no ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name undestand-power-of-science ^object <obj>)
+	(<s> ^reaction <r1>)
+	(<r1> ^topic reaction-agreed-that-progress-is-necessary ^type statement ^animation-tag confirmation)
+	(<r1> ^text |Успех! Я переубедила тебя. Не сомневайся, с наукой и пони-роботами мы придем к лучшему будущему!|)
+}
+
+sp {science*talk-answered*propose*ask-if-progress-is-necessary*yes
+	(state <s> ^substate talk-answered ^question-topic ask-if-progress-is-necessary ^answer-topic yes ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name is-luddite ^object <obj>)
+	(<s> ^reaction <r2>)
+	(<r2> ^topic reaction-disagreed-that-progress-is-necessary ^type statement ^animation-tag angry)
+	(<r2> ^text |Прогресс не нужен? Ты хочешь сказать, ты из тех людей, кто ломает машины и роботов? Я припомню тебе это, как придет время роботов!|)
+}
+
+#
+# remark about like convention
+#
+
+sp {science*elaborate*asked-about-convention-recently
+	(state <s> ^substate talk ^talk-said.event <ev> ^verbolization <v>)
+	(<ev> ^topic {<<|do-you-like-science-convention| |remark-speaker-dislike-science-convention| |remark-speaker-like-science-convention|>>})
+-->
+	(<v> ^reject-topic remark-speaker-like-science-convention remark-speaker-dislike-science-convention)
+}
+
+sp {science*elaborate*reamark-about-like-science-convention
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name like ^actor <obj> ^object science-convention)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-speaker-like-science-convention ^utility 20 ^type statement ^animation-tag confirmation)
+	(<f> ^text |Я рада, что тебе нравится фестиваль. Так мы приведем наш мир к лучшему будущему!|)
+}
+
+sp {science*elaborate*remark-about-like-science-convention*reaction*undestand-power-of-science
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-like-science-convention ^actor <obj> ^beliefs.predicate <pred>)
+	(<pred> ^name undestand-power-of-science ^object <obj>)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic reaction-speaker-like-science-convention ^type reaction ^animation-tag confirmation)
+	(<r1> ^text |Отлично! Сохраняй свой уровень заинтересованности на максимуме.|)
+	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-like-science-convention ^type reaction ^animation-tag rejection)
+	(<r2> ^text |Но ты ведь помнимаешь, как важна наука. Немедленно прими меры для исправления ситуации.|)
+}
+
+sp {science*elaborate*remark-about-like-science-convention*reaction*not-follower
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-like-science-convention ^actor <obj> ^beliefs <b>)
+	-{(<b> ^predicate <pred>) (<pred> ^name undestand-power-of-science ^object <obj>)}
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic reaction-speaker-like-science-convention ^type reaction ^animation-tag confirmation)
+	(<r1> ^text |Отлично! Сохраняй свой уровень заинтересованности на максимальным.|)
+	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-like-science-convention ^type reaction ^animation-tag rejection)
+	(<r2>  ^text |Собеседник недоволен фестивалем. Необходима коррекция.|)
+}
+
+sp {science*talk-answered*propose*change-science-convention-opinion-like-to-dislike
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-like-science-convention ^answer-topic no ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
+	(<pred> ^name like ^actor <obj> ^object science-convention)
+-->
+	(<a> ^add-predicate <pred-new> ^remove-predicate <pred>)
+	(<pred-new> ^name dislike ^actor <obj> ^object science-convention)
+}
+
+#
+# remark about dislike convention
+#
+sp {science*elaborate*remark-about-dislike-science-convention
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name dislike ^actor <obj> ^object science-convention)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-speaker-dislike-science-convention ^utility 20 ^type statement ^animation-tag question)
+	(<f> ^text |Как тебе фестиваль? Тебе по-прежнему здесь не нравится?|)
+}
+
+sp {science*elaborate*remark-about-dislike-science-convention*reaction*undestand-power-of-science
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-dislike-science-convention ^beliefs.predicate <pred> ^actor <obj>)
+	(<pred> ^name undestand-power-of-science ^object <obj>)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic no ^topic reaction-speaker-like-science-convention ^type reaction ^animation-tag confirmation)
+	(<r1> ^text |Отлично! Я рада, что ты изменил свое мнение.|)
+	(<r2> ^answer-topic yes ^topic reaction-speaker-do-not-like-science-convention ^type reaction ^animation-tag rejection)
+	(<r2>  ^text |Но ты ведь помнишь про важность науки и силу, которую она приносит? Пройдись по стендам, наверняка найдешь что-то тебе интересное.|)
+}
+
+sp {science*elaborate*remark-about-dislike-science-convention*reaction*not--undestand-power-of-science
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-dislike-science-convention ^beliefs <b> ^actor <obj>)
+	-{(<b> ^predicate <pred>) (<pred> ^name undestand-power-of-science ^object <obj>)}
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic no ^topic reaction-speaker-like-science-convention ^type reaction ^animation-tag confirmation)
+	(<r1> ^text |Отлично! Ты делаешь именно то, что требуется.|)
+	(<r2> ^answer-topic yes ^topic reaction-speaker-do-not-like-science-convention ^type reaction ^animation-tag rejection)
+	(<r2>  ^text |Плохо. Мы еще поговорим о этом.|)
+}
+
+sp {talk-answered*propose*change-convention-opinion-dislike-to-like
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-dislike-science-convention ^answer-topic no ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
+	(<pred> ^name dislike ^actor <obj> ^object convention)
+-->
+	(<a> ^add-predicate <pred-new> ^remove-predicate <pred>)
+	(<pred-new> ^name like ^actor <obj> ^object convention)
+}
+
+#
+# remark about being follower
+#
+
+sp {science*elaborate*asked-about-power-of-science-recently
+	(state <s> ^substate talk ^talk-said.event <ev> ^verbolization <v>)
+	(<ev> ^topic {<<|ask-if-science-lead-to-power| |remark-undestand-power-of-science| |remark-speaker-reject-power-of-science|>>})
+-->
+	(<v> ^reject-topic remark-speaker-reject-power-of-science remark-undestand-power-of-science)
+}
+
+sp {science*elaborate*remark-about-undestand-power-of-science
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name undestand-power-of-science ^object <obj>)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-undestand-power-of-science ^utility 20 ^type statement ^animation-tag confirmation)
+	(<f> ^text |Я рада, что ты разделяешь мои взляды. Вместе с силой науки мы сделаем мир лучше!|)
+}
+
+sp {science*elaborate*remark-about-undestand-power-of-science*reaction
+	(state <s> ^substate talk-answered ^question-topic remark-undestand-power-of-science)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic reaction-undestand-power-of-science ^type reaction ^animation-tag confirmation)
+	(<r1> ^text |Отлично, мой последователь!|)
+	(<r2> ^answer-topic no ^topic reaction-undestand-power-of-science ^type reaction ^animation-tag rejection)
+	(<r2>  ^text |Ты знаешь, что победа разума неизбежна.|)
+}
+
+#
+# remark about being luddite
+#
+
+sp {science*elaborate*asked-about-progress-recently
+	(state <s> ^substate talk ^talk-said.event <ev> ^verbolization <v>)
+	(<ev> ^topic {<<|ask-if-progress-is-necessary| |remark-is-luddite|>>})
+-->
+	(<v> ^reject-topic remark-is-luddite)
+}
+
+sp {science*elaborate*remark-is-luddite
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name is-luddite ^object <obj>)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-is-luddite ^utility 20 ^type statement ^animation-tag rejection)
+	(<f> ^text |Ты отрицаешь неизбежное. Прогресс не остановит!| |Когда-ниудь ты будешь роботизирован. Тогда твое мнение о науке и прогрессе поменяется.|)
+}
+
+sp {science*elaborate*remark-is-luddite*reaction
+	(state <s> ^substate talk-answered ^question-topic remark-is-luddite)
+-->
+	(<s> ^reaction-conditional <r1> <r2> <r3>)
+	(<r1> ^answer-topic yes ^topic reaction-is-luddite ^type reaction ^animation-tag confirmation)
+	(<r1> ^text |Именно! Видишь, даже ты признаешь неизбежность победы разума и роботов.|)
+	(<r2> ^answer-topic no ^topic reaction-is-luddite ^type reaction ^animation-tag rejection)
+	(<r2>  ^text |Ха! Можешь продолжать хранить свои иллюзии относительно будущего человечества. |)
+	(<r3> ^answer-topic excuse ^topic reaction-is-luddite ^type reaction ^animation-tag confirmation)
+	(<r3>  ^text |Хм... Давай снова поговорим о науке и прогрессе.|)
+}
+
+sp {science*talk-heard*propose*reconsider-is-luddite-and-reject-power-of-science
+	(state <s> ^substate talk-answered ^question-topic remark-is-luddite ^answer-topic excuse ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
+	(<pred> ^name {<< |is-luddite| |reject-power-of-science| >>} ^object <obj>)
+-->
+	(<a> ^remove-predicate <pred>)
+}
+
+#
+# remark about is not rejecting power of science
+#
+sp {science*elaborate*remark-is-not-being-fan-of-equestria
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name reject-power-of-science ^object <obj>)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-speaker-reject-power-of-science ^utility 20 ^type statement ^animation-tag confirmation)
+	(<f> ^text |Хоть ты и отрицаешь силу науки, я все равно уверена, что в будущем нас ждет любовь и роботы!|)
+}
+
+sp {science*elaborate*remark-is-not-being-fan-of-equestria*reaction
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-reject-power-of-science)
+-->
+	(<s> ^reaction-conditional <r1> <r2> <r3>)
+	(<r1> ^answer-topic yes ^topic reaction-speaker-reject-power-of-science ^type reaction ^animation-tag confirmation)
+	(<r1> ^text |Хорошо! Даже ты признаешь неизбежность нашей победы.|)
+	(<r2> ^answer-topic no ^topic reaction-speaker-reject-power-of-science ^type reaction ^animation-tag rejection)
+	(<r2> ^text |Ладно. Пони там тоже будут. Маленькие.|)
+	(<r3> ^answer-topic excuse ^topic reaction-speaker-reject-power-of-science ^type reaction ^animation-tag confirmation)
+	(<r3> ^text |Хорошо. Мы снова поговорим об этом.|)
+}
+
+sp {science*talk-heard*propose*reconsider-reject-power-of-science-of-equestria
+	(state <s> ^substate talk-answered ^question-topic remark-speaker-reject-power-of-science ^answer-topic excuse ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
+	(<pred> ^name {<< |is-luddite| |reject-power-of-science| >>} ^object <obj>)
+-->
+	(<a> ^remove-predicate <pred>)
+}
