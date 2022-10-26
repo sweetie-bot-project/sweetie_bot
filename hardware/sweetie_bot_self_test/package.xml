@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>sweetie_bot_self_test</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>The sweetie_bot_self_test package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
@@ -49,6 +49,9 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <depend>python3-pytest</depend>
+  <depend>python3-qtpy</depend>
+  <depend>python3-smbus</depend>
   <!-- build_depend>rospy</build_depend>
   <build_export_depend>rospy</build_export_depend>
   <exec_depend>rospy</exec_depend -->
