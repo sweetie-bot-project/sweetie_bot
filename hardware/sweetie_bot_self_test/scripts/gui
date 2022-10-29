@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-from gui.main import *
+from sweetie_bot_self_test_gui.main import *
 
 if __name__ == '__main__':
     main()

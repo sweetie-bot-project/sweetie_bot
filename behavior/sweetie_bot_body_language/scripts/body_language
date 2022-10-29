@@ -1,9 +1,4 @@
 #! /usr/bin/env python3
-<<<<<<< HEAD
-from gui.main import *
-
-=======
 from sweetie_bot_body_language.main import *
->>>>>>> d0588b985002a922c3e184f819dfcdab37939d11
 if __name__ == '__main__':
     main()

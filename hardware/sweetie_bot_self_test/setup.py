@@ -5,7 +5,7 @@ from catkin_pkg.python_setup import generate_distutils_setup
 
 # fetch values from package.xml
 setup_args = generate_distutils_setup(
-    packages=['test','gui'],
+    packages=['sweetie_bot_self_test','sweetie_bot_self_test_gui'],
     package_dir={'': 'src'},
 )
 
