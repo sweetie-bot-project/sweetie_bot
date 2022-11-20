@@ -3,6 +3,7 @@ source talk-common.soar
 source talk-answered.soar
 source talk-heard.soar
 source talk-ignored.soar
+source talk-no-answer.soar
 source talk-irrelevant.soar
 source talk-said.soar
 source talk-failed.soar
