@@ -148,7 +148,7 @@ if msg_type in ('FollowStepSequence', 'FSS'):
 elif msg_type in ('FollowJointTrajectory', 'FJT'):
 	msg_type = 'control_msgs/FollowJointTrajectoryGoal'
 elif msg_type in ('MoveBase', 'MB'):
-	msg_type = 'sweetie_bot_clop_generator/MoveBaseGoal'
+	msg_type = 'sweetie_bot_gait_generator/MoveBaseGoal'
 elif msg_type in ('JointState', 'JS'):
 	msg_type = 'sensor_msgs/JointState'
 elif msg_type in ('CompoundAction', 'CA'):
