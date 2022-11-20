@@ -1,0 +1,414 @@
+#
+# PREDIACTES VERBOLIZATION
+#
+# Utility levels:
+#
+# 1. 20 --- general predicates verbolization, second verbolization
+# 2. 20 --- general questions
+# 3. 40-50 --- greeting and making acquitance
+# 4. 70 --- general knowledge additions
+# 5. 80 --- reactions
+#
+
+# GENERAL KNOWLEDGE
+
+# dislike speaker for brohua
+sp {verbolization*elaborate*dislike-from-brohua
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name brohua-status ^object <obj> ^status performed)
+-->
+	(<b> ^predicate <pred-new>)
+	(<pred-new> ^name dislike-for ^object <obj> ^actor me ^reason <pred>)
+}
+
+# like speaker for brohua rejection
+sp {verbolization*elaborate*like-from-brohua
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name brohua-status ^object <obj> ^status rejected-immediately)
+-->
+	(<b> ^predicate <pred-new>)
+	(<pred-new> ^name like-for ^object <obj> ^actor me ^reason <pred>)
+}
+
+#
+# VERBOLIZATION RULES
+#
+
+# ASK ABOUT RARITY
+
+#
+# ask question about Rarity
+#
+sp {verbolization-foe*elaborate*know-rarity
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	-{(<b> ^predicate <pred>)
+ 	  (<pred> ^name asked-about-rarity ^object <obj>)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic ask-about-rarity ^utility 20 ^type question ^animation-tag question)
+	(<f> ^text |Ты ничего не слышал о моей сестре? Ее зовут Рарити. Когда-то давно она руководила Министерством Стиля.|)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*know-rarity*reactions
+	(state <s> ^substate talk-answered ^question-topic ask-about-rarity)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic ask-if-possible-to-meet-rarity ^type question ^text |Я все еще надеюсь встретить ее снова... или хотя бы узнать ее судьбу. Как ты думаешь, это возможно?| ^animation-tag question confirmation)
+	(<r2> ^answer-topic no ^topic reaction-speaker-do-not-know-about-rarity ^type reaction ^text |Жаль. Если что-то узнаешь, то скажи мне.| ^animation-tag rejection)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*know-rarity*predicate
+	(state <s> ^substate talk-answered ^question-topic ask-about-rarity ^answer-topic {<< |yes| |no| >> <a-topic>} ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name asked-about-rarity ^object <obj> ^answer-topic <a-topic>)
+}
+
+#
+# reaction on question about possibility to meet Rarity
+#
+sp {verbolization-foe*talk-answered*elaborate*meet-rarity*reactions
+	(state <s> ^substate talk-answered ^question-topic ask-if-possible-to-meet-rarity)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic speaker-think-meeting-rarity-is-possible ^type reaction ^text |Я тоже надеюсь ее увидеть...| ^animation-tag confirmation)
+	(<r2> ^answer-topic no ^topic speaker-think-meeting-rarity-is-not-possible ^type reaction ^text |Надеюсь, что ничего плохого с ней не случилось...| ^animation-tag confirmation)
+}
+
+# add predicate: have o-support in superstate
+sp {verbolization-foe*talk-answered*elaborate*meet-rarity*add-counter
+	(state <s> ^substate talk-answered ^question-topic ask-if-possible-to-meet-rarity ^answer-topic {<< |yes| |no| >>} ^beliefs <b>)
+	-{(<b> ^predicate <pred>) 
+	  (<pred> ^name consider-posibility-meet-rarity)}
+-->
+	(<b> ^predicate <pred>)
+	(<pred> ^name consider-posibility-meet-rarity ^yes 0 ^no 0)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*meet-rarity*increase-counter
+	(state <s> ^substate talk-answered ^question-topic ask-if-possible-to-meet-rarity ^answer-topic {<< |yes| |no| >> <answer>} ^beliefs.predicate <pred> ^actions <a>)
+	(<pred> ^name consider-posibility-meet-rarity ^<answer> <value>)
+-->
+	(<a> ^parent <pred> ^attribute <answer> ^remove-value <value> ^link-value (+ <value> 1))
+}
+
+#
+# Reject rules to exclude recent topics
+#
+
+sp {verbolization-foe*elaborate*reject-remark
+	(state <s> ^substate talk ^talk-said.event <ev> ^verbolization <v>)
+	(<ev> ^topic {<<|ask-about-rarity| |ask-if-possible-to-meet-rarity| |speaker-does-not-know-about-rarity| |remark-rarity-meeting-is-possible| |remark-rarity-meeting-is-not-possible|>>})
+-->
+	(<v> ^reject-topic speaker-does-not-know-about-rarity remark-rarity-meeting-is-possible remark-rarity-meeting-is-not-possible)
+}
+
+#
+# verbolize speaker does not know about rarity
+#
+sp {verbolization-foe*elaborate*speaker-do-not-knows-about-rarity
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1>)
+  	(<pred1> ^name asked-about-rarity ^object <obj> ^answer-topic no)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic speaker-does-not-know-about-rarity ^utility 20 ^type statement ^animation-tag question)
+	(<f> ^text |В товоей памяти все еще нет сведений о моей сестре Рарити?.|)
+}
+
+sp {verbolization-for*talk-answered*elaborate*speaker-do-no-know-about-rarity*reaction*yes
+	(state <s> ^substate talk-answered ^question-topic speaker-does-not-know-about-rarity ^answer-topic {<<|yes| |sorry|>>})
+-->
+	(<s> ^reaction <r1>)
+	(<r1> ^topic speaker-does-not-know-about-rarity-confirmed ^type reaction ^text |Жаль. Сообщи если что-то узнаешь про нее.| ^animation-tag rejection)
+}
+
+sp {verbolization-for*talk-answered*elaborate*speaker-do-no-know-about-rarity*reaction*no
+	(state <s> ^substate talk-answered ^question-topic speaker-does-not-know-about-rarity ^answer-topic no ^beliefs.predicate <pred> ^actor <obj> ^actions <a>)
+  	(<pred> ^name asked-about-rarity ^object <obj> ^answer-topic no)
+-->
+	(<s> ^reaction <r1>)
+	(<r1> ^topic ask-if-possible-to-meet-rarity ^type question ^text |Да! Здорово! Ответь, смогу ли я ее встретить вновь?| ^animation-tag happy surprise)
+	(<a> ^remove-predicate <pred> ^add-predicate <pred-new>)
+  	(<pred-new> ^name asked-about-rarity ^object <obj> ^answer-topic yes)
+}
+
+#
+# verbolize rarity is robot statistics
+#
+sp {verbolization-foe*elaborate*consider-meeting-with-rarity-is-possible
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1> <pred2>)
+  	(<pred1> ^name asked-about-rarity ^object <obj> ^answer-topic yes)
+	(<pred2> ^name consider-posibility-meet-rarity ^yes <value> ^no {< <value>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-rarity-meeting-is-possible ^utility 20 ^type reaction ^animation-tag pleased)
+	(<f> ^text |Я часто вспоминаю свою сестру Рарити. Многие считают, что нам еще удасться встретиться. Я оцень надеюсь на это.|)
+}
+
+sp {verbolization-foe*elaborate*consider-meeting-with-rarity-is-not-possible
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1> <pred2>)
+  	(<pred1> ^name asked-about-rarity ^object <obj> ^answer-topic yes)
+	(<pred2> ^name consider-posibility-meet-rarity ^yes <value> ^no {> <value>})
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-rarity-meeting-is-not-possible ^utility 20 ^type reaction ^animation-tag rejection)
+	(<f> ^text |Многие считают, что Рарити пропала без вести и искать ее бесполезно. Я им не верю. Уверена, я смогу ее найти.|)
+}
+
+#
+# ASK ABOUT FREE CAPS
+#
+
+#
+# ask if speaker have caps
+#
+sp {verbolization-foe*elaborate*ask-about-caps
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	-{(<b> ^predicate <pred>)
+ 	  (<pred> ^name asked-about-caps ^object <obj>)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic ask-about-caps ^utility 20 ^type question ^animation-tag question)
+	(<f> ^text |Крышки есть?|)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*ask-about-caps
+	(state <s> ^substate talk-answered ^question-topic ask-about-caps)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic reaction-speaker-has-caps ^type reaction ^text |Тогда клади их в коробку! Пойдут на возрождение роботостроения.| ^animation-tag brohoof confirmation)
+	(<r2> ^answer-topic no ^topic check-if-speaker-has-no-caps ^type statement ^text |А если найду?| ^animation-tag question)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*ask-about-caps*yes*predicate
+	(state <s> ^substate talk-answered ^question-topic ask-about-caps ^answer-topic yes  ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name asked-about-caps ^object <obj> ^answer-topic yes)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*check-if-speaker-has-no-caps*yes
+	(state <s> ^substate talk-answered ^question-topic check-if-speaker-has-no-caps ^answer-topic yes ^actor <obj> ^actions <a>)
+-->
+	(<s> ^reaction <r1>)
+	(<r1> ^topic reaction-speaker-has-caps ^type reaction ^text |Не мог сразу нормально ответить? Клади их в коробку! Собираем крышки на возрождение роботостроения.| ^animation-tag brohoof angry)
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name asked-about-caps ^object <obj> ^answer-topic yes)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*check-if-speaker-has-no-caps*no
+	(state <s> ^substate talk-answered ^question-topic check-if-speaker-has-no-caps ^answer-topic no ^actor <obj> ^actions <a>)
+-->
+	(<s> ^reaction <r1>)
+	(<r1> ^topic reaction-speaker-has-no-caps ^type reaction ^text |Ну, тогда пойди, пошукай по ящикам. Мне ли тебе объяснять, как в Пустоши искать крышки?| ^animation-tag question angry)
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name asked-about-caps ^object <obj> ^answer-topic no)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*check-if-speaker-has-no-caps*no-answer
+	(state <s> ^substate talk-no-answer ^topic check-if-speaker-has-no-caps ^actor <obj> ^actions <a>)
+-->
+	(<s> ^reaction <r1>)
+	(<r1> ^topic reaction-speaker-has-no-caps ^type reaction ^text |Молчишь? Ну, пошукай по ящикам. Мне ли тебе объяснять, как в Пустоши искать крышки?| ^animation-tag question rejection)
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name asked-about-caps ^object <obj> ^answer-topic no)
+}
+
+#
+# reject reamrks about caps if question was asked recently
+#
+sp {verbolization-foe*elaborate*reject-remark-about-having-caps
+	(state <s> ^substate talk ^talk-said.event <ev> ^verbolization <v>)
+	(<ev> ^topic {<<|ask-about-caps| |remark-about-not-having-caps| |remark-about-having-caps|>>})
+-->
+	(<v> ^reject-topic remark-about-having-caps remark-about-not-having-caps)
+}
+
+#
+# remark about having caps
+#
+sp {verbolization-foe*elaborate*remark-about-having-caps
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred>)
+ 	 (<pred> ^name asked-about-caps ^object <obj> ^answer-topic yes)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-about-having-caps ^utility 20 ^type statement ^animation-tag confirmation)
+	(<f> ^text |Ты в прошлый раз хорошо задонатил. Но всегда можно задонатить еще.|)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*remark-about-having-caps*reactions
+	(state <s> ^substate talk-answered ^question-topic remark-about-having-caps)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic reaction-more-caps ^type reaction ^text |Больше крышек аликорну крышек!| ^animation-tag dance)
+	(<r2> ^answer-topic no ^topic reaction-no-more-caps ^type reaction ^text |Не поняла.| ^animation-tag angry)
+}
+
+#
+# remark about not having caps
+#
+sp {verbolization-foe*elaborate*remark-about-not-having-caps
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred>)
+ 	(<pred> ^name asked-about-caps ^object <obj> ^answer-topic no)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-about-not-having-caps ^utility 20 ^type statement ^animation-tag question)
+	(<f> ^text |Ты говорил, что крышек у тебя нет. Удалось добыть?|)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*remark-about-not-having-caps*reactions
+	(state <s> ^substate talk-answered ^question-topic remark-about-not-having-caps)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic reaction-speaker-has-caps ^type reaction ^text |Тогда клади их в коробку! Пойдут на возрождение роботостроения.| ^animation-tag brohoof confirmation)
+	(<r2> ^answer-topic no ^topic reaction-speaker-has-no-capss ^type reaction ^text |Ящики и бочки проверял?| ^animation-tag rejection)
+}
+
+#
+# ASK ABOUT BROHOOF
+#
+
+#
+# ask if speaker came for brohua
+#
+sp {verbolization-foe*elaborate*ask-about-brohua
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	-{(<b> ^predicate <pred>)
+ 	  (<pred> ^name brohua-status ^object <obj>)}
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic ask-about-brohua ^utility 20 ^type question ^animation-tag question)
+	(<f> ^text |Ты же сюда не ради брохуа пришел? Или ты тут из-за него?|)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*ask-about-brohua
+	(state <s> ^substate talk-answered ^question-topic ask-about-brohua)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic ask-about-brohua-again ^type question ^text |Ясно. Еще один пришел отбить брохуа. С утра идут и идут. Еще раз. Тебе точно это нужно?| ^animation-tag rejection)
+	(<r2> ^answer-topic no ^topic reaction-speaker-doe-not-want-brohua ^type reaction ^text |Я рада, что твой разум не изменил тебе.| ^animation-tag confirmation)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*ask-about-brohua*no*predicate
+	(state <s> ^substate talk-answered ^question-topic ask-about-brohua ^answer-topic no ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name brohua-status ^object <obj> ^status rejected-immediately)
+}
+
+#
+# confirm if speaker came for brohua again
+#
+
+sp {verbolization-foe*talk-answered*elaborate*ask-about-brohua-again
+	(state <s> ^substate talk-answered ^question-topic ask-about-brohua-again)
+-->
+	(<s> ^reaction-conditional <r1> <r2> ^reaction-default <r3>)
+	(<r1> ^answer-topic yes ^topic is-speaker-ready-for-brohua ^type question ^animation-tag angry)
+	(<r1> ^text |Хорошо. Ты получишь, что хочешь. Приготовься, освободи пространство вокруг себя. Повторяй в точности за мной. Скажи "да" когда готов.|)
+	(<r2> ^answer-topic no ^topic reaction-speaker-does-not-want-brohua ^type reaction ^text |Хорошо. Я больше никогда не спрошу тебя об этом.| ^animation-tag pleased)
+	(<r3> ^topic reaction-speaker-does-not-want-brohua ^type reaction ^text |Да ну все это. Займемся чем-то другим.| ^animation-tag rejection)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*ask-about-brohua-again*predicate*no
+	(state <s> ^substate talk-answered ^question-topic ask-about-brohua-again ^answer-topic {<> yes} ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name brohua-status ^object <obj> ^status rejected)
+}
+
+sp {verbolization-foe*talk-ignored*elaborate*ask-about-brohua-again*predicate
+	(state <s> ^substate talk-ignored ^topic ask-about-brohua-again  ^actor <obj> ^actions <a>)
+-->
+	(<s> ^reaction <r1>)
+	(<r1> ^topic reaction-speaker-does-not-want-brohua ^type reaction ^text |Да ну все это. Займемся чем-то... более разумным.| ^animation-tag rejection)
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name brohua-status ^object <obj> ^status rejected)
+}
+
+
+#
+# reactioan on speaker is ready for brohua
+#
+
+sp {verbolization-foe*talk-answered*elaborate*is-speaker-ready-brohua*reactions
+	(state <s> ^substate talk-answered ^question-topic is-speaker-ready-for-brohua)
+-->
+	(<s> ^reaction-conditional <r1>)
+	(<r1> ^answer-topic yes ^topic brohua ^type reaction ^animation-tag dance)
+	(<r1> ^text |Брохуа хуа хуа! Брохуа хуа хуа!|)
+	(<s> ^reaction-default <r2>)
+	(<r2> ^topic reaction-speaker-does-not-want-brohua ^type reaction ^text |Не готов? Отлично! Больше никаких брохуа.| ^animation-tag pleased)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*is-speaker-ready-brohua*predicate*no
+	(state <s> ^substate talk-answered ^question-topic is-speaker-ready-for-brohua ^answer-topic {<> yes} ^actor <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name brohua-status ^object <obj> ^status rejected)
+}
+
+sp {verbolization-foe*talk-ignored*elaborate*is-speaker-ready-brohua
+	(state <s> ^substate talk-ignored ^topic is-speaker-ready-for-brohua  ^actor <obj> ^actions <a>)
+-->
+	(<s> ^reaction <r1>)
+	(<r1> ^topic reaction-speaker-does-not-want-brohua ^type reaction ^text |Провались оно все в Тартар! Не будет тебе никаких брохуа!| ^animation-tag rejection)
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name brohua-status ^object <obj> ^status rejected)
+}
+
+#
+# reactioan on performed brohua
+#
+
+sp {verbolization-foe*talk-said*elaborate*remark-on-performed-brohua
+	(state <s> ^substate talk-said ^topic brohua  ^object <obj> ^actions <a>)
+-->
+	(<s> ^reaction <r1>)
+	(<r1> ^topic remark-on-performed-brohua ^type statement ^text |Доволен? Теперь объясни, какого Дискорда тебе нужно было это торжественное приветсвие южных племен зебр?| ^animation-tag angry)
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name brohua-status ^object <obj> ^status performed)
+}
+
+#
+# remind of performed brohua
+#
+
+
+#sp {verbolization-foe*elaborate*reject-remark
+#	(state <s> ^substate talk ^talk-said.event <ev> ^verbolization <v>)
+#	(<ev> ^topic {<<|remark-on-performed-brohua| |ask-about-brohua| |ask-about-brohua-again| |is-speaker-ready-for-brohua|>>})
+#-->
+#	(<v> ^reject-topic remark-on-performed-brohua)
+#}
+
+#
+# verbolize speaker does not know about rarity
+#
+sp {verbolization-foe*elaborate*remark-on-performed-brohua
+	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
+	(<b> ^predicate <pred1>)
+  	(<pred1> ^name brohua-status ^object <obj> ^status performed)
+-->
+	(<v> ^frame <f>)
+	(<f> ^topic remark-on-performed-brohua ^utility 20 ^type statement ^animation-tag question)
+	(<f> ^text |Ты доволен успешно отбитым брохуа? Межет хочешь еще?| |Понравилось отбивать брохуа? Пойди в далекое место и повтори.|)
+}
+
+sp {verbolization-foe*talk-answered*elaborate*remark-on-performed-brohua
+	(state <s> ^substate talk-answered ^question-topic remark-on-performed-brohua)
+-->
+	(<s> ^reaction-conditional <r1> <r2>)
+	(<r1> ^answer-topic yes ^topic reaction-remark-on-performed-brohua ^type reaction ^animation-tag rejection)
+	(<r1> ^text |Да ну тебя! Брохуатор.| |Что же сегодня за поветрие такое?|)
+	(<r2> ^answer-topic no sorry ^topic reaction-remark-on-performed-brohua ^type reaction ^animation-tag rejection)
+	(<r2> ^text |И не надейся! Я тебе это теперь не забуду.|)
+}
+

@@ -62,14 +62,15 @@ sp {initialization*apply*joint-trajectory
 	(<op> ^name initialization ^stage 2)
 -->
 	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9>)
-	(<c1> ^name head_node ^tag confirmation greeting pleased ^tag general ^tag talk ^relative yes)
+	(<c1> ^name head_node ^tag confirmation greeting pleased happy ^tag general ^tag talk ^relative yes)
 	(<c2> ^name head_shake ^tag rejection disappointed ^tag talk ^relative yes)
 	(<c3> ^name head_suprised ^tag question surprise  ^tag general ^tag talk ^relative yes)
 	(<c4> ^name head_look_around ^tag long ^tag general ^tag talk)
 	(<c5> ^name hoof_stamp ^tag rejection angry ^tag talk)
 	(<c6> ^name greeting ^tag greeting brohoof ^tag talk)
 	(<c7> ^name get_unconscious ^tag faint ^tag talk)
-	(<c8> ^name dance_stamp ^tag dance ^tag talk)
+	(<c8> ^name dance_stamp ^tag happy ^tag talk)
+	(<c9> ^name dance ^tag dance ^tag talk)
 }
 
 sp {initialization*apply*animation-tag-emotion-mapping
@@ -81,7 +82,7 @@ sp {initialization*apply*animation-tag-emotion-mapping
   (<c2> ^name unamused_look ^tag rejection disappointed)
   (<c3> ^name surprised_look ^tag surprise rejection greeting brohoof)
   (<c4> ^name pleasure_look ^tag pleased)
-  (<c5> ^name happy_look ^tag pleased confirmation dance)
+  (<c5> ^name happy_look ^tag pleased confirmation dance happy)
   (<c6> ^name tender_look ^tag pleased greeting brohoof)
   (<c7> ^name scared_look ^tag scared)
   (<c8> ^name very_scared_look ^tag scared)

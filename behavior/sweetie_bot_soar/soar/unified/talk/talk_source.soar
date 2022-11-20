@@ -9,18 +9,19 @@ source talk-said.soar
 source talk-failed.soar
 # verbolization rules
 source verbolization-talk.soar
-source verbolization-greeting.soar
+source verbolization-foe-greeting.soar
 source verbolization.soar
 # talk substate definition
 source talk.soar
 # verbolization rules
-#source verbolization-requestria.soar
-source verbolization-science.soar
-source verbolization-sweetie-bot.soar
+# source verbolization-requestria.soar
+# source verbolization-science.soar
+# source verbolization-sweetie-bot.soar
 # source verbolization-rarity.soar
 # source verbolization-quest.soar
-source verbolization-quiz.soar
-#source verbolization-vaccine-qr-code.soar
+source verbolization-foe-quiz.soar
+# source verbolization-vaccine-qr-code.soar
+source verbolization-foe.soar
 # content
 #source quest-content.soar
-source quiz-content.soar
+source quiz-content-foe.soar
