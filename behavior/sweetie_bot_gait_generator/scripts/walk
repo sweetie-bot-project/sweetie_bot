@@ -2,15 +2,15 @@
 import sys
 import argparse
 from math import pi
-from sweetie_bot_clop_generator.clopper import Clopper, MoveBaseGoal
+from sweetie_bot_gait_generator.clopper import Clopper, MoveBaseGoal
 
 
 # prepare argument parser
 parser = argparse.ArgumentParser(description=
-"""Move robot base using sweetie_bot_clop_generator.
+"""Move robot base using sweetie_bot_gait_generator.
 
 This command creates MoveBaseGoal message and move robot via actionlib request.
-Action server should be available under topic `clop_generator`.
+Action server should be available under topic `gait_generator`.
 
 By default path coordinte system is used to set target postion.
 The origing of path coordinate system is always under robot base,
@@ -67,5 +67,5 @@ if args.verbose:
 
 # send message to server
 print("Move base: x: %.3f y: %.3f angle: %.0f n_steps: %d duration: %.1f gait_type: %s" % (args.x[0], args.y[0], args.angle[0], msg.n_steps, msg.duration, msg.gait_type) )
-clop = Clopper("clop_generator")
+clop = Clopper("gait_generator")
 clop.invokeClopGenerator(msg)
