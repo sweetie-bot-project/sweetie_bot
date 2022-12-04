@@ -2,6 +2,8 @@
 import rospy
 # этот модуль создастся автомитически из файла Letter.msg
 from sweetie_bot_herkulex_msgs.msg import HerkulexState
+from sound_play.msg import SoundRequest
+from sound_play.libsoundplay import SoundClient
 
 def letterCallback(msg):
     rospy.loginfo(rospy.get_caller_id() + "I heard [%s]", msg.temperature)
@@ -17,6 +19,18 @@ def listener():
     # из определенного топика. Сообщения будут переданы в callback функцию letterCallback.
     rospy.Subscriber("test", HerkulexState, letterCallback)
 
+    soundhandle = SoundClient()
+    
+    rospy.sleep(1)
+
+    volume = 1
+    voice = "voice_kal_diphone"
+
+    soundhandle.say("Milaya pony, tebya tak dolgo jdali", voice, volume)
+    rospy.sleep(1)
+
+    # pub = rospy.Publisher("/robotsound", SoundRequest, queue_size=10)
+    # pub.publish(msg)
     # spin() не дает скрипту завершиться, пока нода не будет остановлена
     rospy.spin()
 
