@@ -53,7 +53,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>641</value>
+        <value>637</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -68,7 +68,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>772</value>
+        <value>768</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -83,7 +83,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>504</value>
+        <value>441</value>
       </simple>
       <simple name="scale" type="double">
         <description>Servo postion scale factor.</description>
@@ -102,7 +102,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>446</value>
+        <value>442</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -117,7 +117,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>479</value>
+        <value>476</value>
       </simple>
       <simple name="scale" type="double">
         <description>Servo postion scale factor.</description>
@@ -136,7 +136,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>431</value>
+        <value>428</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -151,7 +151,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>407</value>
+        <value>411</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -166,7 +166,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>544</value>
+        <value>545</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -181,7 +181,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>293</value>
+        <value>296</value>
       </simple>
       <simple name="scale" type="double">
         <description>Servo postion scale factor.</description>
@@ -200,7 +200,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>590</value>
+        <value>557</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -215,7 +215,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>565</value>
+        <value>614</value>
       </simple>
       <simple name="scale" type="double">
         <description>Servo postion scale factor.</description>
@@ -234,7 +234,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>401</value>
+        <value>496</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
