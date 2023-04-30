@@ -32,7 +32,9 @@ def handle_transcribe(req):
         return TranscribeResponse(status="All API URLs are down!")
     try:
       response = r.json()
-      response['status'] = r.reason
+      if r.status_code != 200:
+          response['status'] = r.reason
+
       rospy.loginfo('Transcription %s (%.2fs): "%s"' % (response['status'],
                                                         response['transcribe_duration'],
                                                         response['text']))
