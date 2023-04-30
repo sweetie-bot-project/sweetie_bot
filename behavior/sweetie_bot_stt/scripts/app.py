@@ -94,6 +94,7 @@ def create_binary():
       <input type=file name=file>
       <input type=submit value=Upload>
     </form>
+    </html>
     '''
 
 if __name__ == "__main__":
