@@ -19,7 +19,10 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 app = Flask(__name__)
+environment_configuration = os.environ.get('CONFIGURATION_SETUP', 'config.DevelopmentConfig')
+app.config.from_object(environment_configuration)
 app.logger.setLevel(logging.INFO)
+app.logger.info(f"Debug: {app.config['DEBUG']}")
 
 @app.route("/", methods=["GET", "POST"])
 def create_binary():
@@ -82,11 +85,11 @@ def create_binary():
                }
 
     # GET
-    return '''
+    return f'''
     <!doctype html>
     <title>Sweetie Bot Transcribe API</title>
     <h1>Sweetie Bot Transcribe API</h1>
-    <p>curl -F file=@file.wav http://127.0.0.1:8577/</p>
+    <p>curl -F file=@file.wav {request.base_url}</p>
     <form method=post enctype=multipart/form-data>
       <input type=file name=file>
       <input type=submit value=Upload>

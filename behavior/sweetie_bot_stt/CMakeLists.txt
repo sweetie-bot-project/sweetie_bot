@@ -154,6 +154,9 @@ include_directories(
 #############
 install(PROGRAMS
   scripts/stt_service_node
+  scripts/stt_api_service_node
+  scripts/app.py
+  scripts/config.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

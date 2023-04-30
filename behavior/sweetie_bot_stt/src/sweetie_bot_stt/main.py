@@ -7,7 +7,6 @@ import requests
 urls = {'0': "http://127.0.0.1:8577/"}
 
 def handle_transcribe(req):
-    #url = urls[url_n] rospy.get_param("~stt_api_url", 'http://127.0.0.1:8577/')
     global urls
     if req.filename and os.path.isfile(req.filename):
         rospy.logdebug("Got filename = %s" % req.filename)
