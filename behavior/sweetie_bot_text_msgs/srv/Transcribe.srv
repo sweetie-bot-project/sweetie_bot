@@ -1,0 +1,8 @@
+string filename
+uint8[] data
+---
+string status
+string text
+string language
+float32 transcribe_duration
+float32 audio_duration
