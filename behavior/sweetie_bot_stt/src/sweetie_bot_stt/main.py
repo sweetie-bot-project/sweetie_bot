@@ -39,7 +39,7 @@ def handle_transcribe(req):
                                                         response['transcribe_duration'],
                                                         response['text']))
     except:
-      rospy.logerr('Cannot decode response (%s)' % (r))
+      rospy.logerr('Cannot decode response (%s)' % (r.content))
       return TranscribeResponse()
 
     return TranscribeResponse(**response)
