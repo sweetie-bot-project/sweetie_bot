@@ -1,0 +1,24 @@
+string prompt
+uint32 max_new_tokens
+bool do_sample
+float32 temperature
+float32 top_p
+int32 typical_p
+float32 repetition_penalty
+int32 top_k
+uint32 min_length
+uint32 no_repeat_ngram_size
+uint32 num_beams
+int32 penalty_alpha
+uint32 length_penalty
+bool early_stopping
+int32 seed
+uint32 add_bos_token
+uint32 truncation_length
+bool ban_eos_token
+bool skip_special_tokens
+string[] stopping_strings
+---
+string status
+string text
+float32 duration

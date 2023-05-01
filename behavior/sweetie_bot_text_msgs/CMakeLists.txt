@@ -27,6 +27,7 @@ add_message_files(
 add_service_files(
   FILES
   Transcribe.srv
+  Complete.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -53,6 +54,11 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(CATKIN_DEPENDS message_runtime std_msgs geometry_msgs)
+
+install(DIRECTORY
+  info
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 ###########
 ## Build ##

@@ -1,0 +1,60 @@
+prompt:
+  description: "User prompt"
+  default: "This is a conversation with your Assistant. The Assistant is very helpful and is eager to chat with you and answer your questions.\r\nYou: What the differense between pony and a horse?\r\nAssistant:"
+max_new_tokens:
+  description: "Max new tokens"
+  default: 250
+do_sample:
+  description: "Do sample"
+  default: True
+temperature:
+  description: "Temperature"
+  default: 1.3
+top_p:
+  description: "Top P"
+  default: 0.1
+typical_p:
+  description: "Typical P"
+  default: 1
+repetition_penalty:
+  description: "Repetition penalty"
+  default: 1.18
+top_k:
+  description: "Top K"
+  default: 40
+min_length:
+  description: "Min length"
+  default: 0
+no_repeat_ngram_size:
+  description: "No repeat ngram size"
+  default: 0
+num_beams:
+  description: "Num beams"
+  default: 1
+penalty_alpha:
+  description: "Penalty alpha"
+  default: 0
+length_penalty:
+  description: "Length penalty"
+  default: 1
+early_stopping:
+  description: "Early stopping"
+  default: False
+seed:
+  description: "Seed"
+  default: -1
+add_bos_token:
+  description: "Add bos token"
+  default: True
+truncation_length:
+  description: "Truncation length"
+  default: 2048
+ban_eos_token:
+  description: "Ban eos token"
+  default: False
+skip_special_tokens:
+  description: "Skip special tokens"
+  default: True
+stopping_strings:
+  description: "Stopping strings"
+  default: ["\nYou:", "\nAssistant:", "\n"]
