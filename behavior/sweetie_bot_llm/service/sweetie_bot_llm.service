@@ -1,0 +1,15 @@
+[Unit]
+Description=Sweetie Bot LLM API service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+# change to your dir
+WorkingDirectory=$HOME/text-generation-webui
+# change to your user
+User=sweetie
+ExecStart=-/bin/bash -c "source /opt/ros/sweetie_bot/setup.bash && rosrun sweetie_bot_llm llm_api_service_node"
+Restart=on-failure
+TimeoutSec=600

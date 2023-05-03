@@ -1,0 +1,6 @@
+<launch>
+    <arg name="api_url_list" default="{'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}"/>
+    <node pkg="sweetie_bot_stt" type="stt_service_node" name="stt_service_node" output="screen">
+        <rosparam param="api_url" subst_value="True">$(arg api_url_list)</rosparam> 
+    </node>
+</launch>
