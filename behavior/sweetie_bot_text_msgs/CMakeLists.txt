@@ -21,6 +21,7 @@ add_message_files(
   Detection.msg
   DetectionArray.msg
   SpeechVisualization.msg
+  SoundEvent.msg
 )
 
 ## Generate services in the 'srv' folder
