@@ -24,10 +24,10 @@ catkin_python_setup()
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-  INCLUDE_DIRS src
-  LIBRARIES ${PROJECT_NAME}
-)
+#catkin_package(
+#  INCLUDE_DIRS src
+#  LIBRARIES ${PROJECT_NAME}
+#)
 
 
 #############
@@ -39,8 +39,8 @@ catkin_package(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-catkin_install_python(PROGRAMS nodes/voice 
-                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#catkin_install_python(PROGRAMS nodes/voice
+#                      DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # install shell scripts
 #install(DIRECTORY scripts
@@ -53,6 +53,6 @@ catkin_install_python(PROGRAMS nodes/voice
 #   # myfile2
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
-install(DIRECTORY launch sounds
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+#install(DIRECTORY launch sounds
+#    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 

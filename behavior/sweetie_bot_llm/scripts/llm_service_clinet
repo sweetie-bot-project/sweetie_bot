@@ -1,10 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, os
 import rospy, rospkg
 from sweetie_bot_text_msgs.srv import Complete, CompleteRequest, CompleteResponse
 import yaml
-import itertools
+
+try:
+    from itertools import izip as zip
+except ImportError: # will be 3.x series
+    pass
+
 import argparse
 
 parser = argparse.ArgumentParser(description='Sweetie bot LLM service client')
@@ -25,7 +30,7 @@ def create_args_from_ros_type(parser, type_path):
     slots = eval(type_name+".__slots__")
     types = eval(type_name+"._slot_types")
 
-    for s,t in itertools.izip(slots, types):
+    for s,t in zip(slots, types):
         parser.add_argument('--'+s,
                             type=type(t),
                             default=info[s]['default'],
