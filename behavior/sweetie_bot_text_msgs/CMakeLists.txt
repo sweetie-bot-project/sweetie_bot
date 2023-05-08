@@ -29,6 +29,7 @@ add_service_files(
   FILES
   Transcribe.srv
   Complete.srv
+  CompleteSimple.srv
 )
 
 ## Generate actions in the 'action' folder

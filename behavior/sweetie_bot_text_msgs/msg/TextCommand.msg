@@ -12,5 +12,6 @@
 #  
 string type
 string command
+string options
 #strings args[]
 #float64 values[]

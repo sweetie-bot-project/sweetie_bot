@@ -24,7 +24,7 @@ def handle_transcribe(req):
             else:
                 rospy.logerr("%d %s" % (r.status_code, r.reason))
                 continue # next url
-        except requests.ConnectionError, e:
+        except requests.ConnectionError as e:
             rospy.logerr("Connection failed! %s" % e)
             # nexu url
 

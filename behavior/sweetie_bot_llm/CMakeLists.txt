@@ -153,9 +153,14 @@ include_directories(
 ## Install ##
 #############
 install(PROGRAMS
+  scripts/llm_service_clinet
   scripts/llm_service_node
   scripts/llm_api_service_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY config
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 # all install targets should use catkin DESTINATION variables

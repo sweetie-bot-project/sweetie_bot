@@ -1,11 +1,31 @@
 voice:
-    lang: "ru,en"
+    lang: 'ru,en,ja'
     sound_packages: [ sweetie_bot_sounds, sweetie_bot_sounds_quest_become_pony ]
-    default_profile: 'rhvoice'
+    default_profile: 'coqui-ai'
     ladspa_path: ~/.ladspa/
     voice_profile:
+        coqui-ai:
+            type: 'coqui-ai'
+            coqui_ai_params:
+                languages:
+                    en:
+                        model: 'vctk'
+                        params:
+                            speaker: 'p225'
+                    ja:
+                        model: 'kokoro'
+                models:
+                    vctk:
+                        model_name: 'tts_models/en/vctk/vits'
+                        progress_bar: false
+                        gpu: false
+                    kokoro:
+                        model_name: 'tts_models/ja/kokoro/tacotron2-DDC'
+                    ruslan:
+                        model_path: 'tts_models/ru/ruslan/tacotron2-DDC.pth'
+                        config_path: 'tts_models/ru/ruslan/tacotron2-DDC.json'
         rhvoice:
-            type: rhvoice
+            type: 'rhvoice'
             rhvoice_params:
                 relative_volume:        1.0  # in percents devided by 100
                 relative_rate:          0.9  # in percents devided by 100
@@ -13,7 +33,7 @@ voice:
                 #relative_pitch_russian: 0.60 # in percents devided by 100
                 #relative_pitch_english: 0.75 # in percents devided by 100
         rhvoice_robotized:
-            type: rhvoice
+            type: 'rhvoice'
             rhvoice_params:
                 relative_volume:        1.0  # in percents devided by 100
                 relative_rate:          0.9  # in percents devided by 100

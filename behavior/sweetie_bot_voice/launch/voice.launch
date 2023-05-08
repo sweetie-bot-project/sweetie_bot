@@ -1,7 +1,9 @@
 <launch>
   <include file="$(find sound_play)/soundplay_node.launch" />
-	<param name="lang" value="ru,en" />
+  <!-- arg name="voice_profile" default="coqui-ai"/ -->
   <node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
-	  <rosparam param="sound_packages">[ sweetie_bot_sounds ]</rosparam>
+    <rosparam command="load" ns="/" file="$(find sweetie_bot_voice)/config/test.yaml" ></rosparam>
+    <!-- rosparam param="voice_profile">$(arg voice_profile)</rosparam -->
+    <!-- rosparam param="sound_packages">[ sweetie_bot_sounds ]</rosparam -->
   </node>
 </launch>

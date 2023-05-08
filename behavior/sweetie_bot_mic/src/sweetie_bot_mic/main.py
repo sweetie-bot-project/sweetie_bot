@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import time
 from contextlib import contextmanager
 import pyaudio
 from pynput import keyboard
@@ -9,9 +10,9 @@ import numpy as np
 import struct
 
 import rospy
-from sweetie_bot_text_msgs.msg import SoundEvent
+from sweetie_bot_text_msgs.msg import SoundEvent, TextCommand
+from sweetie_bot_text_msgs.srv import CompleteSimple, CompleteSimpleRequest, CompleteSimpleResponse
 from std_msgs.msg import Bool
-
 
 # suppress error messages from ALSA
 # https://stackoverflow.com/questions/7088672/pyaudio-working-but-spits-out-error-messages-each-time
@@ -141,6 +142,7 @@ class RespeakerNode(object):
         # shutdown hook
         rospy.on_shutdown(self.on_shutdown)
         # get parameters
+        self.call_llm = rospy.get_param("~call_llm", False)
         self.update_rate = rospy.get_param("~update_rate", 10.0)
         self.main_channel = rospy.get_param('~main_channel', 0)
         suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", True)
@@ -155,8 +157,12 @@ class RespeakerNode(object):
         self.keyboard_listener.start()
         rospy.loginfo("Listening for global hotkey  %s" % self.COMBINATION) #, key=lambda item: item[1]))) # sorted(self.COMBINATION))
         # listen
-        self.sub_button_event = rospy.Subscriber("mic_button", Bool, self.on_mic_button)
-        self.sub_robot_is_speeching_event = rospy.Subscriber("robot_is_speeching", Bool, self.on_robot_is_speeching)
+        self.sub_button_event = rospy.Subscriber("pushed", Bool, self.on_mic_button)
+        self.sub_mouth_event = rospy.Subscriber("mouth", TextCommand, self.on_mouth)
+        # service call
+        if self.call_llm:
+            rospy.wait_for_service('/input_text')
+            self.llm_service_client = rospy.ServiceProxy("/input_text", CompleteSimple)
         # advertise
         self.pub_sound_event = rospy.Publisher("sound_event", SoundEvent , queue_size=10)
         # start
@@ -173,16 +179,18 @@ class RespeakerNode(object):
         finally:
             self.respeaker_audio = None
 
-    def on_robot_is_speeching(self, msg):
+    def on_mouth(self, cmd):
         # If robot is speeching everyone else must shurt up!
         # jk! we don't want the robot to talk to itself.
-        self._robot_is_speeching = msg.data
-        if msg.data:
-            rospy.loginfo("Robot is speeching. Disabling microphone")
-            self.respeaker_audio.stop()
-        else:
-            rospy.loginfo("Robot is not speeching. Enabling microphone")
-            self.respeaker_audio.start()
+        if cmd.type == 'mouth/speech':
+            if cmd.command == 'begin':
+                self._robot_is_speeching = True
+                rospy.loginfo("Robot is speaking. Disabling microphone")
+                self.respeaker_audio.stop()
+            else:
+                self._robot_is_speeching = False
+                rospy.loginfo("Robot is not speaking. Enabling microphone")
+                self.respeaker_audio.start()
 
     def on_mic_button(self, msg):
         self._is_speeching = msg.data
@@ -272,6 +280,18 @@ class RespeakerNode(object):
                 sound_event.sound_flags |= SoundEvent.SPEECH_DECODED
                 sound_event.text = result['text']
                 sound_event.language = result['language']
+                if self.call_llm:
+                    try:
+                        req = CompleteSimpleRequest()
+                        req.data.type = 'complete/request'
+                        req.data.command = sound_event.text
+                        req.data.options = sound_event.language
+                        start = time.time()
+                        ret = self.llm_service_client(req)
+                        duration = time.time() - start
+                        rospy.loginfo("(%.2f) %s" % (duration, ret.data.command))
+                    except rospy.ServiceException as exc:
+                        rospy.logerr("Service did not process request: " + str(exc))
             else:
                 sound_event.text = ''
             # clear buffer
@@ -279,7 +299,6 @@ class RespeakerNode(object):
 
         # publish result
         self.pub_sound_event.publish(sound_event)
-
 
 def main():
     rospy.init_node("respeaker_node")

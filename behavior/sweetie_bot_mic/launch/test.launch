@@ -1,7 +1,9 @@
 <launch>
     <arg name="mic_name" default="ReSpeaker 4 Mic Array (UAC1.0)"/>
     <arg name="api_url_list" default="{'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}"/>
+    <arg name="call_llm" default="False" />
     <node pkg="sweetie_bot_mic" type="respeaker" name="respeaker_node" output="screen">
+        <rosparam param="call_llm"           subst_value="True">$(arg call_llm)</rosparam>
         <rosparam param="mic_name"           subst_value="True">$(arg mic_name)</rosparam>
         <rosparam param="transcribe_servers" subst_value="True">$(arg api_url_list)</rosparam>
     </node>
