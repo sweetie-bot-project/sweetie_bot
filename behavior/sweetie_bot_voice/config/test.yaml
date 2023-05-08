@@ -1,0 +1,37 @@
+voice:
+    lang: 'ru,en,ja'
+    sound_packages: [ sweetie_bot_sounds, sweetie_bot_sounds_quest_become_pony ]
+    default_profile: 'coqui-ai'
+    ladspa_path: ~/.ladspa/
+    voice_profile:
+        coqui-ai:
+            type: 'coqui-ai'
+            coqui_ai_params:
+                languages:
+                    en: 
+                        model: 'vctk'
+                        params:
+                            speaker: 'p225'
+                    ja: 
+                        model: 'kokoro'
+                    conversion:
+                        model: 'freevc24'
+                        params:
+                            target_wav: 'conversion/sweetie_bot.ogg'
+                models:
+                    vctk:
+                        model_name: 'tts_models/en/vctk/vits'
+                        progress_bar: false
+                        gpu: true
+                    kokoro:
+                        model_name: 'tts_models/ja/kokoro/tacotron2-DDC'
+                        gpu: true
+                    ruslan:
+                        model_path: 'tts_models/ru/ruslan/tacotron2-DDC.pth'
+                        config_path: 'tts_models/ru/ruslan/tacotron2-DDC.json'
+                    freevc24:
+                        model_name: 'voice_conversion_models/multilingual/vctk/freevc24'
+                        progress_bar: false
+                        gpu: true
+eyes:
+    start_blinking: true
