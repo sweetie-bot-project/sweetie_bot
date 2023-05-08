@@ -5,12 +5,12 @@
 #include <interactive_markers/menu_handler.h>
 
 #include <actionlib/client/simple_action_client.h>
-#include <sweetie_bot_clop_generator/MoveBaseAction.h>
+#include <sweetie_bot_gait_generator/MoveBaseAction.h>
 
 using interactive_markers::MenuHandler;
-using sweetie_bot_clop_generator::MoveBaseGoal;
-using sweetie_bot_clop_generator::MoveBaseAction;
-using sweetie_bot_clop_generator::EndEffectorGoal;
+using sweetie_bot_gait_generator::MoveBaseGoal;
+using sweetie_bot_gait_generator::MoveBaseAction;
+using sweetie_bot_gait_generator::EndEffectorGoal;
 
 namespace sweetie_bot {
 namespace hmi {

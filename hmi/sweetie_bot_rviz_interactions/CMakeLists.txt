@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   interactive_markers
   visualization_msgs
   geometry_msgs
-  sweetie_bot_clop_generator
+  sweetie_bot_gait_generator
   sweetie_bot_control_msgs
   sweetie_bot_text_msgs
 )
@@ -33,7 +33,7 @@ find_package(Qt5Widgets REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sweetie_bot_rviz_interactions
-  CATKIN_DEPENDS roscpp tf actionlib interactive_markers visualization_msgs geometry_msgs sweetie_bot_clop_generator sweetie_bot_control_msgs sweetie_bot_text_msgs
+  CATKIN_DEPENDS roscpp tf actionlib interactive_markers visualization_msgs geometry_msgs sweetie_bot_gait_generator sweetie_bot_control_msgs sweetie_bot_text_msgs
 #  DEPENDS system_lib
 )
 

@@ -15,6 +15,7 @@
   <run_depend>tf_conversions</run_depend>
   <run_depend>moveit_msgs</run_depend>
   <run_depend>moveit_commander</run_depend>
+  <run_depend>sweetie_bot_gait_generator</run_depend>
 
   <export>
     <flexbe_states />

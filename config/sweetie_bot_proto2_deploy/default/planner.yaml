@@ -1,4 +1,4 @@
-clop_generator:
+gait_generator:
     period: 0.056
     contact_height_tolerance: 0.005
     world_frame: "odom_combined"

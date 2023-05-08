@@ -29,3 +29,13 @@ sp {talk-said*propose*add-last-said
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name talk-last-said-topic ^topic <topic> ^object <obj> ^deadline-time 60.0)
 }
+
+# VERBOLIZATION COGNITION RULES
+
+# propose reaction which matches topic
+sp {talk-said*elaboration*reaction
+	(state <s> ^substate talk-said ^reaction <r> ^event <ev> ^object <obj> ^actions <a>)
+-->
+	(<a> ^add-predicate <pred>)
+	(<pred> ^name talk-possible-reaction ^type topic-chain ^object <obj> ^reaction <r> ^event <ev> ^deadline-time 60.0)
+}

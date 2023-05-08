@@ -11,9 +11,9 @@ import xmlrpc.client
 # datatypes
 from rospy.rostime import Duration
 from std_msgs.msg import Header
-from sweetie_bot_clop_generator.msg import MoveBaseAction
-from sweetie_bot_clop_generator.msg import MoveBaseGoal
-from sweetie_bot_clop_generator.msg import MoveBaseResult
+from sweetie_bot_gait_generator.msg import MoveBaseAction
+from sweetie_bot_gait_generator.msg import MoveBaseGoal
+from sweetie_bot_gait_generator.msg import MoveBaseResult
 from actionlib_msgs.msg import *
 
 
@@ -21,7 +21,7 @@ from actionlib_msgs.msg import *
 # Dummy is actually EventState but FlexBe App is not able to recognize it.
 class GenerateStepSequenceBase(Dummy):
     '''
-    Base class for states which synthesize movement with sweetie_bot_clop_generator::MoveBase action request. Action goal is stored on ROS parameter server in serialized form.
+    Base class for states which synthesize movement with sweetie_bot_gait_generator::MoveBase action request. Action goal is stored on ROS parameter server in serialized form.
 
     -- controller          string    Action server to execute action.
 
@@ -33,7 +33,7 @@ class GenerateStepSequenceBase(Dummy):
 
     '''
 
-    def __init__(self, controller = 'clop_generator', outcomes = ['success', 'solution_not_found', 'partial_movement', 'invalid_pose', 'failure'], *args, **kwargs):
+    def __init__(self, controller = 'gait_generator', outcomes = ['success', 'solution_not_found', 'partial_movement', 'invalid_pose', 'failure'], *args, **kwargs):
         # Declare outcomes and output keys
         super(GenerateStepSequenceBase, self).__init__(outcomes = outcomes, *args, **kwargs)
 

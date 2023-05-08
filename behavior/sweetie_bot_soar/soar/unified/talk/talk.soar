@@ -303,12 +303,24 @@ sp {talk*elaborate*question-is-ignored-event
 	(<ev-ignored> ^name talk-ignored ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
 }
 
+# detect ignored event
+sp {talk*elaborate*statement-is-not-answered-event
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^name waiting-answer ^reason deadline ^process <proc>)
+	(<proc> ^type statement ^object <obj> ^topic <topic>)
+-->
+	(<b> ^event <ev-ignored>)
+	(<ev-ignored> ^name talk-no-answer ^actor <obj> ^topic <topic> ^memorization-time 3600.0)
+}
+
+
 # TALK EVENT PROCESSING
 
 # detect events which should be processed if verbolization 
 sp {talk*propose*event-reaction
 	(state <s> ^substate talk ^beliefs.event <ev>)
-	(<ev> ^name {<<|talk-said| |talk-heard| |talk-ignored| |talk-irrelevant| |talk-failed|>> <ev-name>} -^processed talk-event-reaction)
+	(<ev> ^name {<<|talk-said| |talk-heard| |talk-ignored| |talk-no-answer| |talk-irrelevant| |talk-failed|>> <ev-name>} -^processed talk-event-reaction)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name (concat <ev-name> |-reaction|) ^type cognition ^substate <ev-name> ^event <ev>)

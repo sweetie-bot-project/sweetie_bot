@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+import sys
+import argparse
+from math import pi
+from sweetie_bot_gait_generator.clopper import Clopper, MoveBaseGoal
+
+
+# prepare argument parser
+parser = argparse.ArgumentParser(description=
+"""Move robot base using sweetie_bot_gait_generator.
+
+This command creates MoveBaseGoal message and move robot via actionlib request.
+Action server should be available under topic `gait_generator`.
+
+By default path coordinte system is used to set target postion.
+The origing of path coordinate system is always under robot base,
+x-axis is directed forward along the robot position and z-axis 
+is always directed upward.
+""")
+
+parser.add_argument('x', metavar='X', type=float, nargs=1,
+                            help='Target x coordinate (m).')
+parser.add_argument('y', metavar='Y', type=float, nargs=1,
+                            help='Target y coordinate (m).')
+parser.add_argument('angle', metavar='ANGLE', type=float, nargs=1,
+                            help='Rotation around z-axis (degrees).')
+
+parser.add_argument('-d', '--duration', metavar='DURATION', 
+        dest='duration', type=float, default=3.4,
+        help='Movement duration (default: 3.4).')
+parser.add_argument('-n', '--n-steps', metavar='N_STEPS', 
+        dest='n_steps', type=int, default=4,
+        help='Number of steps (default: 4).')
+parser.add_argument('-g', '--gait', metavar='GAIT_TYPE', 
+        dest='gait_type', type=str, default='walk_overlap',
+        help='Gait type: "walk", "walk_overlap", "trot" and so on (default: "walk_overlap").')
+parser.add_argument('--free', 
+        dest='ee_target_nominal', action='store_false',
+        help='Do not specify end effector target poses.')
+parser.add_argument('-v', '--verbose', 
+        dest='verbose', action='store_true',
+        help='Display movement request.')
+parser.add_argument('-V', '--visualize-only',
+        dest='visualize_only', action='store_true',
+        help='Do not execute planned motion.')
+parser.add_argument('-R', '--repeat_motion',
+        dest='repeat_motion', action='store_true',
+        help='Execute motion planned in prevous request. Target position is ignored.')
+
+# parse command line argumants
+args = parser.parse_args()
+
+# create message
+msg = MoveBaseGoal(gait_type = args.gait_type, n_steps = args.n_steps, duration = args.duration)
+msg.setTargetBaseShift(x = args.x[0], y = args.y[0], angle = pi/180*args.angle[0]) 
+if args.ee_target_nominal:
+    msg.addEndEffectorsTargets(["leg1","leg2","leg3","leg4"]) 
+if args.visualize_only:
+    msg.visualize_only = True
+if args.repeat_motion:
+    msg.execute_only = True
+
+if args.verbose:
+    print("MoveBaseGoal:")
+    print(msg)
+    print()
+
+# send message to server
+print("Move base: x: %.3f y: %.3f angle: %.0f n_steps: %d duration: %.1f gait_type: %s" % (args.x[0], args.y[0], args.angle[0], msg.n_steps, msg.duration, msg.gait_type) )
+clop = Clopper("gait_generator")
+clop.invokeClopGenerator(msg)
