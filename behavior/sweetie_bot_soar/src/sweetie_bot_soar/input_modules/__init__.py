@@ -8,3 +8,4 @@ from .battery import Battery
 from .pose_joints import PoseJoints
 from .pose_tf import PoseTF
 from .herkulex_servos import HerkulexServos
+from .sound import SoundSpeech
