@@ -5,6 +5,7 @@ import time
 from contextlib import contextmanager
 import pyaudio
 from pynput import keyboard
+from pynput.keyboard import Key
 import requests
 import numpy as np
 import struct
@@ -133,36 +134,45 @@ class RespeakerAudio(object):
 
 class RespeakerNode(object):
 
-    # The key combination to check
-    COMBINATION = {keyboard.Key.ctrl, keyboard.Key.alt, keyboard.KeyCode.from_char('w')}
-    # The currently active modifiers
-    current = set()
-
     def __init__(self):
         # shutdown hook
         rospy.on_shutdown(self.on_shutdown)
         # get parameters
-        self.call_llm = rospy.get_param("~call_llm", False)
+        call_llm = rospy.get_param("~call_llm", False)
         self.update_rate = rospy.get_param("~update_rate", 10.0)
         self.main_channel = rospy.get_param('~main_channel', 0)
         suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", True)
         self.transcribe_servers = rospy.get_param("~transcribe_servers", {'0': "http://localhost:8577/"})
+        keys_combo = rospy.get_param("~key_combination", ['pause'])
         # audio interface
         self.respeaker_audio = RespeakerAudio(self.on_audio, suppress_error=suppress_pyaudio_error)
         self.speech_audio_buffer = bytearray()
-        self._is_speeching = False
-        self._robot_is_speeching = False
         # keyboard
+        pynput_key_map = { 'ctrl': Key.ctrl, 'alt': Key.alt, 'space': Key.space, 'pause': Key.pause }
+        self._keys_pressed = set()
+        self._keys_combo = set()
+        for key in keys_combo:
+            if key in pynput_key_map: 
+                self._keys_combo.add( pynput_key_map[key] )
+            elif len(key) == 1:
+                self._keys_combo.add( Key.from_char(key) )
+            else:
+                raise KeyError('unknown key specification: %s' % key)
         self.keyboard_listener = keyboard.Listener(on_press=self.on_key_press, on_release=self.on_key_release)
         self.keyboard_listener.start()
-        rospy.loginfo("Listening for global hotkey  %s" % self.COMBINATION) #, key=lambda item: item[1]))) # sorted(self.COMBINATION))
-        # listen
+        rospy.loginfo("Listening for global hotkey  %s" % self._keys_combo) 
+        # listen: mic button is pressed
+        self._button_pressed = False
         self.sub_button_event = rospy.Subscriber("pushed", Bool, self.on_mic_button)
+        # listen: robot speech event to avoid self-listening
+        self._robot_is_speeching = False
         self.sub_mouth_event = rospy.Subscriber("mouth", TextCommand, self.on_mouth)
-        # service call
-        if self.call_llm:
-            rospy.wait_for_service('/input_text')
-            self.llm_service_client = rospy.ServiceProxy("/input_text", CompleteSimple)
+        # service call: language model
+        if call_llm:
+            rospy.wait_for_service('/input_text', 5.0)
+            self.llm_service_client = rospy.ServiceProxy("/input_text", CompleteSimple, persistent=True)
+        else:
+            self.llm_service_client = None
         # advertise
         self.pub_sound_event = rospy.Publisher("sound_event", SoundEvent , queue_size=10)
         # start
@@ -193,25 +203,18 @@ class RespeakerNode(object):
                 self.respeaker_audio.start()
 
     def on_mic_button(self, msg):
-        self._is_speeching = msg.data
+        self._speeching = msg.data
 
     def on_key_press(self, key):
-        if key in self.COMBINATION:
-            self.current.add(key)
-            if all(k in self.current for k in self.COMBINATION):
-                self._is_speeching = True
+        if key in self._keys_combo:
+            self._keys_pressed.add(key)
 
     def on_key_release(self, key):
-        if key in self.current:
-            try:
-                self.current.remove(key)
-            except KeyError:
-                pass
-            if self._is_speeching and not all(k in self.current for k in self.COMBINATION):
-                self._is_speeching = False
+        self._keys_pressed.discard(key)
 
     def is_speeching(self):
-        return self._is_speeching
+        combo_is_pressed = len(self._keys_pressed) == len(self._keys_combo)
+        return (combo_is_pressed or self._button_pressed) and not self._robot_is_speeching
 
     def transcribe(self, data):
         resp = None
@@ -231,14 +234,13 @@ class RespeakerNode(object):
 
             try:
                 resp = requests.post(urls[n], files={'file': ('audio.wav', header + data)})
-                # check s
+                # check status
                 if resp.status_code == 200:
                     break
                 else:
                     rospy.logerr("%d %s" % (resp.status_code, resp.reason))
-                    continue # next url
             except requests.ConnectionError as e:
-                rospy.logwarn("Connection failed! %s" % e)
+                rospy.logwarn("Connection failed: %s" % e)
 
         if resp is None:
             rospy.logerr('Transcription failed! Cannot decode response')
@@ -280,25 +282,25 @@ class RespeakerNode(object):
                 sound_event.sound_flags |= SoundEvent.SPEECH_DECODED
                 sound_event.text = result['text']
                 sound_event.language = result['language']
-                if self.call_llm:
-                    try:
-                        req = CompleteSimpleRequest()
-                        req.data.type = 'complete/request'
-                        req.data.command = sound_event.text
-                        req.data.options = sound_event.language
-                        start = time.time()
-                        ret = self.llm_service_client(req)
-                        duration = time.time() - start
-                        rospy.loginfo("(%.2f) %s" % (duration, ret.data.command))
-                    except rospy.ServiceException as exc:
-                        rospy.logerr("Service did not process request: " + str(exc))
-            else:
-                sound_event.text = ''
             # clear buffer
             self.speech_audio_buffer.clear()
 
         # publish result
         self.pub_sound_event.publish(sound_event)
+
+        # pass text to language model: new speech is decoded and Complete service is available
+        if sound_event.sound_flags & SoundEvent.SPEECH_DECODED and self.llm_service_client is not None:
+            try:
+                req = CompleteSimpleRequest()
+                req.data.type = 'complete/request'
+                req.data.command = sound_event.text
+                req.data.options = sound_event.language
+                start = time.time()
+                ret = self.llm_service_client(req)
+                duration = time.time() - start
+                rospy.loginfo("Complete ok (%.2f): %s" % (duration, ret.data.command))
+            except rospy.ServiceException as exc:
+                rospy.logerr("Service did not process request: " + str(exc))
 
 def main():
     rospy.init_node("respeaker_node")
