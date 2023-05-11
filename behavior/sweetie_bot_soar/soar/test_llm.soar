@@ -1,0 +1,86 @@
+# initialization 
+
+sp {initialization*propose
+    (state <s> ^superstate nil -^cycle)
+-->
+    (<s> ^operator <op> +)
+    (<op> ^name initialization)
+}
+
+sp {initialization*apply 
+    (state <s> ^operator <op>)
+    (<op> ^name initialization)
+-->
+    (<s> ^name test-llm ^cycle 1)
+}
+
+# requests 
+
+sp {request*propose
+    (state <s> ^name test-llm ^cycle <cycle> -^io.output-link.lang-model)
+--> 
+    (<s> ^operator <op> +)
+    (<op> ^name request ^variant <cycle>)
+}
+
+sp {request*apply1 
+    (state <s> ^operator <op> ^io.output-link <ol>)
+    (<op> ^name request ^variant 1)
+-->
+    (<ol> ^lang-model <lm>) 
+    (<lm> ^request |simple-en| ^text |Hello! What is your name?|)
+}
+
+sp {request*apply2 
+    (state <s> ^operator <op> ^io.output-link <ol>)
+    (<op> ^name request ^variant 2)
+-->
+    (<ol> ^lang-model <lm>) 
+    (<lm> ^request |complex-en| ^predicate <p1> ^event <ev1> <ev2> <ev3>)
+    (<p1> ^text |Human dislike Sweetie.| ^initiated-at 1.0)
+    (<ev1> ^name talk-heard ^text |Hello! I hate robots.| ^initiated-at 0.0)
+    (<ev2> ^name talk-said ^text |Hello... I am very sad.| ^initiated-at 2.0)
+    (<ev3> ^name talk-ignored ^initiated-at 3.0)
+}
+
+sp {request*apply3
+    (state <s> ^operator <op> ^io.output-link <ol>)
+    (<op> ^name request ^variant 3)
+-->
+    (halt)
+}
+
+#result processing
+
+sp {result*propose
+    (state <s> ^name test-llm ^cycle <cycle> ^io.output-link.lang-model <lm>)
+    (<lm> ^status <status>)
+--> 
+    (<s> ^operator <op> +)
+    (<op> ^name result ^cycle <cycle> ^status <status> ^lang-model <lm>)
+}
+
+sp {result*apply*remove-and-cycle
+    (state <s> ^operator <op> ^cycle <cycle> ^io.output-link <ol>)
+    (<op> ^name result ^lang-model <lm>) 
+-->
+    (<ol> ^lang-model <lm> -)
+    (<s> ^cycle <cycle> -)
+    (<s> ^cycle (+ <cycle> 1))
+}
+
+sp {result*apply*failed
+    (state <s> ^operator <op>)
+    (<op> ^name result ^status failed ^lang-model <lm>) 
+    (<lm> ^error_desc <err>)
+-->
+	(write | failed :| <err> (crlf))
+}
+
+sp {result*apply*succeed
+    (state <s> ^operator <op>)
+    (<op> ^name result ^status succeed ^lang-model <lm>) 
+    (<lm> ^emotion <emotion> ^result <answer>)
+-->
+	(write | succeed :| <answer> | (| <emotion> |) | (crlf))
+}
