@@ -25,6 +25,27 @@ class OutputModule(object):
         self._name = name
         self._cmd_timetag = None
 
+    def getConfigParameter(self, config, name, default_value = None, allowed_types = None, check_func = lambda v: True, error_desc = None):
+        # check input config
+        if allowed_types is None:
+            if default_value is not None:
+                allowed_types = type(default_value)
+            else:
+                raise ValueError('`%s` output module:  default_value or allowed_types must be supplied.' % self._name)
+        # get parameter
+        value = config.get(name)
+        # check if paramter is not specified and default_value exists
+        if value == None and default_value is not None:
+            value = default_value
+        # check if parameter value correct
+        if not isinstance(value, allowed_types) or not check_func(value):
+            if error_desc is None:
+                error_desc = '`%s` output module: parameter %s is not present or invalid.' % (self._name, name)
+            raise ValueError(error_desc)
+        # return parater value
+        return value
+
+
     def start(self, cmd_wme_id):
         # execute start hook
         state = self.startHook(cmd_wme_id)
