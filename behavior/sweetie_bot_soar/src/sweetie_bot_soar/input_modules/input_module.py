@@ -26,16 +26,62 @@ class InputModule:
     def __init__(self, name):
         self._name = name
 
-    def getConfigParameter(self, config, name, default_value = None, allowed_types = (str,), check_func = lambda v: True, error_desc = None):
+    def getConfigParameter(self, config, name, default_value = None, allowed_types = None, check_func = lambda v: True, error_desc = None):
+        # check input config
+        if allowed_types is None:
+            if default_value is not None:
+                allowed_types = type(default_value)
+            else:
+                raise ValueError('getConfigParameter: default_value or allowed_types must be supplied.')
         # get parameter
         value = config.get(name)
         # check if paramter is not specified and default_value exists
-        if value == None and default_value != None:
+        if value == None and default_value is not None:
             value = default_value
         # check if parameter value correct
         if not isinstance(value, allowed_types) or not check_func(value):
-            if error_desc == None:
+            if error_desc is None:
                 error_desc = '`%s` input module: parameter %s is not present or invalid.' % (self._name, name)
             raise RuntimeError(error_desc)
         # return parater value
         return value
+
+class InputModuleFlatSoarView(InputModule):
+    def __init__(self, name, agent):
+        super(InputModuleFlatSoarView, self).__init__(name)
+        # create sensor WME
+        input_link_id = agent.GetInputLink()
+        self._sensor_id = input_link_id.CreateIdWME(name)
+        # create child id map
+        self._child_ids = {}
+    
+    def updateChildWME(self, attrib, value):
+        # bool to int
+        if isinstance(value, bool):
+            value = 1 if value else 0
+        # check if corresponding child WME exists
+        child_id = self._child_ids.get(attrib)
+        if child_id == None:
+            # create WME and add it to map
+            if isinstance(value, int):
+                self._child_ids[attrib] = self._sensor_id.CreateIntWME(attrib, value)
+            elif isinstance(value, float):
+                self._child_ids[attrib] = self._sensor_id.CreateFloatWME(attrib, value)
+            elif isinstance(value, str):
+                self._child_ids[attrib] = self._sensor_id.CreateStringWME(attrib, value)
+            else:
+                raise TypeError('SOAR attribute value must be int, float or string.')
+        else:
+            # update existing WME
+            if child_id.GetValue() != value:
+                child_id.Update(value)
+
+    def removeChildWME(self, attrib):
+        child_id = self._child_ids.get(attrib)
+        if child_id != None:
+            del self._child_ids[attrib]
+            child_id.DestroyWME()
+
+    def __del__(self):
+        # remove WME
+        self._sensor_id.DestroyWME()
