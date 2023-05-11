@@ -25,7 +25,7 @@
           hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE \
           hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE \
           behavior/sweetie_bot_voice/CATKIN_IGNORE \
-          behavior/sweetie_bot_clop_generator/CATKIN_IGNORE \
+          behavior/sweetie_bot_gait_generator/CATKIN_IGNORE \
           inc/ifopt/CATKIN_IGNORE \
           inc/ifopt/ifopt_core/CATKIN_IGNORE \
           inc/ifopt/ifopt_ipopt/CATKIN_IGNORE \
