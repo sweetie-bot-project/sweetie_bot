@@ -156,8 +156,19 @@ install(PROGRAMS
   scripts/stt_service_node
   scripts/stt_api_service_node
   scripts/app.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(FILES
+  scripts/example.env
   scripts/config.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY
+  launch
+  service
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 # all install targets should use catkin DESTINATION variables

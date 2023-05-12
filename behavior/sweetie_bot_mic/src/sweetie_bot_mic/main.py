@@ -152,7 +152,7 @@ class RespeakerNode(object):
         self._keys_pressed = set()
         self._keys_combo = set()
         for key in keys_combo:
-            if key in pynput_key_map: 
+            if key in pynput_key_map:
                 self._keys_combo.add( pynput_key_map[key] )
             elif len(key) == 1:
                 self._keys_combo.add( keyboard.KeyCode.from_char(key) )
@@ -163,7 +163,7 @@ class RespeakerNode(object):
         rospy.loginfo("Listening for global hotkey  %s" % self._keys_combo) 
         # listen: mic button is pressed
         self._button_pressed = False
-        self.sub_button_event = rospy.Subscriber("pushed", Bool, self.on_mic_button)
+        self.sub_button_event = rospy.Subscriber("min_button", Bool, self.on_mic_button)
         # listen: robot speech event to avoid self-listening
         self._robot_is_speeching = False
         self.sub_mouth_event = rospy.Subscriber("mouth", TextCommand, self.on_mouth)
@@ -220,7 +220,7 @@ class RespeakerNode(object):
         resp = None
         urls = self.transcribe_servers
         for n in sorted(urls):
-            rospy.logdebug("Send %d bytes to %s" % (len(data), urls[n]))
+            rospy.loginfo("Send %d bytes to %s" % (len(data), urls[n]))
 
             header = struct.pack('<4sL4s4sLHHLLHH4sL', b'RIFF', 
                     36 + len(data), b'WAVE', b'fmt ', 16,

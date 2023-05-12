@@ -39,3 +39,9 @@ parameters.
 * `lang`, (`string`, default "ru,en") --- use provided language prefixes.  First prefix has precedence over the last.
 * `~tts_backend`, (`string`, default "sound_play") --- Text-to-Speech service selection. Currently "sound_play", "rhvoice" and "rhvoice_robotized" are supported.
 
+# Requirements
+
+```
+sudo apt-get install libcairo2-dev libgirepository1.0-dev
+pip install TTS PyGObject
+```

@@ -24,15 +24,21 @@ catkin_python_setup()
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-#catkin_package(
+catkin_package(
 #  INCLUDE_DIRS src
 #  LIBRARIES ${PROJECT_NAME}
-#)
+)
 
 
 #############
 ## Install ##
 #############
+install(DIRECTORY
+  launch
+  config
+  conversion
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html

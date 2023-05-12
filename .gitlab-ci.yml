@@ -103,10 +103,13 @@ focal-amd64:
 
 focal-tinker:
   extends: .common-robot
+  retry: 2
 buster-arm64v8:
   extends: .common-robot
+  retry: 2
 focal-arm64v8:
   extends: .common-robot
+  retry: 2
 
 buster-amd64-test:
   extends: .common-test

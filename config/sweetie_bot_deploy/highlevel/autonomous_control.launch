@@ -40,6 +40,7 @@
 			<arg name="robot_ns" value="$(arg robot_ns)" /> 
 		</include>
 		<!-- voice node  -->
+		<env name="LD_PRELOAD" value="/usr/lib/x86_64-linux-gnu/libffi.so.7" />
 		<node pkg="sweetie_bot_voice" type="voice" name="voice">
 			<remap from="control" to="$(arg robot_ns)/control" />
 		</node>

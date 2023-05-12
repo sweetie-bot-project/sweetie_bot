@@ -6,10 +6,12 @@ WantedBy=multi-user.target
 
 [Service]
 Type=simple
-# change to your dir
-WorkingDirectory=$HOME/text-generation-webui
+# change to your text-generation-webui dir
+Environment=text_generation_webui_path=$HOME/repos/text-generation-webui
 # change to your user
 User=sweetie
-ExecStart=-/bin/bash -c "source /opt/ros/sweetie_bot/setup.bash && rosrun sweetie_bot_llm llm_api_service_node"
+#TimeoutStartSec=100
+# change textgen to your conda environment's name
+ExecStart=/bin/bash -c "cd \"${text_generation_webui_path}\"; source /opt/ros/sweetie_bot/setup.bash && rosrun sweetie_bot_llm llm_api_service_node textgen"
 Restart=on-failure
 TimeoutSec=600

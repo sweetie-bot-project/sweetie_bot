@@ -33,5 +33,3 @@ voice:
                         model_name: 'voice_conversion_models/multilingual/vctk/freevc24'
                         progress_bar: false
                         gpu: true
-eyes:
-    start_blinking: true

@@ -8,9 +8,16 @@ import tempfile
 from faster_whisper import WhisperModel
 
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'ogg'}
-compute_type='int8'
-model='medium'
-audio_model = model = WhisperModel(model, device="cuda", compute_type=compute_type)
+compute_type=os.getenv('COMPUTE_TYPE', 'int8')
+device=os.getenv('COMPUTE_DEVICE', 'cuda')
+beam_size=os.getenv('BEAM_SIZE', '5')
+
+home = os.getenv('HOME', '/root')
+model = os.getenv('MODEL_DIR', os.path.join(home, '.cache/huggingface/hub/models--guillaumekln--faster-whisper-medium/snapshots/7832330bcea9a8d5fd6d6637c49fe5d256e98277'))
+if not os.path.isdir(model):
+    model='medium'
+
+audio_model = model = WhisperModel(model, device=device, compute_type=compute_type)
 
 ret = { "status": "", "text": "", "language": "", "transcribe_duration": 0, "audio_duration": 0 }
 
@@ -59,7 +66,7 @@ def create_binary():
         app.logger.debug("Length of input data: %d", l)
         start = time.time()
         try:
-          segments, result = audio_model.transcribe(temp_file)
+          segments, result = audio_model.transcribe(temp_file, beam_size=beam_size)
         except:
           return ret, "400 Error! Invalid data"
         transcribe_duration = time.time() - start
