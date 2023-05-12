@@ -1,7 +1,7 @@
 <launch>
-    <arg name="api_url_list" default="{'0': 'https://ai.sweetie.bot/llm/', '1':'http://localhost:5000/api/v1/generate'}"/>
+    <arg name="urls" default="{'0': 'https://ai.sweetie.bot/llm/', '1':'http://localhost:5000/api/v1/generate'}"/>
     <node pkg="sweetie_bot_llm" type="llm_service_node" name="llm_service_node" output="screen">
-        <rosparam param="api_url" subst_value="True">$(arg api_url_list)</rosparam>
+        <rosparam param="lang_model_servers" subst_value="True">$(arg urls)</rosparam>
         <rosparam file="$(find sweetie_bot_llm)/config/en/profile.yaml" ns="profile/en" />
         <rosparam file="$(find sweetie_bot_llm)/config/ru/profile.yaml" ns="profile/ru" />
         <rosparam file="$(find sweetie_bot_llm)/config/ja/profile.yaml" ns="profile/ja" />

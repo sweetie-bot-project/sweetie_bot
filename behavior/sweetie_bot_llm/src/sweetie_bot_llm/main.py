@@ -27,7 +27,7 @@ class CompleteNode:
     def __init__(self):
         rospy.init_node('complete_server')
         # get server URLS
-        urls = rospy.get_param("~api_url", {'0': "http://127.0.0.1:5000/api/v1/generate"})
+        urls = rospy.get_param("~lang_model_servers", {'0': "http://127.0.0.1:5000/api/v1/generate"})
         self._urls = [ urls[k] for k in sorted(urls) ]
         # get profiles
         self._profiles = rospy.get_param("~profile", {})
