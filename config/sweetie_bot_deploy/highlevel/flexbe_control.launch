@@ -12,6 +12,7 @@
 
 	<arg name="run_moveit" default="false" doc="Run move_group associated with robot."/>
 	<arg name="run_vision" default="false" doc="Run vision node."/>
+	<arg name="run_nlp" default="true" doc="Run natural language processing nodes: speech to text, language model."/>
 	<arg name="run_flexbe" default="true" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 	<arg name="run_flexbe_gui" default="false" doc="Start flexbe gui."/>
 
@@ -65,6 +66,17 @@
 			<node pkg="sweetie_bot_voice" type="voice" name="voice">
 				<remap from="control" to="$(arg robot_ns)/control" />
 			</node>
+			<group  if="$(arg run_nlp)">
+				<!-- microphone node -->
+				<node pkg="sweetie_bot_mic" type="respeaker" name="microphone" >
+					<remap from="sound_event" to="$(arg robot_ns)/sound_event" />
+					<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
+				</node>
+				<!-- language model interface node -->
+				<node pkg="sweetie_bot_llm" type="llm_service_node" name="lang_model" output="screen">
+					<remap from="llm_request" to="$(arg robot_ns)/llm_request" />
+				</node>
+			</group>
 			<!-- FLEXBE: control node and action server -->
 			<group if="$(arg run_flexbe)">
 				<include file="$(find sweetie_bot_deploy)/highlevel/flexbe.launch" >

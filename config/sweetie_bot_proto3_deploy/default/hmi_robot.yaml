@@ -63,3 +63,10 @@ voice:
             module: 'rhvoice'
 eyes:
     start_blinking: true
+microphone:
+    mic_name: "ReSpeaker 4 Mic Array (UAC1.0)"
+    main_channel: 0
+    update_rate: 10.0
+    transcribe_servers: {'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}
+    key_combination: [ 'ctrl', 'w' ]
+    call_llm: False
