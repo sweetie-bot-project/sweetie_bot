@@ -142,7 +142,9 @@ class RespeakerNode(object):
         self.update_rate = rospy.get_param("~update_rate", 10.0)
         self.main_channel = rospy.get_param('~main_channel', 0)
         suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", True)
-        self.transcribe_servers = rospy.get_param("~transcribe_servers", {'0': "http://localhost:8577/"})
+        servers = rospy.get_param("~transcribe_servers", {'0': "http://localhost:8577/"})
+        self.transcribe_servers = [ servers[k] for k in sorted(servers) ]
+        rospy.loginfo('urls: %s', self.transcribe_servers)
         keys_combo = rospy.get_param("~key_combination", ['ctrl', 'w'])
         # audio interface
         self.respeaker_audio = RespeakerAudio(self.on_audio, suppress_error=suppress_pyaudio_error)
@@ -217,23 +219,24 @@ class RespeakerNode(object):
         return (combo_is_pressed or self._button_pressed) and not self._robot_is_speeching
 
     def transcribe(self, data):
+        # prepare wav data
+        wav_data = bytearray()
+        wav_data += struct.pack('<4sL4s4sLHHLLHH4sL', b'RIFF', 
+                36 + len(data), b'WAVE', b'fmt ', 16,
+                1, # no compression
+                1, # n channels
+                self.respeaker_audio.rate, # framerate,
+                1 * self.respeaker_audio.rate * self.respeaker_audio.sample_width,
+                1 * self.respeaker_audio.sample_width,
+                self.respeaker_audio.sample_width * 8, 
+                b'data', len(data))
+        wav_data += data
+        # request transcribe server
         resp = None
-        urls = self.transcribe_servers
-        for n in sorted(urls):
-            rospy.loginfo("Send %d bytes to %s" % (len(data), urls[n]))
-
-            header = struct.pack('<4sL4s4sLHHLLHH4sL', b'RIFF', 
-                    36 + len(data), b'WAVE', b'fmt ', 16,
-                    1, # no compression
-                    1, # n channels
-                    self.respeaker_audio.rate, # framerate,
-                    1 * self.respeaker_audio.rate * self.respeaker_audio.sample_width,
-                    1 * self.respeaker_audio.sample_width,
-                    self.respeaker_audio.sample_width * 8, 
-                    b'data', len(data))
-
+        for url in self.transcribe_servers:
+            rospy.logdebug("Send %d bytes to %s" % (len(data), url))
             try:
-                resp = requests.post(urls[n], files={'file': ('audio.wav', header + data)})
+                resp = requests.post(url, files={'file': ('audio.wav', wav_data)})
                 # check status
                 if resp.status_code == 200:
                     break
@@ -241,11 +244,10 @@ class RespeakerNode(object):
                     rospy.logerr("%d %s" % (resp.status_code, resp.reason))
             except requests.ConnectionError as e:
                 rospy.logwarn("Connection failed: %s" % e)
-
+        # deacode server response
         if resp is None:
             rospy.logerr('Transcription failed! Cannot decode response')
             return None
-
         try:
             resp_decoded = resp.json()
         except:
