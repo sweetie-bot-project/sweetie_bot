@@ -169,6 +169,9 @@ class Soar:
             except tf.Exception as e:
                 rospy.logerr("SOAR configuration: tf exception: " + str(e))
                 return False
+            except rospy.exceptions.ROSException as e:
+                rospy.logerr("SOAR configuration: ROS exception: " + str(e))
+                return False
         
             # load reasoning rules
             agent_pkg = rospy.get_param("~agent_package", None)
