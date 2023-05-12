@@ -3,5 +3,6 @@ SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 [ -f .env ] && source .env
 MODEL=${LLM_MODEL:-llama-13b-4bit-128g}
 source $HOME/miniconda3/etc/profile.d/conda.sh
-conda activate textgen # change to your conda environment's name
-python server.py --listen --api --model $MODEL $@
+conda activate ${1}
+shift
+python -u server.py --listen --api --model $MODEL $@

@@ -38,15 +38,10 @@ class TTSCoquiAi(TTSInterface):
                 self.speak_params[language] = languages[language]['params']
             model_name = languages[language]['model']
             if not model_name in self.models:
-                print(model_name)
                 model_params = init_params['models'][model_name]
-                print(model_params)
                 self.models[model_name] = TTS(**model_params)
                 self.model_params[model_name] = model_params
-
             self.tts[language] = self.models[model_name]
-
-        print(self.tts)
 
     def speak(self, cmd):
         language = cmd.options
@@ -59,7 +54,6 @@ class TTSCoquiAi(TTSInterface):
         temp_file = os.path.join(temp_dir, "output.wav")
         text_params = { 'text':cmd.command, 'file_path':temp_file }
         speak_params = {**speak_params, **text_params}
-        print(speak_params)
         tts.tts_to_file(**speak_params)
         if 'conversion' in self.tts:
             speak_params = self.speak_params['conversion']
@@ -72,10 +66,10 @@ class TTSCoquiAi(TTSInterface):
             temp_file = temp_file_con
 
         soundhandle.playWave(temp_file)
-        #if os.path.exists(temp_file_con):
-        #    os.remove(temp_file_con)
-        #os.remove(temp_file)
-        #os.rmdir(temp_dir)
+        if os.path.exists(temp_file_con):
+            os.remove(temp_file_con)
+        os.remove(temp_file)
+        os.rmdir(temp_dir)
         return True
 
 class TTSSpeechDispatcher(TTSInterface):
@@ -256,8 +250,6 @@ class VoiceNode():
                     self._voice_profile[name] = TTSSpeechDispatcher(**speechd_params)
                 elif profile_type == 'coqui-ai':
                     coqui_ai_params = profile_config.get('coqui_ai_params')
-                    print("profile_config.get('coqui_ai_params')")
-                    print(coqui_ai_params)
                     self._voice_profile[name] = TTSCoquiAi(coqui_ai_params)
                 else:
                     rospy.logwarn('Unknown voice profile "%s" of type: %s' % (name, profile_type))
@@ -322,7 +314,6 @@ class VoiceNode():
             self.pub.publish('mouth/speech', 'begin', '')
             ret = self._default_profile.speak(cmd)
             self.pub.publish('mouth/speech', 'end', '')
-
         return ret
 
     def command_cb(self, cmd):
