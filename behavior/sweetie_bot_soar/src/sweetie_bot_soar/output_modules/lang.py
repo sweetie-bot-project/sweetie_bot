@@ -3,9 +3,9 @@ import rospy
 import actionlib
 from  actionlib import GoalStatus
 
-import spacy
 from random import choice
 import re
+from ..nlp import SpacyInstance
 
 from sweetie_bot_text_msgs.srv import CompleteRaw, CompleteRawRequest, CompleteRawResponse
 
@@ -103,18 +103,6 @@ def assert_param(value, error_desc, allowed_types = None, check_func = None):
     # check if parameter value correct
     if check_func is not None and not check_func(value):
         raise ValueError(error_desc)
-
-class SpacyInstance:
-    _spacy_models = {}
-    def __new__(cls, model, *args, **kwargs):
-        # check if correspondin model is loaded
-        instance = cls._spacy_models.get(model)
-        if instance is None:
-            # load model
-            instance = spacy.load(model, *args, **kwargs)
-            cls._spacy_models[model] = instance
-        # return spacy model
-        return instance
 
 class AttribRequest:
     subclass_map = {}
