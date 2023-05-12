@@ -106,8 +106,31 @@ sp {elaborate*bottom-state
 	(<s> ^bottom-state 1)
 }
 
+
 sp {elaborate*top-state
 	(state <s> ^superstate nil)
 -->
 	(<s> ^top-state 1)
 }
+
+#
+# STATE IMPASSE: apply cognition operators
+#
+
+sp {elaborate*state-impass-bottom-state
+	(state <s> ^impasse no-change ^attribute state)
+-->
+	(<s> ^bottom-state 1)
+}
+
+# propagate memory access to subgoal substates
+sp {elaborate*state-imapsse*state-io-mem-beliefs
+	(state <s>  ^impasse no-change ^attribute state ^superstate <ss>)
+	(<ss> ^io <io> ^beliefs <b> ^beliefs-stable <bs> ^mem <m>)
+-->
+	(<s> ^io <io>)
+	(<s> ^mem <m>)
+	(<s> ^beliefs <b>)
+	(<s> ^beliefs-stable <bs>)
+}
+
