@@ -299,6 +299,15 @@ sp {automatic*elaborate*event-processing-operator-actions
 	(<op> ^<attr> <value>)
 }
 
+# copy actions 
+sp {automatic*elaborate*event-processing-operator-actions-common
+	(state <s> ^bottom-state 1 ^operator <op> +)
+	(<op> ^name automatic-event-processing ^mark-processed.process.result <r>)
+	(<r> -^status ^<attr> <value>)
+-->
+	(<op> ^<attr> <value>)
+}
+
 #
 # CHANGE ATTRIBUTES SUPPORT
 #
