@@ -263,6 +263,8 @@ class VoiceNode():
                     rospy.logwarn('Unknown voice profile "%s" of type: %s' % (name, profile_type))
             except GLib.Error as e:
                 rospy.logwarn("Profile '%s' initalization failed: %s" % (name, e.message))
+            except ModuleNotFoundError as e:
+                rospy.logwarn("Profile '%s' initalization failed: %s" % (name, e))
 
         if len(self._voice_profile) == 0:
             rospy.logerr('At least one voice profile must be specified.')
