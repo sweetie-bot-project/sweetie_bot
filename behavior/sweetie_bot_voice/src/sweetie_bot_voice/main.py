@@ -21,7 +21,13 @@ gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GLib
 
 class TTSInterface:
-    def speak(self, text):
+    def __init__(self, langs):
+        self._langs = langs
+
+    def is_lang_supported(self, lang):
+        return lang in self._langs
+
+    def speak(self, text, lang):
         pass
 
 class TTSCoquiAi(TTSInterface):
@@ -30,7 +36,9 @@ class TTSCoquiAi(TTSInterface):
     model_params = {}
     speak_params = {}
 
-    def __init__(self, init_params):
+    def __init__(self, init_params, **kwargs):
+        super(TTSCoquiAi, self).__init__(**kwargs)
+
         from TTS.api import TTS
         languages = init_params['languages']
         for language in languages:
@@ -43,8 +51,7 @@ class TTSCoquiAi(TTSInterface):
                 self.model_params[model_name] = model_params
             self.tts[language] = self.models[model_name]
 
-    def speak(self, cmd):
-        language = cmd.options
+    def speak(self, text, language):
         if not language in self.tts:
             rospy.logerr("No such language '%s'" % language)
             return False
@@ -52,7 +59,7 @@ class TTSCoquiAi(TTSInterface):
         speak_params = self.speak_params[language] if language in self.speak_params else {}
         temp_dir = tempfile.mkdtemp()
         temp_file = os.path.join(temp_dir, "output.wav")
-        text_params = { 'text':cmd.command, 'file_path':temp_file }
+        text_params = { 'text':text, 'file_path':temp_file }
         speak_params = {**speak_params, **text_params}
         tts.tts_to_file(**speak_params)
         if 'conversion' in self.tts:
@@ -73,22 +80,26 @@ class TTSCoquiAi(TTSInterface):
         return True
 
 class TTSSpeechDispatcher(TTSInterface):
-    def __init__(self, module = 'rhvoice', lang = 'ru'):
+    def __init__(self, module = 'rhvoice', **kwargs):
+        super(TTSSpeechDispatcher, self).__init__(**kwargs)
+
         import speechd
+        self._speechd = speechd
         self._client = speechd.SSIPClient('ros_speech_dispatcher_client')
         self._client.set_output_module(module)
-        self._client.set_language(lang)
 
-    def speak(self, cmd):
-        text = cmd.command
+    def speak(self, text, lang):
         ev = Event()
-        self._client.speak(text, callback = lambda cb_type: ev.set(), event_types=(speechd.CallbackType.CANCEL, speechd.CallbackType.END))
+        self._client.set_language(lang)
+        self._client.speak(text, callback = lambda cb_type: ev.set(), event_types=(self._speechd.CallbackType.CANCEL, self._speechd.CallbackType.END))
         ev.wait()
         return True
 
 class TTSRhvoiceWrapper(TTSInterface):
 
-    def __init__(self, rhvoice_params, gstreamer_pipeline_string = None):
+    def __init__(self, rhvoice_params, gstreamer_pipeline_string = None, **kwargs):
+        super(TTSRhvoiceWrapper, self).__init__(**kwargs)
+
         from rhvoice_wrapper import TTS
         # create and configure rhvoice client
         self._rhvoice = TTS(threads=2)
@@ -109,8 +120,7 @@ class TTSRhvoiceWrapper(TTSInterface):
         if hasattr(self, '_gstreamer_pipeline'):
             self._gstreamer_pipeline.set_state(Gst.State.NULL)
 
-    def speak(self, cmd):
-        text = cmd.command
+    def speak(self, text, lang):
         Gst.Event.new_flush_start()
 
         # Get synthesized PCM sound from RHVoice server
@@ -237,20 +247,21 @@ class VoiceNode():
             print(name, profile_config)
             try:
                 profile_type = profile_config.get('type')
+                langs = profile_config.get('langs')
                 if profile_type == 'rhvoice':
                     # apply LADSPA fix
                     VoiceNode._ladspa_fix()
                     # configure rhvoice_wrapper synthesyzer
                     gstreamer_pipeline = profile_config.get('gstreamer_pipeline')
                     rhvoice_params = profile_config.get('rhvoice_params')
-                    self._voice_profile[name] = TTSRhvoiceWrapper(rhvoice_params, gstreamer_pipeline)
+                    self._voice_profile[name] = TTSRhvoiceWrapper(rhvoice_params, gstreamer_pipeline, langs = langs)
                 elif profile_type == 'speechd':
                     speechd_params = copy.deepcopy(profile_config)
                     del speechd_params['type']
                     self._voice_profile[name] = TTSSpeechDispatcher(**speechd_params)
                 elif profile_type == 'coqui-ai':
                     coqui_ai_params = profile_config.get('coqui_ai_params')
-                    self._voice_profile[name] = TTSCoquiAi(coqui_ai_params)
+                    self._voice_profile[name] = TTSCoquiAi(coqui_ai_params, langs = langs)
                 else:
                     rospy.logwarn('Unknown voice profile "%s" of type: %s' % (name, profile_type))
             except GLib.Error as e:
@@ -261,20 +272,6 @@ class VoiceNode():
         if len(self._voice_profile) == 0:
             rospy.logerr('At least one voice profile must be specified.')
             sys.exit(2)
-
-        # get default profile
-        default_profile = rospy.get_param("~default_voice_profile", None)
-        if default_profile == None:
-            self._default_profile = next(iter(self._voice_profile.values())) # get 'first' value
-        else:
-            profile = self._voice_profile.get(default_profile)
-            # check if profile exists
-            if profile is not None:
-                self._default_profile = profile
-            else:
-                rospy.logwarn("Profile '%s' does not exist. Use fallback." % (default_profile,))
-                self._default_profile = next(iter(self._voice_profile.values())) 
-        rospy.loginfo("default_profile=%s" % default_profile)
 
         # get and configure player
         sound_packages = rospy.get_param('~sound_packages', [])
@@ -309,10 +306,31 @@ class VoiceNode():
             self.pub.publish('mouth/speech', 'begin', '')
             ret = self._player.play(cmd.command)
             self.pub.publish('mouth/speech', 'end', '')
-        elif cmd.type == 'voice/say':
+        elif cmd.type.startswith('voice/say'):
+            # get lang code
+            if len(cmd.type) == 12:
+                lang = cmd.type[-2:]
+            elif len(cmd.type) == 9:
+                if cmd.options != '':
+                    lang = cmd.options
+                else:
+                    lang = 'en'
+            else:
+                rospy.logerr('Bad text command type: %s' % cmd.type)
+                return False
+            # find profile
+            profile = None
+            for k, p in self._voice_profile.items():
+                if p.is_lang_supported(lang):
+                    profile = p
+                    break
+            if profile is None:
+                rospy.logerr('Unsupported laguage code: %s' % lang)
+                return False
             # Invoke text-to-speech subsystem
+            rospy.loginfo('use %s profile to say: %s (%s)' % (k, cmd.command, lang))
             self.pub.publish('mouth/speech', 'begin', '')
-            ret = self._default_profile.speak(cmd)
+            ret = profile.speak(cmd.command, lang)
             self.pub.publish('mouth/speech', 'end', '')
         return ret
 

@@ -1,11 +1,32 @@
 voice:
-    lang: "ru,en"
+    lang: 'ru,en,ja'
     sound_packages: [ sweetie_bot_sounds ]
-    default_profile: 'rhvoice'
     ladspa_path: ~/.ladspa/
     voice_profile:
+        coqui-ai:
+            type: 'coqui-ai'
+            langs: [ 'en', 'jp' ]
+            coqui_ai_params:
+                languages:
+                    en:
+                        model: 'vctk'
+                        params:
+                            speaker: 'p225'
+                    ja:
+                        model: 'kokoro'
+                models:
+                    vctk:
+                        model_name: 'tts_models/en/vctk/vits'
+                        progress_bar: false
+                        gpu: false
+                    kokoro:
+                        model_name: 'tts_models/ja/kokoro/tacotron2-DDC'
+                    ruslan:
+                        model_path: 'tts_models/ru/ruslan/tacotron2-DDC.pth'
+                        config_path: 'tts_models/ru/ruslan/tacotron2-DDC.json'
         rhvoice:
-            type: rhvoice
+            type: 'rhvoice'
+            langs: [ 'ru' ]
             rhvoice_params:
                 relative_volume:        1.0  # in percents devided by 100
                 relative_rate:          0.9  # in percents devided by 100
@@ -13,7 +34,8 @@ voice:
                 #relative_pitch_russian: 0.60 # in percents devided by 100
                 #relative_pitch_english: 0.75 # in percents devided by 100
         rhvoice_robotized:
-            type: rhvoice
+            type: 'rhvoice'
+            langs: [ 'ru' ]
             rhvoice_params:
                 relative_volume:        1.0  # in percents devided by 100
                 relative_rate:          0.9  # in percents devided by 100
@@ -40,5 +62,12 @@ voice:
                         mix="1.0"'
         speechd:
             type: 'speechd'
-            module: 'rhvoice'
-
+            langs: [ 'ru', 'en' ]
+            module: 'festival'
+microphone:
+    mic_name: "ReSpeaker 4 Mic Array (UAC1.0)"
+    main_channel: 0
+    update_rate: 10.0
+    transcribe_servers: {'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}
+    key_combination: [ 'ctrl', 'w' ]
+    call_llm: False
