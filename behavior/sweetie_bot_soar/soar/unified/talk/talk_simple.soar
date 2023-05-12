@@ -22,7 +22,7 @@ sp {talk-llm*elaborate*substate
 sp {talk-llm*elaborate*memorization-time
 	(state <s> ^substate talk-llm ^process <proc>)
 -->
-	(<proc> ^memorization-time 600.0)
+	(<proc> ^memorization-time 120.0)
 }
 
 # relevant talk-* events
@@ -206,7 +206,7 @@ sp {talk-llm*propose*ignor-me
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name add-ignors-me ^type cognition automatic ^add-predicate <pred-ignors>)
-	(<pred-ignors> ^name ignors-me ^actor <obj> ^memorization-time 120.0)
+	(<pred-ignors> ^name ignors-me ^actor <obj> ^deadline-time 120.0)
 	(<pred-ignors> ^text |Human ignored Sweetie.|)
 }
 

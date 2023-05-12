@@ -80,7 +80,7 @@ sp {talker*propose*talk-continue
 # SELECT HUMAN TO TALK
 
 # select stranger if we are looking at him
-sp {social*propose*talk-to-stranger
+sp {social*propose*talk-start
 	(state <s> ^name social ^substate general -^talking ^beliefs-stable.predicate <pred> ^beliefs <b>)
 	(<pred> ^name looking-at ^object <obj>)
 	(<obj> ^type human)
@@ -90,13 +90,31 @@ sp {social*propose*talk-to-stranger
 	(<a> ^object <obj>)
 }
 
+# reject talk if previous talk is not forgeted
+sp {social*preference*talk-start*reject-recent
+	(state <s> ^name social ^substate general ^operator <op> + ^predicates.process <proc>)
+	(<op> ^name talking ^process-args.object <obj>)
+	(<proc> ^name talking ^object <obj>)
+-->
+	(<s> ^operator <op> -)
+}
+
+# reject talk human ignors-me sweetie 
+sp {social*preference*talk-start*reject-recent
+	(state <s> ^name social ^substate general ^operator <op> + ^beliefs.predicate <pred>)
+	(<op> ^name talking ^process-args.object <obj>)
+	(<pred> ^name ignors-me ^actor <obj>)
+-->
+	(<s> ^operator <op> -)
+}
+
 # start is human satrted to say something
 sp {social*propose*talk-on-greeting
 	(state <s> ^name social ^substate general -^talking ^beliefs-stable.predicate <pred> ^io.input-link.sound.speech 1)
 	(<pred> ^name looking-at ^object <obj>)
 -->
 	(<s> ^operator <o> +, =)
-   	(<o> ^name talking-on-request ^substate talk ^process-args <a>)
+   	(<o> ^name talking-on-request ^substate talk-llm ^process-args <a>)
 	(<a> ^object <obj>)
 }
 
