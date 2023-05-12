@@ -143,7 +143,7 @@ class RespeakerNode(object):
         self.main_channel = rospy.get_param('~main_channel', 0)
         suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", True)
         self.transcribe_servers = rospy.get_param("~transcribe_servers", {'0': "http://localhost:8577/"})
-        keys_combo = rospy.get_param("~key_combination", ['pause'])
+        keys_combo = rospy.get_param("~key_combination", ['ctrl', 'w'])
         # audio interface
         self.respeaker_audio = RespeakerAudio(self.on_audio, suppress_error=suppress_pyaudio_error)
         self.speech_audio_buffer = bytearray()
@@ -155,7 +155,7 @@ class RespeakerNode(object):
             if key in pynput_key_map: 
                 self._keys_combo.add( pynput_key_map[key] )
             elif len(key) == 1:
-                self._keys_combo.add( Key.from_char(key) )
+                self._keys_combo.add( keyboard.KeyCode.from_char(key) )
             else:
                 raise KeyError('unknown key specification: %s' % key)
         self.keyboard_listener = keyboard.Listener(on_press=self.on_key_press, on_release=self.on_key_release)
