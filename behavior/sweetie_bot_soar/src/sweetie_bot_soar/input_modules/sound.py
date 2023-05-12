@@ -68,7 +68,7 @@ class SoundSpeech(InputModuleFlatSoarView):
                     self._text_timestamp = msg.header.stamp + rospy.Duration(self._speech_timeout)
                     self._text_is_updated = True
                 else:
-                    self._text_is_updated = self._text is not None
+                    self._text_is_updated = self._text_is_updated or self._text is not None
                     self._text = None
 
 
@@ -83,6 +83,7 @@ class SoundSpeech(InputModuleFlatSoarView):
             self.updateChildWME('intensity', self._intensity_bins_map(self._last_sound_event.intensity)) 
             # update text if necessary
             if self._text_is_updated:
+                print(self._text, self._text_is_updated)
                 self._text_is_updated = False
                 if self._text is not None:
                     # updtae text
@@ -98,7 +99,7 @@ class SoundSpeech(InputModuleFlatSoarView):
                     # parse and add elements WMEs
                     parser = self._parsers.get(lang)
                     if parser is not None:
-                        elements = self.parse(text)
+                        elements = parser.parse(text)
                         # add WMEs
                         for elem in elements:
                             self._sensor_id.CreateStringWME('element', elem)
