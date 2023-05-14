@@ -15,6 +15,9 @@ from sweetie_bot_text_msgs.msg import SoundEvent, TextCommand
 from sweetie_bot_text_msgs.srv import CompleteSimple, CompleteSimpleRequest, CompleteSimpleResponse
 from std_msgs.msg import Bool
 
+import six
+from google.cloud import translate_v2 as translate
+
 # suppress error messages from ALSA
 # https://stackoverflow.com/questions/7088672/pyaudio-working-but-spits-out-error-messages-each-time
 # https://stackoverflow.com/questions/36956083/how-can-the-terminal-output-of-executables-run-by-python-functions-be-silenced-i
@@ -139,6 +142,7 @@ class RespeakerNode(object):
         rospy.on_shutdown(self.on_shutdown)
         # get parameters
         call_llm = rospy.get_param("~call_llm", False)
+        self.enable_gtranslate = rospy.get_param("~enable_gtranslate", True)
         self.update_rate = rospy.get_param("~update_rate", 10.0)
         self.main_channel = rospy.get_param('~main_channel', 0)
         suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", True)
@@ -165,7 +169,7 @@ class RespeakerNode(object):
         rospy.loginfo("Listening for global hotkey  %s" % self._keys_combo) 
         # listen: mic button is pressed
         self._button_pressed = False
-        self.sub_button_event = rospy.Subscriber("min_button", Bool, self.on_mic_button)
+        self.sub_button_event = rospy.Subscriber("mic_button", Bool, self.on_mic_button)
         # listen: robot speech event to avoid self-listening
         self._robot_is_speeching = False
         self.sub_mouth_event = rospy.Subscriber("mouth", TextCommand, self.on_mouth)
@@ -205,7 +209,7 @@ class RespeakerNode(object):
                 self.respeaker_audio.start()
 
     def on_mic_button(self, msg):
-        self._speeching = msg.data
+        self._button_pressed = msg.data
 
     def on_key_press(self, key):
         if key in self._keys_combo:
@@ -254,12 +258,36 @@ class RespeakerNode(object):
             rospy.logerr('Transcription failed! Cannot decode response (%s)' % (resp))
             return None
 
+        if self.enable_gtranslate and resp_decoded['language'] !='en':
+            resp_decoded['text'] = self.translate_text('en', resp_decoded['text'])
+
         rospy.loginfo('Transcription %s (%.2fs) [%s]: "%s"' % (resp_decoded['status'],
                                                                resp_decoded['transcribe_duration'],
                                                                resp_decoded['language'],
                                                                resp_decoded['text']))
         return resp_decoded
-    
+
+    def translate_text(self, target, text):
+        """Translates text into the target language.
+
+        Target must be an ISO 639-1 language code.
+        See https://g.co/cloud/translate/v2/translate-reference#supported_languages
+        """
+        translate_client = translate.Client()
+
+        if isinstance(text, six.binary_type):
+            text = text.decode("utf-8")
+
+        # Text can also be a sequence of strings, in which case this method
+        # will return a sequence of results for each text.
+        result = translate_client.translate(text, target_language=target)
+
+        #print(u"Text: {}".format(result["input"]))
+        #print(u"Translation: {}".format(result["translatedText"]))
+        #print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
+
+        return result["translatedText"]
+
     def on_audio(self, data, channel):
         if channel == self.main_channel:
             # store speech data

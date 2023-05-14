@@ -13,6 +13,9 @@ from sweetie_bot_text_msgs.msg import TextActionGoal, TextActionFeedback, TextAc
 from sound_play.msg import SoundRequest
 from sound_play.libsoundplay import SoundClient
 
+import six
+from google.cloud import translate_v2 as translate
+
 soundhandle = SoundClient(blocking=True)
 rospack = rospkg.RosPack()
 
@@ -62,6 +65,7 @@ class TTSCoquiAi(TTSInterface):
         text_params = { 'text':text, 'file_path':temp_file }
         speak_params = {**speak_params, **text_params}
         tts.tts_to_file(**speak_params)
+        temp_file_con = ''
         if 'conversion' in self.tts:
             speak_params = self.speak_params['conversion']
             tts = self.tts['conversion']
@@ -70,13 +74,14 @@ class TTSCoquiAi(TTSInterface):
             input_params = {'source_wav':temp_file, 'target_wav':target_wav, 'file_path':temp_file_con}
             speak_params = {**speak_params, **input_params}
             tts.voice_conversion_to_file(**speak_params)
-            temp_file = temp_file_con
-
-        soundhandle.playWave(temp_file)
-        if os.path.exists(temp_file_con):
+            soundhandle.playWave(temp_file_con)
             os.remove(temp_file_con)
+        else:
+            soundhandle.playWave(temp_file)
+
         os.remove(temp_file)
         os.rmdir(temp_dir)
+
         return True
 
 class TTSSpeechDispatcher(TTSInterface):
@@ -235,6 +240,7 @@ class PlayerGstreamer():
 class VoiceNode():
     def __init__(self):
         rospy.init_node('voice', anonymous = True)
+        self.enable_gtranslate = rospy.get_param("~enable_gtranslate", True)
 
         profiles_config = rospy.get_param('~voice_profile') 
         if profiles_config is None or not isinstance(profiles_config, dict):
@@ -318,6 +324,11 @@ class VoiceNode():
             else:
                 rospy.logerr('Bad text command type: %s' % cmd.type)
                 return False
+
+            # translate to source lang
+            if self.enable_gtranslate and cmd.type !='en':
+                cmd.command = self.translate_text(lang, cmd.command)
+
             # find profile
             profile = None
             for k, p in self._voice_profile.items():
@@ -333,6 +344,27 @@ class VoiceNode():
             ret = profile.speak(cmd.command, lang)
             self.pub.publish('mouth/speech', 'end', '')
         return ret
+
+    def translate_text(self, target, text):
+        """Translates text into the target language.
+
+        Target must be an ISO 639-1 language code.
+        See https://g.co/cloud/translate/v2/translate-reference#supported_languages
+        """
+        translate_client = translate.Client()
+
+        if isinstance(text, six.binary_type):
+            text = text.decode("utf-8")
+
+        # Text can also be a sequence of strings, in which case this method
+        # will return a sequence of results for each text.
+        result = translate_client.translate(text, target_language=target)
+
+        print(u"Text: {}".format(result["input"]))
+        print(u"Translation: {}".format(result["translatedText"]))
+        print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
+
+        return result["translatedText"]
 
     def command_cb(self, cmd):
         # execute command 

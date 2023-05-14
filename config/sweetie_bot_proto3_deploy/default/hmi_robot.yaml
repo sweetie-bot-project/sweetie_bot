@@ -5,7 +5,7 @@ voice:
     voice_profile:
         coqui-ai:
             type: 'coqui-ai'
-            langs: [ 'en', 'jp' ]
+            langs: [ 'en', 'ja' ]
             coqui_ai_params:
                 languages:
                     en:
@@ -14,6 +14,10 @@ voice:
                             speaker: 'p225'
                     ja:
                         model: 'kokoro'
+                    conversion:
+                        model: 'freevc24'
+                        params:
+                            target_wav: 'conversion/sweetie_bot.ogg'
                 models:
                     vctk:
                         model_name: 'tts_models/en/vctk/vits'
