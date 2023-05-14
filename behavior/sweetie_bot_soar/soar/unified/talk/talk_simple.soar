@@ -185,7 +185,7 @@ sp {talk-llm*propose*goodbye
 }
 
 sp {talk-llm*propose*failsafe-answer
-	(state <s> ^substate talk-llm ^looking-at -^answering ^beliefs.event <ev> ^lang <lang> ^object <obj> ^process <proc>)
+	(state <s> ^substate talk-llm -^answering ^beliefs.event <ev> ^lang <lang> ^object <obj> ^process <proc>)
 	(<ev> ^name {<<|general-answering-pause| |general-answering-event|>>} ^reason terminated ^status failed ^process.object <obj>)
 -->
  	(<s> ^operator <op> +, =)
