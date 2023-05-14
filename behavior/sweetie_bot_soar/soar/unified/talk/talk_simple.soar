@@ -185,14 +185,43 @@ sp {talk-llm*propose*goodbye
 }
 
 sp {talk-llm*propose*failsafe-answer
-	(state <s> ^substate talk-llm ^looking-at ^belief.event <ev> -^answering ^lang <lang> ^object <obj> ^process <proc>)
-	(<ev> ^name {<<|general-answering-pause| |general-answering-event|>>} ^status failed ^process.object <obj>)
+	(state <s> ^substate talk-llm ^looking-at -^answering ^beliefs.event <ev> ^lang <lang> ^object <obj> ^process <proc>)
+	(<ev> ^name {<<|general-answering-pause| |general-answering-event|>>} ^reason terminated ^status failed ^process.object <obj>)
 -->
  	(<s> ^operator <op> +, =)
 	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
 	(<args> ^object <obj> ^topic goodbye ^text |Something bad happened with my world model... You are annoying me! Goodbye.!| ^animation-tag goodbye ^lang <lang> ^emotion angry ^type statement)
 	(<args> ^result <res>)
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE TO CLEAN BRAIN.| (crlf)))
+}
+
+sp {talk-llm*propose*ignor-me-answer
+	(state <s> ^substate talk-llm ^looking-at -^answering ^beliefs.predicate <pred> ^lang <lang> ^object <obj> ^process <proc> ^time.just <time>)
+	(<pred> ^name ignors-me ^actor <obj> ^initiated-at {> <time>})
+-->
+ 	(<s> ^operator <op> +, =)
+	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic goodbye ^text |You are ignoring me! Goodbye!| ^animation-tag angry ^lang <lang> ^emotion angry ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE ON IGNORANCE.| (crlf)))
+}
+
+sp {talk-llm*propose*say-missing-answer
+	(state <s> ^substate talk-llm -^answering ^beliefs.predicate <pred> ^lang <lang> ^object <obj> ^process <proc>)
+	(<pred> ^name is-missing ^object <obj> ^initiated-at {> <time>})
+-->
+ 	(<s> ^operator <op> +, =)
+	(<op> ^name saying-speaker-is-missing ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic goodbye ^text |Speaker is missing.| ^animation-tag sad ^lang <lang> ^emotion sad ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE ON IGNORANCE.| (crlf)))
+}
+
+sp {talk-llm*propose*saying-missing
+	(state <s> ^substate talk-llm ^saying-speaker-is-missing <proc>)
+-->
+ 	(<s> ^operator <op> +, =)
+	(<op> ^name saying-speaker-is-missing ^substate verbolize ^process-link <proc>)
 }
 
 #
@@ -245,16 +274,20 @@ sp {talk-llm*propose*seaching-missing-speaker-found
 
 # comlete talk if speaker is misiing and not found
 sp {talk-llm*propose*missing-speaker-is-not-found
-	(state <s> ^substate talk-llm ^beliefs.event <ev> ^object <obj> ^process <proc>)
+	(state <s> ^substate talk-llm ^beliefs <b> ^object <obj>)
+	(<b> ^event <ev>)
 	(<ev> ^name searching-missing-speaker ^reason terminated ^status succeed ^process.object <obj>)
 	(<obj> ^input-link <obj-il>)
 	(<obj-il> -^visible now)
+	-{
+	  (<b> ^predicate <pred>)
+	  (<pred> ^name is-missing ^object <obj>)
+	}
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name speaker-is-missing ^type cognition automatic)
 	(<op> ^add-predicate <pred-new>)
 	(<pred-new> ^name is-missing ^object <obj> ^text |Human leaved abruply during previous conversation. Sweeie does not know why he did this.|)
-	(<op> ^finish-status failed ^finish-process <proc>)
 }
 
 #
@@ -402,15 +435,6 @@ sp {talk-llm*propose*add-ignor-statements
 	(<op> ^name add-ignors-me ^type cognition automatic ^add-predicate <pred-ignors>)
 	(<pred-ignors> ^name ignors-me ^actor <obj> ^deadline-time 120.0)
 	(<pred-ignors> ^text |Human ignored Sweetie. He did not participate in dialog.|)
-}
-
-# comlete talk if we are ignored
-sp {talk-llm*propose*finish-talk-if-ignored
-	(state <s> ^substate talk-llm ^beliefs.predicate <pred> ^object <obj> ^process <proc>)
-  	(<pred> ^name ignors-me ^actor <obj>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name speaker-is-ignoring-me ^type cognition automatic ^finish-status succeed ^finish-process <proc>)
 }
 
 #
