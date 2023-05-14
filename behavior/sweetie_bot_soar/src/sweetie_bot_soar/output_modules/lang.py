@@ -134,7 +134,7 @@ class AttribRequest:
         if prompt is not None:
             assert_param(prompt, 'prompt: must be str or None', allowed_types=(str,))
         self.prompt = prompt
-        assert_param(stop_list, 'stop_list: must be list of strings', allowed_types=list, check_func=lambda v: len(v) >=1 and all( isinstance(e, str) for e in v ))
+        assert_param(stop_list, 'stop_list: must be list of strings', allowed_types=list, check_func=lambda v: all( isinstance(e, str) for e in v ))
         self.stop_list = stop_list
 
 class AttribRequestRegex(AttribRequest):
@@ -152,7 +152,17 @@ class AttribRequestRegex(AttribRequest):
         if m is None:
             return None
         # parse groups and return (attr, value) pairs
-        return { attr: m.group(attr) for attr in self._regex.groupindex }
+        # TODO: why group can be None?
+        result = {}
+        for attr in self._regex.groupindex:
+            val = m.group(attr)
+            print('attr: ', attr, ' vaule: ', val)
+            if m.group(attr) is not None:
+                result[attr] = val
+            else:
+                return None
+        return result
+        #return { attr: m.group(attr) for attr in self._regex.groupindex }
 
 AttribRequest.subclass_map.update({'regex': AttribRequestRegex})
 
@@ -186,7 +196,7 @@ AttribRequest.subclass_map.update({'regex-test': AttribRequestRegexTest})
 
 class AttribRequestMap(AttribRequest):
 
-    def __init__(self, map, attrib, nlp_model='en_core_web_sm', **kwargs):
+    def __init__(self, map, attrib, leading_text = '', fallback_value = None, nlp_model='en_core_web_sm', **kwargs):
         super(AttribRequestMap, self).__init__(**kwargs)
         # load spacy
         self._nlp = SpacyInstance(nlp_model)
@@ -201,9 +211,14 @@ class AttribRequestMap(AttribRequest):
         # save attrib name
         assert_param(attrib, 'attrib: must be string', allowed_types=str)
         self._attrib = attrib
+        assert_param(leading_text, 'leading_text: must be string', allowed_types=str)
+        self._leading_text = leading_text
+        if fallback_value is not None:
+            assert_param(fallback_value, 'fallback_value: must be string', allowed_types=str)
+        self._fallback_value = fallback_value
 
     def parse(self, text):
-        tokens = self._nlp(self.prompt + ' ' + text)
+        tokens = self._nlp(self._leading_text + ' ' + text)
         # process parsed tokens and find key
         for idx in range(len(tokens)):
             token = tokens[idx]
@@ -216,7 +231,10 @@ class AttribRequestMap(AttribRequest):
                 # succesfull parsing
                 return { self._attrib: key }
         # failure
-        return None
+        if self._fallback_value is None:
+            return None
+        else:
+            return { self._attrib: self._fallback_value }
 
 AttribRequest.subclass_map.update({'map': AttribRequestMap})
 
@@ -226,7 +244,7 @@ AttribRequest.subclass_map.update({'map': AttribRequestMap})
 
 class LangRequest:
 
-    def __init__(self, prompt_header, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile):
+    def __init__(self, prompt_header, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile, start_event_history_with_heard = False):
         # get parameters: header
         assert_param(prompt_header, 'prompt_header: must be string', allowed_types=str)
         self._header = prompt_header
@@ -244,6 +262,8 @@ class LangRequest:
         self._max_events = max_events
         assert_param(max_predicates, 'max_events: must be nonegative integer', allowed_types=int, check_func=lambda v: v >= 0)
         self._max_predicates = max_predicates
+        assert_param(start_event_history_with_heard, 'start_event_histiry_with_heard: must be bool', allowed_types=bool)
+        self._start_event_history_with_heard = start_event_history_with_heard
         # get Attrib requests
         assert_param(attrib_requests, 'attrib_requests: must be list of dictionaries with requests description', allowed_types=list, check_func=lambda v: all(isinstance(e, dict) for e in v))
         self._requests = []
@@ -274,8 +294,12 @@ class LangRequest:
             # sort by timestamp
             events.sort(key = lambda ev: ev.stamp)
             # verbolize last max_events
-            for ev in events[-self._max_events:]:
-                prompt += ev.verbolize(self._fact_templates)
+        last_events = events[-self._max_events:]
+        if self._start_event_history_with_heard and len(last_events) >= 1:
+            while last_events[0].type == 'talk-said':
+                last_events.pop(0)
+        for ev in last_events:
+            prompt += ev.verbolize(self._fact_templates)
         # add text
         if text is not None:
             template = self._fact_templates['text']
@@ -297,6 +321,8 @@ class LangRequest:
             if request.prompt is not None:
                 # update prompt
                 prompt += request.prompt
+                # fix new lines: must be \r\n
+                prompt = prompt.replace('\n', '\r\n')
                 # send request
                 req = CompleteRawRequest(prompt = prompt, profile = self._llm_profile, stop_list = request.stop_list)
                 resp = llm_caller(req)
@@ -313,6 +339,7 @@ class LangRequest:
                 success = False
                 result['error_desc'] = 'LLM response parse error.'
             else:
+                print('parse result: ', parse_result)
                 result.update( parse_result )
         #
         # return result
@@ -387,7 +414,7 @@ class LangModel(output_module.OutputModule):
         # TODO use future
         success, result, prompt = request.perform_request(self._llm_client, events = events, predicates = predicates, text = text)
 
-        rospy.logdebug('lang_model output module: LLM prompt: \n %s' % prompt)
+        rospy.logdebug('lang_model output module: LLM prompt: \n %s' % repr(prompt))
         rospy.logdebug('lang_model output module: LLM result: \n %s' % result)
 
         # add WMEs
