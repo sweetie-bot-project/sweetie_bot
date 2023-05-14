@@ -100,7 +100,7 @@ class TTSSpeechDispatcher(TTSInterface):
         self._client.set_output_module(module)
 
     def speak(self, text, lang):
-        super().speak(text, language)
+        super().speak(text, lang)
         ev = Event()
         self._client.set_language(lang)
         self._client.speak(text, callback = lambda cb_type: ev.set(), event_types=(self._speechd.CallbackType.CANCEL, self._speechd.CallbackType.END))
@@ -133,7 +133,7 @@ class TTSRhvoiceWrapper(TTSInterface):
             self._gstreamer_pipeline.set_state(Gst.State.NULL)
 
     def speak(self, text, lang):
-        super().speak(text, language)
+        super().speak(text, lang)
         Gst.Event.new_flush_start()
 
         # Get synthesized PCM sound from RHVoice server
