@@ -39,7 +39,9 @@ sp {request*apply2
     (<lm> ^request |complex-en| ^predicate <p1> ^event <ev1> <ev2> <ev3>)
     (<p1> ^text |Human dislike Sweetie.| ^initiated-at 1.0)
     (<ev1> ^name talk-heard ^text |Hello! I hate robots.| ^initiated-at 0.0)
-    (<ev2> ^name talk-said ^text |Hello... I am very sad.| ^initiated-at 2.0)
+    (<ev2> ^name talk-said ^text |Hello... I am very sad.| ^emotion sad ^initiated-at 2.0)
+    (<ev1> ^name talk-heard ^text |I will disassembly you.| ^initiated-at 0.0)
+    (<ev2> ^name talk-said ^text |No! Do not do it!.| ^emotion scared ^initiated-at 2.0)
     (<ev3> ^name talk-ignored ^initiated-at 3.0)
 }
 
@@ -80,7 +82,7 @@ sp {result*apply*failed
 sp {result*apply*succeed
     (state <s> ^operator <op>)
     (<op> ^name result ^status succeed ^lang-model <lm>) 
-    (<lm> ^emotion <emotion> ^result <answer>)
+    (<lm> ^emotion <emotion> ^result <answer> ^sentence-type <type>)
 -->
-	(write | succeed :| <answer> | (| <emotion> |) | (crlf))
+	(write | succeed :| <answer> | (| <emotion> |, | <type> |) | (crlf))
 }
