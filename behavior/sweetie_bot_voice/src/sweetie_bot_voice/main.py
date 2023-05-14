@@ -23,6 +23,8 @@ import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GLib
 
+voice_log = rospy.Publisher('voice_log', TextCommand)
+
 class TTSInterface:
     def __init__(self, langs):
         self._langs = langs
@@ -30,7 +32,10 @@ class TTSInterface:
     def is_lang_supported(self, lang):
         return lang in self._langs
 
-    def speak(self, text, lang):
+    def speak(self, text, language):
+        # voice log
+        global voice_log
+        voice_log.publish('log/voice/out/'+language, text, '')
         pass
 
 class TTSCoquiAi(TTSInterface):
@@ -55,6 +60,7 @@ class TTSCoquiAi(TTSInterface):
             self.tts[language] = self.models[model_name]
 
     def speak(self, text, language):
+        super().speak(text, language)
         if not language in self.tts:
             rospy.logerr("No such language '%s'" % language)
             return False
@@ -94,6 +100,7 @@ class TTSSpeechDispatcher(TTSInterface):
         self._client.set_output_module(module)
 
     def speak(self, text, lang):
+        super().speak(text, language)
         ev = Event()
         self._client.set_language(lang)
         self._client.speak(text, callback = lambda cb_type: ev.set(), event_types=(self._speechd.CallbackType.CANCEL, self._speechd.CallbackType.END))
@@ -126,6 +133,7 @@ class TTSRhvoiceWrapper(TTSInterface):
             self._gstreamer_pipeline.set_state(Gst.State.NULL)
 
     def speak(self, text, lang):
+        super().speak(text, language)
         Gst.Event.new_flush_start()
 
         # Get synthesized PCM sound from RHVoice server
@@ -326,7 +334,7 @@ class VoiceNode():
                 return False
 
             # translate to source lang
-            if self.enable_gtranslate and cmd.type !='en':
+            if self.enable_gtranslate and lang !='en':
                 cmd.command = self.translate_text(lang, cmd.command)
 
             # find profile
@@ -360,9 +368,9 @@ class VoiceNode():
         # will return a sequence of results for each text.
         result = translate_client.translate(text, target_language=target)
 
-        print(u"Text: {}".format(result["input"]))
-        print(u"Translation: {}".format(result["translatedText"]))
-        print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
+        rospy.loginfo(u"Text: {}".format(result["input"]))
+        rospy.loginfo(u"Translation: {}".format(result["translatedText"]))
+        rospy.loginfo(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
 
         return result["translatedText"]
 

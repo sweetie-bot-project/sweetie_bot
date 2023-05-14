@@ -181,6 +181,8 @@ class RespeakerNode(object):
             self.llm_service_client = None
         # advertise
         self.pub_sound_event = rospy.Publisher("sound_event", SoundEvent , queue_size=10)
+        # voice log
+        self.voice_log = rospy.Publisher('voice_log', TextCommand)
         # start
         self.respeaker_audio.start()
         self.info_timer = rospy.Timer(rospy.Duration(1.0 / self.update_rate),
@@ -257,6 +259,8 @@ class RespeakerNode(object):
         except:
             rospy.logerr('Transcription failed! Cannot decode response (%s)' % (resp))
             return None
+
+        self.voice_log.publish('log/voice/in/'+resp_decoded['language'], resp_decoded['text'], '')
 
         if self.enable_gtranslate and resp_decoded['language'] !='en':
             resp_decoded['text'] = self.translate_text('en', resp_decoded['text'])
