@@ -37,6 +37,9 @@ class SoundSpeech(InputModuleFlatSoarView):
         # get configuration from parameters
         sound_event_topic = self.getConfigParameter(config, 'topic', allowed_types = (str,))
         self._speech_timeout = self.getConfigParameter(config, 'speech_timeout', default_value = 1.0)
+        self._lang_filter = self.getConfigParameter(config, 'lang_filter', 
+            default_value = ['en', 'ru'], allowed_types = (list,), 
+            check_func = lambda vals: all(isinstance(v, str) for v in vals) )
         try:
             self._intensity_bins_map = BinsMap( config['intensity_bins_map'] )
         except KeyError:
@@ -86,8 +89,11 @@ class SoundSpeech(InputModuleFlatSoarView):
                 print(self._text, self._text_is_updated)
                 self._text_is_updated = False
                 if self._text is not None:
-                    # updtae text
                     text, lang = self._text
+                    # filter text by lang
+                    if lang not in self._lang_filter:
+                        return
+                    # updtae text
                     self.updateChildWME('text', text)
                     self.updateChildWME('lang', lang)
                     # remove elements if present
