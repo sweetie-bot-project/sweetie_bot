@@ -5,6 +5,7 @@ from  actionlib import GoalStatus
 
 from random import choice
 import re
+from string import Formatter
 from ..nlp import SpacyInstance
 
 from sweetie_bot_text_msgs.srv import CompleteRaw, CompleteRawRequest, CompleteRawResponse
@@ -43,6 +44,8 @@ def GetChildValueAsType(parent_id, attrib, expected_type):
 #
 
 class TalkEvent():
+    formatter = Formatter()
+
     def __init__(self, item_id):
         # get event type
         idx = 0
@@ -54,7 +57,7 @@ class TalkEvent():
                 raise WMEParseError('unknown event type (missing or unknown ^name attribute)')
             # check it 
             name_str = name_id.GetValueAsString()
-            if name_str in ['talk-heard', 'talk-said', 'talk-ignored']:
+            if name_str in ['talk-heard', 'talk-said', 'talk-ignored', 'talk-no-answer', 'talk-illegible']:
                 event_type = name_str
                 break
             # next attr
@@ -63,8 +66,15 @@ class TalkEvent():
         # get timestamp
         self.stamp = GetChildValueAsType(item_id, 'initiated-at', float)
         # get text
-        if event_type in ['talk-heard', 'talk-said']:
+        if event_type == 'talk-heard':
             self.text = GetChildValueAsType(item_id, 'text', str)
+        elif event_type == 'talk-said':
+            self.text = GetChildValueAsType(item_id, 'text', str)
+            emotion_id = item_id.FindByAttribute('emotion', 0) 
+            if emotion_id is not None:
+                self.emotion = emotion_id.GetValueAsString()
+            else:
+                self.emotion = 'neutral'
         else:
             self.text = None
 
@@ -77,10 +87,18 @@ class TalkEvent():
         if isinstance(template, list):
             template = choice(template)
         # use template to generate verbolization
-        if template.find('%s') >= 0:
-            return template % self.text
-        else:
-            return template
+        result = ''
+        fmts = TalkEvent.formatter.parse(template)
+        for fmt in fmts:
+            literal_text, field_name, _, _ = fmt
+            result += literal_text
+            if field_name is None:
+                break
+            if field_name == 'text':
+                result += self.text
+            elif field_name == 'emotion':
+                result += self.emotion
+        return result
 
 class Predicate():
     def __init__(self, item_id):
@@ -112,8 +130,9 @@ class AttribRequest:
         cls = AttribRequest.subclass_map[type]
         return super(AttribRequest, cls).__new__(cls)
 
-    def __init__(self, type, prompt, stop_list = []):
-        assert_param(prompt, 'prompt: must be str', allowed_types=str)
+    def __init__(self, type, prompt = None, stop_list = []):
+        if prompt is not None:
+            assert_param(prompt, 'prompt: must be str or None', allowed_types=(str,))
         self.prompt = prompt
         assert_param(stop_list, 'stop_list: must be list of strings', allowed_types=list, check_func=lambda v: len(v) >=1 and all( isinstance(e, str) for e in v ))
         self.stop_list = stop_list
@@ -135,8 +154,35 @@ class AttribRequestRegex(AttribRequest):
         # parse groups and return (attr, value) pairs
         return { attr: m.group(attr) for attr in self._regex.groupindex }
 
-
 AttribRequest.subclass_map.update({'regex': AttribRequestRegex})
+
+class AttribRequestRegexTest(AttribRequest):
+
+    def __init__(self, regex, attrib, value_match = None, value_nomatch = None, **kwargs):
+        super(AttribRequestRegexTest, self).__init__(**kwargs)
+        # compile and check regexp
+        self._regex = re.compile(regex)
+        # check other attribs
+        assert_param(attrib, 'attrib: must be string', allowed_types=str)
+        self._attrib = attrib
+        if value_match is not None:
+            assert_param(value_match, 'value_match: must be string or none', allowed_types=(str,))
+        self._value_match = value_match
+        if value_nomatch is not None:
+            assert_param(value_match, 'value_nomatch: must be string or none', allowed_types=(str,))
+        self._value_nomatch = value_nomatch
+        if value_nomatch is None and value_nomatch is None:
+            raise TypeError('value_match or value_nomatch cannot be both None')
+
+    def parse(self, text):
+        m = self._regex.match(text)
+        # check if match is succesfull
+        if m is None:
+            return { self._attrib: self._value_nomatch }
+        else:
+            return { self._attrib: self._value_match }
+
+AttribRequest.subclass_map.update({'regex-test': AttribRequestRegexTest})
 
 class AttribRequestMap(AttribRequest):
 
@@ -205,7 +251,11 @@ class LangRequest:
             for request in attrib_requests:
                 self._requests.append( AttribRequest(**request) )
         except TypeError as e:
-            raise KeyError('incorrect attrib_request declaraition: wissing or superfluous parameters (%s): error %s' % ([request.keys()], e))
+            # raise KeyError('incorrect attrib_request declaraition: wissing or superfluous parameters (%s): error %s' % ([request.keys()], e))
+            raise e
+        # check attrib requests
+        if len(self._requests) == 0 or self._requests[0].prompt is None:
+            raise ValueError('incorrect attrib_request declaraition: at leat one request should present, first request should contain prompt field.')
 
     def perform_request(self, llm_caller, text = None, events=[], predicates=[]):
         #
@@ -243,26 +293,27 @@ class LangRequest:
         result = {}
         success = True
         for request in self._requests:
-            # update prompt
-            prompt += request.prompt
-            # send request
-            req = CompleteRawRequest(prompt = prompt, profile = self._llm_profile, stop_list = request.stop_list)
-            resp = llm_caller(req)
-            # check result
-            if resp.error_code != 0:
-                success = False
-                result['error_desc'] = 'LLM request has failed.'
-                return success, result, prompt
-            # parse result
+            # request lang model if prompt is present
+            if request.prompt is not None:
+                # update prompt
+                prompt += request.prompt
+                # send request
+                req = CompleteRawRequest(prompt = prompt, profile = self._llm_profile, stop_list = request.stop_list)
+                resp = llm_caller(req)
+                # check result
+                if resp.error_code != 0:
+                    success = False
+                    result['error_desc'] = 'LLM request has failed.'
+                    return success, result, prompt
+                # add result to prompt
+                prompt += resp.result
+            # parse result (current or prevoius)
             parse_result = request.parse(resp.result)
             if parse_result is None:
                 success = False
                 result['error_desc'] = 'LLM response parse error.'
             else:
                 result.update( parse_result )
-            # add result to prompt
-            prompt += resp.result
-
         #
         # return result
         #
@@ -285,7 +336,8 @@ class LangModel(output_module.OutputModule):
             for req_name, req_conf in requests.items():
                 self._requests[req_name] = LangRequest(**req_conf)
         except TypeError as e:
-            raise KeyError('incorrect request declaraition (%s): missing or superfluous parameters: %s' % (req_name, e))
+            # raise KeyError('incorrect request declaraition (%s): missing or superfluous parameters: %s' % (req_name, e))
+            raise e
         
 
     def startHook(self, cmd_id):
