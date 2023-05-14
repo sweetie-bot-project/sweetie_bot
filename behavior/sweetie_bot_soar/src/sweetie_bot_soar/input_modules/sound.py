@@ -64,9 +64,12 @@ class SoundSpeech(InputModuleFlatSoarView):
     def newSoundEventCallback(self, msg):
         with self._lock:
             self._last_sound_event = msg
+            if msg.sound_flags & SoundEvent.SPEECH_DECODED:
+                rospy.logdebug('lang: receive msg: %s (%s)' % (msg.text, msg.language))
             # get text
             if self._text_timestamp < msg.header.stamp:
                 if (msg.sound_flags & SoundEvent.SPEECH_DECODED) and msg.text != '':
+                    rospy.logdebug('lang: stable message: %s (%s)' % (msg.text, msg.language))
                     self._text = (msg.text, msg.language)
                     self._text_timestamp = msg.header.stamp + rospy.Duration(self._speech_timeout)
                     self._text_is_updated = True
@@ -86,10 +89,10 @@ class SoundSpeech(InputModuleFlatSoarView):
             self.updateChildWME('intensity', self._intensity_bins_map(self._last_sound_event.intensity)) 
             # update text if necessary
             if self._text_is_updated:
-                print(self._text, self._text_is_updated)
                 self._text_is_updated = False
                 if self._text is not None:
                     text, lang = self._text
+                    rospy.logdebug('lang: speech detected: %s (%s)' % (text, lang))
                     # filter text by lang
                     if lang not in self._lang_filter:
                         return
