@@ -7,7 +7,9 @@
 # DECISION OPERATOR
 #
 # (<op> ^name @name@ ^substate verbolize ^process-args <args>) 
-#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> [^sound <sound-file>] [^scene <scene>] [^character <character>])
+#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> 
+#				[^sound <sound-file>] [^scene <scene>] [^character <character>]
+#				[^lang <lang>] [^type <type>])
 #
 # Say person <obj> about <topic> with <text> or <sound-file> and using animation tagged with <tag>.
 #
@@ -43,12 +45,12 @@
 # if text has not been verbolzed and is not being verbolized and we have not failed with sound verbolization befor
 # synthesis has lower priority then predefined sounds
 sp {verbolize*propose*text-action-sound
-	(state <s> ^substate verbolize -^performing-text-action ^args <args> ^process <proc>)
+	(state <s> ^substate verbolize -^saying-text-action ^args <args> ^process <proc>)
 	(<args> ^sound <file> ^topic <topic> ^object <obj>)
 	(<proc> -^text-action-status -^text-action-sound-failed)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name performing-text-action ^substate text-action ^process-args <a> ^priority 27)
+	(<op> ^name saying-text-action ^substate text-action ^process-args <a> ^priority 27)
     (<a> ^type |voice/play_wav| ^command <file> ^result <r-succeed> <r-failed>)
 	(<r-succeed> ^status succeed ^parent <proc> ^attribute text-action-status ^link-value succeed ^add-event <ev-new>)
 	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
@@ -60,15 +62,15 @@ sp {verbolize*propose*text-action-sound
 # propose it if text has not been verbolized and is not being verbolized
 # synthesis has lower priority then predefined sounds
 sp {verbolize*propose*text-action-text
-	(state <s> ^substate verbolize -^performing-text-action ^args <args> ^process <proc>)
-	(<args> ^text <text> ^topic <topic> ^object <obj>)
+	(state <s> ^substate verbolize -^saying-text-action ^args <args> ^process <proc>)
+	(<args> ^text <text> ^topic <topic> ^object <obj> ^lang <lang> ^emotion <emotion> ^type <type>)
 	(<proc> -^text-action-status)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name performing-text-action ^substate text-action ^process-args <a> ^priority 25)
-    (<a> ^type |voice/say| ^command <text> ^result <r>)
+	(<op> ^name saying-text-action ^substate text-action ^process-args <a> ^priority 25)
+    (<a> ^type (concat |voice/say/| <lang>) ^command <text> ^result <r>)
 	(<r> ^status succeed ^parent <proc> ^attribute text-action-status ^link-value succeed ^add-event <ev-new>)
-	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^text <text> ^memorization-time 3600.0)
+	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^text <text> ^lang <lang> ^emotion <emotion> ^type <type> ^memorization-time 3600.0)
 	(<r> ^print (concat |TALK: text action say: | <text> (crlf)))
 }
 
@@ -111,7 +113,7 @@ sp {verbolize*elaborate*speech-visualization-tags
 sp {verbolize*propose*emotion
 	(state <s> ^substate verbolize ^args <args> ^process <proc> ^mem.emotion <emotion>)
 	(<proc> -^emotion-is-displayed)
-	(<args> ^animation-tag <tag>)
+	(<args> ^emotion <tag>)
 	(<emotion> ^tag <tag> ^name <name>)
 -->
 	(<s> ^operator <op> +, =)
