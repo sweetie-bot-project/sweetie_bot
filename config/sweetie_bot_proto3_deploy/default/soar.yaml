@@ -122,17 +122,15 @@ soar:
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n"  ]
                         'talk-said': [ "My emotion: {emotion}; Sweetie Bot: {text}\n" ]
-                        'talk-ignored': [ "Human do not answer.\n", "Human stays silent.\n", "Human continues to stay silent.\n" ]
-                        'talk-no-answer': [ "Human stays silent.\n", "Human continues to stay silent.\n" ]
-                        'talk-illegible': [ "Answer not recognized.\n" ]
+                        'talk-ignored': [ "Human: Human do not answer.\n", "Human: Human stays silent.\n", "Human: Human continues to stay silent.\n" ]
+                        'talk-no-answer': [ "Human: Human stays silent.\n", "Human: Human continues to stay silent.\n" ]
+                        'talk-illegible': [ "Human: Answer not recognized.\n" ]
                     max_events: 5
-                    max_predicates: 0
-                    max_events: 0
                     max_predicates: 0
                     llm_profile: 'en'
                     attrib_requests:
                         - type: 'regex'
-                          prompt: 'My emotion: '
+                          prompt: "My emotion: "
                           regex: '\s*(?P<emotion>\w+); Sweetie Bot: (?P<result>.*)'
                           stop_list: ["\n", "\\n"]
                         - type: 'regex-test'

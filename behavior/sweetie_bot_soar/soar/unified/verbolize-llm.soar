@@ -35,9 +35,8 @@
 sp {verbolize-llm*elaborate*requests
 	(state <s> ^substate verbolize-llm)
 -->
-	(<s> ^possible-request <r2> <r3>)
+	(<s> ^possible-request <r2>)
 	(<r2> ^name simple-en ^priority 2)
-	(<r3> ^name complex-en ^priority 1)
 }
 
 ## chouse best request: not tried and max priority
