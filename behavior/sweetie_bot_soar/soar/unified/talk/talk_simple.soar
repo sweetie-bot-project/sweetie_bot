@@ -184,6 +184,17 @@ sp {talk-llm*propose*goodbye
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE| (crlf)))
 }
 
+sp {talk-llm*propose*failsafe-answer
+	(state <s> ^substate talk-llm ^looking-at ^belief.event <ev> -^answering ^lang <lang> ^object <obj> ^process <proc>)
+	(<ev> ^name {<<|general-answering-pause| |general-answering-event|>>} ^status failed ^process.object <obj>)
+-->
+ 	(<s> ^operator <op> +, =)
+	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic goodbye ^text |Something bad happened with my world model... You are annoying me! Goodbye.!| ^animation-tag goodbye ^lang <lang> ^emotion angry ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE TO CLEAN BRAIN.| (crlf)))
+}
+
 #
 # look-at at lowest priority
 #
