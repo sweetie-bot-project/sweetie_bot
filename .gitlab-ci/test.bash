@@ -15,7 +15,7 @@ export USER=dev
 source devel/setup.bash
 
 # Launch ROS Core
-roslaunch sweetie_bot_deploy load_param.launch 2>&1 > ros_core.log &
+roslaunch sweetie_bot_deploy load_param.launch robot_name:=sweetie_bot_proto2 2>&1 > ros_core.log &
 ROS_CORE=$!
 sleep 40
 
@@ -25,11 +25,11 @@ export DISPLAY=:99
 VIRT_DISPLAY=$!
 
 # Launch actual application
-CMD_APP="roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=false"
+CMD_APP="roslaunch sweetie_bot_deploy flexbe_control.launch run_flexbe:=false robot_name:=sweetie_bot_proto2"
 $CMD_APP 2>&1 > app.log & APP=$!; sleep 100; scrot screenshot.png
 kill -SIGINT $APP; wait $APP; EXIT_APP=$?; log $EXIT_APP app.log "$CMD_APP"
 
-CMD_APP="roslaunch sweetie_bot_deploy joint_space_control.launch"
+CMD_APP="roslaunch sweetie_bot_deploy joint_space_control.launch robot_name:=sweetie_bot_proto2"
 $CMD_APP 2>&1 > app.log & APP=$!; sleep 100; scrot screenshot-towr.png
 kill -SIGINT $APP; wait $APP; EXIT_APP_TOWR=$?; log $EXIT_APP_TOWR app.log "$CMD_APP"
 
@@ -41,7 +41,7 @@ kill -SIGINT $VIRT_DISPLAY
 wait $VIRT_DISPLAY
 EXIT_VIRT_DISPLAY=$?
 
-log $EXIT_CORE ros_core.log "roslaunch sweetie_bot_deploy load_param.launch"
+log $EXIT_CORE ros_core.log "roslaunch sweetie_bot_deploy load_param.launch robot_name:=sweetie_bot_proto2"
 
 EXIT="$(( $EXIT_APP + $EXIT_APP_TOWR + $EXIT_CORE + $EXIT_VIRT_DISPLAY ))"
 if [[ "$EXIT" > 0 ]]; then
