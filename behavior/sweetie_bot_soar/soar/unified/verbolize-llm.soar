@@ -1,0 +1,141 @@
+# VERBOLIZE-LLM SUBSTATE
+#
+#  
+# DESCRIPTION
+#
+# Use LLM to produce phrase base on current talk context.
+#
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate verbolize-llm ^process-args <args>) 
+#   (<args> ^object <obj> ^event <talk-ev1>.. <talk-evN> ^predicate <pred1>.. <predM>)
+# 
+# 1. Guess language from context (language of the last talk-event)
+# 2. Use predicates and events to request LLM via lang-model output cmd. 
+# 3. Verbolize result onto <obj> speaker.
+#
+# State publishes SpeechVisualization message with attributes text, sound, character, scene.
+#
+#
+# PROCESS RESULT STATUSES
+#
+# * succeed --- text action succced and animation outcome is received
+#
+# SIDE EFFECTS
+#
+# Substates: verbolize 
+# Output link: lang-model
+# Events (via verbolize):
+#
+# * (^name talk-said ^object <object> ^topic llm ^text <text> ^type [statement|question]) --- said to <object> about <topic>.
+#
+
+
+## elaborate requests order
+sp {verbolize-llm*elaborate*requests
+	(state <s> ^substate verbolize-llm)
+-->
+	(<s> ^possible-request <r2> <r3>)
+	(<r2> ^name simple-en ^priority 2)
+	(<r3> ^name failsafe-en ^priority 1)
+}
+
+## chouse best request: not tried and max priority
+sp {verbolize-llm*elaborate*best-requests
+	(state <s> ^substate verbolize-llm ^possible-request <req> ^process <proc>)
+	(<req> ^name <name> ^priority <pri>)
+	(<proc> -^tried-request <name>)
+	-{
+	  (<s> ^possible-request <req2>)
+	  (<req2> ^name <name2> ^priority {> <pri>})
+	  (<proc> -^tried-request <name2>)
+	}
+-->
+	(<s> ^proposed-request <name>)
+}
+
+#
+# remove request if it is not related with our process
+#
+sp {verbolize-llm*propose*remove-non-relevant-lang-model-request
+	(state <s> ^substate verbolize-llm ^io.output-link.lang-model <cmd> ^process <proc>)
+	(<proc> -^cmd <cmd>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name remove-nonrelevant-lang-model ^type automatic cognition ^remove-output-command lang-model ^output-command-args <cmd>)
+}
+
+#
+# create new request if no pending request and no result
+#
+sp {verbolize-llm*propose*lang-model-request
+	(state <s> ^substate verbolize-llm ^proposed-request <request> ^io.output-link <ol> ^process <proc>)
+	(<ol> -^lang-model)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name lang-model-request ^type automatic ^add-output-command lang-model ^output-command-args <args>)
+	(<args> ^request <request>)
+	(<op> ^add-process <proc>)
+	(<proc> ^cmd <args>)
+}
+
+# add reqeest arguments: predicates and beliefs
+sp {verbolize-llm*elaborate*related-predicates-and-events
+	(state <s> ^substate verbolize-llm ^operator <op> + ^args <args>)
+	(<op> ^name lang-model-request ^output-command-args <cmd-args>)
+	(<args> ^{<<|event| |predicate| |text|>> <attr>} <value>)
+-->
+	(<cmd-args> ^<attr> <value>)
+}
+
+# remove failed request
+sp {verbolize-llm*propose*lang-model-remove-on-error
+	(state <s> ^substate verbolize-llm ^process <proc>)
+	(<proc> ^cmd <cmd>)
+	(<cmd> ^status error ^request <request>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name lang-model-remove-cmd ^type automatic ^remove-output-command lang-model ^output-command-args <cmd>)
+	(<op> ^parent <proc> ^attribute tried-request ^link-value <request>)
+	(<op> ^parent-2 <proc> ^attribute-2 cmd ^remove-value-2 <cmd>)
+}
+
+## fail if lang model cannot be requested
+sp {verbolize-llm*propose*fail-process
+	(state <s> ^substate verbolize-llm ^io.output-link <ol> ^process <proc>)
+	(<ol> -^lang-model)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name fail-verbolize-llm-process ^type automatic ^finish-status failed ^finish-process <proc>)
+}
+
+# produce verbolization command	
+sp {verbolize-llm*propose*verbolization
+	(state <s> ^name <name> ^substate verbolize-llm -^verbolizing-llm ^process <proc>)
+	(<proc> ^cmd <cmd> ^object <obj> ^lang <lang> -^verbolize-status)
+	(<cmd> ^status succeed ^result <text> ^emotion <emotion> ^sentence-type <type>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name verbolizing-llm ^substate verbolize ^process-args <args>)
+	(<args> ^topic llm ^object <obj> ^text <text> ^animation-tag <emotion> ^lang <lang> ^emotion <emotion> ^type <type> ^result <res>)
+	(<res> ^status succeed ^parent <proc> ^attribute verbolize-status ^link-value succeed)
+}
+
+sp {verbolize-llm*propose*verbolization-wait
+	(state <s> ^substate verbolize-llm ^verbolizing-llm <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name verbolizing-llm-wait ^substate verbolize ^process-link <proc>)
+}
+
+# finish process
+sp {verbolize-llm*propose*terminate-verbolize-llm
+	(state <s> ^bottom-state 1 ^beliefs <b>)
+	(<b> ^process <proc>)
+	(<proc> ^substate verbolize-llm ^verbolize-status succeed ^cmd <cmd>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name terminate-verbolize-llm ^type cognition automatic)
+	(<op> ^finish-process <proc> ^finish-status succeed ^remove-output-command lang-model ^output-command-args <cmd>)
+}
+

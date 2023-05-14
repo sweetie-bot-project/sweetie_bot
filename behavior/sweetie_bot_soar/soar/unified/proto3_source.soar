@@ -17,6 +17,7 @@ source lookat.soar
 source attention.soar
 # talk
 source verbolize.soar
+source verbolize-llm.soar
 source say.soar
 source ask.soar
 source talk/talk_simple.soar

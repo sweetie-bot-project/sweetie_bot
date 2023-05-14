@@ -61,7 +61,7 @@ sp {curiosity*propose*attention
 
 # elaborate talking process link
 sp {social*elaborate*talk
-	(state <s> ^name social ^substate general ^{<<|talking| |talking-on-request|>>} <proc>)
+	(state <s> ^name social ^substate general ^{<<|talking-on-desire| |talking-on-request|>>} <proc>)
 -->
 	(<s> ^talking <proc>)
 }
@@ -86,23 +86,23 @@ sp {social*propose*talk-start
 	(<obj> ^type human)
 -->
 	(<s> ^operator <o> +, =)
-   	(<o> ^name talking ^substate talk-llm ^process-args <a>)
+   	(<o> ^name talking-on-desire ^substate talk-llm ^process-args <a>)
 	(<a> ^object <obj>)
 }
 
 # reject talk if previous talk is not forgeted
 sp {social*preference*talk-start*reject-recent
 	(state <s> ^name social ^substate general ^operator <op> + ^predicates.process <proc>)
-	(<op> ^name talking ^process-args.object <obj>)
-	(<proc> ^name talking ^object <obj>)
+	(<op> ^name talking-on-desire ^process-args.object <obj>)
+	(<proc> ^name talking-on-desire ^status succeed ^object <obj>)
 -->
 	(<s> ^operator <op> -)
 }
 
 # reject talk human ignors-me sweetie 
-sp {social*preference*talk-start*reject-recent
+sp {social*preference*talk-start*reject-ignor-me
 	(state <s> ^name social ^substate general ^operator <op> + ^beliefs.predicate <pred>)
-	(<op> ^name talking ^process-args.object <obj>)
+	(<op> ^name talking-on-desire ^process-args.object <obj>)
 	(<pred> ^name ignors-me ^actor <obj>)
 -->
 	(<s> ^operator <op> -)
@@ -155,7 +155,7 @@ sp {security*propose*say-overheat
 	(<s> ^operator <op> +, =)
 	(<op> ^name say-overheat ^type automatic ^add-predicate <pred-new> ^add-output-command textcmd ^output-command-args <cmd>)
 	(<pred-new> ^name said-about-overheat ^deadline-time 30.0)
-	(<cmd> ^type |voice/say| ^command |Я перегрелась. Буду теперь отдыхать.|)
+	(<cmd> ^type |voice/say| ^command |My motors have overheated! I'll stay still for some time.|)
 }
 
 # say about servos failure
@@ -166,7 +166,7 @@ sp {security*propose*say-servo-failed
 	(<s> ^operator <op> +, =)
 	(<op> ^name say-servo-failed ^type automatic ^add-predicate <pred-new> ^add-output-command textcmd ^output-command-args <cmd>)
 	(<pred-new> ^name said-about-servo-failed ^deadline-time 30.0)
-	(<cmd> ^type |voice/say| ^command |Отказ исполнительной системы! Отказ исполнительной системы! Спасайте меня.| ^automatic-remove yes)
+	(<cmd> ^type |voice/say/en| ^command |One of my servos failed! Help me!| ^automatic-remove yes)
 }
 
 # wait until servos are normal

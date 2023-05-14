@@ -6,7 +6,20 @@
 # 2. use llm to transcribe it
 # 3. verbilize result
 #
-
+#
+#  talk-event
+#    talk-said
+#       question
+#       statement
+#    talk-heard
+#       unknown-class
+#       known-class
+#       answer
+#          irrelevant
+#    talk-ignored
+#    talk-pause
+#    talk-illegible
+#       
 
 # ELABORATIONS 
 
@@ -26,9 +39,10 @@ sp {talk-llm*elaborate*memorization-time
 }
 
 # relevant talk-* events
+# TODO: use negation
 sp {talk-llm*elaborate-recent-talk-events
    (state <s> ^substate talk-llm ^object <obj> ^events.event <ev> ^time.recently <time> ^recent-events <ev-pool>)
-   (<ev> ^name {<<|talk-said| |talk-heard| |talk-ignored|>> <ev-name>} ^object <obj> ^initiated-at {>= <time>})
+   (<ev> ^name {<<|talk-said| |talk-heard| |talk-ignored| |talk-no-answer| |talk-illegible|>> <ev-name>} ^object <obj> ^initiated-at {>= <time>})
 -->
 	(<ev-pool> ^event <ev>)
 }
@@ -53,41 +67,80 @@ sp {talk-llm*elaborate*looking-at
 	(<s> ^looking-at yes)
 }
 
+# inspect talk events for ^lang attrib and use last one
+sp {talk-llm*elborate*lang-from-last-event
+	(state <s> ^substate talk-llm ^recent-events <ev-pool>)
+	(<ev-pool> ^event <ev1>)
+	(<ev1> ^lang <lang> ^initiated-at <t1>)
+	-{(<ev-pool> ^event <ev2>)
+	  (<ev2> ^lang ^initiated-at {> <t1>})
+	}
+-->
+	(<s> ^lang <lang> ^lang-source event)
+}
+
+# default language is always english
+sp {talk-llm*elborate*default-lang
+	(state <s> ^substate talk-llm -^lang-source event)
+-->
+	(<s> ^lang en ^lang-source default)
+}
+
 #
 # DECISION RULES
 #
+
+# detect answering subprocess
+sp {talk-llm*elaborate*answering-subporcess
+	(state <s> ^substate talk-llm ^{<<|greeting| |general-answering-event| |general-answering-pause| |specific-answering|>>} <proc>) 
+-->
+	(<s> ^answering <proc>)
+}
+
+sp {talk-llm*propose*answering-continue
+	(state <s> ^substate talk-llm ^answering <proc>)
+	(<proc> ^name <name> ^substate <substate>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name <name> ^substate <substate> ^process-link <proc>)
+}
 
 #
 # perform greeting if no talk event happened before
 #
 sp {talk-llm*propose*greeting
-	(state <s> ^substate talk-llm ^looking-at -^greeting ^recent-events <ev-pool> ^object <obj>)
+	(state <s> ^substate talk-llm ^looking-at -^answering ^recent-events <ev-pool> ^lang <lang> ^object <obj>)
 	(<ev-pool> -^event)
 -->
-	(<s> ^operator <op> +)
+	(<s> ^operator <op> +, =)
 	(<op> ^name greeting ^substate verbolize ^process-args <proc>)
 	(<proc> ^object <obj> ^topic greet ^result <res-succeed>)
-	(<proc> ^text |Hello! I am Sweetie Bot!| ^animation-tag greeting)
-	(<res-succeed> ^print (concat |TALK: VERBOLIZED GREETING| (crlf)))
-}
-
-sp {talk-llm*propose*greeting-wait
-	(state <s> ^substate talk-llm ^greeting <proc>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name greeting-wait ^substate verbolize ^process-link <proc>)
+	(<proc> ^text |Hello! I am Sweetie Bot!| ^animation-tag greeting ^lang <lang> ^emotion neutral ^type statement)
+	(<res-succeed> ^print (concat |SPECIFIC: GREETING| (crlf)))
 }
 
 #
 # answer on the last event
 #
-sp {talk-llm*propose*answer
-	(state <s> ^substate talk-llm ^looking-at ^most-recent-event <ev> -^complete-and-verbolize ^object <obj> ^process <sp>)
-	(<ev> ^name {<<|talk-heard| |talk-ignored|>>})
+sp {talk-llm*propose*general-answer
+	(state <s> ^substate talk-llm ^looking-at ^most-recent-event <ev> -^answering ^lang <lang> ^object <obj> ^process <sp>)
+	(<ev> ^name {<<|talk-heard| |talk-ignored| |talk-no-answer| |talk-illegible|>>})
 -->
  	(<s> ^operator <op> +, =)
-	(<op> ^name complete-and-verbolize ^substate verbolize-llm ^process-args <args>)
-	(<args> ^object <obj>)
+	(<op> ^name general-answering-event ^substate verbolize-llm ^process-args <args>)
+	(<args> ^object <obj> ^lang <lang>)
+}
+
+#
+# answer on long pause
+#
+sp {talk-llm*propose*answer-delay
+	(state <s> ^substate talk-llm ^looking-at ^most-recent-event <ev> -^answering  ^lang <lang> ^object <obj> ^process <sp> ^time.just <t>)
+	(<ev> ^initiated-at {< <t>})
+-->
+ 	(<s> ^operator <op> +, =)
+	(<op> ^name general-answering-pause ^substate verbolize-llm ^process-args <args>)
+	(<args> ^object <obj> ^lang <lang>)
 }
 
 # add recent talk events
@@ -107,13 +160,29 @@ sp {talk-llm*elaborate*verbolize-llm-related-predicates
 	(<args> ^predicate <pred>)
 }
 
-sp {talk-llm*propose*answer-wair
-	(state <s> ^substate talk-llm ^complete-and-verbolize <proc>)
+#
+# DETERMINISTTIC REACTIONS
+#
+
+# prefer deterministic reactions
+sp {talk-llm*prefer*specific-over-general
+	(state <s> ^substate talk-llm ^operator <op1> + ^operator <op2> +)
+	(<op1> ^name specific-answering)
+	(<op2> ^name {<<|general-answering-event| |general-answering-pause|>>})
 -->
-	(<s> ^operator <op> +, =)
-	(<op> ^name complete-and-verbolize-wait ^substate verbolize-llm ^process-link <proc>)
+	(<s> ^operator <op1> > <op2>)
 }
 
+sp {talk-llm*propose*goodbye
+	(state <s> ^substate talk-llm ^looking-at ^most-recent-event <ev> -^answering ^lang <lang> ^object <obj> ^process <proc>)
+	(<ev> ^name talk-heard ^token goodbye)
+-->
+ 	(<s> ^operator <op> +, =)
+	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic goodbye ^text |Goodbye!| ^animation-tag goodbye ^lang <lang> ^emotion neutral ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE| (crlf)))
+}
 
 #
 # look-at at lowest priority
@@ -144,12 +213,23 @@ sp {talk-llm*propose*searching-missing-speaker
 }
 
 # continue search until speaker is not visible
-sp {talk-llm*propose*wait-seaching-missing-speaker
+sp {talk-llm*propose*seaching-missing-speaker-wait
 	(state <s> ^substate talk-llm ^searching-missing-speaker <proc> ^object.input-link <obj-il>)
 	(<obj-il> -^visible now)
 -->
 	(<s> ^operator <o> +, =)
 	(<o> ^name searching-missing-speaker-wait ^substate flexbe ^process-link <proc>)
+}
+
+# abort immediatelly is speaker is found
+# more high level
+sp {talk-llm*propose*seaching-missing-speaker-found
+	(state <s> ^substate talk-llm ^searching-missing-speaker <proc> ^object.input-link.visible now ^io.output-link.flexbe <cmd>)
+	(<cmd> -^status ^process <proc>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name searching-missing-speaker-abort ^type automatic cognition)
+	(<op> ^parent <cmd> ^attribute abort ^link-value hard)
 }
 
 # comlete talk if speaker is misiing and not found
@@ -160,45 +240,127 @@ sp {talk-llm*propose*missing-speaker-is-not-found
 	(<obj-il> -^visible now)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name speaker-is-missing ^type cognition automatic ^finish-status failed ^finish-process <proc>)
+	(<op> ^name speaker-is-missing ^type cognition automatic)
+	(<op> ^add-predicate <pred-new>)
+	(<pred-new> ^name is-missing ^object <obj> ^text |Human leaved abruply during previous conversation. Sweeie does not know why he did this.|)
+	(<op> ^finish-status failed ^finish-process <proc>)
 }
 
 #
-# COGNITION
+# COGNITION: talk-heard, talk-illegible
 #
 
-# convert detected speech to talk-heard event
-sp {talk-llm*propose*add-talk-heard
-	(state <s> ^substate talk-llm ^io.input-link.sound <snd> ^object <obj>)
-	(<snd> ^text <text> ^lang <lang>)
-    -{(<s> ^most-recent-event <ev>)
-	  (<ev> ^text <text>)
-	}
+# predicate symbolizing speech condition
+sp {talk-llm*elaborate*hearing-speech-preicate
+	(state <s> ^top-state 1 ^io.input-link.sound <snd> ^beliefs <b>)
+	(<snd> ^speech 1)
+-->
+	(<b> ^predicate <pred>)
+	(<pred> ^name hearing-speech ^input-link <snd>)
+}
+
+# speech end detected
+sp {talk-llm*elaborate*hearing-speech*terminate
+	(state <s> ^bottom-state 1 ^beliefs <b>)
+	(<b> ^event <ev> ^process <proc>)
+	(<ev> ^name hearing-speech ^reason terminated -^processed add-talk-event ^predicate.input-link <snd>)
+	(<proc> ^substate talk-llm ^object <obj>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name add-talk-heard ^type automatic cognition ^add-event <ev-heard>)
-	(<ev-heard> ^name talk-heard ^object <obj> ^text <text> ^lang <lang> ^memorization-time 3600.0)
+	(<op> ^name add-talk-event ^type cognition automatic ^input-link <snd> ^add-event <ev-new> ^mark-processed <ev>)
+	(<ev-new> ^object <obj>)
 }
 
-# detect talk-ignored condition
+# speech is not decoded properly
+sp {talk-llm*elaborate*hearing-speech*terminate*illegible
+	(state <s> ^operator <op> +)
+	(<op> ^name add-talk-event ^input-link <snd> ^add-event <ev-new>)
+	(<snd> -^text)
+-->
+	(<ev-new> ^name talk-illegible ^memorization-time 3600.0)
+	(<op> ^print (concat (crlf) (crlf) |TALK-ILLEGIBLE.| (crlf)))
+}
+
+# speech is decoded properly
+sp {talk-llm*elaborate*hearing-speech*terminate*heard
+	(state <s> ^operator <op> +)
+	(<op> ^name add-talk-event ^input-link <snd> ^add-event <ev-new>)
+	(<snd> ^text <text> ^lang <lang>)
+-->
+	(<ev-new> ^name talk-heard ^text <text> ^lang <lang> ^memorization-time 3600.0)
+	(<op> ^print (concat (crlf) (crlf) |TALK-HEARD: | <text> |(| <lang> |)| (crlf)))
+}
+
+# copy extracted tokens
+sp {talk-llm*elaborate*hearing-speech*terminate*elements
+	(state <s> ^operator <op> +)
+	(<op> ^name add-talk-event ^input-link <snd> ^add-event <ev-new>)
+	(<snd> ^element <value>)
+-->
+	(<ev-new> ^token <value>)
+}
+
+#
+# COGNITION: talk-ignored
+# 
+
+# initiate predicate at talk said
+sp {talk-llm*propose*add-talk-waiting-answer
+	(state <s> ^bottom-state 1 ^beliefs <b> ^io.input-link.sound.speech 0)
+	(<b> ^event <ev>)
+	(<ev> ^name talk-said ^object <obj>)
+	-{
+	  (<b> ^predicate <p>)
+	  (<p> ^name talk-waiting-answer ^object <obj>)
+	}
+--> 
+	(<s> ^operator <op> +, =)
+	(<op> ^name add-talk-waiting-answer ^type cognition automatic ^add-predicate <pred>)
+	(<pred> ^name talk-waiting-answer ^object <obj> ^event <ev> ^deadline-time 6.0)
+}
+
+# terminate predicate on speaking
+sp {talk-llm*propose*terminate-talk-waiting-answer
+	(state <s> ^bottom-state 1 ^beliefs.predicate <pred> ^io.input-link.sound.speech 1)
+	(<pred> ^name talk-waiting-answer)
+--> 
+	(<s> ^operator <op> +, =)
+	(<op> ^name terminate-talk-waiting-answer ^type cognition automatic ^remove-predicate <pred>)
+}
+
+# talk-ignored: speaker ignors question
 sp {talk-llm*propose*add-talk-ignored
-	(state <s> ^substate talk-llm ^most-recent-event <ev> ^object <obj> ^time.just <just> ^io.input-link.sound <snd>)
-	(<ev> ^name talk-said ^initiated-at {< <just>})
-	(<snd> ^speech 0 -^text)
---> (<s> ^operator <op> +, =)
-	(<op> ^name add-talk-ignored ^type cognition automatic ^add-event <ev-ignored>)
-	(<ev-ignored> ^name talk-ignored ^object <obj> ^memorization-time 3600.0)
+	(state <s> ^top-state 1 ^beliefs <b> ^io.input-link.sound.speech 0)
+	(<b> ^event <ev>)
+   	(<ev> ^name talk-waiting-answer ^reason deadline ^predicate <pred>)
+	(<pred> ^object <obj> ^event <talk-said>)
+	(<talk-said> ^type question)
+-->
+	(<b> ^event <ev-new>)
+	(<ev-new> ^name talk-ignored ^object <obj> ^talk-event <talk-said> ^memorization-time 3600.0)
+}
+
+# talk-no-answer: sweaker do not answered
+sp {talk-llm*propose*add-talk-no-answer
+	(state <s> ^top-state 1 ^beliefs <b> ^io.input-link.sound.speech 0)
+	(<b> ^event <ev>)
+   	(<ev> ^name talk-waiting-answer ^reason deadline ^predicate <pred>)
+	(<pred> ^object <obj> ^event <talk-said>)
+	(<talk-said> ^type statement)
+-->
+	(<b> ^event <ev-new>)
+	(<ev-new> ^name talk-no-answer ^object <obj> ^talk-event <talk-said> ^memorization-time 3600.0)
 }
 
 # detect ignorance
-sp {talk-llm*propose*ignor-me
-	(state <s> ^substate talk-llm ^recent-events <ev-pool> ^object <obj> ^beliefs <b>)
+sp {talk-llm*propose*add-ignor-me-questions
+	(state <s> ^bottom-state 1 ^beliefs <b> ^events <ev-pool>)
 	(<b> ^event <ev1>)
-	(<ev1> ^name talk-ignored ^initiated-at <t1>)
+	(<ev1> ^name talk-ignored ^object <obj> ^initiated-at <t1>)
 	(<ev-pool> ^event {<> <ev1> <ev2>})
-	(<ev2> ^name talk-ignored ^initiated-at <t2>)
+	(<ev2> ^name talk-ignored ^object <obj> ^initiated-at <t2>)
 	-{(<ev-pool> ^event <ev3>)
-	  (<ev3> ^name talk-heard ^initiated-at {> <t1> < <t2>})
+	  (<ev3> ^name talk-heard  ^object <obj> ^initiated-at {< <t1> > <t2>})
 	}
 	-{(<b> ^predicate <pred>)
 	  (<pred> ^name ignors-me ^actor <obj>)
@@ -207,10 +369,38 @@ sp {talk-llm*propose*ignor-me
 	(<s> ^operator <op> +, =)
 	(<op> ^name add-ignors-me ^type cognition automatic ^add-predicate <pred-ignors>)
 	(<pred-ignors> ^name ignors-me ^actor <obj> ^deadline-time 120.0)
-	(<pred-ignors> ^text |Human ignored Sweetie.|)
+	(<pred-ignors> ^text |Human ignors Sweetie. He did not answer questions.|)
 }
 
 # detect ignorance
+sp {talk-llm*propose*add-ignor-statements
+	(state <s> ^bottom-state 1 ^beliefs <b> ^events <ev-pool>)
+	(<b> ^event <ev1>)
+	(<ev1> ^name talk-no-answer ^object <obj> ^initiated-at <t1>)
+	(<ev-pool> ^event {<> <ev1> <ev2>} {<> <ev1> <ev2> <ev3>})
+	(<ev2> ^name {<<|talk-ignored| |talk-no-answer|>>} ^object <obj> ^initiated-at <t2>)
+	(<ev3> ^name {<<|talk-ignored| |talk-no-answer|>>} ^object <obj> ^initiated-at {< <t2> <t3>})
+	-{(<ev-pool> ^event <ev3>)
+	  (<ev3> ^name talk-heard  ^object <obj> ^initiated-at {< <t1> > <t3>})
+	}
+	-{(<b> ^predicate <pred>)
+	  (<pred> ^name ignors-me ^actor <obj>)
+	} 
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name add-ignors-me ^type cognition automatic ^add-predicate <pred-ignors>)
+	(<pred-ignors> ^name ignors-me ^actor <obj> ^deadline-time 120.0)
+	(<pred-ignors> ^text |Human ignored Sweetie. He did not participate in dialog.|)
+}
+
+# comlete talk if we are ignored
+sp {talk-llm*propose*finish-talk-if-ignored
+	(state <s> ^substate talk-llm ^beliefs.predicate <pred> ^object <obj> ^process <proc>)
+  	(<pred> ^name ignors-me ^actor <obj>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name speaker-is-ignoring-me ^type cognition automatic ^finish-status succeed ^finish-process <proc>)
+}
 
 #
 # COGNITION: ponies, gestures 
@@ -240,74 +430,5 @@ sp {talk-llm*elaborate*speaker-pony
 	(<pred> ^name greet-us-with-gesture ^actor <speaker>)
 	(<pred> ^text |Human is holding pony plusie.|)
 }
-
-#
-# VERBOLIZE-LLM SUBSTATE
-#
-
-#
-# create new request if no pending request and no result
-#
-sp {verbolize-llm*propose*lang-model-request
-	(state <s> ^substate verbolize-llm ^io.output-link <ol> ^process <proc>)
-	(<ol> -^lang-model)
--->
-	(<s> ^operator <op> +)
-	(<op> ^name lang-model-request ^type automatic ^add-output-command lang-model ^output-command-args <args> ^add-process <proc>)
-	(<args> ^request |complex-en|)
-	(<proc> ^cmd <args>)
-}
-
-# add reqeest arguments: predicates and beliefs
-sp {verbolize-llm*elaborate*related-predicates-and-events
-	(state <s> ^substate verbolize-llm ^operator <op> + ^args <args>)
-	(<op> ^name lang-model-request ^output-command-args <cmd-args>)
-	(<args> ^{<<|event| |predicate| |text|>> <attr>} <value>)
--->
-	(<cmd-args> ^<attr> <value>)
-}
-
-# copy result to substate and temove request
-sp {verbolize-llm*propose*lang-model-result
-	(state <s> ^substate verbolize-llm ^io.output-link.lang-model <lm> )
-	(<lm> ^status error)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name lang-model-remove-cmd ^type automatic ^remove-output-command lang-model ^output-command-args <lm>)
-	(<op> ^finish-status failed ^finish-process <proc>)
-}
-
-# produce verbolization command	
-sp {verbolize-llm*propose*verbolization
-	(state <s> ^name <name> ^substate verbolize-llm -^verbolizing-llm ^process <proc>)
-	(<proc> ^cmd <cmd> ^object <obj> -^verbolize-status)
-	(<cmd> ^status succeed ^result <text> ^emotion <emotion>)
--->
-	(<s> ^operator <op> +)
-	(<op> ^name verbolizing-llm ^substate verbolize ^process-args <args>)
-	(<args> ^topic llm ^object <obj> ^text <text> ^animation-tag <emotion> ^result <res>)
-	(<res> ^status succeed ^parent <proc> ^attribute verbolize-status ^link-value succeed)
-}
-
-sp {verbolize-llm*propose*verbolization-wait
-	(state <s> ^substate verbolize-llm ^verbolizing-llm <proc>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name verbolizing-llm-wait ^substate verbolize ^process-link <proc>)
-}
-
-# finish process
-sp {verbolize-llm*propose*terminate-verbolize-llm
-	(state <s> ^bottom-state 1 ^beliefs <b>)
-	(<b> ^process <proc>)
-	(<proc> ^substate verbolize-llm ^verbolize-status succeed ^cmd <cmd>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name terminate-verbolize-llm ^type cognition automatic)
-	(<op> ^finish-process <proc> ^finish-status succeed ^remove-output-command lang-model ^output-command-args <cmd>)
-}
-
-
-	
 
 
