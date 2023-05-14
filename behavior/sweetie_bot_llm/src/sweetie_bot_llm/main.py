@@ -36,6 +36,7 @@ class CompleteNode:
         rospy.Service('input_text', CompleteSimple, self.input_text_callback)
         rospy.Service('llm_request', CompleteRaw, self.complete_simple_callback)
         # log
+        self.log_llm = rospy.Publisher('speech_log', TextCommand)
         rospy.loginfo('urls: %s', self._urls )
         rospy.loginfo('profiles: %s', [self._profiles.keys()] )
 
@@ -103,12 +104,17 @@ class CompleteNode:
         request['prompt'] = msg.prompt
         if len(msg.stop_list) != 0:
             request['stopping_strings'] = msg.stop_list
+
+        self.log_llm.publish('log/llm/in/'+msg.profile, msg.prompt, '')
         # send it to server
         try:
             text, duration = self.request_server(request)
         except CompleteError as e:
             rospy.logerr('%s: %s' % (e.what(), e.details))
             return CompleteRawResponse(status_error = CompleteRawResponse.SERVER_UNREACHABLE)
+
+        self.log_llm.publish('log/llm/out/'+msg.profile, text, '')
+
         # return result
         return CompleteRawResponse(result = text, error_code = CompleteRawResponse.SUCCESS)
 
