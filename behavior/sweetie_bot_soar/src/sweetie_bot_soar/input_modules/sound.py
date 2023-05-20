@@ -67,14 +67,15 @@ class SoundSpeech(InputModuleFlatSoarView):
             if msg.sound_flags & SoundEvent.SPEECH_DECODED:
                 rospy.logdebug('lang: receive msg: %s (%s)' % (msg.text, msg.language))
             # get text
-            if self._text_timestamp < msg.header.stamp:
+            timestamp_now = rospy.Time.now()
+            if self._text_timestamp < timestamp_now:
                 if (msg.sound_flags & SoundEvent.SPEECH_DECODED) and msg.text != '':
                     rospy.logdebug('lang: stable message: %s (%s)' % (msg.text, msg.language))
                     self._text = (msg.text, msg.language)
-                    self._text_timestamp = msg.header.stamp + rospy.Duration(self._speech_timeout)
+                    self._text_timestamp = timestamp_now + rospy.Duration(self._speech_timeout)
                     self._text_is_updated = True
-                else:
-                    self._text_is_updated = self._text_is_updated or self._text is not None
+                elif self._text is not None:
+                    self._text_is_updated = True
                     self._text = None
 
 
