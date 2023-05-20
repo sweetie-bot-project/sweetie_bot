@@ -143,9 +143,17 @@ class ObjectDetectionMonitor(EventState):
             if self._pose_publisher:
                 # transform to frame_id
                 try:
-                    # transform
-                    pose_stamped = PoseStamped(pose = match.pose, header = Header(frame_id = match.header.frame_id, stamp = match.header.stamp - rospy.Duration(self._transform_delay)))
-                    self._pose = self._tf_listener.transformPose(self._frame_id, pose_stamped)
+                    while True:
+                        # transform using 'true' timestamp
+                        pose_stamped = PoseStamped(pose = match.pose, header = Header(frame_id = match.header.frame_id, stamp = match.header.stamp - rospy.Duration(self._transform_delay)))
+                        try:
+                            self._pose = self._tf_listener.transformPose(self._frame_id, pose_stamped)
+                            break
+                        except tf.ExtrapolationException:
+                            pass
+                        # transform using the last available transform
+                        self._pose = self._tf_listener.transformPose(self._frame_id, pose_stamped)
+                        break
                     # publish
                     self._pose_publisher.publish(self._pose_topic, self._pose)
                 except (tf.LookupException, tf.ConnectivityException) as e:
@@ -153,7 +161,6 @@ class ObjectDetectionMonitor(EventState):
                     return 'failure'
                 except tf.ExtrapolationException as e:
                     Logger.logwarn('ObjectDetectionMonitor skip transform: %s' % e)
-                    pass
 
             # match_detection state
             if 'detection_matches' in self._exit_states:

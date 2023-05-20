@@ -151,13 +151,24 @@ class SpatialWorldModel:
                 # quick fix for id change
                 detection_msg.id = 0
 
-                # extract information from detection message
+                # extract timestamp
                 timestamp = detection_msg.header.stamp.to_sec()
-                pose_stamped = PoseStamped(header = Header(frame_id = detection_msg.header.frame_id), pose = detection_msg.pose)
+                # extract pose from detection_msg
                 try:
-                    pose_stamped = self._tf_listener.transformPose(self._world_frame, pose_stamped)
-                except tf.ExtrapolationException:
-                    rospy.logwarn("SWM: unable to extrapolate (%s, %s) detection pose in %s s in the past. Detection is skipped.", detection_msg.label, detection_msg.type, rospy.Time.now() - detection_msg.header.stamp)
+                    while True:
+                        # transform using 'true' time
+                        pose_stamped = PoseStamped(header = detection_msg.header, pose = detection_msg.pose)
+                        try:
+                            pose_stamped = self._tf_listener.transformPose(self._world_frame, pose_stamped)
+                            break
+                        except tf.ExtrapolationException:
+                            pass
+                        # transform using most recent transform
+                        pose_stamped.header.stamp = rospy.Time()
+                        pose_stamped = self._tf_listener.transformPose(self._world_frame, pose_stamped)
+                        break
+                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+                    Logger.logwarn('SWM: unable to transform detection (%s, %s) from %s to %s: %s' % (detection_msg.label, detection_msg.type, pose_stamped.header.frame_id, self._world_frame, e))
                     continue
 
                 # search detected object in index
@@ -165,7 +176,7 @@ class SpatialWorldModel:
                 # check if corrsponding object exists
                 mem_elem = self._memory_map.get(key_tuple)
                 if mem_elem != None:
-                    # renew timestamp and pose of SpatialObject
+                    # renew timestamp and pose of SpatialObject but not update SOAR view
                     mem_elem.spatial_object.updateVisible(timestamp, pose_stamped.pose)
                 else:
                     # add new SpatialObject but do not create corresponding SOAR view
@@ -188,7 +199,7 @@ class SpatialWorldModel:
                 spatial_object.updateInvisible(time_now)
             # check if object is outdated
             if spatial_object.isOutdated(time_now):
-                # mark to remove remove outdtated objects
+                # mark to remove remove outdtated objects: they can be roved only inside SOAR context, so place them in remove list
                 if mem_elem.soar_view != None:
                     self._soar_view_remove_list.append(mem_elem.soar_view)
                 remove_list.append(key_tuple)
