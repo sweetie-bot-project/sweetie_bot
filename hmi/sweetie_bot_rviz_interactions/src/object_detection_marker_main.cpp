@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 	// create markers
 	std::vector< std::unique_ptr<ObjectDetectionMarker> > markers;
 	for(const std::string& name : names) {
-		markers.emplace_back( new ObjectDetectionMarker(name, publisher, server, nh_priv) );
+		markers.emplace_back( new RandomObjectDetectionMarker(name, publisher, server, nh_priv) );
 	}
 
 	ROS_INFO("object_detection_marker is started!");

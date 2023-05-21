@@ -1,6 +1,8 @@
 #ifndef  OBJECT_DETECTION_MARKER_HPP
 #define  OBJECT_DETECTION_MARKER_HPP
 
+#include <random>
+
 #include <interactive_markers/interactive_marker_server.h>
 #include <interactive_markers/menu_handler.h>
 
@@ -18,22 +20,23 @@ public:
 	ObjectDetectionMarker(const ObjectDetectionMarker&) = delete;
 	ObjectDetectionMarker& operator= (const ObjectDetectionMarker&) = delete;
 
-private:
+protected:
 	visualization_msgs::Marker makeSphereMarker(float r, float g, float b);
 	visualization_msgs::InteractiveMarker  makeInteractiveMarker(const geometry_msgs::Pose& pose);
 	void updateInteractiveMarker();
+	void updateInteractiveMarkerColor(float r, float b, float g);
 	void makeMenu();
 
 	void publishCallback(const ros::TimerEvent&);
 
-    void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
     void processToggleVisibility( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 	void processChangeLabel( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 	void processChangeType( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
     void processClickNewId( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
     void processClickNormalize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
+    void processFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
 
-private:
+protected:
 	// CONNECTION
 	// publishers
 	ros::Publisher publisher;
@@ -65,6 +68,27 @@ private:
 	interactive_markers::MenuHandler menu_handler;
 };
 
+class RandomObjectDetectionMarker : public ObjectDetectionMarker
+{
+protected:
+	// state change probabilities
+	double prob_vanish, prob_appear;
+	// marker state
+	bool is_randomizing;
+	bool is_visible;
+	ros::Time change_visibility_timestamp;
+	// random generators
+	std::mt19937 rand_gen;
+	std::uniform_real_distribution<float> appear_time_dist;
+	std::uniform_real_distribution<float> vanish_time_dist;
+	std::uniform_real_distribution<float> lag_dist;
+
+public:
+	RandomObjectDetectionMarker(const std::string& _name, ros::Publisher& detection_publisher, std::shared_ptr<interactive_markers::InteractiveMarkerServer>& server, ros::NodeHandle& node_handle); 
+
+	void publishCallback(const ros::TimerEvent&);
+	void processToggleRandomize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback );
+};
 } // namespace hmi
 } // namespace sweetie_bot
 

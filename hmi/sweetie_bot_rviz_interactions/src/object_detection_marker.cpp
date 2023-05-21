@@ -107,7 +107,7 @@ visualization_msgs::InteractiveMarker ObjectDetectionMarker::makeInteractiveMark
 	{
 		visualization_msgs::InteractiveMarkerControl control;
 		control.always_visible = true;
-		control.markers.push_back( makeSphereMarker(0.5, 0.8, 0.5) );
+		control.markers.push_back( makeSphereMarker(0.2, 0.2, 0.2) );
 		tf::Quaternion orien(0.0, 0.0, 1.0, 1.0);
 		orien.normalize();
 		tf::quaternionTFToMsg(orien, control.orientation);
@@ -170,6 +170,20 @@ void ObjectDetectionMarker::updateInteractiveMarker()
 	server->applyChanges();
 }
 
+void ObjectDetectionMarker::updateInteractiveMarkerColor(float r, float g, float b)
+{
+	visualization_msgs::InteractiveMarker int_marker;
+	// update marker description
+	server->get(name, int_marker);
+	int_marker.controls[0].markers[0].color.r = r;
+	int_marker.controls[0].markers[0].color.g = g;
+	int_marker.controls[0].markers[0].color.b = b;
+	server->erase(name);
+	server->insert(int_marker, boost::bind( &ObjectDetectionMarker::processFeedback, this, _1 ), visualization_msgs::InteractiveMarkerFeedback::POSE_UPDATE);
+	server->applyChanges();
+}
+
+
 void ObjectDetectionMarker::makeMenu()
 {
 	// visibility trigger
@@ -222,11 +236,13 @@ void ObjectDetectionMarker::processToggleVisibility( const visualization_msgs::I
 		case MenuHandler::CHECKED:
 			menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
 			is_publishing = false;
+			updateInteractiveMarkerColor(0.2, 0.2, 0.2);
 			publish_timer.stop();
 			break;
 		case MenuHandler::UNCHECKED:
 			menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
 			is_publishing = true;
+			updateInteractiveMarkerColor(0.5, 0.8, 0.5);
 			publish_timer.start();
 			break;
 	}
@@ -268,6 +284,110 @@ void ObjectDetectionMarker::processClickNormalize( const visualization_msgs::Int
 	tf::quaternionTFToMsg(orien, detection.pose.orientation);
 	// set pose of marker
 	server->setPose(name, detection.pose);
+	server->applyChanges();
+}
+
+RandomObjectDetectionMarker::RandomObjectDetectionMarker(const std::string& _name, ros::Publisher& detection_publisher, std::shared_ptr<interactive_markers::InteractiveMarkerServer>& server, ros::NodeHandle& node_handle) : 
+	ObjectDetectionMarker(_name, detection_publisher, server, node_handle)
+{
+	// GET PARAMETERS
+	double period = 0.1;
+	node_handle.getParam("period", period);
+
+	// time lag
+	double max_time_lag = 0.0;
+	node_handle.getParam("max_time_lag", max_time_lag);
+	this->lag_dist = std::uniform_real_distribution<float>(0.0, max_time_lag);
+
+	// appear phase duration 
+	std::vector<double> interval;
+	if (!node_handle.getParam("appear_duration_interval", interval)) {
+		interval = { 0.5, 2.0 };
+	}
+	if (interval.size() != 2 || interval[0] < 0.0 || interval[1] < 0.0) {
+		ROS_ERROR("RandomObjectDetectionMarker: appear_duration_interval must be pair of nonegative float.");
+		exit(1);
+	}
+	this->appear_time_dist = std::uniform_real_distribution<float>(interval[0], interval[1]);
+
+	// vanish phase duration 
+	if (!node_handle.getParam("vanish_duration_interval", interval)) {
+		interval = { 0.25, 1.0 };
+	}
+	if (interval.size() != 2 || interval[0] < 0.0 || interval[1] < 0.0) {
+		ROS_ERROR("RandomObjectDetectionMarker: vanish_duration_interval must be pair of nonegative float.");
+		exit(1);
+	}
+	this->vanish_time_dist = std::uniform_real_distribution<float>(interval[0], interval[1]);
+	
+	// add menu entries
+	auto menu_entry_randomize = menu_handler.insert("Randomize visibility", boost::bind( &RandomObjectDetectionMarker::processToggleRandomize, this, _1 ));
+	menu_handler.setCheckState(menu_entry_randomize, MenuHandler::UNCHECKED);
+	menu_handler.reApply(*server);
+
+	// recreate Timer with new callback
+	publish_timer = node_handle.createTimer(ros::Duration(period), &RandomObjectDetectionMarker::publishCallback, this);
+	publish_timer.stop();
+	is_publishing = false;
+
+	// state
+	this->is_randomizing = false;
+	this->is_visible = true;
+	this->change_visibility_timestamp = ros::Time(0.0);
+
+	// rand genertors
+	std::random_device rd;
+	rand_gen = std::mt19937(rd());
+}
+
+void RandomObjectDetectionMarker::publishCallback(const ros::TimerEvent& ev)
+{
+	if (is_randomizing && change_visibility_timestamp < ev.current_real) {
+		// change state
+		change_visibility_timestamp = ev.current_real;
+		if (is_visible) {
+			// vanish marker detection
+			is_visible = false;
+			change_visibility_timestamp += ros::Duration( vanish_time_dist(rand_gen) );
+			updateInteractiveMarkerColor(0.8, 0.5, 0.5);
+		}
+		else {
+			// appear marker detection
+			is_visible = true;
+			change_visibility_timestamp += ros::Duration( appear_time_dist(rand_gen) );
+			updateInteractiveMarkerColor(0.5, 0.8, 0.5);
+		}
+	}
+	// publish marker if it is visible
+	if (is_visible) {
+		// update header and set new randomized timestamp if necessary
+		detection.header.stamp = ev.current_real;
+		if (is_randomizing) {
+			detection.header.stamp -= ros::Duration( lag_dist(rand_gen) );
+		}
+		// publish message
+		sweetie_bot_text_msgs::DetectionArray array;
+		array.detections.push_back(detection);
+		publisher.publish(array);
+	}
+}
+
+void RandomObjectDetectionMarker::processToggleRandomize( const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback ) {
+	MenuHandler::CheckState check;
+	menu_handler.getCheckState(feedback->menu_entry_id, check);
+	switch (check) {
+		case MenuHandler::CHECKED:
+			menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::UNCHECKED);
+			is_randomizing = false;
+			is_visible = true;
+			updateInteractiveMarkerColor(0.5, 0.8, 0.5);
+			break;
+		case MenuHandler::UNCHECKED:
+			menu_handler.setCheckState(feedback->menu_entry_id, MenuHandler::CHECKED);
+			is_randomizing = true;
+			break;
+	}
+	menu_handler.reApply(*server);
 	server->applyChanges();
 }
 
