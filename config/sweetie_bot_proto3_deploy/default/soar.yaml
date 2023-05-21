@@ -26,7 +26,7 @@ soar:
             head_frame: "head_link4"
             distance_bins_map: { names: [ "close", "near", "far" ], values: [ 0.3, 3.0] }
             yaw_bins_map: { names: [ "right", "center", "left" ], values: [ -0.52, 0.52] }
-            time_bins_map: { names: [ "now", "long-time" ], values: [ 2.0, 120.0] }
+            time_bins_map: { names: [ "now", "just", "recently", "long-time" ], values: [ 2.0, 10.0, 120.0] }
         body-pose:
             type: "pose_joints"
             topic: "joint_states"

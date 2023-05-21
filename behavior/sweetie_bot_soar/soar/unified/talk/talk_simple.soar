@@ -244,8 +244,8 @@ sp {talk-llm*propose*looking-at-speaker
 # finding-speaker if look-at-speaker failed
 sp {talk-llm*propose*searching-missing-speaker
 	(state <s> ^substate talk-llm ^beliefs.event <ev> ^object <obj>)
-	(<ev> ^name looking-at-speaker ^reason terminated ^status failed ^process <proc>)
-	(<proc> ^object <obj>)
+	(<obj> ^input-link <il>)
+	-(<il> ^visible {<<|now| |just|>>})
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name searching-missing-speaker ^substate flexbe ^process-args <a> ^interruptable hard)
@@ -265,7 +265,7 @@ sp {talk-llm*propose*seaching-missing-speaker-wait
 # more high level
 sp {talk-llm*propose*seaching-missing-speaker-found
 	(state <s> ^substate talk-llm ^searching-missing-speaker <proc> ^object.input-link.visible now ^io.output-link.flexbe <cmd>)
-	(<cmd> -^status ^process <proc>)
+	(<cmd> -^status -^abort ^process <proc>)
 -->
 	(<s> ^operator <op> +)
 	(<op> ^name searching-missing-speaker-abort ^type automatic cognition)
