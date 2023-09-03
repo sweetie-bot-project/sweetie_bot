@@ -1,7 +1,7 @@
 
 .common:
   stage: build
-  image: registry.gitlab.com/slavanap/ros-build/dev:$CI_JOB_NAME
+  image: registry.gitlab.com/slavanap/ros-build/master:$CI_JOB_NAME
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
     ROBOT: "false"
@@ -96,27 +96,15 @@
     when: always
 
 
-buster-amd64:
-  extends: .common
 focal-amd64:
   extends: .common
-
 focal-tinker:
-  extends: .common-robot
-  retry: 2
-buster-arm64v8:
   extends: .common-robot
   retry: 2
 focal-arm64v8:
   extends: .common-robot
   retry: 2
 
-buster-amd64-test:
-  extends: .common-test
-  dependencies:
-    - buster-amd64
-  variables:
-    IMAGE_SOURCE: debian:buster
 focal-amd64-test:
   extends: .common-test
   dependencies:
@@ -131,10 +119,8 @@ pages:
   stage: deploy
   image: ubuntu:bionic
   dependencies:
-    - buster-amd64
     - focal-amd64
     - focal-tinker
-    - buster-arm64v8
     - focal-arm64v8
   only:
     - master
@@ -153,13 +139,6 @@ pages:
     - |
       cat > conf/distributions <<EOF
       Origin: $CI_PROJECT_NAMESPACE.gitlab.io
-      Codename: buster
-      Architectures: armhf arm64 amd64
-      Components: main
-      Description: no description
-      SignWith: yes
-
-      Origin: $CI_PROJECT_NAMESPACE.gitlab.io
       Codename: focal
       Architectures: armhf arm64 amd64
       Components: main
@@ -168,7 +147,7 @@ pages:
       EOF
     - |
       shopt -s nullglob
-      for dist in buster focal; do
+      for dist in focal; do
         for f in $CI_PROJECT_DIR/*${dist}*.deb; do
           reprepro -S utils includedeb "$dist" "$f"
         done
