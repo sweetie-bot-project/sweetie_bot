@@ -274,6 +274,10 @@ class VoiceNode():
                     del speechd_params['type']
                     self._voice_profile[name] = TTSSpeechDispatcher(**speechd_params)
                 elif profile_type == 'coqui-ai':
+                    # Ensure we're running on CUDA machine
+                    import torch
+                    assert torch.cuda.is_available(), "CUDA is not availabe on this machine."
+
                     coqui_ai_params = profile_config.get('coqui_ai_params')
                     self._voice_profile[name] = TTSCoquiAi(coqui_ai_params, langs = langs)
                 else:
@@ -281,6 +285,8 @@ class VoiceNode():
             except GLib.Error as e:
                 rospy.logwarn("Profile '%s' initalization failed: %s" % (name, e.message))
             except ModuleNotFoundError as e:
+                rospy.logwarn("Profile '%s' initalization failed: %s" % (name, e))
+            except AssertionError as e:
                 rospy.logwarn("Profile '%s' initalization failed: %s" % (name, e))
 
         if len(self._voice_profile) == 0:
