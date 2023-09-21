@@ -256,7 +256,7 @@ void TrajectoryEditor::on_executeButton_clicked()
 	ui.statusLabel->setStyleSheet("font-weight: bold");
 
 	// TODO callback does not compile T_T
-	//client->sendGoal(joint_trajectory_data_.follow_joint_trajectory_goal_, boost::bind(&TrajectoryEditor::executeActionCallback, this, _1, _2));
+	//client->sendGoal(joint_trajectory_data_.follow_joint_trajectory_goal_, boost::bind(&TrajectoryEditor::executeActionCallback, this, boost::placeholders::_1, boost::placeholders::_2));
 	//, Client::SimpleActiveCallback(), Client::SimpleFeedbackCallback());
 }
 

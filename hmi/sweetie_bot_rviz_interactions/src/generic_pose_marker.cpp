@@ -14,7 +14,7 @@ GenericPoseMarker::GenericPoseMarker(std::shared_ptr<interactive_markers::Intera
   node_handle.getParam("select_only_one_resource", select_only_one_resource);
 
   makeMenu();
-  makeInteractiveMarker(makeMarkerBody, boost::bind( &GenericPoseMarker::processFeedback, this, _1 ));
+  makeInteractiveMarker(makeMarkerBody, boost::bind( &GenericPoseMarker::processFeedback, this, boost::placeholders::_1 ));
 
   server->applyChanges();
 }
@@ -44,7 +44,7 @@ void GenericPoseMarker::setOperational(bool is_operational)
 
 
     // send goal to server
-    action_client->sendGoal(goal, boost::bind( &GenericPoseMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &GenericPoseMarker::actionActiveCallback, this ));
+    action_client->sendGoal(goal, boost::bind( &GenericPoseMarker::actionDoneCallback, this, boost::placeholders::_1, boost::placeholders::_2 ), boost::bind( &GenericPoseMarker::actionActiveCallback, this ));
     // return true if goal is being processed
     GoalState state = action_client->getState();
     this->is_operational = !state.isDone();
@@ -197,7 +197,7 @@ void GenericPoseMarker::processFeedback( const visualization_msgs::InteractiveMa
 
 void GenericPoseMarker::makeMenu()
 {
-  MenuHandler::FeedbackCallback processFeedback = boost::bind( &GenericPoseMarker::processFeedback, this, _1 );
+  MenuHandler::FeedbackCallback processFeedback = boost::bind( &GenericPoseMarker::processFeedback, this, boost::placeholders::_1 );
 
   set_operational_entry = menu_handler.insert( "OPERATIONAL", processFeedback);
   menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
@@ -207,15 +207,15 @@ void GenericPoseMarker::makeMenu()
 		else menu_handler.setCheckState(handle, MenuHandler::UNCHECKED);
 		resources_entry_map.emplace(handle, res);
 	}
-  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &GenericPoseMarker::processNormalize, this, _1 ));
+  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &GenericPoseMarker::processNormalize, this, boost::placeholders::_1 ));
   publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback );
   menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
-  enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &GenericPoseMarker::processEnable6DOF, this, _1 ));
+  enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &GenericPoseMarker::processEnable6DOF, this, boost::placeholders::_1 ));
   menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::CHECKED);
   if (!frames.empty()) {
     frames_submenu_entry = menu_handler.insert("Move to frame");
     for ( const std::string& frame : frames ) {
-      menu_handler.insert(frames_submenu_entry, frame, boost::bind( &GenericPoseMarker::processMoveToFrame, this, _1 ));
+      menu_handler.insert(frames_submenu_entry, frame, boost::bind( &GenericPoseMarker::processMoveToFrame, this, boost::placeholders::_1 ));
     }
   }
 

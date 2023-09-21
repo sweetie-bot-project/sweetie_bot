@@ -70,7 +70,7 @@ ObjectDetectionMarker::ObjectDetectionMarker(const std::string& _name, ros::Publ
 	makeMenu();	
 
 	// add marker to server
-	server->insert(int_marker, boost::bind( &ObjectDetectionMarker::processFeedback, this, _1 ));
+	server->insert(int_marker, boost::bind( &ObjectDetectionMarker::processFeedback, this, boost::placeholders::_1 ));
 	menu_handler.apply( *server, int_marker.name );
 
 	server->applyChanges();
@@ -165,7 +165,7 @@ void ObjectDetectionMarker::updateInteractiveMarker()
 	server->get(name, int_marker);
 	int_marker.description = "label: " + detection.label + " type: " + detection.type + " id: " + std::to_string(detection.id);
 	server->erase(name);
-	server->insert(int_marker, boost::bind( &ObjectDetectionMarker::processFeedback, this, _1 ), visualization_msgs::InteractiveMarkerFeedback::POSE_UPDATE);
+	server->insert(int_marker, boost::bind( &ObjectDetectionMarker::processFeedback, this, boost::placeholders::_1 ), visualization_msgs::InteractiveMarkerFeedback::POSE_UPDATE);
 	menu_handler.apply( *server, int_marker.name );
 	server->applyChanges();
 }
@@ -179,7 +179,7 @@ void ObjectDetectionMarker::updateInteractiveMarkerColor(float r, float g, float
 	int_marker.controls[0].markers[0].color.g = g;
 	int_marker.controls[0].markers[0].color.b = b;
 	server->erase(name);
-	server->insert(int_marker, boost::bind( &ObjectDetectionMarker::processFeedback, this, _1 ), visualization_msgs::InteractiveMarkerFeedback::POSE_UPDATE);
+	server->insert(int_marker, boost::bind( &ObjectDetectionMarker::processFeedback, this, boost::placeholders::_1 ), visualization_msgs::InteractiveMarkerFeedback::POSE_UPDATE);
 	server->applyChanges();
 }
 
@@ -187,26 +187,26 @@ void ObjectDetectionMarker::updateInteractiveMarkerColor(float r, float g, float
 void ObjectDetectionMarker::makeMenu()
 {
 	// visibility trigger
-	auto menu_entry_visible = menu_handler.insert("VISIBLE", boost::bind( &ObjectDetectionMarker::processToggleVisibility, this, _1 ));
+	auto menu_entry_visible = menu_handler.insert("VISIBLE", boost::bind( &ObjectDetectionMarker::processToggleVisibility, this, boost::placeholders::_1 ));
 	menu_handler.setCheckState(menu_entry_visible, is_publishing ? MenuHandler::CHECKED : MenuHandler::UNCHECKED);
 	// list of labels
 	if (!labels.empty()) {
 		auto labels_submenu_entry = menu_handler.insert("label");
 		for ( const std::string& label : labels ) {
-			menu_handler.insert(labels_submenu_entry, label, boost::bind( &ObjectDetectionMarker::processChangeLabel, this, _1 ));
+			menu_handler.insert(labels_submenu_entry, label, boost::bind( &ObjectDetectionMarker::processChangeLabel, this, boost::placeholders::_1 ));
 		}
 	}
 	// list of types
 	if (!types.empty()) {
 		auto types_submenu_entry = menu_handler.insert("types");
 		for ( const std::string& type : types ) {
-			menu_handler.insert(types_submenu_entry, type, boost::bind( &ObjectDetectionMarker::processChangeType, this, _1 ));
+			menu_handler.insert(types_submenu_entry, type, boost::bind( &ObjectDetectionMarker::processChangeType, this, boost::placeholders::_1 ));
 		}
 	}
 	// new id
-	menu_handler.insert("New id", boost::bind( &ObjectDetectionMarker::processClickNewId, this, _1 ));
+	menu_handler.insert("New id", boost::bind( &ObjectDetectionMarker::processClickNewId, this, boost::placeholders::_1 ));
 	// to nominal
-	menu_handler.insert("Normalize", boost::bind( &ObjectDetectionMarker::processClickNormalize, this, _1 ));
+	menu_handler.insert("Normalize", boost::bind( &ObjectDetectionMarker::processClickNormalize, this, boost::placeholders::_1 ));
 }
 
 void ObjectDetectionMarker::publishCallback(const ros::TimerEvent&)
@@ -321,7 +321,7 @@ RandomObjectDetectionMarker::RandomObjectDetectionMarker(const std::string& _nam
 	this->vanish_time_dist = std::uniform_real_distribution<float>(interval[0], interval[1]);
 	
 	// add menu entries
-	auto menu_entry_randomize = menu_handler.insert("Randomize visibility", boost::bind( &RandomObjectDetectionMarker::processToggleRandomize, this, _1 ));
+	auto menu_entry_randomize = menu_handler.insert("Randomize visibility", boost::bind( &RandomObjectDetectionMarker::processToggleRandomize, this, boost::placeholders::_1 ));
 	menu_handler.setCheckState(menu_entry_randomize, MenuHandler::UNCHECKED);
 	menu_handler.reApply(*server);
 

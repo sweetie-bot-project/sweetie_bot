@@ -1,6 +1,6 @@
 #include "stance_pose_marker.hpp"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 namespace sweetie_bot {
 namespace hmi {
@@ -11,7 +11,7 @@ StancePoseMarker::StancePoseMarker(std::shared_ptr<interactive_markers::Interact
     action_client( new ActionClient("stance_set_operational_action", false) )
 {
   makeMenu();
-  makeInteractiveMarker(makeCubeBody, boost::bind( &StancePoseMarker::processFeedback, this, _1 ));
+  makeInteractiveMarker(makeCubeBody, boost::bind( &StancePoseMarker::processFeedback, this, boost::placeholders::_1 ));
 
   // Add legs markers
   std::vector<std::unique_ptr<LimbPoseMarker>> leg_markers;
@@ -142,7 +142,7 @@ void StancePoseMarker::setOperational(bool is_operational)
     }
 
     // send goal to server
-    action_client->sendGoal(goal, boost::bind( &StancePoseMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &StancePoseMarker::actionActiveCallback, this ));
+    action_client->sendGoal(goal, boost::bind( &StancePoseMarker::actionDoneCallback, this, boost::placeholders::_1, boost::placeholders::_2 ), boost::bind( &StancePoseMarker::actionActiveCallback, this ));
     // return true if goal is being processed
     GoalState state = action_client->getState();
     this->is_operational = !state.isDone();
@@ -339,7 +339,7 @@ void StancePoseMarker::processMoveAllToHome( const visualization_msgs::Interacti
 
 void StancePoseMarker::makeMenu()
 {
-  MenuHandler::FeedbackCallback processFeedback = boost::bind( &StancePoseMarker::processFeedback, this, _1 );
+  MenuHandler::FeedbackCallback processFeedback = boost::bind( &StancePoseMarker::processFeedback, this, boost::placeholders::_1 );
 
   set_operational_entry = menu_handler.insert( "OPERATIONAL", processFeedback);
   menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
@@ -376,14 +376,14 @@ void StancePoseMarker::makeMenu()
     resources_entry_map.emplace(handle, limb_marker->getResourceName());
   }
 
-  normalize_pose_entry = menu_handler.insert( "Move all to home", boost::bind( &StancePoseMarker::processMoveAllToHome, this, _1 ));
-  // normalize_pose_entry = menu_handler.insert( "Normalize legs", boost::bind( &StancePoseMarker::processNormalizeLegs, this, _1 ));
-  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &StancePoseMarker::processNormalize, this, _1 ));
+  normalize_pose_entry = menu_handler.insert( "Move all to home", boost::bind( &StancePoseMarker::processMoveAllToHome, this, boost::placeholders::_1 ));
+  // normalize_pose_entry = menu_handler.insert( "Normalize legs", boost::bind( &StancePoseMarker::processNormalizeLegs, this, boost::placeholders::_1 ));
+  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &StancePoseMarker::processNormalize, this, boost::placeholders::_1 ));
   publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback );
   menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
-  enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &StancePoseMarker::processEnable6DOF, this, _1 ));
+  enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &StancePoseMarker::processEnable6DOF, this, boost::placeholders::_1 ));
   menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::CHECKED);
-  menu_handler.insert("Move to home frame", boost::bind( &StancePoseMarker::processMoveToHomeFrame, this, _1 ));
+  menu_handler.insert("Move to home frame", boost::bind( &StancePoseMarker::processMoveToHomeFrame, this, boost::placeholders::_1 ));
 
   menu_handler.reApply(*server);
   server->applyChanges();

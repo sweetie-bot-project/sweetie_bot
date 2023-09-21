@@ -1,6 +1,6 @@
 #include "limb_pose_marker.hpp"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 namespace sweetie_bot {
 namespace hmi {
@@ -71,7 +71,7 @@ LimbPoseMarker::~LimbPoseMarker()
 
 void LimbPoseMarker::init(MakeMarkerBodyFuncPtr makeMarkerBody) {
   makeMenu();
-  makeInteractiveMarker(makeMarkerBody, boost::bind( &LimbPoseMarker::processFeedback, this, _1 ));
+  makeInteractiveMarker(makeMarkerBody, boost::bind( &LimbPoseMarker::processFeedback, this, boost::placeholders::_1 ));
 
   server->applyChanges();
 
@@ -135,7 +135,7 @@ void LimbPoseMarker::setOperational(bool is_operational)
     goal.resources.push_back(resource_name);
 
     // send goal to server
-    action_client->sendGoal(goal, boost::bind( &LimbPoseMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &LimbPoseMarker::actionActiveCallback, this ));
+    action_client->sendGoal(goal, boost::bind( &LimbPoseMarker::actionDoneCallback, this, boost::placeholders::_1, boost::placeholders::_2 ), boost::bind( &LimbPoseMarker::actionActiveCallback, this ));
     // return true if goal is being processed
     GoalState state = action_client->getState();
     this->is_operational = !state.isDone();
@@ -253,16 +253,16 @@ void LimbPoseMarker::processFeedback( const visualization_msgs::InteractiveMarke
 
 void LimbPoseMarker::makeMenu()
 {
-  MenuHandler::FeedbackCallback processFeedback = boost::bind( &LimbPoseMarker::processFeedback, this, _1 );
+  MenuHandler::FeedbackCallback processFeedback = boost::bind( &LimbPoseMarker::processFeedback, this, boost::placeholders::_1 );
 
   set_operational_entry = menu_handler.insert( "Keep activated", processFeedback );
   menu_handler.setCheckState(set_operational_entry, MenuHandler::UNCHECKED);
   publish_pose_entry = menu_handler.insert( "Publish pose", processFeedback );
   menu_handler.setCheckState(publish_pose_entry, MenuHandler::CHECKED);
-  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &LimbPoseMarker::processNormalize, this, _1 ));
-  enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &LimbPoseMarker::processEnable6DOF, this, _1 ));
+  normalize_pose_entry = menu_handler.insert( "Normalize pose", boost::bind( &LimbPoseMarker::processNormalize, this, boost::placeholders::_1 ));
+  enable_6DOF_entry = menu_handler.insert( "Enable 6-DOF", boost::bind( &LimbPoseMarker::processEnable6DOF, this, boost::placeholders::_1 ));
   menu_handler.setCheckState(enable_6DOF_entry, MenuHandler::CHECKED);
-  menu_handler.insert("Move to home frame", boost::bind( &LimbPoseMarker::processMoveToHomeFrame, this, _1 ));
+  menu_handler.insert("Move to home frame", boost::bind( &LimbPoseMarker::processMoveToHomeFrame, this, boost::placeholders::_1 ));
 
   menu_handler.reApply(*server);
   server->applyChanges();
