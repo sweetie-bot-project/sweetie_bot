@@ -83,7 +83,7 @@ sp {talk-llm*elborate*lang-from-last-event
 sp {talk-llm*elborate*default-lang
 	(state <s> ^substate talk-llm -^lang-source event)
 -->
-	(<s> ^lang en ^lang-source default)
+	(<s> ^lang ru ^lang-source default)
 }
 
 #
@@ -115,7 +115,7 @@ sp {talk-llm*propose*greetin
 	(<s> ^operator <op> +, =)
 	(<op> ^name greeting ^substate verbolize ^process-args <proc>)
 	(<proc> ^object <obj> ^topic greet ^result <res-succeed>)
-	(<proc> ^text |Hello! I am Sweetie Bot!| ^animation-tag greeting ^lang <lang> ^emotion neutral ^type statement)
+	(<proc> ^text |Hello! I am Sweetie Bot! Speak while the button is pressed.| ^animation-tag greeting ^lang <lang> ^emotion neutral ^type statement)
 	(<res-succeed> ^print (concat |SPECIFIC: GREETING| (crlf)))
 }
 
@@ -212,7 +212,7 @@ sp {talk-llm*propose*say-missing-answer
 -->
  	(<s> ^operator <op> +, =)
 	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
-	(<args> ^object <obj> ^topic goodbye ^text |Speaker is missing.| ^animation-tag sad ^lang <lang> ^emotion sad ^type statement)
+	(<args> ^object <obj> ^topic goodbye ^text |Interlocutor is missing.| ^animation-tag sad ^lang <lang> ^emotion sad ^type statement)
 	(<args> ^result <res>)
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE ON IGNORANCE.| (crlf)))
 }
