@@ -1,7 +1,7 @@
 #include "destination_marker.hpp"
 
 #include <ros/ros.h>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <sstream>
 #include <math.h>
 #include <stdlib.h>
@@ -235,7 +235,7 @@ void DestinationMarker::invokeClopGenerator(const geometry_msgs::Pose& base_goal
   }
 
   goal.header.stamp = ros::Time::now();
-  action_client->sendGoal(goal, boost::bind( &DestinationMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &DestinationMarker::actionActiveCallback, this ));
+  action_client->sendGoal(goal, boost::bind( &DestinationMarker::actionDoneCallback, this, boost::placeholders::_1, boost::placeholders::_2 ), boost::bind( &DestinationMarker::actionActiveCallback, this ));
 }
 
 void DestinationMarker::toNominal()
@@ -269,7 +269,7 @@ void DestinationMarker::toNominal()
   }
 
   goal.header.stamp = ros::Time::now();
-  action_client->sendGoal(goal, boost::bind( &DestinationMarker::actionDoneCallback, this, _1, _2 ), boost::bind( &DestinationMarker::actionActiveCallback, this ));
+  action_client->sendGoal(goal, boost::bind( &DestinationMarker::actionDoneCallback, this, boost::placeholders::_1, boost::placeholders::_2 ), boost::bind( &DestinationMarker::actionActiveCallback, this ));
 }
 
 Marker DestinationMarker::makePointMarker()
@@ -533,14 +533,14 @@ void DestinationMarker::processStepsNum( const visualization_msgs::InteractiveMa
 
 void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_options, const std::vector<unsigned>& n_steps_options)
 {
-  MenuHandler::FeedbackCallback processFeedback = boost::bind( &DestinationMarker::processFeedback, this, _1 );
+  MenuHandler::FeedbackCallback processFeedback = boost::bind( &DestinationMarker::processFeedback, this, boost::placeholders::_1 );
 
   if (!gait_type_options.empty() || !n_steps_options.empty()) {
     start_motion_entry = menu_handler.insert("Walk to the target", processFeedback);
     repeat_last_motion_entry = menu_handler.insert("Repeat last motion", processFeedback);
     to_nominal_entry = menu_handler.insert("Legs to nominal positions", processFeedback);
     MenuHandler::EntryHandle gait_type_entry = menu_handler.insert("Gait type");
-    MenuHandler::FeedbackCallback processGaitType = boost::bind( &DestinationMarker::processGaitType, this, _1 );
+    MenuHandler::FeedbackCallback processGaitType = boost::bind( &DestinationMarker::processGaitType, this, boost::placeholders::_1 );
     for (auto& gait_type_option : gait_type_options) {
       MenuHandler::EntryHandle handle = menu_handler.insert(gait_type_entry, gait_type_option, processGaitType);
       if (gait_type_option == gait_type)
@@ -550,7 +550,7 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
       gait_type_submenu.emplace(handle, gait_type_option);
     }
     MenuHandler::EntryHandle n_steps_entry = menu_handler.insert("Steps number");
-    MenuHandler::FeedbackCallback processStepsNum = boost::bind( &DestinationMarker::processStepsNum, this, _1 );
+    MenuHandler::FeedbackCallback processStepsNum = boost::bind( &DestinationMarker::processStepsNum, this, boost::placeholders::_1 );
     for (auto& n_steps_option : n_steps_options) {
       MenuHandler::EntryHandle handle = menu_handler.insert(n_steps_entry, std::to_string(n_steps_option), processStepsNum);
       if (n_steps_option == n_steps)

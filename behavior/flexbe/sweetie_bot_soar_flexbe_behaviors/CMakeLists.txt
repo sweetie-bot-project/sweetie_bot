@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 2.9)
 project(sweetie_bot_soar_flexbe_behaviors)
 
 find_package(catkin REQUIRED)

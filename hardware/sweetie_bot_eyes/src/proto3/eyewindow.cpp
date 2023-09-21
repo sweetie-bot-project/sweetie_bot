@@ -2,6 +2,7 @@
 #include "qmath.h"
 #include <QPainter>
 #include <QKeyEvent>
+#include <QRandomGenerator>
 #include <QApplication>
 
 // Convertion proportions for new eye resolution
@@ -189,7 +190,7 @@ void EyeWindow::PublishImage()
     img.encoding = "rgba8";
     img.step = image.bytesPerLine();
     //ROS_INFO("format=%d bytesPerLine=%d", int(image.format()), image.bytesPerLine());
-    img.data = std::vector<unsigned char>(image.bits(), image.bits() + image.byteCount());
+    img.data = std::vector<unsigned char>(image.bits(), image.bits() + image.sizeInBytes());
     pub_eye_image_.publish(img);
 }
 
@@ -429,29 +430,31 @@ void EyeWindow::keyPressEvent(QKeyEvent *e) {
 }
 
 void EyeWindow::computeRandomMove() {
-    int ms = qrand()%301 + 100;                                   //from 100 to 400
+	QRandomGenerator * rand = QRandomGenerator::global();
+
+    int ms = rand->bounded(100, 401);                                   //from 100 to 400
 
     EyeState randomState;
-    randomState.center            = QPointF(qrand()%200 + 300,    //from 300 to 500
-                                            qrand()%400 + 200);   //from 200 to 600
+    randomState.center            = QPointF(rand->bounded(300, 501),    //from 300 to 500
+                                            rand->bounded(200, 601));   //from 200 to 600
 
-    randomState.angle             = qrand()%41 - 20;              //from -20 to 20
-    randomState.radius            = qrand()%201 + 90;             //from 90 to 290
-    randomState.radiusRatio       = (qrand()%51 + 50) / 100.0;    //from 0.5 to 1
+    randomState.angle             = rand->bounded(-20, 21);              //from -20 to 20
+    randomState.radius            = rand->bounded(90, 291);             //from 90 to 290
+    randomState.radiusRatio       = rand->bounded(0.5) + 0.5;           //from 0.5 to 1
 
-    randomState.eyeColor          = QColor(qrand()%256,           // from 0 to 255
-                                           qrand()%256,           // from 0 to 255
-                                           qrand()%256);          // from 0 to 255
+    randomState.eyeColor          = QColor(rand->bounded(256),           // from 0 to 255
+                                           rand->bounded(256),           // from 0 to 255
+                                           rand->bounded(256));          // from 0 to 255
 
-    randomState.pupilRadius       = (qrand()%61 + 20) / 100.0;    //from 0.2 to 0.8
-    randomState.pupilAngle        = qrand()%360;                  //from 0   to 359
+    randomState.pupilRadius       = rand->bounded(0.6) + 0.2;    //from 0.2 to 0.8
+    randomState.pupilAngle        = rand->bounded(360);                  //from 0   to 359
 
-    randomState.topEyelidY        = qrand()%101 + 100;            //from 100 to 200
-    randomState.topEyelidAngle    = qrand()%21 - 10;              //from -10 to 10
-    randomState.bottomEyelidY     = qrand()%101 + 630;            //from 630 to 730 
-    randomState.bottomEyelidAngle = qrand()%21 - 10;              //from -10 to 10
+    randomState.topEyelidY        = rand->bounded(100, 201);            //from 100 to 200
+    randomState.topEyelidAngle    = rand->bounded(-10, 11);              //from -10 to 10
+    randomState.bottomEyelidY     = rand->bounded(630, 731);            //from 630 to 730 
+    randomState.bottomEyelidAngle = rand->bounded(-10, 11);              //from -10 to 10
 
-    m_isMoveWithBlink = qrand()%2;
+    m_isMoveWithBlink = rand->generate() % 2;
 
     move((MoveFlags)(PupilSize | PupilRotation | TopEyelidHeight | TopEyelidRotation | BottomEyelidHeight | BottomEyelidRotation), ms, randomState);
 

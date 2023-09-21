@@ -1,7 +1,9 @@
 #include "mainwindow.h"
 #include "qmath.h"
 #include <QPainter>
+#include <QPainterPath>
 #include <QKeyEvent>
+#include <QRandomGenerator>
 
 #include "consts.h"
 
@@ -128,7 +130,7 @@ void MainWindow::PublishImage()
     img.encoding = "rgba8";
     img.step = image.bytesPerLine();
     //ROS_INFO("format=%d bytesPerLine=%d", int(image.format()), image.bytesPerLine());
-    img.data = std::vector<unsigned char>(image.bits(), image.bits() + image.byteCount());
+    img.data = std::vector<unsigned char>(image.bits(), image.bits() + image.sizeInBytes());
     pub_eye_image_.publish(img);
 }
 
@@ -399,21 +401,23 @@ void MainWindow::keyPressEvent(QKeyEvent *e) {
 }
 
 void MainWindow::computeMove() {
-    int ms = qrand()%301 + 100;                       //from 100 to 400
-    float eyeToX = qrand()%161 + 80;                  //from 80  to 240
-    float eyeToY = qrand()%81 + 100;                  //from 100 to 180
-    float eyeRotation = qrand()%41 - 20;              //from -20 to 20
-    float eyeRadius = (qrand()%51 + 100);             //from 100 to 150
-    float eyeScale = (qrand()%51 + 50) / 100.0;       //from 0.5 to 1
-    int eyeColorR = qrand()%256;                      //from 0   to 255
-    int eyeColorG = qrand()%256;                      //from 0   to 255
-    int eyeColorB = qrand()%256;                      //from 0   to 255
-    float pupilRelSize = (qrand()%61 + 20) / 100.0;   //from 0.2 to 0.8
-    float pupilRotation = qrand()%360;                //from 0   to 359
-    float eyelidHeight = qrand()%101;                 //from 0   to 100
-    float eyelidRotation = qrand()%61 - 30;           //from -30 to 30
+	QRandomGenerator * rand = QRandomGenerator::global();
 
-    m_isMoveWithBlink = qrand()%2;
+    int ms = rand->bounded(100, 401);                       //from 100 to 400
+    float eyeToX = rand->bounded(80, 240);                  //from 80  to 240
+    float eyeToY = rand->bounded(100, 181);                 //from 100 to 180
+    float eyeRotation = rand->bounded(-20, 21);             //from -20 to 20
+    float eyeRadius = rand->bounded(100, 151);             //from 100 to 150
+    float eyeScale = rand->bounded(0.5) + 0.5;              //from 0.5 to 1
+    int eyeColorR = rand->bounded(256);                     //from 0   to 255
+    int eyeColorG = rand->bounded(256);                     //from 0   to 255
+    int eyeColorB = rand->bounded(256);                     //from 0   to 255
+    float pupilRelSize = rand->bounded(0.6) + 0.2;          //from 0.2 to 0.8
+    float pupilRotation = rand->bounded(360);               //from 0   to 359
+    float eyelidHeight = rand->bounded(101);                //from 0   to 100
+    float eyelidRotation = rand->bounded(-30, 31);          //from -30 to 30
+
+    m_isMoveWithBlink = rand->generate() % 2;
 
     move((MoveFlags)1, ms,
          eyeToX, eyeToY, eyeRotation, eyeRadius, eyeScale,

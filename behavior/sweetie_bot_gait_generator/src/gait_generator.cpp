@@ -17,6 +17,8 @@
 #include <tf_conversions/tf_kdl.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+#include <orocos/sweetie_bot_orocos_misc/stream_operators.hpp>
+
 #include <towr/nlp_formulation.h>
 #include <towr/nlp_formulation_planar.h>
 #include <towr/nlp_formulation_zmp_planar.h>
@@ -28,19 +30,6 @@ using XmlRpc::XmlRpcValue;
 using XmlRpc::XmlRpcException;
 using Eigen::Vector3d;
 using namespace towr;
-
-std::ostream& operator<<(std::ostream& out, const std::vector<int>& v) {
-	for(auto it = v.begin(); it != v.end(); it++) out << *it << " ";
-	return out;
-}
-std::ostream& operator<<(std::ostream& out, const std::vector<unsigned int>& v) {
-	for(auto it = v.begin(); it != v.end(); it++) out << *it << " ";
-	return out;
-}
-std::ostream& operator<<(std::ostream& out, const std::vector<double>& v) {
-	for(auto it = v.begin(); it != v.end(); it++) out << *it << " ";
-	return out;
-}
 
 std::ostream& operator<<(std::ostream& out, const Eigen::AlignedBox3d& box) {
 	out << "min: (" << box.min().transpose() << "), max: (" << box.max().transpose() << ")";
@@ -138,9 +127,9 @@ ClopGenerator::ClopGenerator(const std::string& name)
 	tf_listener.reset( new tf2_ros::TransformListener(tf_buffer) );
 	// action server
 	// TODO implement goal rejection
-	move_base_as.reset( new actionlib::SimpleActionServer<MoveBaseAction>(node_handler, name, boost::bind(&ClopGenerator::callbackExecuteMoveBase, this, _1), false) );
+	move_base_as.reset( new actionlib::SimpleActionServer<MoveBaseAction>(node_handler, name, boost::bind(&ClopGenerator::callbackExecuteMoveBase, this, boost::placeholders::_1), false) );
 	//move_base_as.reset( new actionlib::ActionServer<MoveBaseAction>(node_handler, name) );
-	//move_base_as.registerGoalCallback( boost::bind(&ClopGenerator::MoveBaseGoalCallback, this, _1) );
+	//move_base_as.registerGoalCallback( boost::bind(&ClopGenerator::MoveBaseGoalCallback, this, boost::placeholders::_1) );
 	// action client
 	execute_step_sequence_ac.reset( new actionlib::SimpleActionClient<FollowStepSequenceAction>(node_handler, "step_sequence", false) );
 
