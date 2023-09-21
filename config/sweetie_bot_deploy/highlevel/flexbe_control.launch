@@ -63,12 +63,12 @@
 			</node>
 			<!-- voice node  -->
 			<env name="LD_PRELOAD" value="/usr/lib/x86_64-linux-gnu/libffi.so.7" />
-			<node pkg="sweetie_bot_voice" type="voice" name="voice">
+			<node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
 				<remap from="control" to="$(arg robot_ns)/control" />
 			</node>
 			<group  if="$(arg run_nlp)">
 				<!-- microphone node -->
-				<node pkg="sweetie_bot_mic" type="respeaker" name="microphone" >
+				<node pkg="sweetie_bot_mic" type="respeaker" name="microphone" output="screen">
 					<remap from="sound_event" to="$(arg robot_ns)/sound_event" />
 					<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
 				</node>
