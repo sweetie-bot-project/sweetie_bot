@@ -164,11 +164,11 @@ class SpatialWorldModel:
                         except tf.ExtrapolationException:
                             pass
                         # transform using most recent transform
-                        pose_stamped.header.stamp = rospy.Time()
+                        pose_stamped.header.stamp = rospy.Time(0) # TODO: wait for transform
                         pose_stamped = self._tf_listener.transformPose(self._world_frame, pose_stamped)
                         break
                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
-                    Logger.logwarn('SWM: unable to transform detection (%s, %s) from %s to %s: %s' % (detection_msg.label, detection_msg.type, pose_stamped.header.frame_id, self._world_frame, e))
+                    rospy.logwarn('SWM: unable to transform detection (%s, %s) from %s to %s: %s' % (detection_msg.label, detection_msg.type, pose_stamped.header.frame_id, self._world_frame, e))
                     continue
 
                 # search detected object in index
