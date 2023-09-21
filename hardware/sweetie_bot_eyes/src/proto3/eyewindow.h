@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QPainter>
+#include <QPainterPath>
 #include <QTimer>
 #include <QOpenGLWidget>
 #include <QOpenGLFramebufferObject>
