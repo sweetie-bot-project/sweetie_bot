@@ -5,7 +5,7 @@ voice:
     voice_profile:
         coqui-ai:
             type: 'coqui-ai'
-            langs: [ 'en', 'ja' ]
+            langs: [] # [ 'en', 'ja' ]
             coqui_ai_params:
                 languages:
                     en:
@@ -28,6 +28,10 @@ voice:
                     ruslan:
                         model_path: 'tts_models/ru/ruslan/tacotron2-DDC.pth'
                         config_path: 'tts_models/ru/ruslan/tacotron2-DDC.json'
+                    freevc24:
+                        model_name: 'voice_conversion_models/multilingual/vctk/freevc24'
+                        progress_bar: false
+                        gpu: true
         rhvoice:
             type: 'rhvoice'
             langs: [ 'ru' ]
