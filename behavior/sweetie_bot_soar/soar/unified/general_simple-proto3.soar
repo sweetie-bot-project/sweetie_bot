@@ -26,8 +26,8 @@ sp {movement*propose*rand*head*movements
 	(state <s> ^name movement ^substate general -^moving-head)
 -->
 	(<s> ^operator <op> +, =)
-   	(<op> ^name moving-head ^substate flexbe ^process-args <a> ^interruptable hard)
-   	(<a> ^behavior ExecuteRandHeadMovements ^timeout (+ 5 (rand-int 15))) 
+	(<op> ^name moving-head ^substate flexbe ^process-args <a> ^interruptable hard)
+	(<a> ^behavior ExecuteRandHeadMovements ^timeout (+ 10 (rand-int 20)))
 }
 
 # wait 
