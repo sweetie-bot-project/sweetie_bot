@@ -163,7 +163,6 @@ sp {talk-llm*elaborate*verbolize-llm-related-predicates
 #
 # DETERMINISTTIC REACTIONS
 #
-
 # prefer deterministic reactions
 sp {talk-llm*prefer*specific-over-general
 	(state <s> ^substate talk-llm ^operator <op1> + ^operator <op2> +)
@@ -173,8 +172,11 @@ sp {talk-llm*prefer*specific-over-general
 	(<s> ^operator <op1> > <op2>)
 }
 
+# STANDATRT REACTIONS
+
+# say goodbye and end dialog if speaker has said goodbye
 sp {talk-llm*propose*goodbye
-	(state <s> ^substate talk-llm ^looking-at ^most-recent-event <ev> -^answering ^lang <lang> ^object <obj> ^process <proc>)
+	(state <s> ^substate talk-llm ^looking-at -^answering ^most-recent-event <ev> ^lang <lang> ^object <obj> ^process <proc>)
 	(<ev> ^name talk-heard ^token goodbye)
 -->
  	(<s> ^operator <op> +, =)
@@ -184,6 +186,7 @@ sp {talk-llm*propose*goodbye
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE| (crlf)))
 }
 
+# if LLM is broken end dialog
 sp {talk-llm*propose*failsafe-answer
 	(state <s> ^substate talk-llm -^answering ^beliefs.event <ev> ^lang <lang> ^object <obj> ^process <proc>)
 	(<ev> ^name {<<|general-answering-pause| |general-answering-event|>>} ^reason terminated ^status failed ^process.object <obj>)
@@ -195,6 +198,7 @@ sp {talk-llm*propose*failsafe-answer
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE TO CLEAN BRAIN.| (crlf)))
 }
 
+# ignorance reaction
 sp {talk-llm*propose*ignor-me-answer
 	(state <s> ^substate talk-llm ^looking-at -^answering ^beliefs.predicate <pred> ^lang <lang> ^object <obj> ^process <proc> ^time.just <time>)
 	(<pred> ^name ignors-me ^actor <obj> ^initiated-at {> <time>})
@@ -206,6 +210,7 @@ sp {talk-llm*propose*ignor-me-answer
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE ON IGNORANCE.| (crlf)))
 }
 
+# missing speaker reaction
 sp {talk-llm*propose*say-missing-answer
 	(state <s> ^substate talk-llm -^answering ^beliefs.predicate <pred> ^lang <lang> ^object <obj> ^process <proc>)
 	(<pred> ^name is-missing ^object <obj> ^initiated-at {> <time>})
@@ -217,12 +222,32 @@ sp {talk-llm*propose*say-missing-answer
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE ON IGNORANCE.| (crlf)))
 }
 
-sp {talk-llm*propose*specific-answering-continue
-	(state <s> ^substate talk-llm ^specific-answering <proc>)
+# EXTRA REACTIONS
+
+# brohoof
+sp {talk-llm*propose*brohoof
+	(state <s> ^substate talk-llm ^looking-at -^answering ^most-recent-event <ev> ^lang <lang> ^object <obj> ^process <proc>)
+	(<ev> ^name talk-heard ^token hoof give)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name specific-answering ^substate verbolize ^process-link <proc>)
+	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic greeting ^text |Good!| ^animation-tag brohoof ^lang <lang> ^emotion happy ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: BROHOOF.| (crlf)))
 }
+
+# dance
+sp {talk-llm*propose*dance
+	(state <s> ^substate talk-llm ^looking-at -^answering ^most-recent-event <ev> ^lang <lang> ^object <obj> ^process <proc>)
+	(<ev> ^name talk-heard ^token dance please)
+-->
+ 	(<s> ^operator <op> +, =)
+	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic greeting ^text |I am dancing!.. I am dancing!.. I am dancing!.. I am dancing!..| ^animation-tag dance ^lang <lang> ^emotion happy ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: DANCE.| (crlf)))
+}
+
 
 #
 # look-at at lowest priority
