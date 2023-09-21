@@ -108,7 +108,7 @@ sp {talk-llm*propose*answering-continue
 #
 # perform greeting if no talk event happened before
 #
-sp {talk-llm*propose*greeting
+sp {talk-llm*propose*greetin
 	(state <s> ^substate talk-llm ^looking-at -^answering ^recent-events <ev-pool> ^lang <lang> ^object <obj>)
 	(<ev-pool> -^event)
 -->
@@ -211,17 +211,17 @@ sp {talk-llm*propose*say-missing-answer
 	(<pred> ^name is-missing ^object <obj> ^initiated-at {> <time>})
 -->
  	(<s> ^operator <op> +, =)
-	(<op> ^name saying-speaker-is-missing ^substate verbolize ^process-args <args>)
+	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
 	(<args> ^object <obj> ^topic goodbye ^text |Speaker is missing.| ^animation-tag sad ^lang <lang> ^emotion sad ^type statement)
 	(<args> ^result <res>)
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE ON IGNORANCE.| (crlf)))
 }
 
-sp {talk-llm*propose*saying-missing
-	(state <s> ^substate talk-llm ^saying-speaker-is-missing <proc>)
+sp {talk-llm*propose*specific-answering-continue
+	(state <s> ^substate talk-llm ^specific-answering <proc>)
 -->
- 	(<s> ^operator <op> +, =)
-	(<op> ^name saying-speaker-is-missing ^substate verbolize ^process-link <proc>)
+	(<s> ^operator <op> +, =)
+	(<op> ^name specific-answering ^substate verbolize ^process-link <proc>)
 }
 
 #
@@ -288,6 +288,15 @@ sp {talk-llm*propose*missing-speaker-is-not-found
 	(<op> ^name speaker-is-missing ^type cognition automatic)
 	(<op> ^add-predicate <pred-new>)
 	(<pred-new> ^name is-missing ^object <obj> ^text |Human leaved abruply during previous conversation. Sweeie does not know why he did this.|)
+}
+
+sp {talk-llm*propose*speaker-is-missing-remove
+	(state <s> ^bottom-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name is-missing ^object.input-link.visible now)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name terminate-speaker-is-missing ^type cognition automatic)
+	(<op> ^remove-predicate <pred>)
 }
 
 #
@@ -398,7 +407,7 @@ sp {talk-llm*propose*add-talk-no-answer
 
 # detect ignorance
 sp {talk-llm*propose*add-ignor-me-questions
-	(state <s> ^bottom-state 1 ^beliefs <b> ^events <ev-pool>)
+	(state <s> ^bottom-state 1 ^beliefs <b> ^recent-events <ev-pool>)
 	(<b> ^event <ev1>)
 	(<ev1> ^name talk-ignored ^object <obj> ^initiated-at <t1>)
 	(<ev-pool> ^event {<> <ev1> <ev2>})
@@ -418,7 +427,7 @@ sp {talk-llm*propose*add-ignor-me-questions
 
 # detect ignorance
 sp {talk-llm*propose*add-ignor-statements
-	(state <s> ^bottom-state 1 ^beliefs <b> ^events <ev-pool>)
+	(state <s> ^bottom-state 1 ^beliefs <b> ^recent-events <ev-pool>)
 	(<b> ^event <ev1>)
 	(<ev1> ^name talk-no-answer ^object <obj> ^initiated-at <t1>)
 	(<ev-pool> ^event {<> <ev1> <ev2>} {<> <ev1> <ev2> <ev3>})
