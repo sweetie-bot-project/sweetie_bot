@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.2.8)
 # http://habrahabr.ru/post/181838/ 
 project(sweetie_bot_eyes)
 
-# enable C++11
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
 # Tell CMake to run moc when necessary:
 set(CMAKE_AUTOMOC ON)
 # As moc files are generated in the binary dir, tell CMake
