@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os, sys, copy
+import os, sys, copy, re
 import tempfile
 import rospy, actionlib, roslib, rospkg
 from threading import Event
@@ -255,6 +255,10 @@ class VoiceNode():
             rospy.logerr('Incorrect or missing "~voice_profiles" subtree')
             sys.exit(2)
 
+        # define gender hints for translator
+        self.voice_gender = rospy.get_param('~gender')
+        self.gender_translation_hints = rospy.get_param('~gender_translation_hints')
+
         # load voice profiles
         self._voice_profile = {}
         for name, profile_config in profiles_config.items():
@@ -341,7 +345,8 @@ class VoiceNode():
 
             # translate to source lang
             if self.enable_gtranslate and lang !='en':
-                cmd.command = self.translate_text(lang, cmd.command)
+                gender_hint = self.gender_translation_hints[self.voice_gender]
+                cmd.command = self.translate_text(lang, cmd.command, gender_hint)
 
             # find profile
             profile = None
@@ -359,7 +364,8 @@ class VoiceNode():
             self.pub.publish('mouth/speech', 'end', '')
         return ret
 
-    def translate_text(self, target, text):
+    @staticmethod
+    def translate_text(target, text, hint=''):
         """Translates text into the target language.
 
         Target must be an ISO 639-1 language code.
@@ -371,14 +377,25 @@ class VoiceNode():
             text = text.decode("utf-8")
 
         rospy.loginfo(u"Text: {}".format(text))
+        if hint:
+            text = u'{}: """{}"""'.format(hint, text)
+
         # Text can also be a sequence of strings, in which case this method
         # will return a sequence of results for each text.
         result = translate_client.translate(text, target_language=target)
+        translated_text = result["translatedText"]
 
-        rospy.loginfo(u"Translation: {}".format(result["translatedText"]))
+        # Extrat text from wrapped translation with hint
+        if hint:
+            column_pos = translated_text.find(':')
+            translated_text = translated_text[column_pos + 1:].lstrip()
+            translated_text = re.sub('&quot;', '', translated_text)
+            translated_text = translated_text.strip("«»\"' ")
+
+        rospy.loginfo(u"Translation: {}".format(translated_text))
         rospy.loginfo(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
 
-        return result["translatedText"]
+        return translated_text
 
     def command_cb(self, cmd):
         # execute command 

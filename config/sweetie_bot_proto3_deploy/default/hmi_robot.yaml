@@ -1,5 +1,10 @@
 voice:
     lang: 'ru,en,ja'
+    gender: 'female'
+    gender_translation_hints:
+        'female': 'She said'
+        'male': 'He said'
+        'unknown': 'They said'
     sound_packages: [ sweetie_bot_sounds, sweetie_bot_sounds_quest_become_pony ]
     ladspa_path: ~/.ladspa/
     voice_profile:
@@ -36,17 +41,17 @@ voice:
             type: 'rhvoice'
             langs: [ 'ru' ]
             rhvoice_params:
-                relative_volume:        1.0  # in percents devided by 100
-                relative_rate:          0.9  # in percents devided by 100
-                relative_pitch:         0.6 # in percents devided by 100
+                relative_volume:         1.0  # in percents devided by 100
+                relative_rate:           0.9  # in percents devided by 100
+                relative_pitch:          0.6  # in percents devided by 100
                 #relative_pitch_russian: 0.60 # in percents devided by 100
                 #relative_pitch_english: 0.75 # in percents devided by 100
         rhvoice_robotized:
             type: 'rhvoice'
             langs: [ 'ru' ]
             rhvoice_params:
-                relative_volume:        1.0  # in percents devided by 100
-                relative_rate:          0.9  # in percents devided by 100
+                relative_volume:        1.0 # in percents devided by 100
+                relative_rate:          0.9 # in percents devided by 100
                 relative_pitch:         0.6 # in percents devided by 100
             gstreamer_pipeline: 'audioconvert ! audioresample
                 ! ladspa-autotalent-so-autotalent
