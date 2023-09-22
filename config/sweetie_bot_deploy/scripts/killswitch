@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+import rospy
+import rosnode
+import rosgraph
+import os
+import sys
+import argparse
+
+from std_srvs.srv import Trigger, TriggerRequest
+
+def get_node_pids():
+    # lots of things 'borrowed' from rosnode
+    try:
+        from xmlrpc.client import ServerProxy
+    except ImportError:
+        from xmlrpclib import ServerProxy
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('ROS_MASTER_URI', type=str, nargs='?', metavar='URI', help='ROS master URI to use.')
+    args = parser.parse_args()
+
+    ID = '/rosnode'
+    master = rosgraph.Master(ID, master_uri=args.ROS_MASTER_URI)
+    print (f'Using master at {master.getUri()}')
+
+    nodes = rosnode.get_node_names()
+
+    node_pids = dict()
+    for node_name in nodes:
+        node_api = rosnode.get_api_uri(master, node_name)
+        node = ServerProxy(node_api)
+        pid = rosnode._succeed(node.getPid(ID))
+        node_pids[node_name] = pid
+
+    return node_pids
+
+# Collect node PIDs
+node_pids = get_node_pids()
+
+# Killswitch sequence:
+# 1. Pause dialogue interaction
+req = TriggerRequest()
+toggle_operational_srv = rospy.ServiceProxy('/soar/toggle_operational', Trigger)
+toggle_operational_srv(req)
+
+# 2. Killing voice node
+voice_pid = node_pids['/voice']
+os.system(f'kill -9 {voice_pid}')
+
+# 3. Killing soar node
+soar_pid = node_pids['/soar']
+os.system(f'kill -9 {soar_pid}')
