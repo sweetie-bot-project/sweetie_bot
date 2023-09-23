@@ -343,6 +343,9 @@ class VoiceNode():
                 rospy.logerr('Bad text command type: %s' % cmd.type)
                 return False
 
+            # Publish original text before the translation as well
+            voice_log.publish('log/voice/out/en', cmd.command, '')
+
             # translate to source lang
             if self.enable_gtranslate and lang !='en':
                 gender_hint = self.gender_translation_hints[self.voice_gender]

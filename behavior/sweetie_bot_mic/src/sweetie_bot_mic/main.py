@@ -265,6 +265,9 @@ class RespeakerNode(object):
         if self.enable_gtranslate and resp_decoded['language'] !='en':
             resp_decoded['text'] = self.translate_text('en', resp_decoded['text'])
 
+        # Publish translated verssion of the text as well
+        self.voice_log.publish('log/voice/in/en', resp_decoded['text'], '')
+
         rospy.loginfo('Transcription %s (%.2fs) [%s]: "%s"' % (resp_decoded['status'],
                                                                resp_decoded['transcribe_duration'],
                                                                resp_decoded['language'],
