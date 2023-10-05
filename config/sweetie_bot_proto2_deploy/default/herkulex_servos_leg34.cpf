@@ -3,41 +3,49 @@
 <properties>
   <struct name="servos" type="PropertyBag">
     <description>Herkulex servo description.</description>
-	<struct name="broadcast" type="PropertyBag">
-		<description>Broadcast ID.</description>
-		<simple name="servo_id" type="ulong">
-			<description>Servo hardware ID.</description>
-			<value>254</value>
-		</simple>
-		<simple name="offset" type="ulong">
-			<description>Servo zero position offset (raw).</description>
-			<value>512</value>
-		</simple>
-		<simple name="reverse" type="boolean">
-			<description>Reverse direction flag.</description>
-			<value>0</value>
-		</simple>
-		<struct name="registers_init" type="PropertyBag">
-			<description>These values are written to RAM register of ALL servos after reboot. The servo-specific values override them.</description>
-			<simple name="torque_control" type="ulong">
-				<description>Servo opertional state: ON=96, BRAKE=64, FREE=0</description>
-				<value>96</value>
-			</simple>
-			<simple name="calibration_difference" type="ulong">
-				<description>calibration difference</description>
-				<value>0</value>
-			</simple>
-			<simple name="alarm_led_policy" type="ulong">
-				<description>Blink with led if coresponding status error bit set.</description>
-				<value>119</value>
-			</simple>
-		</struct>
-	</struct>
+    <struct name="broadcast" type="PropertyBag">
+        <description>Broadcast ID.</description>
+        <simple name="servo_id" type="ulong">
+            <description>Servo hardware ID.</description>
+            <value>254</value>
+        </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
+        </simple>
+        <simple name="offset" type="ulong">
+            <description>Servo zero position offset (raw).</description>
+            <value>512</value>
+        </simple>
+        <simple name="reverse" type="boolean">
+            <description>Reverse direction flag.</description>
+            <value>0</value>
+        </simple>
+        <struct name="registers_init" type="PropertyBag">
+            <description>These values are written to RAM register of ALL servos after reboot. The servo-specific values override them.</description>
+            <simple name="torque_control" type="ulong">
+                <description>Servo opertional state: ON=96, BRAKE=64, FREE=0</description>
+                <value>96</value>
+            </simple>
+            <simple name="calibration_difference" type="ulong">
+                <description>calibration difference</description>
+                <value>0</value>
+            </simple>
+            <simple name="alarm_led_policy" type="ulong">
+                <description>Blink with led if coresponding status error bit set.</description>
+                <value>119</value>
+            </simple>
+        </struct>
+    </struct>
     <struct name="joint31" type="PropertyBag">
         <description>Servo description.</description>
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
             <value>31</value>
+        </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -54,6 +62,10 @@
             <description>Servo hardware ID.</description>
             <value>32</value>
         </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
+        </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
             <value>482</value>
@@ -68,6 +80,10 @@
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
             <value>33</value>
+        </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -84,6 +100,10 @@
             <description>Servo hardware ID.</description>
             <value>34</value>
         </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
+        </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
             <value>518</value>
@@ -98,6 +118,10 @@
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
             <value>35</value>
+        </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -114,6 +138,10 @@
             <description>Servo hardware ID.</description>
             <value>41</value>
         </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
+        </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
             <value>510</value>
@@ -128,6 +156,10 @@
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
             <value>42</value>
+        </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
@@ -144,6 +176,10 @@
             <description>Servo hardware ID.</description>
             <value>43</value>
         </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
+        </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
             <value>517</value>
@@ -159,6 +195,10 @@
             <description>Servo hardware ID.</description>
             <value>44</value>
         </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
+        </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
             <value>564</value>
@@ -173,6 +213,10 @@
         <simple name="servo_id" type="ulong">
             <description>Servo hardware ID.</description>
             <value>45</value>
+        </simple>
+        <simple name="model" type="string">
+            <description>Servo model string.</description>
+            <value>drs101</value>
         </simple>
         <simple name="offset" type="ulong">
             <description>Servo zero position offset (raw).</description>
