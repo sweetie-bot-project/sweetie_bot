@@ -19,6 +19,9 @@ class HerkulexServos:
         self._overheat_temperature = config.get("overheat_temperature")
         if not self._overheat_temperature or not isinstance(self._overheat_temperature, (float, int)):
             raise RuntimeError("HerkulexServos input module: 'overheat_temperature' parameter is not defined or is not number.")
+        self._ignore_joints = config.get("ignore_joints", [])
+        if not isinstance(self._ignore_joints, list):
+            raise RuntimeError("HerkulexServos input module: 'ignore_joints' parameter must be list of strings.")
 
         # subscriber    
         self._servo_state_sub = rospy.Subscriber(servo_state_topic, HerkulexState, self.newServoStateCallback)
@@ -32,6 +35,10 @@ class HerkulexServos:
         self._status_wmes_ids = {}
 
     def newServoStateCallback(self, msg):
+        # check ignore list
+        if msg.name in self._ignore_joints:
+            return
+        # update servo state
         with self._lock:
             # check if servo has FAILED
             if not msg.respond_sucess or msg.status_error:
