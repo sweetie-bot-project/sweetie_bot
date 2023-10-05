@@ -268,13 +268,13 @@ sp {talk-llm*propose*looking-at-speaker
 
 # finding-speaker if look-at-speaker failed
 sp {talk-llm*propose*searching-missing-speaker
-	(state <s> ^substate talk-llm ^beliefs.event <ev> ^object <obj>)
+	(state <s> ^substate talk-llm ^beliefs.event <ev> ^object <obj> ^lang <lang>)
 	(<obj> ^input-link <il>)
 	-(<il> ^visible {<<|now| |just|>>})
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name searching-missing-speaker ^substate flexbe ^process-args <a> ^interruptable hard)
-	(<a> ^object <obj> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text |Where are you?|)
+	(<a> ^object <obj> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text |Where are you?| ^lang <lang>)
 }
 
 # continue search until speaker is not visible

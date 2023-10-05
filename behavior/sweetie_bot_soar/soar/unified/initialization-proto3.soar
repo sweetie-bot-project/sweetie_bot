@@ -42,7 +42,7 @@ sp {initialization*apply*flexbe-commands
 	(<c2> ^name ExecuteCompoundAction ^param action_name)
 	(<c3> ^name ExecuteStepSequence ^param action_name)
 	(<c4> ^name ExecuteJointTrajectory ^param joint_trajectory is_relative)
-	(<c4> ^name ExecuteJointTrajectoryAndSay ^param joint_trajectory text text_delay is_relative)
+	(<c4> ^name ExecuteJointTrajectoryAndSay ^param joint_trajectory text text_delay is_relative lang)
 	(<c5> ^name ExecuteSetPose ^param pose)
 }
 
