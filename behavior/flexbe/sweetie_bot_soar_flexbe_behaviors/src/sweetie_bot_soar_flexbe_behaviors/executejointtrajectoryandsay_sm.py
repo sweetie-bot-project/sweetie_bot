@@ -41,6 +41,7 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 		self.add_parameter('is_relative', False)
 		self.add_parameter('text', 'I am speaking.')
 		self.add_parameter('alpha_duration', 0.058)
+		self.add_parameter('lang', 'en')
 
 		# references to used behaviors
 
@@ -81,7 +82,7 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 
 			# x:272 y:200
 			OperatableStateMachine.add('SayText',
-										TextCommandState(type='voice/say', command=self.text, topic='control'),
+										TextCommandState(type='voice/say/' + self.lang, command=self.text, topic='control'),
 										transitions={'done': 'WaitSayEnd'},
 										autonomy={'done': Autonomy.Off})
 
@@ -142,7 +143,7 @@ class ExecuteJointTrajectoryAndSaySM(Behavior):
 
 			# x:308 y:141
 			OperatableStateMachine.add('SayText',
-										TextCommandState(type='voice/say', command=self.text, topic='control'),
+										TextCommandState(type='voice/say/' + self.lang, command=self.text, topic='control'),
 										transitions={'done': 'WaitSayEnd'},
 										autonomy={'done': Autonomy.Off})
 

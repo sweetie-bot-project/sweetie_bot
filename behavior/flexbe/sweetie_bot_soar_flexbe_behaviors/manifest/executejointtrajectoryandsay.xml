@@ -32,6 +32,8 @@
 			<max value="1.0" />
 		</param>
 
+		<param type="text" name="lang" default="en" label="lang" hint="Set pharse language." />
+
 	</params>
 
 
