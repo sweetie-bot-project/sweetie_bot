@@ -152,6 +152,7 @@ class ObjectDetectionMonitor(EventState):
                         except tf.ExtrapolationException:
                             pass
                         # transform using the last available transform
+                        pose_stamped.header.stamp = rospy.Time(0) # TODO: wait for transform
                         self._pose = self._tf_listener.transformPose(self._frame_id, pose_stamped)
                         break
                     # publish
