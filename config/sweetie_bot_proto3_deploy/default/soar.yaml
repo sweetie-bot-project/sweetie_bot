@@ -64,6 +64,8 @@ soar:
                         dance: [dance]
                         sing: [sing]
                         please: [please]
+                        give: [give]
+                        hoof: [hoof, hand, leg, hooves]
                 'ru':
                     nlp_model: 'en_core_web_sm'
                     map: 
@@ -72,6 +74,8 @@ soar:
                         dance: [dance]
                         sing: [sing]
                         please: [please]
+                        give: [give]
+                        hoof: [hoof, hand, leg, hooves]
     output:
         nop:
             delay: 0.2

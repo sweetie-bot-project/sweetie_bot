@@ -269,12 +269,12 @@ sp {talk-llm*propose*looking-at-speaker
 # finding-speaker if look-at-speaker failed
 sp {talk-llm*propose*searching-missing-speaker
 	(state <s> ^substate talk-llm ^beliefs.event <ev> ^object <obj> ^lang <lang>)
-	(<obj> ^input-link <il>)
+	(<obj> ^input-link <il> ^label <label>)
 	-(<il> ^visible {<<|now| |just|>>})
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name searching-missing-speaker ^substate flexbe ^process-args <a> ^interruptable hard)
-	(<a> ^object <obj> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text |Where are you?| ^lang <lang>)
+	(<a> ^object <obj> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text (concat |Where are you, interlocutor | <label> |?|) ^lang <lang>)
 }
 
 # continue search until speaker is not visible
@@ -455,11 +455,11 @@ sp {talk-llm*propose*add-ignor-statements
 	(state <s> ^bottom-state 1 ^beliefs <b> ^recent-events <ev-pool>)
 	(<b> ^event <ev1>)
 	(<ev1> ^name talk-no-answer ^object <obj> ^initiated-at <t1>)
-	(<ev-pool> ^event {<> <ev1> <ev2>} {<> <ev1> <ev2> <ev3>})
+	(<ev-pool> ^event {<> <ev1> <ev2>} ^event {<> <ev1> <> <ev2> <ev3>})
 	(<ev2> ^name {<<|talk-ignored| |talk-no-answer|>>} ^object <obj> ^initiated-at <t2>)
 	(<ev3> ^name {<<|talk-ignored| |talk-no-answer|>>} ^object <obj> ^initiated-at {< <t2> <t3>})
-	-{(<ev-pool> ^event <ev3>)
-	  (<ev3> ^name talk-heard  ^object <obj> ^initiated-at {< <t1> > <t3>})
+	-{(<ev-pool> ^event <ev4>)
+	  (<ev4> ^name talk-heard  ^object <obj> ^initiated-at {< <t1> > <t3>})
 	}
 	-{(<b> ^predicate <pred>)
 	  (<pred> ^name ignors-me ^actor <obj>)
