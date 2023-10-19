@@ -23,6 +23,8 @@ from geometry_msgs.msg import Vector3
 import six
 from google.cloud import translate_v2 as translate
 
+import pyroomacoustics as pra
+
 # suppress error messages from ALSA
 # https://stackoverflow.com/questions/7088672/pyaudio-working-but-spits-out-error-messages-each-time
 # https://stackoverflow.com/questions/36956083/how-can-the-terminal-output-of-executables-run-by-python-functions-be-silenced-i
@@ -45,7 +47,6 @@ def ignore_stderr(enable=True):
                 os.close(devnull)
     else:
         yield
-
 
 
 class RespeakerInterface(object):
@@ -185,14 +186,14 @@ class RespeakerInterface(object):
 
 class RespeakerAudio(object):
 
-    def __init__(self, on_audio, mic_name = '', buffer_rate = 10, channels=None, suppress_error=True):
+    def __init__(self, on_audio, mic_name = '', sample_rate = 16000, buffer_size = 1024, channels=None, suppress_error=True):
         self.on_audio = on_audio
         with ignore_stderr(enable=suppress_error):
             self.pyaudio = pyaudio.PyAudio()
         self.available_channels = None
         self.channels = channels
         self.device_index = None
-        self.rate = 16000
+        self.rate = sample_rate
         self.sample_width = 2
         self.bit_depth = 16
 
@@ -201,18 +202,17 @@ class RespeakerAudio(object):
         rospy.logdebug("%d audio devices found" % count)
         for i in range(count):
             info = self.pyaudio.get_device_info_by_index(i)
-            rospy.logdebug(info)
             name = info["name"]
             chan = info["maxInputChannels"]
-            rospy.logdebug(" - %d: %s" % (i, name))
+            rospy.logdebug(" - %d: '%s' (%d channels)" % (i, name, chan))
             if name.startswith(mic_name):
                 self.available_channels = chan
                 self.device_index = i
-                rospy.loginfo("Found pyaudio device id=%d name=%s (channels: %d)" % (i, name, chan))
+                rospy.loginfo("Found pyaudio device id=%d name='%s' (channels: %d)" % (i, name, chan))
                 break
 
         if self.device_index is None:
-            rospy.logwarn("Failed to find pyaudio device by name (%s). Using default input" % mic_name)
+            rospy.logerr("Failed to find pyaudio device by name (%s). Using default input" % mic_name)
             info = self.pyaudio.get_default_input_device_info()
             self.available_channels = info["maxInputChannels"]
             self.device_index = info["index"]
@@ -220,25 +220,23 @@ class RespeakerAudio(object):
         if self.available_channels != 6:
             rospy.logwarn("%d channel is found for microphone" % self.available_channels)
 
-        # whisper can only work with mono
-        self.available_channels = 1
-
+        # selected channels
         if self.channels is None:
             self.channels = range(self.available_channels)
         else:
-            self.channels = filter(lambda c: 0 <= c < self.available_channels, self.channels)
+            self.channels =  list( filter(lambda c: 0 <= c < self.available_channels, self.channels) )
         if not self.channels:
             raise RuntimeError('Invalid channels %s. (Available channels are %s)' % (
                 self.channels, self.available_channels))
 
-        rospy.loginfo('Using channels %s' % self.channels)
+        rospy.loginfo('Using channels %s' % list(self.channels))
 
         self.stream = self.pyaudio.open(
             input=True, start=False,
             format=pyaudio.paInt16,
             channels=self.available_channels,
             rate=self.rate,
-            frames_per_buffer=int(self.rate/buffer_rate),
+            frames_per_buffer=int(buffer_size),
             stream_callback=self.stream_callback,
             input_device_index=self.device_index,
         )
@@ -258,14 +256,14 @@ class RespeakerAudio(object):
 
     def stream_callback(self, in_data, frame_count, time_info, status):
         # split channel
-        # TODO optimize
         data = np.frombuffer(in_data, dtype=np.int16)
         chunk_per_channel = len(data) // self.available_channels
         data_channels = np.reshape(data, (chunk_per_channel, self.available_channels))
-        for chan in self.channels:
-            chan_data = data_channels[:, chan]
-            # invoke callback
-            self.on_audio(chan_data.tobytes(), chan)
+        # select channels
+        selected_channels = [ data_channels[:, chan] for chan in self.channels ]
+        # invoke callback
+        self.on_audio(selected_channels)
+        # continue function
         return None, pyaudio.paContinue
 
     def start(self):
@@ -281,20 +279,27 @@ class RespeakerNode(object):
     def __init__(self):
         # shutdown hook
         rospy.on_shutdown(self.on_shutdown)
-        # get parameters
+        #
+        # Common parameters
+        #
         mic_name = rospy.get_param("~mic_name", "ReSpeaker 4 Mic Array (UAC1.0)")
+        sample_rate = rospy.get_param("~sample_rate", 16000)
+        update_rate = rospy.get_param("~update_rate", 8)
+        main_channel = rospy.get_param('~main_channel', 0)
+        self.frame_id = rospy.get_param("~frame_id", "base_link")
         call_llm = rospy.get_param("~call_llm", False)
         self.enable_gtranslate = rospy.get_param("~enable_gtranslate", True)
-        self.update_rate = rospy.get_param("~update_rate", 10.0)
-        self.main_channel = rospy.get_param('~main_channel', 0)
         suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", True)
+
+        # speech-to-text services
         servers = rospy.get_param("~transcribe_servers", {'0': "http://localhost:8577/"})
         self.transcribe_servers = [ servers[k] for k in sorted(servers) ]
-        rospy.loginfo('urls: %s', self.transcribe_servers)
-        keys_combo = rospy.get_param("~key_combination", ['ctrl', 'w'])
-        self.respeaker_frame_id = rospy.get_param("~frame_id", "base_link")
-        self.doa_object_distance = rospy.get_param("~doa_distance", 2.0)
-        self.doa_angle_shift = rospy.get_param("~doa_angle_shift", 2.0)
+        rospy.loginfo('transcribe urls: %s', self.transcribe_servers)
+
+        #
+        # Hardware interfaces and audio processing configuration
+        #
+
         # respeaker interface
         try:
             self.respeaker = RespeakerInterface()
@@ -304,13 +309,9 @@ class RespeakerNode(object):
         except RuntimeError:
             rospy.logwarn('respeaker device is not detected')
             self.respeaker = None
-        # audio interface
-        self.respeaker_audio = RespeakerAudio(self.on_audio, mic_name, buffer_rate=self.update_rate, suppress_error=suppress_pyaudio_error)
-        # buffers
-        self.speech_audio_buffer = bytearray()
-        self.sound_rms = 0.0
-        self.sound_direction = 180.0
+
         # keyboard
+        keys_combo = rospy.get_param("~key_combination", ['ctrl', 'w'])
         pynput_key_map = { 'ctrl': Key.ctrl, 'alt': Key.alt, 'space': Key.space, 'pause': Key.pause }
         self._keys_pressed = set()
         self._keys_combo = set()
@@ -324,11 +325,67 @@ class RespeakerNode(object):
         self.keyboard_listener = keyboard.Listener(on_press=self.on_key_press, on_release=self.on_key_release)
         self.keyboard_listener.start()
         rospy.loginfo("Listening for global hotkey  %s" % self._keys_combo) 
-        # listen: mic button is pressed
+
+        # doa algorithm
+        self.doa_algorithm = rospy.get_param("~doa/algorithm", 'none')
+        self.doa_object_distance = rospy.get_param("~doa/object_distance", 2.0)
+        channels = [main_channel]
+        if self.doa_algorithm == 'respeaker':
+            if self.respeaker is None:
+                raise RuntimeError('DOA estimation algorithm "respeaker" is not available: Respeaker device is not found')
+            rospy.loginfo(f'DOA estimator: respeaker')
+        elif self.doa_algorithm in pra.doa.algorithms:
+            # get paramters
+            mic_coords = rospy.get_param("~doa/mic_coords")
+            if not isinstance(mic_coords, list) or any(not isinstance(c, (float, int)) for c in mic_coords) or len(mic_coords) % 2 != 0:
+                raise RuntimeError('DOA estimator: mic_coords parameter must be specified and be list of float of format [ x1, y1, x2, y2, ... xn, yn ]')
+            mic_coords = np.reshape(mic_coords, (len(mic_coords)//2, 2)).T
+            mic_channels = rospy.get_param("~doa/mic_channels")
+            if not isinstance(mic_channels, list) or any(not isinstance(c, int) for c in mic_channels) or mic_coords.shape[0] != len(mic_channels):
+                raise RuntimeError('DOA estimator: mic_channels parameter must be specified and be list of int, it size must be equal to size of mic_coords divided by two.')
+            channels.extend(mic_channels)
+            nfft = rospy.get_param("~doa/nfft", 256)
+            if not isinstance(nfft, int) or nfft < 0 or 2**int(np.log2(nfft)) != nfft:
+                raise RuntimeError('DOA estimator: nfft parameter must be power of 2.')
+            self.doa_nfft = nfft
+            mode = rospy.get_param("~doa/mode", 'far')
+            if not isinstance(mode, str):
+                raise RuntimeError('DOA estimator: mode parameter must be string.')
+            azimuth = rospy.get_param("~doa/azimuth", [-180, 180, 32])
+            colatitude = rospy.get_param("~doa/colatitude", [90, 90, 1])
+            try:
+                azimuth = np.deg2rad( np.linspace(azimuth[0], azimuth[1], int(azimuth[2])) )
+                colatitude = np.deg2rad( np.linspace(colatitude[0], colatitude[1], int(colatitude[2])) )
+            except (TypeError, ValueError, IndexError):
+                raise RuntimeError('DOA estimator: azimuth and colatitude paramters must be lists in format [start_angle, stop_angel, N]')
+            # create estimator 
+            alg = pra.doa.algorithms[self.doa_algorithm]
+            self.doa_estimator = alg(L = mic_coords, fs = sample_rate, nfft = nfft, num_src = 1, mode = mode, azimuth = azimuth, colatitude = colatitude)
+            # log info
+            rospy.loginfo(f'DOA estimator: {self.doa_algorithm}: mic channels: {mic_channels}, mode: {mode}, nfft: {nfft}, aizmut/latitude grid: {len(azimuth)}x{len(colatitude)}.')
+        elif self.doa_algorithm != 'none':
+            raise RuntimeError(f'DOA estimator: aunsknown algorithms {self.doa_algorithm}')
+
+        # audio interface
+        buffer_size = int(2**np.round(np.log2(sample_rate/update_rate)))
+        rospy.loginfo(f'audio: actual update rate {sample_rate/buffer_size} Hz (requested {update_rate} Hz), buffer size {buffer_size} samples, selected channels {channels}.')
+        self.respeaker_audio = RespeakerAudio(self.on_audio, mic_name, sample_rate=sample_rate, buffer_size=buffer_size, channels=channels, suppress_error=suppress_pyaudio_error)
+
+        #
+        # Node state and buffers
+        # 
+
+        self.speech_audio_buffer = bytearray()
         self._button_pressed = False
+        self._robot_is_speeching = False
+
+        #
+        # Node interface
+        #
+
+        # listen: mic button is pressed
         self.sub_button_event = rospy.Subscriber("mic_button", Bool, self.on_mic_button)
         # listen: robot speech event to avoid self-listening
-        self._robot_is_speeching = False
         self.sub_mouth_event = rospy.Subscriber("mouth", TextCommand, self.on_mouth)
         # service call: language model
         if call_llm:
@@ -342,10 +399,11 @@ class RespeakerNode(object):
         self.pub_markers = rospy.Publisher("hmi/detections", MarkerArray, queue_size=1)
         # voice log
         self.voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=1)
-        # start
+
+        #
+        # start audio processing
+        #
         self.respeaker_audio.start()
-        self.info_timer = rospy.Timer(rospy.Duration(1.0 / self.update_rate),
-                                      self.on_timer)
 
     def on_shutdown(self):
         try:
@@ -452,40 +510,64 @@ class RespeakerNode(object):
 
         return result["translatedText"]
 
-    def on_audio(self, data, channel):
-        if channel == self.main_channel:
-            # calculate rms
-            adata = np.frombuffer(data, np.int16).astype(np.float32) 
-            self.sound_rms = np.sqrt(np.sum(adata**2) / len(adata)) 
-            # get direction
-            if self.respeaker is not None:
-                self.sound_direction = self.respeaker.direction()
-                if self.sound_rms > 1000:
-                    print('direction: ', self.sound_direction, ', intensity: ', self.sound_rms)
-            # add data to speech buffer
-            if self.is_speeching():
-                self.speech_audio_buffer.extend(data)
-
-    def on_timer(self, event):
-        # form speech event
-        sound_event = SoundEvent()
-        sound_event.header.stamp = event.current_real or rospy.Time.now()
-        sound_event.header.frame_id = self.respeaker_frame_id
-
+    def on_audio(self, channels_data):
         # set current status
         is_speeching = self.is_speeching();
+
+        # add data to speech buffer
+        if is_speeching:
+            self.speech_audio_buffer.extend(channels_data[0].tobytes())
+
+        # calculate sound rms
+        adata = channels_data[0].astype(np.float32) 
+        sound_rms = np.sqrt(np.sum(adata**2) / len(adata)) 
+
+        # get direction
+        if self.doa_algorithm == 'respeaker':
+            doa_rad = np.deg2rad(self.respeaker.direction())
+            sound_direction = Vector3(np.cos(doa_rad), np.sin(doa_rad), 0.0)
+        elif self.doa_algorithm != 'none':
+            # perform fft on raw mic channels
+            nfft = self.doa_nfft
+            X = np.array(
+                [
+                    pra.transform.stft.analysis(data.astype(np.float32), nfft, nfft // 2).T
+                    for data in channels_data[1:]
+                ]
+            )
+            # estimate direction
+            self.doa_estimator.locate_sources(X, freq_bins=np.arange(5, 60)) # TODO: add freq range parameter
+            # calculate direction
+            sources_azimuth = self.doa_estimator.azimuth_recon
+            sources_colatitude = self.doa_estimator.colatitude_recon
+            if sources_azimuth is not None and len(sources_azimuth) > 0:
+                azimuth = sources_azimuth[0]
+            else:
+                azimuth = 0.0
+            if sources_colatitude is not None and len(sources_colatitude) > 0:
+                colatitude = sources_colatitude[0]
+            else:
+                colatitude = np.pi/2.0
+            sound_direction = Vector3( np.cos(azimuth)*np.sin(colatitude), np.sin(azimuth)*np.sin(colatitude), np.cos(colatitude) )
+        else:
+            sound_direction = Vector3()
+
+
+        # form speech event
+        sound_event = SoundEvent()
+        sound_event.header.stamp = rospy.Time.now()
+        sound_event.header.frame_id = self.frame_id
+
+        # set current status
         if is_speeching:
             sound_event.sound_flags |= SoundEvent.SPEECH_DETECTING | SoundEvent.SOUND_DETECTING
 
         # add intensity and direction
-        sound_event.intensity = self.sound_rms
-        doa_rad = math.radians(self.sound_direction - 180.0)
-        sound_event.direction.x = np.cos(doa_rad)
-        sound_event.direction.y = np.sin(doa_rad)
-        sound_event.direction.z = 0.0
+        sound_event.intensity = sound_rms
+        sound_event.direction = sound_direction
        
         # decode speech
-        if not self.is_speeching() and len(self.speech_audio_buffer) != 0:
+        if not is_speeching and len(self.speech_audio_buffer) != 0:
             # new speech fragment is received
             result = self.transcribe(self.speech_audio_buffer)
             if result is not None:
