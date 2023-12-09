@@ -14,7 +14,7 @@ fi
 if [[ ! -f /etc/apt/sources.list.d/sweetie-bot.list ]]; then
 	echo "Enabling SweetieBot repository..."
 	wget -qO - https://apt.sweetie.bot/repository.key | apt-key add -
-	echo "deb [arch=amd64] http://apt.sweetie.bot $(lsb_release -sc) main" > /etc/apt/sources.list.d/sweetie-bot.list
+	echo "deb [arch=$(dpkg --print-architecture)] http://apt.sweetie.bot $(lsb_release -sc) main" > /etc/apt/sources.list.d/sweetie-bot.list
 fi
 
 echo "Refreshing package cache..."
