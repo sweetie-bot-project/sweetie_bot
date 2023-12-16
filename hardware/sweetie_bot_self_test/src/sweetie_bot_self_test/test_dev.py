@@ -6,8 +6,10 @@ class TestDev:
     @pytest.mark.parametrize(
         ("path"),
         [
-            ("/dev/ttyAMA2"),
             ("/dev/ttyAMA0"),
+            ("/dev/ttyAMA1"),
+            ("/dev/ttyAMA2"),
+            ("/dev/ttyAMA3"),
             ("/dev/ttyAMA4"),
             ("/dev/i2c-1"),
             ("/dev/dri/card0"),
@@ -15,13 +17,15 @@ class TestDev:
             ("/dev/video0"),
             ("/dev/rtc0")
         ],
-        ids=['serh',
-             'serf',
-             'serb',
+        ids=['AMA0',
+             'AMA1',
+             'AMA2',
+             'AMA3',
+             'AMA4',
              'i2c1',
              'drm0',
              'drm1',
-             'cam0',
+             'video0',
              'rtc0']
     )
     def test_dev(self, path):
