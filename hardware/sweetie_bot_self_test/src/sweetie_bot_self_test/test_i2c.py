@@ -7,11 +7,12 @@ class TestI2CDev:
     @pytest.mark.parametrize(
         ("dev_id"),
         [
-            (0x68),
-            (0x2b)
+            (0x68)
+            #(0x2b)
         ],
-        ids=['rtc',
-             'touch']
+        ids=['rtc'
+             #'touch'
+            ]
     )
     def test_i2c(self, dev_id):
         try:

@@ -12,12 +12,12 @@ class TestHekulexServo:
     @pytest.mark.parametrize(
         ("limb", "port", "baud", "servo_ids"),
         [
-            ("head", "/dev/ttyAMA2", 115200, [51,52,53,54]),
-            ("ears", "/dev/ttyAMA2", 115200, [100,101,102,103]),
-            ("leg1", "/dev/ttyAMA0", 115200, [11,12,13,14,15,16]),
-            ("leg2", "/dev/ttyAMA0", 115200, [21,22,23,24,25,26]),
-            ("leg3", "/dev/ttyAMA4", 115200, [31,32,33,34,35,36]),
-            ("leg4", "/dev/ttyAMA4", 115200, [41,42,43,44,45,46])
+            ("head", "/opt/ros/sweetie_bot/dev/tty_head",  115200, [51,52,53,54]),
+            ("ears", "/opt/ros/sweetie_bot/dev/tty_head",  115200, [100,101,102,103]),
+            ("leg1", "/opt/ros/sweetie_bot/dev/tty_front", 115200, [11,12,13,14,15,16]),
+            ("leg2", "/opt/ros/sweetie_bot/dev/tty_front", 115200, [21,22,23,24,25,26]),
+            ("leg3", "/opt/ros/sweetie_bot/dev/tty_hind",  115200, [31,32,33,34,35,36]),
+            ("leg4", "/opt/ros/sweetie_bot/dev/tty_hind",  115200, [41,42,43,44,45,46])
         ],
         ids=['head',
              'ears',
@@ -32,7 +32,7 @@ class TestHekulexServo:
         addr = 54
         dlen = 2
         ret = True
-        servos = ()
+        servos = []
         #print(f"{limb} test started")
         for servo_id in servo_ids:
             inp = herk.write_packet(servo_id, cmd, (addr, dlen) )   # RAM_READ
@@ -60,11 +60,12 @@ class TestHekulexServo:
                 
                 #print( regs )
             else:
-                seros.append(servo_id)
+                servos.append(servo_id)
                 ret = False
 
         if not ret:
              print(f"Servos {servos} is not responding!") #, end="")
 
+        assert ret
         return ret
 
