@@ -57,7 +57,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>856</value>
+        <value>821</value>
       </simple>
       <simple name="scale" type="double">
         <description>Servo postion scale factor.</description>
@@ -65,7 +65,7 @@
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
-        <value>1</value>
+        <value>0</value>
       </simple>
     </struct>
     <struct name="head_joint2" type="PropertyBag">
@@ -80,7 +80,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>600</value>
+        <value>533</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -107,7 +107,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>510</value>
+        <value>484</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -134,7 +134,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>514</value>
+        <value>529</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>

@@ -4,14 +4,13 @@
 	<arg name="robot_ns" default="/" doc="Namspace where main robot nodes and topics are located."/>
 
 	<!-- Environment for OpenGL eyes  -->
-	<env name="QT_QPA_EGLFS_KMS_CONFIG" value="$(find sweetie_bot_eyes)/config/eglfs.json" />
+	<!-- <env name="QT_QPA_EGLFS_KMS_CONFIG" value="$(find sweetie_bot_eyes)/config/eglfs.json" /> -->
 	<env name="QT_QPA_PLATFORM" value="eglfs" />
 	<env name="QT_QPA_EGLFS_ALWAYS_SET_MODE" value="1" />
 	<env name="QT_QPA_EGLFS_KMS_ATOMIC" value="1" />
 
 	<!-- run eyes on fb device -->
 	<node machine="sweetiebot" name="eyes"  pkg="sweetie_bot_eyes" type="proto3_eyes"></node>
-
 	<!-- run horn on gpio device -->
 	<node pkg="ws281x" name="horn" type="ws281x_node" clear_params="true">
 	  <param name="led_count" value="1"/>

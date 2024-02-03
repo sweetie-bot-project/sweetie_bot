@@ -57,7 +57,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>526</value>
+        <value>568</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -76,7 +76,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>212</value>
+        <value>209</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -95,7 +95,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>479</value>
+        <value>542</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -114,7 +114,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>544</value>
+        <value>651</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -133,7 +133,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>436</value>
+        <value>560</value>
       </simple>
       <simple name="scale" type="double">
         <description>Servo postion scale factor.</description>
@@ -156,11 +156,11 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>535</value>
+        <value>536</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
-        <value>0</value>
+        <value>1</value>
       </simple>
     </struct>
     <struct name="leg4_joint1" type="PropertyBag">
@@ -175,7 +175,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>425</value>
+        <value>435</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -194,11 +194,11 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>585</value>
+        <value>602</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
-        <value>0</value>
+        <value>1</value>
       </simple>
     </struct>
     <struct name="leg4_joint3" type="PropertyBag">
@@ -213,7 +213,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>509</value>
+        <value>494</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -232,7 +232,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>455</value>
+        <value>342</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -251,7 +251,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>531</value>
+        <value>402</value>
       </simple>
       <simple name="scale" type="double">
         <description>Servo postion scale factor.</description>
@@ -274,11 +274,11 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>514</value>
+        <value>528</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
-        <value>1</value>
+        <value>0</value>
       </simple>
     </struct>
   </struct>
