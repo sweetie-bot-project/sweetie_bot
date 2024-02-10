@@ -1,0 +1,17 @@
+servo_inv:
+    priority: 20
+    battery_voltage: 12
+    lead: 0.0
+    sign_dead_zone: 0.001
+    extrapolate_position: false
+servo_ident:
+    priority: 10
+    control_delay: 0.0224
+    velocity_diff_cycles: 1
+    min_accepted_velocity: 0.1
+    relaxation_factor: 0.995
+    error_averaging_time: 5.0
+    threshold: 0.01
+    battery_voltage: 12.0
+    sign_dead_zone: 0.001
+
