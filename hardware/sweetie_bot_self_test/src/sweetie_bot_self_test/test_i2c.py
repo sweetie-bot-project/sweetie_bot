@@ -19,8 +19,9 @@ class TestI2CDev:
             ret = self.bus.read_byte(dev_id)
         except OSError as e:
                 if e.errno == errno.EBUSY:
-                    # taked by a kernel or somethoig else
+                    # taken by the kernel or something else
                     return True
                 else:
+                    print('i2c device:', hex(dev_id), e, end="")
                     raise
         return True

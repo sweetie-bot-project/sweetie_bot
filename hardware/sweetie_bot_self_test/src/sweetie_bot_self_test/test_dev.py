@@ -30,7 +30,7 @@ class TestDev:
     )
     def test_dev(self, path):
         if not os.path.exists(path):
-            print("check config", end = '')
+            print(f"No such device: {path}", end = '')
         mode = os.lstat(path).st_mode
         return stat.S_ISCHR(mode)
         
