@@ -2,7 +2,7 @@ herkulex:
     groups: [ leg12, leg34, head ]
     all:
         driver:
-            port_name: '/dev/ttyAMA0'
+            port_name: '/opt/ros/sweetie_bot/dev/tty_front'
             baudrate: 115200
         array:
             timeout: 0.060
@@ -21,7 +21,7 @@ herkulex:
             poll_round_size: 10
     leg12:
         driver:
-            port_name: '/dev/ttyAMA0'
+            port_name: '/opt/ros/sweetie_bot/dev/tty_front'
             baudrate: 115200
         array:
             timeout: 0.060
@@ -40,7 +40,7 @@ herkulex:
             poll_round_size: 6
     leg34:
         driver:
-            port_name: '/dev/ttyAMA4'
+            port_name: '/opt/ros/sweetie_bot/dev/tty_hind'
             baudrate: 115200
         array:
             timeout: 0.060
@@ -59,7 +59,7 @@ herkulex:
             poll_round_size: 6
     head:
         driver:
-            port_name: '/dev/ttyAMA2'
+            port_name: '/opt/ros/sweetie_bot/dev/tty_head'
             baudrate: 115200
         array:
             timeout: 0.060

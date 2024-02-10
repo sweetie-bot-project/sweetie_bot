@@ -13,13 +13,15 @@ class TestHekulexServo:
         ("limb", "port", "baud", "servo_ids"),
         [
             ("head", "/opt/ros/sweetie_bot/dev/tty_head",  115200, [51,52,53,54]),
-            ("ears", "/opt/ros/sweetie_bot/dev/tty_head",  115200, [100,101,102,103]),
+            ("mouth", "/opt/ros/sweetie_bot/dev/tty_head", 115200, [61]),
+            ("ears", "/opt/ros/sweetie_bot/dev/tty_head",  115200, [71,72]),
             ("leg1", "/opt/ros/sweetie_bot/dev/tty_front", 115200, [11,12,13,14,15,16]),
             ("leg2", "/opt/ros/sweetie_bot/dev/tty_front", 115200, [21,22,23,24,25,26]),
             ("leg3", "/opt/ros/sweetie_bot/dev/tty_hind",  115200, [31,32,33,34,35,36]),
             ("leg4", "/opt/ros/sweetie_bot/dev/tty_hind",  115200, [41,42,43,44,45,46])
         ],
         ids=['head',
+             'mouth',
              'ears',
              'leg1',
              'leg2',
@@ -33,6 +35,7 @@ class TestHekulexServo:
         dlen = 2
         ret = True
         servos = []
+        warn = {}
         #print(f"{limb} test started")
         for servo_id in servo_ids:
             inp = herk.write_packet(servo_id, cmd, (addr, dlen) )   # RAM_READ
@@ -47,24 +50,28 @@ class TestHekulexServo:
 
             if data != []:
                 regs =  HerkulexRegisters(cmd, data)
-                regs.values[48] = regs.convert_voltage_raw_to_volts(regs.values[48])
-                if regs.values[48] > 13:
-                    warnings.warn(UserWarning(f"Overvoltage servo {servo_id} in {limb} {regs.values[48]}"))
+                #regs.values[48] = regs.convert_voltage_raw_to_volts(regs.values[48])
+                #if regs.values[48] > 14:
+                #    warnings.warn(UserWarning(f"Overvoltage servo {servo_id} in {limb} {regs.values[48]}"))
 
-                regs.values[49] = regs.convert_temperature_raw_to_celsius(regs.values[49])
-                if regs.values[49] > 80:
-                    warnings.warn(UserWarning(f"Overheat servo {servo_id} in {limb} {regs.values[49]}"))
+                #regs.values[49] = regs.convert_temperature_raw_to_celsius(regs.values[49])
+                #if regs.values[49] > 80:
+                #    warnings.warn(UserWarning(f"Overheat servo {servo_id} in {limb} {regs.values[49]}"))
                 
                 if regs.status_error_code > 0:
-                    warnings.warn(UserWarning(f"Error on servo {servo_id} in {limb} {regs.status_error_text}"))
+                    warn[regs.status_error_text] = warn.get(regs.status_error_text, '') + f" {servo_id}"
+                    #warnings.warn(UserWarning(f"Error on servo {servo_id} in {limb} {regs.status_error_text}"))
                 
                 #print( regs )
             else:
                 servos.append(servo_id)
                 ret = False
 
+        if warn:
+            print(warn, end="")
+
         if not ret:
-             print(f"Servos {servos} is not responding!") #, end="")
+            print(f"Servos {servos} is not responding!", end="")
 
         assert ret
         return ret
