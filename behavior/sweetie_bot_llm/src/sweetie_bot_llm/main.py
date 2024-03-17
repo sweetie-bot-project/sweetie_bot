@@ -56,7 +56,7 @@ class CompleteNode:
                     rospy.logwarn("server $s request error %d: %s" % (url, resp.status_code, resp.reason))
                     continue # next url
             except requests.ConnectionError as e:
-                rospy.logwarn("connection error: %s" % e.what())
+                rospy.logwarn("connection error: %s" % e)
 
         # check if response is received
         if resp is None:
@@ -88,8 +88,8 @@ class CompleteNode:
         try:
             text, duration = self.request_server(request)
         except CompleteError as e:
-            rospy.logerr('%s: %s' % (e.what(), e.details))
-            return CompleteResponse(status = e.what())
+            rospy.logerr('%s: %s' % (e, e.details))
+            return CompleteResponse(status = e))
         # return result
         return CompleteResponse(status='ok', text = text, duration=duration)
 
@@ -110,7 +110,7 @@ class CompleteNode:
         try:
             text, duration = self.request_server(request)
         except CompleteError as e:
-            rospy.logerr('%s: %s' % (e.what(), e.details))
+            rospy.logerr('%s: %s' % (e, e.details))
             return CompleteRawResponse(status_error = CompleteRawResponse.SERVER_UNREACHABLE)
 
         self.log_llm.publish('log/llm/out/'+msg.profile, text, '')
@@ -134,8 +134,8 @@ class CompleteNode:
         try:
             text, duration = self.request_server(request)
         except CompleteError as e:
-            rospy.logerr('%s: %s' % (e.what(), e.details))
-            return CompleteSimpleResponse(data = TextCommand(type = "complete/error", command = e.what()))
+            rospy.logerr('%s: %s' % (e, e.details))
+            return CompleteSimpleResponse(data = TextCommand(type = "complete/error", command = e))
         # return result
         return CompleteSimpleResponse(data = TextCommand(type = "complete/response", command = text))
 
