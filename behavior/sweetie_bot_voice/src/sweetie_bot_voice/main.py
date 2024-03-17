@@ -169,7 +169,7 @@ class TTSRhvoiceWrapper(TTSInterface):
             rospy.logerr('TTSRhvoiceWrapper: gstreamer failed: %s' % err)
             return False
         # result message was NULL
-        rospy.loginfo('TTSRhvoiceWrapper: succeed.')
+        rospy.logdebug('TTSRhvoiceWrapper: succeed.')
         return True
 
 class PlayerGstreamer():
@@ -361,7 +361,7 @@ class VoiceNode():
                 rospy.logerr('Unsupported laguage code: %s' % lang)
                 return False
             # Invoke text-to-speech subsystem
-            rospy.loginfo('use %s profile to say: %s (%s)' % (k, cmd.command, lang))
+            rospy.logdebug('use %s profile to say: %s (%s)' % (k, cmd.command, lang))
             self.pub.publish('mouth/speech', 'begin', '')
             ret = profile.speak(cmd.command, lang)
             self.pub.publish('mouth/speech', 'end', '')
