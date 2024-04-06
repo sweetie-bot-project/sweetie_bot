@@ -149,7 +149,7 @@ class RespeakerNode(object):
         servers = rospy.get_param("~transcribe_servers", {'0': "http://localhost:8577/"})
         self.transcribe_servers = [ servers[k] for k in sorted(servers) ]
         rospy.loginfo('urls: %s', self.transcribe_servers)
-        keys_combo = rospy.get_param("~key_combination", ['ctrl', 'w'])
+        keys_combo = rospy.get_param("~key_combination", ['ctrl', 'alt','w'])
         # audio interface
         self.respeaker_audio = RespeakerAudio(self.on_audio, suppress_error=suppress_pyaudio_error)
         self.speech_audio_buffer = bytearray()
