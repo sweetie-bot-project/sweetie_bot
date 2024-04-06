@@ -264,6 +264,8 @@ class VoiceNode():
         for name, profile_config in profiles_config.items():
             print(name, profile_config)
             try:
+                if not profile_config.get('enabled'):
+                    continue
                 profile_type = profile_config.get('type')
                 langs = profile_config.get('langs')
                 if profile_type == 'rhvoice':
