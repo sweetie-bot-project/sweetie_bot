@@ -23,7 +23,7 @@ import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GLib
 
-voice_log = rospy.Publisher('voice_log', TextCommand)
+voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=10)
 
 class TTSInterface:
     def __init__(self, langs):

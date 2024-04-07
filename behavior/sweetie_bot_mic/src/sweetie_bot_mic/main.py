@@ -180,9 +180,9 @@ class RespeakerNode(object):
         else:
             self.llm_service_client = None
         # advertise
-        self.pub_sound_event = rospy.Publisher("sound_event", SoundEvent , queue_size=10)
+        self.pub_sound_event = rospy.Publisher("sound_event", SoundEvent, queue_size=10)
         # voice log
-        self.voice_log = rospy.Publisher('voice_log', TextCommand)
+        self.voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=10))
         # start
         self.respeaker_audio.start()
         self.info_timer = rospy.Timer(rospy.Duration(1.0 / self.update_rate),
