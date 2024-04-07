@@ -36,7 +36,7 @@ class CompleteNode:
         rospy.Service('input_text', CompleteSimple, self.input_text_callback)
         rospy.Service('llm_request', CompleteRaw, self.complete_simple_callback)
         # log
-        self.log_llm = rospy.Publisher('speech_log', TextCommand)
+        self.log_llm = rospy.Publisher('speech_log', TextCommand, queue_size=10)
         rospy.loginfo('urls: %s', self._urls )
         rospy.loginfo('profiles: %s', [self._profiles.keys()] )
 

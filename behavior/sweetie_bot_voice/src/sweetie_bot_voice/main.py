@@ -23,7 +23,7 @@ import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GLib
 
-voice_log = rospy.Publisher('voice_log', TextCommand)
+voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=10)
 
 class TTSInterface:
     def __init__(self, langs):
@@ -264,6 +264,10 @@ class VoiceNode():
         for name, profile_config in profiles_config.items():
             print(name, profile_config)
             try:
+                if not profile_config.get('enabled'):
+                    continue
+                del profile_config['enabled']
+                    
                 profile_type = profile_config.get('type')
                 langs = profile_config.get('langs')
                 if profile_type == 'rhvoice':

@@ -6,6 +6,7 @@ voice:
     voice_profile:
         coqui-ai:
             type: 'coqui-ai'
+            enabled: false
             langs: [ 'en', 'ja' ]
             coqui_ai_params:
                 languages:

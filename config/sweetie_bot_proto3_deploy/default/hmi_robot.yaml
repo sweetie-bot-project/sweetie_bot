@@ -10,6 +10,7 @@ voice:
     voice_profile:
         coqui-ai:
             type: 'coqui-ai'
+            enabled: false
             langs: [] # [ 'en', 'ja' ]
             coqui_ai_params:
                 languages:
@@ -39,6 +40,7 @@ voice:
                         gpu: true
         rhvoice:
             type: 'rhvoice'
+            enabled: true
             langs: [ 'ru' ]
             rhvoice_params:
                 relative_volume:         1.0  # in percents devided by 100
@@ -48,6 +50,7 @@ voice:
                 #relative_pitch_english: 0.75 # in percents devided by 100
         rhvoice_robotized:
             type: 'rhvoice'
+            enabled: true
             langs: [ 'ru' ]
             rhvoice_params:
                 relative_volume:        1.0 # in percents devided by 100
@@ -75,6 +78,7 @@ voice:
                         mix="1.0"'
         speechd:
             type: 'speechd'
+            enabled: true
             langs: [ 'ru', 'en' ]
             module: 'festival'
 eyes:
@@ -87,7 +91,7 @@ microphone:
     sample_rate: 16000
     update_rate: 2.0
     transcribe_servers: {'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}
-    key_combination: [ 'ctrl', 'w' ]
+    key_combination: [ 'ctrl','alt', 'w' ]
     call_llm: False
     doa:
         algorithm: 'respeaker'
