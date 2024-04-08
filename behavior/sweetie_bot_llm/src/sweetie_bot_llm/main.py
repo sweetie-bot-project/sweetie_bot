@@ -89,7 +89,7 @@ class CompleteNode:
             text, duration = self.request_server(request)
         except CompleteError as e:
             rospy.logerr('%s: %s' % (e, e.details))
-            return CompleteResponse(status = e))
+            return CompleteResponse(status = e)
         # return result
         return CompleteResponse(status='ok', text = text, duration=duration)
 
