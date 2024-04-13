@@ -30,7 +30,7 @@ RUN git clone --depth=1 https://gitlab.com/sweetie-bot/sweetie_bot_flexbe_behavi
  && git clone --depth=1 https://gitlab.com/sweetie-bot/sweetie_bot_sounds
 
 # Build workspace
-RUN rosdep update \
+RUN rosdep update -r || true \
  && . /opt/ros/sweetie_bot/setup.sh \
  && catkin_make
 
