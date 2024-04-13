@@ -152,15 +152,22 @@ function config.file(conf_file)
 		conf_file_param = "conf_file/" .. conf_file_param
 	end
 	-- try to get rosparam
+	local user = os.getenv ( "USER" )
+        tmp_root_dir = "/tmp/sweetie_bot"
+	lfs.mkdir(tmp_root_dir)
+        os.execute('chmod a+rw "' .. tmp_root_dir .. '"')
+	tmp_dir = "/tmp/sweetie_bot/" .. user
+	lfs.mkdir( tmp_dir )
 	local buffer = config.get_rosparam(conf_file_param, 'string')
 	if buffer then
 		print("config.file: use ROS parameter ", conf_file_param)
-		-- create directory in /tmp/<node_fullname>
-		local full_path = "/tmp" .. config.node_namespace 
+		-- create directory in /tmp/sweetie_bot/$USER/<node_fullname>
+		local full_path = tmp_dir .. config.node_namespace
+		print("full_path = ", full_path)
 		local cd = lfs.currentdir()
-		full_path = "/tmp" .. config.node_namespace
+		full_path = tmp_dir .. config.node_namespace
 		local success = lfs.chdir(full_path) or lfs.mkdir(full_path)
-		full_path = "/tmp" .. config.node_fullname
+		full_path = tmp_dir .. config.node_fullname
 		success = success and (lfs.chdir(full_path) or lfs.mkdir(full_path))
 		lfs.chdir(cd)
 		assert(success, "config.file: Unable to create directory " .. full_path)
