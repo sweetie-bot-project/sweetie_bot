@@ -123,7 +123,6 @@ mkdir -p ~/ros/sweetie_bot/src
 cd ~/ros/sweetie_bot/src
 git clone https://gitlab.com/sweetie-bot/sweetie_bot_sounds.git
 git clone https://gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git
-git clone https://gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git
 ```
 Build workspace
 ```
