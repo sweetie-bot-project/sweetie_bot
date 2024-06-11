@@ -1,6 +1,6 @@
 [Unit]
 Description=Sweetie bot self test gui
-After=sweetie-self-test.service
+After=sweetie_bot_self_test.service
 
 [Service]
 Type=oneshot
@@ -10,3 +10,4 @@ ExecStart=/bin/bash -c "source /opt/ros/sweetie_bot/setup.bash && rosrun sweetie
 
 [Install]
 WantedBy=multi-user.target
+

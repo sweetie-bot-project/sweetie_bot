@@ -8,15 +8,15 @@ class TestI2CDev:
         ("dev_id"),
         [
             (0x09),
-            (0x0b),
+            pytest.param((0x0b),marks=pytest.mark.xfail(reason='no battery')),
             (0x6b),
             (0x1e),
             (0x68),
             (0x2c)
         ],
         ids=[
-             'BQ24715',
-             'BQ40Z60',
+             'bq',
+             'bat',
              'acc',
              'mag',
              'rtc',
