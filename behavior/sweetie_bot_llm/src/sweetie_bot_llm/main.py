@@ -27,7 +27,7 @@ class CompleteNode:
     def __init__(self):
         rospy.init_node('complete_server')
         # get server URLS
-        urls = rospy.get_param("~lang_model_servers", {'0': "http://127.0.0.1:5000/api/v1/generate"})
+        urls = rospy.get_param("~lang_model_servers", {'0': "http://127.0.0.1:5000/v1/completions"})
         self._urls = [ urls[k] for k in sorted(urls) ]
         # get profiles
         self._profiles = rospy.get_param("~profile", {})
@@ -69,12 +69,12 @@ class CompleteNode:
         # display result
         rospy.logdebug(f'server {url} response: \n\n {response} \n\n')
         # check response structure
-        if ( 'results' not in response or len(response['results'])==0 or 'text' not in response['results'][0]):
+        if ( 'choices' not in response or len(response['choices'])==0 or 'text' not in response['choices'][0]):
             raise CompleteError('wrong response structure', resp.content)
         # convert to unicode
         try:
             # TODO: what is this? decode and then encode?
-            text = response['results'][0]['text'].encode('utf-8').strip()
+            text = response['choices'][0]['text'].encode('utf-8').strip()
             text = text.decode()
         except UnicodeDecodeError:
             return CompleteError('unicode decode error', resp.content)
@@ -98,12 +98,12 @@ class CompleteNode:
         profile = self._profiles.get(msg.profile)
         if profile is None:
             rospy.logerr(f'unknown profile: {msg.profile}')
-            return CompleteRawResponse(status_error = CompleteRawResponse.UNKNOWN_PROFILE)
+            return CompleteRawResponse(error_code = CompleteRawResponse.UNKNOWN_PROFILE)
         # construct request 
         request = copy(profile) # shallow copy: one level is enought
         request['prompt'] = msg.prompt
         if len(msg.stop_list) != 0:
-            request['stopping_strings'] = msg.stop_list
+            request['stop'] = msg.stop_list
 
         self.log_llm.publish('log/llm/in/'+msg.profile, msg.prompt, '')
         # send it to server
@@ -111,7 +111,7 @@ class CompleteNode:
             text, duration = self.request_server(request)
         except CompleteError as e:
             rospy.logerr(f'{e}: {e.details}')
-            return CompleteRawResponse(status_error = CompleteRawResponse.SERVER_UNREACHABLE)
+            return CompleteRawResponse(error_code = CompleteRawResponse.SERVER_UNREACHABLE)
 
         self.log_llm.publish('log/llm/out/'+msg.profile, text, '')
 
