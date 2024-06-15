@@ -37,12 +37,12 @@ class CompleteNode:
         rospy.Service('llm_request', CompleteRaw, self.complete_simple_callback)
         # log
         self.log_llm = rospy.Publisher('speech_log', TextCommand, queue_size=10)
-        rospy.loginfo('urls: %s', self._urls )
-        rospy.loginfo('profiles: %s', [self._profiles.keys()] )
+        rospy.loginfo(f'urls: {self._urls}')
+        rospy.loginfo(f'profiles: {[self._profiles.keys()]}')
 
     def request_server(self, request):
         # display request
-        rospy.logdebug(f'request: \n\n %s \n\n' % request)
+        rospy.logdebug(f'request: \n\n {request} \n\n')
         # send request to servers
         resp = None
         for url in self._urls:
@@ -53,10 +53,10 @@ class CompleteNode:
                 if resp.status_code == 200:
                     break
                 else:
-                    rospy.logwarn("server $s request error %d: %s" % (url, resp.status_code, resp.reason))
+                    rospy.logwarn(f'server {url} request error {resp.status_code}: {resp.reason}')
                     continue # next url
             except requests.ConnectionError as e:
-                rospy.logwarn("connection error: %s" % e)
+                rospy.logwarn(f'connection error: {e}')
 
         # check if response is received
         if resp is None:
@@ -67,7 +67,7 @@ class CompleteNode:
         except ValueError:
             raise CompleteError('json: can not decode response', resp.content)
         # display result
-        rospy.logdebug(f'server %s response: \n\n %s \n\n' % (url, response))
+        rospy.logdebug(f'server {url} response: \n\n {response} \n\n')
         # check response structure
         if ( 'results' not in response or len(response['results'])==0 or 'text' not in response['results'][0]):
             raise CompleteError('wrong response structure', resp.content)
@@ -88,7 +88,7 @@ class CompleteNode:
         try:
             text, duration = self.request_server(request)
         except CompleteError as e:
-            rospy.logerr('%s: %s' % (e, e.details))
+            rospy.logerr(f'{e}: {e.details}')
             return CompleteResponse(status = e)
         # return result
         return CompleteResponse(status='ok', text = text, duration=duration)
@@ -97,7 +97,7 @@ class CompleteNode:
         # get profile
         profile = self._profiles.get(msg.profile)
         if profile is None:
-            rospy.logerr('unknown profile: %s' % msg.profile)
+            rospy.logerr(f'unknown profile: {msg.profile}')
             return CompleteRawResponse(status_error = CompleteRawResponse.UNKNOWN_PROFILE)
         # construct request 
         request = copy(profile) # shallow copy: one level is enought
@@ -110,7 +110,7 @@ class CompleteNode:
         try:
             text, duration = self.request_server(request)
         except CompleteError as e:
-            rospy.logerr('%s: %s' % (e, e.details))
+            rospy.logerr(f'{e}: {e.details}')
             return CompleteRawResponse(status_error = CompleteRawResponse.SERVER_UNREACHABLE)
 
         self.log_llm.publish('log/llm/out/'+msg.profile, text, '')
@@ -125,7 +125,7 @@ class CompleteNode:
         # get profile
         profile = self._profiles.get(msg.data.options)
         if profile is None:
-            rospy.logerr('unknown profile: %s' % msg.data.options)
+            rospy.logerr(f'unknown profile: {msg.data.options}')
             return CompleteSimpleResponse(data = TextCommand(type = "complete/error", command = 'unknown profile'))
         # produce request
         request = copy(profile)
@@ -134,7 +134,7 @@ class CompleteNode:
         try:
             text, duration = self.request_server(request)
         except CompleteError as e:
-            rospy.logerr('%s: %s' % (e, e.details))
+            rospy.logerr(f'{e}: {e.details}')
             return CompleteSimpleResponse(data = TextCommand(type = "complete/error", command = e))
         # return result
         return CompleteSimpleResponse(data = TextCommand(type = "complete/response", command = text))
