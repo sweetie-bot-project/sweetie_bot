@@ -15,6 +15,7 @@
 	<arg name="run_nlp" default="true" doc="Run natural language processing nodes: speech to text, language model."/>
 	<arg name="run_flexbe" default="true" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 	<arg name="run_flexbe_gui" default="false" doc="Start flexbe gui."/>
+	<arg name="run_button" default="true" />
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
 	<machine name="sweetiebot" address="localhost" user="$(env USER)" default="true"/>
@@ -67,6 +68,14 @@
 				<remap from="control" to="$(arg robot_ns)/control" />
 			</node>
 			<group  if="$(arg run_nlp)">
+				<!-- external button node -->
+				<!-- Check if path to battery exists -->
+
+				<!-- run external button monitor if device connected -->
+				<node ns="hardware" name="external_button_monitor" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
+					<remap from="pushed" to="$(arg robot_ns)/mic_button" />
+				</node>
+
 				<!-- microphone node -->
 				<node pkg="sweetie_bot_mic" type="respeaker" name="microphone" output="screen">
 					<remap from="sound_event" to="$(arg robot_ns)/sound_event" />
