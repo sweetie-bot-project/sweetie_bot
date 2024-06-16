@@ -22,6 +22,7 @@ add_message_files(
   DetectionArray.msg
   SpeechVisualization.msg
   SoundEvent.msg
+  DetectedLanguage.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -31,6 +32,8 @@ add_service_files(
   Complete.srv
   CompleteSimple.srv
   CompleteRaw.srv
+  LibreTranslate.srv
+  Translate.srv
 )
 
 ## Generate actions in the 'action' folder
