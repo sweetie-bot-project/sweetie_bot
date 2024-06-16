@@ -57,27 +57,27 @@ class RespeakerAudio(object):
 
         # find device
         count = self.pyaudio.get_device_count()
-        rospy.logdebug("%d audio devices found" % count)
+        rospy.logdebug(f"{count} audio devices found")
         for i in range(count):
             info = self.pyaudio.get_device_info_by_index(i)
             rospy.logdebug(info)
             name = info["name"]
             chan = info["maxInputChannels"]
-            rospy.logdebug(" - %d: %s" % (i, name))
+            rospy.logdebug(f" - {i}: {name}")
             if name.startswith(self.mic_name):
                 self.available_channels = chan
                 self.device_index = i
-                rospy.loginfo("Found pyaudio device id=%d name=%s (channels: %d)" % (i, name, chan))
+                rospy.loginfo(f"Found pyaudio device id={i} name={name} (channels: {chan})")
                 break
 
         if self.device_index is None:
-            rospy.logwarn("Failed to find pyaudio device by name (%s). Using default input" % self.mic_name)
+            rospy.logwarn(f"Failed to find pyaudio device by name ({self.mic_name}). Using default input")
             info = self.pyaudio.get_default_input_device_info()
             self.available_channels = info["maxInputChannels"]
             self.device_index = info["index"]
 
         if self.available_channels != 6:
-            rospy.logwarn("%d channel is found for microphone" % self.available_channels)
+            rospy.logwarn(f"{self.available_channels} channel is found for microphone")
 
         # whisper can only work with mono
         self.available_channels = 1
@@ -87,10 +87,9 @@ class RespeakerAudio(object):
         else:
             self.channels = filter(lambda c: 0 <= c < self.available_channels, self.channels)
         if not self.channels:
-            raise RuntimeError('Invalid channels %s. (Available channels are %s)' % (
-                self.channels, self.available_channels))
+            raise RuntimeError(f"Invalid channels {self.channels}. (Available channels are {self.available_channels})")
 
-        rospy.loginfo('Using channels %s' % self.channels)
+        rospy.loginfo(f"Using channels {self.channels}")
 
         self.stream = self.pyaudio.open(
             input=True, start=False,
@@ -148,7 +147,7 @@ class RespeakerNode(object):
         suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", True)
         servers = rospy.get_param("~transcribe_servers", {'0': "http://localhost:8577/"})
         self.transcribe_servers = [ servers[k] for k in sorted(servers) ]
-        rospy.loginfo('urls: %s', self.transcribe_servers)
+        rospy.loginfo(f"urls: {self.transcribe_servers}")
         keys_combo = rospy.get_param("~key_combination", ['ctrl', 'alt','w'])
         # audio interface
         self.respeaker_audio = RespeakerAudio(self.on_audio, suppress_error=suppress_pyaudio_error)
@@ -163,10 +162,10 @@ class RespeakerNode(object):
             elif len(key) == 1:
                 self._keys_combo.add( keyboard.KeyCode.from_char(key) )
             else:
-                raise KeyError('unknown key specification: %s' % key)
+                raise KeyError(f"unknown key specification: {key}")
         self.keyboard_listener = keyboard.Listener(on_press=self.on_key_press, on_release=self.on_key_release)
         self.keyboard_listener.start()
-        rospy.loginfo("Listening for global hotkey  %s" % self._keys_combo) 
+        rospy.loginfo(f"Listening for global hotkey  {self._keys_combo}")
         # listen: mic button is pressed
         self._button_pressed = False
         self.sub_button_event = rospy.Subscriber("mic_button", Bool, self.on_mic_button)
@@ -240,24 +239,24 @@ class RespeakerNode(object):
         # request transcribe server
         resp = None
         for url in self.transcribe_servers:
-            rospy.logdebug("Send %d bytes to %s" % (len(data), url))
+            rospy.logdebug(f"Send {len(data)} bytes to {url}")
             try:
                 resp = requests.post(url, files={'file': ('audio.wav', wav_data)})
                 # check status
                 if resp.status_code == 200:
                     break
                 else:
-                    rospy.logerr("%d %s" % (resp.status_code, resp.reason))
+                    rospy.logerr(f"{resp.status_code} {resp.reason}")
             except requests.ConnectionError as e:
-                rospy.logwarn("Connection failed: %s" % e)
+                rospy.logwarn(f"Connection failed: {e}")
         # deacode server response
         if resp is None:
-            rospy.logerr('Transcription failed! Cannot decode response')
+            rospy.logerr("Transcription failed! Cannot decode response")
             return None
         try:
             resp_decoded = resp.json()
         except:
-            rospy.logerr('Transcription failed! Cannot decode response (%s)' % (resp))
+            rospy.logerr(f"Transcription failed! Cannot decode response ({resp})")
             return None
 
         self.voice_log.publish('log/voice/in/'+resp_decoded['language'], resp_decoded['text'], '')
@@ -335,11 +334,11 @@ class RespeakerNode(object):
                 start = time.time()
                 ret = self.llm_service_client(req)
                 duration = time.time() - start
-                rospy.loginfo("Complete ok (%.2f): %s" % (duration, ret.data.command))
+                rospy.loginfo(f"Complete ok ({duration:.2f}): {ret.data.command}")
             except rospy.ServiceException as exc:
-                rospy.logerr("Service did not process request: " + str(exc))
+                rospy.logerr(f"Service did not process request: {exc}")
 
 def main():
-    rospy.init_node("respeaker_node")
+    rospy.init_node("microphone_node")
     n = RespeakerNode()
     rospy.spin()

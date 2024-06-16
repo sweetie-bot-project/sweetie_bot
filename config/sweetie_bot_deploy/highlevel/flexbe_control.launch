@@ -68,7 +68,7 @@
 			</node>
 			<group  if="$(arg run_nlp)">
 				<!-- microphone node -->
-				<node pkg="sweetie_bot_mic" type="respeaker" name="microphone" output="screen">
+				<node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
 					<remap from="sound_event" to="$(arg robot_ns)/sound_event" />
 					<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
 				</node>
