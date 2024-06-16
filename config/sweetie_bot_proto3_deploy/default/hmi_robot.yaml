@@ -48,6 +48,8 @@ voice:
                 relative_pitch:          0.6  # in percents devided by 100
                 #relative_pitch_russian: 0.60 # in percents devided by 100
                 #relative_pitch_english: 0.75 # in percents devided by 100
+            gstreamer_pipeline: 'audioconvert ! audioresample
+                ! volume volume=6.0'
         rhvoice_robotized:
             type: 'rhvoice'
             enabled: true
@@ -78,7 +80,7 @@ voice:
                         mix="1.0"'
         speechd:
             type: 'speechd'
-            enabled: true
+            enabled: false
             langs: [ 'ru', 'en' ]
             module: 'festival'
 eyes:
