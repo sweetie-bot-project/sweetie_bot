@@ -1,5 +1,5 @@
 lang_model:
-    lang_model_servers: {'0': 'http://ai.sweetie.bot:5000/v1/completions', '1':'http://localhost:5000/v1/completions'}
+    lang_model_servers: {'0': 'https://ai.sweetie.bot/llm/v1/completions', '1':'http://localhost:5000/v1/completions'}
     profile:
         en:
             max_tokens: 250

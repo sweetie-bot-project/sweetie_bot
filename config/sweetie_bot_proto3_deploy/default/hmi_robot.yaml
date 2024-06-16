@@ -80,7 +80,7 @@ voice:
                         mix="1.0"'
         speechd:
             type: 'speechd'
-            enabled: false
+            enabled: true
             langs: [ 'ru', 'en' ]
             module: 'festival'
 eyes:
