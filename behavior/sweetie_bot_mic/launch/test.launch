@@ -3,10 +3,12 @@
     <arg name="urls" default="{'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}"/>
     <arg name="call_llm" default="False" />
     <arg name="enable_gtranslate" default="True"/>
+    <arg name="suppress_pyaudio_error" default="True"/>
     <node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
         <rosparam param="call_llm"           subst_value="True">$(arg call_llm)</rosparam>
         <rosparam param="mic_name"           subst_value="True">$(arg mic_name)</rosparam>
         <rosparam param="transcribe_servers" subst_value="True">$(arg urls)</rosparam>
         <rosparam param="enable_gtranslate"  subst_value="True">$(arg enable_gtranslate)</rosparam>
+        <rosparam param="suppress_pyaudio_error" subst_value="True">$(arg suppress_pyaudio_error)</rosparam>
     </node>
 </launch>

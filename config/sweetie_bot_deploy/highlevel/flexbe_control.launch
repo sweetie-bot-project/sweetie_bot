@@ -72,6 +72,11 @@
 					<remap from="sound_event" to="$(arg robot_ns)/sound_event" />
 					<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
 				</node>
+				<!-- transcription node -->
+				<node pkg="sweetie_bot_stt" type="stt_service_node" name="stt_service_node" output="screen">
+					<remap from="transcribe_api" to="$(arg robot_ns)/transcribe_api" />
+					<remap from="transcribe" to="$(arg robot_ns)/transcribe" />
+				</node>
 				<!-- language model interface node -->
 				<node pkg="sweetie_bot_llm" type="llm_service_node" name="lang_model" output="screen">
 					<remap from="llm_request" to="$(arg robot_ns)/llm_request" />

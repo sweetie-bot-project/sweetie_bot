@@ -6,17 +6,12 @@ from contextlib import contextmanager
 import pyaudio
 from pynput import keyboard
 from pynput.keyboard import Key
-import requests
 import numpy as np
-import struct
 
 import rospy
 from sweetie_bot_text_msgs.msg import SoundEvent, TextCommand
-from sweetie_bot_text_msgs.srv import CompleteSimple, CompleteSimpleRequest, CompleteSimpleResponse
+from sweetie_bot_text_msgs.srv import Transcribe, TranscribeRequest, TranscribeResponse
 from std_msgs.msg import Bool
-
-import six
-from google.cloud import translate_v2 as translate
 
 # suppress error messages from ALSA
 # https://stackoverflow.com/questions/7088672/pyaudio-working-but-spits-out-error-messages-each-time
@@ -140,14 +135,9 @@ class RespeakerNode(object):
         # shutdown hook
         rospy.on_shutdown(self.on_shutdown)
         # get parameters
-        call_llm = rospy.get_param("~call_llm", False)
-        self.enable_gtranslate = rospy.get_param("~enable_gtranslate", True)
         self.update_rate = rospy.get_param("~update_rate", 10.0)
         self.main_channel = rospy.get_param('~main_channel', 0)
-        suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", True)
-        servers = rospy.get_param("~transcribe_servers", {'0': "http://localhost:8577/"})
-        self.transcribe_servers = [ servers[k] for k in sorted(servers) ]
-        rospy.loginfo(f"urls: {self.transcribe_servers}")
+        suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", False)
         keys_combo = rospy.get_param("~key_combination", ['ctrl', 'alt','w'])
         # audio interface
         self.respeaker_audio = RespeakerAudio(self.on_audio, suppress_error=suppress_pyaudio_error)
@@ -169,19 +159,14 @@ class RespeakerNode(object):
         # listen: mic button is pressed
         self._button_pressed = False
         self.sub_button_event = rospy.Subscriber("mic_button", Bool, self.on_mic_button)
+        # define transcribe service node
+        rospy.wait_for_service('/transcribe_api', 5.0)
+        self.transcribe_service_client = rospy.ServiceProxy("/transcribe_api", Transcribe, persistent=True)
         # listen: robot speech event to avoid self-listening
-        self._robot_is_speeching = False
+        self._robot_is_speaking = False
         self.sub_mouth_event = rospy.Subscriber("mouth", TextCommand, self.on_mouth)
-        # service call: language model
-        if call_llm:
-            rospy.wait_for_service('/input_text', 5.0)
-            self.llm_service_client = rospy.ServiceProxy("/input_text", CompleteSimple, persistent=True)
-        else:
-            self.llm_service_client = None
         # advertise
         self.pub_sound_event = rospy.Publisher("sound_event", SoundEvent, queue_size=10)
-        # voice log
-        self.voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=10)
         # start
         self.respeaker_audio.start()
         self.info_timer = rospy.Timer(rospy.Duration(1.0 / self.update_rate),
@@ -197,15 +182,15 @@ class RespeakerNode(object):
             self.respeaker_audio = None
 
     def on_mouth(self, cmd):
-        # If robot is speeching everyone else must shurt up!
-        # jk! we don't want the robot to talk to itself.
+        # If robot is speaking, everyone else must shut up!
+        # jk! we just don't want the robot to talk to itself.
         if cmd.type == 'mouth/speech':
             if cmd.command == 'begin':
-                self._robot_is_speeching = True
+                self._robot_is_speaking = True
                 rospy.logdebug("Robot is speaking. Disabling microphone")
                 self.respeaker_audio.stop()
             else:
-                self._robot_is_speeching = False
+                self._robot_is_speaking = False
                 rospy.logdebug("Robot is not speaking. Enabling microphone")
                 self.respeaker_audio.start()
 
@@ -219,85 +204,14 @@ class RespeakerNode(object):
     def on_key_release(self, key):
         self._keys_pressed.discard(key)
 
-    def is_speeching(self):
+    def is_speaking(self):
         combo_is_pressed = len(self._keys_pressed) == len(self._keys_combo)
-        return (combo_is_pressed or self._button_pressed) and not self._robot_is_speeching
-
-    def transcribe(self, data):
-        # prepare wav data
-        wav_data = bytearray()
-        wav_data += struct.pack('<4sL4s4sLHHLLHH4sL', b'RIFF', 
-                36 + len(data), b'WAVE', b'fmt ', 16,
-                1, # no compression
-                1, # n channels
-                self.respeaker_audio.rate, # framerate,
-                1 * self.respeaker_audio.rate * self.respeaker_audio.sample_width,
-                1 * self.respeaker_audio.sample_width,
-                self.respeaker_audio.sample_width * 8, 
-                b'data', len(data))
-        wav_data += data
-        # request transcribe server
-        resp = None
-        for url in self.transcribe_servers:
-            rospy.logdebug(f"Send {len(data)} bytes to {url}")
-            try:
-                resp = requests.post(url, files={'file': ('audio.wav', wav_data)})
-                # check status
-                if resp.status_code == 200:
-                    break
-                else:
-                    rospy.logerr(f"{resp.status_code} {resp.reason}")
-            except requests.ConnectionError as e:
-                rospy.logwarn(f"Connection failed: {e}")
-        # deacode server response
-        if resp is None:
-            rospy.logerr("Transcription failed! Cannot decode response")
-            return None
-        try:
-            resp_decoded = resp.json()
-        except:
-            rospy.logerr(f"Transcription failed! Cannot decode response ({resp})")
-            return None
-
-        self.voice_log.publish('log/voice/in/'+resp_decoded['language'], resp_decoded['text'], '')
-
-        if self.enable_gtranslate and resp_decoded['language'] !='en':
-            resp_decoded['text'] = self.translate_text('en', resp_decoded['text'])
-
-        # Publish translated verssion of the text as well
-        self.voice_log.publish('log/voice/in/en', resp_decoded['text'], '')
-
-        rospy.loginfo('Transcription %s (%.2fs) [%s]: "%s"' % (resp_decoded['status'],
-                                                               resp_decoded['transcribe_duration'],
-                                                               resp_decoded['language'],
-                                                               resp_decoded['text']))
-        return resp_decoded
-
-    def translate_text(self, target, text):
-        """Translates text into the target language.
-
-        Target must be an ISO 639-1 language code.
-        See https://g.co/cloud/translate/v2/translate-reference#supported_languages
-        """
-        translate_client = translate.Client()
-
-        if isinstance(text, six.binary_type):
-            text = text.decode("utf-8")
-
-        # Text can also be a sequence of strings, in which case this method
-        # will return a sequence of results for each text.
-        result = translate_client.translate(text, target_language=target)
-
-        #print(u"Text: {}".format(result["input"]))
-        #print(u"Translation: {}".format(result["translatedText"]))
-        #print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
-
-        return result["translatedText"]
+        return (combo_is_pressed or self._button_pressed) and not self._robot_is_speaking
 
     def on_audio(self, data, channel):
         if channel == self.main_channel:
             # store speech data
-            if self.is_speeching():
+            if self.is_speaking():
                 self.speech_audio_buffer.extend(data)
 
     def on_timer(self, event):
@@ -306,37 +220,28 @@ class RespeakerNode(object):
         sound_event.header.stamp = event.current_real or rospy.Time.now()
 
         # set current status
-        is_speeching = self.is_speeching();
-        if is_speeching:
+        is_speaking = self.is_speaking();
+        if is_speaking:
             sound_event.sound_flags |= SoundEvent.SPEECH_DETECTING | SoundEvent.SOUND_DETECTING
        
         # decode speech
-        if not self.is_speeching() and len(self.speech_audio_buffer) != 0:
+        if not self.is_speaking() and len(self.speech_audio_buffer) != 0:
             # new speech fragment is received
-            result = self.transcribe(self.speech_audio_buffer)
+            transcribe_req = TranscribeRequest(
+                data=self.speech_audio_buffer,
+                rate=self.respeaker_audio.rate,
+                sample_width=self.respeaker_audio.sample_width
+            )
+            result = self.transcribe_service_client(transcribe_req)
             if result is not None:
                 sound_event.sound_flags |= SoundEvent.SPEECH_DECODED
-                sound_event.text = result['text']
-                sound_event.language = result['language']
+                sound_event.text = result.text
+                sound_event.language = result.language
             # clear buffer
             self.speech_audio_buffer.clear()
 
         # publish result
         self.pub_sound_event.publish(sound_event)
-
-        # pass text to language model: new speech is decoded and Complete service is available
-        if sound_event.sound_flags & SoundEvent.SPEECH_DECODED and self.llm_service_client is not None:
-            try:
-                req = CompleteSimpleRequest()
-                req.data.type = 'complete/request'
-                req.data.command = sound_event.text
-                req.data.options = sound_event.language
-                start = time.time()
-                ret = self.llm_service_client(req)
-                duration = time.time() - start
-                rospy.loginfo(f"Complete ok ({duration:.2f}): {ret.data.command}")
-            except rospy.ServiceException as exc:
-                rospy.logerr(f"Service did not process request: {exc}")
 
 def main():
     rospy.init_node("microphone_node")
