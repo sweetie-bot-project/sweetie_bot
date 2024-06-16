@@ -1,8 +1,5 @@
 string filename
-
 uint8[] data
-uint32 rate
-uint32 sample_width
 ---
 string status
 string text

@@ -2,7 +2,6 @@
 import os
 import rospy
 import requests
-import struct
 
 from sweetie_bot_text_msgs.msg import TextCommand
 from sweetie_bot_text_msgs.srv import Transcribe, TranscribeRequest, TranscribeResponse
@@ -42,30 +41,13 @@ class TranscriberNode(object):
         rospy.loginfo(f"urls: {self.transcribe_servers}")
         self.voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=10)
 
-    def transcribe(self, msg):
-        # TODO: Factor out of vaw generation from
-        #       this function back into mic
-        data = msg.data
-        rate = msg.rate
-        sample_width = msg.sample_width
-        # prepare wav data
-        wav_data = bytearray()
-        wav_data += struct.pack('<4sL4s4sLHHLLHH4sL', b'RIFF', 
-                36 + len(data), b'WAVE', b'fmt ', 16,
-                1, # no compression
-                1, # n channels
-                rate, # framerate,
-                1 * rate * sample_width,
-                1 * sample_width,
-                sample_width * 8, 
-                b'data', len(data))
-        wav_data += data
+    def transcribe(self, req):
         # request transcribe server
         resp = None
         for url in self.transcribe_servers:
-            rospy.logdebug(f"Send {len(data)} bytes to {url}")
+            rospy.logdebug(f"Send {len(req.data)} bytes to {url}")
             try:
-                resp = requests.post(url, files={'file': ('audio.wav', wav_data)})
+                resp = requests.post(url, files={'file': ('audio.wav', req.data)})
                 # check status
                 if resp.status_code == 200:
                     break

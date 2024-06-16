@@ -7,6 +7,7 @@ import pyaudio
 from pynput import keyboard
 from pynput.keyboard import Key
 import numpy as np
+import struct
 
 import rospy
 from sweetie_bot_text_msgs.msg import SoundEvent, TextCommand
@@ -214,6 +215,22 @@ class RespeakerNode(object):
             if self.is_speaking():
                 self.speech_audio_buffer.extend(data)
 
+    def buf_to_wav(self, data):
+        # prepare wav data
+        wav_data = bytearray()
+        wav_data += struct.pack('<4sL4s4sLHHLLHH4sL', b'RIFF', 
+                36 + len(data), b'WAVE', b'fmt ', 16,
+                1, # no compression
+                1, # n channels
+                self.respeaker_audio.rate, # framerate,
+                1 * self.respeaker_audio.rate * self.respeaker_audio.sample_width,
+                1 * self.respeaker_audio.sample_width,
+                self.respeaker_audio.sample_width * 8, 
+                b'data', len(data))
+        wav_data += data
+
+        return wav_data
+
     def on_timer(self, event):
         # form speech event
         sound_event = SoundEvent()
@@ -228,9 +245,7 @@ class RespeakerNode(object):
         if not self.is_speaking() and len(self.speech_audio_buffer) != 0:
             # new speech fragment is received
             transcribe_req = TranscribeRequest(
-                data=self.speech_audio_buffer,
-                rate=self.respeaker_audio.rate,
-                sample_width=self.respeaker_audio.sample_width
+                data=self.buf_to_wav(self.speech_audio_buffer),
             )
             result = self.transcribe_service_client(transcribe_req)
             if result is not None:
