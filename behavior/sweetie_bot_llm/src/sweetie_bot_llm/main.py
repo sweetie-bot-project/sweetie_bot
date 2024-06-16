@@ -95,9 +95,9 @@ class CompleteNode:
 
     def complete_simple_callback(self, msg):
         # get profile
-        profile = self._profiles.get(msg.profile)
+        profile = self._profiles.get(msg.profile_name)
         if profile is None:
-            rospy.logerr(f'unknown profile: {msg.profile}')
+            rospy.logerr(f'unknown profile: {msg.profile_name}')
             return CompleteRawResponse(error_code = CompleteRawResponse.UNKNOWN_PROFILE)
         # construct request 
         request = copy(profile) # shallow copy: one level is enought
@@ -105,7 +105,7 @@ class CompleteNode:
         if len(msg.stop_list) != 0:
             request['stop'] = msg.stop_list
 
-        self.log_llm.publish('log/llm/in/'+msg.profile, msg.prompt, '')
+        self.log_llm.publish('log/llm/in/'+msg.profile_name, msg.prompt, '')
         # send it to server
         try:
             text, duration = self.request_server(request)
@@ -113,7 +113,7 @@ class CompleteNode:
             rospy.logerr(f'{e}: {e.details}')
             return CompleteRawResponse(error_code = CompleteRawResponse.SERVER_UNREACHABLE)
 
-        self.log_llm.publish('log/llm/out/'+msg.profile, text, '')
+        self.log_llm.publish('log/llm/out/'+msg.profile_name, text, '')
 
         # return result
         return CompleteRawResponse(result = text, error_code = CompleteRawResponse.SUCCESS)

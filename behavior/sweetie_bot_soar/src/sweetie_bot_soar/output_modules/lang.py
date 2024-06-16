@@ -244,13 +244,20 @@ AttribRequest.subclass_map.update({'map': AttribRequestMap})
 
 class LangRequest:
 
-    def __init__(self, prompt_header, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile, start_event_history_with_heard = False):
+    def __init__(self, prompt_header_name, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile_name, start_event_history_with_heard = False):
         # get parameters: header
-        assert_param(prompt_header, 'prompt_header: must be string', allowed_types=str)
-        self._header = prompt_header
+        assert_param(prompt_header_name, 'prompt_header_name: must be string', allowed_types=str)
+        self._header_name = prompt_header_name
+
+        prompt_parameter = f'/lang_model/prompts/{self._header_name}'
+        try:
+            self._header = rospy.get_param(prompt_parameter)
+        except KeyError:
+            raise KeyError(f'prompt_header_name: requested prompt {self._header_name} is missing from parameter server. Load it into {self._header_name}.txt file from the prompt directory.')
+
         # get parameters: profile
-        assert_param(llm_profile, 'profile: must be string', allowed_types=str)
-        self._llm_profile = llm_profile
+        assert_param(llm_profile_name, 'profile name: must be string', allowed_types=str)
+        self._llm_profile_name = llm_profile_name
         # get parameters: fact templates
         assert_param(prompt_fact_templates, 'prompt_fact_templates: must be dictionary', allowed_types=dict)
         for k, v in prompt_fact_templates.items():
@@ -324,7 +331,7 @@ class LangRequest:
                 # fix new lines: must be \r\n
                 prompt = prompt.replace('\n', '\r\n')
                 # send request
-                req = CompleteRawRequest(prompt = prompt, profile = self._llm_profile, stop_list = request.stop_list)
+                req = CompleteRawRequest(prompt = prompt, profile_name = self._llm_profile_name, stop_list = request.stop_list)
                 resp = llm_caller(req)
                 # check result
                 if resp.error_code != 0:
