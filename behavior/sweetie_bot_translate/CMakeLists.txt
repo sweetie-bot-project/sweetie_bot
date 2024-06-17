@@ -160,7 +160,6 @@ install(PROGRAMS
 
 install(DIRECTORY
   launch
-  config
   service
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
