@@ -7,11 +7,20 @@ class TestI2CDev:
     @pytest.mark.parametrize(
         ("dev_id"),
         [
-            (0x68)
-            #(0x2b)
+            (0x09),
+            pytest.param((0x0b),marks=pytest.mark.xfail(reason='no battery')),
+            (0x6b),
+            (0x1e),
+            (0x68),
+            (0x2c)
         ],
-        ids=['rtc'
-             #'touch'
+        ids=[
+             'bq',
+             'bat',
+             'acc',
+             'mag',
+             'rtc',
+             'touch'
             ]
     )
     def test_i2c(self, dev_id):
