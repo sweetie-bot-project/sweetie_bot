@@ -153,15 +153,13 @@ include_directories(
 ## Install ##
 #############
 install(PROGRAMS
-  scripts/translate_service_clinet
+  scripts/translate_service_client
   scripts/translate_service_node
-  scripts/translate_api_service_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(DIRECTORY
   launch
-  config
   service
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
