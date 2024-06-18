@@ -36,6 +36,8 @@ child = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
 streamdata = child.communicate()[0]
 ip = streamdata.decode().strip()
 
+hostname = socket.gethostname()
+
 class TestNet:
     @pytest.mark.parametrize(
         ("value"),
@@ -71,5 +73,15 @@ class TestNet:
         ids=[ip]
     )
     def test_ip(self, value):
+        assert '' != value
+
+    @pytest.mark.parametrize(
+        ("value"),
+        [
+            (hostname)
+        ],
+        ids=[hostname]
+    )
+    def test_hostname(self, value):
         assert '' != value
 

@@ -1,0 +1,6 @@
+<launch>
+    <arg name="libre_translate_urls" default="{'0': 'http://127.0.0.1:5001/translate', '1': 'https://ai.sweetie.bot/trans/'}"/>
+    <node pkg="sweetie_bot_translate" type="translate_service_node" name="translate_server" output="screen">
+        <rosparam param="libre_translate_servers" subst_value="True">$(arg libre_translate_urls)</rosparam>
+    </node>
+</launch>
