@@ -155,7 +155,6 @@ function config.file(conf_file)
 	local user = os.getenv ( "USER" )
         tmp_root_dir = "/tmp/sweetie_bot"
 	lfs.mkdir(tmp_root_dir)
-        os.execute('chmod a+rw "' .. tmp_root_dir .. '"')
 	tmp_dir = "/tmp/sweetie_bot/" .. user
 	lfs.mkdir( tmp_dir )
 	local buffer = config.get_rosparam(conf_file_param, 'string')
