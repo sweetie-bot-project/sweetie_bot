@@ -15,9 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 # Generate the virtualenv
 catkin_generate_virtualenv(
-	INPUT_REQUIREMENTS requirements.in
 	PYTHON_INTERPRETER python3.8
-	)
+)
 
 ## System dependencies are found with CMake's coundEvent
 # find_package(Boost REQUIRED COMPONENTS system)
