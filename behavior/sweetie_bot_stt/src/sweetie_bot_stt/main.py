@@ -80,29 +80,28 @@ class TranscriberNode(object):
 
         return TranscribeResponse(**resp_decoded)
 
-    def transcribe_file(req):
+    def transcribe_file(self, req):
         if req.filename and os.path.isfile(req.filename):
-            rospy.logdebug("Got filename = %s" % req.filename)
+            rospy.logdebug(f'Got filename = {req.filename}')
             with open(req.filename, 'rb') as file:
                 req.data = file.read()
 
         r = None
-        for n in sorted(self.transcribe_servers):
-            rospy.loginfo("Send %d bytes to %s" % (len(req.data), self.transcribe_servers[n]))
+        for url in self.transcribe_servers:
+            rospy.loginfo(f'Send {len(req.data)} bytes to {url}')
             try:
                 r = None
-                r = requests.post(self.transcribe_servers[n], files={'file': ('audio.wav', req.data)})
+                r = requests.post(url, files={'file': ('audio.wav', req.data)})
                 if r.status_code == 200:
                     break
                 else:
-                    rospy.logerr("%d %s" % (r.status_code, r.reason))
+                    rospy.logerr(f'{r.status_code} {r.reason}')
                     continue # next url
             except requests.ConnectionError as e:
-                rospy.logerr("Connection failed! %s" % e)
-                # nexu url
+                rospy.logerr(f'Connection failed! {e}') # next url
 
         if r is None:
-            return TranscribeResponse(status="All API URLs are down!")
+            return TranscribeResponse(status='All API URLs are down!')
         try:
           response = r.json()
           if r.status_code != 200:
@@ -115,7 +114,7 @@ class TranscriberNode(object):
                                                             response['transcribe_duration'],
                                                             response['text']))
         except:
-          rospy.logerr('Cannot decode response (%s)' % (r.content))
+          rospy.logerr(f'Cannot decode response ({r.content})')
           return TranscribeResponse()
 
         return TranscribeResponse(**response)
