@@ -274,7 +274,7 @@ class RespeakerNode(object):
         #
         mic_name = rospy.get_param("~mic_name", "ReSpeaker 4 Mic Array (UAC1.0)")
         sample_rate = rospy.get_param("~sample_rate", 16000)
-        update_rate = rospy.get_param("~update_rate", 8)
+        update_rate = rospy.get_param("~update_rate", 4)
         main_channel = rospy.get_param('~main_channel', 0)
         self.frame_id = rospy.get_param("~frame_id", "base_link")
         call_llm = rospy.get_param("~call_llm", False)
@@ -388,6 +388,8 @@ class RespeakerNode(object):
         self._button_pressed = False
         self._robot_is_speeching = False
         self._intensity_speech = np.ones(shape=(10,))
+        self._speech_source_direction = np.zeros(shape=(3,))
+        self._speech_source_intesity = 0.0
 
         #
         # Messages buffers
@@ -402,15 +404,18 @@ class RespeakerNode(object):
             self._sound_event.doa_colatitude = self.doa_estimator.grid.colatitude
 
         # create object detection  message
-        detection = Detection(id = 0, label = 'speech', type = 'sound')
-        detection.header = self._sound_event.header
-        self._detections_msg = DetectionArray(detections = [ detection ])
+        self._detection_sound_msg = Detection(header = self._sound_event.header, id = 0, label = 'sound', type = 'sound')
+        self._detection_speech_msg = Detection(header = self._sound_event.header, id = 0, label = 'speech', type = 'sound')
 
-        # create visualization marker message 
-        marker = Marker(ns = 'microphone', id = 0, type = Marker.SPHERE, action = Marker.ADD, scale = Vector3(0.3, 0.3, 0.3), lifetime = rospy.Duration(1.0), color = ColorRGBA(1.0, 0.0, 0.0, 0.5))
-        marker.header = self._sound_event.header
-        marker.pose = detection.pose
-        self._markers_msg = MarkerArray(markers = [ marker ])
+        # create visualization marker message (temporary)
+        self._marker_sound_msg = Marker(header = self._sound_event.header, ns = 'microphone', 
+                                        id = 0, type = Marker.SPHERE, action = Marker.ADD, lifetime = rospy.Duration(1.0), 
+                                        scale = Vector3(0.3, 0.3, 0.3), color = ColorRGBA(0.0, 1.0, 0.0, 0.5),
+                                        pose = self._detection_sound_msg.pose)
+        self._marker_speech_msg = Marker(header = self._sound_event.header, ns = 'microphone', 
+                                        id = 1, type = Marker.SPHERE, action = Marker.ADD, lifetime = rospy.Duration(1.0), 
+                                        scale = Vector3(0.3, 0.3, 0.3), color = ColorRGBA(1.0, 0.0, 0.0, 0.5),
+                                        pose = self._detection_speech_msg.pose)
 
         # plot message
         if self.debug_plot:
@@ -575,11 +580,11 @@ class RespeakerNode(object):
             self.speech_audio_buffer.extend(main_channel.tobytes())
 
         # calculate sound rms
-        self._sound_event.intensity = np.sqrt(np.sum(main_channel.astype(np.float32)**2) / len(main_channel)) 
+        intensity = np.sqrt(np.sum(main_channel.astype(np.float32)**2) / len(main_channel)) 
 
         # sound intensity profile estimation (only is debug plot is enabled)
         if self.debug_plot:
-            intensity_index = int(self._sound_event.intensity // self._intensity_histogram_step)
+            intensity_index = int(intensity // self._intensity_histogram_step)
             # resize bins array if necessary
             if intensity_index >= len(self._intensity_speech):
                 new_size = int(1.3 * intensity_index)
@@ -600,10 +605,11 @@ class RespeakerNode(object):
             now.y = [ p_speech ]
 
         # doa estimation
+        doa_direction = np.zeros(shape(3,))
         if self.doa_algorithm == 'respeaker':
             # get direction from hardware
             doa_rad = np.deg2rad(self.respeaker.direction())
-            self._sound_event.doa = Vector3(np.cos(doa_rad), np.sin(doa_rad), 0.0)
+            doa_direction[:] = np.cos(doa_rad), np.sin(doa_rad), 0.0
         elif self.doa_algorithm != 'none':
             # perform fft on raw mic channels
             nfft = self.doa_nfft
@@ -622,7 +628,6 @@ class RespeakerNode(object):
             else:
                 colatitude = np.pi/2.0
             doa_direction = np.array( (np.cos(azimuth)*np.sin(colatitude), np.sin(azimuth)*np.sin(colatitude), np.cos(colatitude)) )
-            self._sound_event.doa = Vector3( *doa_direction )
 
             # copy raw DOA data
             doa_values_sum = np.sum(self.doa_estimator.grid.values)
@@ -637,12 +642,20 @@ class RespeakerNode(object):
                     # copy DOA to debug 
                     doa = self._plot_msg.subplots[2].curves[0]
                     doa.x = self.doa_estimator.grid.azimuth 
-                    doa.y = self._sound_event.doa_values * self._sound_event.intensity
+                    doa.y = self._sound_event.doa_values * intensity
+
+        # average speech source direction
+        if is_speeching:
+            self._speech_source_direction[:] = 0.0
+            self._speech_source_intesity = 0.0
+        else: 
+            self._speech_source_direction += doa_direction * intensity
+            self._speech_source_intesity += intensity
 
         # form speech event
         self._sound_event.header.stamp = rospy.Time.now()
-
-        # set current status
+        self._sound_event.doa = Vector3( *doa_direction )
+        self._sound_event.intensity = intensity
         if is_speeching:
             self._sound_event.sound_flags = SoundEvent.SPEECH_DETECTING | SoundEvent.SOUND_DETECTING
         else:
@@ -662,15 +675,24 @@ class RespeakerNode(object):
         # publish result
         self.pub_sound_event.publish(self._sound_event)
 
-        # publush object detection and marker if speeching
-        if is_speeching:
-            # modify detection messsa
-            # visualization marker shares the same header and pose
-            pos = self._detections_msg.detections[0].pose.position
+        # publush object detections and markers if someone is speeching or sound is heard
+        detections_msg = DetectionArray()
+        markers_msgs = MarkerArray()
+        # modify only detection messsages
+        # visualization marker shares the same header and pose
+        if self._sound_event | SoundEvent.SOUND_DETECTING:
+            pos = self._detection_sound_msg.pose.position
             pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
-            # publish detection and marker
-            self.pub_detections.publish(self._detections_msg)
-            self.pub_markers.publish(self._markers_msg)
+            detections_msg.append(self._detection_sound_msg)
+            markers_msgs.append(self._marker_sound_msg)
+        if self._sound_event | SoundEvent.SPEECH_DETECTING:
+            pos = self._detection_speech_msg.pose.position
+            pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
+            detections_msg.append(self._detection_speech_msg)
+            markers_msgs.append(self._marker_speech_msg)
+        if len(detections_msg.detections) > 0:
+            self.pub_detections.publish(detections_msg)
+            self.pub_markers.publish(markers_msg)
 
         # publish debug plot
         if self.debug_plot:
