@@ -13,6 +13,8 @@ import numpy as np
 import struct
 
 import rospy
+from dynamic_reconfigure.server import Server as DynamicReconfigureServer
+from sweetie_bot_mic.cfg import RespeakerConfig
 
 from sweetie_bot_text_msgs.msg import SoundEvent, TextCommand, Detection, DetectionArray
 from sweetie_bot_text_msgs.srv import CompleteSimple, CompleteSimpleRequest, CompleteSimpleResponse
@@ -441,6 +443,8 @@ class RespeakerNode(object):
         # Node interface
         #
 
+        # dynamic parameters
+        self.dyn_paramters = DynamicReconfigureServer(RespeakerConfig, self.on_parameters_update)
         # listen: mic button is pressed
         self.sub_button_event = rospy.Subscriber("mic_button", Bool, self.on_mic_button)
         # listen: robot speech event to avoid self-listening
@@ -474,6 +478,13 @@ class RespeakerNode(object):
         finally:
             self.respeaker_audio = None
             self.respeaker = None
+
+    def on_parameters_update(self, config, level):
+        try:
+            self._sound_intesity_threshold = config['sound_intensity_threshold']
+        except KeyError:
+            pass
+        return config
 
     def on_mouth(self, cmd):
         # If robot is speeching everyone else must shurt up!
@@ -605,7 +616,7 @@ class RespeakerNode(object):
             now.y = [ p_speech ]
 
         # doa estimation
-        doa_direction = np.zeros(shape(3,))
+        doa_direction = np.zeros(shape=(3,))
         if self.doa_algorithm == 'respeaker':
             # get direction from hardware
             doa_rad = np.deg2rad(self.respeaker.direction())
@@ -656,10 +667,11 @@ class RespeakerNode(object):
         self._sound_event.header.stamp = rospy.Time.now()
         self._sound_event.doa = Vector3( *doa_direction )
         self._sound_event.intensity = intensity
+        self._sound_event.sound_flags = 0
         if is_speeching:
-            self._sound_event.sound_flags = SoundEvent.SPEECH_DETECTING | SoundEvent.SOUND_DETECTING
-        else:
-            self._sound_event.sound_flags = 0
+            self._sound_event.sound_flags = SoundEvent.SPEECH_DETECTING
+        if intensity > self._sound_intesity_threshold:
+            self._sound_event.sound_flags = SoundEvent.SOUND_DETECTING
 
         # decode speech
         if not is_speeching and len(self.speech_audio_buffer) != 0:
@@ -677,19 +689,19 @@ class RespeakerNode(object):
 
         # publush object detections and markers if someone is speeching or sound is heard
         detections_msg = DetectionArray()
-        markers_msgs = MarkerArray()
+        markers_msg = MarkerArray()
         # modify only detection messsages
         # visualization marker shares the same header and pose
-        if self._sound_event | SoundEvent.SOUND_DETECTING:
+        if self._sound_event.sound_flags & SoundEvent.SOUND_DETECTING:
             pos = self._detection_sound_msg.pose.position
             pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
-            detections_msg.append(self._detection_sound_msg)
-            markers_msgs.append(self._marker_sound_msg)
-        if self._sound_event | SoundEvent.SPEECH_DETECTING:
+            detections_msg.detections.append(self._detection_sound_msg)
+            markers_msg.markers.append(self._marker_sound_msg)
+        if self._sound_event.sound_flags & SoundEvent.SPEECH_DETECTING:
             pos = self._detection_speech_msg.pose.position
             pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
-            detections_msg.append(self._detection_speech_msg)
-            markers_msgs.append(self._marker_speech_msg)
+            detections_msg.detections.append(self._detection_speech_msg)
+            markers_msg.markers.append(self._marker_speech_msg)
         if len(detections_msg.detections) > 0:
             self.pub_detections.publish(detections_msg)
             self.pub_markers.publish(markers_msg)
