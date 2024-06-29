@@ -1,0 +1,3 @@
+google-cloud-translate==2.0.1
+TTS
+rhvoice-wrapper-bin
