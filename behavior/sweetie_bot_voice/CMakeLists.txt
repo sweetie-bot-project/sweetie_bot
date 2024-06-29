@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.6)
 project(sweetie_bot_voice)
 
 ## Find catkin macros and libraries
@@ -8,13 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   rospack
   sound_play
-  catkin_virtualenv
   sweetie_bot_text_msgs
-)
-
-# Generate the virtualenv
-catkin_generate_virtualenv(
-	PYTHON_INTERPRETER python3.8
 )
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -45,9 +39,6 @@ install(DIRECTORY
   conversion
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
-
-install(FILES requirements.txt
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html

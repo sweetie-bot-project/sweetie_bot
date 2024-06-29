@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.6)
 project(sweetie_bot_mic)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -16,6 +16,9 @@ find_package(catkin REQUIRED COMPONENTS
 # Generate the virtualenv
 catkin_generate_virtualenv(
 	PYTHON_INTERPRETER python3.8
+  USE_SYSTEM_PACKAGES FALSE
+  ISOLATE_REQUIREMENTS TRUE
+  CHECK_VENV FALSE
 )
 
 ## System dependencies are found with CMake's coundEvent

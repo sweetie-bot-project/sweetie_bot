@@ -241,7 +241,7 @@ class PlayerGstreamer():
                 if extension.endswith(ext):
                     files[basename] = os.path.join(directory, f)
         except OSError as e:
-            rospy.logwarn('Unable to list `%s` directory.' % directory)
+            rospy.logdebug('Unable to list `%s` directory.' % directory)
             return []
         return files
 
@@ -262,7 +262,6 @@ class VoiceNode():
         # load voice profiles
         self._voice_profile = {}
         for name, profile_config in profiles_config.items():
-            print(name, profile_config)
             try:
                 if not profile_config.get('enabled'):
                     continue
@@ -336,8 +335,8 @@ class VoiceNode():
             self.pub.publish('mouth/speech', 'end', '')
         elif cmd.type.startswith('voice/say'):
             # get lang code
-            if len(cmd.type) == 12:
-                lang = cmd.type[-2:]
+            if len(cmd.type) >= 12:
+                lang = cmd.type.rsplit('/',1)[-1]
             elif len(cmd.type) == 9:
                 if cmd.options != '':
                     lang = cmd.options
@@ -348,7 +347,7 @@ class VoiceNode():
                 return False
 
             # Publish original text before the translation as well
-            voice_log.publish('log/voice/out/en', cmd.command, '')
+            voice_log.publish(f'log/voice/out/{lang}', cmd.command, '')
 
             # translate to source lang
             if self.enable_gtranslate and lang !='en':
