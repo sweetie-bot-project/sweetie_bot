@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 # Generate the virtualenv
 catkin_generate_virtualenv(
-	PYTHON_INTERPRETER python3.9
+	PYTHON_INTERPRETER python3.8
 )
 
 ## Uncomment this if the package has a setup.py. This macro ensures
