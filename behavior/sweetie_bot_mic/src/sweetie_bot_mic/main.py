@@ -412,7 +412,7 @@ class RespeakerNode(object):
         # create visualization marker message (temporary)
         self._marker_sound_msg = Marker(header = self._sound_event.header, ns = 'microphone', 
                                         id = 0, type = Marker.SPHERE, action = Marker.ADD, lifetime = rospy.Duration(1.0), 
-                                        scale = Vector3(0.3, 0.3, 0.3), color = ColorRGBA(0.0, 1.0, 0.0, 0.5),
+                                        scale = Vector3(0.2, 0.2, 0.2), color = ColorRGBA(0.0, 1.0, 0.0, 0.5),
                                         pose = self._detection_sound_msg.pose)
         self._marker_speech_msg = Marker(header = self._sound_event.header, ns = 'microphone', 
                                         id = 1, type = Marker.SPHERE, action = Marker.ADD, lifetime = rospy.Duration(1.0), 
@@ -656,22 +656,24 @@ class RespeakerNode(object):
                     doa.y = self._sound_event.doa_values * intensity
 
         # average speech source direction
+        # TODO: use non-moving frame
         if is_speeching:
-            self._speech_source_direction[:] = 0.0
-            self._speech_source_intesity = 0.0
-        else: 
             self._speech_source_direction += doa_direction * intensity
             self._speech_source_intesity += intensity
+        else:
+            self._speech_source_direction[:] = 0.0
+            self._speech_source_intesity = 0.0
 
         # form speech event
         self._sound_event.header.stamp = rospy.Time.now()
         self._sound_event.doa = Vector3( *doa_direction )
         self._sound_event.intensity = intensity
-        self._sound_event.sound_flags = 0
+        sound_flags = 0
         if is_speeching:
-            self._sound_event.sound_flags = SoundEvent.SPEECH_DETECTING
+            sound_flags |= SoundEvent.SPEECH_DETECTING
         if intensity > self._sound_intesity_threshold:
-            self._sound_event.sound_flags = SoundEvent.SOUND_DETECTING
+            sound_flags |= SoundEvent.SOUND_DETECTING
+        self._sound_event.sound_flags = sound_flags
 
         # decode speech
         if not is_speeching and len(self.speech_audio_buffer) != 0:
@@ -692,15 +694,17 @@ class RespeakerNode(object):
         markers_msg = MarkerArray()
         # modify only detection messsages
         # visualization marker shares the same header and pose
-        if self._sound_event.sound_flags & SoundEvent.SOUND_DETECTING:
+        if sound_flags & SoundEvent.SOUND_DETECTING:
             pos = self._detection_sound_msg.pose.position
             pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
             detections_msg.detections.append(self._detection_sound_msg)
+            self._marker_sound_msg.color.a = min(intensity / 2000, 1.0)
             markers_msg.markers.append(self._marker_sound_msg)
-        if self._sound_event.sound_flags & SoundEvent.SPEECH_DETECTING:
+        if sound_flags & SoundEvent.SPEECH_DETECTING:
             pos = self._detection_speech_msg.pose.position
-            pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
+            pos.x, pos.y, pos.z = self._speech_source_direction * (self.doa_object_distance / self._speech_source_intesity)
             detections_msg.detections.append(self._detection_speech_msg)
+            self._marker_speech_msg.color.a = min(intensity / 2000, 1.0)
             markers_msg.markers.append(self._marker_speech_msg)
         if len(detections_msg.detections) > 0:
             self.pub_detections.publish(detections_msg)
