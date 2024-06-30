@@ -58,3 +58,14 @@ lang_model:
             ban_eos_token: False
             skip_special_tokens: True
             stop: ["\n私の感情：", "\n人間：", "\n"]
+
+transcriber:
+    balancer_config:
+        # Min priority value = 100
+        server_choices:
+            local_host:
+                priority: 10
+                url: 'https://ai.sweetie.bot/stt/'
+            remote_host:
+                priority: 20
+                url: 'http://localhost:8577/'

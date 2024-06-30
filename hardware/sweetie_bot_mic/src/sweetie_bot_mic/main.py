@@ -240,23 +240,29 @@ class RespeakerNode(object):
         is_speaking = self.is_speaking();
         if is_speaking:
             sound_event.sound_flags |= SoundEvent.SPEECH_DETECTING | SoundEvent.SOUND_DETECTING
-       
-        # decode speech
-        if not self.is_speaking() and len(self.speech_audio_buffer) != 0:
-            # new speech fragment is received
-            transcribe_req = TranscribeRequest(
-                data=self.buf_to_wav(self.speech_audio_buffer),
-            )
-            result = self.transcribe_service_client(transcribe_req)
-            if result is not None:
-                sound_event.sound_flags |= SoundEvent.SPEECH_DECODED
-                sound_event.text = result.text
-                sound_event.language = result.language
-            # clear buffer
-            self.speech_audio_buffer.clear()
 
-        # publish result
-        self.pub_sound_event.publish(sound_event)
+        try:
+       
+            # decode speech
+            if not self.is_speaking() and len(self.speech_audio_buffer) != 0:
+                # new speech fragment is received
+                transcribe_req = TranscribeRequest(
+                    data=self.buf_to_wav(self.speech_audio_buffer),
+                )
+                result = self.transcribe_service_client(transcribe_req)
+                if result is not None:
+                    sound_event.sound_flags |= SoundEvent.SPEECH_DECODED
+                    sound_event.text = result.text
+                    sound_event.language = result.language
+                # clear buffer
+                self.speech_audio_buffer.clear()
+
+            # publish result
+            self.pub_sound_event.publish(sound_event)
+
+        except Exception as e:
+            rospy.logerr(f'mic request to transcription failed: {e}')
+
 
 def main():
     rospy.init_node("microphone_node")

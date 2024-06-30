@@ -37,10 +37,7 @@ class Balancer:
 
     def request_available_server(self, decode_json=False, **kwargs):
         # display request
-        if 'json' in kwargs:
-            self.log_debug(f"request: \n\n {kwargs['json']} \n\n")
-        else:
-            self.log_warning(f"request: \n\n No json provided! \n\n")
+        self.log_debug(f"request: \n\n {kwargs} \n\n")
 
         LOWEST_PRIORITY = 100
         def priority_sorting(server_item: Tuple[str, Any]) -> int:

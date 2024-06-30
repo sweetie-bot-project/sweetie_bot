@@ -3,6 +3,7 @@ import os
 import rospy
 import requests
 
+from sweetie_bot_load_balancer.balancer import Balancer
 from sweetie_bot_text_msgs.msg import TextCommand
 from sweetie_bot_text_msgs.srv import Transcribe, TranscribeRequest, TranscribeResponse
 
@@ -33,52 +34,46 @@ def translate_text(target, text):
 
 
 class TranscriberNode(object):
+    DEFAULT_CONFIG = dict(server_choices=dict(
+        local_host = {'url': 'http://localhost:8577/'},
+    ))
 
     def __init__(self):
-        servers = rospy.get_param("~transcribe_servers", {'0': "http://localhost:8577/"})
         self.enable_gtranslate = rospy.get_param("~enable_gtranslate", True)
-        self.transcribe_servers = [ servers[k] for k in sorted(servers) ]
-        rospy.loginfo(f"urls: {self.transcribe_servers}")
+
+        balancer_config = rospy.get_param("~balancer_config", self.DEFAULT_CONFIG)
+        self.balancer = Balancer(
+            balancer_config,
+            loggers={'debug': rospy.logdebug, 'warn': rospy.logwarn, 'info': rospy.loginfo},
+            postprocess_func=self.translate_response,
+        )
+
         self.voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=10)
 
-    def transcribe(self, req):
-        # request transcribe server
-        resp = None
-        for url in self.transcribe_servers:
-            rospy.logdebug(f"Send {len(req.data)} bytes to {url}")
-            try:
-                resp = requests.post(url, files={'file': ('audio.wav', req.data)})
-                # check status
-                if resp.status_code == 200:
-                    break
-                else:
-                    rospy.logerr(f"{resp.status_code} {resp.reason}")
-            except requests.ConnectionError as e:
-                rospy.logwarn(f"Connection failed: {e}")
-        # deacode server response
-        if resp is None:
-            rospy.logerr("Transcription failed! Cannot decode response")
-            return None
-        try:
-            resp_decoded = resp.json()
-        except:
-            rospy.logerr(f"Transcription failed! Cannot decode response ({resp})")
-            return None
-
+    def translate_response(self, resp_decoded):
         self.voice_log.publish('log/voice/in/'+resp_decoded['language'], resp_decoded['text'], '')
 
         if self.enable_gtranslate and resp_decoded['language'] !='en':
             resp_decoded['text'] = translate_text('en', resp_decoded['text'])
+        return resp_decoded
 
+    def transcribe(self, req):
+        # request transcribe server
+        try:
+            response, duration = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
+        except Exception as e:
+            breakpoint()
+            rospy.logerr(f'transcriber: {e}')
+            return TranscribeResponse(status = e)
+
+        rospy.loginfo('Transcription %s (%.2fs) [%s]: "%s"' % (response['status'],
+                                                               response['transcribe_duration'],
+                                                               response['language'],
+                                                               response['text']))
         # Publish translated verssion of the text as well
-        self.voice_log.publish('log/voice/in/en', resp_decoded['text'], '')
+        self.voice_log.publish('log/voice/in/en', response['text'], '')
 
-        rospy.loginfo('Transcription %s (%.2fs) [%s]: "%s"' % (resp_decoded['status'],
-                                                               resp_decoded['transcribe_duration'],
-                                                               resp_decoded['language'],
-                                                               resp_decoded['text']))
-
-        return TranscribeResponse(**resp_decoded)
+        return TranscribeResponse(**response)
 
     def transcribe_file(self, req):
         if req.filename and os.path.isfile(req.filename):
@@ -86,36 +81,16 @@ class TranscriberNode(object):
             with open(req.filename, 'rb') as file:
                 req.data = file.read()
 
-        r = None
-        for url in self.transcribe_servers:
-            rospy.loginfo(f'Send {len(req.data)} bytes to {url}')
-            try:
-                r = None
-                r = requests.post(url, files={'file': ('audio.wav', req.data)})
-                if r.status_code == 200:
-                    break
-                else:
-                    rospy.logerr(f'{r.status_code} {r.reason}')
-                    continue # next url
-            except requests.ConnectionError as e:
-                rospy.logerr(f'Connection failed! {e}') # next url
-
-        if r is None:
-            return TranscribeResponse(status='All API URLs are down!')
         try:
-          response = r.json()
-          if r.status_code != 200:
-              response['status'] = r.reason
+            response, duration = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
+        except Exception as e:
+            breakpoint()
+            rospy.logerr(f'transcriber: {e}')
+            return TranscribeResponse(status = e)
 
-          if self.enable_gtranslate and response['language'] !='en':
-              response['text'] = translate_text('en', response['text'])
-
-          rospy.loginfo('Transcription %s (%.2fs): "%s"' % (response['status'],
-                                                            response['transcribe_duration'],
-                                                            response['text']))
-        except:
-          rospy.logerr(f'Cannot decode response ({r.content})')
-          return TranscribeResponse()
+        rospy.loginfo('Transcription %s (%.2fs): "%s"' % (response['status'],
+                                                          response['transcribe_duration'],
+                                                          response['text']))
 
         return TranscribeResponse(**response)
 

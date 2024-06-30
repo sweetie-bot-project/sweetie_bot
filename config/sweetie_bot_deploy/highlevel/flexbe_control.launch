@@ -73,7 +73,7 @@
 					<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
 				</node>
 				<!-- transcription node -->
-				<node pkg="sweetie_bot_stt" type="stt_service_node" name="stt_service_node" output="screen">
+				<node pkg="sweetie_bot_stt" type="stt_service_node" name="transcriber" output="screen">
 					<remap from="transcribe_api" to="$(arg robot_ns)/transcribe_api" />
 					<remap from="transcribe" to="$(arg robot_ns)/transcribe" />
 				</node>
