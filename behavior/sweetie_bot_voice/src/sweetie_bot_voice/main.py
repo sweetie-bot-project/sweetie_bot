@@ -9,12 +9,12 @@ from threading import Event
 from sweetie_bot_text_msgs.msg import TextCommand
 from sweetie_bot_text_msgs.msg import TextActionAction as TextAction
 from sweetie_bot_text_msgs.msg import TextActionGoal, TextActionFeedback, TextActionResult
+from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResponse
 
 from sound_play.msg import SoundRequest
 from sound_play.libsoundplay import SoundClient
 
 import six
-from google.cloud import translate_v2 as translate
 
 soundhandle = SoundClient(blocking=True)
 rospack = rospkg.RosPack()
@@ -55,7 +55,14 @@ class TTSCoquiAi(TTSInterface):
             model_name = languages[language]['model']
             if not model_name in self.models:
                 model_params = init_params['models'][model_name]
-                self.models[model_name] = TTS(**model_params)
+                # Check if v2 TTS
+                if 'to' in dir(TTS) and model_params['gpu']:
+                    device = model_params['gpu'] if isinstance(model_params['gpu'], str) else 'cuda'
+                    del model_params['gpu']
+                    self.models[model_name] = TTS(**model_params).to(device)
+                else:
+                    self.models[model_name] = TTS(**model_params)
+
                 self.model_params[model_name] = model_params
             self.tts[language] = self.models[model_name]
 
@@ -69,7 +76,8 @@ class TTSCoquiAi(TTSInterface):
         temp_dir = tempfile.mkdtemp()
         temp_file = os.path.join(temp_dir, "output.wav")
         text_params = { 'text':text, 'file_path':temp_file }
-        speak_params = {**speak_params, **text_params}
+        language_ar = { 'language': language.lower() }
+        speak_params = {**speak_params, **text_params, **language_ar}
         tts.tts_to_file(**speak_params)
         temp_file_con = ''
         if 'conversion' in self.tts:
@@ -85,6 +93,7 @@ class TTSCoquiAi(TTSInterface):
         else:
             soundhandle.playWave(temp_file)
 
+        #print(temp_file)
         os.remove(temp_file)
         os.rmdir(temp_dir)
 
@@ -248,7 +257,9 @@ class PlayerGstreamer():
 class VoiceNode():
     def __init__(self):
         rospy.init_node('voice', anonymous = True)
-        self.enable_gtranslate = rospy.get_param("~enable_gtranslate", True)
+        self.enable_translate = rospy.get_param("~enable_translate", True)
+        if self.enable_translate:
+            self.do_translate = rospy.ServiceProxy('translate', Translate)
 
         profiles_config = rospy.get_param('~voice_profile') 
         if profiles_config is None or not isinstance(profiles_config, dict):
@@ -343,16 +354,17 @@ class VoiceNode():
                 else:
                     lang = 'en'
             else:
-                rospy.logerr('Bad text command type: %s' % cmd.type)
+                rospy.logerr(f"Bad text command type: {cmd.type} ({len(cmd.type)})")
                 return False
 
             # Publish original text before the translation as well
             voice_log.publish(f'log/voice/out/{lang}', cmd.command, '')
 
             # translate to source lang
-            if self.enable_gtranslate and lang !='en':
-                gender_hint = self.gender_translation_hints[self.voice_gender]
-                cmd.command = self.translate_text(lang, cmd.command, gender_hint)
+            if self.enable_translate and lang !='en':
+                #gender_hint = self.gender_translation_hints[self.voice_gender]
+                gender_hint = ''
+                cmd.command = self.translate_text(self, lang, cmd.command, gender_hint)
 
             # find profile
             profile = None
@@ -371,25 +383,17 @@ class VoiceNode():
         return ret
 
     @staticmethod
-    def translate_text(target, text, hint=''):
-        """Translates text into the target language.
-
-        Target must be an ISO 639-1 language code.
-        See https://g.co/cloud/translate/v2/translate-reference#supported_languages
-        """
-        translate_client = translate.Client()
+    def translate_text(self, target, text, hint=''):
 
         if isinstance(text, six.binary_type):
             text = text.decode("utf-8")
 
-        rospy.loginfo(u"Text: {}".format(text))
         if hint:
             text = u'{}: """{}"""'.format(hint, text)
+        rospy.loginfo(u"Text: {}".format(text))
 
-        # Text can also be a sequence of strings, in which case this method
-        # will return a sequence of results for each text.
-        result = translate_client.translate(text, target_language=target)
-        translated_text = result["translatedText"]
+        result = self.do_translate(text=text, source='auto', target=target)
+        translated_text = result.text
 
         # Extrat text from wrapped translation with hint
         if hint:
@@ -399,7 +403,7 @@ class VoiceNode():
             translated_text = translated_text.strip("«»\"' ")
 
         rospy.loginfo(u"Translation: {}".format(translated_text))
-        rospy.loginfo(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
+        rospy.loginfo(u"Detected source language: {}".format(result.source))
 
         return translated_text
 

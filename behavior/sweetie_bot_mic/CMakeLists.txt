@@ -9,16 +9,7 @@ project(sweetie_bot_mic)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   rospy
-  catkin_virtualenv
   sweetie_bot_text_msgs
-)
-
-# Generate the virtualenv
-catkin_generate_virtualenv(
-	PYTHON_INTERPRETER python3.8
-  USE_SYSTEM_PACKAGES FALSE
-  ISOLATE_REQUIREMENTS TRUE
-  CHECK_VENV FALSE
 )
 
 ## System dependencies are found with CMake's coundEvent
@@ -165,9 +156,6 @@ install(DIRECTORY
   launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
-
-install(FILES requirements.txt
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html

@@ -105,6 +105,7 @@ class TranslateNode:
                 strict_mode=False,
                 check_missing_fields=False)
 
+        libre_translate_request.target = libre_translate_request.target[:2]
         libre_translate_response = self.libre_translate_callback(libre_translate_request)
 
         response = TranslateResponse()

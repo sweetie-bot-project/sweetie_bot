@@ -13,10 +13,10 @@ import struct
 import rospy
 from sweetie_bot_text_msgs.msg import SoundEvent, TextCommand
 from sweetie_bot_text_msgs.srv import CompleteSimple, CompleteSimpleRequest, CompleteSimpleResponse
+from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResponse
 from std_msgs.msg import Bool
 
 import six
-from google.cloud import translate_v2 as translate
 
 # suppress error messages from ALSA
 # https://stackoverflow.com/questions/7088672/pyaudio-working-but-spits-out-error-messages-each-time
@@ -142,7 +142,11 @@ class RespeakerNode(object):
         rospy.on_shutdown(self.on_shutdown)
         # get parameters
         call_llm = rospy.get_param("~call_llm", False)
-        self.enable_gtranslate = rospy.get_param("~enable_gtranslate", True)
+
+        self.enable_translate = rospy.get_param("~enable_translate", True)
+        if self.enable_translate:
+            self.do_translate = rospy.ServiceProxy('translate', Translate)
+
         self.update_rate = rospy.get_param("~update_rate", 10.0)
         self.main_channel = rospy.get_param('~main_channel', 0)
         suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", True)
@@ -262,7 +266,7 @@ class RespeakerNode(object):
 
         self.voice_log.publish('log/voice/in/'+resp_decoded['language'], resp_decoded['text'], '')
 
-        if self.enable_gtranslate and resp_decoded['language'] !='en':
+        if self.enable_translate and resp_decoded['language'] !='en':
             resp_decoded['text'] = self.translate_text('en', resp_decoded['text'])
 
         # Publish translated verssion of the text as well
@@ -275,25 +279,17 @@ class RespeakerNode(object):
         return resp_decoded
 
     def translate_text(self, target, text):
-        """Translates text into the target language.
-
-        Target must be an ISO 639-1 language code.
-        See https://g.co/cloud/translate/v2/translate-reference#supported_languages
-        """
-        translate_client = translate.Client()
 
         if isinstance(text, six.binary_type):
             text = text.decode("utf-8")
 
-        # Text can also be a sequence of strings, in which case this method
-        # will return a sequence of results for each text.
-        result = translate_client.translate(text, target_language=target)
+        result = self.do_translate(text, source='auto', target=target)
 
-        #print(u"Text: {}".format(result["input"]))
-        #print(u"Translation: {}".format(result["translatedText"]))
-        #print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
+        print(u"Text: {}".format(text))
+        print(u"Translation: {}".format(result["text"]))
+        print(u"Detected source language: {}".format(result["source"]))
 
-        return result["translatedText"]
+        return result["text"]
 
     def on_audio(self, data, channel):
         if channel == self.main_channel:
