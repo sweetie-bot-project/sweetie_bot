@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(sweetie_bot_llm)
+project(sweetie_bot_translate)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,8 +8,8 @@ project(sweetie_bot_llm)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  sweetie_bot_text_msgs
   rospy
+  sweetie_bot_text_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -69,7 +69,7 @@ catkin_python_setup()
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   audio_common_msgs
+#   sweetie_bot_text_msgs
 # )
 
 ################################################
@@ -103,8 +103,8 @@ catkin_python_setup()
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES sweetie_bot_llm
-#  CATKIN_DEPENDS audio_common_msgs rospy
+#  LIBRARIES sweetie_bot_translate
+#  CATKIN_DEPENDS rospy sweetie_bot_text_msgs
 #  DEPENDS system_lib
 )
 
@@ -121,7 +121,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/sweetie_bot_llm.cpp
+#   src/${PROJECT_NAME}/sweetie_bot_translate.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -132,7 +132,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/sweetie_bot_llm_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/sweetie_bot_translate_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,15 +153,13 @@ include_directories(
 ## Install ##
 #############
 install(PROGRAMS
-  scripts/llm_service_client
-  scripts/llm_service_node
-  scripts/llm_api_service_node
+  scripts/translate_service_client
+  scripts/translate_service_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(DIRECTORY
   launch
-  config
   service
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
@@ -209,7 +207,7 @@ install(DIRECTORY
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_sweetie_bot_llm.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_sweetie_bot_translate.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
