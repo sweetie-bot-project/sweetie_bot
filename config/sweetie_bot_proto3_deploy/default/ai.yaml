@@ -69,3 +69,14 @@ transcriber:
             remote_host:
                 priority: 20
                 url: 'http://localhost:8577/'
+
+translator:
+    balancer_config:
+        # Min priority value = 100
+        server_choices:
+            local_host:
+                priority: 10
+                url: 'http://127.0.0.1:5001/translate'
+            remote_host:
+                priority: 20
+                url: 'https://ai.sweetie.bot/trans/'

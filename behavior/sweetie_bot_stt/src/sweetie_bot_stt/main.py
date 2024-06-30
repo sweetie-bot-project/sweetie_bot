@@ -7,31 +7,6 @@ from sweetie_bot_text_msgs.msg import TextCommand
 from sweetie_bot_text_msgs.srv import Transcribe, TranscribeRequest, TranscribeResponse
 from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResponse
 
-import six
-from google.cloud import translate_v2 as translate
-
-
-def translate_text(target, text):
-    """Translates text into the target language.
-
-    Target must be an ISO 639-1 language code.
-    See https://g.co/cloud/translate/v2/translate-reference#supported_languages
-    """
-    translate_client = translate.Client()
-
-    if isinstance(text, six.binary_type):
-        text = text.decode("utf-8")
-
-    # Text can also be a sequence of strings, in which case this method
-    # will return a sequence of results for each text.
-    result = translate_client.translate(text, target_language=target)
-
-    #print(u"Text: {}".format(result["input"]))
-    #print(u"Translation: {}".format(result["translatedText"]))
-    #print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
-
-    return result["translatedText"]
-
 
 class TranscriberNode(object):
     DEFAULT_CONFIG = dict(server_choices=dict(
@@ -59,13 +34,18 @@ class TranscriberNode(object):
         self.voice_log.publish('log/voice/in/'+resp_decoded['language'], resp_decoded['text'], '')
 
         if self.enable_translation and resp_decoded['language'] !='en':
-            req = TranslateRequest(text=resp_decoded['text'], source='auto', target='en')
-            translate_response = self._translate_client(req)
-
-            resp_decoded['text'] = translate_response.text
-            resp_decoded['status'] = translate_response.status
-            # Switch profile languate to translated one
-            resp_decoded['language'] = translate_response.target
+            try:
+                req = TranslateRequest(
+                    text=resp_decoded['text'],
+                    source='auto', target='en',
+                    detected_source=resp_decoded['language']
+                )
+                translate_response = self._translate_client(req)
+            except Exception as e:
+                rospy.logerr(f'transcriber: {e}')
+            else:
+                resp_decoded['text'] = translate_response.text
+                resp_decoded['status'] = translate_response.status
 
         return resp_decoded
 
@@ -74,7 +54,6 @@ class TranscriberNode(object):
         try:
             response, _ = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
         except Exception as e:
-            breakpoint()
             rospy.logerr(f'transcriber: {e}')
             return TranscribeResponse(status = e)
 
@@ -96,7 +75,6 @@ class TranscriberNode(object):
         try:
             response, _ = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
         except Exception as e:
-            breakpoint()
             rospy.logerr(f'transcriber: {e}')
             return TranscribeResponse(status = e)
 

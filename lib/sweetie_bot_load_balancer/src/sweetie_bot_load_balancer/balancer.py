@@ -62,7 +62,7 @@ class Balancer:
                 self.log_warn(f'connection error with server {name} ({server_url}): {e}')
 
         # check if response is received
-        if response is not None and response.status_code != 200:
+        if response is None or response.status_code != 200:
             if self.fallback_function is None:
                 raise BalancerError('unable to get response: tried all servers.')
             else:

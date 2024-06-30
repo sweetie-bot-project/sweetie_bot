@@ -346,6 +346,7 @@ class LangRequest:
                 if parse_result is None:
                     # TODO: Better handle wrong emotion responses as '1'
                     # TODO: And figure out why is there two emotion requests happening
+                    # NOTE: Maybe better instruction following models would give more stable outputs? -Mike
                     success = False
                     result['error_desc'] = 'LLM response parse error.'
                 else:
