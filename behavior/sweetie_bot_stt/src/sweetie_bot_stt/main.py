@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import os
 import rospy
-import requests
 
 from sweetie_bot_load_balancer.balancer import Balancer
 from sweetie_bot_text_msgs.msg import TextCommand
 from sweetie_bot_text_msgs.srv import Transcribe, TranscribeRequest, TranscribeResponse
+from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResponse
 
 import six
 from google.cloud import translate_v2 as translate
@@ -39,28 +39,40 @@ class TranscriberNode(object):
     ))
 
     def __init__(self):
-        self.enable_gtranslate = rospy.get_param("~enable_gtranslate", True)
+        self.enable_translation = rospy.get_param("~enable_translation", True)
 
         balancer_config = rospy.get_param("~balancer_config", self.DEFAULT_CONFIG)
         self.balancer = Balancer(
             balancer_config,
             loggers={'debug': rospy.logdebug, 'warn': rospy.logwarn, 'info': rospy.loginfo},
-            postprocess_func=self.translate_response,
+            postprocess_func=self.translate_phrase,
         )
+
+        self._translate_client = rospy.ServiceProxy('/translate', Translate)
+
+        rospy.Service('transcribe', Transcribe, self.transcribe_file)
+        rospy.Service('transcribe_api', Transcribe, self.transcribe)
 
         self.voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=10)
 
-    def translate_response(self, resp_decoded):
+    def translate_phrase(self, resp_decoded):
         self.voice_log.publish('log/voice/in/'+resp_decoded['language'], resp_decoded['text'], '')
 
-        if self.enable_gtranslate and resp_decoded['language'] !='en':
-            resp_decoded['text'] = translate_text('en', resp_decoded['text'])
+        if self.enable_translation and resp_decoded['language'] !='en':
+            req = TranslateRequest(text=resp_decoded['text'], source='auto', target='en')
+            translate_response = self._translate_client(req)
+
+            resp_decoded['text'] = translate_response.text
+            resp_decoded['status'] = translate_response.status
+            # Switch profile languate to translated one
+            resp_decoded['language'] = translate_response.target
+
         return resp_decoded
 
     def transcribe(self, req):
         # request transcribe server
         try:
-            response, duration = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
+            response, _ = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
         except Exception as e:
             breakpoint()
             rospy.logerr(f'transcriber: {e}')
@@ -82,7 +94,7 @@ class TranscriberNode(object):
                 req.data = file.read()
 
         try:
-            response, duration = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
+            response, _ = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
         except Exception as e:
             breakpoint()
             rospy.logerr(f'transcriber: {e}')
@@ -99,8 +111,6 @@ def main():
     rospy.init_node('transcribe_server')
 
     transcriber = TranscriberNode()
-    rospy.Service('transcribe', Transcribe, transcriber.transcribe_file)
-    rospy.Service('transcribe_api', Transcribe, transcriber.transcribe)
 
     rospy.loginfo("Ready to transcribe.")
     rospy.spin()

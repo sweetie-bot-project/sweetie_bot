@@ -71,7 +71,8 @@ class TranslateNode:
             msg = TextCommand()
             msg.type = "translate"
             msg.command = response['translatedText'].encode('utf-8').strip().decode()
-            msg.options = response['detectedLanguage']['language']
+            if 'detectedLanguage' in response:
+                msg.options = response['detectedLanguage']['language']
             self.log.publish(msg)
         except UnicodeDecodeError:
             return TranslateError('json decode error', resp.content)
@@ -116,5 +117,7 @@ class TranslateNode:
 
 def main():
     n = TranslateNode()
+
+    rospy.loginfo("Ready to translate.")
     rospy.spin()
 
