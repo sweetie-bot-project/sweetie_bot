@@ -244,13 +244,20 @@ AttribRequest.subclass_map.update({'map': AttribRequestMap})
 
 class LangRequest:
 
-    def __init__(self, prompt_header, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile, start_event_history_with_heard = False):
+    def __init__(self, prompt_header_name, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile_name, start_event_history_with_heard = False):
         # get parameters: header
-        assert_param(prompt_header, 'prompt_header: must be string', allowed_types=str)
-        self._header = prompt_header
+        assert_param(prompt_header_name, 'prompt_header_name: must be string', allowed_types=str)
+        self._header_name = prompt_header_name
+
+        prompt_parameter = f'/lang_model/prompts/{self._header_name}'
+        try:
+            self._header = rospy.get_param(prompt_parameter)
+        except KeyError:
+            raise KeyError(f'prompt_header_name: requested prompt {self._header_name} is missing from parameter server. Load it into {self._header_name}.txt file from the prompt directory.')
+
         # get parameters: profile
-        assert_param(llm_profile, 'profile: must be string', allowed_types=str)
-        self._llm_profile = llm_profile
+        assert_param(llm_profile_name, 'profile name: must be string', allowed_types=str)
+        self._llm_profile_name = llm_profile_name
         # get parameters: fact templates
         assert_param(prompt_fact_templates, 'prompt_fact_templates: must be dictionary', allowed_types=dict)
         for k, v in prompt_fact_templates.items():
@@ -295,8 +302,8 @@ class LangRequest:
             events.sort(key = lambda ev: ev.stamp)
             # verbolize last max_events
         last_events = events[-self._max_events:]
-        if self._start_event_history_with_heard and len(last_events) >= 1:
-            while last_events[0].type == 'talk-said':
+        if self._start_event_history_with_heard:
+            while len(last_events) >= 1 and last_events[0].type == 'talk-said':
                 last_events.pop(0)
         for ev in last_events:
             prompt += ev.verbolize(self._fact_templates)
@@ -316,31 +323,42 @@ class LangRequest:
         #
         result = {}
         success = True
-        for request in self._requests:
-            # request lang model if prompt is present
-            if request.prompt is not None:
-                # update prompt
-                prompt += request.prompt
-                # fix new lines: must be \r\n
-                prompt = prompt.replace('\n', '\r\n')
-                # send request
-                req = CompleteRawRequest(prompt = prompt, profile = self._llm_profile, stop_list = request.stop_list)
-                resp = llm_caller(req)
-                # check result
-                if resp.error_code != 0:
+        try:
+            for request in self._requests:
+                # request lang model if prompt is present
+                if request.prompt is not None:
+                    # update prompt
+                    prompt += request.prompt
+                    # fix new lines: must be \r\n
+                    prompt = prompt.replace('\n', '\r\n')
+                    # send request
+                    req = CompleteRawRequest(prompt = prompt, profile_name = self._llm_profile_name, stop_list = request.stop_list)
+                    resp = llm_caller(req)
+                    # check result
+                    if resp.error_code != 0:
+                        success = False
+                        result['error_desc'] = 'LLM request has failed.'
+                        return success, result, prompt
+                    # add result to prompt
+                    prompt += resp.result
+                # parse result (current or prevoius)
+                parse_result = request.parse(resp.result)
+                if parse_result is None:
+                    # TODO: Better handle wrong emotion responses as '1'
+                    # TODO: And figure out why is there two emotion requests happening
+                    # NOTE: Maybe better instruction following models would give more stable outputs? -Mike
                     success = False
-                    result['error_desc'] = 'LLM request has failed.'
-                    return success, result, prompt
-                # add result to prompt
-                prompt += resp.result
-            # parse result (current or prevoius)
-            parse_result = request.parse(resp.result)
-            if parse_result is None:
-                success = False
-                result['error_desc'] = 'LLM response parse error.'
-            else:
-                print('parse result: ', parse_result)
-                result.update( parse_result )
+                    result['error_desc'] = 'LLM response parse error.'
+                else:
+                    print('parse result: ', parse_result)
+                    result.update( parse_result )
+        except rospy.ServiceException as e:
+            success = False
+            result['error_desc'] = f'LLM service error: {e}.'
+        except:
+            success = False
+            result['error_desc'] = f'Unknown LLM error. Please, investigate it.'
+
         #
         # return result
         #
@@ -355,7 +373,7 @@ class LangModel(output_module.OutputModule):
         service_ns = self.getConfigParameter(config, "service_ns", allowed_types=str)
         # create Service client
         rospy.wait_for_service(service_ns, timeout=5.0)
-        self._llm_client = rospy.ServiceProxy(service_ns, CompleteRaw, persistent=True) 
+        self._llm_client = rospy.ServiceProxy(service_ns, CompleteRaw) 
         # configuration
         requests = self.getConfigParameter(config, "requests", allowed_types=dict)
         self._requests = {}
@@ -426,7 +444,7 @@ class LangModel(output_module.OutputModule):
             rospy.loginfo('lang_model output module: succeed: %s' % result)
             return 'succeed'
         else:
-            rospy.loginfo('lang_model output module: failed: %s' % result['error_desc'])
+            rospy.logerr('lang_model output module: failed: %s' % result['error_desc'])
             return 'error'
 
 

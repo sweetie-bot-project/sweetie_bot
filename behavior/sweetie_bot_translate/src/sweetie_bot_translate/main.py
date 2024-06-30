@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os, time, json
-import requests
 from copy import copy
 
 import rospy
 from rospy_message_converter import message_converter
 
+from sweetie_bot_load_balancer.balancer import Balancer
 from sweetie_bot_text_msgs.srv import LibreTranslate, LibreTranslateRequest, LibreTranslateResponse
 from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResponse
 from sweetie_bot_text_msgs.msg import TextCommand
+
+import six
+from google.cloud import translate_v2 as translate
 
 class TranslateError(RuntimeError):
     def __init__(self, msg, details = ''):
@@ -21,60 +24,68 @@ class TranslateError(RuntimeError):
         return self._details
 
 class TranslateNode:
+    DEFAULT_CONFIG = dict(server_choices=dict(
+        local_host = {'url': 'http://127.0.0.1:5001/translate'},
+    ))
 
     def __init__(self):
         rospy.init_node('translate_server')
-        # get server URLS
-        libre_urls = rospy.get_param("~libre_translate_servers", {'0': "http://127.0.0.1:5001/translate"})
-        self._libre_urls = [ libre_urls[k] for k in sorted(libre_urls) ]
         # create services
         rospy.Service('libre_translate', LibreTranslate, self.libre_translate_callback)
         rospy.Service('translate', Translate, self.translate_callback)
+
+        balancer_config = rospy.get_param("~balancer_config", self.DEFAULT_CONFIG)
+        self.balancer = Balancer(
+            balancer_config,
+            loggers={'debug': rospy.logdebug, 'warn': rospy.logwarn, 'info': rospy.loginfo},
+            postprocess_func=self.unpack_translation_result,
+            fallback_func=self.translation_is_unavailable_behavior
+        )
+
         # log
         self.log = rospy.Publisher('speech_log', TextCommand, queue_size=10)
-        rospy.loginfo('libre_urls: %s', self._libre_urls )
 
-    def libre_translate_request_server(self, request):
-        # display request
-        rospy.logdebug(f'request: \n\n %s \n\n' % request)
-        # send request to servers
-        resp = None
-        for url in self._libre_urls:
-            try:
-                start = time.time()
-                resp = requests.post(url, json=request)
-                duration = time.time() - start
-                if resp.status_code == 200:
-                    break
-                else:
-                    rospy.logwarn("server %s request error %d: %s" % (url, resp.status_code, resp.reason))
-                    continue # next url
-            except requests.ConnectionError as e:
-                rospy.logwarn("connection error: %s" % e)
+    def translation_is_unavailable_behavior(self, original_request):
+        # In the case when all translation servers are failed
+        # keep the original source language as the profile language
+        request = original_request.pop('json')
+        response = {'translatedText': request['q']}
+        if 'detected_source' in request and request['detected_source'] != '':
+            response['detectedLanguage'] = {
+                'language'   : request['detected_source'],
+                'confidence' : 100.0,
+            }
 
-        # check if response is received
-        if resp is None:
-            raise TranslateError('unable to get response: tried all servers.')
-        # decode
-        try:
-            response = resp.json()
-        except ValueError:
-            raise TranslateError('json: can not decode response', resp.content)
-        # display result
-        rospy.logdebug(f'server %s response: \n\n %s \n\n' % (url, response))
+        return response
+
+    def unpack_translation_result(self, response):
         # check response structure
         if ( 'error' in response or 'translatedText' not in response):
-            raise TranslateError('wrong response structure', resp.content)
+            raise TranslateError('wrong response structure', response)
+
         # convert to unicode
         try:
             # TODO: what is this? decode and then encode?
             msg = TextCommand()
             msg.type = "translate"
             msg.command = response['translatedText'].encode('utf-8').strip().decode()
-            msg.options = response['detectedLanguage']['language']
+            if 'detectedLanguage' in response:
+                msg.options = response['detectedLanguage']['language']
             self.log.publish(msg)
         except UnicodeDecodeError:
-            return TranslateError('json decode error', resp.content)
+            raise TranslateError('unicode convertion error', response)
+
+        return response
+
+    def libre_translate_request_server(self, request):
+        # display request
+        rospy.logdebug(f'request: \n\n %s \n\n' % request)
+
+        try:
+            response, _ = self.balancer.request_available_server(json=request, decode_json=True)
+        except Exception as e:
+            rospy.logerr(f'translator: {e}')
+            return TranslateResponse(status = e)
 
         return response
 
@@ -115,7 +126,32 @@ class TranslateNode:
         response.target = req_message.target
         return response
 
+
+# TODO: Integrate google translate back with new balancing mechanism
+def translate_text(target, text):
+    """Translates text into the target language.
+
+    Target must be an ISO 639-1 language code.
+    See https://g.co/cloud/translate/v2/translate-reference#supported_languages
+    """
+    translate_client = translate.Client()
+
+    if isinstance(text, six.binary_type):
+        text = text.decode("utf-8")
+
+    # Text can also be a sequence of strings, in which case this method
+    # will return a sequence of results for each text.
+    result = translate_client.translate(text, target_language=target)
+
+    #print(u"Text: {}".format(result["input"]))
+    #print(u"Translation: {}".format(result["translatedText"]))
+    #print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
+
+    return result["translatedText"]
+
 def main():
     n = TranslateNode()
+
+    rospy.loginfo("Ready to translate.")
     rospy.spin()
 

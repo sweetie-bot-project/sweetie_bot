@@ -48,6 +48,8 @@ voice:
                 relative_pitch:          0.6  # in percents devided by 100
                 #relative_pitch_russian: 0.60 # in percents devided by 100
                 #relative_pitch_english: 0.75 # in percents devided by 100
+            gstreamer_pipeline: 'audioconvert ! audioresample
+                ! volume volume=6.0'
         rhvoice_robotized:
             type: 'rhvoice'
             enabled: true
@@ -90,9 +92,7 @@ microphone:
     main_channel: 0
     sample_rate: 16000
     update_rate: 2.0
-    transcribe_servers: {'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}
     key_combination: [ 'ctrl','alt', 'w' ]
-    call_llm: False
     doa:
         algorithm: 'respeaker'
         # algorithm: 'NormMUSIC'

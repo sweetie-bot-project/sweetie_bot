@@ -1,8 +1,8 @@
 <launch>
-    <arg name="api_url_list" default="{'1': 'https://ai.sweetie.bot/stt/', '0':'http://localhost:8577/'}"/>
-    <arg name="enable_translate" default="False"/>
-    <node pkg="sweetie_bot_stt" type="stt_service_node" name="stt_service_node" output="screen">
-        <rosparam param="api_url" subst_value="True">$(arg api_url_list)</rosparam> 
-        <rosparam param="enable_translate" subst_value="True">$(arg enable_translate)</rosparam>
+    <arg name="balancer_config" default="{'server_choices': {'local_host': {'priority': 10, 'url': 'https://ai.sweetie.bot/stt/'}, 'remote_host': {'priority': 20, 'url': 'http://localhost:8577'}}}"/>
+    <arg name="enable_translation" default="False"/>
+    <node pkg="sweetie_bot_stt" type="stt_service_node" name="transcriber" output="screen">
+        <rosparam param="balancer_config" subst_value="True">$(arg balancer_config)</rosparam>
+        <rosparam param="enable_translation" subst_value="True">$(arg enable_translation)</rosparam>
     </node>
 </launch>

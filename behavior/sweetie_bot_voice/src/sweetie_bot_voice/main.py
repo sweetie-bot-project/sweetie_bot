@@ -14,6 +14,10 @@ from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResp
 from sound_play.msg import SoundRequest
 from sound_play.libsoundplay import SoundClient
 
+# @Important! If TTS imported after google/Gst imports,
+#             its initialization crashes without any error messages.
+from rhvoice_wrapper import TTS
+
 import six
 
 soundhandle = SoundClient(blocking=True)
@@ -121,7 +125,6 @@ class TTSRhvoiceWrapper(TTSInterface):
     def __init__(self, rhvoice_params, gstreamer_pipeline_string = None, **kwargs):
         super(TTSRhvoiceWrapper, self).__init__(**kwargs)
 
-        from rhvoice_wrapper import TTS
         # create and configure rhvoice client
         self._rhvoice = TTS(threads=2)
         self._rhvoice.set_params(**rhvoice_params)
@@ -280,7 +283,7 @@ class VoiceNode():
                     
                 profile_type = profile_config.get('type')
                 langs = profile_config.get('langs')
-                if profile_type == 'rhvoice':
+                if profile_type.startswith('rhvoice'):
                     # apply LADSPA fix
                     VoiceNode._ladspa_fix()
                     # configure rhvoice_wrapper synthesyzer
