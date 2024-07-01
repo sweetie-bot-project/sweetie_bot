@@ -14,15 +14,14 @@
   <url type="website">sweetiebot.net</url>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>catkin_virtualenv</build_depend>
   <depend>rospy</depend>
   <depend>rospack</depend>
   <depend>sound_play</depend>
   <depend>sweetie_bot_text_msgs</depend>
+  <depend>sweetie_bot_load_balancer</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
       <!-- Other tools can request additional information be placed here -->
-      <pip_requirements>requirements.txt</pip_requirements>
   </export>
 </package>

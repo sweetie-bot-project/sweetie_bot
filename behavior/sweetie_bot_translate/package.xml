@@ -51,6 +51,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>rospy</build_depend>
   <build_depend>sweetie_bot_text_msgs</build_depend>
+  <build_depend>sweetie_bot_load_balancer</build_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>sweetie_bot_text_msgs</build_export_depend>
   <exec_depend>rospy</exec_depend>

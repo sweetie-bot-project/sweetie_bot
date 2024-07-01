@@ -9,6 +9,7 @@ project(sweetie_bot_stt)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   sweetie_bot_text_msgs
+  sweetie_bot_load_balancer
   rospy
 )
 

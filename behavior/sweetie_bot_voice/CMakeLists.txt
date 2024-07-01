@@ -8,17 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   rospack
   sound_play
-  catkin_virtualenv
   sweetie_bot_text_msgs
-)
-
-# Generate the virtualenv
-catkin_generate_virtualenv(
-	PYTHON_INTERPRETER python3.10
-  #USE_SYSTEM_PACKAGES FALSE
-  #ISOLATE_REQUIREMENTS TRUE
-  #CHECK_VENV FALSE
-  EXTRA_PIP_ARGS -vvv
+  sweetie_bot_load_balancer
 )
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -47,10 +38,6 @@ install(DIRECTORY
   launch
   config
   conversion
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-install(FILES requirements.txt
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

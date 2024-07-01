@@ -11,24 +11,7 @@ voice:
     voice_profile:
         coqui-ai:
             type: 'coqui-ai'
+            langs: [ 'en', 'es', 'fr', 'de', 'it', 'pt', 'pl', 'tr', 'ru', 'nl', 'cs', 'ar', 'zh-CN', 'hu', 'ko', 'ja', 'hi' ]
             enabled: true
-            langs: [ 'en', 'zh-CN' ]
             coqui_ai_params:
-                languages:
-                    en: 
-                        model: 'vctk'
-                        params:
-                            speaker: 'p225'
-                    zh-CN:
-                        model: 'baker'
-                        params:
-                            #speaker: 'Asya Anara'
-                            speaker_wav: '/opt/ros/sweetie_bot/share/sweetie_bot_voice/conversion/sweetie_bot.ogg'
-                models:
-                    vctk:
-                        model_name: 'tts_models/en/vctk/vits'
-                        progress_bar: false
-                        gpu: true
-                    baker:
-                        model_name: 'tts_models/multilingual/multi-dataset/xtts_v2'
-                        gpu: true
+                speaker: "Asya Anara"
