@@ -62,6 +62,9 @@
 			<node name="gait_generator" pkg="sweetie_bot_gait_generator" type="towr_gait_generator" output="screen">
 				<remap from="step_sequence" to="motion/controller/step_sequence" />     
 			</node>
+			<!-- control node for mouth, ears and horn -->
+			<node pkg="sweetie_bot_body_language" name="body_language" type="body_language" output="screen"/>
+			<!-- <node pkg="sweetie_bot_body_language" name="led" type="led" output="screen"/> -->
 			<!-- voice node  -->
 			<env name="LD_PRELOAD" value="/usr/lib/x86_64-linux-gnu/libffi.so.7" />
 			<node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
