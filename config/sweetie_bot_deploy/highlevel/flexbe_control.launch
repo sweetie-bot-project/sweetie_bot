@@ -15,11 +15,16 @@
 	<arg name="run_nlp" default="true" doc="Run natural language processing nodes: speech to text, language model."/>
 	<arg name="run_flexbe" default="true" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 	<arg name="run_flexbe_gui" default="false" doc="Start flexbe gui."/>
-	<arg name="run_button" default="true" />
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
 	<machine name="sweetiebot" address="localhost" user="$(env USER)" default="true"/>
 	<!--<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>-->
+
+
+	<!-- Check if path to button exists -->
+	<arg name="yaml_config" default="$(eval open(robot_profile_path + '/../default/hardware.yaml').read())" />
+	<arg name="button_dev" default="$(eval eval('_' + '_import_' + '_(\'yaml\')').safe_load(yaml_config)['hardware']['external_button']['sysfs_path'])" />
+	<arg name="run_button" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev) else 'false')" />
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
@@ -71,12 +76,11 @@
 				<remap from="control" to="$(arg robot_ns)/control" />
 			</node>
 			<group  if="$(arg run_nlp)">
-				<!-- external button node -->
-				<!-- Check if path to battery exists -->
-
-				<!-- run external button monitor if device connected -->
-				<node ns="hardware" name="external_button_monitor" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
+				<!-- run external button node if device is connected -->
+				<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
 					<remap from="pushed" to="$(arg robot_ns)/mic_button" />
+					<!-- rename path param for consistency of config -->
+					<remap from="~port" to="~sysfs_path" />
 				</node>
 
 				<!-- microphone node -->
