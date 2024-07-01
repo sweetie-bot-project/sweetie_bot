@@ -53,7 +53,7 @@ soar:
         sound:
             type: "sound_speech"
             topic: "sound_event"
-            speech_timeout: 1.5
+            speech_timeout: 2.5
             intensity_bins_map: { names: [ "low", "med", "high" ], values: [ 10.0, 20.0 ] }
             lang_filter: ['en', 'ru']
             map_parsers:

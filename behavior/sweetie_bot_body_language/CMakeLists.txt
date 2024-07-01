@@ -158,6 +158,7 @@ include_directories(
 
 install(PROGRAMS
    scripts/body_language
+   scripts/led
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

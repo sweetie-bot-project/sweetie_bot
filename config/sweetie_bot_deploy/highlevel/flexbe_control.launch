@@ -20,6 +20,12 @@
 	<machine name="sweetiebot" address="localhost" user="$(env USER)" default="true"/>
 	<!--<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>-->
 
+
+	<!-- Check if path to button exists -->
+	<arg name="yaml_config" default="$(eval open(robot_profile_path + '/../default/hardware.yaml').read())" />
+	<arg name="button_dev" default="$(eval eval('_' + '_import_' + '_(\'yaml\')').safe_load(yaml_config)['hardware']['external_button']['sysfs_path'])" />
+	<arg name="run_button" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev) else 'false')" />
+
 	<!-- load parameters -->
 	<group if="$(arg host)">
 		<include ns="$(arg robot_ns)" file="$(arg robot_profile_path)/load_param.launch">
@@ -61,12 +67,22 @@
 			<node name="gait_generator" pkg="sweetie_bot_gait_generator" type="towr_gait_generator" output="screen">
 				<remap from="step_sequence" to="motion/controller/step_sequence" />     
 			</node>
+			<!-- control node for mouth, ears and horn -->
+			<node pkg="sweetie_bot_body_language" name="body_language" type="body_language" output="screen"/>
+			<!-- <node pkg="sweetie_bot_body_language" name="led" type="led" output="screen"/> -->
 			<!-- voice node  -->
 			<env name="LD_PRELOAD" value="/usr/lib/x86_64-linux-gnu/libffi.so.7" />
 			<node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
 				<remap from="control" to="$(arg robot_ns)/control" />
 			</node>
 			<group  if="$(arg run_nlp)">
+				<!-- run external button node if device is connected -->
+				<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
+					<remap from="pushed" to="$(arg robot_ns)/mic_button" />
+					<!-- rename path param for consistency of config -->
+					<remap from="~port" to="~sysfs_path" />
+				</node>
+
 				<!-- microphone node -->
 				<node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
 					<remap from="sound_event" to="$(arg robot_ns)/sound_event" />

@@ -77,10 +77,11 @@ voice:
                         lfo-quantization="0"
                         formant-correction="1"
                         formant-warp="0.4"
-                        mix="1.0"'
+                        mix="1.0"
+                ! audioresample ! audioconvert ! audiorate ! audiowsinclimit mode=low-pass cutoff=7000 length=10001 window=blackman
+                ! volume volume=6.0'
         speechd:
             type: 'speechd'
-            enabled: true
             langs: [ 'ru', 'en' ]
             module: 'festival'
 eyes:
