@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <offset.list> <herkulex_servos_*.cpf>"
