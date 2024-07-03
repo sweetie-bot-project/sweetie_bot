@@ -71,17 +71,19 @@
 				<remap from="control" to="$(arg robot_ns)/control" />
 			</node>
 			<group  if="$(arg run_nlp)">
-				<!-- Check if path to button exists -->
-				<arg name="yaml_config" default="$(eval open(robot_profile_path + '/../default/hardware.yaml').read())" />
-				<arg name="button_dev" default="$(eval eval('_' + '_import_' + '_(\'yaml\')').safe_load(yaml_config)['hardware']['external_button']['sysfs_path'])" />
-				<arg name="run_button" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev) else 'false')" />
+				<group  if="$(eval robot_name == 'sweetie_bot_proto3')">  <!-- Hack to get rid of error on proto2 config -->
+					<!-- Check if path to button exists -->
+					<arg name="yaml_config" default="$(eval open(robot_profile_path + '/../default/hardware.yaml').read())" />
+					<arg name="button_dev" default="$(eval eval('_' + '_import_' + '_(\'yaml\')').safe_load(yaml_config)['hardware']['external_button']['sysfs_path'])" />
+					<arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev))" />
 
-				<!-- run external button node if device is connected -->
-				<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
-					<remap from="pushed" to="$(arg robot_ns)/mic_button" />
-					<!-- rename path param for consistency of config -->
-					<remap from="~port" to="~sysfs_path" />
-				</node>
+					<!-- run external button node if device is connected -->
+					<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
+						<remap from="pushed" to="$(arg robot_ns)/mic_button" />
+						<!-- rename path param for consistency of config -->
+						<remap from="~port" to="~sysfs_path" />
+					</node>
+				</group>
 
 				<!-- microphone node -->
 				<node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
