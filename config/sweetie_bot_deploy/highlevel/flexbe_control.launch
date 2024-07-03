@@ -21,13 +21,6 @@
 	<!--<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>-->
 
 
-	<group if="$(arg run_nlp)">
-		<!-- Check if path to button exists -->
-		<arg name="yaml_config" default="$(eval open(robot_profile_path + '/../default/hardware.yaml').read())" />
-		<arg name="button_dev" default="$(eval eval('_' + '_import_' + '_(\'yaml\')').safe_load(yaml_config)['hardware']['external_button']['sysfs_path'])" />
-		<arg name="run_button" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev) else 'false')" />
-	</group>
-
 	<!-- load parameters -->
 	<group if="$(arg host)">
 		<include ns="$(arg robot_ns)" file="$(arg robot_profile_path)/load_param.launch">
@@ -78,6 +71,11 @@
 				<remap from="control" to="$(arg robot_ns)/control" />
 			</node>
 			<group  if="$(arg run_nlp)">
+				<!-- Check if path to button exists -->
+				<arg name="yaml_config" default="$(eval open(robot_profile_path + '/../default/hardware.yaml').read())" />
+				<arg name="button_dev" default="$(eval eval('_' + '_import_' + '_(\'yaml\')').safe_load(yaml_config)['hardware']['external_button']['sysfs_path'])" />
+				<arg name="run_button" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev) else 'false')" />
+
 				<!-- run external button node if device is connected -->
 				<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
 					<remap from="pushed" to="$(arg robot_ns)/mic_button" />
