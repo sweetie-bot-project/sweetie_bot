@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.6)
 project(sweetie_bot_voice)
 
 ## Find catkin macros and libraries
@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospack
   sound_play
   sweetie_bot_text_msgs
+  sweetie_bot_load_balancer
 )
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -45,7 +46,10 @@ install(DIRECTORY
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-catkin_install_python(PROGRAMS nodes/voice
+catkin_install_python(PROGRAMS
+                      scripts/voice
+                      scripts/logger
+                      scripts/tts_api_service_node
                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # install shell scripts

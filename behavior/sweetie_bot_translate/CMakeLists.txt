@@ -10,6 +10,7 @@ project(sweetie_bot_translate)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   sweetie_bot_text_msgs
+  sweetie_bot_load_balancer
 )
 
 ## System dependencies are found with CMake's conventions

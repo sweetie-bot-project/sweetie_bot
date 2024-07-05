@@ -1,10 +1,16 @@
 <launch>
   <include file="$(find sound_play)/soundplay_node.launch" />
-  <arg name="enable_gtranslate" default="True"/>
-  <!-- arg name="voice_profile" default="coqui-ai"/ -->
+  <arg name="enable_translate" default="True"/>
+  <arg name="voice_profile" default="coqui-ai"/>
   <env name="LD_PRELOAD" value="/usr/lib/x86_64-linux-gnu/libffi.so.7" />
+  <arg name="libre_translate_urls" default="{'0': 'http://127.0.0.1:5001/translate', '1': 'https://ai.sweetie.bot/trans/'}"/>
+  <arg name="balancer_config" default="{'server_choices': {'local_host': {'priority': 10, 'url': 'http://127.0.0.1:5002/api/tts'}, 'remote_host': {'priority': 20, 'url': 'https://ai.sweetie.bot/tts/api/tts'}}}"/>
+  <node pkg="sweetie_bot_translate" type="translate_service_node" name="translate_server" output="screen">
+      <rosparam param="libre_translate_servers" subst_value="True">$(arg libre_translate_urls)</rosparam>
+  </node>
   <node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
     <rosparam command="load" ns="/" file="$(find sweetie_bot_voice)/config/test.yaml" ></rosparam>
-    <rosparam param="enable_gtranslate" subst_value="True">$(arg enable_gtranslate)</rosparam>
+    <rosparam param="enable_translate" subst_value="True">$(arg enable_translate)</rosparam>
+    <rosparam param="balancer_config" subst_value="True">$(arg balancer_config)</rosparam>
   </node>
 </launch>
