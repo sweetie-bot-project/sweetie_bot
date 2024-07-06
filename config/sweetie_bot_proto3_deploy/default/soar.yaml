@@ -55,11 +55,11 @@ soar:
             topic: "sound_event"
             speech_timeout: 2.5
             intensity_bins_map: { names: [ "low", "med", "high" ], values: [ 10.0, 20.0 ] }
-            lang_filter: ['en', 'ru']
+            lang_filter: ['en', 'ru', 'zh']
             map_parsers:
                 'en': 
                     nlp_model: 'en_core_web_sm'
-                    map: 
+                    map:
                         greeting: [hello, hi, greet]
                         goodbye: [goodbye, bye]
                         dance: [dance]
@@ -69,7 +69,17 @@ soar:
                         hoof: [hoof, hand, leg, hooves]
                 'ru':
                     nlp_model: 'en_core_web_sm'
-                    map: 
+                    map:
+                        greeting: [hello, hi, greet]
+                        goodbye: [goodbye, bye]
+                        dance: [dance]
+                        sing: [sing]
+                        please: [please]
+                        give: [give]
+                        hoof: [hoof, hand, leg, hooves]
+                'zh':
+                    nlp_model: 'en_core_web_sm'
+                    map:
                         greeting: [hello, hi, greet]
                         goodbye: [goodbye, bye]
                         dance: [dance]
