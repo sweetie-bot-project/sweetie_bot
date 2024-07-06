@@ -56,14 +56,14 @@ class TTSCoquiAi(TTSInterface):
         balancer_config = rospy.get_param("~balancer_config", self.DEFAULT_CONFIG)
         self.balancer = Balancer(
             balancer_config,
-            loggers={'debug': rospy.logdebug, 'warn': rospy.logwarn, 'info': rospy.loginfo}
+            loggers={'debug': rospy.logdebug, 'warn': rospy.logwarn, 'info': rospy.loginfo},
         )
 
     def speak(self, text, language):
         super().speak(text, language)
 
         try:
-            request = { "text": text, "language_id": language.lower(), "speaker_id": self.speaker }
+            request = { "text": text, "language_id": f'{language}-cn' if language == 'zh' else language, "speaker_id": self.speaker }
             response, _ = self.balancer.request_available_server(data=request)
         except Exception as e:
             rospy.logerr(f'text to speach error: {e}')
@@ -370,7 +370,7 @@ class VoiceNode():
             text = u'{}: """{}"""'.format(hint, text)
         rospy.loginfo(u"Text: {}".format(text))
 
-        result = self.do_translate(text=text, source='auto', target=target)
+        result = self.do_translate(text=text, source='en', target=target)
         translated_text = result.text
 
         # Extrat text from wrapped translation with hint
@@ -381,7 +381,7 @@ class VoiceNode():
             translated_text = translated_text.strip("«»\"' ")
 
         rospy.loginfo(u"Translation: {}".format(translated_text))
-        rospy.loginfo(u"Detected source language: {}".format(result.source))
+        rospy.loginfo(u"Received target language: {}".format(target))
 
         return translated_text
 

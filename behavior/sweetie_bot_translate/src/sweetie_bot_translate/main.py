@@ -85,7 +85,7 @@ class TranslateNode:
             response, _ = self.balancer.request_available_server(json=request, decode_json=True)
         except Exception as e:
             rospy.logerr(f'translator: {e}')
-            return TranslateResponse(status = e)
+            return TranslateResponse(status = str(e))
 
         return response
 

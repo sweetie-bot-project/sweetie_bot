@@ -67,6 +67,8 @@
 			<!-- <node pkg="sweetie_bot_body_language" name="led" type="led" output="screen"/> -->
 			<!-- voice node  -->
 			<env name="LD_PRELOAD" value="/usr/lib/x86_64-linux-gnu/libffi.so.7" />
+			<!-- sound play is necessary for voice to function -->
+			<include file="$(find sound_play)/soundplay_node.launch" />
 			<node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
 				<remap from="control" to="$(arg robot_ns)/control" />
 			</node>

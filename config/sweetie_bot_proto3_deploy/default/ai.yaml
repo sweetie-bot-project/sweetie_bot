@@ -4,10 +4,10 @@ lang_model:
         server_choices:
             local_host:
                 priority: 10
-                url: 'https://ai.sweetie.bot/llm/v1/completions'
+                url: 'http://localhost:5000/v1/completions'
             remote_host:
                 priority: 20
-                url: 'http://localhost:5000/v1/completions'
+                url: 'https://ai.sweetie.bot/llm/v1/completions'
         fallback_answer: 'angry | Sweetie Bot: Error! Connection to the brain has been lost!'
     profile:
         en:
@@ -65,10 +65,10 @@ transcriber:
         server_choices:
             local_host:
                 priority: 10
-                url: 'https://ai.sweetie.bot/stt/'
+                url: 'http://localhost:8577/'
             remote_host:
                 priority: 20
-                url: 'http://localhost:8577/'
+                url: 'http://192.168.3.128:5000/'
 
 translator:
     balancer_config:

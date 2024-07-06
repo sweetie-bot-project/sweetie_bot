@@ -55,7 +55,7 @@ class TranscriberNode(object):
             response, _ = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
         except Exception as e:
             rospy.logerr(f'transcriber: {e}')
-            return TranscribeResponse(status = e)
+            return TranscribeResponse(status = str(e))
 
         rospy.loginfo('Transcription %s (%.2fs) [%s]: "%s"' % (response['status'],
                                                                response['transcribe_duration'],
@@ -76,7 +76,7 @@ class TranscriberNode(object):
             response, _ = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
         except Exception as e:
             rospy.logerr(f'transcriber: {e}')
-            return TranscribeResponse(status = e)
+            return TranscribeResponse(status = str(e))
 
         rospy.loginfo('Transcription %s (%.2fs): "%s"' % (response['status'],
                                                           response['transcribe_duration'],
