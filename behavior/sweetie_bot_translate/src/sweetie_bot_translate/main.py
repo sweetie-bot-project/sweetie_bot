@@ -99,22 +99,32 @@ class TranslateNode:
             rospy.logerr('%s: %s' % (e, e.details))
             return LibreTranslateResponse(status = 'error')
         # return result
-        return message_converter.convert_dictionary_to_ros_message('sweetie_bot_text_msgs/LibreTranslate',
-                response,
-                kind="response",
-                strict_mode=False,
-                check_missing_fields=False)
+        try:
+            return message_converter.convert_dictionary_to_ros_message('sweetie_bot_text_msgs/LibreTranslate',
+                    response,
+                    kind="response",
+                    strict_mode=False,
+                    check_missing_fields=False)
+        except Exception as e:
+            rospy.logerr(f'translator: {e}')
+            rospy.logerr(f'convertion error: {response}')
+            raise
 
     def translate_callback(self, req_message):
         # prepare request
         translate_request = message_converter.convert_ros_message_to_dictionary(req_message)
         translate_request['q'] = translate_request.pop('text')
 
-        libre_translate_request = message_converter.convert_dictionary_to_ros_message('sweetie_bot_text_msgs/LibreTranslate',
-                translate_request,
-                kind="request",
-                strict_mode=False,
-                check_missing_fields=False)
+        try:
+            libre_translate_request = message_converter.convert_dictionary_to_ros_message('sweetie_bot_text_msgs/LibreTranslate',
+                    translate_request,
+                    kind="request",
+                    strict_mode=False,
+                    check_missing_fields=False)
+        except Exception as e:
+            rospy.logerr(f'translator: {e}')
+            rospy.logerr(f'convertion error: {translate_request}')
+            raise
 
         libre_translate_request.target = libre_translate_request.target[:2]
         libre_translate_response = self.libre_translate_callback(libre_translate_request)
