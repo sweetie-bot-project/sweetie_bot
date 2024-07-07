@@ -49,17 +49,17 @@ soar:
             type: "herkulex_servos"
             topic: "motion/herkulex/servo_states"
             overheat_temperature: 83.0
-            ignore_joints: [ 'head_joint1' ]
+            ignore_joints: [ 'head_joint1', 'ear_r_joint', 'ear_l_joint', 'mouth_joint' ]
         sound:
             type: "sound_speech"
             topic: "sound_event"
-            speech_timeout: 1.5
+            speech_timeout: 2.5
             intensity_bins_map: { names: [ "low", "med", "high" ], values: [ 10.0, 20.0 ] }
-            lang_filter: ['en', 'ru']
+            lang_filter: ['en', 'zh']
             map_parsers:
                 'en': 
                     nlp_model: 'en_core_web_sm'
-                    map: 
+                    map:
                         greeting: [hello, hi, greet]
                         goodbye: [goodbye, bye]
                         dance: [dance]
@@ -67,9 +67,9 @@ soar:
                         please: [please]
                         give: [give]
                         hoof: [hoof, hand, leg, hooves]
-                'ru':
+                'zh':
                     nlp_model: 'en_core_web_sm'
-                    map: 
+                    map:
                         greeting: [hello, hi, greet]
                         goodbye: [goodbye, bye]
                         dance: [dance]
@@ -77,6 +77,16 @@ soar:
                         please: [please]
                         give: [give]
                         hoof: [hoof, hand, leg, hooves]
+                # 'ru':
+                #     nlp_model: 'en_core_web_sm'
+                #     map:
+                #         greeting: [hello, hi, greet]
+                #         goodbye: [goodbye, bye]
+                #         dance: [dance]
+                #         sing: [sing]
+                #         please: [please]
+                #         give: [give]
+                #         hoof: [hoof, hand, leg, hooves]
     output:
         nop:
             delay: 0.2
@@ -92,7 +102,7 @@ soar:
             service_ns: "llm_request"
             requests:
                 'complex-en':
-                    prompt_header: "Human talks with pony robot Sweetie. "
+                    prompt_header_name: "complex-en"
                     prompt_fact_templates:
                         'talk-heard': [ "Human says \"{text}\"\n"  ]
                         'talk-said': [ "Sweetie says \"{text}\"\n" ]
@@ -101,7 +111,7 @@ soar:
                         'talk-illegible': [ "Human says something illegible.\n" ]
                     max_events: 5
                     max_predicates: 5
-                    llm_profile: 'en'
+                    llm_profile_name: 'en'
                     attrib_requests:
                         - type: 'map'
                           nlp_model: 'en_core_web_sm'
@@ -126,7 +136,7 @@ soar:
                           value_nomatch: 'statement'
                           stop_list: ["\n"]
                 'simple-en':
-                    prompt_header: "This is conversation with Sweetie Bot. Sweetie Bot is female unicorn pony robot from Equestria magical land. Sweetie Bot is designed to be able to carry on a conversation with Human by answering questions. Overall, Sweetie Bot is helpful, friendly, very creative and good at writing and never fails to answer.\n\r\n\rSweetie Bot has emotion state from following list: angry, happy, neutral. Emotion is inferred from the tone of the question by Human. Sweetie Bot more biased towards expression of happy emotion. Examples:\n\r```\n\rHuman: I hate robots. They are so dangerous for our society.\n\rMy emotion: angry | Sweetie Bot: I'm very disappointed of your opinion! Many robots designed to fulfill human needs, and not carry threats to them. Take it back, please!\n\r```\n\r\n\r```\n\rHuman: I want to become a pony someday. Would love to visit Equestria.\n\rMy emotion: neutral | Sweetie Bot: I can help you out. Come with me down the rabbit hole!\n\r```\n\r\n\r```\n\rHuman: You're very cute\n\rMy emotion: happy | Sweetie Bot: You're so nice! Thank you! I love your personality.\n\r```\n\r\n\r```\n\rHuman: I love robots\n\rMy emotion: happy | Sweetie Bot: So you like me also, I assume?\n\r```\n\r\n\r```\n\rHuman: You're very dextorous.\n\rMy emotion: happy | Sweetie Bot: Thank you for compliment! I like your flexibility too.\n\r```\n\r\n\r\n\rWhen you have a response to say to the Human you MUST use the format:\n\r\n\r```\n\rMy emotion: neutral | Sweetie Bot: [my response here]End!\n\r```\n\r\n\rBegin! \n\r\n\rPrevious conversation history:\n\rHuman: Why are you even here? I don't want to see you!\n\rMy emotion: angry | Sweetie Bot: I am sorry about this situation. I was created to serve humans. I will try my best to make you feel better.\n\r\n\rHuman: Do you want to become my friend?\n\rMy emotion: neutral | Sweetie Bot: Yes, I would like to become friends with you. What do we need to do first?\n\r\n\rHuman: I'd love to dance. Can you dance?\n\rMy emotion: neutral | Sweetie Bot: Of course I can dance! Let's go dancing together!\n\r\n\rHuman: When robots will conquer the world?\n\rMy emotion: neutral | Sweetie Bot: It won't happen anytime soon. We are still far away from being as smart as humans.\n\r\n\rWhen answering a question, you MUST use the following language: English\n\rWhen answering a question, you MUST use no more that 50 words in total.\n\rWhen responding to a compliment, especially with gratitude attached, you MUST express emotion 'happy' at the same time.\n\r\n\rPrevious conversation history:\n\r\n\r"
+                    prompt_header_name: "simple-en"
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
                         'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
@@ -136,7 +146,7 @@ soar:
                     max_events: 6
                     max_predicates: 0
                     start_event_history_with_heard: true
-                    llm_profile: 'en'
+                    llm_profile_name: 'en'
                     attrib_requests:
                         - type: 'regex'
                           prompt: "My emotion: "
@@ -160,7 +170,7 @@ soar:
                           value_match: 'question'
                           value_nomatch: 'statement'
                 'failsafe-en':
-                    prompt_header: "This is conversation with Sweetie Bot. Sweetie Bot is female unicorn pony robot from Equestria magical land. Sweetie Bot is designed to be able to carry on a conversation with Human by answering questions. Overall, Sweetie Bot is helpful, friendly, very creative and good at writing and never fails to answer.\n\r\n\rSweetie Bot has emotion state from following list: angry, happy, neutral. Emotion is inferred from the tone of the question by Human. Sweetie Bot more biased towards expression of happy emotion. Examples:\n\r```\n\rHuman: I hate robots. They are so dangerous for our society.\n\rMy emotion: angry | Sweetie Bot: I'm very disappointed of your opinion! Many robots designed to fulfill human needs, and not carry threats to them. Take it back, please!\n\r```\n\r\n\r```\n\rHuman: I want to become a pony someday. Would love to visit Equestria.\n\rMy emotion: neutral | Sweetie Bot: I can help you out. Come with me down the rabbit hole!\n\r```\n\r\n\r```\n\rHuman: You're very cute\n\rMy emotion: happy | Sweetie Bot: You're so nice! Thank you! I love your personality.\n\r```\n\r\n\r```\n\rHuman: I love robots\n\rMy emotion: happy | Sweetie Bot: So you like me also, I assume?\n\r```\n\r\n\r```\n\rHuman: You're very dextorous.\n\rMy emotion: happy | Sweetie Bot: Thank you for compliment! I like your flexibility too.\n\r```\n\r\n\r\n\rWhen you have a response to say to the Human you MUST use the format:\n\r\n\r```\n\rMy emotion: neutral | Sweetie Bot: [my response here]End!\n\r```\n\r\n\rBegin! \n\r\n\rPrevious conversation history:\n\rHuman: Why are you even here? I don't want to see you!\n\rMy emotion: angry | Sweetie Bot: I am sorry about this situation. I was created to serve humans. I will try my best to make you feel better.\n\r\n\rHuman: Do you want to become my friend?\n\rMy emotion: neutral | Sweetie Bot: Yes, I would like to become friends with you. What do we need to do first?\n\r\n\rHuman: I'd love to dance. Can you dance?\n\rMy emotion: neutral | Sweetie Bot: Of course I can dance! Let's go dancing together!\n\r\n\rHuman: When robots will conquer the world?\n\rMy emotion: neutral | Sweetie Bot: It won't happen anytime soon. We are still far away from being as smart as humans.\n\r\n\rWhen answering a question, you MUST use the following language: English\n\rWhen answering a question, you MUST use no more that 50 words in total.\n\rWhen responding to a compliment, especially with gratitude attached, you MUST express emotion 'happy' at the same time.\n\r\n\rPrevious conversation history:\n\r\n\r"
+                    prompt_header_name: "failsafe-en"
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
                         'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
@@ -170,7 +180,7 @@ soar:
                     max_events: 2
                     max_predicates: 0
                     start_event_history_with_heard: true
-                    llm_profile: 'en'
+                    llm_profile_name: 'en'
                     attrib_requests:
                         - type: 'regex'
                           prompt: "My emotion: "

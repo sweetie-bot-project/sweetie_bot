@@ -83,7 +83,7 @@
   </struct>
   <struct name="head_q_min" type="array">
      <description>Upper joints limits</description>
-     <simple name="Element0" type="double"><value>-0.29</value></simple>
+     <simple name="Element0" type="double"><value>-0.0</value></simple>
      <simple name="Element1" type="double"><value>-0.82</value></simple>
      <simple name="Element2" type="double"><value>-1.39</value></simple>
      <simple name="Element3" type="double"><value>-1.04</value></simple>

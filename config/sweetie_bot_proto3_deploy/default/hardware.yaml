@@ -4,3 +4,5 @@ hardware:
         sysfs_path: '/sys/class/power_supply/BAT0'
     joystick:
         sysfs_path: '/dev/input/js0'
+    external_button:
+        sysfs_path: '/dev/ttyUSB0'

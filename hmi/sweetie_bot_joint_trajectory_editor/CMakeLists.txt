@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.6)
 project(sweetie_bot_joint_trajectory_editor)
 
 # Tell CMake to run moc when necessary:

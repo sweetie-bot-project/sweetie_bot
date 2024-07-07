@@ -6,11 +6,12 @@ WantedBy=multi-user.target
 
 [Service]
 Type=simple
+Environment=VENV=translate
+Environment=PORT=5001
 # change to your user
 User=sweetie
-WorkingDirectory=$HOME/repos/translate/LibreTranslate
-ExecStart=-/bin/bash -c "source $HOME/miniconda3/etc/profile.d/conda.sh && \
-  conda activate translate && \
-  libretranslate --host 0.0.0.0 --port 5001 --debug"
+ExecStart=-/bin/bash -c "source ${HOME}/miniconda3/etc/profile.d/conda.sh && \
+  conda activate ${VENV} && \
+  libretranslate --host 0.0.0.0 --port ${PORT} --debug"
 Restart=on-failure
 TimeoutSec=600

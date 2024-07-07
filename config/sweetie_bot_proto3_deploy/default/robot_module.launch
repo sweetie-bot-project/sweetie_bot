@@ -23,9 +23,6 @@
 	  <param name="invert" value="false"/>
 	</node>
 
-	<!-- control node for mouth, ears and horn -->
-	<node pkg="sweetie_bot_body_language" name="body_language" type="sweetie_bot_body_language" />
-
 	<!-- run battery monitor -->
 	<node ns="hardware" machine="sweetiebot" name="battery_monitor" pkg="sweetie_bot_battery_monitor" type="battery_monitor" if="false">
 		<remap from="battery_state" to="$(arg robot_ns)/battery_state" />
