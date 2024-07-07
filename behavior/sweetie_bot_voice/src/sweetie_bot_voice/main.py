@@ -338,6 +338,8 @@ class VoiceNode():
             # Publish original text before the translation as well
             voice_log.publish(f'log/voice/out/{lang}', cmd.command, '')
 
+            rospy.loginfo(u"Text: {}".format(cmd.command))
+
             # translate to source lang
             if self.enable_translate and lang !='en':
                 #gender_hint = self.gender_translation_hints[self.voice_gender]
@@ -368,7 +370,6 @@ class VoiceNode():
 
         if hint:
             text = u'{}: """{}"""'.format(hint, text)
-        rospy.loginfo(u"Text: {}".format(text))
 
         result = self.do_translate(text=text, source='en', target=target)
         translated_text = result.text

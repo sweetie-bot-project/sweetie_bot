@@ -49,7 +49,7 @@ soar:
             type: "herkulex_servos"
             topic: "motion/herkulex/servo_states"
             overheat_temperature: 83.0
-            ignore_joints: [ 'head_joint1' ]
+            ignore_joints: [ 'head_joint1', 'ear_r_joint', 'ear_l_joint', 'mouth_joint' ]
         sound:
             type: "sound_speech"
             topic: "sound_event"
