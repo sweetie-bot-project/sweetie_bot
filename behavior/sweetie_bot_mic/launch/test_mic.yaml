@@ -1,0 +1,19 @@
+  mic_name: "default"
+  main_channel: 0
+  sample_rate: 16000
+  update_rate: 4.0
+  transcribe_servers: {'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}
+  key_combination: [ 'ctrl', 'w' ]
+  call_llm: False
+  sound_intensity_threshold: 300
+  intensity_normalization_divider: 2000
+  doa:
+      algorithm: 'NormMUSIC'
+      #algorithm: 'SRP'
+      #algorithm: 'FRIDA'
+      #algorithm: 'MUSIC'
+      #algorithm: 'TOPS'
+      mic_coords: [ 0.0, 0.05, 0.0, -0.05 ]
+      mic_channels: [ 0, 1 ]
+      azimuth: [ -90.0, 90.0, 32 ]
+      nfft: 1024

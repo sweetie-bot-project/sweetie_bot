@@ -214,7 +214,11 @@ class RespeakerAudio(object):
                 break
 
         if self.device_index is None:
-            raise RuntimeError(f"Failed to find pyaudio device by name '{mic_name}'. Bailing out.")
+            msg = f"Failed to find pyaudio device by name '{mic_name}'. Available devices:\n"
+            for i in range(count):
+                info = self.pyaudio.get_device_info_by_index(i)
+                msg += f" - '{info['name']}' (input channels: {info['maxInputChannels']}, output channels: {info['maxOutputChannels']})\n"
+            raise RuntimeError(msg)
 
         # selected channels
         if self.channels is None:
@@ -714,6 +718,10 @@ class RespeakerNode(object):
         # publish debug plot
         if self.debug_plot:
             self.pub_plot.publish(self._plot_msg)
+
+        # print intensity
+        #if is_speeching:
+        #    print(f'Intesity: {intensity}')
 
         # pass text to language model: new speech is decoded and Complete service is available
         if self._sound_event.sound_flags & SoundEvent.SPEECH_DECODED and self.llm_service_client is not None:
