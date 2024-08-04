@@ -391,7 +391,7 @@ class RespeakerNode(object):
         self._robot_is_speeching = False
         self._intensity_speech = np.ones(shape=(10,))
         self._speech_source_direction = np.zeros(shape=(3,))
-        self._speech_source_intesity = 0.0
+        self._speech_source_intensity = 0.0
 
         #
         # Messages buffers
@@ -425,7 +425,7 @@ class RespeakerNode(object):
             from sweetie_bot_plot.msg import Plot, Subplot, Curve
             # create plot buffer
             self._plot_msg = Plot(title=mic_name, action=Plot.UPDATE)
-            intensity_splt = Subplot(title = 'Sound intensity histogram', xlabel = 'intesity', ylabel= 'count')
+            intensity_splt = Subplot(title = 'Sound intensity histogram', xlabel = 'intensity', ylabel= 'count')
             intensity_splt.curves.append( Curve(name = 'statistics', type = Curve.HISTOGRAM) )
             intensity_splt.curves.append( Curve(name = 'now', type = Curve.HISTOGRAM) )
             self._plot_msg.subplots.append( intensity_splt )
@@ -480,11 +480,12 @@ class RespeakerNode(object):
             self.respeaker = None
 
     def on_parameters_update(self, config, level):
-        try:
-            self._sound_intesity_threshold = config['sound_intensity_threshold']
-        except KeyError:
-            pass
-        return config
+        accepted_config = {}
+        for param, value in config.items():
+            if param in ('sound_intensity_threshold', 'intensity_normalization_divider'):
+                setattr(self, '_'+param, value)
+                accepted_config[param] = value
+        return accepted_config
 
     def on_mouth(self, cmd):
         # If robot is speeching everyone else must shurt up!
@@ -659,19 +660,19 @@ class RespeakerNode(object):
         # TODO: use non-moving frame
         if is_speeching:
             self._speech_source_direction += doa_direction * intensity
-            self._speech_source_intesity += intensity
+            self._speech_source_intensity += intensity
         else:
             self._speech_source_direction[:] = 0.0
-            self._speech_source_intesity = 0.0
+            self._speech_source_intensity = 0.0
 
         # form speech event
         self._sound_event.header.stamp = rospy.Time.now()
         self._sound_event.doa = Vector3( *doa_direction )
-        self._sound_event.intensity = intensity
+        self._sound_event.intensity = intensity / self._intensity_normalization_divider
         sound_flags = 0
         if is_speeching:
             sound_flags |= SoundEvent.SPEECH_DETECTING
-        if intensity > self._sound_intesity_threshold:
+        if intensity > self._sound_intensity_threshold:
             sound_flags |= SoundEvent.SOUND_DETECTING
         self._sound_event.sound_flags = sound_flags
 
@@ -698,13 +699,13 @@ class RespeakerNode(object):
             pos = self._detection_sound_msg.pose.position
             pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
             detections_msg.detections.append(self._detection_sound_msg)
-            self._marker_sound_msg.color.a = min(intensity / 2000, 1.0)
+            self._marker_sound_msg.color.a = min(intensity / self._intensity_normalization_divider, 1.0)
             markers_msg.markers.append(self._marker_sound_msg)
         if sound_flags & SoundEvent.SPEECH_DETECTING:
             pos = self._detection_speech_msg.pose.position
-            pos.x, pos.y, pos.z = self._speech_source_direction * (self.doa_object_distance / self._speech_source_intesity)
+            pos.x, pos.y, pos.z = self._speech_source_direction * (self.doa_object_distance / self._speech_source_intensity)
             detections_msg.detections.append(self._detection_speech_msg)
-            self._marker_speech_msg.color.a = min(intensity / 2000, 1.0)
+            self._marker_speech_msg.color.a = min(intensity / self._intensity_normalization_divider, 1.0)
             markers_msg.markers.append(self._marker_speech_msg)
         if len(detections_msg.detections) > 0:
             self.pub_detections.publish(detections_msg)
