@@ -1,11 +1,21 @@
 from .input_module import InputModuleFlatSoarView, register
 from .bins import BinsMap
 from ..nlp import SpacyInstance
+from .swm import SpatialWorldModel, ObjectKeyTuple
 
 from threading import Lock
+from bisect import insort
+from dataclasses import dataclass
+
+import numpy as np
+from numpy.linalg import norm
+
 import rospy
+import tf
+from flexbe_core.proxy import ProxyTransformListener
 
 from sweetie_bot_text_msgs.msg import SoundEvent
+from std_msgs.msg import Header
 
 class ParserMap:
     def __init__(self, nlp_model, map):
@@ -29,7 +39,16 @@ class ParserMap:
                 keys.append(key)
         return keys
 
+@dataclass(eq = True, frozen = True)
+class EvaluationFrame:
+    key : 'ObjectKeyTuple'
+    intensity : float
+
 class SoundSpeech(InputModuleFlatSoarView):
+    WAITING = 0
+    LISTENING = 1
+    DISPLAYING = 2
+
     def __init__(self, name, config, agent):
         self._sound_event_sub = None
         # call supercalss constructor
@@ -40,6 +59,15 @@ class SoundSpeech(InputModuleFlatSoarView):
         self._lang_filter = self.getConfigParameter(config, 'lang_filter', 
             default_value = ['en', 'ru'], allowed_types = (list,), 
             check_func = lambda vals: all(isinstance(v, str) for v in vals) )
+        self._object_filter = self.getConfigParameter(config, 'object_filter', 
+            default_value = ['human'], allowed_types = (list,), 
+            check_func = lambda vals: all(isinstance(v, str) for v in vals) )
+        self._object_max_n = self.getConfigParameter(config, 'object_max_n', default_value = 5, 
+            allowed_types = (int,), check_func = lambda v: v >= 1)
+        self._undetected_angle_tolerance = self.getConfigParameter(config, 'undetected_angle_tolerance', default_value = 0.5, 
+            allowed_types = (float,), check_func = lambda v: v >= 0.0)
+        self._undetected_intensity_accept_ratio = self.getConfigParameter(config, 'undetected_intensity_accept_ratio', default_value = 0.75, 
+            allowed_types = (float,), check_func = lambda v: v >= 0.0 and v <= 1.0 )
         try:
             self._intensity_bins_map = BinsMap( config['intensity_bins_map'] )
         except KeyError:
@@ -54,30 +82,147 @@ class SoundSpeech(InputModuleFlatSoarView):
             raise KeyError('incorrect parser declaraition: missing or superfluous parameters (%s): error %s' % ([request.keys()], e))
         # subscriber    
         self._sound_event_sub = rospy.Subscriber(sound_event_topic, SoundEvent, self.newSoundEventCallback, queue_size = 10)
+        self._tf_listener = ProxyTransformListener().listener()
         # message buffers
         self._lock = Lock()
         self._last_sound_event = SoundEvent()
         self._text = None
         self._text_is_updated = False
         self._text_timestamp = rospy.Time.now()
+        self._state = SoundSpeech.WAITING
+        # direction 
+        self._object_intensity_map= {}
 
-    def newSoundEventCallback(self, msg):
-        with self._lock:
-            self._last_sound_event = msg
-            if msg.sound_flags & SoundEvent.SPEECH_DECODED:
-                rospy.logdebug('lang: receive msg: %s (%s)' % (msg.text, msg.language))
-            # get text
-            timestamp_now = rospy.Time.now()
-            if self._text_timestamp < timestamp_now:
-                if (msg.sound_flags & SoundEvent.SPEECH_DECODED) and msg.text != '':
-                    rospy.logdebug('lang: stable message: %s (%s)' % (msg.text, msg.language))
-                    self._text = (msg.text, msg.language)
-                    self._text_timestamp = timestamp_now + rospy.Duration(self._speech_timeout)
-                    self._text_is_updated = True
-                elif self._text is not None:
-                    self._text_is_updated = True
-                    self._text = None
+    def newSoundEventCallback(self, sound_event):
+        # processing FSM
+        while True:
 
+            rospy.logdebug('sound: sound event processing: state: %s, msg: %s' % (self._state, sound_event))
+            # print('sound: sound event processing: state: %s, msg: %s' % (self._state, sound_event))
+
+            # waiting speech 
+            if self._state == SoundSpeech.WAITING:
+                
+                # speech is heard, transit to LISTENING
+                if sound_event.sound_flags & SoundEvent.SPEECH_DETECTING:
+                    # clear evaluation map
+                    self._object_intensity_map.clear()
+                    # new state
+                    self._state = SoundSpeech.LISTENING
+                    continue
+
+                # continue waiting speech
+                break
+
+            # listening to speech (text is not available yet)
+            elif self._state == SoundSpeech.LISTENING:
+
+                # no speech, transit to WAITING
+                if not (sound_event.sound_flags & (SoundEvent.SPEECH_DETECTING | SoundEvent.SPEECH_DECODED)):
+                    # new state 
+                    self._state = SoundSpeech.WAITING
+                    continue
+                
+                # possible speakers evaluation
+                if sound_event.sound_flags & SoundEvent.SPEECH_DETECTING:
+                    # listening to speed and avlauate possible speaker
+                    swm = SpatialWorldModel.get_swm()
+                    # get objects 
+                    objects = swm.get_objects() 
+                    objects = swm.get_objects(object_filter = lambda obj: obj.isVisible() and (obj.type in self._object_filter or (obj.type == 'sound' and obj.label == 'speech'))) 
+                    if len(objects) > 0:
+                        # last convertion from SWM frame to microphone frame as matrix44
+                        sTw = self._tf_listener.asMatrix(sound_event.header.frame_id, Header(frame_id = swm.world_frame, stamp = rospy.Time()))
+                        # extract doa directions and values
+                        doa_azimuth = sound_event.doa_azimuth
+                        doa_colatitude = sound_event.doa_colatitude
+                        doa_directions = np.vstack( ( np.cos(doa_azimuth)*np.sin(doa_colatitude), np.sin(doa_azimuth)*np.sin(doa_colatitude), np.cos(doa_colatitude) ) ) # doa directions (3, n_doas)
+                        doa_values = np.array(sound_event.doa_values)
+                        # find nearest direction for each object and corresponding doa value
+                        obj_coords = np.stack([ (obj.pose.position.x, obj.pose.position.y, obj.pose.position.z, 0.0) for obj in objects.values() ], axis=1) # homogeneus coordintaes of objects in world frame (4, n_objects)
+                        obj_coords = (sTw @ obj_coords)[0:3, :] # coordinates of objects in sound frame (3, n_objects)
+                        obj_distances = np.linalg.norm(obj_coords, axis=0) # distance to objects (n_objects)
+                        doa_obj_cos = doa_directions.T @ (obj_coords / obj_distances) # matrix of cos between sound doas and object directions (n_doas, n_objects)
+                        obj_values = doa_values[ np.argmax(doa_obj_cos, axis=0) ] # intensity of object doas (n_objects)
+                        # process object intesities
+                        for k, (key_tuple, obj) in enumerate(objects.items()):
+                            if key_tuple in self._object_intensity_map:
+                                self._object_intensity_map[key_tuple] += doa_values[k] * sound_event.intensity
+                            else:
+                                self._object_intensity_map[key_tuple] = doa_values[k] * sound_event.intensity
+
+                elif sound_event.sound_flags & SoundEvent.SPEECH_DECODED and sound_event.text != '':
+                    # speech is decoded, transit to DISPLAYING
+
+                    # select max_n objects with maximal intensity
+                    # and get speech detection which represents undetected speaker
+                    obj_eval_frames = []
+                    undetected_eval_frame = None
+                    for key_tuple, intensity in self._object_intensity_map.items():
+                        if (key_tuple.label, key_tuple.type) == ('speech', 'sound'):
+                            undetected_eval_frame = EvaluationFrame(key_tuple, intensity)
+                        else: 
+                            insort(obj_eval_frames, EvaluationFrame(key_tuple, intensity), key=lambda p: p.intensity)
+                            del obj_eval_frames[self._object_max_n:]
+                    print('evaluating objects: ', obj_eval_frames)
+                    print('udetected object: ', undetected_eval_frame)
+                    # check if speaker is undetected
+                    if undetected_eval_frame is not None:
+                        # get corresponding objects
+                        swm = SpatialWorldModel.get_swm()
+                        objects = [ swm.get_object(eval_frame.key) for eval_frame in obj_eval_frames + [undetected_eval_frame] ] # (object_max_n + 1) objects
+                        # last convertion from SWM frame to microphone frame as matrix44
+                        sTw = self._tf_listener.asMatrix(sound_event.header.frame_id, Header(frame_id = swm.world_frame))
+                        # convert objects coordinates to sound_event frame
+                        obj_coords = np.stack([ (obj.pose.position.x, obj.pose.position.y, obj.pose.position.z, 0.0) for obj in objects ], axis=1) # homogeneus coordintaes of objects in world frame (4, n_objects)
+                        obj_coords = (sTw @ obj_coords)[0:3, :] # coordinates of objects in sound frame (3, n_objects+1)
+                        obj_directions = obj_coords / np.linalg.norm(obj_coords, axis=0) # distance to objects (n_objects+1)
+                        # get cos beetween 
+                        obj_cos = obj_directions[:,-1].T @ obj_directions[:,:-1] # cos between speech object (undetected speaker) and evaluated objects
+                        # check angle_treshhold and intensity
+                        intensity_threshhold = undetected_eval_frame.intensity * self._undetected_intensity_accept_ratio
+                        if np.all( obj_cos > np.cos(self._undetected_angle_tolerance) ) and all( eval_frame.intensity < intensity_threshhold for eval_frame in obj_eval_frames ):
+                            # add undetected to object list
+                            insort(obj_eval_frames, undetected_eval_frame, key=lambda p: p.intensity)
+                            del obj_eval_frames[self._object_max_n:]
+                    
+                    # store speech decode result
+                    with self._lock:
+                        self._last_sound_event = sound_event
+                        self._text = ( sound_event.text, sound_event.language, obj_eval_frames )
+                        self._text_timestamp = rospy.Time.now() + rospy.Duration(self._speech_timeout)
+                        # notify that update is needed
+                        self._text_is_updated = True
+                    # new state 
+                    self._state = SoundSpeech.DISPLAYING
+                    continue 
+               
+                break
+
+            elif self._state == SoundSpeech.DISPLAYING:
+                timestamp_now = rospy.Time.now()
+
+                if self._text_timestamp < timestamp_now:
+                    # update speech decode result
+                    with self._lock:
+                        self._last_sound_event = sound_event
+                        self._text_is_updated = True
+                        self._text = None
+                    # new state
+                    self._state = SoundSpeech.WAITING
+                    continue
+
+                break
+
+            # update last message (if it was already updated nothin happens)
+            self._last_sound_event = sound_event
+
+    def remove_all_wme_by_attr(self, attr):
+        while True:
+            wme_id = self._sensor_id.FindByAttribute(attr, 0)
+            if wme_id is None:
+                return
+            wme_id.DestroyWME()
 
     def update(self):
         with self._lock:
@@ -92,20 +237,19 @@ class SoundSpeech(InputModuleFlatSoarView):
             if self._text_is_updated:
                 self._text_is_updated = False
                 if self._text is not None:
-                    text, lang = self._text
-                    rospy.logdebug('lang: speech detected: %s (%s)' % (text, lang))
+                    text, lang, obj_eval_frames = self._text
+                    rospy.logdebug('lang: speech detected: %s (%s), speech sources: %s' % (text, lang, obj_eval_frames))
+                    print('lang: speech detected: %s (%s), speech sources: %s' % (text, lang, obj_eval_frames))
                     # filter text by lang
                     if lang not in self._lang_filter:
                         return
                     # updtae text
                     self.updateChildWME('text', text)
                     self.updateChildWME('lang', lang)
-                    # remove elements if present
-                    while True:
-                        wme_id = self._sensor_id.FindByAttribute('element', 0)
-                        if wme_id is None:
-                            break
-                        wme_id.DestroyWME()
+                    # remove elements and speech sources
+                    self.remove_all_wme_by_attr('element')
+                    self.remove_all_wme_by_attr('speech-source')
+                    self.remove_all_wme_by_attr('best-speech-source')
                     # parse and add elements WMEs
                     parser = self._parsers.get(lang)
                     if parser is not None:
@@ -113,16 +257,27 @@ class SoundSpeech(InputModuleFlatSoarView):
                         # add WMEs
                         for elem in elements:
                             self._sensor_id.CreateStringWME('element', elem)
+                    # add possible speech sources
+                    swm = SpatialWorldModel.get_swm()
+                    is_first = True
+                    for eval_frame in obj_eval_frames:
+                        soar_view = swm.get_object_soar_view(eval_frame.key)
+                        if soar_view is not None:
+                            source_id = self._sensor_id.CreateIdWME('speech-source')
+                            source_id.CreateFloatWME('metric', eval_frame.intensity)
+                            source_id.CreateSharedIdWME('swm-object', soar_view.wme_id)
+                            # the first element is the best
+                            if is_first:
+                                self._sensor_id.CreateSharedIdWME('best-speech-source', source_id)
+                                is_first = False
                 else:
                     # remove WMEs
                     self.removeChildWME('text')
                     self.removeChildWME('lang')
-                    # remove elements
-                    while True:
-                        wme_id = self._sensor_id.FindByAttribute('element', 0)
-                        if wme_id is None:
-                            break
-                        wme_id.DestroyWME()
+                    # remove elements and speech sources
+                    self.remove_all_wme_by_attr('element')
+                    self.remove_all_wme_by_attr('speech-source')
+                    self.remove_all_wme_by_attr('best-speech-source')
 
     def __del__(self):
         # remove sensor wme and ROS subscriber
