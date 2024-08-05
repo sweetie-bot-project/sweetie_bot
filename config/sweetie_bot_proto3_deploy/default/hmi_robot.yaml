@@ -80,19 +80,33 @@ voice:
 eyes:
     start_blinking: true
 microphone:
-    mic_name: "ReSpeaker 4 Mic Array (UAC1.0)"
+    mic_name: "ReSpeaker 4 Mic Array"
     # mic_name: "sof-hda-dsp: - (hw:0,7)"
     # mic_name: "HD Pro Webcam C920"
-    main_channel: 0
     sample_rate: 16000
-    update_rate: 2.0
+    supress_pyaudio_error: True
+    update_rate: 4.0
+    main_channel: 0
+    frame_id: 'base_link'
     transcribe_servers: {'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}
-    key_combination: [ 'ctrl', 'w' ]
+    enable_gtranslate: True
     call_llm: False
+    key_combination: [ 'ctrl', 'w' ]
+    debug_plot: False
+    intensity_histogram_step: 100.0
+    intensity_histogram_forget_factor: 0.95
+    sound_intensity_threshold: 300
+    intensity_normalization_divider: 2000
     doa:
-        algorithm: 'respeaker'
-        # algorithm: 'NormMUSIC'
-        mic_coords: [ 0.0, -0.035, 0.0, 0.035 ]
-        mic_channels: [ 0, 1 ]
-        azimuth: [ -90.0, 90.0, 32]
+        #algorithm: 'respeaker'
+        algorithm: 'NormMUSIC'
+        #algorithm: 'SRP'
+        #algorithm: 'FRIDA'
+        #algorithm: 'MUSIC'
+        #algorithm: 'TOPS'
+        mic_coords: [ 0.02285, -0.02285, 0.02285, 0.02285, -0.02285, 0.02285, -0.02285, -0.02285 ]
+        mic_channels: [ 1, 2, 3, 4 ]
+        freq_range: [ 80.0, 2000.0 ]
+        mode: 'far'
+        azimuth: [ -180.0, 180.0, 32 ]
         nfft: 1024
