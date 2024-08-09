@@ -105,11 +105,21 @@ class SpatialObjectSoarView:
 
 class SpatialWorldModel:
     _swm_instance_ref = None
+    _update_callbacks = []
 
     @staticmethod
     def get_swm():
         swm_ref = SpatialWorldModel._swm_instance_ref
         return swm_ref if swm_ref is not None else None
+
+    @staticmethod
+    def add_update_callback(callback):
+        if callback not in SpatialWorldModel._update_callbacks:
+            SpatialWorldModel._update_callbacks.append(callback)
+
+    @staticmethod
+    def remove_update_callback(callback):
+        SpatialWorldModel._update_callbacks.remove(callback)
 
     @staticmethod
     def distance(p):
@@ -234,6 +244,10 @@ class SpatialWorldModel:
             if time_now - self._last_update_time > self._seen_timeout:
                 self.__updateSpatialMemory(time_now)
 
+        # call callbacks
+        for callback in self._update_callbacks:
+            callback(self)
+
     def __updateSpatialMemory(self, time_now):
         self._last_update_time = time_now
         # iterate over objects, mark unseen invisible and mark to remove outdated 
@@ -272,7 +286,7 @@ class SpatialWorldModel:
                     mem_elem.soar_view = soar_view
                 # visibility timestamp
                 soar_view.updateChildWME( 'visible', self._time_bins_map(time_now - spatial_object.update_time) ) # string
-                soar_view.updateChildWME( 'appeared', self._time_bins_map(time_now - spatial_object.creation_time) ) # string
+                soar_view.updateChildWME( 'perceived-first-time', self._time_bins_map(time_now - spatial_object.creation_time) ) # string
                 if spatial_object.perceive_begin_time != None:
                     soar_view.updateChildWME('perceive-begin', self._time_bins_map(time_now - spatial_object.perceive_begin_time) ) # string
                 else:
