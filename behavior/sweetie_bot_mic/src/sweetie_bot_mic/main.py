@@ -411,7 +411,7 @@ class RespeakerNode(object):
 
         # create object detection  message
         self._detection_sound_msg = Detection(header = self._sound_event.header, id = 0, label = 'sound', type = 'sound')
-        self._detection_speech_msg = Detection(header = self._sound_event.header, id = 0, label = 'speech', type = 'sound')
+        self._detection_speech_msg = Detection(header = self._sound_event.header, id = 0, label = 'speech', type = 'speec')
 
         # create visualization marker message (temporary)
         self._marker_sound_msg = Marker(header = self._sound_event.header, ns = 'microphone', 
