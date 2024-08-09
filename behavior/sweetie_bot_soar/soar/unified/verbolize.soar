@@ -171,12 +171,9 @@ sp {verbolize*elaborate*say-execute-animation-is-relative
 }
 
 
-# WAITING 
-# TODO: correct implementation of parallel processe: both substates should be placed in stack
-
 # look at speaker if animation is finished
 sp {verbolize*propose*looking-at-speaker
-	(state <s> ^substate verbolize ^process <proc>)
+	(state <s> ^substate verbolize -^looking-at-speaker ^process <proc>)
 	(<proc> ^animation-status succeed ^object <obj>)
 -->
 	(<s> ^operator <op> +, =)
@@ -184,7 +181,15 @@ sp {verbolize*propose*looking-at-speaker
 	(<a> ^object <obj> ^timeout 5.0 ^delay 1.0)
 }
 
-# waiting is worst choice
+# waiting for subprocess
+sp {verbolize*elaborate*waiting-subprocess
+	(state <s> ^substate verbolize ^{<<|performing-animation| |looking-at-speaker|>>} <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name wait-subprocess ^process-link <proc>)
+}
+
+# do nothing is worst choice
 sp {verbolize*elaborate*waiting
 	(state <s> ^substate verbolize)
 -->
