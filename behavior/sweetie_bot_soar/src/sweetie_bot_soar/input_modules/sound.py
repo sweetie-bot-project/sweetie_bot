@@ -17,8 +17,55 @@ from flexbe_core.proxy import ProxyTransformListener
 from sweetie_bot_text_msgs.msg import SoundEvent
 from std_msgs.msg import Header
 
-class ParserMap:
-    def __init__(self, nlp_model, map):
+#
+# NLP support
+#
+
+class Parser:
+    subclass_map = {}
+
+    def __new__(cls, type, **kwargs):
+        # factory implementatipacy
+        cls = Parser.subclass_map[type]
+        return super(Parser, cls).__new__(cls)
+
+    def __init__(cls, type):
+        pass
+
+class ParserLexicalTree(Parser):
+    def __init__(self, nlp_model, **kwargs):
+        super(ParserLexicalTree, self).__init__(**kwargs)
+        self._nlp = SpacyInstance(nlp_model)
+
+    def __call__(self, text, wme_id):
+        # get tokens
+        doc = self._nlp(text)
+        # create token WMEs
+        token_ids = []
+        for token in doc:
+            # add token
+            token_id = wme_id.CreateIdWME('token')
+            # set token attributes
+            token_id.CreateStringWME('text', token.text)
+            token_id.CreateStringWME('lemma', token.lemma_.lower())
+            token_id.CreateStringWME('dep', token.dep_)
+            if token.ent_type_ != '':
+                token_id.CreateStringWME('entity-type', token.ent_type_)
+            # store WME id
+            token_ids.append(token_id)
+        # add childrens to each token
+        for token in doc:
+            for child in token.children:
+                token_ids[token.i].CreateSharedIdWME('child', token_ids[child.i])
+        # add entities
+        for entity in doc.ents:
+            token_ids[entity.root.i].CreateStringWME('entity-full', entity.text)
+
+Parser.subclass_map.update({'lexical_tree': ParserLexicalTree})
+
+class ParserMap(Parser):
+    def __init__(self, nlp_model, map, **kwargs):
+        super(ParserMap, self).__init__(**kwargs)
         self._nlp = SpacyInstance(nlp_model)
         # process map: construct key to words map
         try:
@@ -29,20 +76,28 @@ class ParserMap:
         except (TypeError, AttributeError):
             raise TypeError('map: must be dict which maps strings to list of strings')
 
-    def parse(self, text):
+    def __call__(self, text, wme_id):
         tokens = self._nlp(text)
         # process parsed tokens and find key
-        keys = []
         for token in tokens:
-            key = self._map.get(token.lemma_)
+            key = self._map.get(token.lemma_.lower())
             if key is not None:
-                keys.append(key)
-        return keys
+                wme_id.CreateStringWME('element', key)
+
+Parser.subclass_map.update({'word_map': ParserMap})
+
+#
+# speaker detection support
+#
 
 @dataclass(eq = True, frozen = True)
 class EvaluationFrame:
     key : 'ObjectKeyTuple'
     intensity : float
+
+#
+# input module iplementation
+#
 
 class SoundSpeech(InputModuleFlatSoarView):
     WAITING = 0
@@ -72,12 +127,12 @@ class SoundSpeech(InputModuleFlatSoarView):
             self._intensity_bins_map = BinsMap( config['intensity_bins_map'] )
         except KeyError:
             raise RuntimeError('sound_speech input module: "intensity_bins_map" parameter must present.')
-        # text analisys
-        parsers = self.getConfigParameter(config, 'map_parsers', default_value = {}, allowed_types = dict)
+        # NLP analisys
+        parsers = self.getConfigParameter(config, 'nlp_parsers', default_value = {}, allowed_types = dict)
         self._parsers = {}
         try:
             for lang, conf in parsers.items():
-                self._parsers[lang] = ParserMap(**conf)
+                self._parsers[lang] = Parser(**conf)
         except TypeError as e:
             raise KeyError('incorrect parser declaraition: missing or superfluous parameters (%s): error %s' % ([request.keys()], e))
         # subscriber    
@@ -246,17 +301,16 @@ class SoundSpeech(InputModuleFlatSoarView):
                     # updtae text
                     self.updateChildWME('text', text)
                     self.updateChildWME('lang', lang)
-                    # remove elements and speech sources
-                    self.remove_all_wme_by_attr('element')
+                    # remove nlp results and speech sources
+                    self.remove_all_wme_by_attr('nlp')
                     self.remove_all_wme_by_attr('speech-source')
                     self.remove_all_wme_by_attr('best-speech-source')
-                    # parse and add elements WMEs
+                    # NLP: apply parser
                     parser = self._parsers.get(lang)
                     if parser is not None:
-                        elements = parser.parse(text)
-                        # add WMEs
-                        for elem in elements:
-                            self._sensor_id.CreateStringWME('element', elem)
+                        nlp_id = self._sensor_id.CreateIdWME('nlp')
+                        parser(text, nlp_id)
+                        print('Apply parser')
                     # add possible speech sources
                     swm = SpatialWorldModel.get_swm()
                     is_first = True
@@ -275,7 +329,7 @@ class SoundSpeech(InputModuleFlatSoarView):
                     self.removeChildWME('text')
                     self.removeChildWME('lang')
                     # remove elements and speech sources
-                    self.remove_all_wme_by_attr('element')
+                    self.remove_all_wme_by_attr('nlp')
                     self.remove_all_wme_by_attr('speech-source')
                     self.remove_all_wme_by_attr('best-speech-source')
 
