@@ -268,7 +268,7 @@ sp {talk-llm*propose*looking-at-speaker
 
 # finding-speaker if look-at-speaker failed
 sp {talk-llm*propose*searching-missing-speaker
-	(state <s> ^substate talk-llm ^beliefs.event <ev> ^object <obj> ^lang <lang>)
+	(state <s> ^substate talk-llm -^searching-missing-speaker ^beliefs.event <ev> ^object <obj> ^lang <lang>)
 	(<obj> ^input-link <il> ^label <label>)
 	-(<il> ^visible {<<|now| |just|>>})
 -->
