@@ -53,10 +53,10 @@ class CompleteNode:
                 if resp.status_code == 200:
                     break
                 else:
-                    rospy.logwarn("server $s request error %d: %s" % (url, resp.status_code, resp.reason))
+                    rospy.logwarn("server %s request error %d: %s" % (url, resp.status_code, resp.reason))
                     continue # next url
             except requests.ConnectionError as e:
-                rospy.logwarn("connection error: %s" % e.what())
+                rospy.logwarn("connection error: %s" % e)
 
         # check if response is received
         if resp is None:

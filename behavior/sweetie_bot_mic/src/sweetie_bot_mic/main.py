@@ -411,7 +411,7 @@ class RespeakerNode(object):
 
         # create object detection  message
         self._detection_sound_msg = Detection(header = self._sound_event.header, id = 0, label = 'sound', type = 'sound')
-        self._detection_speech_msg = Detection(header = self._sound_event.header, id = 0, label = 'speech', type = 'speec')
+        self._detection_speech_msg = Detection(header = self._sound_event.header, id = 0, label = 'speech', type = 'speech')
 
         # create visualization marker message (temporary)
         self._marker_sound_msg = Marker(header = self._sound_event.header, ns = 'microphone', 
@@ -681,6 +681,8 @@ class RespeakerNode(object):
         self._sound_event.sound_flags = sound_flags
 
         # decode speech
+        self._sound_event.text = ''
+        self._sound_event.language = ''
         if not is_speeching and len(self.speech_audio_buffer) != 0:
             # new speech fragment is received
             result = self.transcribe(self.speech_audio_buffer)
