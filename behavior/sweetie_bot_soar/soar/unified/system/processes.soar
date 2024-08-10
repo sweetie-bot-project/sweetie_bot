@@ -35,7 +35,7 @@ sp {process*elaborate*recover-existing-process
 # auto-created process
 sp {process*elaborate*auto-create-process
 	(state <s> -^process-origin {<<|user| |recovered|>>} ^superstate.operator <op>)
-	(<op> -^type cognition ^name <name> ^substate <substate>)
+	(<op> -^type cognition ^name <name> ^substate <substate> ^process-args)
 -->
 	(<s> ^process <proc> ^process-origin auto ^process-status pending)
 	(<proc> ^name <name> ^substate <substate>)

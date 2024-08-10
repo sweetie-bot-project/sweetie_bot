@@ -19,7 +19,7 @@
 #  * one tag is matched
 #  * animation have ^teg general
 #
-# State publishes SpeechVisualization message with attributes text, sound, character, scene.
+# State publishes SpeechVisualization message with attributes ^text, ^sound, ^character, ^scene.
 #
 #
 # PROCESS RESULT STATUSES
@@ -30,9 +30,9 @@
 #
 # Substates:
 #
-# tect-action, flexbe, look-at
+# text-action, flexbe, look-at
 #
-# Process:
+# Events:
 #
 # * (^name talk-said ^object <object> ^topic <topic> ^text <text>) --- said to <object> about <topic>.
 #
@@ -182,19 +182,18 @@ sp {verbolize*propose*looking-at-speaker
 }
 
 # waiting for subprocess
-sp {verbolize*elaborate*waiting-subprocess
-	(state <s> ^substate verbolize ^{<<|performing-animation| |looking-at-speaker|>>} <proc>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name wait-subprocess ^process-link <proc>)
-}
-
-# do nothing is worst choice
-sp {verbolize*elaborate*waiting
+sp {verbolize*propose*wait
 	(state <s> ^substate verbolize)
 -->
 	(<s> ^operator <op> +, <)
-	(<op> ^name waiting ^substate wait)
+	(<op> ^name wait ^substate wait)
+}
+
+sp {verbolize*elaborate*waiting-subprocess
+	(state <s> ^substate verbolize ^{<<|performing-animation| |looking-at-speaker| |saying-text-action|>>} <proc> ^operator <op> +)
+	(<op> ^name wait ^substate wait)
+-->
+	(<op> ^process <proc>)
 }
 
 # PREFERENCES 
