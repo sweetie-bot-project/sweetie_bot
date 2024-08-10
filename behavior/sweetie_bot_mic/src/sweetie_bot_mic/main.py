@@ -11,6 +11,7 @@ from pynput.keyboard import Key
 import requests
 import numpy as np
 import struct
+import threading
 
 import rospy
 from dynamic_reconfigure.server import Server as DynamicReconfigureServer
@@ -21,6 +22,7 @@ from sweetie_bot_text_msgs.srv import CompleteSimple, CompleteSimpleRequest, Com
 from visualization_msgs.msg import MarkerArray, Marker
 from std_msgs.msg import Bool, ColorRGBA
 from geometry_msgs.msg import Vector3
+from std_srvs.srv import Trigger, TriggerResponse
 
 import six
 from google.cloud import translate_v2 as translate
@@ -287,7 +289,7 @@ class RespeakerNode(object):
         self.debug_plot = rospy.get_param("~debug_plot", True)
         self.enable_gtranslate = rospy.get_param("~enable_gtranslate", True)
         suppress_pyaudio_error = rospy.get_param("~suppress_pyaudio_error", True)
-        self._intensity_histogram_forget_factor = rospy.get_param("~intensity_histogram_forget_factor", 0.99)
+        self._intensity_histogram_forget_factor = rospy.get_param("~intensity_histogram_forget_factor", 0.999)
         self._intensity_histogram_step = rospy.get_param("~intensity_histogram_step", 100.0)
 
         #
@@ -393,7 +395,8 @@ class RespeakerNode(object):
         self.speech_audio_buffer = bytearray()
         self._button_pressed = False
         self._robot_is_speeching = False
-        self._intensity_speech = np.ones(shape=(10,))
+        self._intesity_histogram = np.ones(shape=(10,))
+        self._intesity_histogram_lock = threading.Lock()
         self._speech_source_direction = np.zeros(shape=(3,))
         self._speech_source_intensity = 0.0
 
@@ -465,6 +468,7 @@ class RespeakerNode(object):
         self.pub_markers = rospy.Publisher("hmi/detections", MarkerArray, queue_size=1)
         if self.debug_plot:
             self.pub_plot = rospy.Publisher("plot", Plot, queue_size=1)
+            self.srv_statistics_reset = rospy.Service('~reset_statistics', Trigger, self.on_reset_statistics)
         # voice log
         self.voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=1)
 
@@ -490,6 +494,12 @@ class RespeakerNode(object):
                 setattr(self, '_'+param, value)
                 accepted_config[param] = value
         return accepted_config
+
+    def on_reset_statistics(self, request):
+        # reset histogramm
+        with self._intesity_histogram_lock:
+            self._intesity_histogram = np.ones(shape=(10,))
+        return TriggerResponse(success = True, message='Histogram is cleared.')
 
     def on_mouth(self, cmd):
         # If robot is speeching everyone else must shurt up!
@@ -601,21 +611,21 @@ class RespeakerNode(object):
         # sound intensity profile estimation (only is debug plot is enabled)
         if self.debug_plot:
             intensity_index = int(intensity // self._intensity_histogram_step)
-            # resize bins array if necessary
-            if intensity_index >= len(self._intensity_speech):
-                new_size = int(1.3 * intensity_index)
-                self._intensity_speech.resize((new_size,))
-            # update
-            if is_speeching:
-                self._intensity_speech *= self._intensity_histogram_forget_factor
-                self._intensity_speech[intensity_index] += 1
-            # check current measurement agnist histogram
-            intensity_speech_sum = self._intensity_speech.sum()
-            p_speech = self._intensity_speech[intensity_index] / intensity_speech_sum
+            with self._intesity_histogram_lock:
+                # resize bins array if necessary
+                if intensity_index >= len(self._intesity_histogram):
+                    new_size = int(1.3 * intensity_index)
+                    self._intesity_histogram.resize((new_size,))
+                # update
+                self._intesity_histogram *= self._intensity_histogram_forget_factor
+                self._intesity_histogram[intensity_index] += 1
+                # check current measurement agnist histogram
+                intensity_speech_sum = self._intesity_histogram.sum()
+                p_speech = self._intesity_histogram[intensity_index] / intensity_speech_sum
             # debug plot
             stat = self._plot_msg.subplots[0].curves[0]
-            stat.x = np.arange(0, len(self._intensity_speech)+1) * self._intensity_histogram_step
-            stat.y = self._intensity_speech / intensity_speech_sum
+            stat.x = np.arange(0, len(self._intesity_histogram)+1) * self._intensity_histogram_step
+            stat.y = self._intesity_histogram / intensity_speech_sum
             now = self._plot_msg.subplots[0].curves[1]
             now.x = np.array([intensity_index, intensity_index + 1]) * self._intensity_histogram_step
             now.y = [ p_speech ]
@@ -658,7 +668,7 @@ class RespeakerNode(object):
                     # copy DOA to debug 
                     doa = self._plot_msg.subplots[2].curves[0]
                     doa.x = self.doa_estimator.grid.azimuth 
-                    doa.y = self._sound_event.doa_values * intensity
+                    doa.y = self._sound_event.doa_values
 
         # average speech source direction
         # TODO: use non-moving frame
