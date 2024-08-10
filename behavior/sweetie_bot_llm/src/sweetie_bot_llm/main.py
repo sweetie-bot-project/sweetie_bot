@@ -36,7 +36,7 @@ class CompleteNode:
         rospy.Service('input_text', CompleteSimple, self.input_text_callback)
         rospy.Service('llm_request', CompleteRaw, self.complete_simple_callback)
         # log
-        self.log_llm = rospy.Publisher('speech_log', TextCommand)
+        self.log_llm = rospy.Publisher('speech_log', TextCommand, queue_size=10)
         rospy.loginfo('urls: %s', self._urls )
         rospy.loginfo('profiles: %s', [self._profiles.keys()] )
 
@@ -88,8 +88,8 @@ class CompleteNode:
         try:
             text, duration = self.request_server(request)
         except CompleteError as e:
-            rospy.logerr('%s: %s' % (e.what(), e.details))
-            return CompleteResponse(status = e.what())
+            rospy.logerr('%s: %s', e, e.details)
+            return CompleteResponse(status = str(e))
         # return result
         return CompleteResponse(status='ok', text = text, duration=duration)
 
@@ -97,8 +97,8 @@ class CompleteNode:
         # get profile
         profile = self._profiles.get(msg.profile)
         if profile is None:
-            rospy.logerr('unknown profile: %s' % msg.profile)
-            return CompleteRawResponse(status_error = CompleteRawResponse.UNKNOWN_PROFILE)
+            rospy.logerr('unknown profile: %s', msg.profile)
+            return CompleteRawResponse(error_code = CompleteRawResponse.UNKNOWN_PROFILE)
         # construct request 
         request = copy(profile) # shallow copy: one level is enought
         request['prompt'] = msg.prompt
@@ -110,8 +110,8 @@ class CompleteNode:
         try:
             text, duration = self.request_server(request)
         except CompleteError as e:
-            rospy.logerr('%s: %s' % (e.what(), e.details))
-            return CompleteRawResponse(status_error = CompleteRawResponse.SERVER_UNREACHABLE)
+            rospy.logerr('%s: %s', e, e.details)
+            return CompleteRawResponse(error_code = CompleteRawResponse.SERVER_UNREACHABLE)
 
         self.log_llm.publish('log/llm/out/'+msg.profile, text, '')
 
@@ -125,7 +125,7 @@ class CompleteNode:
         # get profile
         profile = self._profiles.get(msg.data.options)
         if profile is None:
-            rospy.logerr('unknown profile: %s' % msg.data.options)
+            rospy.logerr('unknown profile: %s', msg.data.options)
             return CompleteSimpleResponse(data = TextCommand(type = "complete/error", command = 'unknown profile'))
         # produce request
         request = copy(profile)
@@ -134,8 +134,8 @@ class CompleteNode:
         try:
             text, duration = self.request_server(request)
         except CompleteError as e:
-            rospy.logerr('%s: %s' % (e.what(), e.details))
-            return CompleteSimpleResponse(data = TextCommand(type = "complete/error", command = e.what()))
+            rospy.logerr('%s: %s', e, e.details)
+            return CompleteSimpleResponse(data = TextCommand(type = "complete/error", command = str(e)))
         # return result
         return CompleteSimpleResponse(data = TextCommand(type = "complete/response", command = text))
 
