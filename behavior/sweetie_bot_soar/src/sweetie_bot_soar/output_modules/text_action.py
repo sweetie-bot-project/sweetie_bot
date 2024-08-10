@@ -36,11 +36,12 @@ class TextAction(output_module.OutputModule):
     def updateHook(self, cmd_id):
         # check goal state
         status = self._action_client.get_state()
-        if status in [ GoalStatus.ACTIVE, GoalStatus.PENDING ]:
+        if status in (GoalStatus.ACTIVE, GoalStatus.PENDING):
             # Goal is active. Check for abort request.
             abort_id = cmd_id.FindByAttribute("abort", 0)
             if abort_id is not None:
                 self._action_client.cancel_goal()
+                return "aborted"
             return None
         # Goal is completed.
         if status == GoalStatus.SUCCEEDED:
@@ -54,12 +55,7 @@ class TextAction(output_module.OutputModule):
         else:
             rospy.loginfo("TextAction output module:  behavior execution has failed: %s.", status)
             return "failed"
-        
+
 output_module.register("text-action", TextAction)
-
-
-
-        
-
 
 
