@@ -1,0 +1,278 @@
+#
+# ATTENTION MODULE
+#
+# DESCRIPTION
+#
+# Focus attention on several object. Randomly change them.
+#
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate attention ^object <obj1> ...)
+#
+# Objects are splitted in two groups 
+# 1. Main objects mentioned in operator arguments. 
+#	 Attention span for these objects are 3-6 seconds. 
+#    Even if main main object is not visible try to look at it previous position.
+# 2. Other objects are represented by non main visible objects.
+#	 Attention span for these objects are 1 seconds. 
+#	 
+# Attention spwitched between objects randomly. Switch occurs if
+# 1. Attention time period is elasped.
+# 2. New object apperated.
+#
+# Process is finished if all subprocess look-at are finished.
+# Or it can be aborted manually by deleting coresponding process or ^deadline-time.
+#
+# PROCESS RESULT STATUSES
+#
+# succeed -- all subprcesses have finished.
+#
+# SIDE EFFECTS
+#
+# Substates:
+#
+# look-at
+#
+# Output link: 
+#
+# flexbe, look-at
+#
+
+# ELABORATION
+
+# attention span on main objects (arguments of operator)
+sp {attention*elaborte*attentin-span-main
+	(state <s> ^substate attention ^operator <op> +)
+	(<op> ^substate look-at ^proposed-object-type main ^process-args <a>)
+-->
+	(<a> ^deadline-time (+ 3.0 (rand-float 2.0)) ^memorization-time 2.0)
+}
+	
+# attention span on other objects (not arguments of operator)
+sp {attention*elaborte*attentin-span-other
+	(state <s> ^substate attention ^operator <op> +)
+	(<op> ^substate look-at ^proposed-object-type other ^process-args <a>)
+-->
+	(<a> ^deadline-time 1.0 ^memorization-time 2.0)
+}
+
+# duration of random movements
+sp {attention*elaborte*attentin-span-rand
+	(state <s> ^substate attention ^operator <op> +)
+	(<op> ^substate flexbe ^process-args <a>)
+	(<a> ^behavior ExecuteRandHeadMovements)
+-->
+	(<a> ^timeout 1.0 ^memorization-time 2.0)
+}
+
+# visible objects are candidates to attention change (except the main objects)
+sp {attention*elaborte*other-object
+	(state <s> ^substate attention ^beliefs.object <obj> ^args <a>)
+	(<obj> ^input-link.visible now)
+	-(<a> ^object <obj>)
+-->
+	(<s> ^other-object <obj>)
+}
+
+# newly appered objects are candidates to reconsider attention change (except the one we currently looking at)
+sp {attention*elaborte*reconsider-other-object
+	(state <s> ^substate attention ^looking-at <proc> ^beliefs.object <obj>)
+	(<obj> ^input-link.perceive-begin now)
+	-(<proc> ^object <obj>)
+-->
+	(<s> ^reconsider-other-object <obj>)
+}
+
+# reconsider selection if new object appeared
+sp {attention*elaborte*reconsider
+	(state <s> ^substate attention ^reconsider-other-object <obj>)
+-->
+	(<s> ^reconsider yes)
+}
+
+# look-at/flexbe subprocess
+sp {attention*elaborte*looking-at
+	(state <s> ^substate attention ^process <proc> ^beliefs.process <sproc>)
+	(<sproc> ^substate {<<|look-at| |flexbe|>>} ^subprocess-of <proc>)
+-->
+	(<s> ^looking-at <sproc>)
+}
+
+# memorized look-at/flexbe process
+sp {attention*elaborte*recent-looking-at
+	(state <s> ^substate attention ^process <proc> ^predicates.process <sproc>)
+	(<sproc> ^substate {<<|look-at| |flexbe|>>} ^subprocess-of <proc>)
+-->
+	(<s> ^recent-looking-at <sproc>)
+}
+
+# the last look-at/flexbe process
+sp {attention*elaborte*the-last-looking-at
+	(state <s> ^substate attention ^recent-looking-at <proc>)
+	(<proc> ^terminated-at <time>)
+	-{(<s> ^recent-looking-at <p>) 
+	  (<p> ^terminated-at {> <time>})
+    }
+-->
+	(<s> ^last-looking-at <proc>)
+}
+
+# indication that the last object in focus is main
+sp {attention*elaborte*looking-at-last-object-type
+	(state <s> ^substate attention ^last-looking-at <proc> ^args.object <obj>)
+	(<proc> ^object <obj>)
+-->
+	(<s> ^last-looking-at-object-is-main yes)
+}
+
+# DECISION 
+
+# select main object on start of process
+sp {attention*propose*select-main-object-start
+	(state <s> ^substate attention ^process-status pending ^args.object <obj>)
+	(<obj> ^label <label> ^type <type>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name looking-at-on-main-object-start ^substate look-at ^proposed-object <obj> ^proposed-object-type main ^process-args <a>)
+	(<a> ^object <obj>)
+}
+
+# select objects on look-at deadline
+
+# it can be a main object
+sp {attention*propose*select-main-object
+	(state <s> ^substate attention ^process-status active -^looking-at ^args.object <obj>)
+	(<obj> ^label <label> ^type <type>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name looking-at-on-main-object ^substate look-at ^proposed-object <obj> ^proposed-object-type main ^process-args <a>)
+	(<a> ^object <obj>)
+}
+
+# or other object
+sp {attention*propose*select-other-object
+	(state <s> ^substate attention ^process-status active -^looking-at ^other-object <obj>)
+	(<obj> ^label <label> ^type <type>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name looking-at-on-other-object ^substate look-at ^proposed-object <obj> ^proposed-object-type other ^process-args <a>)
+	(<a> ^object <obj>)
+}
+
+# At last consider  random movement if no other objects presents
+sp {attention*propose*random-movement
+	(state <s> ^substate attention ^process-status active -^looking-at -^other-object)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name moving-randomly ^substate flexbe ^proposed-object-type none ^process-args <a> ^interruptable hard)
+	(<a> ^behavior ExecuteRandHeadMovements ^timeout 1.0)
+}
+
+# Continue looking on selected object.
+sp {attention*propose*select-main-object-continue
+	(state <s> ^substate attention ^process-status active ^looking-at <proc> -^reconsider)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name looking-at-continue ^process-link <proc>)
+}
+
+# Reconsider looking focus. Conside currrent object
+sp {attention*propose*select-main-object-reconsider
+	(state <s> ^substate attention ^process-status active ^looking-at <proc> ^reconsider)
+	(<proc> ^object <obj>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name looking-at-continue-reconsider ^proposed-object <obj> ^proposed-object-type main ^process-link <proc>)
+}
+
+# and reconsider candidates
+sp {attention*propose*select-other-object-reconsider
+	(state <s> ^substate attention ^process-status active ^looking-at ^reconsider ^reconsider-other-object <obj>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name looking-at-other-object-reconsider ^substate look-at ^proposed-object <obj>  ^proposed-object-type other ^process-args <a>)
+	(<a> ^object <obj>)
+}
+
+# finish process if main objects are not present
+sp {attention*propose*finish-error
+	(state <s> ^substate attention ^process-status active -^looking-at ^process <proc>)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name finish-error ^type automatic ^finish-process <proc> ^finish-status error)
+}	
+
+# PREFERENCES
+
+sp {attention*prefer*main-object
+	(state <s> ^substate attention ^operator <op> +)
+	(<op> ^proposed-object-type main>)
+-->
+	(<s> ^operator <op> = 50.0)
+}
+
+sp {attention*prefer*other-object
+	(state <s> ^substate attention ^last-looking-at-object-is-main ^operator <op> +)
+	(<op> ^proposed-object-type other)
+-->
+	(<s> ^operator <op> = 50.0)
+}
+
+sp {attention*prefer*object-except-last
+	(state <s> ^substate attention ^last-looking-at.object <obj> ^operator <op> + ^args <a>)
+	(<op> ^proposed-object <obj>)
+-->
+	(<s> ^operator <op> = -50.0)
+}
+
+sp {attention*prefer*moving-randomly
+	(state <s> ^substate attention ^operator <op> +)
+	(<op> ^name moving-randomly)
+-->
+	(<s> ^operator <op> = 50.0)
+}
+
+sp {attention*prefer*preserve-object-when-reconsidering
+	(state <s> ^substate attention ^operator <op> + ^looking-at.object <obj>)
+	(<op> ^proposed-object <obj>)
+-->
+	(<s> ^operator <op> = -20.0)
+}
+
+sp {attention*prefer*visible
+	(state <s> ^substate attention ^operator <op> +)
+	(<op> ^proposed-object <obj>)
+	(<obj> ^input-link.visible now)
+-->
+	(<s> ^operator <op> = 20.0)
+}
+
+sp {attention*prefer*just-appeared-object
+	(state <s> ^substate attention ^operator <op> +)
+	(<op> ^proposed-object <obj>)
+	(<obj> ^input-link.perceive-begin now)
+-->
+	(<s> ^operator <op> = 50.0)
+}
+
+sp {attention*prefer*just-appeared-first-time
+	(state <s> ^substate attention ^operator <op> +)
+	(<op> ^proposed-object <obj>)
+	(<obj> ^input-link.perceived-first-time now)
+-->
+	(<s> ^operator <op> = 50.0)
+}
+
+# COGNITION
+
+# remove process when all subrocesses are terminated and forgotten
+sp {attention*propose*finish
+	(state <s> ^bottom-state 1 ^beliefs.process <proc> ^predicates <p>)
+	(<proc> ^substate attention)
+	-{(<p> ^process <sproc>)
+	  (<sproc> ^substate {<<|look-at| |flexbe|>>} ^subprocess-of <proc>)
+    }
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name attention-finished ^type cognition automatic ^finish-process <proc> ^finish-status succeed)
+}
