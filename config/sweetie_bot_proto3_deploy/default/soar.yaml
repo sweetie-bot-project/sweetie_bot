@@ -3,7 +3,6 @@ soar:
     autostart: false
     agent_package: "sweetie_bot_soar"
     agent_file: "soar/unified-proto3.soar"
-    # agent_file: "soar/test_llm.soar"
     input:
         rand:
             type: "rand"
@@ -54,29 +53,30 @@ soar:
             type: "sound_speech"
             topic: "sound_event"
             speech_timeout: 1.5
-            intensity_bins_map: { names: [ "low", "med", "high" ], values: [ 10.0, 20.0 ] }
+            intensity_bins_map: { names: [ "low", "medium", "high" ], values: [ 0.3, 0.6 ] }
             lang_filter: ['en', 'ru']
-            map_parsers:
+            object_filter: ['human']
+            object_max_n: 3
+            undetected_angle_tolerance: 0.5 # +/- 30 deg
+            undetected_intensity_accept_ratio: 0.90
+            nlp_parsers:
                 'en': 
+                    type: 'lexical_tree'
                     nlp_model: 'en_core_web_sm'
-                    map: 
-                        greeting: [hello, hi, greet]
-                        goodbye: [goodbye, bye]
-                        dance: [dance]
-                        sing: [sing]
-                        please: [please]
-                        give: [give]
-                        hoof: [hoof, hand, leg, hooves]
                 'ru':
+                    type: 'lexical_tree'
                     nlp_model: 'en_core_web_sm'
-                    map: 
-                        greeting: [hello, hi, greet]
-                        goodbye: [goodbye, bye]
-                        dance: [dance]
-                        sing: [sing]
-                        please: [please]
-                        give: [give]
-                        hoof: [hoof, hand, leg, hooves]
+                #'en':
+                    #type: 'word_map'
+                    #nlp_model: 'en_core_web_sm'
+                    #map: 
+                        #greeting: [hello, hi, greet]
+                        #goodbye: [goodbye, bye]
+                        #dance: [dance]
+                        #sing: [sing]
+                        #please: [please]
+                        #give: [give]
+                        #hoof: [hoof, hand, leg, hooves]
     output:
         nop:
             delay: 0.2
