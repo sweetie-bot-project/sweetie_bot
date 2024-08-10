@@ -88,6 +88,9 @@ soar:
             action_ns: "voice/syn"
         speech-visualization:
             topic: "hmi/speech_visualization"
+        look-at:
+            controller: "motion/controller/look_at"
+            period: 0.1
         lang-model:
             service_ns: "llm_request"
             requests:
