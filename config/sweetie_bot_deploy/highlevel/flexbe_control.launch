@@ -62,7 +62,6 @@
 				<remap from="step_sequence" to="motion/controller/step_sequence" />     
 			</node>
 			<!-- voice node  -->
-			<env name="LD_PRELOAD" value="/usr/lib/x86_64-linux-gnu/libffi.so.7" />
 			<node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
 				<remap from="control" to="$(arg robot_ns)/control" />
 			</node>

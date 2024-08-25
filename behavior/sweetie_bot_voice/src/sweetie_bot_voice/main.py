@@ -262,7 +262,7 @@ class VoiceNode():
         # load voice profiles
         self._voice_profile = {}
         for name, profile_config in profiles_config.items():
-            print(name, profile_config)
+            #print(name, profile_config)
             try:
                 profile_type = profile_config.get('type')
                 langs = profile_config.get('langs')
