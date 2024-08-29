@@ -69,12 +69,12 @@ class CompleteNode:
         # display result
         rospy.logdebug(f'server %s response: \n\n %s \n\n' % (url, response))
         # check response structure
-        if ( 'results' not in response or len(response['results'])==0 or 'text' not in response['results'][0]):
+        if ( 'choices' not in response or len(response['choices'])==0 or 'text' not in response['choices'][0]):
             raise CompleteError('wrong response structure', resp.content)
         # convert to unicode
         try:
             # TODO: what is this? decode and then encode?
-            text = response['results'][0]['text'].encode('utf-8').strip()
+            text = response['choices'][0]['text'].encode('utf-8').strip()
             text = text.decode()
         except UnicodeDecodeError:
             return CompleteError('unicode decode error', resp.content)
