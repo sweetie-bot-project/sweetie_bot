@@ -59,14 +59,6 @@ sp {talk-llm*elaborate-the-most-recent-talk-event
 	(<s> ^most-recent-event <ev>)
 }
 
-# looking-at 
-sp {talk-llm*elaborate*looking-at
-	(state <s> ^substate talk-llm ^beliefs-stable.predicate <pred> ^object <obj>)
-	(<pred> ^name looking-at ^object <obj>)
--->
-	(<s> ^looking-at yes)
-}
-
 # inspect talk events for ^lang attrib and use last one
 sp {talk-llm*elborate*lang-from-last-event
 	(state <s> ^substate talk-llm ^recent-events <ev-pool>)
@@ -109,7 +101,7 @@ sp {talk-llm*propose*answering-continue
 # perform greeting if no talk event happened before
 #
 sp {talk-llm*propose*greetin
-	(state <s> ^substate talk-llm ^looking-at -^answering ^recent-events <ev-pool> ^lang <lang> ^object <obj>)
+	(state <s> ^substate talk-llm -^answering ^recent-events <ev-pool> ^lang <lang> ^object <obj>)
 	(<ev-pool> -^event)
 -->
 	(<s> ^operator <op> +, =)
@@ -123,7 +115,7 @@ sp {talk-llm*propose*greetin
 # answer on the last event
 #
 sp {talk-llm*propose*general-answer
-	(state <s> ^substate talk-llm ^looking-at ^most-recent-event <ev> -^answering ^lang <lang> ^object <obj> ^process <sp>)
+	(state <s> ^substate talk-llm ^most-recent-event <ev> -^answering ^lang <lang> ^object <obj> ^process <sp>)
 	(<ev> ^name {<<|talk-heard| |talk-ignored| |talk-no-answer| |talk-illegible|>>})
 -->
  	(<s> ^operator <op> +, =)
@@ -135,7 +127,7 @@ sp {talk-llm*propose*general-answer
 # answer on long pause
 #
 sp {talk-llm*propose*answer-delay
-	(state <s> ^substate talk-llm ^looking-at ^most-recent-event <ev> -^answering  ^lang <lang> ^object <obj> ^process <sp> ^time.just <t>)
+	(state <s> ^substate talk-llm ^most-recent-event <ev> -^answering  ^lang <lang> ^object <obj> ^process <sp> ^time.just <t>)
 	(<ev> ^initiated-at {< <t>})
 -->
  	(<s> ^operator <op> +, =)
@@ -176,7 +168,7 @@ sp {talk-llm*prefer*specific-over-general
 
 # say goodbye and end dialog if speaker has said goodbye
 sp {talk-llm*propose*goodbye
-	(state <s> ^substate talk-llm ^looking-at -^answering ^most-recent-event <ev> ^lang <lang> ^object <obj> ^process <proc>)
+	(state <s> ^substate talk-llm -^answering ^most-recent-event <ev> ^lang <lang> ^object <obj> ^process <proc>)
 	(<ev> ^name talk-heard ^token goodbye)
 -->
  	(<s> ^operator <op> +, =)
@@ -200,7 +192,7 @@ sp {talk-llm*propose*failsafe-answer
 
 # ignorance reaction
 sp {talk-llm*propose*ignor-me-answer
-	(state <s> ^substate talk-llm ^looking-at -^answering ^beliefs.predicate <pred> ^lang <lang> ^object <obj> ^process <proc> ^time.just <time>)
+	(state <s> ^substate talk-llm -^answering ^beliefs.predicate <pred> ^lang <lang> ^object <obj> ^process <proc> ^time.just <time>)
 	(<pred> ^name ignors-me ^actor <obj> ^initiated-at {> <time>})
 -->
  	(<s> ^operator <op> +, =)
@@ -226,7 +218,7 @@ sp {talk-llm*propose*say-missing-answer
 
 # brohoof
 sp {talk-llm*propose*brohoof
-	(state <s> ^substate talk-llm ^looking-at -^answering ^most-recent-event <ev> ^lang <lang> ^object <obj> ^process <proc>)
+	(state <s> ^substate talk-llm  -^answering ^most-recent-event <ev> ^lang <lang> ^object <obj> ^process <proc>)
 	(<ev> ^name talk-heard ^token hoof give)
 -->
 	(<s> ^operator <op> +, =)
@@ -238,7 +230,7 @@ sp {talk-llm*propose*brohoof
 
 # dance
 sp {talk-llm*propose*dance
-	(state <s> ^substate talk-llm ^looking-at -^answering ^most-recent-event <ev> ^lang <lang> ^object <obj> ^process <proc>)
+	(state <s> ^substate talk-llm -^answering ^most-recent-event <ev> ^lang <lang> ^object <obj> ^process <proc>)
 	(<ev> ^name talk-heard ^token dance please)
 -->
  	(<s> ^operator <op> +, =)

@@ -39,6 +39,48 @@
 
 # DECISION RULES
 
+# focus on interlocutor before any other actions
+sp {verbolize*propose*focusing-on-interlocutor
+	(state <s> ^substate verbolize ^args <args> ^process <proc>)
+	(<args> ^object <obj>)
+	(<proc> -^focusing-on-interlocutor-status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name focusing-on-interlocutor ^substate look-at ^process-args <a> ^priority 30)
+    (<a> ^object <obj> ^delay 1.0 ^timeout 5.0 ^result <r-failed>)
+	(<r-failed> ^status failed ^parent <proc> ^attribute focusing-on-interlocutor-status ^link-value failed)
+	(<r-failed> ^status failed ^finish-process <proc> ^finish-status failed)
+}
+
+# detect that oobject in focus, procced to actual verbolization
+sp {verbolize*propose*focusing-on-interlocutor-succeed
+	(state <s> ^bottom-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name looking-at ^object <obj> ^focusing-process.subprocess-of.subprocess-of <proc>)
+	(<proc> ^substate verbolize ^object <obj> -^focusing-on-interlocutor-status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name focusing-on-interlocutor-succeed ^type cognition automatic)
+    (<op> ^parent <proc> ^attribute focusing-on-interlocutor-status ^link-value succced)
+}
+
+
+# LOOK AT INTERLOCUTOR BEFORE SAY ANYTHING
+
+sp {verbolize*propose*text-action-sound
+	(state <s> ^substate verbolize -^saying-text-action ^args <args> ^process <proc>)
+	(<args> ^sound <file> ^topic <topic> ^object <obj>)
+	(<proc> -^text-action-status -^text-action-sound-failed)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name saying-text-action ^substate text-action ^process-args <a> ^priority 27)
+    (<a> ^type |voice/play_wav| ^command <file> ^result <r-succeed> <r-failed>)
+	(<r-succeed> ^status succeed ^parent <proc> ^attribute text-action-status ^link-value succeed ^add-event <ev-new>)
+	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
+	(<r-succeed> ^print (concat |TALK: text action play file: | <file> (crlf)))
+	(<r-failed> ^status failed ^parent <proc> ^attribute text-action-sound-failed ^link-value yes)
+}
+
+
 # PERFORM TEXT ACTION
 
 # text action: play sound file  
@@ -199,6 +241,7 @@ sp {verbolize*elaborate*waiting-subprocess
 # PREFERENCES 
 #
 # Utility:
+# focus on speaker --- 50
 # ditch aniamtion --- 40
 # perform aniamtion 
 #     two matching tags --- 32
