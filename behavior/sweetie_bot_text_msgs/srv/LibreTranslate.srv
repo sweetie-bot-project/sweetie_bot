@@ -1,0 +1,10 @@
+string q
+string detected_source
+string source
+string target
+string format
+string api_key
+---
+DetectedLanguage detectedLanguage
+string translatedText
+string status

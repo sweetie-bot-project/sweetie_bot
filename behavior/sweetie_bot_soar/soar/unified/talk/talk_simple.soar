@@ -75,7 +75,7 @@ sp {talk-llm*elborate*lang-from-last-event
 sp {talk-llm*elborate*default-lang
 	(state <s> ^substate talk-llm -^lang-source event)
 -->
-	(<s> ^lang ru ^lang-source default)
+	(<s> ^lang en ^lang-source default)
 }
 
 #
@@ -185,7 +185,7 @@ sp {talk-llm*propose*failsafe-answer
 -->
  	(<s> ^operator <op> +, =)
 	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
-	(<args> ^object <obj> ^topic goodbye ^text |Something bad happened with my world model... You are annoying me! Goodbye.!| ^animation-tag goodbye ^lang <lang> ^emotion angry ^type statement)
+	(<args> ^object <obj> ^topic goodbye ^text |Internal error! Something bad happened with my world model... Unable to continue the dialogue.!| ^animation-tag goodbye ^lang <lang> ^emotion angry ^type statement)
 	(<args> ^result <res>)
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE TO CLEAN BRAIN.| (crlf)))
 }

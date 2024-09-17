@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <package format="2">
   <name>sweetie_bot_mic</name>
   <version>0.0.0</version>
@@ -6,6 +5,7 @@
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <maintainer email="goncharovoi@yandex.ru">disRecord</maintainer>
+  <maintainer email="fsdfur@gmail.com">mutronics</maintainer>
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <license>BSD</license>
@@ -33,6 +33,5 @@
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
-
   </export>
 </package>

@@ -1,9 +1,0 @@
-<launch>
-    <arg name="call_llm" default="False" />
-    <arg name="enable_gtranslate" default="True"/>
-    <node pkg="sweetie_bot_mic" type="respeaker" name="microphone" output="screen">
-        <rosparam command="load" file="$(find sweetie_bot_mic)/launch/test_mic.yaml" />
-        <rosparam param="call_llm"           subst_value="True">$(arg call_llm)</rosparam>
-        <rosparam param="enable_gtranslate"  subst_value="True">$(arg enable_gtranslate)</rosparam>
-    </node>
-</launch>

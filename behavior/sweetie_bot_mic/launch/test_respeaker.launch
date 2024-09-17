@@ -1,5 +1,0 @@
-<launch>
-	<node pkg="sweetie_bot_mic" type="respeaker" name="microphone" output="screen">
-		<rosparam command="load" file="$(find sweetie_bot_mic)/launch/test_respeaker.yaml" />
-    </node>
-</launch>

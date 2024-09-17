@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen" />
+</launch>

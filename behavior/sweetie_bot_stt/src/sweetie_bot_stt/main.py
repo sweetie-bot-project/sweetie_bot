@@ -1,87 +1,92 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import rospy
+
+from sweetie_bot_load_balancer.balancer import Balancer
+from sweetie_bot_text_msgs.msg import TextCommand
 from sweetie_bot_text_msgs.srv import Transcribe, TranscribeRequest, TranscribeResponse
-import requests
+from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResponse
 
-import six
-from google.cloud import translate_v2 as translate
 
-urls = {'0': "http://127.0.0.1:8577/"}
+class TranscriberNode(object):
+    DEFAULT_CONFIG = dict(server_choices=dict(
+        local_host = {'url': 'http://localhost:8577/'},
+    ))
 
-def translate_text(target, text):
-    """Translates text into the target language.
+    def __init__(self):
+        self.enable_translation = rospy.get_param("~enable_translation", True)
 
-    Target must be an ISO 639-1 language code.
-    See https://g.co/cloud/translate/v2/translate-reference#supported_languages
-    """
-    translate_client = translate.Client()
+        balancer_config = rospy.get_param("~balancer_config", self.DEFAULT_CONFIG)
+        self.balancer = Balancer(
+            balancer_config,
+            loggers={'debug': rospy.logdebug, 'warn': rospy.logwarn, 'info': rospy.loginfo},
+            postprocess_func=self.translate_phrase,
+        )
 
-    if isinstance(text, six.binary_type):
-        text = text.decode("utf-8")
+        self._translate_client = rospy.ServiceProxy('/translate', Translate)
 
-    # Text can also be a sequence of strings, in which case this method
-    # will return a sequence of results for each text.
-    result = translate_client.translate(text, target_language=target)
+        rospy.Service('transcribe', Transcribe, self.transcribe_file)
+        rospy.Service('transcribe_api', Transcribe, self.transcribe)
 
-    #print(u"Text: {}".format(result["input"]))
-    #print(u"Translation: {}".format(result["translatedText"]))
-    #print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
+        self.voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=10)
 
-    return result["translatedText"]
+    def translate_phrase(self, resp_decoded):
+        self.voice_log.publish('log/voice/in/'+resp_decoded['language'], resp_decoded['text'], '')
 
-def handle_transcribe(req):
-    global urls
-    global enable_gtranslate
-    if req.filename and os.path.isfile(req.filename):
-        rospy.logdebug("Got filename = %s" % req.filename)
-        with open(req.filename, 'rb') as file:
-            req.data = file.read()
-
-    r = None
-    for n in sorted(urls):
-        rospy.loginfo("Send %d bytes to %s" % (len(req.data), urls[n]))
-        try:
-            r = None
-            r = requests.post(urls[n], files={'file': ('audio.wav', req.data)})
-            if r.status_code == 200:
-                break
+        if self.enable_translation and resp_decoded['language'] !='en':
+            try:
+                req = TranslateRequest(
+                    text=resp_decoded['text'],
+                    source='auto', target='en',
+                    detected_source=resp_decoded['language']
+                )
+                translate_response = self._translate_client(req)
+            except Exception as e:
+                rospy.logerr(f'transcriber: {e}')
             else:
-                rospy.logerr("%d %s" % (r.status_code, r.reason))
-                continue # next url
-        except requests.ConnectionError as e:
-            rospy.logerr("Connection failed! %s" % e)
-            # nexu url
+                resp_decoded['text'] = translate_response.text
+                resp_decoded['status'] = translate_response.status
 
-    if r is None:
-        return TranscribeResponse(status="All API URLs are down!")
-    try:
-      response = r.json()
-      if r.status_code != 200:
-          response['status'] = r.reason
+        return resp_decoded
 
-      if enable_gtranslate and response['language'] !='en':
-          response['text'] = translate_text('en', response['text'])
+    def transcribe(self, req):
+        # request transcribe server
+        try:
+            response, duration = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
+        except Exception as e:
+            rospy.logerr(f'transcriber: {e}')
+            return TranscribeResponse(status = str(e))
 
-      rospy.loginfo('Transcription %s (%.2fs): "%s"' % (response['status'],
-                                                        response['transcribe_duration'],
-                                                        response['text']))
-    except:
-      rospy.logerr('Cannot decode response (%s)' % (r.content))
-      return TranscribeResponse()
+        rospy.loginfo('Transcription %s (client %.2fs, server %.2fs) [%s]: "%s"', response['status'], duration, response['transcribe_duration'], response['language'], response['text'])
+        # Publish translated verssion of the text as well
+        self.voice_log.publish('log/voice/in/en', response['text'], '')
 
-    return TranscribeResponse(**response)
+        return TranscribeResponse(**response)
 
-def transcribe_server():
-    global urls
-    rospy.init_node('transcribe_server')
-    urls = rospy.get_param("~api_url", urls)
-    enable_gtranslate = rospy.get_param("~enable_gtranslate", False)
-    s = rospy.Service('transcribe', Transcribe, handle_transcribe)
-    rospy.loginfo(urls)
-    rospy.loginfo("Ready to transcribe.")
-    rospy.spin()
+    def transcribe_file(self, req):
+        if req.filename and os.path.isfile(req.filename):
+            rospy.logdebug(f'Got filename = {req.filename}')
+            with open(req.filename, 'rb') as file:
+                req.data = file.read()
+
+        try:
+            response, _ = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
+        except Exception as e:
+            rospy.logerr(f'transcriber: {e}')
+            return TranscribeResponse(status = str(e))
+
+        rospy.loginfo('Transcription %s (%.2fs): "%s"' % (response['status'],
+                                                          response['transcribe_duration'],
+                                                          response['text']))
+
+        return TranscribeResponse(**response)
+
 
 def main():
-    transcribe_server()
+    rospy.init_node('transcribe_server')
+
+    transcriber = TranscriberNode()
+
+    rospy.loginfo("Ready to transcribe.")
+    rospy.spin()
 

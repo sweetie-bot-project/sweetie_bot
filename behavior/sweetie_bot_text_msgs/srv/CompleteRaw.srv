@@ -1,5 +1,5 @@
 string prompt
-string profile
+string profile_name
 string[] stop_list
 ---
 string result

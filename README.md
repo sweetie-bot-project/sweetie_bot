@@ -10,8 +10,8 @@ Also see [`CONTRIBUTING`](CONTRIBUTING.md) page for details.
 
 Build status               | master branch  |
 ---------------------------|----------------|
-ros-noetic-sweetie-bot-base | [![Build Status](https://gitlab.com/slavanap/ros-build/badges/master/build.svg)](https://gitlab.com/slavanap/ros-build/pipelines) | 
-ros-noetic-sweetie-bot      | [![Build Status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/master/build.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/commits/master) | 
+ros-noetic-sweetie-bot-base | [![pipeline status](https://gitlab.com/slavanap/ros-build/badges/master/pipeline.svg)](https://gitlab.com/slavanap/ros-build/-/commits/master) |
+ros-noetic-sweetie-bot      | [![pipeline status](https://gitlab.com/sweetie-bot/sweetie_bot/badges/master/pipeline.svg)](https://gitlab.com/sweetie-bot/sweetie_bot/-/commits/master) |
 
 ## Overview
 
@@ -123,7 +123,6 @@ mkdir -p ~/ros/sweetie_bot/src
 cd ~/ros/sweetie_bot/src
 git clone https://gitlab.com/sweetie-bot/sweetie_bot_sounds.git
 git clone https://gitlab.com/sweetie-bot/sweetie_bot_proto2_movements.git
-git clone https://gitlab.com/sweetie-bot/sweetie_bot_flexbe_behaviors.git
 ```
 Build workspace
 ```

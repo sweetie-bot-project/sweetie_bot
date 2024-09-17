@@ -49,7 +49,16 @@
       DEB_NAME="ros-${ROS_DISTRO}-sweetie-bot$PKG_SUFFIX"
       DEB_DESCRIPTION="Package $DEB_NAME for $ROS_DISTRO"
       DEB_HOMEPAGE="http://sweetiebot.net/"
-      buildpkg "/opt/ros/sweetie_bot" "sweetie-bot.deb" "ros-${ROS_DISTRO}-sweetie-bot-base$PKG_SUFFIX (=${BASE_VERSION})" || echo "ret code $?"
+      buildpkg "/opt/ros/sweetie_bot" "sweetie-bot.deb" "ros-${ROS_DISTRO}-sweetie-bot-base$PKG_SUFFIX (=${BASE_VERSION})" \
+        libspeechd-dev \
+        portaudio19-dev \
+        ros-noetic-joint-state-publisher-gui \
+        ros-noetic-rqt ros-noetic-rqt-service-caller \
+        autotalent \
+        python3-speechd \
+        opus-tools \
+        lame \
+      || echo "ret code $?"
       mv sweetie-bot.deb "$CI_PROJECT_DIR/sweetie-bot-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
       cp -a /src/base/sweetie-bot-base.deb "$CI_PROJECT_DIR/sweetie-bot-base-${CI_JOB_NAME}-${CI_JOB_ID}.deb"
     - |
@@ -100,10 +109,8 @@ focal-amd64:
   extends: .common
 focal-tinker:
   extends: .common-robot
-  retry: 2
 focal-arm64v8:
   extends: .common-robot
-  retry: 2
 
 focal-amd64-test:
   extends: .common-test

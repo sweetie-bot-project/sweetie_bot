@@ -1,5 +1,6 @@
 [Unit]
 Description=Sweetie bot self test
+After=systemd-timesyncd.service network-online.target
 
 [Service]
 Type=oneshot
