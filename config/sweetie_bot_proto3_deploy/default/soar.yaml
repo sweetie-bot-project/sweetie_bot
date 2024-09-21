@@ -59,6 +59,7 @@ soar:
             lang_filter: ['en', 'ru']
             object_filter: ['human']
             object_max_n: 3
+            object_evaluation_alpha: 0.85
             undetected_angle_tolerance: 0.5 # +/- 30 deg
             undetected_intensity_accept_ratio: 0.90
             nlp_parsers:

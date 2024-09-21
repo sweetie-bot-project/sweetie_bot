@@ -127,6 +127,8 @@ class SoundSpeech(InputModuleFlatSoarView):
             self._intensity_bins_map = BinsMap( config['intensity_bins_map'] )
         except KeyError:
             raise RuntimeError('sound_speech input module: "intensity_bins_map" parameter must present.')
+        self._object_evaluation_alpha = self.getConfigParameter(config, 'object_evaluation_alpha', default_value = 0.85, 
+            allowed_types = (float,), check_func = lambda v: v >= 0.0 and v <= 1.0 )
         # NLP analisys
         parsers = self.getConfigParameter(config, 'nlp_parsers', default_value = {}, allowed_types = dict)
         self._parsers = {}
@@ -202,7 +204,7 @@ class SoundSpeech(InputModuleFlatSoarView):
                         # process object intesities
                         for k, (key_tuple, obj) in enumerate(objects.items()):
                             if key_tuple in self._object_intensity_map:
-                                self._object_intensity_map[key_tuple] += obj_values[k] * sound_event.intensity
+                                self._object_intensity_map[key_tuple] = self._object_evaluation_alpha * self._object_intensity_map[key_tuple] + obj_values[k] * sound_event.intensity
                             else:
                                 self._object_intensity_map[key_tuple] = obj_values[k] * sound_event.intensity
 
