@@ -271,8 +271,8 @@ class SoundSpeech(InputModuleFlatSoarView):
 
                 break
 
-            # update last message (if it was already updated nothin happens)
-            self._last_sound_event = sound_event
+        # update last message (if it was already updated nothin happens)
+        self._last_sound_event = sound_event
 
     def remove_all_wme_by_attr(self, attr):
         while True:

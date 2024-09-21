@@ -338,9 +338,9 @@ class VoiceNode():
             if self.enable_translate and lang !='en':
                 #gender_hint = self.gender_translation_hints[self.voice_gender]
                 gender_hint = ''
-                translated_text = self.translate_text(lang, cmd.command, gender_hint)
+                translated_text = self.translate_text(cmd.command, lang, gender_hint)
                 if translated_text is not None:
-                    cmd.command = translate_text
+                    cmd.command = translated_text
                 else:
                     lang = 'en' # ????
 
@@ -384,8 +384,8 @@ class VoiceNode():
             translated_text = re.sub('&quot;', '', translated_text)
             translated_text = translated_text.strip("«»\"' ")
 
-        rospy.loginfo(u"Translation: {}".format(translated_text))
-        rospy.loginfo(u"Received target language: {}".format(target))
+        rospy.loginfo("Translation: %s", translated_text)
+        rospy.loginfo("Received target language: %s", target_lang)
 
         return translated_text
 
