@@ -16,3 +16,7 @@
 	path = inc/rtimulib2
 	url = https://github.com/sweetie-bot-project/RTIMULib2
 	branch = master
+[submodule "config/sweetie_bot_proto3_description"]
+	path = config/sweetie_bot_proto3_description
+	url = git@gitlab.com:sweetie-bot/sweetie_bot_proto3_description.git
+	branch = devel
