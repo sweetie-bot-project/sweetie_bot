@@ -23,7 +23,7 @@ voice:
                         url: 'http://127.0.0.1:5002/api/tts'
                     remote_host:
                         priority: 20
-                        url: 'http://192.168.3.128:5002/api/tts'
+                        url: 'https://ai.sweetie.bot/tts/api/tts'
         rhvoice:
             type: 'rhvoice'
             enabled: true
@@ -81,7 +81,6 @@ microphone:
     main_channel: 0
     supress_pyaudio_error: True
     frame_id: 'base_link'
-    transcribe_servers: {'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}
     enable_translate: True
     key_combination: [ 'ctrl','alt', 'w' ]
     debug_plot: False

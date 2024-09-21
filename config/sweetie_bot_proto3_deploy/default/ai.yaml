@@ -68,7 +68,7 @@ transcriber:
                 url: 'http://localhost:8577/'
             remote_host:
                 priority: 20
-                url: 'http://192.168.3.128:5000/'
+                url: 'https://ai.sweetie.bot/stt/'
 
 translator:
     balancer_config:
