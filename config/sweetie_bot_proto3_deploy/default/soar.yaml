@@ -62,23 +62,34 @@ soar:
             undetected_angle_tolerance: 0.5 # +/- 30 deg
             undetected_intensity_accept_ratio: 0.90
             nlp_parsers:
-                'en': 
-                    type: 'lexical_tree'
-                    nlp_model: 'en_core_web_sm'
-                'ru':
-                    type: 'lexical_tree'
-                    nlp_model: 'en_core_web_sm'
-                #'en':
-                    #type: 'word_map'
+                #'en': 
+                    #type: 'lexical_tree'
                     #nlp_model: 'en_core_web_sm'
-                    #map: 
-                        #greeting: [hello, hi, greet]
-                        #goodbye: [goodbye, bye]
-                        #dance: [dance]
-                        #sing: [sing]
-                        #please: [please]
-                        #give: [give]
-                        #hoof: [hoof, hand, leg, hooves]
+                #'ru':
+                    #type: 'lexical_tree'
+                    #nlp_model: 'en_core_web_sm'
+                'en':
+                    type: 'word_map'
+                    nlp_model: 'en_core_web_sm'
+                    map: 
+                        greeting: [hello, hi, greet]
+                        goodbye: [goodbye, bye]
+                        dance: [dance]
+                        sing: [sing]
+                        please: [please]
+                        give: [give]
+                        hoof: [hoof, hand, leg, hooves]
+                'ru':
+                    type: 'word_map'
+                    nlp_model: 'en_core_web_sm'
+                    map: 
+                        greeting: [hello, hi, greet]
+                        goodbye: [goodbye, bye]
+                        dance: [dance]
+                        sing: [sing]
+                        please: [please]
+                        give: [give]
+                        hoof: [hoof, hand, leg, hooves]
     output:
         nop:
             delay: 0.2
