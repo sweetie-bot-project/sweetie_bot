@@ -23,7 +23,7 @@ voice:
             langs: [ 'en', 'es', 'fr', 'de', 'it', 'pt', 'pl', 'tr', 'ru', 'nl', 'cs', 'ar', 'zh', 'hu', 'ko', 'ja', 'hi' ]
             enabled: true
             coqui_ai_params:
-                speaker: "Asya Anara"
+                speaker: "Daisy Studious"
         rhvoice:
             type: 'rhvoice'
             enabled: true
