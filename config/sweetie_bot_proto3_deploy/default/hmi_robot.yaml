@@ -80,7 +80,7 @@ microphone:
     update_rate: 4.0
     main_channel: 0
     supress_pyaudio_error: True
-    frame_id: 'base_link'
+    frame_id: 'microphone_link'
     enable_translate: True
     key_combination: [ 'ctrl','alt', 'w' ]
     debug_plot: False
