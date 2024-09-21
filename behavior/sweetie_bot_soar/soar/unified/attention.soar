@@ -27,7 +27,7 @@
 sp {attention*elaborate*evaluation-frames
 	(state <s> ^substate attention ^beliefs.object <obj>)
 	(<obj> ^type <type> ^input-link <il>)
-	(<il> ^visible now ^perceive-begin <p-time> ^distance-head <d-head>)
+	(<il> ^visible now ^yaw-body {<<|left| |center| |right|>>} ^perceive-begin <p-time> ^distance-head <d-head>)
 -->
 	(<s> ^evaluation-frame <e>)
 	(<e> ^object <obj> ^type <type> ^perceive-begin <p-time> ^distance-head <d-head>)
@@ -37,11 +37,11 @@ sp {attention*elaborate*evaluation-frames
 sp {attention*elaborate*preferences-and-utility
 	(state <s> ^substate attention)
 -->
-	(<s> ^focus-reconsider-time 10.0)
+	(<s> ^focus-reconsider-time 3.0)
 	(<s> ^attempt-to-focus-time 3.0)
 	(<s> ^preference <p1> <p2> <p3>)
 	(<p1> ^attribute type ^map <m1> ^utility utilityA ^default -100)
-	(<m1> ^human 20 ^pony 10)	
+	(<m1> ^human 20 ^pony 10 ^speech 30 ^sound 10)	
 	(<p2> ^attribute distance-head ^map <m2> ^utility utilityB ^default 0)
 	(<m2> ^close 200 ^near 50)	
 	(<p3> ^attribute perceive-begin ^map <m3> ^utility utilityC ^default 0)
@@ -69,7 +69,7 @@ sp {attention*propose*look-at-new-atention-focus
 -->
 	(<s> ^operator <op> +, = <utility>)
 	(<op> ^name focusing-attention ^substate look-at ^process-args <a>)
-	(<a> ^object <obj> ^delay 2.0 ^timeout <focus-timeout> ^deadline-time <reconsider-time>) 
+	(<a> ^object <obj> ^deadline-time <reconsider-time>) 
 }
 
 # continue looking at selected object
@@ -89,7 +89,7 @@ sp {attention*propose*switch-atention-focus
 -->
 	(<s> ^operator <op> +, = <utility>)
 	(<op> ^name focusing-attention ^substate look-at ^process-args <a>)
-	(<a> ^object <obj> ^delay 2.0 ^timeout <focus-timeout> ^deadline-time <reconsider-time>) 
+	(<a> ^object <obj> ^deadline-time <reconsider-time>) 
 }
 
 # PREFERENCES

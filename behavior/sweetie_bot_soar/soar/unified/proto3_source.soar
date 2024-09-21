@@ -13,13 +13,11 @@ source flexbe.soar
 source text-action.soar
 # high level actions
 source animation.soar
-source lookat.soar
+source lookat2.soar
 source attention.soar
 # talk
 source verbolize.soar
 source verbolize-llm.soar
-source say.soar
-source ask.soar
 source talk/talk_simple.soar
 # main behavior
 source general.soar
