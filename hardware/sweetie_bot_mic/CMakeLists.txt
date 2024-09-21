@@ -7,6 +7,7 @@ project(sweetie_bot_mic)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS 
 	rospy
+	roscpp
 	dynamic_reconfigure
 )
 
@@ -66,7 +67,7 @@ generate_dynamic_reconfigure_options(
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package()
+catkin_package(CATKIN_DEPENDS dynamic_reconfigure)
 
 ###########
 ## Build ##

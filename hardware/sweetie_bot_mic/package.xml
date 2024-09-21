@@ -28,7 +28,7 @@
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>sweetie_bot_text_msgs</exec_depend>
-  <exec_depend>dynamic_reconfigure</exec_depend>
+  <depend>dynamic_reconfigure</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
