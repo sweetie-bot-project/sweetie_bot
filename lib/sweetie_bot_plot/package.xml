@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sweetie_bot_plot</name>
+  <version>0.0.1</version>
+  <description>Plot curves via message.</description>
+  <maintainer email="goncharovoi@yandex.ru">Oleg Goncharov</maintainer>
+  <author email="goncharovoi@yandex.ru">Oleg Goncharov</author>
+  <license>BSD</license>
+  <!-- <url type="website">http://wiki.ros.org/sweet_plot</url> -->
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <exec_depend>rospy</exec_depend>
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <depend>std_msgs</depend>
+  <export>
+  </export>
+</package>
