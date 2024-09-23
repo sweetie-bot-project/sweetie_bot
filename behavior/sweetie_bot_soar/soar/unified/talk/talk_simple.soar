@@ -397,6 +397,15 @@ sp {talk-llm*prefer*look-at-last-interlocutor
 	(<s> ^operator <op1> > <op2>)
 }
 
+# looking at speaker as the worst choice
+sp {talk-llm*propose*end-process
+	(state <s> ^substate talk-llm ^beliefs.object <obj> ^process <proc>)
+	-(<obj> ^type human ^input-link.visible now)
+-->
+	(<s> ^operator <op> +, <, =)
+	(<op> ^name finish-talk ^type automatic ^finish-status succeed ^finish-process <proc>)
+}
+
 #
 # missing speaker
 #
