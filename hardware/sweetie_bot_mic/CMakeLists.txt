@@ -7,7 +7,6 @@ project(sweetie_bot_mic)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS 
 	rospy
-	roscpp
 	dynamic_reconfigure
 )
 
@@ -54,7 +53,7 @@ catkin_python_setup()
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 generate_dynamic_reconfigure_options(
-  cfg/respeaker.cfg
+  cfg/microphone.cfg
 )
 
 

@@ -15,7 +15,7 @@ import threading
 import rospy
 from dynamic_reconfigure.server import Server as DynamicReconfigureServer
 
-from sweetie_bot_mic.cfg import RespeakerConfig
+from sweetie_bot_mic.cfg import microphoneConfig
 
 from sweetie_bot_text_msgs.msg import SoundEvent, TextCommand, Detection, DetectionArray
 from sweetie_bot_text_msgs.srv import Transcribe, TranscribeRequest, TranscribeResponse
@@ -447,7 +447,7 @@ class RespeakerNode(object):
         #
 
         # dynamic parameters
-        self.dyn_paramters = DynamicReconfigureServer(RespeakerConfig, self.on_parameters_update)
+        self.dyn_paramters = DynamicReconfigureServer(microphoneConfig, self.on_parameters_update)
         # listen: mic button is pressed
         self.sub_button_event = rospy.Subscriber("mic_button", Bool, self.on_mic_button)
         # listen: robot speech event to avoid self-listening
