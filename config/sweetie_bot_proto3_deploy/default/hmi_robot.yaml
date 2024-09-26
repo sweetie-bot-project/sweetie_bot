@@ -95,9 +95,10 @@ microphone:
         #algorithm: 'FRIDA'
         #algorithm: 'MUSIC'
         #algorithm: 'TOPS'
-        mic_coords: [ 0.02285, -0.02285, 0.02285, 0.02285, -0.02285, 0.02285, -0.02285, -0.02285 ]
+        mic_coords: [ 0.02285, -0.02285, 0.0, 0.02285, 0.02285, 0.0, -0.02285, 0.02285, 0.0, -0.02285, -0.02285, 0.0 ]
         mic_channels: [ 1, 2, 3, 4 ]
         freq_range: [ 80.0, 2000.0 ]
         mode: 'far'
-        azimuth: [ -180.0, 180.0, 32 ]
+        grid_type: '2d_circle'
+        grid_size: 32
         nfft: 1024

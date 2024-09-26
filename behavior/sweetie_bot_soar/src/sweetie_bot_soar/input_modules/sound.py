@@ -181,32 +181,43 @@ class SoundSpeech(InputModuleFlatSoarView):
                     continue
                 
                 # possible speakers evaluation
-                if sound_event.sound_flags & SoundEvent.SPEECH_DETECTING:
-                    # listening to speed and avlauate possible speaker
-                    swm = SpatialWorldModel.get_swm()
-                    # get objects 
-                    objects = swm.get_objects() 
-                    objects = swm.get_objects(object_filter = lambda obj: obj.isVisible() and (obj.type in self._object_filter or (obj.type == 'speech' and obj.label == 'speech'))) 
-                    if len(objects) > 0:
-                        # last convertion from SWM frame to microphone frame as matrix44
-                        sTw = self._tf_listener.asMatrix(sound_event.header.frame_id, Header(frame_id = swm.world_frame, stamp = rospy.Time()))
-                        # extract doa directions and values
-                        doa_azimuth = sound_event.doa_azimuth
-                        doa_colatitude = sound_event.doa_colatitude
-                        doa_directions = np.vstack( ( np.cos(doa_azimuth)*np.sin(doa_colatitude), np.sin(doa_azimuth)*np.sin(doa_colatitude), np.cos(doa_colatitude) ) ) # doa directions (3, n_doas)
-                        doa_values = np.array(sound_event.doa_values)
-                        # find nearest direction for each object and corresponding doa value
-                        obj_coords = np.stack([ (obj.pose.position.x, obj.pose.position.y, obj.pose.position.z, 0.0) for obj in objects.values() ], axis=1) # homogeneus coordintaes of objects in world frame (4, n_objects)
-                        obj_coords = (sTw @ obj_coords)[0:3, :] # coordinates of objects in sound frame (3, n_objects)
-                        obj_distances = np.linalg.norm(obj_coords, axis=0) # distance to objects (n_objects)
-                        doa_obj_cos = doa_directions.T @ (obj_coords / obj_distances) # matrix of cos between sound doas and object directions (n_doas, n_objects)
-                        obj_values = doa_values[ np.argmax(doa_obj_cos, axis=0) ] # intensity of object doas (n_objects)
-                        # process object intesities
-                        for k, (key_tuple, obj) in enumerate(objects.items()):
-                            if key_tuple in self._object_intensity_map:
-                                self._object_intensity_map[key_tuple] = self._object_evaluation_alpha * self._object_intensity_map[key_tuple] + obj_values[k] * sound_event.intensity
+                if (sound_event.sound_flags & SoundEvent.SPEECH_DETECTING):
+                    # check if doa histogram is present in message
+                    if len(sound_event.doa_values) > 0:
+                        # evaluate possible speaker
+                        swm = SpatialWorldModel.get_swm()
+                        # get objects 
+                        objects = swm.get_objects() 
+                        objects = swm.get_objects(object_filter = lambda obj: obj.isVisible() and (obj.type in self._object_filter or (obj.type == 'speech' and obj.label == 'speech'))) 
+                        if len(objects) > 0:
+                            # last convertion from SWM frame to microphone frame as matrix44
+                            sTw = self._tf_listener.asMatrix(sound_event.header.frame_id, Header(frame_id = swm.world_frame, stamp = rospy.Time()))
+                            # compute object coordinates to microphone frame
+                            obj_coords = np.stack([ (obj.pose.position.x, obj.pose.position.y, obj.pose.position.z, 0.0) for obj in objects.values() ], axis=1) # homogeneus coordintaes of objects in world frame (4, n_objects)
+                            obj_coords = (sTw @ obj_coords)[0:3, :] # coordinates of objects in sound frame (3, n_objects)
+                            # extract doa directions and values
+                            doa_values = np.array(sound_event.doa_values)
+                            doa_azimuth = sound_event.doa_azimuth
+                            doa_colatitude = sound_event.doa_colatitude
+                            if len(doa_colatitude) == 0:
+                                # 2D problem: latitude is asumed to be zero
+                                doa_directions = np.vstack( ( np.cos(doa_azimuth), np.sin(doa_azimuth), np.zeros(len(doa_azimuth))) ) # doa directions (3, n_doas)
+                                # project object coordinates onto Oxy plane by setting z coordinate to zero
+                                obj_coords[2, :] = 0
                             else:
-                                self._object_intensity_map[key_tuple] = obj_values[k] * sound_event.intensity
+                                # 3D problem: use colatitude values
+                                doa_directions = np.vstack( ( np.cos(doa_azimuth)*np.sin(doa_colatitude), np.sin(doa_azimuth)*np.sin(doa_colatitude), np.cos(doa_colatitude) ) ) # doa directions (3, n_doas)
+                            # find nearest direction for each object and corresponding doa value
+                            obj_distances = np.linalg.norm(obj_coords, axis=0) # distance to objects (n_objects)
+                            doa_obj_cos = doa_directions.T @ (obj_coords / obj_distances) # matrix of cos between sound doas and object directions (n_doas, n_objects)
+                            obj_values = doa_values[ np.argmax(doa_obj_cos, axis=0) ] # intensity of object doas (n_objects)
+                            # process object intesities
+                            for k, (key_tuple, obj) in enumerate(objects.items()):
+                                if key_tuple in self._object_intensity_map:
+                                    self._object_intensity_map[key_tuple] = self._object_evaluation_alpha * self._object_intensity_map[key_tuple] + obj_values[k] * sound_event.intensity
+                                else:
+                                    self._object_intensity_map[key_tuple] = obj_values[k] * sound_event.intensity
+                    #TODO: respeaker algorithm support
 
                 elif sound_event.sound_flags & SoundEvent.SPEECH_DECODED and sound_event.text != '':
                     # speech is decoded, transit to DISPLAYING
@@ -233,6 +244,10 @@ class SoundSpeech(InputModuleFlatSoarView):
                         # convert objects coordinates to sound_event frame
                         obj_coords = np.stack([ (obj.pose.position.x, obj.pose.position.y, obj.pose.position.z, 0.0) for obj in objects ], axis=1) # homogeneus coordintaes of objects in world frame (4, n_objects)
                         obj_coords = (sTw @ obj_coords)[0:3, :] # coordinates of objects in sound frame (3, n_objects+1)
+                        # for 2D DOA problem calulate angles in Oxy plane by setting z-coordinate to zero
+                        if len(sound_event.doa_colatitude) == 0:
+                            obj_coords[2, :] = 0 
+                        # calculate directions
                         obj_directions = obj_coords / np.linalg.norm(obj_coords, axis=0) # distance to objects (n_objects+1)
                         # get cos beetween 
                         obj_cos = obj_directions[:,-1].T @ obj_directions[:,:-1] # cos between speech object (undetected speaker) and evaluated objects
