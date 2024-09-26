@@ -308,39 +308,66 @@ class RespeakerNode(object):
         elif self.doa_algorithm in pra.doa.algorithms:
             # get paramters
             mic_coords = rospy.get_param("~doa/mic_coords")
-            if not isinstance(mic_coords, list) or any(not isinstance(c, (float, int)) for c in mic_coords) or len(mic_coords) % 2 != 0:
-                raise RuntimeError('DOA estimator: mic_coords parameter must be specified and be list of float of format [ x1, y1, x2, y2, ... xn, yn ]')
-            mic_coords = np.reshape(mic_coords, (len(mic_coords)//2, 2)).T
+            if not isinstance(mic_coords, list) or any(not isinstance(c, (float, int)) for c in mic_coords) or len(mic_coords) % 3 != 0:
+                raise RuntimeError('DOA estimator: \'mic_coords\' parameter must be specified and be list of float of format [ x1, y1, z1, x2, y2, ... xn, yn, zn ]')
+            mic_coords = np.reshape(mic_coords, (len(mic_coords)//3, 3)).T
             mic_channels = rospy.get_param("~doa/mic_channels")
             if not isinstance(mic_channels, list) or any(not isinstance(c, int) for c in mic_channels) or mic_coords.shape[1] != len(mic_channels):
-                raise RuntimeError('DOA estimator: mic_channels parameter must be specified and be list of int, it size must be equal to size of mic_coords divided by two.')
+                raise RuntimeError('DOA estimator: \'mic_channels\' parameter must be specified and be list of int, it size must be equal to size of mic_coords divided by two.')
             channels.extend(mic_channels)
             nfft = rospy.get_param("~doa/nfft", 256)
             if not isinstance(nfft, int) or nfft < 0 or 2**int(np.log2(nfft)) != nfft:
-                raise RuntimeError('DOA estimator: nfft parameter must be power of 2.')
+                raise RuntimeError('DOA estimator: \'nfft\' parameter must be power of 2.')
             self.doa_nfft = nfft
             freq_range = rospy.get_param("~doa/freq_range", [80.0, 2000.0])
             if not isinstance(freq_range, list) or len(freq_range) != 2 or any(not isinstance(freq, (int, float)) for freq in freq_range):
-                raise RuntimeError('DOA estimator: freq_range must be list with two frequencies: [min_freq, max_freq].')
+                raise RuntimeError('DOA estimator: \'freq_range\' must be list with two frequencies: [min_freq, max_freq].')
             if freq_range[0] >= freq_range[1] or freq_range[0] < 0.0  or freq_range[1] > sample_rate/2.0:
-                raise RuntimeError('DOA estimator: incorrect freq_range [min_freq, max_freq]: the following condition must hold 0.0 <= min_freq <= max_freq <= sample_rate/2.')
+                raise RuntimeError('DOA estimator: incorrect \'freq_range\' [min_freq, max_freq]: the following condition must hold 0.0 <= min_freq <= max_freq <= sample_rate/2.')
             self.freq_bin_range = np.round( np.array(freq_range) / (sample_rate/2.0) * nfft ).astype(np.int32)
             mode = rospy.get_param("~doa/mode", 'far')
             if not isinstance(mode, str):
-                raise RuntimeError('DOA estimator: mode parameter must be string.')
-            azimuth = rospy.get_param("~doa/azimuth", [-180, 180, 32])
-            colatitude = rospy.get_param("~doa/colatitude", [90, 90, 1])
-            try:
-                azimuth = np.deg2rad( np.linspace(azimuth[0], azimuth[1], int(azimuth[2])) )
-                colatitude = np.deg2rad( np.linspace(colatitude[0], colatitude[1], int(colatitude[2])) )
-            except (TypeError, ValueError, IndexError):
-                raise RuntimeError('DOA estimator: azimuth and colatitude paramters must be lists in format [start_angle, stop_angel, N]')
+                raise RuntimeError("DOA estimator: 'mode' parameter must be string.")
+            # get grid type
+            grid = rospy.get_param("~doa/grid_type", None)
+            if grid in ('2d_circle', '3d_sphere'):
+                # get grid size paramter
+                colatitude = None
+                azimuth = None
+                if grid.startswith('2d'):
+                    dim = 2
+                else:
+                    dim = 3
+                n_grid = rospy.get_param("~doa/grid_size", 32 if dim == 2 else 32*16)
+                if not isinstance(n_grid, int) or n_grid <= 0:
+                    raise RuntimeError("DOA estimator: 'grid_size' parameter must be positive integer.")
+            elif grid in ('2d_linspace', '3d_linspace'):
+                # interpret colatitude and azimuth as linspace specification
+                n_grid = None
+                azimuth = rospy.get_param("~doa/azimuth", [-180, 180, 32])
+                colatitude = rospy.get_param("~doa/colatitude", None)
+                try:
+                    azimuth = np.deg2rad( np.linspace(azimuth[0], azimuth[1], int(azimuth[2])) )
+                    if colatitude is not None:
+                        colatitude = np.deg2rad( np.linspace(colatitude[0], colatitude[1], int(colatitude[2])) )
+                except (TypeError, ValueError, IndexError):
+                    raise RuntimeError("DOA estimator: 'azimuth' and 'colatitude' paramters must be lists in format [start_angle, stop_angel, N]. 'azimuth' paramter must be specified.")
+                # 2d or 3d
+                if grid.startswith('2d'):
+                    dim = 2
+                    colatitude = None
+                else:
+                    dim = 3
+                    if colatitude is None:
+                        raise RuntimeError("DOA estimator: 'colatitude' parameter must be specified for '3d_lispace' grid mode.")
+            else:
+                raise RuntimeError("DOA estimator: 'grid_type' parameter must be specified and be string with one of following value: '2d_circle', '3d_sphere', '2d_linspace', '3d_linspace'.")
             # create estimator 
             alg = pra.doa.algorithms[self.doa_algorithm]
-            self.doa_estimator = alg(L = mic_coords, fs = sample_rate, nfft = nfft, num_src = 1, mode = mode, azimuth = azimuth, colatitude = colatitude)
+            self.doa_estimator = alg(L = mic_coords, fs = sample_rate, nfft = nfft, num_src = 1, mode = mode, dim = dim, n_grid = n_grid, azimuth = azimuth, colatitude = colatitude)
             self.stft = pra.transform.STFT(N = nfft, hop = nfft // 2, channels = len(mic_channels))
             # log info
-            rospy.loginfo(f"DOA estimator '{self.doa_algorithm}': nfft {nfft}, freq range {freq_range}.")
+            rospy.loginfo(f"DOA estimator '{self.doa_algorithm}': nfft {nfft}, freq range {freq_range}, grid type '{grid}', grid size {self.doa_estimator.grid.n_points}")
         elif self.doa_algorithm != 'none':
             raise RuntimeError(f'DOA estimator: unknown algorithms {self.doa_algorithm}')
 
@@ -406,7 +433,10 @@ class RespeakerNode(object):
         if self.doa_estimator is not None:
             # add grid paramters to SoundEvent
             self._sound_event.doa_azimuth = self.doa_estimator.grid.azimuth
-            self._sound_event.doa_colatitude = self.doa_estimator.grid.colatitude
+            if self.doa_estimator.dim == 2:
+                self._sound_event.doa_colatitude = []
+            else:
+                self._sound_event.doa_colatitude = self.doa_estimator.grid.colatitude
 
         # create object detection  message
         self._detection_sound_msg = Detection(header = self._sound_event.header, id = 0, label = 'sound', type = 'sound')

@@ -13,7 +13,8 @@
       #algorithm: 'FRIDA'
       #algorithm: 'MUSIC'
       #algorithm: 'TOPS'
-      mic_coords: [ 0.0, 0.05, 0.0, -0.05 ]
+      mic_coords: [ 0.0, 0.05, 0.0, 0.0, -0.05, 0.0 ]
       mic_channels: [ 0, 1 ]
+      grid_type: '2d_linspace'
       azimuth: [ -90.0, 90.0, 32 ]
       nfft: 1024
