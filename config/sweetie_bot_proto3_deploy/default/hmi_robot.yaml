@@ -6,7 +6,6 @@ voice:
         'unknown': 'They said'
     sound_packages: [ ]
     lang: 'ru,en'
-    default_profile: 'coqui-ai'
     ladspa_path: ~/.ladspa/
     voice_profile:
         coqui-ai:

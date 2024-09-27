@@ -56,7 +56,7 @@ class TTSCoquiAi(TTSInterface):
             request = { "text": text, "language_id": f'{language}-cn' if language == 'zh' else language, "speaker_id": self.speaker }
             response, _ = self.balancer.request_available_server(data=request)
         except BalancerError as e:
-            rospy.logerr(f'text to speach error: {e}')
+            rospy.logerr('TTSCoquiAi: text to speach error: %s', e)
             return False
 
         # TODO: rewrite using gstreamer
@@ -310,11 +310,11 @@ class VoiceNode():
             
     def _execute_text_command(self, cmd):
         # Check command type
-        ret = False
+        success = False
         if cmd.type == 'voice/play_wav':
             # Play specified sound file
             self._mouth_pub.publish('mouth/speech', 'begin', '')
-            ret = self._player.play(cmd.command)
+            success = self._player.play(cmd.command)
             self._mouth_pub.publish('mouth/speech', 'end', '')
         elif cmd.type.startswith('voice/say'):
             # get lang code
@@ -344,23 +344,27 @@ class VoiceNode():
                 else:
                     lang = 'en' # ????
 
-            # find profile
-            profile = None
-            for k, p in self._voice_profile.items():
-                if p.is_lang_supported(lang):
-                    profile = p
-                    break
-            if profile is None:
-                rospy.logerr('Unsupported laguage code: %s' % lang)
-                return False
-            # speech log
-            rospy.loginfo('use %s profile to say: %s (%s)' % (k, cmd.command, lang))
+            # speech log, indicate that speech has started
             self._voice_log_pub.publish('log/voice/out/'+lang, cmd.command, '')
-            # Invoke text-to-speech subsystem
             self._mouth_pub.publish('mouth/speech', 'begin', '')
-            ret = profile.speak(cmd.command, lang)
+            # try to say text 
+            for profile_name, profile in self._voice_profile.items():
+                # check if language is supported
+                if not profile.is_lang_supported(lang):
+                    continue
+                # use profile
+                rospy.loginfo('use %s profile to say: %s (%s)', profile_name, cmd.command, lang)
+                success = profile.speak(cmd.command, lang)
+                # exit on success
+                if success:
+                    break
+            # speech end
             self._mouth_pub.publish('mouth/speech', 'end', '')
-        return ret
+            # log error
+            if not success:
+                rospy.logerr('Text-to-speech translation failed: tried all profiles:  %s (%s)', cmd.command, lang)
+            # Invoke text-to-speech subsystem
+        return success
 
     def translate_text(self, text, target_lang, hint=''):
 
