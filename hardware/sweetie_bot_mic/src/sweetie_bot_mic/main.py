@@ -430,7 +430,7 @@ class RespeakerNode(object):
         # sound event message
         self._sound_event = SoundEvent()
         self._sound_event.header.frame_id = self.frame_id
-        if self.doa_estimator is not None:
+        if self.doa_algorithm != 'none' and self.doa_estimator is not None:
             # add grid paramters to SoundEvent
             self._sound_event.doa_azimuth = self.doa_estimator.grid.azimuth
             if self.doa_estimator.dim == 2:
@@ -490,8 +490,9 @@ class RespeakerNode(object):
             self.llm_service_client = None
         # advertise
         self.pub_sound_event = rospy.Publisher("sound_event", SoundEvent , queue_size=10)
-        self.pub_detections = rospy.Publisher("detections", DetectionArray, queue_size=1)
-        self.pub_markers = rospy.Publisher("hmi/detections", MarkerArray, queue_size=1)
+        if self.doa_algorithm != 'none':
+            self.pub_detections = rospy.Publisher("detections", DetectionArray, queue_size=1)
+            self.pub_markers = rospy.Publisher("hmi/detections", MarkerArray, queue_size=1)
         if self.debug_plot:
             self.pub_plot = rospy.Publisher("plot", Plot, queue_size=1)
             self.srv_statistics_reset = rospy.Service('~reset_statistics', Trigger, self.on_reset_statistics)
@@ -684,25 +685,26 @@ class RespeakerNode(object):
         self.pub_sound_event.publish(self._sound_event)
 
         # publush object detections and markers if someone is speeching or sound is heard
-        detections_msg = DetectionArray()
-        markers_msg = MarkerArray()
-        # modify only detection messsages
-        # visualization marker shares the same header and pose
-        if sound_flags & SoundEvent.SOUND_DETECTING:
-            pos = self._detection_sound_msg.pose.position
-            pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
-            detections_msg.detections.append(self._detection_sound_msg)
-            self._marker_sound_msg.color.a = min(intensity / self._intensity_normalization_divider, 1.0)
-            markers_msg.markers.append(self._marker_sound_msg)
-        if sound_flags & SoundEvent.SPEECH_DETECTING:
-            pos = self._detection_speech_msg.pose.position
-            pos.x, pos.y, pos.z = self._speech_source_direction * (self.doa_object_distance / self._speech_source_intensity)
-            detections_msg.detections.append(self._detection_speech_msg)
-            self._marker_speech_msg.color.a = min(intensity / self._intensity_normalization_divider, 1.0)
-            markers_msg.markers.append(self._marker_speech_msg)
-        if len(detections_msg.detections) > 0:
-            self.pub_detections.publish(detections_msg)
-            self.pub_markers.publish(markers_msg)
+        if self.doa_algorithm != 'none':
+            detections_msg = DetectionArray()
+            markers_msg = MarkerArray()
+            # modify only detection messsages
+            # visualization marker shares the same header and pose
+            if sound_flags & SoundEvent.SOUND_DETECTING:
+                pos = self._detection_sound_msg.pose.position
+                pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
+                detections_msg.detections.append(self._detection_sound_msg)
+                self._marker_sound_msg.color.a = min(intensity / self._intensity_normalization_divider, 1.0)
+                markers_msg.markers.append(self._marker_sound_msg)
+            if sound_flags & SoundEvent.SPEECH_DETECTING:
+                pos = self._detection_speech_msg.pose.position
+                pos.x, pos.y, pos.z = self._speech_source_direction * (self.doa_object_distance / self._speech_source_intensity)
+                detections_msg.detections.append(self._detection_speech_msg)
+                self._marker_speech_msg.color.a = min(intensity / self._intensity_normalization_divider, 1.0)
+                markers_msg.markers.append(self._marker_speech_msg)
+            if len(detections_msg.detections) > 0:
+                self.pub_detections.publish(detections_msg)
+                self.pub_markers.publish(markers_msg)
 
         # publish debug plot
         if self.debug_plot:
