@@ -528,17 +528,6 @@ sp {talk-llm*elaborate*hearing-speech*terminate*heard
 	(<op> ^print (concat (crlf) (crlf) |TALK-HEARD: | <text> |(| <lang> |)| (crlf)))
 }
 
-# speech source: human
-sp {talk-llm*elaborate*hearing-speech*terminate*speech-source
-	(state <s> ^operator <op> + ^beliefs.object <obj>)
-	(<op> ^name add-talk-event ^input-link <snd> ^add-event <ev-new>)
-	(<snd> ^best-speech-source.swm-object <swm>)
-	(<obj> ^input-link <swm> ^label <label>)
--->
-	(<ev-new> ^object <obj> ^memorization-time 3600.0)
-	(<op> ^print (concat (crlf) (crlf) |TALK-EVENT SOURCE: | <label> (crlf)))
-}
-
 # copy extracted tokens
 sp {talk-llm*elaborate*hearing-speech*terminate*elements
 	(state <s> ^operator <op> +)
@@ -546,6 +535,64 @@ sp {talk-llm*elaborate*hearing-speech*terminate*elements
 	(<nlp> ^element <value>)
 -->
 	(<ev-new> ^token <value>)
+}
+
+# speech source: sound module
+sp {talk-llm*propose*talk-heard*speaker-detection-sound
+	(state <s> ^bottom-state 1 ^beliefs <b> ^io.input-link.sound <snd>)
+	(<b> ^event <ev> ^object <obj>)
+	(<ev> ^name {<<|talk-heard| |talk-illegible|>>} -^object)
+	(<snd> ^best-speech-source.swm-object <swm>)
+	(<obj> ^input-link <swm> ^label <label>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name speaker-detection-sound ^type cognition automatic)
+	(<op> ^parent <ev> ^attribute object ^link-value <obj>)
+	(<op> ^print (concat (crlf) (crlf) |TALK-EVENT SOURCE from sound: | <label> (crlf)))
+}
+
+# speech source: visible human
+sp {talk-llm*propose*talk-heard*speaker-detection-visible-human
+	(state <s> ^substate talk-llm ^beliefs <b>)
+	(<b> ^event <ev> ^object <obj>)
+	(<ev> ^name {<<|talk-heard| |talk-illegible|>>} -^object)
+	(<obj> ^input-link.visible now ^label <label>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name speaker-detection-visible-human ^type cognition automatic ^object <obj>)
+	(<op> ^parent <ev> ^attribute object ^link-value <obj>)
+	(<op> ^print (concat (crlf) (crlf) |TALK-EVENT SOURCE from vision: | <label> (crlf)))
+}
+
+sp {talk-llm*prefer*talk-heard*speaker-detection-sound
+	(state <s> ^substate talk-llm ^operator <op1> + ^operator <op2> +)
+	(<op1> ^name speaker-detection-sound)
+	(<op2> ^name speaker-detection-visible-human)
+-->
+	(<s> ^operator <op1> > <op2>)
+}
+
+sp {talk-llm*elaborate*speaker-detection-visible-human*most-recent
+	(state <s> ^substate talk-llm ^operator <op> +  ^most-recent-event.object <obj>)
+	(<op> ^name speaker-detection-visible-human ^object <obj>)
+-->
+	(<op> ^object-class most-recent-event)
+}
+
+sp {talk-llm*prefer*talk-heard*speaker-detection-visible-human*most-recent
+	(state <s> ^substate talk-llm ^operator <op1> + ^operator {<> <op1> <op2>} +)
+	(<op1> ^name speaker-detection-visible-human ^object-class most-recent-event)
+	(<op2> ^name speaker-detection-visible-human -^object-class most-recent-event)
+-->
+	(<s> ^operator <op1> > <op2>)
+}
+
+sp {talk-llm*prefer*talk-heard*speaker-detection-visible-human*center
+	(state <s> ^substate talk-llm ^operator <op1> + ^operator {<> <op1> <op2>} +)
+	(<op1> ^name speaker-detection-visible-human -^object-class most-recent-event ^object.input-link.yaw-head center)
+	(<op2> ^name speaker-detection-visible-human -^object-class most-recent-event ^object.input-link.yaw-head {<> center})
+-->
+	(<s> ^operator <op1> > <op2>)
 }
 
 #
