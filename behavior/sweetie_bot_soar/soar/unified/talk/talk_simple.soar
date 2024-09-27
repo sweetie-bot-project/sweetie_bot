@@ -1,4 +1,4 @@
-#
+	#
 # TALKING
 #
 # 1. Use one of start phrases to begin dialog.
@@ -397,13 +397,39 @@ sp {talk-llm*prefer*look-at-last-interlocutor
 	(<s> ^operator <op1> > <op2>)
 }
 
-# looking at speaker as the worst choice
-sp {talk-llm*propose*end-process
-	(state <s> ^substate talk-llm ^beliefs.object <obj> ^process <proc>)
-	-(<obj> ^type human ^input-link.visible now)
+#
+# finish dialog
+#
+
+# look around for any possible speakers
+sp {talk-llm*propose*searching-anyone
+	(state <s> ^substate talk-llm  ^beliefs <b> ^lang <lang>)
+    -{(<b> ^object <obj>)
+      (<obj> ^type human ^input-link.visible now)
+     }
 -->
 	(<s> ^operator <op> +, <, =)
-	(<op> ^name finish-talk ^type automatic ^finish-status succeed ^finish-process <proc>)
+	(<op> ^name searching-anyone ^substate flexbe ^process-args <a> ^interruptable hard)
+	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text |Where did everyone go?| ^lang <lang>)
+}
+
+# abort immediatelly if any human is found
+sp {talk-llm*propose*seaching-anyone-abort
+	(state <s> ^substate talk-llm ^searching-anyone <proc> ^beliefs.object.input-link.visible now ^io.output-link.flexbe <cmd>)
+	(<cmd> -^status -^abort ^process <proc>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name searching-anyone-abort ^type automatic cognition)
+	(<op> ^parent <cmd> ^attribute abort ^link-value hard)
+}
+
+# finish talk if no one is found
+sp {talk-llm*propose*searching-anyone-have-failed-finish-talk
+	(state <s> ^substate talk-llm ^beliefs.event <ev> ^process <proc>)
+	(<ev> ^name searching-anyone ^reason terminated ^status succeed ^process.subprocess-of <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name finish-talk ^type cognition automatic ^finish-status succeed ^finish-process <proc>)
 }
 
 #
