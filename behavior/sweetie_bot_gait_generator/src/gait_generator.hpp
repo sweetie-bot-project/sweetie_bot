@@ -8,6 +8,7 @@
 
 #include <sweetie_bot_gait_generator/MoveBaseAction.h>
 #include <sweetie_bot_gait_generator/SaveTrajectory.h>
+#include <sweetie_bot_gait_generator/DisplayMarkers.h>
 #include <sweetie_bot_control_msgs/FollowStepSequenceAction.h>
 
 namespace sweetie_bot {
@@ -31,6 +32,10 @@ class ClopGenerator
 		// SaveTrajectory service
 		typedef sweetie_bot_gait_generator::SaveTrajectory::Response SaveTrajectoryResponse;
 		typedef sweetie_bot_gait_generator::SaveTrajectory::Request SaveTrajectoryRequest;
+
+		// Markers
+		typedef sweetie_bot_gait_generator::DisplayMarkers::Response DisplayMarkersResponse;
+		typedef sweetie_bot_gait_generator::DisplayMarkers::Request DisplayMarkersRequest;
 	
 	protected:
 		struct EndEffectorInfo {
@@ -43,9 +48,11 @@ class ClopGenerator
 		// NodeHandler
 		ros::NodeHandle node_handler;
 		// publisers
+		ros::Publisher markers_pub;
 		// subscribers
 		// service servers
 		ros::ServiceServer save_trajectory_service;
+		ros::ServiceServer display_markers_serv;
 		// tf
 		tf2_ros::Buffer tf_buffer;
 		std::unique_ptr<tf2_ros::TransformListener> tf_listener;
@@ -78,6 +85,7 @@ class ClopGenerator
 		// information about last planning request
 		bool last_request_successed;
 		MoveBaseGoal last_request_goal;
+		KDL::Frame last_request_wTp;
 
 	protected:
 		void storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& msg, const KDL::Frame& wTp);
@@ -106,6 +114,7 @@ class ClopGenerator
 		bool performMotionPlanning();
 		void callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg);
 		bool callbackSaveTrajectory(SaveTrajectoryRequest& req, SaveTrajectoryResponse& resp);
+		bool callbackDispayMarker(DisplayMarkersRequest& req, DisplayMarkersResponse& resp);
 };
 
 } // namespace sweetie_bot

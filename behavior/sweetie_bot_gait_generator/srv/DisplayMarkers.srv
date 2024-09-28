@@ -1,0 +1,8 @@
+# Display trajectory debug inforamtion corresponding to specific time: base and limb postions, kinematic constraints, 
+#    *  time_from_start Time from the start of geneated trajectory.
+#    *  use_base_frame Publish poses relative to base_frame.
+#    *  delete_markers Remover markers.
+float64 time_from_start
+bool use_base_frame
+bool delete_markers
+---

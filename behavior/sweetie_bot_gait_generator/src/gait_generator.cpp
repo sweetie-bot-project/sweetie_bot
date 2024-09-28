@@ -1,5 +1,7 @@
 #include "gait_generator.hpp"
 
+#include <visualization_msgs/MarkerArray.h>
+
 #include <algorithm>
 #include <xmlrpcpp/XmlRpcException.h>
 
@@ -119,10 +121,12 @@ ClopGenerator::ClopGenerator(const std::string& name)
 	// publish topics
 	//xpp_trajectory_pub = node_handler.advertise<RobotStateCartesianTrajectory>("xpp_trajectory", 1);
 	//xpp_robot_pram_pub = node_handler.advertise<RobotParameters>("xpp_robot_parameters", 1);	
+	markers_pub = node_handler.advertise<visualization_msgs::MarkerArray>("markers", 5);
 	// subscribe topics
 	// advertise servises
 	ros::NodeHandle node_handler_private("~");
 	save_trajectory_service = node_handler_private.advertiseService("save_trajectory", &ClopGenerator::callbackSaveTrajectory, this);
+	display_markers_serv = node_handler_private.advertiseService("display_markers", &ClopGenerator::callbackDispayMarker, this);
 	// tf listener
 	tf_listener.reset( new tf2_ros::TransformListener(tf_buffer) );
 	// action server
@@ -1086,6 +1090,7 @@ void ClopGenerator::callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg)
 	geometry_msgs::TransformStamped wTFp;
 	wTFp = tf_buffer.lookupTransform(world_frame, planning_frame, ros::Time(0));
 	tf::transformMsgToKDL(wTFp.transform, wTp);
+	last_request_wTp = wTp;
 
 	// PLAN MOTION
 	if (msg->execute_only) {
@@ -1324,6 +1329,170 @@ void ClopGenerator::storeSolutionInStepSequenceGoalMsg(FollowStepSequenceGoal& m
 	}
 }
 
+struct ColorRGBAInit : public std_msgs::ColorRGBA
+{
+	public:
+		ColorRGBAInit() : std_msgs::ColorRGBA() {}
+		//ColorRGBAInit(const ColorRGBAInit& color) : ColorRGBA(color) {}
+		ColorRGBAInit(_r_type _r, _g_type _g, _b_type _b, _a_type _a = 1.0) { r = _r; b = _b; g = _g; a = _a; }
+};
+
+bool ClopGenerator::callbackDispayMarker(DisplayMarkersRequest& req, DisplayMarkersResponse& resp)
+{
+	constexpr int n_markers_per_ee = 4;
+
+	int n_ee = formulation->model_.kinematic_model_->GetNumberOfEndeffectors();
+	ros::Time timestamp = ros::Time::now();
+	visualization_msgs::MarkerArray markers;
+	int n_markers = n_ee * n_markers_per_ee;
+	if (req.use_base_frame) n_markers++;
+
+	//
+	// add markers and fill general fields
+	//
+	for (int index = 0; index < n_markers; index++) {
+		markers.markers.emplace_back();
+		visualization_msgs::Marker& marker = markers.markers.back();
+		// header 
+		marker.header.frame_id = (req.use_base_frame) ? this->base_frame_id : this->world_frame;
+		marker.header.stamp = timestamp;
+		// common info
+		marker.id = index;
+		marker.action = (req.delete_markers) ? visualization_msgs::Marker::DELETE : visualization_msgs::Marker::ADD;
+		marker.frame_locked = req.use_base_frame;
+	}
+
+	// return if deletion requested
+	if (req.delete_markers) {
+		return true;
+	}
+
+	// check that trajectory is planned
+	if (!last_request_successed) {
+		return false;
+	}
+
+	//
+	// fill fields with geometry information
+	//
+	int marker_index = 0;
+
+	// get time
+	double t = req.time_from_start; // check!
+	if (t < 0.0 || t > solution.base_linear_->GetTotalTime()) {
+		return false;
+	}
+	// planning frame to world transform
+	KDL::Frame wTp = last_request_wTp;
+	KDL::Vector b_p_com = EigenToKDL( com_B );
+
+	// BASE POSE in planning frame
+	KDL::Frame pTb;
+	// base COM frame pose in planning frame
+	towr::EulerConverter base_angular(solution.base_angular_);
+	Eigen::Quaterniond p_quat_b = base_angular.GetQuaternionBaseToWorld(t);
+	tf::quaternionEigenToKDL(p_quat_b, pTb.M);
+	tf::vectorEigenToKDL(solution.base_linear_->GetPoint(t).at(kPos), pTb.p);
+	// return to base frame from CoM frame
+	pTb.p -= pTb.M * b_p_com;
+	
+	// deduce base marker scale from nominal stance
+	Vector3d base_scale = this->formulation->model_.kinematic_model_->GetNominalStanceInBase(towr::LF) - this->formulation->model_.kinematic_model_->GetNominalStanceInBase(towr::RH);
+	base_scale[2] = 0.1 * std::min(base_scale[0], base_scale[1]);
+
+	// base marker
+	if (!req.use_base_frame) {
+		visualization_msgs::Marker& marker = markers.markers[marker_index++];
+		// marker ns
+		marker.ns = "base_link";
+		// marker general info
+		marker.type = visualization_msgs::Marker::CUBE;
+		marker.color = ColorRGBAInit(1.0, 0.0, 0.0, 1.0);
+		tf::vectorEigenToMsg(base_scale, marker.scale);
+		// position
+		tf::pointKDLToMsg(wTp * pTb.p, marker.pose.position);
+		tf::quaternionKDLToMsg(wTp.M * pTb.M, marker.pose.orientation);
+	}
+	else {
+		// do not add base marker
+		// use wTp to store transform from planning to base frame
+		wTp = pTb.Inverse();
+	}
+
+	//
+	// EE assotiated markers
+	//
+	// common EE orientation
+	Eigen::Quaterniond p_quat_ee(p_quat_b.w(), 0.0, 0.0, p_quat_b.z()); // w, x, y, x
+	p_quat_ee.normalize();
+	KDL::Rotation pRee;
+	tf::quaternionEigenToKDL(p_quat_ee, pRee);
+	for (int ee = 0; ee < n_ee; ee++) {
+		// marker ns
+		std::string ns = "ee";
+		if (auto it = std::find_if(end_effector_index.begin(), end_effector_index.end(), [ee](const auto& pair) { return pair.second.towr_index == ee; }); it != end_effector_index.end()) {
+			ns = it->first;
+		}
+		// leg postion marker
+		visualization_msgs::Marker * marker = &markers.markers[marker_index++];
+		// marker general info
+		marker->ns = ns;
+		marker->type = visualization_msgs::Marker::CUBE;
+		marker->color = ColorRGBAInit(1.0, 0.0, 0.0, 1.0);
+		tf::vectorEigenToMsg(0.3 * base_scale, marker->scale);
+		// position of contact in planning frame
+		KDL::Vector p_p_ee;
+		tf::vectorEigenToKDL(solution.ee_motion_.at(ee)->GetPoint(t).at(kPos), p_p_ee);
+		// position of EE frame origin
+		p_p_ee = p_p_ee - pRee * end_effector_contact_point[ee];
+		tf::pointKDLToMsg(wTp * p_p_ee, marker->pose.position);
+		tf::quaternionKDLToMsg(wTp.M * pRee, marker->pose.orientation);
+
+		// bounding box marker
+		marker = &markers.markers[marker_index++];
+		// marker general info
+		marker->ns = ns;
+		marker->type = visualization_msgs::Marker::CUBE;
+		marker->color = ColorRGBAInit(0.0, 0.0, 1.0, 0.3);
+		// position and scale
+		Eigen::AlignedBox3d box = formulation->model_.kinematic_model_->GetBoundingBox(ee); 
+		KDL::Vector b_center, b_diagonal;
+		Eigen::Map<Vector3d>(b_center.data) = box.center();
+		Eigen::Map<Vector3d>(b_diagonal.data) = box.diagonal();
+		tf::vectorKDLToMsg(b_diagonal, marker->scale);
+		tf::pointKDLToMsg(wTp * (pTb * (b_center + b_p_com)), marker->pose.position);
+		tf::quaternionKDLToMsg(wTp.M * pTb.M, marker->pose.orientation);
+
+		// outer bounding sphere marker
+		marker = &markers.markers[marker_index++];
+		// marker general info
+		marker->ns = ns;
+		marker->type = visualization_msgs::Marker::SPHERE;
+		marker->color = ColorRGBAInit(0.0, 0.0, 1.0, 0.3);
+		// position and scale
+		towr::SphereShell3d sphere = formulation->model_.kinematic_model_->GetBoundingSphere(ee); 
+		Eigen::Map<Vector3d>(b_center.data) = sphere.center();
+		tf::vectorEigenToMsg(2.0 * sphere.radius_max() * Eigen::Vector3d::Ones(), marker->scale);
+		tf::pointKDLToMsg(wTp * (pTb * (b_center + b_p_com)), marker->pose.position);
+		marker->pose.orientation.w = 1.0;
+
+		// inder  bounding sphere marker
+		marker = &markers.markers[marker_index++];
+		// marker general info
+		marker->ns = ns;
+		marker->type = visualization_msgs::Marker::SPHERE;
+		marker->color = ColorRGBAInit(1.0, 0.0, 0.0, 0.3);
+		// position and scale
+		tf::vectorEigenToMsg(2.0 * sphere.radius_min() * Eigen::Vector3d::Ones(), marker->scale);
+		tf::pointKDLToMsg(wTp * (pTb * (b_center + b_p_com)), marker->pose.position);
+		marker->pose.orientation.w = 1.0;
+	}
+
+	// publish
+	markers_pub.publish(markers);
+	
+	return true;
+}
 
 } // namespace sweetie_bot
 

@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
 	sensor_msgs
 	geometry_msgs
 	actionlib_msgs
+	visualization_msgs
 	towr
 	towr_ros
 	sweetie_bot_control_msgs 
@@ -40,6 +41,7 @@ add_message_files(
 add_service_files(
   FILES
   SaveTrajectory.srv
+  DisplayMarkers.srv
 )
 
 # Generate actions in the 'action' folder
@@ -78,6 +80,7 @@ catkin_package(
 	sensor_msgs
 	geometry_msgs
 	actionlib_msgs
+	visualization_msgs
 	towr_ros
 	sweetie_bot_control_msgs 
 	sweetie_bot_orocos_misc
