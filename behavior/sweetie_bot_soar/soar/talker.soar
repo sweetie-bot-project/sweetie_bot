@@ -1,3 +1,0 @@
-pushd walker
-source talker_source.soar
-popd

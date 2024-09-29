@@ -1,4 +1,0 @@
-source initialize-test.soar
-source cycle.soar
-source text.soar
-source joy.soar

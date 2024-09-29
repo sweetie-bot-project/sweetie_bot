@@ -1,3 +1,0 @@
-dynamics_inv:
-    use_ref_joint_position: false
-

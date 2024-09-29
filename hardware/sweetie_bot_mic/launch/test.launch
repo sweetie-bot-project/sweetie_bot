@@ -1,8 +1,0 @@
-<launch>
-    <arg name="mic_name" default="ReSpeaker 4 Mic Array (UAC1.0)"/>
-    <arg name="suppress_pyaudio_error" default="True"/>
-    <node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
-        <rosparam param="mic_name"           subst_value="True">$(arg mic_name)</rosparam>
-        <rosparam param="suppress_pyaudio_error" subst_value="True">$(arg suppress_pyaudio_error)</rosparam>
-    </node>
-</launch>

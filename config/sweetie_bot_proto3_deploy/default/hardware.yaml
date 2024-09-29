@@ -1,8 +1,0 @@
-hardware:     
-    battery_monitor:
-        period: 2.0
-        sysfs_path: '/sys/class/power_supply/BAT0'
-    joystick:
-        sysfs_path: '/dev/input/js0'
-    external_button:
-        sysfs_path: '/dev/ttyUSB0'

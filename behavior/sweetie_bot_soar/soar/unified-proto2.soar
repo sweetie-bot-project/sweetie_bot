@@ -1,3 +1,0 @@
-pushd unified
-source proto2_source.soar
-popd

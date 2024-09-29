@@ -1,4 +1,0 @@
-#! /usr/bin/env python3
-from sweetie_bot_body_language.main import *
-if __name__ == '__main__':
-    main()

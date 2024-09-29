@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-cd "$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-source $HOME/miniconda3/etc/profile.d/conda.sh
-conda activate ${1}
-shift
-flask run $@

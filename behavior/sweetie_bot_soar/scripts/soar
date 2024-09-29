@@ -1,5 +1,0 @@
-#!/usr/bin/env python3
-from sweetie_bot_soar.soar_node import *
-
-if __name__ == '__main__':
-    main()

@@ -1,9 +1,0 @@
-# remove nop cmd
-sp {remove*nop*cmd
-	:o-support
-	(state <s> ^io.output-link <ol> ^top-state 1)
-	(<ol> ^nop <nop>)
-	(<nop> ^status completed)
--->
-	(<ol> ^nop <nop> -)
-}

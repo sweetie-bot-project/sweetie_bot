@@ -1,9 +1,0 @@
-<!-- MODULE: launch flexbe  opertor interface  (in flexbe_ns). -->
-<launch>
-	<arg name="flexbe_ns" default="/flexbe" doc="Location where flexbe user interface should be started."/>
-
-	<!-- launch user interface -->
-	<group ns="$(arg flexbe_ns)">
-		<include file="$(find flexbe_app)/launch/flexbe_ocs.launch" />
-	</group>
-</launch>

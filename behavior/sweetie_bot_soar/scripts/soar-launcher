@@ -1,3 +1,0 @@
-#!/bin/sh
-echo "Starting SOAR agent:"
-rosservice call /soar/set_operational "data: true" 

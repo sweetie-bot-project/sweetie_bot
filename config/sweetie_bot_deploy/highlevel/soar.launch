@@ -1,6 +1,0 @@
-<launch>
-    <!-- Enabling debug output for SOAR -->
-    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find sweetie_bot_deploy)/highlevel/debug_rosconsole.conf"/>
-
-    <node pkg="sweetie_bot_soar" type="soar" name="soar" output="screen" />
-</launch>
