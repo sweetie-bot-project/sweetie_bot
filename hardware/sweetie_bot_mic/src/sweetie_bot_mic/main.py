@@ -14,6 +14,8 @@ import threading
 
 import rospy
 from dynamic_reconfigure.server import Server as DynamicReconfigureServer
+import PyKDL
+import tf
 
 from sweetie_bot_mic.cfg import microphoneConfig
 
@@ -21,7 +23,7 @@ from sweetie_bot_text_msgs.msg import SoundEvent, TextCommand, Detection, Detect
 from sweetie_bot_text_msgs.srv import Transcribe, TranscribeRequest, TranscribeResponse
 from visualization_msgs.msg import MarkerArray, Marker
 from std_msgs.msg import Bool, ColorRGBA
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import Vector3 
 from std_srvs.srv import Trigger, TriggerResponse
 from std_msgs.msg import Bool
 
@@ -282,7 +284,8 @@ class RespeakerNode(object):
         sample_rate = rospy.get_param("~sample_rate", 16000)
         update_rate = rospy.get_param("~update_rate", 4)
         main_channel = rospy.get_param('~main_channel', 0)
-        self.frame_id = rospy.get_param("~frame_id", "base_link")
+        self._mic_frame_id = rospy.get_param("~microphone_frame_id", "microphone_link")
+        self._stationary_frame_id = rospy.get_param("~stationary_frame_id", "base_link_path")
         call_llm = rospy.get_param("~call_llm", False)
         self.debug_plot = rospy.get_param("~debug_plot", True)
         self.enable_translate = rospy.get_param("~enable_translate", True)
@@ -301,6 +304,7 @@ class RespeakerNode(object):
         #
         self.doa_algorithm = rospy.get_param("~doa/algorithm", 'none')
         self.doa_object_distance = rospy.get_param("~doa/object_distance", 2.0)
+        self.doa_object_z_position = rospy.get_param("~doa/object_z_position", 1.0)
         channels = [main_channel]
         if self.doa_algorithm == 'respeaker':
             self.doa_estimator = None
@@ -420,7 +424,7 @@ class RespeakerNode(object):
         self._robot_is_speaking = False
         self._intesity_histogram = np.ones(shape=(10,))
         self._intesity_histogram_lock = threading.Lock()
-        self._speech_source_direction = np.zeros(shape=(3,))
+        self._s_speech_source_direction = PyKDL.Vector()
         self._speech_source_intensity = 0.0
 
         #
@@ -429,7 +433,7 @@ class RespeakerNode(object):
 
         # sound event message
         self._sound_event = SoundEvent()
-        self._sound_event.header.frame_id = self.frame_id
+        self._sound_event.header.frame_id = self._mic_frame_id
         if self.doa_algorithm != 'none' and self.doa_estimator is not None:
             # add grid paramters to SoundEvent
             self._sound_event.doa_azimuth = self.doa_estimator.grid.azimuth
@@ -498,6 +502,8 @@ class RespeakerNode(object):
             self.srv_statistics_reset = rospy.Service('~reset_statistics', Trigger, self.on_reset_statistics)
         # voice log
         self.voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=1)
+        # tf
+        self._tf_listener = tf.TransformListener()
 
         #
         # start audio processing
@@ -607,11 +613,13 @@ class RespeakerNode(object):
             now.y = [ p_speech ]
 
         # doa estimation
-        doa_direction = np.zeros(shape=(3,))
+        doa_dim = 3
+        doa_direction = PyKDL.Vector()
         if self.doa_algorithm == 'respeaker':
             # get direction from hardware
             doa_rad = np.deg2rad(self.respeaker.direction())
-            doa_direction[:] = np.cos(doa_rad), np.sin(doa_rad), 0.0
+            doa_direction = PyKDL.Vector(np.cos(doa_rad), np.sin(doa_rad), 0.0)
+            doa_dim = 2
         elif self.doa_algorithm != 'none':
             # perform fft on raw mic channels
             nfft = self.doa_nfft
@@ -629,7 +637,8 @@ class RespeakerNode(object):
                 colatitude = sources_colatitude[0]
             else:
                 colatitude = np.pi/2.0
-            doa_direction = np.array( (np.cos(azimuth)*np.sin(colatitude), np.sin(azimuth)*np.sin(colatitude), np.cos(colatitude)) )
+            doa_direction =  PyKDL.Vector(np.cos(azimuth)*np.sin(colatitude), np.sin(azimuth)*np.sin(colatitude), np.cos(colatitude))
+            doa_dim = self.doa_estimator.dim
 
             # copy raw DOA data
             doa_values_sum = np.sum(self.doa_estimator.grid.values)
@@ -646,18 +655,37 @@ class RespeakerNode(object):
                     doa.x = self.doa_estimator.grid.azimuth 
                     doa.y = self._sound_event.doa_values
 
+        # transform between microphone frame to stationary frame
+        try:
+            trans, rot = self._tf_listener.lookupTransform(self._mic_frame_id, self._stationary_frame_id, rospy.Time(0))
+        except tf.Exception as e:
+            rospy.logerr('tf request failed: %s', str(e))
+            # failsafe values
+            trans = (0, 0, 0)
+            rot = (0, 0, 0, 1.0)
+
+        m_T_s = PyKDL.Frame(PyKDL.Rotation.Quaternion(*rot), PyKDL.Vector(*trans))
+        # for 2D problem use only Z-axis rotation
+        if doa_dim == 2:
+            rot = np.array(rot)
+            rot[0:2] = 0.0
+            rot /= np.linalg.norm(rot)
+        # microphone -> stationary
+        s_R_m = PyKDL.Rotation.Quaternion(*rot).Inverse()
+        # transform doa to stationary
+        s_doa_direction = s_R_m * doa_direction
+
         # average speech source direction
-        # TODO: use non-moving frame
         if is_speaking:
-            self._speech_source_direction += doa_direction * intensity
+            self._s_speech_source_direction += s_doa_direction * intensity
             self._speech_source_intensity += intensity
         else:
-            self._speech_source_direction[:] = 0.0
+            self._s_speech_source_direction = PyKDL.Vector()
             self._speech_source_intensity = 0.0
 
         # form speech event
         self._sound_event.header.stamp = rospy.Time.now()
-        self._sound_event.doa = Vector3( *doa_direction )
+        self._sound_event.doa = Vector3(*doa_direction)
         self._sound_event.intensity = intensity / self._intensity_normalization_divider
         sound_flags = 0
         if is_speaking:
@@ -692,13 +720,22 @@ class RespeakerNode(object):
             # visualization marker shares the same header and pose
             if sound_flags & SoundEvent.SOUND_DETECTING:
                 pos = self._detection_sound_msg.pose.position
-                pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
+                if doa_dim == 2:
+                    s_object_pos = s_doa_direction * self.doa_object_distance
+                    s_object_pos.z(self.doa_object_z_position)
+                    pos.x, pos.y, pos.z = m_T_s * s_object_pos
+                else:
+                    pos.x, pos.y, pos.z = doa_direction * self.doa_object_distance
                 detections_msg.detections.append(self._detection_sound_msg)
                 self._marker_sound_msg.color.a = min(intensity / self._intensity_normalization_divider, 1.0)
                 markers_msg.markers.append(self._marker_sound_msg)
             if sound_flags & SoundEvent.SPEECH_DETECTING:
                 pos = self._detection_speech_msg.pose.position
-                pos.x, pos.y, pos.z = self._speech_source_direction * (self.doa_object_distance / self._speech_source_intensity)
+                pos.x, pos.y, pos.z = self._s_speech_source_direction * (self.doa_object_distance / self._speech_source_intensity)
+                s_object_pos = self._s_speech_source_direction * (self.doa_object_distance / self._speech_source_intensity)
+                if doa_dim == 2:
+                    s_object_pos.z(self.doa_object_z_position)
+                pos.x, pos.y, pos.z = m_T_s * s_object_pos
                 detections_msg.detections.append(self._detection_speech_msg)
                 self._marker_speech_msg.color.a = min(intensity / self._intensity_normalization_divider, 1.0)
                 markers_msg.markers.append(self._marker_speech_msg)

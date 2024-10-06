@@ -84,6 +84,8 @@ microphone:
     intensity_histogram_forget_factor: 0.95
     sound_intensity_threshold: 300
     intensity_normalization_divider: 2000
+    microphone_frame_id: 'microphone_link'
+    stationary_frame_id: 'base_link_path'
     doa:
         #algorithm: 'respeaker'
         algorithm: 'NormMUSIC'
@@ -98,3 +100,5 @@ microphone:
         grid_type: '2d_circle'
         grid_size: 32
         nfft: 1024
+        object_distance: 2.0
+        object_z_position: 1.0

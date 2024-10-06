@@ -6,9 +6,10 @@
   update_rate: 4.0
   transcribe_servers: {'0': 'https://ai.sweetie.bot/stt/', '1':'http://localhost:8577/'}
   key_combination: [ 'ctrl', 'w' ]
-  call_llm: False
   sound_intensity_threshold: 300
   intensity_normalization_divider: 2000
+  microphone_frame_id: 'microphone_link'
+  stationary_frame_id: 'microphone_link'
   doa:
       #algorithm: 'respeaker'
       algorithm: 'NormMUSIC'
@@ -24,3 +25,5 @@
       #azimuth: [-180.0, 180.0, 32]
       #colatitude: [10.0, 90.0, 8]
       nfft: 1024
+      object_distance: 2.0
+      object_z_position: 1.0
