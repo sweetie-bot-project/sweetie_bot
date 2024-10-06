@@ -403,7 +403,7 @@ sp {talk-llm*prefer*look-at-last-interlocutor
 
 # look around for any possible speakers
 sp {talk-llm*propose*searching-anyone
-	(state <s> ^substate talk-llm  ^beliefs <b> ^lang <lang>)
+	(state <s> ^substate talk-llm ^beliefs <b> ^lang <lang>)
     -{(<b> ^object <obj>)
       (<obj> ^type human ^input-link.visible now)
      }
@@ -413,12 +413,19 @@ sp {talk-llm*propose*searching-anyone
 	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text |Where did everyone go?| ^lang <lang>)
 }
 
+#sp {talk-llm*propose*searching-anyone-continue
+#	(state <s> ^substate talk-llm ^searching-anyone <proc> )
+#-->
+#	(<s> ^operator <op> +, <, =)
+#	(<op> ^name searching-anyone ^substate flexbe ^process-link <proc>)
+#}
+
 # abort immediatelly if any human is found
 sp {talk-llm*propose*seaching-anyone-abort
 	(state <s> ^substate talk-llm ^searching-anyone <proc> ^beliefs.object.input-link.visible now ^io.output-link.flexbe <cmd>)
 	(<cmd> -^status -^abort ^process <proc>)
 -->
-	(<s> ^operator <op> +)
+	(<s> ^operator <op> +, =)
 	(<op> ^name searching-anyone-abort ^type automatic cognition)
 	(<op> ^parent <cmd> ^attribute abort ^link-value hard)
 }
@@ -537,19 +544,34 @@ sp {talk-llm*elaborate*hearing-speech*terminate*elements
 	(<ev-new> ^token <value>)
 }
 
-# speech source: sound module
+# speech source: sound module, human 
 sp {talk-llm*propose*talk-heard*speaker-detection-sound
 	(state <s> ^bottom-state 1 ^beliefs <b> ^io.input-link.sound <snd>)
 	(<b> ^event <ev> ^object <obj>)
 	(<ev> ^name {<<|talk-heard| |talk-illegible|>>} -^object)
 	(<snd> ^best-speech-source.swm-object <swm>)
-	(<obj> ^input-link <swm> ^label <label>)
+	(<obj> ^input-link <swm> ^label <label> ^type {<<|human| |human-supposed|>>})
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name speaker-detection-sound ^type cognition automatic)
 	(<op> ^parent <ev> ^attribute object ^link-value <obj>)
-	(<op> ^print (concat (crlf) (crlf) |TALK-EVENT SOURCE from sound: | <label> (crlf)))
+	(<op> ^print (concat (crlf) (crlf) |TALK-EVENT HUMAN from sound: | <label> (crlf)))
 }
+
+# speech source: sound module, undetected source
+#sp {talk-llm*propose*talk-heard*speaker-detection-sound-unknown
+#	(state <s> ^bottom-state 1 ^beliefs <b> ^io.input-link.sound.best-speech-source.swm-object <swm>)
+#	(<swm> ^type speech)	
+#	(<b> ^event <ev>)
+#	(<ev> ^name talk-heard -^object ^initiated-at <now>)
+#    -(<b> ^object.input-link <swm>)
+#-->
+#	(<s> ^operator <op> +, =)
+#	(<op> ^name speaker-detection-sound ^type cognition automatic)
+#	(<op> ^parent <b> ^attribute object ^copy-value-one-level <obj>)
+#	(<obj> ^label unknown-speaker ^type human-supposed ^input-link <swm> ^terminate-time (+ <now> 10.0))
+#	(<op> ^print (concat (crlf) (crlf) |TALK-EVENT UNKNOWN from sound: | <label> (crlf)))
+#}
 
 # speech source: visible human
 sp {talk-llm*propose*talk-heard*speaker-detection-visible-human
