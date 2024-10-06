@@ -50,7 +50,7 @@ class FlexBe(output_module.OutputModule):
                 goal.input_input_keys.append(key_id.GetAttribute())
                 goal.input_values.append(input_key_id.GetValueAsString())
         # send goal to server
-        rospy.loginfo("flexbe output module: executing behavior %s.", goal.behavior_name)
+        rospy.loginfo("flexbe output module: executing behavior %s with paramters %s", goal.behavior_name, {key: value for key, value in zip(goal.arg_keys, goal.arg_values)})
         self._action_client.send_goal(goal)
         return None
 
