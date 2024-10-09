@@ -1,11 +1,15 @@
 <launch>
-	<node pkg="sweetie_bot_mic_button" type="mic_button_hotkey_node" name="mic_button_hotkey_node" output="screen" />
-        <arg name="robot_ns" default="/" />
-        <arg name="button_dev" default="/dev/ttyUSB0" />
-        <arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev))" />
+	<arg name="robot_ns" default="/" />
+	<arg name="button_dev" default="/dev/ttyUSB0" />
+	<arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev))" />
 
-        <!-- run external button node if device is connected -->
-        <node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
-                   <remap from="pushed" to="$(arg robot_ns)/mic_button" />
-        </node>
+	<!-- run external button node if device is connected -->
+	<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
+		<param name="~port" value="$(arg button_dev)" />
+		<remap from="pushed" to="$(arg robot_ns)/mic_button" />
+	</node>
+	<!-- run keyboard combo detector -->
+	<node pkg="sweetie_bot_mic_button" type="mic_button_hotkey_node" name="mic_button_hotkey_node" output="screen" >
+		<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
+	</node>
 </launch>
