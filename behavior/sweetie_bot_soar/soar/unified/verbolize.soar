@@ -52,7 +52,7 @@ sp {verbolize*propose*focusing-on-interlocutor
 	(<proc> -^focusing-on-interlocutor-status)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name focusing-on-interlocutor ^substate look-at ^process-args <a> ^priority 30)
+	(<op> ^name focusing-on-interlocutor ^substate look-at ^process-args <a> ^priority 50)
     (<a> ^object <obj> ^deadline-time 5.0)
 }
 
