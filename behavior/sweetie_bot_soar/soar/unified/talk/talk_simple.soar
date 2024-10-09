@@ -413,16 +413,10 @@ sp {talk-llm*propose*searching-anyone
 	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text |Where did everyone go?| ^lang <lang>)
 }
 
-#sp {talk-llm*propose*searching-anyone-continue
-#	(state <s> ^substate talk-llm ^searching-anyone <proc> )
-#-->
-#	(<s> ^operator <op> +, <, =)
-#	(<op> ^name searching-anyone ^substate flexbe ^process-link <proc>)
-#}
-
 # abort immediatelly if any human is found
 sp {talk-llm*propose*seaching-anyone-abort
-	(state <s> ^substate talk-llm ^searching-anyone <proc> ^beliefs.object.input-link.visible now ^io.output-link.flexbe <cmd>)
+	(state <s> ^substate talk-llm ^searching-anyone <proc> ^beliefs.object <obj>  ^io.output-link.flexbe <cmd>)
+	(<obj> ^type human ^input-link.visible now)
 	(<cmd> -^status -^abort ^process <proc>)
 -->
 	(<s> ^operator <op> +, =)
@@ -457,8 +451,9 @@ sp {talk-llm*propose*searching-missing-speaker
 
 # continue search until speaker is not visible
 sp {talk-llm*propose*seaching-missing-speaker-wait
-	(state <s> ^substate talk-llm ^searching-missing-speaker <proc> ^object.input-link <obj-il>)
-	(<obj-il> -^visible now)
+	(state <s> ^substate talk-llm ^searching-missing-speaker <proc>)
+	(<proc>  ^object.input-link <obj-il>)
+	-(<il> ^visible {<<|now| |just|>>})
 -->
 	(<s> ^operator <o> +, =)
 	(<o> ^name searching-missing-speaker-wait ^substate flexbe ^process-link <proc>)
@@ -467,7 +462,8 @@ sp {talk-llm*propose*seaching-missing-speaker-wait
 # abort immediatelly is speaker is found
 # more high level
 sp {talk-llm*propose*seaching-missing-speaker-found
-	(state <s> ^substate talk-llm ^searching-missing-speaker <proc> ^object.input-link.visible now ^io.output-link.flexbe <cmd>)
+	(state <s> ^substate talk-llm ^searching-missing-speaker <proc> ^io.output-link.flexbe <cmd>)
+	(<proc>  ^object.input-link.visible {<<|now| |just|>>})
 	(<cmd> -^status -^abort ^process <proc>)
 -->
 	(<s> ^operator <op> +)
@@ -578,7 +574,7 @@ sp {talk-llm*propose*talk-heard*speaker-detection-visible-human
 	(state <s> ^substate talk-llm ^beliefs <b>)
 	(<b> ^event <ev> ^object <obj>)
 	(<ev> ^name {<<|talk-heard| |talk-illegible|>>} -^object)
-	(<obj> ^input-link.visible now ^label <label>)
+	(<obj> ^input-link.visible now ^label <label> ^type human)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name speaker-detection-visible-human ^type cognition automatic ^object <obj>)
