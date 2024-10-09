@@ -113,7 +113,7 @@ catkin_package(CATKIN_DEPENDS dynamic_reconfigure)
 ## Install ##
 #############
 install(DIRECTORY
-  launch
+  launch udev
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
