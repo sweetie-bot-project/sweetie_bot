@@ -6,8 +6,6 @@ from contextlib import contextmanager
 import usb.core
 import usb.util
 import pyaudio
-from pynput import keyboard
-from pynput.keyboard import Key
 import numpy as np
 import struct
 import threading
@@ -398,23 +396,6 @@ class RespeakerNode(object):
         if self.respeaker is None and self.doa_algorithm == 'respeaker':
             raise RuntimeError('DOA estimation algorithm "respeaker" is not available: Respeaker device is not found')
 
-        # keyboard
-        keys_combo = rospy.get_param("~key_combination", ['ctrl', 'w'])
-        pynput_key_map = { 'ctrl': Key.ctrl, 'alt': Key.alt, 'space': Key.space, 'pause': Key.pause }
-        self._keys_pressed = set()
-        self._keys_combo = set()
-        for key in keys_combo:
-            if key in pynput_key_map:
-                self._keys_combo.add( pynput_key_map[key] )
-            elif len(key) == 1:
-                self._keys_combo.add( keyboard.KeyCode.from_char(key) )
-            else:
-                raise KeyError(f"unknown key specification: {key}")
-        self.keyboard_listener = keyboard.Listener(on_press=self.on_key_press, on_release=self.on_key_release)
-        self.keyboard_listener.start()
-        rospy.loginfo(f"Listening for global hotkey  {self._keys_combo}")
-
-
         #
         # Node state 
         # 
@@ -550,16 +531,8 @@ class RespeakerNode(object):
     def on_mic_button(self, msg):
         self._button_pressed = msg.data
 
-    def on_key_press(self, key):
-        if key in self._keys_combo:
-            self._keys_pressed.add(key)
-
-    def on_key_release(self, key):
-        self._keys_pressed.discard(key)
-
     def is_speaking(self):
-        combo_is_pressed = len(self._keys_pressed) == len(self._keys_combo)
-        return (combo_is_pressed or self._button_pressed) and not self._robot_is_speaking
+        return self._button_pressed and not self._robot_is_speaking
 
     def buf_to_wav(self, data):
         # prepare wav data

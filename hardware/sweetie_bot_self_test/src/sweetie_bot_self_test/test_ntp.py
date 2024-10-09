@@ -11,7 +11,11 @@ while timeout>0:
   child = sp.Popen(cmd, shell=True, stdout=sp.PIPE)
   streamdata = child.communicate()[0]
   ntp_data = streamdata.decode().strip()
-  ntp = dict(x.split("=") for x in ntp_data.split("\n"))
+  ntp=dict()
+  for x in ntp_data.split("\n"):
+      k, v = x.split("=")
+      ntp[k]=v
+  #ntp = dict(x.split("=") for x in ntp_data.split("\n"))
   ntp = {k[:7]: v for k, v in ntp.items() if v == 'yes' or v == 'no' and k in ['CanNTP', 'NTP', 'NTPSynchronized']}
   values = [tuple(i[0]) for i in ntp.values()]
   if ntp['NTPSync'] == 'yes':
