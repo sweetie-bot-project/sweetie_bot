@@ -4,7 +4,6 @@ from ..nlp import SpacyInstance
 from .swm import SpatialWorldModel, ObjectKeyTuple
 
 from threading import Lock
-from bisect import insort
 from dataclasses import dataclass
 
 import numpy as np
@@ -16,6 +15,19 @@ from flexbe_core.proxy import ProxyTransformListener
 
 from sweetie_bot_text_msgs.msg import SoundEvent
 from std_msgs.msg import Header
+
+# insort() version with key function
+def insort(a, x, key):
+    lo = 0
+    hi = len(a)
+    x_key = key(x)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if x_key < key(a[mid]):
+            hi = mid
+        else:
+            lo = mid + 1
+    a.insert(lo, x)
 
 #
 # NLP support
