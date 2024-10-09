@@ -47,7 +47,8 @@ sp {movement*propose*wait
 
 sp {curiosity*propose*attention
 	(state <s> ^name curiosity ^substate general ^beliefs.object <obj>)
-	(<obj> ^input-link.visible now)
+	(<obj> ^input-link <il>)
+	(<il> ^visible now ^yaw-body {<<|left| |center| |right|>>})
 -->
 	(<s> ^operator <o> +, =)
    	(<o> ^name look-at-multiple-objects ^substate attention ^process-args <a>)
