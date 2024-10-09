@@ -68,6 +68,9 @@ voice:
             enabled: true
             langs: [ 'ru', 'en' ]
             module: 'festival'
+mic_button_hotkey_node:
+    key_combination: [ 'ctrl','alt', 'w' ]
+    enable_global_hotkey: True
 microphone:
     mic_name: "ReSpeaker 4 Mic Array"
     # mic_name: "sof-hda-dsp: - (hw:0,7)"
@@ -78,7 +81,6 @@ microphone:
     supress_pyaudio_error: True
     frame_id: 'microphone_link'
     enable_translate: True
-    key_combination: [ 'ctrl','alt', 'w' ]
     debug_plot: False
     intensity_histogram_step: 100.0
     intensity_histogram_forget_factor: 0.95

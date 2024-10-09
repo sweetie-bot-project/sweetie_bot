@@ -41,10 +41,17 @@
 			<arg name="overlays" value="$(arg robot_profile_path) control motion_core" /> 
 			<arg name="interactive" value="false" /> 
 		</include>
-		<!-- robot-specific ROS nodes -->
-		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch">
-			<arg name="robot_ns" value="$(arg robot_ns)" /> 
-		</include>
+		<group if="$(arg robot)">
+			<!-- robot-specific ROS nodes -->
+			<include if="$(arg run_real)" file="$(arg robot_profile_path)/robot_module.launch">
+				<arg name="robot_ns" value="$(arg robot_ns)" /> 
+			</include>
+			<!-- microphone node -->
+			<node if="$(arg run_nlp)" pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
+				<remap from="sound_event" to="$(arg robot_ns)/sound_event" />
+				<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
+			</node>
+		</group>
 	</group>
 
 	<!-- robot nodes on host side -->
@@ -74,23 +81,16 @@
 			<!-- natural language processing -->
 			<!-- TODO: unification with voice? -->
 			<group  if="$(arg run_nlp)">
-				<group  if="$(eval robot_name == 'sweetie_bot_proto3')">  <!-- Hack to get rid of error on proto2 config -->
-					<!-- Check if path to button exists -->
-					<arg name="yaml_config" default="$(eval open(robot_profile_path + '/../default/hardware.yaml').read())" />
-					<arg name="button_dev" default="$(eval eval('_' + '_import_' + '_(\'yaml\')').safe_load(yaml_config)['hardware']['external_button']['sysfs_path'])" />
-					<arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev))" />
-
-					<!-- run external button node if device is connected -->
-					<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
-						<remap from="pushed" to="$(arg robot_ns)/mic_button" />
-						<!-- rename path param for consistency of config -->
-						<remap from="~port" to="~sysfs_path" />
-					</node>
-				</group>
-
-				<!-- microphone node -->
-				<node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
-					<remap from="sound_event" to="$(arg robot_ns)/sound_event" />
+				<!-- microphone button: external button -->
+				<!-- TODO: use param -->
+				<arg name="button_dev" default="/dev/ttyUSB0" />
+				<arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev))" />
+				<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
+					<param name="~port" value="$(arg button_dev)" />
+					<remap from="pushed" to="$(arg robot_ns)/mic_button" />
+				</node>
+				<!-- microphone button: keyboard combo -->
+				<node pkg="sweetie_bot_mic_button" type="mic_button_hotkey_node" name="mic_button_hotkey_node" output="screen" >
 					<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
 				</node>
 				<!-- transcription node -->
