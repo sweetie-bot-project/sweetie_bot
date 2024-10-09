@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 catkin_generate_virtualenv(
-  PYTHON_INTERPRETER python3.8
+  PYTHON_INTERPRETER python3
   USE_SYSTEM_PACKAGES FALSE
   EXTRA_PIP_ARGS -vvv
 )
