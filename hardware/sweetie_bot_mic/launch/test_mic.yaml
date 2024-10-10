@@ -1,4 +1,5 @@
-  mic_name: "default"
+  gstreamer_pipeline: "alsasrc"
+  n_channels: 2
   main_channel: 0
   sample_rate: 16000
   update_rate: 4.0
@@ -8,8 +9,12 @@
   intensity_normalization_divider: 2000
   microphone_frame_id: 'microphone_link'
   stationary_frame_id: 'microphone_link'
+  debug_plot: True
+  intensity_histogram_step: 200
+  intensity_histogram_forget_factor: 0.99
   doa:
-      algorithm: 'NormMUSIC'
+      algorithm: 'none'
+      #algorithm: 'NormMUSIC'
       #algorithm: 'SRP'
       #algorithm: 'FRIDA'
       #algorithm: 'MUSIC'
