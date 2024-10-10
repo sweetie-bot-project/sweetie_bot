@@ -19,16 +19,23 @@
 
   <!-- The *depend tags are used to specify dependencies -->
   <buildtool_depend>catkin</buildtool_depend>
-
-  <exec_depend>sweetie_bot_text_msgs</exec_depend>
+  <!-- System dependencies -->
+  <exec_depend>python3-gi</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-pykdl</exec_depend>
+  <!-- Non-standard system dependencies -->
+  <exec_depend>python3-pyroomacoustics</exec_depend>
+  <!-- ROS dependencies -->
+  <depend>dynamic_reconfigure</depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <!-- ROS messages dependencies -->
   <exec_depend>visualization_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>std_srvs</exec_depend>
-
-  <exec_depend>rospy</exec_depend>
+  <!-- SweetieBot messages dependencies -->
   <exec_depend>sweetie_bot_text_msgs</exec_depend>
-  <depend>dynamic_reconfigure</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
