@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+import rospy
+import gi
+gi.require_version('Gst', '1.0')
+from gi.repository import Gst
+
+class GstreamerNode:
+    _gstreamer_is_initialized = False
+
+    def __init__(self):
+        # Node
+        rospy.init_node('gstreamer')
+        # get parameters
+        pipeline_string = rospy.get_param('~gstreamer_pipeline')
+        if not isinstance(pipeline_string, str):
+            raise TypeError("'gstreamer_pipeline' parameter must present and contain string.")
+        rospy.loginfo('gstreamer pipeline: \n  %s', pipeline_string.replace('!', '!\n  '))
+        # init gstreamer
+        if not self._gstreamer_is_initialized:
+            Gst.init(None)
+            self._gstreamer_is_initialized = True
+        # construct gstreamer pipeline
+        self._gstreamer_pipeline = Gst.parse_launch(pipeline_string)
+        # start pipeline
+        self._gstreamer_pipeline.set_state(Gst.State.PLAYING)
+
+    def __del__(self):
+        if hasattr(self, '_gstreamer_pipeline'):
+            self.finalize()
+
+    def finalize(self):
+        self._gstreamer_pipeline.set_state(Gst.State.NULL)
+
+def main():
+    try:
+        node = GstreamerNode()
+    except Exception as e:
+        rospy.logerr(str(e))
+        raise
+    rospy.spin()
+    node.finalize()
+         
+if __name__ == '__main__':
+    main()
+
+
+

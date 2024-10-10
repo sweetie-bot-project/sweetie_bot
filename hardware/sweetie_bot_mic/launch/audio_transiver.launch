@@ -1,0 +1,14 @@
+<launch>
+    <arg name="device" default="plughw:ArrayUAC10" doc="ALSA audio device name (arecord -L)." />
+    <arg name="target_host" default="localhost" doc="Hostname or IP to receive translation." />
+    <arg name="compression" default="True" doc="Use vorbis compressed stream." />
+
+    <node pkg="sweetie_bot_mic" type="gstreamer_node" name="audio_transiver" output="screen">
+        <rosparam unless="$(arg compression)" param="gstreamer_pipeline" subst_value="true">
+            "alsasrc  device=$(arg device) ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! audioconvert ! rtpL16pay ! udpsink host=$(arg target_host) port=12345"
+        </rosparam>
+        <rosparam if="$(arg compression)" param="gstreamer_pipeline"  subst_value="true">
+            "alsasrc  device=$(arg device) ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! audioconvert ! vorbisenc ! rtpvorbispay ! udpsink host=$(arg target_host) port=12345"
+        </rosparam>
+    </node>
+</launch>
