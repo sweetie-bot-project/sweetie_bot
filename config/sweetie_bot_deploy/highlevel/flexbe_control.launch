@@ -16,10 +16,12 @@
 	<arg name="run_flexbe" default="true" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 	<arg name="run_flexbe_gui" default="false" doc="Start flexbe gui."/>
 
+	<arg name="host_address" default="127.0.0.1" doc="IP address of host computer."/>
+	<arg name="robot_address" default="127.0.0.1" doc="IP address of robot on-board computer."/>
+
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
 	<machine name="sweetiebot" address="localhost" user="$(env USER)" default="true"/>
 	<!--<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>-->
-
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
@@ -46,11 +48,12 @@
 			<include if="$(arg run_real)" file="$(arg robot_profile_path)/robot_module.launch">
 				<arg name="robot_ns" value="$(arg robot_ns)" /> 
 			</include>
-			<!-- microphone node -->
-			<node if="$(arg run_nlp)" pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
-				<remap from="sound_event" to="$(arg robot_ns)/sound_event" />
-				<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
-			</node>
+			<!-- microphone transiver node -->
+			<include if="$(arg run_nlp)" file="$(find sweetie_bot_mic)/launch/audio_transiver.launch">
+				<arg name="device" value="plughw:ArrayUAC10" /> 
+				<arg name="target_host" value="$(arg host_address)" /> 
+				<arg name="compression" value="true" /> 
+			</include>
 		</group>
 	</group>
 
@@ -93,16 +96,18 @@
 				<node pkg="sweetie_bot_mic_button" type="mic_button_hotkey_node" name="mic_button_hotkey_node" output="screen" >
 					<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
 				</node>
+				<!-- microphone node -->
+				<node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
+					<remap from="sound_event" to="$(arg robot_ns)/sound_event" />
+					<remap from="detections" to="$(arg robot_ns)/detections" />
+					<remap from="hmi/detections" to="$(arg robot_ns)/hmi/detections" />
+					<remap from="/tf" to="$(arg robot_ns)/tf" />
+					<remap from="/tf_static" to="$(arg robot_ns)/tf_static" />
+				</node>
 				<!-- transcription node -->
-				<node pkg="sweetie_bot_stt" type="stt_service_node" name="transcriber" output="screen">
-					<remap from="transcribe_api" to="$(arg robot_ns)/transcribe_api" />
-					<remap from="transcribe" to="$(arg robot_ns)/transcribe" />
-				</node>
+				<node pkg="sweetie_bot_stt" type="stt_service_node" name="transcriber" output="screen" /> 
 				<!-- translation node -->
-				<node pkg="sweetie_bot_translate" type="translate_service_node" name="translator" output="screen">
-					<remap from="translate" to="$(arg robot_ns)/translate" />
-					<remap from="libre_translate" to="$(arg robot_ns)/libre_translate" />
-				</node>
+				<node pkg="sweetie_bot_translate" type="translate_service_node" name="translator" output="screen" />
 				<!-- language model interface node -->
 				<node pkg="sweetie_bot_llm" type="llm_service_node" name="lang_model" output="screen">
 					<remap from="llm_request" to="$(arg robot_ns)/llm_request" />
