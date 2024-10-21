@@ -8,18 +8,12 @@ project(sweetie_bot_mic_button)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  catkin_virtualenv
   rospy
   std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-catkin_generate_virtualenv(
-  PYTHON_INTERPRETER python3
-  USE_SYSTEM_PACKAGES FALSE
-  EXTRA_PIP_ARGS -vvv
-)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -109,7 +103,7 @@ catkin_python_setup()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sweetie_bot_mic_button
-#  CATKIN_DEPENDS catkin_virtualenv rospy std_msgs
+#  CATKIN_DEPENDS rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -163,6 +157,11 @@ install(FILES requirements.txt
 install(PROGRAMS
    scripts/mic_button_hotkey_node
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY
+  launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 # all install targets should use catkin DESTINATION variables
