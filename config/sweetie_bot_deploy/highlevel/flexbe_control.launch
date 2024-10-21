@@ -52,7 +52,7 @@
 			<include if="$(arg run_nlp)" file="$(find sweetie_bot_mic)/launch/audio_transiver.launch">
 				<arg name="device" value="plughw:ArrayUAC10" /> 
 				<arg name="target_host" value="$(arg host_address)" /> 
-				<arg name="compression" value="true" /> 
+				<arg name="compression" value="false" />
 			</include>
 		</group>
 	</group>
