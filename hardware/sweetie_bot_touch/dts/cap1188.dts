@@ -1,0 +1,60 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+        compatible = "brcm,bcm2835";
+        fragment@0 {
+                target = <&i2c1>;
+                __overlay__{
+                        status = "okay";
+                        #address-cells = <1>;
+                        #size-cells = <0>;
+                        cap1188: cap1188@2b {
+                                compatible = "microchip,cap1188";
+                                pinctrl-0 = <&cap1188_pins>;
+                                pinctrl-names = "default";
+                                interrupt-parent = <&gpio>;
+                                interrupts = <17 2>;
+                                reg = <0x2b>;
+                                //autorepeat;
+                                microchip,sensor-gain = <1>;
+                                microchip,input-threshold = <0x40>,
+                                                            <0x40>,
+                                                            <0x40>,
+                                                            <0x40>,
+                                                            <0x40>,
+                                                            <0x40>,
+                                                            <0x70>,
+                                                            <0x70>;
+
+
+                                linux,keycodes = <704>,           /* BTN_TRIGGER_HAPPY1		0x2c0 */
+                                                 <705>,           /* BTN_TRIGGER_HAPPY2		0x2c1 */
+                                                 <706>,           /* BTN_TRIGGER_HAPPY3		0x2c2 */
+                                                 <707>,           /* BTN_TRIGGER_HAPPY4		0x2c3 */
+                                                 <708>,           /* BTN_TRIGGER_HAPPY5		0x2c4 */
+                                                 <709>,           /* BTN_TRIGGER_HAPPY6		0x2c5 */
+                                                 <710>,           /* BTN_TRIGGER_HAPPY7		0x2c6 */
+                                                 <711>;           /* BTN_TRIGGER_HAPPY8		0x2c7 */
+
+                                status = "okay";
+
+                        };
+                };
+        };
+        fragment@1 {
+                target = <&gpio>;
+                __overlay__ {
+                        cap1188_pins: cap1188_pins {
+                                brcm,pins = <17>;
+                                brcm,function = <0>; /* in */
+                                brcm,pull = <0>; /* none */
+                        };
+                };
+        };
+
+        __overrides__ {
+                int_pin = <&cap1188>, "interrupts:17",
+                          <&cap1188_pins>, "brcm,pins:17";
+        };
+};

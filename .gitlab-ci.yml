@@ -55,6 +55,7 @@
         portaudio19-dev \
         ros-noetic-joint-state-publisher-gui \
         ros-noetic-rqt ros-noetic-rqt-service-caller \
+        ros-noetic-joy \
         autotalent \
         python3-speechd \
         opus-tools \

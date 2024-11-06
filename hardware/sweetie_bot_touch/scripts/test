@@ -1,0 +1,2 @@
+#!/bin/bash
+clear; sudo evtest /dev/input/event0
