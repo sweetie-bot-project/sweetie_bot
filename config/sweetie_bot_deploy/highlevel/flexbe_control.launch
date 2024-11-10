@@ -87,7 +87,7 @@
 				<!-- microphone button: external button -->
 				<!-- TODO: use param -->
 				<arg name="button_dev" default="/dev/ttyUSB0" />
-				<arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev))" />
+				<arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').access(button_dev, 4))" />
 				<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
 					<param name="~port" value="$(arg button_dev)" />
 					<remap from="pushed" to="$(arg robot_ns)/mic_button" />
