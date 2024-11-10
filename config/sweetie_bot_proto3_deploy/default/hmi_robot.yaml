@@ -14,7 +14,8 @@ voice:
             langs: [ 'en', 'es', 'fr', 'de', 'it', 'pt', 'pl', 'tr', 'ru', 'nl', 'cs', 'ar', 'zh', 'hu', 'ko', 'ja', 'hi' ]
             enabled: true
             coqui_ai_params:
-                speaker: "Daisy Studious"
+                #speaker: "Daisy Studious"
+                speaker: "Asya Anara"
             balancer_config:
                 # Min priority value = 100
                 server_choices:
