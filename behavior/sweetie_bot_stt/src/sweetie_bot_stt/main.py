@@ -9,9 +9,7 @@ from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResp
 
 
 class TranscriberNode(object):
-    DEFAULT_CONFIG = dict(server_choices=dict(
-        local_host = {'url': 'http://localhost:8577/'},
-    ))
+    DEFAULT_CONFIG = { "server_choices": { "remote_host": { "priority": 10, "url": 'https://ai.sweetie.bot/stt/'}}}
 
     def __init__(self):
         self.enable_translation = rospy.get_param("~enable_translation", True)

@@ -52,7 +52,7 @@ class GstreamerAudio(object):
         pipeline_list.append(pipeline)
         pipeline_list.extend([
             f'audio/x-raw,format=S16LE,channels={n_channels},rate={sample_rate},layout=interleaved',
-            f'audiobuffersplit output-buffer-size={buffer_size*n_channels*self.sample_width} strict-buffer-size=true',
+            f'audiobuffersplit output-buffer-duration={buffer_size}/{sample_rate} strict-buffer-size=true',
             f'appsink name=appsink-microphone-node max-buffers=10 drop=true emit-signals=true'
         ])
         pipeline_string = str.join(' ! ', pipeline_list)

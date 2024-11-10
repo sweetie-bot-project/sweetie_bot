@@ -72,7 +72,7 @@ voice:
 eyes:
     start_blinking: true
 mic_button_hotkey_node:
-    key_combination: [ 'ctrl', 'w' ]
+    key_combination: [ 'ctrl','alt', 'w' ]
     enable_global_hotkey: True
 microphone:
     gstreamer_pipeline: "udpsrc port=12345 ! application/x-rtp,media=audio,clock-rate=16000,encoding-name=L16,channels=6 ! queue ! rtpL16depay ! audioconvert"
