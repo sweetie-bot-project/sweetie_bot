@@ -62,7 +62,7 @@ sp {initialization*apply*joint-trajectory
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9>)
+	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8>)
 	(<c1> ^name head_node ^tag confirmation greeting pleased happy neutral ^tag general ^tag talk ^relative yes)
 	(<c2> ^name head_shake ^tag rejection disappointed angry sad ^tag talk ^relative yes)
 	(<c3> ^name head_suprised ^tag question surprise ^tag general ^tag talk ^relative yes)
@@ -70,8 +70,7 @@ sp {initialization*apply*joint-trajectory
 	(<c5> ^name hoof_stamp ^tag rejection angry ^tag talk)
 	(<c6> ^name greeting ^tag greeting brohoof ^tag talk)
 	(<c7> ^name get_unconscious ^tag faint ^tag talk)
-	(<c8> ^name dance_stamp ^tag happy ^tag talk)
-	(<c9> ^name dance ^tag dance ^tag talk)
+	(<c8> ^name dance_stamp ^tag happy dance ^tag talk)
 }
 
 sp {initialization*apply*animation-tag-emotion-mapping
