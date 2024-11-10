@@ -17,6 +17,9 @@ class BalancerError(RuntimeError):
     def details(self):
         return self._details
 
+    def __str__(self):
+        return self.details
+
 class Balancer:
 
     def __init__(self, config, loggers=None, fallback_func=None, postprocess_func=None):
@@ -82,7 +85,7 @@ class Balancer:
                 response = self.postprocess_function(response)
             except Exception as e:
                 # TODO: Check behavior when there's html page returned in response to replace some error codes
-                raise BalancerError(f'postprocess: got an error during postprocess phase: {e}', response.get('detail', 'Unknown error'))
+                raise BalancerError(f'postprocess: got an error during postprocess phase: {e}', e.details)
 
         self.log_debug(f'server {server_name} response: \n\n {response} \n\n')
 

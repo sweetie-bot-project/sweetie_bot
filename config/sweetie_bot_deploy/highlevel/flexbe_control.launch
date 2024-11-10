@@ -103,8 +103,11 @@
 					<remap from="libre_translate" to="$(arg robot_ns)/libre_translate" />
 				</node>
 				<!-- language model interface node -->
-				<node pkg="sweetie_bot_llm" type="llm_service_node" name="lang_model" output="screen">
+				<node pkg="sweetie_bot_llm" type="llm_completion_node" name="lang_model" output="screen">
 					<remap from="llm_request" to="$(arg robot_ns)/llm_request" />
+				</node>
+				<node pkg="sweetie_bot_llm" type="llm_classification_node" name="classification_model" output="screen">
+					<remap from="classification" to="$(arg robot_ns)/classification" />
 				</node>
 			</group>
 			<!-- FLEXBE: control node and action server -->

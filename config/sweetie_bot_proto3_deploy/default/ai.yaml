@@ -59,6 +59,17 @@ lang_model:
             skip_special_tokens: True
             stop: ["\n私の感情：", "\n人間：", "\n"]
 
+classification_model:
+    balancer_config:
+        # Min priority value = 100
+        server_choices:
+            local_host:
+                priority: 10
+                url: 'http://localhost:5011/'
+            remote_host:
+                priority: 20
+                url: 'https://ai.sweetie.bot/classification/'
+
 transcriber:
     balancer_config:
         # Min priority value = 100
@@ -68,7 +79,7 @@ transcriber:
                 url: 'http://localhost:8577/'
             remote_host:
                 priority: 20
-                url: 'http://192.168.3.128:5000/'
+                url: 'https://ai.sweetie.bot/stt/'
 
 translator:
     balancer_config:

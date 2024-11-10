@@ -9,6 +9,7 @@ from string import Formatter
 from ..nlp import SpacyInstance
 
 from sweetie_bot_text_msgs.srv import CompleteRaw, CompleteRawRequest, CompleteRawResponse
+from sweetie_bot_text_msgs.srv import Classification, ClassificationRequest, ClassificationResponse
 
 #
 # WME helpers

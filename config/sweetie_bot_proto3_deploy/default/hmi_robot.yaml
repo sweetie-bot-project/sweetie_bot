@@ -16,7 +16,7 @@ voice:
                 url: 'http://127.0.0.1:5002/api/tts'
             remote_host:
                 priority: 20
-                url: 'http://192.168.3.128:5002/api/tts'
+                url: 'https://ai.sweetie.bot/tts/api/tts'
     voice_profile:
         coqui-ai:
             type: 'coqui-ai'
