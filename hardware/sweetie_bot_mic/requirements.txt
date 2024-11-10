@@ -1,2 +1,3 @@
 PyAudio
 pyusb
+pyroomacoustics
