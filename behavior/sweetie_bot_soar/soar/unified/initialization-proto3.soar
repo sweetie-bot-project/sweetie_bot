@@ -25,12 +25,12 @@ sp {initialization*apply*drives
 	(<op> ^name initialization ^stage 2)
 -->
 	(<m> ^drive <d1> <d2> <d3> <d4> <d5> <d6>)
-	(<d1> ^name movement ^activation 0 ^importance 2) 
+	(<d1> ^name movement ^activation 0 ^importance 2)
 	(<d2> ^name obey ^activation 0 ^importance 8)
 	(<d3> ^name security ^activation 0 ^importance 10)
-	(<d4> ^name curiosity ^activation 0 ^importance 5) 
-	(<d5> ^name social ^activation 0 ^importance 6) 
-	(<d6> ^name dummy ^activation 0 ^importance 11) 
+	(<d4> ^name curiosity ^activation 0 ^importance 5)
+	(<d5> ^name social ^activation 0 ^importance 6)
+	(<d6> ^name dummy ^activation 0 ^importance 11)
 }
 
 sp {initialization*apply*flexbe-commands
@@ -63,14 +63,14 @@ sp {initialization*apply*joint-trajectory
 	(<op> ^name initialization ^stage 2)
 -->
 	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8>)
-	(<c1> ^name head_node ^tag confirmation greeting pleased happy neutral ^tag general ^tag talk ^relative yes)
-	(<c2> ^name head_shake ^tag rejection disappointed angry sad ^tag talk ^relative yes)
+	(<c1> ^name head_node ^tag confirmation greeting pleased joy neutral ^tag general ^tag talk ^relative yes)
+	(<c2> ^name head_shake ^tag rejection disappointed anger sad ^tag talk ^relative yes)
 	(<c3> ^name head_suprised ^tag question surprise ^tag general ^tag talk ^relative yes)
 	(<c4> ^name head_look_around ^tag long neutral ^tag general ^tag talk)
-	(<c5> ^name hoof_stamp ^tag rejection angry ^tag talk)
+	(<c5> ^name hoof_stamp ^tag rejection anger ^tag talk)
 	(<c6> ^name greeting ^tag greeting brohoof ^tag talk)
 	(<c7> ^name get_unconscious ^tag faint ^tag talk)
-	(<c8> ^name dance_stamp ^tag happy dance ^tag talk)
+	(<c8> ^name dance_stamp ^tag joy dance ^tag talk)
 }
 
 sp {initialization*apply*animation-tag-emotion-mapping
@@ -78,19 +78,19 @@ sp {initialization*apply*animation-tag-emotion-mapping
   (<op> ^name initialization ^stage 2)
 -->
   (<m> ^emotion <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12> <c13>)
-  (<c1> ^name begging_look ^tag begging)
-  (<c2> ^name unamused_look ^tag rejection disappointed angry)
+  (<c1> ^name begging_look ^tag begging love)
+  (<c2> ^name evil_look ^tag rejection disappointed anger)
   (<c3> ^name surprised_look ^tag surprise rejection greeting)
-  (<c4> ^name pleasure_look ^tag pleased happy)
-  (<c5> ^name happy_look ^tag pleased confirmation dance happy)
-  (<c6> ^name tender_look ^tag pleased greeting brohoof happy)
+  (<c4> ^name happy_look ^tag pleased joy)
+  (<c5> ^name pleasure_look ^tag pleased confirmation dance joy)
+  (<c6> ^name tender_look ^tag pleased greeting brohoof joy love)
   (<c7> ^name scared_look ^tag fear)
   (<c8> ^name very_scared_look ^tag fear)
   (<c9> ^name raised_right_eyebrow_look ^tag question neural)
   (<c10> ^name raised_left_eyebrow_look ^tag question neural)
-  (<c11> ^name evil_look ^tag angry rejection )
+  (<c11> ^name unamused_look ^tag anger rejection )
   (<c12> ^name sad_look ^tag sad disappointed)
-  (<c13> ^name normal ^tag general confirmation rejection question greeting brohoof long none neutral)
+  (<c13> ^name normal ^tag general confirmation question greeting brohoof long none neutral)
 }
 
 #sp {initialization*apply*compound*action
@@ -100,10 +100,10 @@ sp {initialization*apply*animation-tag-emotion-mapping
 #	(<m> ^compound-action <c1> <c2> <c3> <c4> <c5> <c6> <c7>)
 #	(<c1> ^name greeting_acquitance_procedure ^tag greet ^tag talk)
 #	(<c2> ^name greeting_friendship_programs ^tag greet ^tag talk)
-#	(<c3> ^name point_do_not_touch ^tag angry ^topic comfort-zone ^tag talk)
-#	(<c4> ^name hoof_stamp_do_you_want_attention ^tag angry ^tag talk)
+#	(<c3> ^name point_do_not_touch ^tag anger ^topic comfort-zone ^tag talk)
+#	(<c4> ^name hoof_stamp_do_you_want_attention ^tag anger ^tag talk)
 #	(<c5> ^name prance_maximum_fun ^tag fun ^tag general ^tag alone)
-#	(<c6> ^name menace ^tag angry ^tag alone)
+#	(<c6> ^name menace ^tag anger ^tag alone)
 #	(<c7> ^name head_ask_about_sister ^tag talk)
 #}
 #
@@ -128,5 +128,5 @@ sp {apply*initialization-second-stage*name
 	(state <s> ^name initialization ^operator <op>)
 	(<op> ^name initialization ^stage 3)
 -->
-	(<s> ^substate general) 
+	(<s> ^substate general)
 }

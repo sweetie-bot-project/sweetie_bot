@@ -19,16 +19,16 @@
 #    talk-ignored
 #    talk-pause
 #    talk-illegible
-#       
+#
 
-# ELABORATIONS 
+# ELABORATIONS
 
 # create basic agumentation for talk substate
 sp {talk-llm*elaborate*substate
 	(state <s> ^substate talk-llm ^args <args>)
 	(<args> ^object <obj>)
 -->
-	(<s> ^object <obj> ^recent-events <ev>)	
+	(<s> ^object <obj> ^recent-events <ev>)
 }
 
 # remember process for 10 minutes
@@ -59,7 +59,7 @@ sp {talk-llm*elaborate-the-most-recent-talk-event
 	(<s> ^most-recent-event <ev>)
 }
 
-# looking-at 
+# looking-at
 sp {talk-llm*elaborate*looking-at
 	(state <s> ^substate talk-llm ^beliefs-stable.predicate <pred> ^object <obj>)
 	(<pred> ^name looking-at ^object <obj>)
@@ -92,7 +92,7 @@ sp {talk-llm*elborate*default-lang
 
 # detect answering subprocess
 sp {talk-llm*elaborate*answering-subporcess
-	(state <s> ^substate talk-llm ^{<<|greeting| |general-answering-event| |general-answering-pause| |specific-answering|>>} <proc>) 
+	(state <s> ^substate talk-llm ^{<<|greeting| |general-answering-event| |general-answering-pause| |specific-answering|>>} <proc>)
 -->
 	(<s> ^answering <proc>)
 }
@@ -193,7 +193,7 @@ sp {talk-llm*propose*failsafe-answer
 -->
  	(<s> ^operator <op> +, =)
 	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
-	(<args> ^object <obj> ^topic goodbye ^text |Internal error! Something bad happened with my world model... Unable to continue the dialogue.!| ^animation-tag goodbye ^lang <lang> ^emotion angry ^type statement)
+	(<args> ^object <obj> ^topic goodbye ^text |Internal error! Something bad happened with my world model... Unable to continue the dialogue.!| ^animation-tag goodbye ^lang <lang> ^emotion anger ^type statement)
 	(<args> ^result <res>)
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE TO CLEAN BRAIN.| (crlf)))
 }
@@ -205,7 +205,7 @@ sp {talk-llm*propose*ignor-me-answer
 -->
  	(<s> ^operator <op> +, =)
 	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
-	(<args> ^object <obj> ^topic goodbye ^text |You are ignoring me! Goodbye!| ^animation-tag angry ^lang <lang> ^emotion angry ^type statement)
+	(<args> ^object <obj> ^topic goodbye ^text |You are ignoring me! Goodbye!| ^animation-tag anger ^lang <lang> ^emotion anger ^type statement)
 	(<args> ^result <res>)
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: GOODBYE ON IGNORANCE.| (crlf)))
 }
@@ -231,7 +231,7 @@ sp {talk-llm*propose*brohoof
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
-	(<args> ^object <obj> ^topic greeting ^text |Good!| ^animation-tag brohoof ^lang <lang> ^emotion happy ^type statement)
+	(<args> ^object <obj> ^topic greeting ^text |Good!| ^animation-tag brohoof ^lang <lang> ^emotion joy ^type statement)
 	(<args> ^result <res>)
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: BROHOOF.| (crlf)))
 }
@@ -243,7 +243,7 @@ sp {talk-llm*propose*dance
 -->
  	(<s> ^operator <op> +, =)
 	(<op> ^name specific-answering ^substate verbolize ^process-args <args>)
-	(<args> ^object <obj> ^topic greeting ^text |I am dancing!;; I am dancing!;; I am dancing!;; I am dancing!;;| ^animation-tag dance ^lang <lang> ^emotion happy ^type statement)
+	(<args> ^object <obj> ^topic greeting ^text |I am dancing!;; I am dancing!;; I am dancing!;; I am dancing!;;| ^animation-tag dance ^lang <lang> ^emotion joy ^type statement)
 	(<args> ^result <res>)
 	(<res> ^status succeed ^finish-status succeed ^finish-process <proc> ^print (concat |SPECIFIC: DANCE.| (crlf)))
 }
@@ -380,7 +380,7 @@ sp {talk-llm*elaborate*hearing-speech*terminate*elements
 
 #
 # COGNITION: talk-ignored
-# 
+#
 
 # initiate predicate at talk said
 sp {talk-llm*propose*add-talk-waiting-answer
@@ -391,7 +391,7 @@ sp {talk-llm*propose*add-talk-waiting-answer
 	  (<b> ^predicate <p>)
 	  (<p> ^name talk-waiting-answer ^object <obj>)
 	}
---> 
+-->
 	(<s> ^operator <op> +, =)
 	(<op> ^name add-talk-waiting-answer ^type cognition automatic ^add-predicate <pred>)
 	(<pred> ^name talk-waiting-answer ^object <obj> ^event <ev> ^deadline-time 6.0)
@@ -401,7 +401,7 @@ sp {talk-llm*propose*add-talk-waiting-answer
 sp {talk-llm*propose*terminate-talk-waiting-answer
 	(state <s> ^bottom-state 1 ^beliefs.predicate <pred> ^io.input-link.sound.speech 1)
 	(<pred> ^name talk-waiting-answer)
---> 
+-->
 	(<s> ^operator <op> +, =)
 	(<op> ^name terminate-talk-waiting-answer ^type cognition automatic ^remove-predicate <pred>)
 }
@@ -442,7 +442,7 @@ sp {talk-llm*propose*add-ignor-me-questions
 	}
 	-{(<b> ^predicate <pred>)
 	  (<pred> ^name ignors-me ^actor <obj>)
-	} 
+	}
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name add-ignors-me ^type cognition automatic ^add-predicate <pred-ignors>)
@@ -463,7 +463,7 @@ sp {talk-llm*propose*add-ignor-statements
 	}
 	-{(<b> ^predicate <pred>)
 	  (<pred> ^name ignors-me ^actor <obj>)
-	} 
+	}
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name add-ignors-me ^type cognition automatic ^add-predicate <pred-ignors>)
@@ -472,7 +472,7 @@ sp {talk-llm*propose*add-ignor-statements
 }
 
 #
-# COGNITION: ponies, gestures 
+# COGNITION: ponies, gestures
 #
 
 # detect plusie
@@ -499,5 +499,3 @@ sp {talk-llm*elaborate*speaker-pony
 	(<pred> ^name greet-us-with-gesture ^actor <speaker>)
 	(<pred> ^text |Human is holding pony plusie.|)
 }
-
-
