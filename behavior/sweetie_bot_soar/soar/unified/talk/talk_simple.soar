@@ -83,7 +83,7 @@ sp {talk-llm*elborate*lang-from-last-event
 sp {talk-llm*elborate*default-lang
 	(state <s> ^substate talk-llm -^lang-source event)
 -->
-	(<s> ^lang en ^lang-source default)
+	(<s> ^lang ru ^lang-source default)
 }
 
 #
