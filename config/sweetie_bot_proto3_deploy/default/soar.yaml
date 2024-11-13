@@ -102,7 +102,7 @@ soar:
             service_ns: "llm_request"
             requests:
                 'complex-en':
-                    prompt_header_name: "complex-en"
+                    prompt_header_names: [ "complex-en" ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human says \"{text}\"\n"  ]
                         'talk-said': [ "Sweetie says \"{text}\"\n" ]
@@ -151,7 +151,7 @@ soar:
                           value_nomatch: 'statement'
                           stop_list: ["\n"]
                 'simple-en':
-                    prompt_header_name: "simple-en"
+                    prompt_header_names: [ "simple-en", "simple-en-personality-1" ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
                         'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
@@ -200,7 +200,7 @@ soar:
                           value_match: 'question'
                           value_nomatch: 'statement'
                 'failsafe-en':
-                    prompt_header_name: "failsafe-en"
+                    prompt_header_names: [ "failsafe-en", "failsafe-en-personality-1" ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
                         'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]

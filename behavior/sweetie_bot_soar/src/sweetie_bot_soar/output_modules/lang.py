@@ -3,7 +3,9 @@ import rospy
 import actionlib
 from  actionlib import GoalStatus
 
+import numpy as np
 from random import choice
+from datetime import datetime
 import re
 from string import Formatter
 from ..nlp import SpacyInstance
@@ -303,16 +305,25 @@ AttribRequest.subclass_map.update({'classification': AttribRequestClassification
 
 class LangRequest:
 
-    def __init__(self, prompt_header_name, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile_name, start_event_history_with_heard = False):
+    def __init__(self, prompt_header_names, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile_name, selection_cooldown_sec = None, header_change_probability = None, start_event_history_with_heard = False):
         # get parameters: header
-        assert_param(prompt_header_name, 'prompt_header_name: must be string', allowed_types=str)
-        self._header_name = prompt_header_name
+        assert_param(prompt_header_names, 'prompt_header_names: must be list', allowed_types=list)
+        self._header_names = prompt_header_names
 
-        prompt_parameter = f'/lang_model/prompts/{self._header_name}'
-        try:
-            self._header = rospy.get_param(prompt_parameter)
-        except KeyError:
-            raise KeyError(f'prompt_header_name: requested prompt {self._header_name} is missing from parameter server. Load it into {self._header_name}.txt file from the prompt directory.')
+        self._headers = {}
+        for header_name in self._header_names:
+            prompt_parameter = f'/lang_model/prompts/{header_name}'
+            try:
+                self._headers[header_name] = rospy.get_param(prompt_parameter)
+            except KeyError:
+                raise KeyError(f'prompt_header_name: requested prompt {header_name} is missing from parameter server. Load it into {header_name}.txt file from the prompt directory.')
+
+        # Selecting first provided system prompt as default
+        self._current_header_name = self._header_names[0]
+        self._selected_header = self._headers[self._current_header_name]
+        self._selection_cooldown_sec = header_change_probability or 0 #60
+        self._header_change_probability = header_change_probability or 0.5
+        self._last_header_update_time = datetime.now()
 
         # get parameters: profile
         assert_param(llm_profile_name, 'profile name: must be string', allowed_types=str)
@@ -343,11 +354,31 @@ class LangRequest:
         if len(self._requests) == 0 or self._requests[0].prompt is None:
             raise ValueError('incorrect attrib_request declaraition: at leat one request should present, first request should contain prompt field.')
 
-    def perform_request(self, llm_caller, text = None, events=[], predicates=[]):
+    def try_change_header(self, events, predicates):
+        elapsed_after_update = datetime.now() - self._last_header_update_time
+        if elapsed_after_update.total_seconds() > self._selection_cooldown_sec:
+            if np.random.uniform() < self._header_change_probability:
+                # Chaning prompt on random, but different one
+                name_pool = [n for n in self._header_names if n != self._current_header_name]
+                if len(name_pool) == 0:
+                    return events, predicates
+
+                new_name_choice = np.random.choice(len(name_pool), size=1, replace=False).item()
+                self._current_header_name = name_pool[new_name_choice]
+                self._selected_header = self._headers[self._current_header_name]
+
+                self._last_header_update_time = datetime.now()
+
+                # return tuple(), tuple()
+
+        return events, predicates
+
+    def perform_request(self, llm_caller, events, predicates, text = None):
         #
         # form prompt
         #
-        prompt = self._header
+        prompt = self._selected_header
+        events, predicates = self.try_change_header(events, predicates)
         # verbolize predicates
         if self._max_predicates > 0:
             # sort by timestamp
@@ -403,7 +434,6 @@ class LangRequest:
                     resp = llm_caller(req)
                     # check result
                     if resp.error_code != 0:
-                        breakpoint()
                         success = False
                         result['error_desc'] = 'LLM request has failed.'
                         return success, result, prompt
