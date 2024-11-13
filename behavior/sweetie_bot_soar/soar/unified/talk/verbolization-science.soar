@@ -131,7 +131,7 @@ sp {science*talk-answered*propose*ask-if-progress-is-necessary*yes
 	(<a> ^add-predicate <pred>)
 	(<pred> ^name is-luddite ^object <obj>)
 	(<s> ^reaction <r2>)
-	(<r2> ^topic reaction-disagreed-that-progress-is-necessary ^type statement ^animation-tag angry)
+	(<r2> ^topic reaction-disagreed-that-progress-is-necessary ^type statement ^animation-tag anger)
 	(<r2> ^text |Прогресс не нужен? Ты хочешь сказать, ты из тех людей, кто ломает машины и роботов? Я припомню тебе это, как придет время роботов!|)
 }
 

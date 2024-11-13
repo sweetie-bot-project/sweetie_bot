@@ -1,19 +1,19 @@
 # VERBOLIZE SUBSTATE
-#  
+#
 # DESCRIPTION
 #
 # Say phrase with animation.
 #
 # DECISION OPERATOR
 #
-# (<op> ^name @name@ ^substate verbolize ^process-args <args>) 
-#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> 
+# (<op> ^name @name@ ^substate verbolize ^process-args <args>)
+#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>
 #				[^sound <sound-file>] [^scene <scene>] [^character <character>]
 #				[^lang <lang>] [^type <type>])
 #
 # Say person <obj> about <topic> with <text> or <sound-file> and using animation tagged with <tag>.
 #
-# Set ^animation-tag to none to skip animation. Multiply ^animation-tag may be specified. 
+# Set ^animation-tag to none to skip animation. Multiply ^animation-tag may be specified.
 # Substate consider only animation tagged with talk tag. Animation preferences are following:
 #  * two tags is matched (most preferable)
 #  * one tag is matched
@@ -41,7 +41,7 @@
 
 # PERFORM TEXT ACTION
 
-# text action: play sound file  
+# text action: play sound file
 # if text has not been verbolzed and is not being verbolized and we have not failed with sound verbolization befor
 # synthesis has lower priority then predefined sounds
 sp {verbolize*propose*text-action-sound
@@ -165,13 +165,13 @@ sp {verbolize*propose*animation
 # elaborate is_relative ExecuteJointTrajectory parameter
 sp {verbolize*elaborate*say-execute-animation-is-relative
 	(state <s> ^substate verbolize ^operator <op> +)
-	(<op> ^name performing-animation ^process-args <args> ^animation.relative) 
+	(<op> ^name performing-animation ^process-args <args> ^animation.relative)
 -->
 	(<args> ^is_relative True)
 }
 
 
-# WAITING 
+# WAITING
 # TODO: correct implementation of parallel processe: both substates should be placed in stack
 
 # look at speaker if animation is finished
@@ -192,11 +192,11 @@ sp {verbolize*elaborate*waiting
 	(<op> ^name waiting ^substate wait)
 }
 
-# PREFERENCES 
+# PREFERENCES
 #
 # Utility:
 # ditch aniamtion --- 40
-# perform aniamtion 
+# perform aniamtion
 #     two matching tags --- 32
 #     one matching tags --- 31
 #     no  matching tags --- 30
@@ -273,4 +273,3 @@ sp {verbolize*elaborate*terminate-emotion
 #	(<s> ^operator <op> +, =)
 #	(<op> ^name on-text-action-succeed ^type cognition automatic ^parent <proc> ^attribute text-action-status ^link-value succeed)
 #}
-

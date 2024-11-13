@@ -32,6 +32,7 @@ add_service_files(
   Complete.srv
   CompleteSimple.srv
   CompleteRaw.srv
+  Classification.srv
   LibreTranslate.srv
   Translate.srv
 )

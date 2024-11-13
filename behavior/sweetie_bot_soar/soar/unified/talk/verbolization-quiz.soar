@@ -15,7 +15,7 @@
 #
 # quiz preidicate: (<pred> ^name quiz ^number-of-asked-questions <number> ^score <score> ^object <talker>)
 # quiz answer predicate: (<q1> ^name quiz-answer ^object <speaker> ^question <link-to-question> ^result "correct|incorrect|ignored")
-# quiz finished preidicate: (<pred> ^name quiz-finished ^score <score> ^object <talker> 
+# quiz finished preidicate: (<pred> ^name quiz-finished ^score <score> ^object <talker>
 #
 # Memory
 #
@@ -29,14 +29,14 @@
 #     correct +0.25
 # 	  incorrect -0.25
 #     ignored -0.125
-# 
+#
 # Total Score
 #     success 1
 #     normal > 0.5 < 1
 #     bad < 0.5
-#  	  
 #
-	
+#
+
 # GENERAL KNOWLEDGE
 
 # if quiz topic is ignored then stop quiz
@@ -54,7 +54,7 @@ sp {quest*propose*ignor-topic-terminate-quiz
 
 #
 # ask speaker about quiz
-# 
+#
 
 # ask if speaker is interest in quiz
 sp {quiz*elaborate*ask-about-quiz
@@ -69,7 +69,7 @@ sp {quiz*elaborate*ask-about-quiz
 # ask about quiz again: select phares based on result
 sp {quiz*elaborate*ask-about-quiz-again
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
-  	(<b> ^predicate <pred>) 
+  	(<b> ^predicate <pred>)
 	(<pred> ^name quiz-finished ^object <obj> ^score <score>)
 -->
 	(<v> ^frame <f>)
@@ -125,7 +125,7 @@ sp {talk-answered*propose*ask-about-quiz*yes
 # TODO: do it after new quiz is finished
 sp {talk-answered*propose*ask-about-quiz*yes*terminate-quiz-finished
 	(state <s> ^substate talk-answered ^question-topic ask-about-quiz ^answer-topic yes ^actor <obj> ^beliefs <b> ^actions <a>)
-  	(<b> ^predicate <pred>) 
+  	(<b> ^predicate <pred>)
 	(<pred> ^name quiz-finished ^actor <obj>)
 -->
 	(<a> ^remove-predicate <pred>)
@@ -375,7 +375,7 @@ sp {talk-answered*propose*quiz-question-reaction*incorrect-answer
 	(<pred-answer> ^name quiz-answer ^object <obj> ^question <question> ^result incorrect)
 }
 
-# repeat question 
+# repeat question
 sp {talk-answered*propose*quiz-question-reaction*repeat-question
 	(state <s> ^substate talk-answered ^question-topic quiz ^answer-topic <answer> ^actor <obj> ^beliefs.predicate <pred>)
 	(<pred> ^name quiz ^object <obj> ^current-question <question>)
@@ -405,7 +405,5 @@ sp {talk-ignored*propose*quiz-question-ignored
 	(<pred> ^name quiz ^object <obj> ^current-question.statement <text>)
 -->
 	(<s> ^reaction <r>)
-	(<r> ^topic quiz ^type question ^text <text> ^animation-tag angry)
+	(<r> ^topic quiz ^type question ^text <text> ^animation-tag anger)
 }
-
-

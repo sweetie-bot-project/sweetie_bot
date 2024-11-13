@@ -45,14 +45,14 @@ sp {general*conversation*propose*main*talk*normal
 	(<tr1> ^timeout 30.0 ^next-topic main)
 }
 
-sp {general*conversation*propose*main*talk*angry
+sp {general*conversation*propose*main*talk*anger
 	(state <s> ^conversation <c> ^company <h>)
 	(<c> ^name general ^topic main ^goal <g>)
 	(<h> ^like-me no)
 -->
 	(<s> ^operator <co> + =)
-	(<co> ^name phrase-choice ^say angry-talk ^transition <tr1> ^subgoal <o>)
-	(<o> ^name animation ^tag angry)
+	(<co> ^name phrase-choice ^say anger-talk ^transition <tr1> ^subgoal <o>)
+	(<o> ^name animation ^tag anger)
 	(<tr1> ^timeout 30.0 ^next-topic main)
 }
 
@@ -67,5 +67,3 @@ sp {general*conversation*propose*memorize
 	#(<s> ^operator <o> + =)
 	#(<o> ^name memorize ^obj <h> ^attr like-me ^value <answer>)
 }
-
-

@@ -115,16 +115,31 @@ soar:
                     attrib_requests:
                         - type: 'map'
                           nlp_model: 'en_core_web_sm'
-                          map: 
-                            anger: [ 'anger' ]
-                            happy: [ 'happiness', 'love', 'happy' ]
-                            neutral: [ 'indifference', 'neutral', 'nothing' ]
-                            sad: [ 'sadness', 'sad' ]
-                            scared: [ 'scary', 'fright' ]
+                          map:
+                            love: [ 'love' ]
+                            joy: [ 'joy', 'happy', 'happiness' ]
+                            surprise: [ 'surprise' ]
+                            neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
+                            sad: [ 'sad', 'sadness' ]
+                            fear: [ 'fear', 'scared', 'scary', 'fright' ]
+                            anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
                           attrib: 'emotion'
                           prompt: "Sweetie thinks about human's answer and the emotion she feels is "
                           leading_text: "The emotion Sweetie feels is "
                           stop_list: ['.', '!', "\n"]
+                        - type: 'classification'
+                          classification_model: 'bert_sentiment'
+                          attrib: 'additional_emotion'
+                          fallback_value: 'neutral'
+                          leading_text: ''
+                          merge_map:
+                            love: [ 'love' ]
+                            joy: [ 'neutral', 'joy', ]
+                            surprise: [ 'neutral', 'surprise' ]
+                            neutral: [ 'neutral', 'surprise', 'fear', 'sad' ]
+                            sad: [ 'neutral', 'sad', ]
+                            fear: [ 'neutral', 'fear' ]
+                            anger: [ 'anger' ]
                         - type: 'regex'
                           regex: '(?P<result>[^"]+)"'
                           prompt: 'Sweetie says "'
@@ -158,12 +173,27 @@ soar:
                           attrib: 'emotion'
                           fallback_value: 'neutral'
                           leading_text: ''
-                          map: 
+                          map:
+                            love: [ 'love' ]
+                            joy: [ 'joy', 'happy', 'happiness' ]
+                            surprise: [ 'surprise' ]
+                            neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
+                            sad: [ 'sad', 'sadness' ]
+                            fear: [ 'fear', 'scared', 'scary', 'fright' ]
+                            anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
+                        - type: 'classification'
+                          classification_model: 'bert_sentiment'
+                          attrib: 'additional_emotion'
+                          fallback_value: 'neutral'
+                          leading_text: ''
+                          merge_map:
+                            love: [ 'love' ]
+                            joy: [ 'neutral', 'joy', ]
+                            surprise: [ 'neutral', 'surprise' ]
+                            neutral: [ 'neutral', 'surprise', 'fear', 'sad' ]
+                            sad: [ 'neutral', 'sad', ]
+                            fear: [ 'neutral', 'fear' ]
                             anger: [ 'anger' ]
-                            happy: [ 'happiness', 'love', 'happy' ]
-                            neutral: [ 'indifference', 'neutral', 'nothing' ]
-                            sad: [ 'sadness', 'sad' ]
-                            scared: [ 'scary', 'fright' ]
                         - type: 'regex-test'
                           regex: ".*\\?.*"
                           attrib: 'sentence-type'
@@ -192,16 +222,29 @@ soar:
                           attrib: 'emotion'
                           fallback_value: 'neutral'
                           leading_text: ''
-                          map: 
+                          map:
+                            love: [ 'love' ]
+                            joy: [ 'joy', 'happy', 'happiness' ]
+                            surprise: [ 'surprise' ]
+                            neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
+                            sad: [ 'sad', 'sadness' ]
+                            fear: [ 'fear', 'scared', 'scary', 'fright' ]
+                            anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
+                        - type: 'classification'
+                          classification_model: 'bert_sentiment'
+                          attrib: 'additional_emotion'
+                          fallback_value: 'neutral'
+                          leading_text: ''
+                          merge_map:
+                            love: [ 'love' ]
+                            joy: [ 'neutral', 'joy', ]
+                            surprise: [ 'neutral', 'surprise' ]
+                            neutral: [ 'neutral', 'surprise', 'fear', 'sad' ]
+                            sad: [ 'neutral', 'sad', ]
+                            fear: [ 'neutral', 'fear' ]
                             anger: [ 'anger' ]
-                            happy: [ 'happiness', 'love', 'happy' ]
-                            neutral: [ 'indifference', 'neutral', 'nothing' ]
-                            sad: [ 'sadness', 'sad' ]
-                            scared: [ 'scary', 'fright' ]
                         - type: 'regex-test'
                           regex: ".*\\?.*"
                           attrib: 'sentence-type'
                           value_match: 'question'
                           value_nomatch: 'statement'
-
-

@@ -1,4 +1,4 @@
-from . import output_module 
+from . import output_module
 import rospy
 import actionlib
 from  actionlib import GoalStatus
@@ -9,6 +9,7 @@ from string import Formatter
 from ..nlp import SpacyInstance
 
 from sweetie_bot_text_msgs.srv import CompleteRaw, CompleteRawRequest, CompleteRawResponse
+from sweetie_bot_text_msgs.srv import Classification, ClassificationRequest, ClassificationResponse
 
 #
 # WME helpers
@@ -20,7 +21,7 @@ class WMEParseError(RuntimeError):
 
 
 def GetChildValueAsType(parent_id, attrib, expected_type):
-    # get child WME    
+    # get child WME
     wme_id = parent_id.FindByAttribute(attrib, 0)
     if wme_id is None:
         raise WMEParseError('missing %s attribute' % attrib)
@@ -51,11 +52,11 @@ class TalkEvent():
         idx = 0
         event_type = None
         while True:
-            # get name attr 
+            # get name attr
             name_id = item_id.FindByAttribute('name', idx)
             if name_id is None:
                 raise WMEParseError('unknown event type (missing or unknown ^name attribute)')
-            # check it 
+            # check it
             name_str = name_id.GetValueAsString()
             if name_str in ['talk-heard', 'talk-said', 'talk-ignored', 'talk-no-answer', 'talk-illegible']:
                 event_type = name_str
@@ -70,7 +71,7 @@ class TalkEvent():
             self.text = GetChildValueAsType(item_id, 'text', str)
         elif event_type == 'talk-said':
             self.text = GetChildValueAsType(item_id, 'text', str)
-            emotion_id = item_id.FindByAttribute('emotion', 0) 
+            emotion_id = item_id.FindByAttribute('emotion', 0)
             if emotion_id is not None:
                 self.emotion = emotion_id.GetValueAsString()
             else:
@@ -147,7 +148,7 @@ class AttribRequestRegex(AttribRequest):
         if self._regex.groups != len(self._regex.groupindex) or self._regex.groups == 0:
             raise ValueError('regexp (%s): must be at least one match group, all groups must be named.' % regex)
 
-    def parse(self, text):
+    def parse(self, text, **kwargs):
         m = self._regex.match(text)
         # check if match is succesfull
         if m is None:
@@ -185,7 +186,7 @@ class AttribRequestRegexTest(AttribRequest):
         if value_nomatch is None and value_nomatch is None:
             raise TypeError('value_match or value_nomatch cannot be both None')
 
-    def parse(self, text):
+    def parse(self, text, **kwargs):
         m = self._regex.match(text)
         # check if match is succesfull
         if m is None:
@@ -218,14 +219,14 @@ class AttribRequestMap(AttribRequest):
             assert_param(fallback_value, 'fallback_value: must be string', allowed_types=str)
         self._fallback_value = fallback_value
 
-    def parse(self, text):
+    def parse(self, text, **kwargs):
         tokens = self._nlp(self._leading_text + ' ' + text)
         # process parsed tokens and find key
         for idx in range(len(tokens)):
             token = tokens[idx]
             key = self._map.get(token.lemma_)
             if key is not None:
-                # check negation 
+                # check negation
                 # TODO: proper token tree processing
                 if idx > 0 and tokens[idx].lemma_ == 'not':
                     continue
@@ -238,6 +239,64 @@ class AttribRequestMap(AttribRequest):
             return { self._attrib: self._fallback_value }
 
 AttribRequest.subclass_map.update({'map': AttribRequestMap})
+
+class AttribRequestClassification(AttribRequest):
+
+    def __init__(self, merge_map, attrib, leading_text = '', fallback_value = None, classification_model='bert_sentiment', **kwargs):
+        super(AttribRequestClassification, self).__init__(**kwargs)
+        # connect classification service
+        # TODO: Add model selection
+        self._classificaion_client = rospy.ServiceProxy("/classification", Classification)
+        # process map: construct key to words map
+        try:
+            self._merge_map = merge_map
+        except (TypeError, AttributeError):
+            raise TypeError('merge_map: must be dict which maps strings to list of strings')
+        # save attrib name
+        assert_param(attrib, 'attrib: must be string', allowed_types=str)
+        self._attrib = attrib
+        assert_param(leading_text, 'leading_text: must be string', allowed_types=str)
+        self._leading_text = leading_text
+        if fallback_value is not None:
+            assert_param(fallback_value, 'fallback_value: must be string', allowed_types=str)
+        self._fallback_value = fallback_value
+        self._classification_noise_threshold = 0.1
+
+    def merge_emotions(self, llm_emotion, classificator_emotion):
+        consistent_emotions = self._merge_map[llm_emotion]
+        if classificator_emotion in consistent_emotions:
+            selected_emotion = classificator_emotion
+        else:
+            selected_emotion = llm_emotion
+
+        return selected_emotion
+
+    def parse(self, text, **kwargs):
+        llm_emotion = kwargs.get('llm_emotion', self._fallback_value)
+        last_heard_phrase = kwargs.get('last_heard_phrase', None)
+        llm_response = kwargs.get('llm_response', None)
+
+        # classify phrase with additional sentiment analyzer
+        most_probable_emotion = self._fallback_value
+        if last_heard_phrase is not None and llm_response is not None:
+            phrase_with_response = f'{last_heard_phrase} \nMy response: {llm_response}'
+            req = ClassificationRequest(text = phrase_with_response)
+            emotion_resp = self._classificaion_client(req)
+            if emotion_resp.probabilities[0] > self._classification_noise_threshold:
+                most_probable_emotion = emotion_resp.classes[0].lower()
+
+            merged_emotion = self.merge_emotions(llm_emotion, most_probable_emotion)
+            print('emotion classification: ', dict(zip(emotion_resp.classes, emotion_resp.probabilities)))
+
+            return { 'emotion': merged_emotion,
+                     self._attrib: merged_emotion }
+        # failure
+        if self._fallback_value is None:
+            return None
+        else:
+            return { self._attrib: self._fallback_value }
+
+AttribRequest.subclass_map.update({'classification': AttribRequestClassification})
 
 #
 # Request to Lang model
@@ -306,8 +365,15 @@ class LangRequest:
         if self._start_event_history_with_heard:
             while len(last_events) >= 1 and last_events[0].type == 'talk-said':
                 last_events.pop(0)
+
         for ev in last_events:
             prompt += ev.verbolize(self._fact_templates)
+
+        # Save last human phrase for later processing
+        last_heard_phrase = None
+        if len(last_events) > 0:
+            last_heard_phrase = ev.text
+
         # add text
         if text is not None:
             template = self._fact_templates['text']
@@ -324,6 +390,7 @@ class LangRequest:
         #
         result = {}
         success = True
+        kwargs = {}
         try:
             for request in self._requests:
                 # request lang model if prompt is present
@@ -337,13 +404,23 @@ class LangRequest:
                     resp = llm_caller(req)
                     # check result
                     if resp.error_code != 0:
+                        breakpoint()
                         success = False
                         result['error_desc'] = 'LLM request has failed.'
                         return success, result, prompt
                     # add result to prompt
                     prompt += resp.result
+
+                # Provide simple emotion assesment from llm
+                if isinstance(request, AttribRequestClassification):
+                    kwargs = dict(
+                        llm_emotion=result.get('emotion', None),
+                        last_heard_phrase=last_heard_phrase,
+                        llm_response=result.get('result', None),
+                    )
+
                 # parse result (current or prevoius)
-                parse_result = request.parse(resp.result)
+                parse_result = request.parse(resp.result, **kwargs)
                 if parse_result is None:
                     # TODO: Better handle wrong emotion responses as '1'
                     # TODO: And figure out why is there two emotion requests happening
@@ -356,7 +433,7 @@ class LangRequest:
         except rospy.ServiceException as e:
             success = False
             result['error_desc'] = f'LLM service error: {e}.'
-        except:
+        except Exception as e:
             success = False
             result['error_desc'] = f'Unknown LLM error. Please, investigate it.'
 
@@ -374,7 +451,7 @@ class LangModel(output_module.OutputModule):
         service_ns = self.getConfigParameter(config, "service_ns", allowed_types=str)
         # create Service client
         rospy.wait_for_service(service_ns, timeout=5.0)
-        self._llm_client = rospy.ServiceProxy(service_ns, CompleteRaw) 
+        self._llm_client = rospy.ServiceProxy(service_ns, CompleteRaw)
         # configuration
         requests = self.getConfigParameter(config, "requests", allowed_types=dict)
         self._requests = {}
@@ -384,7 +461,7 @@ class LangModel(output_module.OutputModule):
         except TypeError as e:
             # raise KeyError('incorrect request declaraition (%s): missing or superfluous parameters: %s' % (req_name, e))
             raise e
-        
+
 
     def startHook(self, cmd_id):
         #
@@ -454,6 +531,3 @@ class LangModel(output_module.OutputModule):
 
 
 output_module.register("lang-model", LangModel)
-
-
-

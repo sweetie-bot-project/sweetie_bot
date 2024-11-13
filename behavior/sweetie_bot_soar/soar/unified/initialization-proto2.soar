@@ -25,10 +25,10 @@ sp {initialization*apply*drives
 	(<op> ^name initialization ^stage 2)
 -->
 	(<m> ^drive <d1> <d2> <d3> <d4>)
-	(<d1> ^name movement ^activation 0 ^importance 2) 
+	(<d1> ^name movement ^activation 0 ^importance 2)
 	(<d2> ^name obey ^activation 0 ^importance 8)
 	(<d3> ^name security ^activation 0 ^importance 10)
-	(<d4> ^name curiosity ^activation 0 ^importance 5) 
+	(<d4> ^name curiosity ^activation 0 ^importance 5)
 }
 
 
@@ -39,22 +39,22 @@ sp {initialization*apply*compound*action
 	(<m> ^compound-action <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12> <c13> <c14> <c15> <c16> <c17> <c18> <c19>)
 	(<c1> ^name brohoof_acquitance_procedure ^tag greet)
 	(<c2> ^name prance_maximum_fun ^tag alone ^tag talk)
-	(<c3> ^name menace_prepare_to_die ^tag angry)
+	(<c3> ^name menace_prepare_to_die ^tag anger)
 	(<c4> ^name brohoof_do_you_want ^tag greet)
-	(<c5> ^name hoof_stamp_do_you_want_attention ^tag angry)
-	(<c6> ^name point_control_you ^tag angry)
+	(<c5> ^name hoof_stamp_do_you_want_attention ^tag anger)
+	(<c6> ^name point_control_you ^tag anger)
 	(<c7> ^name brohoof ^tag greet ^tag alone )
 	(<c8> ^name introduce_herself_friendship ^tag greet)
-	(<c9> ^name point_do_not_touch ^tag angry)
+	(<c9> ^name point_do_not_touch ^tag anger)
 	(<c10> ^name greeting_friendship_programs ^tag greet)
-	(<c11> ^name menace ^tag angry ^tag alone)
+	(<c11> ^name menace ^tag anger ^tag alone)
 	(<c12> ^name head_ask_about_sister ^tag talk)
 	(<c13> ^name sing_song1 ^tag talk ^tag alone )
 	(<c14> ^name sing_song2 ^tag talk ^tag alone )
 	(<c15> ^name complex_hybrid_state_machines ^tag talk ^tag alone)
 	(<c16> ^name seizure_cutie_mark_acquisition ^tag talk  ^tag alone)
-	(<c17> ^name applause_you_must_be_upgraded ^tag angry )
-	(<c18> ^name point_i_have_remembered_you ^tag angry )
+	(<c17> ^name applause_you_must_be_upgraded ^tag anger )
+	(<c18> ^name point_i_have_remembered_you ^tag anger )
 	(<c19> ^name head_shake_dizzy ^tag alone )
 }
 
@@ -99,5 +99,5 @@ sp {apply*initialization-second-stage*name
 	(state <s> ^name initialization ^operator <op>)
 	(<op> ^name initialization ^stage 3)
 -->
-	(<s> ^substate general) 
+	(<s> ^substate general)
 }
