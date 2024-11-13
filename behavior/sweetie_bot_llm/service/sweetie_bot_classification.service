@@ -1,0 +1,16 @@
+[Unit]
+Description=Sweetie Bot Classificator API service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/sweetie/repos/Bert-Base-Emotion-Sentiment-Analysis
+# change to your user
+User=sweetie
+ExecStart=-/bin/bash -c "source /home/sweetie/miniconda3/etc/profile.d/conda.sh && \
+  conda activate textgen_v1 && \
+  flask --app classificator_app run --host 0.0.0.0 --port 5011"
+Restart=on-failure
+TimeoutSec=600
