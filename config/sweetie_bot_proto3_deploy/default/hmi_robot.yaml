@@ -8,22 +8,23 @@ voice:
     lang: 'ru,en'
     default_profile: 'coqui-ai'
     ladspa_path: ~/.ladspa/
-    balancer_config:
-        # Min priority value = 100
-        server_choices:
-            local_host:
-                priority: 10
-                url: 'http://127.0.0.1:5002/api/tts'
-            remote_host:
-                priority: 20
-                url: 'http://192.168.3.128:5002/api/tts'
     voice_profile:
         coqui-ai:
             type: 'coqui-ai'
             langs: [ 'en', 'es', 'fr', 'de', 'it', 'pt', 'pl', 'tr', 'ru', 'nl', 'cs', 'ar', 'zh', 'hu', 'ko', 'ja', 'hi' ]
             enabled: true
             coqui_ai_params:
+                #speaker: "Daisy Studious"
                 speaker: "Asya Anara"
+            balancer_config:
+                # Min priority value = 100
+                server_choices:
+                    local_host:
+                        priority: 10
+                        url: 'http://127.0.0.1:5002/api/tts'
+                    remote_host:
+                        priority: 20
+                        url: 'https://ai.sweetie.bot/tts/api/tts'
         rhvoice:
             type: 'rhvoice'
             enabled: true
