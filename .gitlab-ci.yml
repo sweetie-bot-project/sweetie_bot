@@ -33,6 +33,10 @@
           inc/ifopt/ifopt_snopt/CATKIN_IGNORE \
           inc/towr/towr/CATKIN_IGNORE \
           inc/towr/towr_ros/CATKIN_IGNORE
+      else
+        touch \
+          hardware/sweetie_bot_self_test/CATKIN_IGNORE \
+          hardware/sweetie_bot_touch/CATKIN_IGNORE
       fi
     - |
       source "/opt/ros/$ROS_DISTRO/setup.bash"
