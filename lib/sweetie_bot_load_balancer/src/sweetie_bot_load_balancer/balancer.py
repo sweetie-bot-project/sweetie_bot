@@ -22,7 +22,7 @@ class BalancerError(RuntimeError):
 
 class Balancer:
 
-    def __init__(self, config, loggers=None, fallback_func=None, postprocess_func=None):
+    def __init__(self, config, loggers=None, verbose=False, fallback_func=None, postprocess_func=None):
         self.server_choices = {} if 'server_choices' not in config else config['server_choices']
         if loggers:
             self.log_debug = loggers['debug']
@@ -33,6 +33,7 @@ class Balancer:
             self.log_warn  = lambda x: print(f'Balancer [WARN]: {x}')
             self.log_inro  = lambda x: print(f'Balancer [INFO]: {x}')
             
+        self.verbose = verbose
         self.fallback_function = fallback_func
         self.postprocess_function = postprocess_func
 
@@ -58,11 +59,13 @@ class Balancer:
                     server_name, server_url = name, server['url']
                     break
                 else:
-                    self.log_warn(f'server {name} ({server_url}) request error {response.status_code}: {response.reason}')
+                    if self.verbose:
+                        self.log_warn(f'server {name} ({server_url}) request error {response.status_code}: {response.reason}')
                     continue # try the next server
 
             except requests.ConnectionError as e:
-                self.log_warn(f'connection error with server {name} ({server_url}): {e}')
+                if self.verbose:
+                    self.log_warn(f'connection error with server {name} ({server_url}): {e}')
 
         # check if response is received
         if response is None or response.status_code != 200:
