@@ -103,6 +103,7 @@ soar:
             requests:
                 'complex-en':
                     prompt_header_names: [ "complex-en" ]
+                    personality_names: [ "Sweetie Bot" ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human says \"{text}\"\n"  ]
                         'talk-said': [ "Sweetie says \"{text}\"\n" ]
@@ -141,7 +142,7 @@ soar:
                             fear: [ 'neutral', 'fear' ]
                             anger: [ 'anger' ]
                         - type: 'regex'
-                          regex: '(?P<result>[^"]+)"'
+                          regexes: ['(?P<result>[^"]+)"']
                           prompt: 'Sweetie says "'
                           stop_list: ["\n", "\\n"]
                         - type: 'regex-test'
@@ -152,9 +153,10 @@ soar:
                           stop_list: ["\n"]
                 'simple-en':
                     prompt_header_names: [ "simple-en", "simple-en-personality-1" ]
+                    personality_names: [ "Sweetie Bot", "Princess Celestia" ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
-                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
+                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r", "My emotion: {emotion} | Princess Celestia: {text}\n\r\n\r"]
                         'talk-ignored': [ "Human: Human do not answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
@@ -166,7 +168,7 @@ soar:
                         - type: 'regex'
                           prompt: "My emotion: "
                           #regex: '\s*(?P<emotion_raw>\w+)\s*[|;]\s*Sweetie Bot: (?P<result>.*)'
-                          regex: '[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)'
+                          regexes: ['[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)', '[^|]*\|\s*[Pp]rincess\s+[Cc]elestia:\s*(?P<result>.*)']
                           stop_list: ["\n"]
                         - type: 'map'
                           nlp_model: 'en_core_web_sm'
@@ -201,13 +203,14 @@ soar:
                           value_nomatch: 'statement'
                 'failsafe-en':
                     prompt_header_names: [ "failsafe-en", "failsafe-en-personality-1" ]
+                    personality_names: [ "Sweetie Bot", "Princess Celestia" ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
-                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
+                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r", "My emotion: {emotion} | Princess Celestia: {text}\n\r\n\r" ]
                         'talk-ignored': [ "Human: Human do not answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
-                    max_events: 2
+                    max_events: 3
                     max_predicates: 0
                     start_event_history_with_heard: true
                     llm_profile_name: 'en'
@@ -215,7 +218,7 @@ soar:
                         - type: 'regex'
                           prompt: "My emotion: "
                           #regex: '\s*(?P<emotion_raw>\w+)\s*[|;]\s*Sweetie Bot: (?P<result>.*)'
-                          regex: '[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)'
+                          regexes: ['[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)', '[^|]*\|\s*[Pp]rincess\s+[Cc]elestia:\s*(?P<result>.*)']
                           stop_list: ["\n"]
                         - type: 'map'
                           nlp_model: 'en_core_web_sm'

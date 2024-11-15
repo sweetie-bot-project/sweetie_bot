@@ -81,11 +81,13 @@ class TalkEvent():
         else:
             self.text = None
 
-    def verbolize(self, templates):
+    def verbolize(self, templates, selected_header_idx):
         # get template
         template = templates.get(self.type)
         if template is None:
             raise KeyError('Unknown talk event type: %s (%s)' % (self.type, self.text))
+        if self.type == 'talk-said':
+            template = template[selected_header_idx]
         # get random template
         if isinstance(template, list):
             template = choice(template)
@@ -143,22 +145,26 @@ class AttribRequest:
 
 class AttribRequestRegex(AttribRequest):
 
-    def __init__(self, regex, **kwargs):
+    def __init__(self, regexes, **kwargs):
         super(AttribRequestRegex, self).__init__(**kwargs)
         # compile and check regexp
-        self._regex = re.compile(regex)
-        if self._regex.groups != len(self._regex.groupindex) or self._regex.groups == 0:
-            raise ValueError('regexp (%s): must be at least one match group, all groups must be named.' % regex)
+        self._regexes = list()
+        for regex in regexes:
+            self._regexes.append(re.compile(regex))
+
+            if self._regexes[-1].groups != len(self._regexes[-1].groupindex) or self._regexes[-1].groups == 0:
+                raise ValueError('regexp (%s): must be at least one match group, all groups must be named.' % regex)
 
     def parse(self, text, **kwargs):
-        m = self._regex.match(text)
+        selected_prompt_i = kwargs['selected_prompt_i']
+        m = self._regexes[selected_prompt_i].match(text)
         # check if match is succesfull
         if m is None:
             return None
         # parse groups and return (attr, value) pairs
         # TODO: why group can be None?
         result = {}
-        for attr in self._regex.groupindex:
+        for attr in self._regexes[selected_prompt_i].groupindex:
             val = m.group(attr)
             print('attr: ', attr, ' vaule: ', val)
             if m.group(attr) is not None:
@@ -166,7 +172,7 @@ class AttribRequestRegex(AttribRequest):
             else:
                 return None
         return result
-        #return { attr: m.group(attr) for attr in self._regex.groupindex }
+        #return { attr: m.group(attr) for attr in self._regexes[selected_prompt_i].groupindex }
 
 AttribRequest.subclass_map.update({'regex': AttribRequestRegex})
 
@@ -306,7 +312,7 @@ AttribRequest.subclass_map.update({'classification': AttribRequestClassification
 
 class LangRequest:
 
-    def __init__(self, prompt_header_names, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile_name, selection_cooldown_sec = None, header_change_probability = None, start_event_history_with_heard = False):
+    def __init__(self, prompt_header_names, personality_names, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile_name, selection_cooldown_sec = None, header_change_probability = None, start_event_history_with_heard = False):
         # get parameters: header
         assert_param(prompt_header_names, 'prompt_header_names: must be list', allowed_types=list)
         self._header_names = prompt_header_names
@@ -319,12 +325,17 @@ class LangRequest:
             except KeyError:
                 raise KeyError(f'prompt_header_name: requested prompt {header_name} is missing from parameter server. Load it into {header_name}.txt file from the prompt directory.')
 
+        self._personality_names = personality_names
+
         # Selecting first provided system prompt as default
-        self._current_header_name = self._header_names[0]
+        self._selected_header_idx = 0
+        self._previous_selected_header_idx = -1
+        self._current_header_name = self._header_names[self._selected_header_idx]
         self._selected_header = self._headers[self._current_header_name]
         self._selection_cooldown_sec = header_change_probability or 0 #60
         self._header_change_probability = header_change_probability or 0.5
         self._last_header_update_time = datetime.now()
+        self._elapsed_events_after_update = 0
 
         # get parameters: profile
         assert_param(llm_profile_name, 'profile name: must be string', allowed_types=str)
@@ -355,31 +366,30 @@ class LangRequest:
         if len(self._requests) == 0 or self._requests[0].prompt is None:
             raise ValueError('incorrect attrib_request declaraition: at leat one request should present, first request should contain prompt field.')
 
-    def try_change_header(self, events, predicates):
+    def try_change_header(self):
         elapsed_after_update = datetime.now() - self._last_header_update_time
-        if elapsed_after_update.total_seconds() > self._selection_cooldown_sec:
-            if np.random.uniform() < self._header_change_probability:
+        if self._elapsed_events_after_update > self._max_events:
+            if elapsed_after_update.total_seconds() > self._selection_cooldown_sec:
+                # if np.random.uniform() < self._header_change_probability:
                 # Chaning prompt on random, but different one
                 name_pool = [n for n in self._header_names if n != self._current_header_name]
                 if len(name_pool) == 0:
-                    return events, predicates
+                    return
 
                 new_name_choice = np.random.choice(len(name_pool), size=1, replace=False).item()
                 self._current_header_name = name_pool[new_name_choice]
                 self._selected_header = self._headers[self._current_header_name]
+                self._previous_selected_header_idx = self._selected_header_idx
+                self._selected_header_idx = self._header_names.index(self._current_header_name)
 
                 self._last_header_update_time = datetime.now()
-
-                # return tuple(), tuple()
-
-        return events, predicates
+                self._elapsed_events_after_update = 0
 
     def perform_request(self, llm_caller, events, predicates, text = None):
         #
         # form prompt
         #
         prompt = self._selected_header
-        events, predicates = self.try_change_header(events, predicates)
         # verbolize predicates
         if self._max_predicates > 0:
             # sort by timestamp
@@ -398,7 +408,7 @@ class LangRequest:
                 last_events.pop(0)
 
         for ev in last_events:
-            prompt += ev.verbolize(self._fact_templates)
+            prompt += ev.verbolize(self._fact_templates, self._selected_header_idx)
 
         # Save last human phrase for later processing
         last_heard_phrase = None
@@ -416,6 +426,11 @@ class LangRequest:
                     template = choice(template)
                 # use template
                 prompt += template % text
+
+        # Replacing any entries of original personality to changed one
+        if self._previous_selected_header_idx != -1:
+            prompt = prompt.replace(self._personality_names[self._previous_selected_header_idx], self._personality_names[self._selected_header_idx])
+
         #
         # perform requests
         #
@@ -431,11 +446,12 @@ class LangRequest:
                     # fix new lines: must be \r\n
                     prompt = prompt.replace('\n', '\r\n')
                     # send request
-                    req = CompleteRawRequest(prompt = prompt, profile_name = self._llm_profile_name, stop_list = request.stop_list)
+                    req = CompleteRawRequest(prompt = prompt, profile_name = self._llm_profile_name, stop_list = request.stop_list, temperature=request.temperature)
                     resp = llm_caller(req)
                     # check result
                     if resp.error_code != 0:
                         success = False
+                        breakpoint()
                         result['error_desc'] = 'LLM request has failed.'
                         return success, result, prompt
                     # add result to prompt
@@ -449,12 +465,16 @@ class LangRequest:
                         llm_response=result.get('result', None),
                     )
 
+                if isinstance(request, AttribRequestRegex):
+                    kwargs = dict(selected_prompt_i=self._selected_header_idx)
+
                 # parse result (current or prevoius)
                 parse_result = request.parse(resp.result, **kwargs)
                 if parse_result is None:
                     # TODO: Better handle wrong emotion responses as '1'
                     # TODO: And figure out why is there two emotion requests happening
                     # NOTE: Maybe better instruction following models would give more stable outputs? -Mike
+                    breakpoint()
                     success = False
                     result['error_desc'] = 'LLM response parse error.'
                 else:
@@ -462,10 +482,18 @@ class LangRequest:
                     result.update( parse_result )
         except rospy.ServiceException as e:
             success = False
+            breakpoint()
             result['error_desc'] = f'LLM service error: {e}.'
         except Exception as e:
             success = False
+            breakpoint()
             result['error_desc'] = f'Unknown LLM error. Please, investigate it.'
+
+        print(f'Current prompt: {prompt}')
+        print(f'Current personality: {self._personality_names[self._selected_header_idx]}')
+
+        self.try_change_header()
+        self._elapsed_events_after_update += 1
 
         #
         # return result
