@@ -22,9 +22,7 @@
       fi
       if [[ "$ROBOT" == "true" ]]; then
         touch \
-          hmi/sweetie_bot_motor_state_viewer/CATKIN_IGNORE \
-          hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE \
-          hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE \
+          hmi/CATKIN_IGNORE \
           behavior/sweetie_bot_voice/CATKIN_IGNORE \
           behavior/sweetie_bot_gait_generator/CATKIN_IGNORE \
           inc/ifopt/CATKIN_IGNORE \

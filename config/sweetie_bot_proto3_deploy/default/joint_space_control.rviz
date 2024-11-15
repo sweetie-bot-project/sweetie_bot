@@ -9,7 +9,7 @@ Panels:
         - /EyeLeft1
         - /EyeRight1
       Splitter Ratio: 0.4801381826400757
-    Tree Height: 383
+    Tree Height: 293
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -25,10 +25,11 @@ Panels:
     Name: Views
     Splitter Ratio: 0.5
   - Class: rviz/Time
-    Experimental: false
     Name: Time
     SyncMode: 0
     SyncSource: ""
+  - Class: sweetie_bot_rviz_panel::sweetieBotRvizPanel
+    Name: sweetieBotRvizPanel
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -292,6 +293,10 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        microphone_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         mouth_link:
           Alpha: 1
           Show Axes: false
@@ -313,6 +318,8 @@ Visualization Manager:
       Visual Enabled: true
     - Class: rviz/TF
       Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
         All Enabled: true
@@ -416,6 +423,8 @@ Visualization Manager:
           Value: true
         leg4_link7:
           Value: true
+        microphone_link:
+          Value: true
         mouth_link:
           Value: true
         nose_link1:
@@ -423,112 +432,6 @@ Visualization Manager:
         nose_link2:
           Value: true
         odom_combined:
-          Value: true
-        real/base_link:
-          Value: true
-        real/base_link_inertia:
-          Value: true
-        real/base_link_optical:
-          Value: true
-        real/camera_link:
-          Value: true
-        real/camera_link_optical:
-          Value: true
-        real/camera_link_optical2:
-          Value: true
-        real/ear_l_link:
-          Value: true
-        real/ear_r_link:
-          Value: true
-        real/eye_l_link:
-          Value: true
-        real/eye_r_link:
-          Value: true
-        real/eyes_link_pitch:
-          Value: true
-        real/eyes_link_yaw:
-          Value: true
-        real/head_base:
-          Value: true
-        real/head_link1:
-          Value: true
-        real/head_link2:
-          Value: true
-        real/head_link3:
-          Value: true
-        real/head_link4:
-          Value: true
-        real/hoof1:
-          Value: true
-        real/hoof2:
-          Value: true
-        real/hoof3:
-          Value: true
-        real/hoof4:
-          Value: true
-        real/leg1_link1:
-          Value: true
-        real/leg1_link2:
-          Value: true
-        real/leg1_link3:
-          Value: true
-        real/leg1_link4:
-          Value: true
-        real/leg1_link5:
-          Value: true
-        real/leg1_link6:
-          Value: true
-        real/leg1_link7:
-          Value: true
-        real/leg2_link1:
-          Value: true
-        real/leg2_link2:
-          Value: true
-        real/leg2_link3:
-          Value: true
-        real/leg2_link4:
-          Value: true
-        real/leg2_link5:
-          Value: true
-        real/leg2_link6:
-          Value: true
-        real/leg2_link7:
-          Value: true
-        real/leg3_link1:
-          Value: true
-        real/leg3_link2:
-          Value: true
-        real/leg3_link3:
-          Value: true
-        real/leg3_link4:
-          Value: true
-        real/leg3_link5:
-          Value: true
-        real/leg3_link6:
-          Value: true
-        real/leg3_link7:
-          Value: true
-        real/leg4_link1:
-          Value: true
-        real/leg4_link2:
-          Value: true
-        real/leg4_link3:
-          Value: true
-        real/leg4_link4:
-          Value: true
-        real/leg4_link5:
-          Value: true
-        real/leg4_link6:
-          Value: true
-        real/leg4_link7:
-          Value: true
-        real/mouth_link:
-          Value: true
-        real/nose_link1:
-          Value: true
-        real/nose_link2:
-          Value: true
-        realbase_link:
           Value: true
       Marker Alpha: 1
       Marker Scale: 0.10000000149011612
@@ -563,6 +466,8 @@ Visualization Manager:
                       eyes_link_yaw:
                         {}
                     head_base:
+                      {}
+                    microphone_link:
                       {}
                     mouth_link:
                       {}
@@ -609,8 +514,6 @@ Visualization Manager:
                           {}
                         leg4_link7:
                           {}
-            realbase_link:
-              {}
           base_link_path:
             {}
       Update Interval: 0
@@ -621,6 +524,7 @@ Visualization Manager:
       Name: MarkerArray
       Namespaces:
         balance: true
+        contacts: true
         limbs_external_forces_and_twists: true
       Queue Size: 100
       Value: true
@@ -733,7 +637,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.1292966604232788
+      Distance: 1.5412158966064453
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -741,25 +645,25 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.19966280460357666
-        Y: 0.047968413680791855
-        Z: 0.31210464239120483
+        X: -0.11627434939146042
+        Y: 0.1034896969795227
+        Z: 0.1401519477367401
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.37039995193481445
+      Pitch: 0.3803999423980713
       Target Frame: <Fixed Frame>
-      Yaw: 6.105410099029541
+      Yaw: 5.895410060882568
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1015
+  Height: 691
   Hide Left Dock: false
-  Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000030800000337fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000007901000003fb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000004600000337000000ff01000003fb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000011000000337fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000004600000337000000d701000003fb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000077a00000050fc0100000002fb0000000800540069006d006501000000000000077a000002d701000003fb0000000800540069006d00650100000000000004500000000000000000000003600000033700000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Hide Right Dock: true
+  QMainWindow State: 000000ff00000000fd00000004000000000000015600000259fc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d000001b9000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000002600730077006500650074006900650042006f0074005200760069007a00500061006e0065006c01000001fc0000009a0000001600ffffff000000010000011000000259fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000259000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000077a00000050fc0100000002fb0000000800540069006d006500000000000000077a0000039300fffffffb0000000800540069006d00650100000000000004500000000000000000000003530000025900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -767,7 +671,9 @@ Window Geometry:
   Tool Properties:
     collapsed: false
   Views:
-    collapsed: false
-  Width: 1914
+    collapsed: true
+  Width: 1199
   X: 0
-  Y: 0
+  Y: 27
+  sweetieBotRvizPanel:
+    collapsed: false
