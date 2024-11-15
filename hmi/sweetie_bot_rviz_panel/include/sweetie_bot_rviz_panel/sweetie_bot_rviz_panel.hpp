@@ -60,7 +60,9 @@ namespace sweetie_bot_rviz_panel
         private Q_SLOTS:
 
             void button_toggle_operational();
-            void button_start_sweetie_bot_motor_state_viewer();
+            void button_start_motor_state_viewer();
+            void button_start_trajectory_editor();
+            void button_kill_joint_state_ref();
 
         /**
          *  Finally, we close up with protected member variables

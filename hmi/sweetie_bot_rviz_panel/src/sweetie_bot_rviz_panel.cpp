@@ -17,7 +17,9 @@ namespace sweetie_bot_rviz_panel
         toggle_operational_caller_ = nh_.serviceClient<std_srvs::Trigger>("/soar/toggle_operational");
 
         connect(ui_->pushButtonToggleOperational, SIGNAL(clicked()), this, SLOT(button_toggle_operational()));
-        connect(ui_->pushButtonMotorStateViewer, SIGNAL(clicked()), this, SLOT(button_start_sweetie_bot_motor_state_viewer()));
+        connect(ui_->pushButtonMotorStateViewer, SIGNAL(clicked()), this, SLOT(button_start_motor_state_viewer()));
+        connect(ui_->pushButtonTrajectoryEditor, SIGNAL(clicked()), this, SLOT(button_start_trajectory_editor()));
+        connect(ui_->pushButtonKillJointStateRef, SIGNAL(clicked()), this, SLOT(button_kill_joint_state_ref()));
     }
 
 
@@ -29,10 +31,10 @@ namespace sweetie_bot_rviz_panel
     }
 
 
-    void sweetieBotRvizPanel::button_start_sweetie_bot_motor_state_viewer()
+    void sweetieBotRvizPanel::button_start_motor_state_viewer()
     {
-        ROS_INFO_STREAM("Button 'sweetie_bot_motor_state_viewer' pressed.");
-        std::string command = "rosrun sweetie_bot_motor_state_viewer motor_state_viewer";
+        ROS_INFO_STREAM("Button 'motor_state_viewer' is pressed.");
+        std::string command = "rosrun sweetie_bot_motor_state_viewer motor_state_viewer &";
         int result = system(command.c_str());
         if (result == -1)
         {
@@ -42,6 +44,40 @@ namespace sweetie_bot_rviz_panel
 	else
 	{
             ui_->labelMotorStateViewer->setText( QString("Started") );
+        }
+    }
+
+
+    void sweetieBotRvizPanel::button_start_trajectory_editor()
+    {
+        ROS_INFO_STREAM("Button 'trajectory_editor' is pressed.");
+        std::string command = "roslaunch sweetie_bot_deploy joint_trajectory_editor.launch &";
+        int result = system(command.c_str());
+        if (result == -1)
+        {
+            ROS_ERROR("Failed to execute trajectory_editor");
+            ui_->labelTrajectoryEditor->setText( QString("Failed") );
+        }
+	else
+	{
+            ui_->labelTrajectoryEditor->setText( QString("Started") );
+        }
+    }
+
+
+    void sweetieBotRvizPanel::button_kill_joint_state_ref()
+    {
+        ROS_INFO_STREAM("Button 'kill_joint_state_ref' is pressed.");
+        std::string command = "rosnode kill /hmi/joint_state_ref &";
+        int result = system(command.c_str());
+        if (result == -1)
+        {
+            ROS_ERROR("Failed to kill joint_state_ref");
+            ui_->labelKillJointStateRef->setText( QString("Failed") );
+        }
+	else
+	{
+            ui_->labelKillJointStateRef->setText( QString("Killed") );
         }
     }
 

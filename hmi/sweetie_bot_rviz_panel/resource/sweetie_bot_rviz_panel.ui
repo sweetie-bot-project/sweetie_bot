@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>296</width>
-    <height>107</height>
+    <height>132</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,13 +16,13 @@
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>180</x>
-     <y>20</y>
-     <width>101</width>
-     <height>61</height>
+     <x>150</x>
+     <y>10</y>
+     <width>131</width>
+     <height>111</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QVBoxLayout" name="verticalLayout_labels">
     <item>
      <widget class="QLabel" name="labelToggleOperational">
       <property name="text">
@@ -33,7 +33,21 @@
     <item>
      <widget class="QLabel" name="labelMotorStateViewer">
       <property name="text">
-       <string></string>
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="labelTrajectoryEditor">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="labelKillJointStateRef">
+      <property name="text">
+       <string/>
       </property>
      </widget>
     </item>
@@ -43,12 +57,12 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>20</y>
-     <width>156</width>
-     <height>61</height>
+     <y>10</y>
+     <width>131</width>
+     <height>111</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_buttons">
     <item>
      <widget class="QPushButton" name="pushButtonToggleOperational">
       <property name="text">
@@ -60,6 +74,20 @@
      <widget class="QPushButton" name="pushButtonMotorStateViewer">
       <property name="text">
        <string>Motor State Viewer</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButtonTrajectoryEditor">
+      <property name="text">
+       <string>Trajectory Editor</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButtonKillJointStateRef">
+      <property name="text">
+       <string>Kill Joint State Ref</string>
       </property>
      </widget>
     </item>
