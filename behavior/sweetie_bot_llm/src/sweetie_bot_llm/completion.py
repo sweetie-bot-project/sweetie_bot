@@ -85,6 +85,8 @@ class CompleteNode:
         # construct request 
         request = copy(profile) # shallow copy: one level is enought
         request['prompt'] = msg.prompt
+        if msg.temperature >= 0:
+            request['temperature'] = msg.temperature
         if len(msg.stop_list) != 0:
             request['stop'] = msg.stop_list
 

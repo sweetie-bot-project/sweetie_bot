@@ -1,4 +1,5 @@
 string prompt
+float32 temperature
 string profile_name
 string[] stop_list
 ---

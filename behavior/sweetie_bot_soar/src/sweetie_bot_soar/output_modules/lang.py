@@ -133,12 +133,13 @@ class AttribRequest:
         cls = AttribRequest.subclass_map[type]
         return super(AttribRequest, cls).__new__(cls)
 
-    def __init__(self, type, prompt = None, stop_list = []):
+    def __init__(self, type, prompt = None, stop_list = [], temperature = -1):
         if prompt is not None:
             assert_param(prompt, 'prompt: must be str or None', allowed_types=(str,))
         self.prompt = prompt
         assert_param(stop_list, 'stop_list: must be list of strings', allowed_types=list, check_func=lambda v: all( isinstance(e, str) for e in v ))
         self.stop_list = stop_list
+        self.temperature = temperature
 
 class AttribRequestRegex(AttribRequest):
 
