@@ -393,7 +393,7 @@ class LangRequest:
             # verbolize last max_events
         last_events = events[-self._max_events:]
         if self._start_event_history_with_heard:
-            while len(last_events) >= 1 and last_events[0].type == 'talk-said':
+            while len(last_events) >= 1 and last_events[-1].type == 'talk-said':
                 last_events.pop(0)
 
         for ev in last_events:
