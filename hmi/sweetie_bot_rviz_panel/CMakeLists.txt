@@ -257,13 +257,22 @@ else()
 endif()
 
 ## Add library is needed in order to generate the header file from ui file.
-add_library(sweetie_bot_rviz_panel
+add_library(${PROJECT_NAME}
   ${${PROJECT_NAME}_SRCS}
   ${${PROJECT_NAME}_UIS_H}
   ${${PROJECT_NAME}_MOCS} 
 )
 
-target_link_libraries(sweetie_bot_rviz_panel
+target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${QT_LIBRARIES}
+)
+
+install(FILES
+  sweetie_bot_rviz_panel.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(TARGETS ${PROJECT_NAME}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
