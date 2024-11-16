@@ -2,7 +2,7 @@
 
   <class type="sweetie_bot_rviz_panel::sweetieBotRvizPanel" base_class_type="rviz::Panel">
     <description>
-      A simple panel widget with two buttons.
+      A simple panel widget with buttons.
     </description>
   </class>
 
