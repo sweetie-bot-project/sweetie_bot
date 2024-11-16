@@ -312,7 +312,7 @@ AttribRequest.subclass_map.update({'classification': AttribRequestClassification
 
 class LangRequest:
 
-    def __init__(self, prompt_header_names, personality_names, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile_name, selection_cooldown_sec = None, header_change_probability = None, start_event_history_with_heard = False):
+    def __init__(self, prompt_header_names, personality_names, personality_prefixes, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile_name, selection_cooldown_sec = None, header_change_probability = None, start_event_history_with_heard = False):
         # get parameters: header
         assert_param(prompt_header_names, 'prompt_header_names: must be list', allowed_types=list)
         self._header_names = prompt_header_names
@@ -326,6 +326,7 @@ class LangRequest:
                 raise KeyError(f'prompt_header_name: requested prompt {header_name} is missing from parameter server. Load it into {header_name}.txt file from the prompt directory.')
 
         self._personality_names = personality_names
+        self._personality_prefixes = personality_prefixes
 
         # Selecting first provided system prompt as default
         self._selected_header_idx = 0
@@ -389,6 +390,7 @@ class LangRequest:
         #
         # form prompt
         #
+        self.try_change_header()
         prompt = self._selected_header
         # verbolize predicates
         if self._max_predicates > 0:
@@ -427,9 +429,12 @@ class LangRequest:
                 # use template
                 prompt += template % text
 
+        current_personality = self._personality_names[self._selected_header_idx]
+        previous_personality = ''
         # Replacing any entries of original personality to changed one
         if self._previous_selected_header_idx != -1:
-            prompt = prompt.replace(self._personality_names[self._previous_selected_header_idx], self._personality_names[self._selected_header_idx])
+            previous_personality = self._personality_names[self._previous_selected_header_idx]
+            prompt = prompt.replace(previous_personality, current_personality)
 
         #
         # perform requests
@@ -451,7 +456,6 @@ class LangRequest:
                     # check result
                     if resp.error_code != 0:
                         success = False
-                        breakpoint()
                         result['error_desc'] = 'LLM request has failed.'
                         return success, result, prompt
                     # add result to prompt
@@ -474,10 +478,16 @@ class LangRequest:
                     # TODO: Better handle wrong emotion responses as '1'
                     # TODO: And figure out why is there two emotion requests happening
                     # NOTE: Maybe better instruction following models would give more stable outputs? -Mike
-                    breakpoint()
                     success = False
                     result['error_desc'] = 'LLM response parse error.'
                 else:
+                    # Injecting prefix that indecates current personality
+                    if 'result' in parse_result:
+                        if self._elapsed_events_after_update == 0:
+                            if current_personality != previous_personality and self._previous_selected_header_idx != -1:
+                                prefix = self._personality_prefixes[self._selected_header_idx]
+                                parse_result['result'] = prefix + parse_result['result']
+
                     print('parse result: ', parse_result)
                     result.update( parse_result )
         except rospy.ServiceException as e:
@@ -488,12 +498,11 @@ class LangRequest:
             success = False
             breakpoint()
             result['error_desc'] = f'Unknown LLM error. Please, investigate it.'
+        else:
+            self._elapsed_events_after_update += 1
 
         print(f'Current prompt: {prompt}')
         print(f'Current personality: {self._personality_names[self._selected_header_idx]}')
-
-        self.try_change_header()
-        self._elapsed_events_after_update += 1
 
         #
         # return result

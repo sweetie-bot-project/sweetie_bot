@@ -53,7 +53,7 @@ soar:
         sound:
             type: "sound_speech"
             topic: "sound_event"
-            speech_timeout: 2.5
+            speech_timeout: 6.0
             intensity_bins_map: { names: [ "low", "med", "high" ], values: [ 10.0, 20.0 ] }
             lang_filter: ['en', 'zh']
             map_parsers:
@@ -104,6 +104,7 @@ soar:
                 'complex-en':
                     prompt_header_names: [ "complex-en" ]
                     personality_names: [ "Sweetie Bot" ]
+                    personality_prefixes: [ "" ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human says \"{text}\"\n"  ]
                         'talk-said': [ "Sweetie says \"{text}\"\n" ]
@@ -154,6 +155,7 @@ soar:
                 'simple-en':
                     prompt_header_names: [ "simple-en", "simple-en-personality-1", "simple-en-personality-2" ]
                     personality_names: [ "Sweetie Bot", "Princess Celestia", "Crazy Head" ]
+                    personality_prefixes: [ "I'm Doctor Sweetie Bot. Let's continue our therapy session. ", "Princess Celestia is listening to you, my faithful student. ", "Here comes Crazy Head again... " ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
                         'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r", "My emotion: {emotion} | Princess Celestia: {text}\n\r\n\r", "My emotion: {emotion} | Crazy Head: {text}\n\r\n\r"]
@@ -204,6 +206,7 @@ soar:
                 'failsafe-en':
                     prompt_header_names: [ "failsafe-en", "failsafe-en-personality-1", "failsafe-en-personality-2"  ]
                     personality_names: [ "Sweetie Bot", "Princess Celestia", "Crazy Head" ]
+                    personality_prefixes: [ "I'm Doctor Sweetie Bot. Let's continue our therapy session. ", "Princess Celestia is listening to you, my faithful student. ", "Here comes Crazy Head again... " ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
                         'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r", "My emotion: {emotion} | Princess Celestia: {text}\n\r\n\r", "My emotion: {emotion} | Crazy Head: {text}\n\r\n\r" ]
