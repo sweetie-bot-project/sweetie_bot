@@ -78,6 +78,7 @@ class TalkEvent():
                 self.emotion = emotion_id.GetValueAsString()
             else:
                 self.emotion = 'neutral'
+                rospy.logerr('Cannot find emotion!!!')
         else:
             self.text = None
 
@@ -573,9 +574,13 @@ class LangModel(output_module.OutputModule):
             return "error"
 
         # perform request
-        rospy.logdebug('lang_model output module: LLM request: predicates %s, events %s, text %s' % (len(predicates), len(events), text))
         # TODO use future
-        success, result, prompt = request.perform_request(self._llm_client, events = events, predicates = predicates, text = text)
+        rospy.logdebug('lang_model output module: LLM request: predicates %s, events %s, text %s' % (len(predicates), len(events), text))
+        try:
+            success, result, prompt = request.perform_request(self._llm_client, events = events, predicates = predicates, text = text)
+        except rospy.ServiceException as e:
+            rospy.logerr("lang_model output module: request to llm service failed: %s" % e)
+            return "error"
 
         rospy.logdebug('lang_model output module: LLM prompt: \n %s' % repr(prompt))
         rospy.logdebug('lang_model output module: LLM result: \n %s' % result)

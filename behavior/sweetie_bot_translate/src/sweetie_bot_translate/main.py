@@ -12,6 +12,7 @@ from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResp
 from sweetie_bot_text_msgs.msg import TextCommand
 
 import six
+import re
 from google.cloud import translate_v2 as translate
 
 class TranslateError(RuntimeError):
@@ -62,6 +63,12 @@ class TranslateNode:
         # check response structure
         if ( 'error' in response or 'translatedText' not in response):
             raise TranslateError('wrong response structure', response)
+
+        # Eliminate all dots, so TTS wouldn't have a chance to pronounce them
+        response['translatedText'] = response['translatedText'].replace('.', ';')
+
+        # Eliminate all other unwanted characters, that TTS can potentially pronounce
+        response['translatedText'] = re.sub("«|»", " ", response['translatedText'])
 
         # convert to unicode
         try:
