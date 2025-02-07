@@ -99,9 +99,6 @@ assert(component_type ~= nil, 'ERROR: ~kinematics_inv/type parameter must be spe
 -- load component
 depl:loadComponent("kinematics_inv", "sweetie_bot::motion::" .. component_type)
 kinematics_inv = depl:getPeer("kinematics_inv")
--- load configuration from cpf
-kinematics_inv:loadService("marshalling")
-kinematics_inv:provides("marshalling"):loadProperties(config.file("kinematics_inv_joint_limits.cpf"))
 -- get ROS parameteres and services
 config.get_peer_rosparams(kinematics_inv)
 -- data flow: controller <-> aggregator_ref
