@@ -11,6 +11,7 @@ servo_inv:
     lead: 0.056
     extrapolate_position: false
 kinematics_inv:
+    type: KinematicsInv
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
     eps_vel: 0.01

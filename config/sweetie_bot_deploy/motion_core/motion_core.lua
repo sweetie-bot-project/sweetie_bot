@@ -93,7 +93,11 @@ kinematics_fwd:configure()
 --
 
 ros:import("sweetie_bot_kinematics")
-depl:loadComponent("kinematics_inv", "sweetie_bot::motion::KinematicsInv")
+-- get component type
+local component_type = config.get_rosparam("~kinematics_inv/type", "string")
+assert(component_type ~= nil, 'ERROR: ~kinematics_inv/type parameter must be specified.')
+-- load component
+depl:loadComponent("kinematics_inv", "sweetie_bot::motion::" .. component_type)
 kinematics_inv = depl:getPeer("kinematics_inv")
 -- load configuration from cpf
 kinematics_inv:loadService("marshalling")
@@ -101,7 +105,7 @@ kinematics_inv:provides("marshalling"):loadProperties(config.file("kinematics_in
 -- get ROS parameteres and services
 config.get_peer_rosparams(kinematics_inv)
 -- data flow: controller <-> aggregator_ref
-depl:connect("kinematics_inv.in_joints_seed_sorted", "aggregator_ref.out_joints_sorted", rtt.Variable("ConnPolicy"))
+depl:connect("kinematics_inv.in_joints_sorted", "aggregator_ref.out_joints_sorted", rtt.Variable("ConnPolicy"))
 depl:connect("kinematics_inv.out_joints", "aggregator_ref.in_joints", rtt.Variable("ConnPolicy"))
 -- connect to RobotModel
 depl:connectServices("kinematics_inv", "aggregator_ref")

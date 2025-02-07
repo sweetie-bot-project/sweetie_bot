@@ -7,16 +7,37 @@ aggregator_ref:
     publish_on_timer: true
     publish_on_event: false
 kinematics_inv:
+    type: KinematicsInv
     priority: 20
+    services: [ solver_ik_factory_trac_ik, solver_ik_factory_kdl_sqp ]
     kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
     eps_vel: 0.01
     zero_vel_at_singularity: true
     max_joint_velocity: 18.7 # 60 grad per discretization period
-    services: [ solver_ik_factory_trac_ik ]
     solver_ik_factory_trac_ik:
-        kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
+        kinematic_chains: [ head, nose ]
         eps_pos: 0.0001
         timeout_pos: 0.003
+    solver_ik_factory_kdl_sqp:
+        load_cpf: [ kinematics_inv_joint_opt_poses.cpf ]
+        kinematic_chains: [ leg1, leg3, leg4, leg2 ]
+        eps_pos: 0.002
+        timeout: 0.003
+        weight_rot: 0.1
+        weight_q_opt: 0.01
+#kinematics_inv:
+    #priority: 20
+    #type: KinematicsInvControl
+    #kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
+    #n_steps: 20
+    #alpha: 0.05
+    #jac_svd_threshold: 0.0005
+    #kp_pos: 60
+    #kp_rot: 60
+    #kp_null: 30
+    #max_rot_vel: 10.0
+    #max_pos_vel: 5.0
+    #ignore_ref_twist: false
 kinematics_fwd:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
