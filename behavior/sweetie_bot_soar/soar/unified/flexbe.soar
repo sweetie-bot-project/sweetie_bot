@@ -48,9 +48,9 @@ sp {flexbe*propose*start*behavior
 
 # copy behavior params mentioned under ^param attribute
 sp {flexbe*elaborate*behavior-params
-	(state <s> ^substate flexbe ^operator <op> + ^args <args>)
+	(state <s> ^substate flexbe ^operator <op> + ^args.param <param>)
 	(<op> ^name flexbe-start-behavior ^param <p>)
-	(<args> ^param ^<attr> <value>)
+	(<param> ^<attr> <value>)
 -->
 	(<p> ^<attr> <value>)
 }
