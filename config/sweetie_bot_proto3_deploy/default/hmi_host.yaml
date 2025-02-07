@@ -3,6 +3,7 @@ joint_state_ref:
 dynamics_visualizer:
     robot_model_namespace: "/motion"
     display_twist: true
+    balance_history_length: 1000
 stance_pose_marker:
     normalized_z_level: 0.03
     scale: 1.5
@@ -65,7 +66,7 @@ destination_marker:
     n_steps_options: [ 2, 3, 4, 5 ]
     n_steps_default_idx: 2
     duration: 5
-    nominal_height: 0.25
+    nominal_height: 0.27
     recorded_trajectory_name: "recorded_trajectory"
     ee_names: [ leg1, leg2, leg3, leg4 ]
 object_detection_marker:

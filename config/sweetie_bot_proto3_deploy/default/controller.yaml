@@ -67,4 +67,4 @@ controller:
     step_sequence:
         priority: 20
         override_odometry: true  # deployment parameter: discard odometry results if step_sequence is active. This is preferable for `fast` gaits.
-        use_kinematics_inv_port: true # deployment parameter: do not connect step_sequence to kinematics_inv IK service, use port interface instead. If it is set kinematic errors are ignored.
+        use_kinematics_inv_port: false # deployment parameter: do not connect step_sequence to kinematics_inv IK service, use port interface instead. If it is set kinematic errors are ignored.

@@ -6,6 +6,7 @@ gait_generator:
     storage_namespace: "saved_msgs"
     towr_model:
         nlp_type: "6d"
+        #nlp_type: "zmp_phase"
         base:
             frame_id: "base_link"
             links: ["base_link", "base_link_inertia", "leg1_link1", "leg1_link2", "leg2_link1", "leg2_link2", "leg3_link1", "leg3_link2", "leg4_link1", "leg4_link2", "head_link1", "head_link2", "head_link3", "head_link4", "ear_l_link", "ear_r_link", "mouth_link" ]
@@ -55,7 +56,8 @@ gait_generator:
         optimize_phase_durations: false
         bound_phase_duration_min: 0.4
         bound_phase_duration_max: 2.0
-        min_swing_height: 0.01
+        min_swing_height: 0.015
+        stability_margin: 0.02
         costs: # better for on-line synthesis
             base_lin_acc: 0.01
             base_ang_acc: 0.1

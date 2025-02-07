@@ -7,7 +7,7 @@
      <simple name="Element1" type="double"><value>-0.26</value></simple>
      <simple name="Element2" type="double"><value>-0.00</value></simple>
      <simple name="Element3" type="double"><value>-2.09</value></simple>
-     <simple name="Element4" type="double"><value>-1.05</value></simple>
+     <simple name="Element4" type="double"><value>-0.40</value></simple>
      <simple name="Element5" type="double"><value>-0.73</value></simple>
      <simple name="Element6" type="double"><value>-1.58</value></simple>
   </struct>
@@ -17,7 +17,7 @@
      <simple name="Element1" type="double"><value>2.34</value></simple>
      <simple name="Element2" type="double"><value>1.94</value></simple>
      <simple name="Element3" type="double"><value>0.00</value></simple>
-     <simple name="Element4" type="double"><value>0.50</value></simple>
+     <simple name="Element4" type="double"><value>1.00</value></simple>
      <simple name="Element5" type="double"><value>0.73</value></simple>
      <simple name="Element6" type="double"><value>1.58</value></simple>
   </struct>
@@ -94,7 +94,7 @@
      <simple name="Element1" type="double"><value>-0.26</value></simple>
      <simple name="Element2" type="double"><value>-0.00</value></simple>
      <simple name="Element3" type="double"><value>-2.09</value></simple>
-     <simple name="Element4" type="double"><value>-1.05</value></simple>
+     <simple name="Element4" type="double"><value>-0.40</value></simple>
      <simple name="Element5" type="double"><value>-0.73</value></simple>
      <simple name="Element6" type="double"><value>-1.58</value></simple>
   </struct>
@@ -104,7 +104,7 @@
      <simple name="Element1" type="double"><value>2.24</value></simple>
      <simple name="Element2" type="double"><value>1.94</value></simple>
      <simple name="Element3" type="double"><value>0.00</value></simple>
-     <simple name="Element4" type="double"><value>0.50</value></simple>
+     <simple name="Element4" type="double"><value>1.00</value></simple>
      <simple name="Element5" type="double"><value>0.73</value></simple>
      <simple name="Element6" type="double"><value>1.58</value></simple>
   </struct>
