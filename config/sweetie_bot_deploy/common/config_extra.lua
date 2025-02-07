@@ -71,8 +71,11 @@ end
 --
 -- Some parameters has special meaning:
 -- * @c period component property as default value uses "~timer/period" ROS parameter.
+-- * @c activity_period ROS parameter (int) is used to set peer Activity period.
 -- * @c priority ROS parameter (int) is used to set peer RT priority.
 -- * @c services ROS parameter (string[]) contains list of services that should be loaded in compnent.
+-- * @c load_cpf ROS parameter (string[]) contains .cpf file names to load into peer or service. Each name is
+--     expanded to full path with config.file() call. 
 --
 -- After special parameters is processed component's and subservices' properties are assigned
 -- by getAll() call (rosparam).
@@ -102,11 +105,27 @@ function config.get_peer_rosparams(peer)
 		peer:setPeriod(period)
 	end
 	-- use rosparam `services` to load additionaol services
-	services = config.get_rosparam("~" .. peer:getName() .. "/services", "string[]")
+	local services = config.get_rosparam("~" .. peer:getName() .. "/services", "string[]")
 	if services then
 		for k, service in ipairs(services) do 
 			-- print("Load service " .. service .. " into " .. peer:getName())
 			peer:loadService(service)
+			-- load .cpf into service
+			local cpfs = config.get_rosparam("~" .. peer:getName() .. "/" .. service .. "/load_cpf", "string[]")
+			if cpfs then
+				for _, file in ipairs(cpfs) do
+					peer:loadService("marshalling")
+					peer:provides("marshalling"):loadServiceProperties(config.file(file), service)
+				end
+			end
+		end
+	end
+	-- load .cpf int peer
+	local cpfs = config.get_rosparam("~" .. peer:getName() .. "/load_cpf", "string[]")
+	if cpfs then
+		for _, file in ipairs(cpfs) do
+			peer:loadService("marshalling")
+			peer:provides("marshalling"):loadProperties(config.file(file))
 		end
 	end
 	-- load parameters from parameter server
