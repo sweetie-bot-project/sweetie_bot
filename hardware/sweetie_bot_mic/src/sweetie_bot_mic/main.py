@@ -8,11 +8,29 @@ from pynput import keyboard
 from pynput.keyboard import Key
 import numpy as np
 import struct
-
+import torch
 import rospy
+import collections
+import audioop
+
 from sweetie_bot_text_msgs.msg import SoundEvent, TextCommand
 from sweetie_bot_text_msgs.srv import Transcribe, TranscribeRequest, TranscribeResponse
 from std_msgs.msg import Bool
+
+# Для отрисовки на графике
+voiced_confidences = []
+energies = []
+
+# Длина циклического буфера в секундах
+BUFFER_LENGTH = 5
+
+# Циклический буфер для хранения аудио данных
+buffer_size = 16000 * BUFFER_LENGTH  # 16000 - частота дискретизации
+audio_buffer = collections.deque(maxlen=buffer_size)
+
+model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+                              model='silero_vad',
+                              force_reload=True)
 
 # suppress error messages from ALSA
 # https://stackoverflow.com/questions/7088672/pyaudio-working-but-spits-out-error-messages-each-time
@@ -211,8 +229,23 @@ class RespeakerNode(object):
 
     def is_speaking(self):
         return self.is_button_pressed() and not self._robot_is_speaking
-
+    
     def on_audio(self, data, channel):
+        def int2float(sound):
+            abs_max = np.abs(sound).max()
+            sound = sound.astype('float32')
+            if abs_max > 0:
+                # Нормализует значения звука, деля их на 32768 
+                # (максимальное значение для 16-битного целого числа). 
+                # Это приводит значения в диапазон от -1 до 1, 
+                # что является стандартом для аудиосигналов с плавающей запятой.
+                sound *= 1 / 32768
+            sound = sound.squeeze()
+            # Удаляет все единичные размеры из массива. 
+            # Это может быть полезно, если входной массив 
+            # имеет лишние размерности (например, если он имеет 
+            # форму (n, 1) вместо (n,)
+            return sound
         if channel == self.main_channel:
             # store speech data
             if not self._robot_is_speaking:
@@ -220,6 +253,34 @@ class RespeakerNode(object):
                     self.speech_audio_buffer.extend(data)
                 else:
                     # Will use VAD here
+                    # waiting_command()
+                    
+                    # breakpoint()
+                    pass
+                    parts_of_data = [data[i:i+1024] for i in range(0,len(data),1024)]
+                    for part in parts_of_data:
+                        audio_int16 = np.frombuffer(part, np.int16)
+                        audio_float32 = int2float(audio_int16)
+
+                        new_confidence = model(torch.from_numpy(audio_float32), 16000).item()
+                        voiced_confidences.append(new_confidence)
+
+                        audio_buffer.extend(audio_int16)
+
+                        audio_data = np.array(audio_buffer, dtype=np.int16).tobytes()
+                        energy = audioop.rms(audio_data, 2)
+                        energies.append(energy)
+
+                        if len(voiced_confidences) > 100:
+                            voiced_confidences.pop(0)
+                            
+                        if len(energies) > 100:
+                            energies.pop(0)
+
+                        if new_confidence > 0.5:
+                            print(f"Аудио обнаружено, <энергия>: {energy} <уверенность>: {new_confidence}")
+
+                    self.speech_audio_buffer.extend(data)
                     pass
                 
 
