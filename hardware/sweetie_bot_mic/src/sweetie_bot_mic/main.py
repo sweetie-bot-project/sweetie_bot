@@ -205,15 +205,23 @@ class RespeakerNode(object):
     def on_key_release(self, key):
         self._keys_pressed.discard(key)
 
-    def is_speaking(self):
+    def is_button_pressed(self):
         combo_is_pressed = len(self._keys_pressed) == len(self._keys_combo)
-        return (combo_is_pressed or self._button_pressed) and not self._robot_is_speaking
+        return (combo_is_pressed or self._button_pressed)
+
+    def is_speaking(self):
+        return self.is_button_pressed() and not self._robot_is_speaking
 
     def on_audio(self, data, channel):
         if channel == self.main_channel:
             # store speech data
-            if self.is_speaking():
-                self.speech_audio_buffer.extend(data)
+            if not self._robot_is_speaking:
+                if self.is_button_pressed():
+                    self.speech_audio_buffer.extend(data)
+                else:
+                    # Will use VAD here
+                    pass
+                
 
     def buf_to_wav(self, data):
         # prepare wav data
