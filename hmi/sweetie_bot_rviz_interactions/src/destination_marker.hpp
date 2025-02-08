@@ -85,6 +85,8 @@ private:
   std::string name;
   // world frame
   std::string world_frame;
+  // gait generator parameters
+  std::string gait_generator_ns;
   // marker sacle parameter
   double scale;
   // selected gait type

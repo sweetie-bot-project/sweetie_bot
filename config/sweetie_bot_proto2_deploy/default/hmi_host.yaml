@@ -55,6 +55,7 @@ robot_pose_marker:
 destination_marker:
     name: "Destination marker"
     world_frame: odom_combined
+    gait_generator_ns: "/gait_generator"
     scale: 1.1
     gait_type_options: [ walk_overlap, walk, trot ]
     gait_type_default_idx: 0

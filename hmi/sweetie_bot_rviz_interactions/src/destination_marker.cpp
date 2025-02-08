@@ -18,6 +18,9 @@
 #include <QDesktopWidget>
 #include <QApplication>
 
+#include <xmlrpcpp/XmlRpcValue.h>
+#include <xmlrpcpp/XmlRpcException.h>
+
 using namespace visualization_msgs;
 using namespace interactive_markers;
 
@@ -30,6 +33,7 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
   : action_client( new ActionClient("move_base_action", false) ),
     name(""),
     world_frame("odom_combined"),
+    gait_generator_ns("/gait_generator"),
     scale(1.0),
     gait_type("walk_overlap"),
     n_steps(4),
@@ -43,6 +47,7 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
 
   node_handle.getParam("name", name);
   node_handle.getParam("world_frame", world_frame);
+  node_handle.getParam("gait_generator_ns", gait_generator_ns);
 
   node_handle.getParam("scale", scale);
   if (scale < 0) {
@@ -244,7 +249,7 @@ void DestinationMarker::toNominal()
   static sweetie_bot_gait_generator::MoveBaseGoal goal;
 
   if (!is_goal_init) {
-    goal = buildMoveBaseGoal("base_link_path", "free", 3.0, 0, false);
+    goal = buildMoveBaseGoal("base_link_path", "free", duration, 0, false);
     static geometry_msgs::Pose null_goal;
     null_goal.orientation.w = 1.0;
     setBaseGoal(goal, null_goal, nominal_height);
@@ -253,12 +258,38 @@ void DestinationMarker::toNominal()
       // end effector goals
       std::vector<sweetie_bot_gait_generator::EndEffectorGoal> ee_goals;
       setEndEffectorTargets(ee_goals, ee_names, sweetie_bot_gait_generator::EndEffectorGoal::PATH_FINAL);
-
-      setEndEffectorPosition(ee_goals[0],  0.080425,  0.0386, 0.0);
-      setEndEffectorPosition(ee_goals[1],  0.080425, -0.0386, 0.0);
-      setEndEffectorPosition(ee_goals[2], -0.080425,  0.0386, 0.0);
-      setEndEffectorPosition(ee_goals[3], -0.080425, -0.0386, 0.0);
-
+      // get nominal poses from towr configuration
+      try {
+        // get paramters
+        XmlRpc::XmlRpcValue towr_model;
+        ros::param::get(gait_generator_ns + "/towr_model", towr_model);
+        // iterate over ee
+        for(auto& ee_goal : ee_goals) {
+          bool ee_is_found = false;
+          // find it  in towr model
+          for(auto it = towr_model.begin(); it != towr_model.end(); it++) {
+            if (it->second.getType() == XmlRpc::XmlRpcValue::TypeStruct &&
+                it->second.hasMember("name") && it->second["name"] == ee_goal.name) 
+            {
+              // ee definition is found
+              XmlRpc::XmlRpcValue& ee_nominal_stance = it->second["nominal_stance"];
+              setEndEffectorPosition(ee_goal, ee_nominal_stance[0],  ee_nominal_stance[1], 0.0);
+              ee_is_found = true;
+              break;
+            }
+          }
+          // check if ee is found
+          if (!ee_is_found) {
+            ROS_ERROR_STREAM("Unable to find ee " << ee_goal.name << " in towr_mode form ns " << gait_generator_ns << "/towr_model.");
+            return;
+          }
+        }
+      }
+      catch (XmlRpc::XmlRpcException& e) {
+        ROS_ERROR_STREAM("Unable to parse towr_mode form ns " << gait_generator_ns << "/towr_model: " << e.getMessage());
+        return;
+      }
+      // add ee goals
       goal.ee_goal.insert(goal.ee_goal.begin(), ee_goals.begin(), ee_goals.end());
     }
 
