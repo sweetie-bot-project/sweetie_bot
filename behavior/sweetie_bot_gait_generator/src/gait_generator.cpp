@@ -1345,7 +1345,7 @@ bool ClopGenerator::callbackDispayMarker(DisplayMarkersRequest& req, DisplayMark
 	ros::Time timestamp = ros::Time::now();
 	visualization_msgs::MarkerArray markers;
 	int n_markers = n_ee * n_markers_per_ee;
-	if (req.use_base_frame) n_markers++;
+	if (!req.use_base_frame) n_markers++;
 
 	//
 	// add markers and fill general fields
@@ -1483,9 +1483,15 @@ bool ClopGenerator::callbackDispayMarker(DisplayMarkersRequest& req, DisplayMark
 		marker->type = visualization_msgs::Marker::SPHERE;
 		marker->color = ColorRGBAInit(1.0, 0.0, 0.0, 0.3);
 		// position and scale
-		tf::vectorEigenToMsg(2.0 * sphere.radius_min() * Eigen::Vector3d::Ones(), marker->scale);
-		tf::pointKDLToMsg(wTp * (pTb * (b_center + b_p_com)), marker->pose.position);
-		marker->pose.orientation.w = 1.0;
+		if (sphere.radius_min() > 0.0) {
+			tf::vectorEigenToMsg(2.0 * sphere.radius_min() * Eigen::Vector3d::Ones(), marker->scale);
+			tf::pointKDLToMsg(wTp * (pTb * (b_center + b_p_com)), marker->pose.position);
+			marker->pose.orientation.w = 1.0;
+		}
+		else {
+			// disable marker if scale is zero
+			marker->action = visualization_msgs::Marker::DELETE;
+		}
 	}
 
 	// publish
