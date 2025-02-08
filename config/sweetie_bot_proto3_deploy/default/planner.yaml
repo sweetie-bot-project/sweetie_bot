@@ -5,8 +5,8 @@ gait_generator:
     planning_frame: "base_link_path"
     storage_namespace: "saved_msgs"
     towr_model:
-        nlp_type: "6d"
-        #nlp_type: "zmp_phase"
+        #nlp_type: "6d"
+        nlp_type: "zmp_phase2"
         base:
             frame_id: "base_link"
             links: ["base_link", "base_link_inertia", "leg1_link1", "leg1_link2", "leg2_link1", "leg2_link2", "leg3_link1", "leg3_link2", "leg4_link1", "leg4_link2", "head_link1", "head_link2", "head_link3", "head_link4", "ear_l_link", "ear_r_link", "mouth_link" ]
@@ -30,7 +30,7 @@ gait_generator:
             name: "leg3"
             frame_id: "leg3_link6"
             nominal_stance: [ -0.175, 0.078, -0.25 ]
-            bounding_box: [ -1.0, 0.04, -1.0, -0.10, 0.12, -0.23 ]
+            bounding_box: [ -1.0, 0.04, -1.0, -0.10, 0.10, -0.23 ]
             bounding_sphere: [ -0.124, 0.048, -0.031, 0.26 ] # 0.265
             contact_point: [ 0.0, 0.0, -0.035 ]
             links: ["leg3_link4", "leg3_link5", "leg3_link6"]
@@ -38,7 +38,7 @@ gait_generator:
             name: "leg4"
             frame_id: "leg4_link6"
             nominal_stance: [ -0.175, -0.078, -0.25 ]
-            bounding_box: [ -1.0, -0.12, -1.0, -0.10, -0.04, -0.23 ]
+            bounding_box: [ -1.0, -0.10, -1.0, -0.10, -0.04, -0.23 ]
             bounding_sphere: [ -0.124, -0.048, -0.031, 0.26 ]
             contact_point: [ 0.0, 0.0, -0.035 ]
             links: ["leg4_link4", "leg4_link5", "leg4_link6"]
