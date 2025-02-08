@@ -25,7 +25,7 @@ kinematics_inv:
         eps_pos: 0.002
         timeout: 0.003
         weight_rot: 0.1
-        weight_q_opt: 0.01
+        weight_q_opt: 0.002
 #kinematics_inv:
     #priority: 20
     #type: KinematicsInvControl

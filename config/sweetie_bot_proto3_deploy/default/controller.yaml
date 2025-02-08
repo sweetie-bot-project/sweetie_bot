@@ -31,7 +31,7 @@ controller:
         priority: 20
         services: [ filter_rigid_body_state_pd ]
         support_legs: [ leg1, leg2, leg3, leg4 ]
-        override_odometry: false # deployment parameter: discard odometry results if stance is active
+        override_odometry: true # deployment parameter: discard odometry results if stance is active
         use_kinematics_inv_port: false # deployment parameter: do not connect stance to kinematics_inv IK service, use port interface instead
         pose_feedback: false
         activation_delay: 4
