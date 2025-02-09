@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-import weakref
 import rospy
 from .gstreamer import GstreamerPipeline
 
@@ -28,7 +27,7 @@ class GstreamerNode(GstreamerPipeline):
 
     def finalize(self):
         # stop gstreamer
-        self.gstreamer_audio = None
+        self.close()
 
 def main():
     try:

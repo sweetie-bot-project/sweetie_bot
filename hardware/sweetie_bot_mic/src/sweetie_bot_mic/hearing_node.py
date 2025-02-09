@@ -64,7 +64,7 @@ class HearingNode:
         buffer_size = int(2**np.round(np.log2(sample_rate/update_rate)))
         rospy.loginfo(f'audio: actual update rate {sample_rate/buffer_size} Hz (requested {update_rate} Hz), buffer size {buffer_size} samples, main channel {self._main_channel}.')
         self.gstreamer_audio = GstreamerAudioSource(pipeline=gstreamer_pipeline, sample_rate=sample_rate, buffer_size=buffer_size, n_channels = n_channels,  
-                                              on_audio = self.on_audio, on_error = self.on_gstreamer_error, on_warning = self.on_gstreamer_error)
+                                              on_audio = self.on_audio, on_error = self.on_gstreamer_error, on_warning = None)
 
         #
         # Node state 
@@ -338,7 +338,7 @@ class HearingNode:
 
     def finalize(self):
         # stop gstreamer
-        self.gstreamer_audio = None
+        self.gstreamer_audio.close()
 
 def main():
     try:

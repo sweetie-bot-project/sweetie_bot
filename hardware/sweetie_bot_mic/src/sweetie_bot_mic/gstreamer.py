@@ -119,23 +119,37 @@ class GstreamerPipeline(object):
         return Gst.BusSyncReply.DROP
 
     def __del__(self):
-        if self._gstreamer_pipeline is not None:
-            # stop event loop
-            if self._event_thread is not None:
-                # send EOS message to event loop thread and wait until it exit
-                self._event_buffer.push(Gst.Message.new_eos())
-                self._event_thread.join()
-            # stop pipeline
-            self._gstreamer_pipeline.set_state(Gst.State.NULL)
+        if self._gstreamer_pipeline.current_state != Gst.State.NULL:
+            rospy.logwarn('GstreamerPipeline: destructor is called before close() method is invoked. ')
+            self.close()
 
     def start(self):
-        self._gstreamer_pipeline.set_state(Gst.State.PLAYING)
+        state = self._gstreamer_pipeline.current_state
+        if state in [Gst.State.READY, Gst.State.PAUSED, Gst.State.PLAYING]:
+            self._gstreamer_pipeline.set_state(Gst.State.PLAYING)
+        else:
+            raise RuntimeError(f'GstreamerPipeline: pipeline is closed or in error state: {state}')
 
     def stop(self):
-        self._gstreamer_pipeline.set_state(Gst.State.READY)
+        state = self._gstreamer_pipeline.current_state
+        if state in [Gst.State.READY, Gst.State.PAUSED, Gst.State.PLAYING]:
+            self._gstreamer_pipeline.set_state(Gst.State.READY)
+        else:
+            raise RuntimeError(f'GstreamerPipeline: pipeline is closed or in error state: {state}')
+
+    def close(self):
+        # stop event loop
+        if self._event_thread is not None:
+            # send EOS message to event loop thread and wait until it exit
+            self._event_buffer.push(Gst.Message.new_eos())
+            self._event_thread.join()
+            self._event_thread = None
+        # stop pipeline
+        if self._gstreamer_pipeline is not None:
+            self._gstreamer_pipeline.set_state(Gst.State.NULL)
 
     def get_state(self):
-        return self.gstreamer_pipeline.current_state
+        return self._gstreamer_pipeline.current_state
 
 
 class GstreamerAudioSource(GstreamerPipeline):
