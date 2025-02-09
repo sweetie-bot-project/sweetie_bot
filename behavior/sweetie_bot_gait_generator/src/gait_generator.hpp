@@ -6,6 +6,7 @@
 #include <towr/nlp_formulation_base.h>
 #include <ifopt/ipopt_solver.h>
 
+#include <std_srvs/SetBool.h>
 #include <sweetie_bot_gait_generator/MoveBaseAction.h>
 #include <sweetie_bot_gait_generator/SaveTrajectory.h>
 #include <sweetie_bot_gait_generator/DisplayMarkers.h>
@@ -36,6 +37,8 @@ class ClopGenerator
 		// Markers
 		typedef sweetie_bot_gait_generator::DisplayMarkers::Response DisplayMarkersResponse;
 		typedef sweetie_bot_gait_generator::DisplayMarkers::Request DisplayMarkersRequest;
+		typedef std_srvs::SetBool::Response SetBoolResponse;
+		typedef std_srvs::SetBool::Request SetBoolRequest;
 	
 	protected:
 		struct EndEffectorInfo {
@@ -52,7 +55,8 @@ class ClopGenerator
 		// subscribers
 		// service servers
 		ros::ServiceServer save_trajectory_service;
-		ros::ServiceServer display_markers_serv;
+		ros::ServiceServer display_trajectory_markers_serv;
+		ros::ServiceServer display_limits_markers_serv;
 		// tf
 		tf2_ros::Buffer tf_buffer;
 		std::unique_ptr<tf2_ros::TransformListener> tf_listener;
@@ -114,7 +118,8 @@ class ClopGenerator
 		bool performMotionPlanning();
 		void callbackExecuteMoveBase(const MoveBaseGoalConstPtr& msg);
 		bool callbackSaveTrajectory(SaveTrajectoryRequest& req, SaveTrajectoryResponse& resp);
-		bool callbackDispayMarker(DisplayMarkersRequest& req, DisplayMarkersResponse& resp);
+		bool callbackDisplayMarker(DisplayMarkersRequest& req, DisplayMarkersResponse& resp);
+		bool callbackDisplayEELimitsMarker(SetBoolRequest& req, SetBoolResponse& resp);
 };
 
 } // namespace sweetie_bot

@@ -84,6 +84,7 @@
 			<!-- gait generator -->
 			<node name="gait_generator" pkg="sweetie_bot_gait_generator" type="towr_gait_generator" output="screen">
 				<remap from="step_sequence" to="motion/controller/step_sequence" />     
+				<remap from="markers" to="hmi/marker_array" />
 			</node>
 		</group>
 

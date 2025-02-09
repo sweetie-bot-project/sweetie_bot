@@ -126,7 +126,8 @@ ClopGenerator::ClopGenerator(const std::string& name)
 	// advertise servises
 	ros::NodeHandle node_handler_private("~");
 	save_trajectory_service = node_handler_private.advertiseService("save_trajectory", &ClopGenerator::callbackSaveTrajectory, this);
-	display_markers_serv = node_handler_private.advertiseService("display_markers", &ClopGenerator::callbackDispayMarker, this);
+	display_trajectory_markers_serv = node_handler_private.advertiseService("display_trajectory_markers", &ClopGenerator::callbackDisplayMarker, this);
+	display_limits_markers_serv = node_handler_private.advertiseService("display_ee_limits_markers", &ClopGenerator::callbackDisplayEELimitsMarker, this);
 	// tf listener
 	tf_listener.reset( new tf2_ros::TransformListener(tf_buffer) );
 	// action server
@@ -1337,7 +1338,7 @@ struct ColorRGBAInit : public std_msgs::ColorRGBA
 		ColorRGBAInit(_r_type _r, _g_type _g, _b_type _b, _a_type _a = 1.0) { r = _r; b = _b; g = _g; a = _a; }
 };
 
-bool ClopGenerator::callbackDispayMarker(DisplayMarkersRequest& req, DisplayMarkersResponse& resp)
+bool ClopGenerator::callbackDisplayMarker(DisplayMarkersRequest& req, DisplayMarkersResponse& resp)
 {
 	constexpr int n_markers_per_ee = 4;
 
@@ -1360,11 +1361,6 @@ bool ClopGenerator::callbackDispayMarker(DisplayMarkersRequest& req, DisplayMark
 		marker.id = index;
 		marker.action = (req.delete_markers) ? visualization_msgs::Marker::DELETE : visualization_msgs::Marker::ADD;
 		marker.frame_locked = req.use_base_frame;
-	}
-
-	// return if deletion requested
-	if (req.delete_markers) {
-		return true;
 	}
 
 	// check that trajectory is planned
@@ -1456,10 +1452,9 @@ bool ClopGenerator::callbackDispayMarker(DisplayMarkersRequest& req, DisplayMark
 		marker->color = ColorRGBAInit(0.0, 0.0, 1.0, 0.3);
 		// position and scale
 		Eigen::AlignedBox3d box = formulation->model_.kinematic_model_->GetBoundingBox(ee); 
-		KDL::Vector b_center, b_diagonal;
+		KDL::Vector b_center;
 		Eigen::Map<Vector3d>(b_center.data) = box.center();
-		Eigen::Map<Vector3d>(b_diagonal.data) = box.diagonal();
-		tf::vectorKDLToMsg(b_diagonal, marker->scale);
+		tf::vectorEigenToMsg(box.diagonal(), marker->scale);
 		tf::pointKDLToMsg(wTp * (pTb * (b_center + b_p_com)), marker->pose.position);
 		tf::quaternionKDLToMsg(wTp.M * pTb.M, marker->pose.orientation);
 
@@ -1497,6 +1492,86 @@ bool ClopGenerator::callbackDispayMarker(DisplayMarkersRequest& req, DisplayMark
 	// publish
 	markers_pub.publish(markers);
 	
+	return true;
+}
+
+bool ClopGenerator::callbackDisplayEELimitsMarker(SetBoolRequest& req, SetBoolResponse& resp)
+{
+	constexpr int n_markers_per_ee = 3;
+
+	int n_ee = formulation->model_.kinematic_model_->GetNumberOfEndeffectors();
+	ros::Time timestamp = ros::Time::now();
+	visualization_msgs::MarkerArray markers;
+	int n_markers = n_ee * n_markers_per_ee;
+
+	// add markers and fill general fields
+	for (int index = 0; index < n_markers; index++) {
+		markers.markers.emplace_back();
+		visualization_msgs::Marker& marker = markers.markers.back();
+		// header 
+		marker.header.frame_id = this->base_frame_id;
+		marker.header.stamp = timestamp;
+		// common info
+		marker.id = index;
+		marker.action = (req.data) ? visualization_msgs::Marker::ADD : visualization_msgs::Marker::DELETE;
+		marker.frame_locked = true;
+	}
+
+	// limits markers
+	int marker_index = 0;
+	for (int ee = 0; ee < n_ee; ee++) {
+		// marker ns
+		std::string ns = "ee";
+		if (auto it = std::find_if(end_effector_index.begin(), end_effector_index.end(), [ee](const auto& pair) { return pair.second.towr_index == ee; }); it != end_effector_index.end()) {
+			ns = it->first;
+		}
+
+		// bounding box marker
+		visualization_msgs::Marker * marker = &markers.markers[marker_index++];
+		// marker general info
+		marker->ns = ns;
+		marker->type = visualization_msgs::Marker::CUBE;
+		marker->color = ColorRGBAInit(0.0, 0.0, 1.0, 0.3);
+		// position and scale
+		Eigen::AlignedBox3d box = formulation->model_.kinematic_model_->GetBoundingBox(ee); 
+		tf::vectorEigenToMsg(box.diagonal(), marker->scale);
+		tf::pointEigenToMsg(box.center() + com_B, marker->pose.position);
+		marker->pose.orientation.w = 1.0;
+
+		// outer bounding sphere marker
+		marker = &markers.markers[marker_index++];
+		// marker general info
+		marker->ns = ns;
+		marker->type = visualization_msgs::Marker::SPHERE;
+		marker->color = ColorRGBAInit(0.0, 0.0, 1.0, 0.3);
+		// position and scale
+		towr::SphereShell3d sphere = formulation->model_.kinematic_model_->GetBoundingSphere(ee); 
+		tf::vectorEigenToMsg(2.0 * sphere.radius_max() * Eigen::Vector3d::Ones(), marker->scale);
+		tf::pointEigenToMsg(sphere.center() + com_B, marker->pose.position);
+		marker->pose.orientation.w = 1.0;
+
+		// inder  bounding sphere marker
+		marker = &markers.markers[marker_index++];
+		// marker general info
+		marker->ns = ns;
+		marker->type = visualization_msgs::Marker::SPHERE;
+		marker->color = ColorRGBAInit(1.0, 0.0, 0.0, 0.3);
+		// position and scale
+		if (sphere.radius_min() > 0.0) {
+			tf::vectorEigenToMsg(2.0 * sphere.radius_min() * Eigen::Vector3d::Ones(), marker->scale);
+			tf::pointEigenToMsg(sphere.center() + com_B, marker->pose.position);
+			marker->pose.orientation.w = 1.0;
+		}
+		else {
+			// disable marker if scale is zero
+			marker->action = visualization_msgs::Marker::DELETE;
+		}
+	}
+
+	// publish
+	markers_pub.publish(markers);
+	
+	resp.success = true;
 	return true;
 }
 

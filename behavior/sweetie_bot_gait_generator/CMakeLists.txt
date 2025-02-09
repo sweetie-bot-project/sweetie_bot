@@ -26,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
 	towr_ros
 	sweetie_bot_control_msgs 
 	sweetie_bot_orocos_misc
+	std_srvs
 )
 
 # Python setup
@@ -84,6 +85,7 @@ catkin_package(
 	towr_ros
 	sweetie_bot_control_msgs 
 	sweetie_bot_orocos_misc
+	std_srvs
   DEPENDS 
     towr 
 )
