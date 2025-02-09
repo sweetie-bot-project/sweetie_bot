@@ -49,9 +49,7 @@
 			<remap from="look_at_set_operational_action" to="$(arg robot_ns)/motion/controller/look_at"/>
 		</node>
 		<!-- robot position control -->
-		<node name="destination_marker" pkg="sweetie_bot_rviz_interactions" type="destination_marker" >
-			<remap from="move_base_action" to="$(arg robot_ns)/gait_generator"/>
-		</node>
+		<node name="destination_marker" pkg="sweetie_bot_rviz_interactions" type="destination_marker" />
 		<!-- object detection imitation -->
 		<node name="object_detection_marker" pkg="sweetie_bot_rviz_interactions" type="object_detection_marker" >
 			<remap from="detections" to="$(arg robot_ns)/detections"/>

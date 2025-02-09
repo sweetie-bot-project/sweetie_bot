@@ -10,6 +10,8 @@
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Header.h>
 
+#include <std_srvs/SetBool.h>
+
 #include <sweetie_bot_gait_generator/MoveBaseGoal.h>
 #include <sweetie_bot_gait_generator/EndEffectorGoal.h>
 #include <sweetie_bot_gait_generator/SaveTrajectory.h>
@@ -30,8 +32,7 @@ namespace hmi {
 DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::InteractiveMarkerServer> server,
                                      ros::NodeHandle node_handle
                                     )
-  : action_client( new ActionClient("move_base_action", false) ),
-    name(""),
+  : name(""),
     world_frame("odom_combined"),
     gait_generator_ns("/gait_generator"),
     scale(1.0),
@@ -42,12 +43,19 @@ DestinationMarker::DestinationMarker(std::shared_ptr<interactive_markers::Intera
     trajectory_name("recorded_trajectory"),
     server(server)
 {
+  node_handle.getParam("gait_generator_ns", gait_generator_ns);
+
+  action_client.reset( new ActionClient(gait_generator_ns, false) );
+  display_ee_limits_client =  node_handle.serviceClient<std_srvs::SetBool>(gait_generator_ns + "/display_ee_limits_markers");
+  if (!display_ee_limits_client.waitForExistence(ros::Duration(5.0))) {
+    ROS_ERROR("DestinationMarker: can not connect to 'display_ee_limits_markers' service.");
+  }
+
   std::vector<std::string> gait_type_options;
   std::vector<int> _n_steps_options;
 
   node_handle.getParam("name", name);
   node_handle.getParam("world_frame", world_frame);
-  node_handle.getParam("gait_generator_ns", gait_generator_ns);
 
   node_handle.getParam("scale", scale);
   if (scale < 0) {
@@ -461,6 +469,20 @@ void DestinationMarker::processFeedback( const visualization_msgs::InteractiveMa
       invokeClopGenerator(feedback->pose, true);
     } else if (feedback->menu_entry_id == to_nominal_entry) {
       toNominal();
+    } else if (feedback->menu_entry_id == display_ee_limits_entry) {
+      MenuHandler::CheckState check;
+      std_srvs::SetBool srv;
+      menu_handler.getCheckState(feedback->menu_entry_id, check);
+      srv.request.data = (check == MenuHandler::UNCHECKED);
+      bool success = display_ee_limits_client.call(srv);
+      if (success && srv.response.success) {
+        menu_handler.setCheckState(feedback->menu_entry_id, srv.request.data ? MenuHandler::CHECKED : MenuHandler::UNCHECKED);
+        menu_handler.reApply(*server);
+        server->applyChanges();
+      }
+      else {
+        ROS_ERROR_STREAM("Service call 'display_ee_limits_markers' failed: retval = " << success << ", response.success = " << srv.response.success);
+      }
     } else if (feedback->menu_entry_id == change_trajectory_name_entry) {
       bool ok = false;
       QWidget w(nullptr);
@@ -570,6 +592,8 @@ void DestinationMarker::makeMenu(const std::vector<std::string>& gait_type_optio
     start_motion_entry = menu_handler.insert("Walk to the target", processFeedback);
     repeat_last_motion_entry = menu_handler.insert("Repeat last motion", processFeedback);
     to_nominal_entry = menu_handler.insert("Legs to nominal positions", processFeedback);
+    display_ee_limits_entry = menu_handler.insert("Display leg motion limits", processFeedback);
+    menu_handler.setCheckState(display_ee_limits_entry, MenuHandler::UNCHECKED);
     MenuHandler::EntryHandle gait_type_entry = menu_handler.insert("Gait type");
     MenuHandler::FeedbackCallback processGaitType = boost::bind( &DestinationMarker::processGaitType, this, boost::placeholders::_1 );
     for (auto& gait_type_option : gait_type_options) {

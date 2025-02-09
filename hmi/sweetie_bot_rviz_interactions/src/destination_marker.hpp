@@ -79,6 +79,8 @@ private:
   // CONNECTION
   // action server
   std::unique_ptr<ActionClient> action_client;
+  // service clients
+  ros::ServiceClient display_ee_limits_client;
 
   // PARAMETERS
   // marker name
@@ -117,6 +119,7 @@ private:
   MenuHandler::EntryHandle increase_by_half_duration_entry;
   MenuHandler::EntryHandle decrease_by_half_duration_entry;
   MenuHandler::EntryHandle change_trajectory_name_entry;
+  MenuHandler::EntryHandle display_ee_limits_entry;
 
 };
 
