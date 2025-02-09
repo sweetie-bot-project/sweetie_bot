@@ -1,7 +1,7 @@
 
 .common:
   stage: build
-  image: registry.gitlab.com/slavanap/ros-build/master:$CI_JOB_NAME
+  image: registry.gitlab.com/sweetie-bot/ros-build/master:$CI_JOB_NAME
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
     ROBOT: "false"
