@@ -101,6 +101,7 @@ include_directories(${catkin_INCLUDE_DIRS})
 ## Declare a C++ executable
      
 add_executable(towr_gait_generator src/gait_generator.cpp src/towr_trajectory_visualizer.cpp src/rigid_body_inertia_calculator.cpp)
+target_compile_features(towr_gait_generator PRIVATE cxx_std_17)
 target_link_libraries(towr_gait_generator ${catkin_LIBRARIES})
 add_dependencies(towr_gait_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
