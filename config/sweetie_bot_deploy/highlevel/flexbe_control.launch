@@ -49,11 +49,9 @@
 				<arg name="robot_ns" value="$(arg robot_ns)" /> 
 			</include>
 			<!-- microphone transiver node -->
-			<include if="$(arg run_nlp)" file="$(find sweetie_bot_mic)/launch/audio_transiver.launch">
-				<arg name="device" value="plughw:ArrayUAC10" /> 
-				<arg name="target_host" value="$(arg host_address)" /> 
-				<arg name="compression" value="false" />
-			</include>
+			<node if="$(arg run_nlp)" pkg="sweetie_bot_mic" type="gstreamer_node" name="audio_transiver" output="screen">
+				<param name="target_host" type="str" value="$(arg host_address)"/>
+			</node>
 		</group>
 	</group>
 
