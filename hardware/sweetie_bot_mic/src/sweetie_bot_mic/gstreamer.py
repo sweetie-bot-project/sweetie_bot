@@ -119,7 +119,7 @@ class GstreamerPipeline(object):
         return Gst.BusSyncReply.DROP
 
     def __del__(self):
-        if self._gstreamer_pipeline.current_state != Gst.State.NULL:
+        if self._gstreamer_pipeline is not None and self._gstreamer_pipeline.current_state != Gst.State.NULL:
             rospy.logwarn('GstreamerPipeline: destructor is called before close() method is invoked. ')
             self.close()
 
