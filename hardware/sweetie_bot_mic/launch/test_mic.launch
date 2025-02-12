@@ -1,11 +1,8 @@
 <launch>
-	<arg name="enable_translate" default="True"/>
-
 	<include file="$(find sweetie_bot_stt)/launch/test.launch" />
 	<include file="$(find sweetie_bot_mic_button)/launch/test.launch" />
 
 	<node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
 		<rosparam command="load" file="$(find sweetie_bot_mic)/launch/test_mic.yaml" />
-		<rosparam param="enable_translate"  subst_value="True">$(arg enable_translate)</rosparam>
 	</node>
 </launch>
