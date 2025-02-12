@@ -74,20 +74,18 @@ eyes:
 mic_button_hotkey_node:
     key_combination: [ 'ctrl','alt', 'w' ]
     enable_global_hotkey: True
+audio_transiver:
+    gstreamer_pipeline: "alsasrc device=plughw:ArrayUAC10 ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! audioconvert ! rtpL16pay ! udpsink host={target_host} port=12345"
 microphone:
     gstreamer_pipeline: "udpsrc port=12345 ! application/x-rtp,media=audio,clock-rate=16000,encoding-name=L16,channels=6 ! queue ! rtpL16depay ! audioconvert"
     n_channels: 6
+    main_channel: 0
     sample_rate: 16000
     update_rate: 4.0
-    main_channel: 0
-    enable_translate: True
     sound_intensity_threshold: 300
     intensity_normalization_divider: 2000
     microphone_frame_id: 'microphone_link'
     stationary_frame_id: 'base_link_path'
-    debug_plot: False
-    intensity_histogram_step: 100.0
-    intensity_histogram_forget_factor: 0.95
     doa:
         algorithm: 'NormMUSIC'
         #algorithm: 'SRP'
@@ -101,5 +99,13 @@ microphone:
         grid_type: '2d_circle'
         grid_size: 32
         nfft: 1024
-        object_distance: 2.0
-        object_z_position: 1.0
+    vad:
+        type: 'button'
+    detections:
+        publish_detections: True
+        publish_markers: True
+        distance: 2.0
+        2d_z_position: 1.0
+    debug_plot: True
+    intensity_histogram_forget_factor: 0.99
+    intensity_histogram_step: 100
