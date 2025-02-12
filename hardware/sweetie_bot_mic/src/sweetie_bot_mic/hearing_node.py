@@ -179,7 +179,10 @@ class HearingNode:
         wav_data += data
         return wav_data
 
-    def _publish_detections(self, sound_flags, s_doa_direction, s_speech_direction, intensity, s_T_m):
+    def _publish_detections(self, sound_event, s_sound_direction, s_speech_direction, s_T_m):
+        sound_flags = sound_event.sound_flags
+        intensity = sound_event.intensity
+        speech_probability = sound_event.speech_probability
         # form and publish messages
         if self._detections_are_published or self._markers_are_published:
             # modify only detection messsages
@@ -189,7 +192,7 @@ class HearingNode:
             # sound object
             if sound_flags & SoundEvent.SOUND_DETECTING:
                 pos = self._detection_sound_msg.pose.position
-                s_object_pos = s_doa_direction * self._detections_distance
+                s_object_pos = s_sound_direction * self._detections_distance
                 if self.doa_estimator.dim == 2:
                     s_object_pos.z(self._detections_z_position)
                 pos.x, pos.y, pos.z = s_T_m.Inverse(s_object_pos)
@@ -204,7 +207,7 @@ class HearingNode:
                     s_object_pos.z(self._detections_z_position)
                 pos.x, pos.y, pos.z = s_T_m.Inverse(s_object_pos)
                 detections_msg.detections.append(self._detection_speech_msg)
-                self._marker_speech_msg.color.a = min(intensity / self._intensity_normalization_divider, 1.0)
+                self._marker_speech_msg.color.a = min(speech_probability * intensity / self._intensity_normalization_divider, 1.0)
                 markers_msg.markers.append(self._marker_speech_msg)
             # publish messages
             if len(detections_msg.detections) > 0:
@@ -240,19 +243,20 @@ class HearingNode:
         intensity = np.sqrt(np.sum(main_channel_data.astype(np.float32)**2) / len(main_channel_data)) 
 
         # doa estimation
-        m_doa_direction, doa_values = self.doa_estimator.update(audio_data)
+        m_sound_direction, doa_values = self.doa_estimator.update(audio_data)
 
         # transform doa to stationary
         s_T_m, s_PT_m = self._get_transforms_from_mic_to_stationary()
-        s_doa_direction = s_PT_m.M * m_doa_direction # use projectied transform to be correct for 2D estimate
+        s_sound_direction = s_PT_m.M * m_sound_direction # use projectied transform to be correct for 2D estimate
 
         # vad detector
-        vad_result, speech_audio_buffer, s_speech_direction = self.vad_detector.update(main_channel_data, s_doa_direction, intensity)
+        vad_result, speech_probability, speech_audio_buffer, s_speech_direction  = self.vad_detector.update(main_channel_data, s_sound_direction, intensity)
 
         # sound event message
         sound_event = SoundEvent(header = Header(frame_id = self._mic_frame_id, stamp = rospy.Time.now()), 
                                  intensity = intensity / self._intensity_normalization_divider,
-                                 doa = Vector3(*m_doa_direction),
+                                 speech_probability = speech_probability,
+                                 doa = Vector3(*m_sound_direction),
                                  doa_azimuth = self.doa_estimator.grid_azimuth, 
                                  doa_colatitude = self.doa_estimator.grid_colatitude,
                                  doa_values = doa_values)
@@ -271,8 +275,8 @@ class HearingNode:
         self._processing_queue.put_nowait( (sound_event, speech_audio_buffer) )
 
         # publish object detections 
-        if m_doa_direction != PyKDL.Vector.Zero():
-            self._publish_detections(sound_flags, s_doa_direction, s_speech_direction, intensity, s_T_m)
+        if m_sound_direction != PyKDL.Vector.Zero():
+            self._publish_detections(sound_event, s_sound_direction, s_speech_direction, s_T_m)
 
         # publish debug plot
         if self._debug_plot:

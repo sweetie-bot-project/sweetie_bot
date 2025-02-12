@@ -53,12 +53,15 @@ class VoiceActivityDetector:
 
         Returns:
         -------
-        result: 
-            Classification result: 'silence', 'pause', 'speech'.
-        speech_data: array_like
-            Fragment with detected speech or None.
-        speech_direction: KDL.Vector
-            Direction of sound arrival.
+        result: VoiceActivity
+            Classification result: VOICED, UNVOICED, SILENCE, VOICED_END
+        speech_probability: float
+            Probablilty that fragment is VOICED.
+        speech_data: array_like or None
+            Data fragment with speech accumulated over VOICED/UNVOICED period. 
+            it is not None only if result is VOICED_END.
+        speech_direction: PyKDL.Vector
+            Averaged direction to speech source.
         '''
         raise NotImplementedError
 
@@ -84,8 +87,7 @@ class VoiceActivityDetectorNone(VoiceActivityDetector):
     _detector_type = 'none'
 
     def update(self, sound_event, audio_data):
-        return VoiceActivity.SILENCE, None, PyKDL.Vector()
-
+        return VoiceActivity.SILENCE, 0.0, None, PyKDL.Vector()
 
 class VoiceActivityDetectorButton(VoiceActivityDetector):
     _detector_type = 'button'
@@ -99,25 +101,24 @@ class VoiceActivityDetectorButton(VoiceActivityDetector):
         self._speech_audio_buffer = bytearray()
         rospy.loginfo(f"VAD type: button.")
 
-
     def update(self, audio_data, doa_direction, intensity):
         if self._speech_indicator:
             # button is pressed so we are hearing speech so add segment to audio buffer
             self._speech_audio_buffer.extend(audio_data.tobytes())
             self._average_speech_direction(doa_direction, intensity)
             self._speeeh_indicator_on_previous_update = True
-            return VoiceActivity.VOICED, None, self.speech_direction
+            return VoiceActivity.VOICED, 1.0, None, self.speech_direction
         else: 
             # button is not pressed, 
             if self._speeeh_indicator_on_previous_update == True:
                 # end of speech episode 
                 self._speeeh_indicator_on_previous_update = False
-                return VoiceActivity.VOICED_END, self._speech_audio_buffer, self.speech_direction
+                return VoiceActivity.VOICED_END, 0.0, self._speech_audio_buffer, self.speech_direction
             else:
                 # reset state
                 self._speech_audio_buffer.clear()
                 self._reset_speech_direction()
-                return VoiceActivity.SILENCE, None, PyKDL.Vector()
+                return VoiceActivity.SILENCE, 0.0, None, PyKDL.Vector()
 
     def _on_speech_indicator(self, msg):
         self._speech_indicator = msg.data
