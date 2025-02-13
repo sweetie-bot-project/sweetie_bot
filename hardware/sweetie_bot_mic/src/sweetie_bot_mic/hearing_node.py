@@ -102,15 +102,9 @@ class HearingNode:
             # import plot message library
             from sweetie_bot_plot.msg import Plot, Subplot, Curve
             # create plot buffer
-            self._plot_msg = Plot(title=rospy.get_name(), action=Plot.UPDATE)
-            intensity_splt = Subplot(title = 'Sound intensity histogram', xlabel = 'intensity', ylabel= 'count')
-            intensity_splt.curves.append( Curve(name = 'statistics', type = Curve.HISTOGRAM) )
-            intensity_splt.curves.append( Curve(name = 'now', type = Curve.HISTOGRAM) )
-            self._plot_msg.subplots.append( intensity_splt )
-            if self.doa_estimator.dim == 2:
-                direction_splt = Subplot(title = 'Azimuth Diagram', xlabel = 'azimuth', ylabel= 'likehood')
-                direction_splt.curves.append( Curve(type = Curve.LINE) )
-                self._plot_msg.subplots.append( direction_splt )
+            intensity_histogram_subplot = Subplot(title = 'Sound intensity histogram', xlabel = 'intensity', ylabel= 'count',
+                                                  curves = [ Curve(name = 'statistics', type = Curve.HISTOGRAM), Curve(name = 'now', type = Curve.HISTOGRAM)])
+            self._plot_msg = Plot(title=rospy.get_name(), action=Plot.UPDATE, subplots = [ intensity_histogram_subplot ])
         
         #
         # Node interface
@@ -280,11 +274,8 @@ class HearingNode:
 
         # publish debug plot
         if self._debug_plot:
-            # DOA histogramm messagwe
-            if self.doa_estimator.dim == 2:
-                doa = self._plot_msg.subplots[1].curves[0]
-                doa.x = self.doa_estimator.grid_azimuth 
-                doa.y = doa_values
+            stat_plot = self._plot_msg.subplots[0].curves[0]
+            now_plot = self._plot_msg.subplots[0].curves[1]
             # intensity histogram update
             intensity_index = int(intensity // self._intensity_histogram_step)
             with self._intesity_histogram_lock:
@@ -298,13 +289,16 @@ class HearingNode:
                 # check current measurement agnist histogram
                 intensity_speech_sum = self._intesity_histogram.sum()
                 p_speech = self._intesity_histogram[intensity_index] / intensity_speech_sum
-            # inrtensity histogramm plot message
-            stat = self._plot_msg.subplots[0].curves[0]
-            stat.x = np.arange(0, len(self._intesity_histogram)+1) * self._intensity_histogram_step
-            stat.y = self._intesity_histogram / intensity_speech_sum
-            now = self._plot_msg.subplots[0].curves[1]
-            now.x = np.array([intensity_index, intensity_index + 1]) * self._intensity_histogram_step
-            now.y = [ p_speech ]
+            # intensity histogramm subplot message update
+            if len(stat_plot.x) != len(self._intesity_histogram)+1:
+                stat_plot.x = np.arange(0, len(self._intesity_histogram)+1) * self._intensity_histogram_step
+            stat_plot.y = self._intesity_histogram / intensity_speech_sum
+            now_plot.x = np.array([intensity_index, intensity_index + 1]) * self._intensity_histogram_step
+            now_plot.y = [ p_speech ]
+            # add submodules plots
+            del self._plot_msg.subplots[1:]
+            self._plot_msg.subplots.extend( self.doa_estimator.debug_plots() )
+            self._plot_msg.subplots.extend( self.vad_detector.debug_plots() )
             # publish result
             self.pub_plot.publish(self._plot_msg)
 
@@ -329,6 +323,10 @@ class HearingNode:
                     sound_event.language = ''
             # publish result
             self.pub_sound_event.publish(sound_event)
+            # debug speech file
+            #if self._debug_plot and audio_wav is not None:
+                #with open('/tmp/speech.wav', 'wb') as fd:
+                    #fd.write(audio_wav)
 
     def finalize(self):
         # stop gstreamer

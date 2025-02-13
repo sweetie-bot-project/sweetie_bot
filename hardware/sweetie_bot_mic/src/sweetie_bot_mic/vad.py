@@ -64,6 +64,10 @@ class VoiceActivityDetector:
         '''
         raise NotImplementedError
 
+    def debug_plots(self):
+        ''' Return array of sweetie_bot_plot.msgs.Subplot object with debug information. '''
+        return ()
+
     def _average_speech_direction(self, doa_direction, intensity):
         ''' Average speech source direction using intensity as weight. '''
         self._speech_direction += doa_direction * intensity

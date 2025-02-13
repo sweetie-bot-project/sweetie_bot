@@ -57,6 +57,9 @@ class DOAEstimator:
     def grid_values(self):
         raise NotImplementedError
 
+    def debug_plots(self):
+        return ()
+
 
 class DOAEstimatorNone(DOAEstimator):
     _detector_type = 'none'
@@ -158,6 +161,12 @@ class DOAEstimatorPyRoomAcoustics(DOAEstimator):
         alg = pra.doa.algorithms[doa_algorithm]
         self.doa_estimator = alg(L = mic_coords, fs = sample_rate, nfft = nfft, num_src = 1, mode = mode, dim = dim, n_grid = n_grid, azimuth = azimuth, colatitude = colatitude)
         self.stft = pra.transform.STFT(N = nfft, hop = nfft // 2, channels = len(self.mic_channels))
+
+        #
+        # debug plot
+        #
+        self._direction_subplot = None
+
         # log info
         rospy.loginfo(f"DOA estimator '{doa_algorithm}': nfft {nfft}, freq range {freq_range}, grid type '{grid}', grid size {self.doa_estimator.grid.n_points}")
 
@@ -201,4 +210,20 @@ class DOAEstimatorPyRoomAcoustics(DOAEstimator):
         doa_values_sum = np.sum(self.doa_estimator.grid.values)
         doa_values = self.doa_estimator.grid.values / doa_values_sum
         return doa_direction, doa_values
+
+    def debug_plots(self):
+        # only 2D plot is supported
+        if self.doa_estimator.dim != 2:
+            return []
+        # init subplot if necessary
+        if self._direction_subplot is None:
+            from sweetie_bot_plot.msg import Subplot, Curve
+            # create 
+            self._direction_subplot = Subplot(title = 'Azimuth Diagram', xlabel = 'azimuth', ylabel= 'likehood', curves = [ Curve(type = Curve.LINE) ])
+        # update direction histogram
+        curve = self._direction_subplot.curves[0]
+        curve.x = self.doa_estimator.grid.azimuth 
+        curve.y = self.doa_estimator.grid.values
+        # return subplot
+        return (self._direction_subplot, )
 
