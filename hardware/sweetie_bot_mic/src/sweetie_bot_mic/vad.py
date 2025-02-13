@@ -30,7 +30,6 @@ class VoiceActivityDetector:
 
     def __init_subclass__(cls, **kwargs):
         super(VoiceActivityDetector, cls).__init_subclass__(**kwargs)
-        print(cls, cls._detector_type)
         if cls._detector_type in cls._subclass_map:
             raise ValueError(f"VoiceActivityDetector: detector type '{cls._detector_type}' is already registered.")
         cls._subclass_map[cls._detector_type] = cls

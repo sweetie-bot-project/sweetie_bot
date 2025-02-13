@@ -4,5 +4,7 @@
 
 	<node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
 		<rosparam command="load" file="$(find sweetie_bot_mic)/launch/test_mic.yaml" />
+		<param unless="$(arg remote)" name="gstreamer_pipeline" value="alsasrc" />
+		<param if="$(eval remote)" name="gstreamer_pipeline" value="udpsrc port=12345 ! application/x-rtp,media=audio,clock-rate=16000,encoding-name=L16,channels=6 ! queue ! rtpL16depay ! audioconvert" />
 	</node>
 </launch>

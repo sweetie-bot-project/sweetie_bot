@@ -9,8 +9,9 @@ intensity_normalization_divider: 2000
 microphone_frame_id: 'microphone_link'
 stationary_frame_id: 'microphone_link'
 doa:
-    algorithm: 'none'
-    #algorithm: 'NormMUSIC'
+    type: 'none'
+    #type: 'pyroomacoustics'
+    algorithm: 'NormMUSIC'
     #algorithm: 'SRP'
     #algorithm: 'FRIDA'
     #algorithm: 'MUSIC'

@@ -4,7 +4,89 @@ import rospy
 
 import pyroomacoustics as pra
 
+
 class DOAEstimator:
+    ''' Sound direction of arrival estimator '''
+    _subclass_map = {}
+
+    def __new__(cls, type, **kwargs):
+        cls = DOAEstimator._subclass_map.get(type)
+        if cls is None:
+            raise ValueError(f"DOAEstimator: unknown estimator type: {type}")
+        return super(DOAEstimator, cls).__new__(cls)
+
+    def __init_subclass__(cls, **kwargs):
+        super(DOAEstimator, cls).__init_subclass__(**kwargs)
+        if cls._detector_type in cls._subclass_map:
+            raise ValueError(f"DOAEstimator: subclass type '{cls._detector_type}' is already registered.")
+        cls._subclass_map[cls._detector_type] = cls
+
+    def __init__(self, type):
+        pass
+    
+    def update(self, data):
+        ''' Update estimator state.
+
+        Arguments:
+        ---------
+        data: array_like
+            2-dimentional array with audio data of the shape (n_samples, n_channels).
+
+        Returns:
+        -------
+        sound_direction: PyKDL.Vector
+            Direction to sound source.
+        grid_values: array_like
+            Raw DOA estimate data: intensity for each direction.
+        '''
+        raise NotImplementedError
+
+    @property
+    def dim(self):
+        raise NotImplementedError
+
+    @property
+    def grid_azimuth(self):
+        raise NotImplementedError
+
+    @property
+    def grid_colatitude(self):
+        raise NotImplementedError
+
+    @property
+    def grid_values(self):
+        raise NotImplementedError
+
+
+class DOAEstimatorNone(DOAEstimator):
+    _detector_type = 'none'
+
+    def __init__(self, **kwargs):
+        pass
+
+    def update(self, data):
+        return PyKDL.Vector(), []
+
+    @property
+    def dim(self):
+        return 0
+
+    @property
+    def grid_azimuth(self):
+        return []
+
+    @property
+    def grid_colatitude(self):
+        return []
+
+    @property
+    def grid_values(self):
+        return []
+
+
+class DOAEstimatorPyRoomAcoustics(DOAEstimator):
+    _detector_type = 'pyroomacoustics'
+
     def __init__(self, **params):
         #
         # basic parameters
@@ -97,10 +179,6 @@ class DOAEstimator:
     @property
     def grid_values(self):
         return self.doa_estimator.grid.values
-
-    def prepare_buffers(self, sound_event):
-        # add grid paramters to SoundEvent
-        sound_event.doa_azimuth = self.doa_estimator.grid.azimuth
 
     def update(self, data):
         # perform fft on raw mic channels
