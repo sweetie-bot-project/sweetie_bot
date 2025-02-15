@@ -148,6 +148,10 @@ class VoiceActivityDetectorThresholdBase(VoiceActivityDetector):
         self._speech_buffer = bytearray()
         self._debug_subplot = None
 
+    def _update(self, audio_data):
+        ''' Return metric which indicates that given audio fragment belongs to VOICED class. '''
+        raise NotImplementedError
+
     def update(self, audio_data, doa_direction, intensity):
         frame_size = self._frame_size
         # check data length
@@ -199,9 +203,14 @@ class VoiceActivityDetectorThresholdBase(VoiceActivityDetector):
         else:
             result_value /= n_frames
             self._average_speech_direction(doa_direction, intensity * result_value)
-        # return result
+        # rxlengtheturn result
         if voiced_end:
             return VoiceActivity.VOICED_END, 0.0, self._speech_buffer, self.speech_direction
         else:
             return result_state, result_value, None, self.speech_direction
 
+class VoiceActivityDetectorIntensity(VoiceActivityDetectorThresholdBase):
+    _detector_type = 'intensity'
+
+    def _update(self, audio_data):
+        return np.sqrt(np.sum(audio_data.astype(np.float32)**2) / len(audio_data)) 
