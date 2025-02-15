@@ -119,21 +119,21 @@
   </struct>
   <struct name="head_q_min" type="array">
      <description>Upper joints limits</description>
-     <simple name="Element0" type="double"><value>-1.47</value></simple>
+     <simple name="Element0" type="double"><value>-0.25</value></simple>
      <simple name="Element1" type="double"><value>-0.82</value></simple>
      <simple name="Element2" type="double"><value>-1.43</value></simple>
      <simple name="Element3" type="double"><value>-1.36</value></simple>
   </struct>
   <struct name="head_q_max" type="array">
      <description>Upper joints limits</description>
-     <simple name="Element0" type="double"><value>0.30</value></simple>
+     <simple name="Element0" type="double"><value>1.40</value></simple>
      <simple name="Element1" type="double"><value>1.04</value></simple>
      <simple name="Element2" type="double"><value>1.43</value></simple>
      <simple name="Element3" type="double"><value>1.36</value></simple>
   </struct>
   <struct name="nose_q_min" type="array">
      <description>Upper joints limits</description>
-     <simple name="Element0" type="double"><value>-1.47</value></simple>
+     <simple name="Element0" type="double"><value>-0.25</value></simple>
      <simple name="Element1" type="double"><value>-0.82</value></simple>
      <simple name="Element2" type="double"><value>-1.43</value></simple>
      <simple name="Element3" type="double"><value>-1.36</value></simple>
@@ -142,7 +142,7 @@
   </struct>
   <struct name="nose_q_max" type="array">
      <description>Upper joints limits</description>
-     <simple name="Element0" type="double"><value>0.30</value></simple>
+     <simple name="Element0" type="double"><value>1.40</value></simple>
      <simple name="Element1" type="double"><value>1.04</value></simple>
      <simple name="Element2" type="double"><value>1.43</value></simple>
      <simple name="Element3" type="double"><value>1.36</value></simple>

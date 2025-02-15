@@ -69,11 +69,11 @@ def main():
         for case in suite:
             n = case.name
             name = n[n.find("[")+1:n.rfind("]")]
-            gui.add_button(name, "green" if case.is_passed else "red" )
+            gui.add_button(name, "green" if case.is_passed else "yellow" if case.is_skipped else "red" )
             if not case.system_out == None:
                 gui.memo.append(case.system_out) 
 
     gui.show()
-    gui.timer.start(1000)
+    gui.timer.start(100)
     sys.exit(app.exec_())
 

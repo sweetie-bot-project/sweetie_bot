@@ -63,6 +63,7 @@ class FlexBe(output_module.OutputModule):
             if abort_id:
                 if abort_id.GetValueAsString() == "hard":
                     # cancel goal immediatelly
+                    rospy.loginfo("flexbe output module: cancel behavior.")
                     self._action_client.cancel_goal()
             return None
         # Goal is completed.

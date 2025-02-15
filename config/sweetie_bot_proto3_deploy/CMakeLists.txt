@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.9)
+cmake_minimum_required(VERSION 3.9)
 project(sweetie_bot_proto3_deploy)
 
 ## Find catkin macros and libraries
@@ -27,7 +27,7 @@ catkin_package(
 #############
 
 # Scripts installation
-install(DIRECTORY default tinker torque_control joint_trajectories
+install(DIRECTORY default tinker torque_control joint_trajectories proto32
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # bash script

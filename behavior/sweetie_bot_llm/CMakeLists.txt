@@ -9,6 +9,7 @@ project(sweetie_bot_llm)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   sweetie_bot_text_msgs
+  sweetie_bot_load_balancer
   rospy
 )
 
@@ -153,9 +154,16 @@ include_directories(
 ## Install ##
 #############
 install(PROGRAMS
-  scripts/llm_service_clinet
-  scripts/llm_service_node
+  scripts/llm_service_client
   scripts/llm_api_service_node
+  scripts/llm_completion_node
+  scripts/llm_classification_node
+  scripts/classificator_app.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(FILES
+  scripts/config.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

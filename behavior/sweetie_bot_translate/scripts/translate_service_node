@@ -1,0 +1,5 @@
+#! /usr/bin/env python3
+from sweetie_bot_translate.main import *
+if __name__ == '__main__':
+    main()
+

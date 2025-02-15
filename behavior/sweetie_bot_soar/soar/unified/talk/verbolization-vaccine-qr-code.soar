@@ -114,7 +114,7 @@ sp {vaccine-qr*propose*remark-has-no-vaccine-qr
 	(<pred> ^name has-no-vaccine-qr ^actor <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic remark-has-no-qr-code ^utility 20 ^type statement ^animation-tag angry)
+	(<f> ^topic remark-has-no-qr-code ^utility 20 ^type statement ^animation-tag anger)
 	(<f> ^text |Держись по-дальше, ты можешь заразить меня каким-нибудь вирусом.| |Ты не предявил кью ар код. Наверняка у тебя его нет.|)
 }
 

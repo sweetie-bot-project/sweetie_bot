@@ -41,7 +41,12 @@ class HerkulexServos:
         # update servo state
         with self._lock:
             # check if servo has FAILED
-            if not msg.respond_sucess or msg.status_error:
+            critical = HerkulexState.STATUS_ERROR_OVER_VOLTAGE \
+                     | HerkulexState.STATUS_ERROR_TEMPERATURE \
+                     | HerkulexState.STATUS_ERROR_OVERLOAD \
+                     | HerkulexState.STATUS_ERROR_DRIVER_FAULT \
+                     | HerkulexState.STATUS_ERROR_EEP_REGS
+            if not msg.respond_sucess or msg.status_error & critical:
                 self._failed_servos.add(msg.name)
             else:
                 self._failed_servos.discard(msg.name)

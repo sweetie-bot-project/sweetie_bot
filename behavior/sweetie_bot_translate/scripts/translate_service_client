@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+
+import sys, os
+import rospy, rospkg
+from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResponse
+from rospy_message_converter import message_converter
+import yaml
+
+try:
+    from itertools import izip as zip
+except ImportError: # will be 3.x series
+    pass
+
+import argparse
+
+parser = argparse.ArgumentParser(description='Sweetie bot translate service client')
+parser.add_argument('--service', type=str, default='/translate', help='ROS service name')
+
+def create_args_from_ros_type(parser, type_path):
+    pkg_name, type_name = type_path.split('.')
+    rospack = rospkg.RosPack()
+    pkg_path = rospack.get_path(pkg_name)
+    info_path = os.path.join(pkg_path, "info", type_name+".yaml")
+    with open(info_path, "r") as stream:
+        try:
+            info = yaml.safe_load(stream)
+        except yaml.YAMLError as e:
+            print(e)
+            sys.exit(1)
+
+    slots = eval(type_name+".__slots__")
+    types = eval(type_name+"._slot_types")
+
+    for s,t in zip(slots, types):
+        parser.add_argument('--'+s,
+                            type=type(t),
+                            default=info[s]['default'],
+                            help=info[s]['description']+" (default: %(default)s)")
+
+if __name__ == '__main__':
+    create_args_from_ros_type(parser, 'sweetie_bot_text_msgs.TranslateRequest')
+    # handle multiline strings in prompt
+    #for k,v in enumerate(sys.argv):
+    #    sys.argv[k] = v.replace('\\n', '\n').replace('\\r', '\r')
+
+    args = vars(parser.parse_args())
+    service = args.pop('service')
+    rospy.wait_for_service(service)
+    try:
+        llm_client_caller = rospy.ServiceProxy(service, Translate)
+        print(args)
+        resp = llm_client_caller(**args)
+        print(message_converter.convert_ros_message_to_dictionary(resp))
+        #resp.text = resp.text.encode('utf-8').strip().decode()
+        #print(resp)
+    except rospy.ServiceException as e:
+        print("Service call failed: %s"%e)
+
