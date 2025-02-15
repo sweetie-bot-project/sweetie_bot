@@ -291,7 +291,7 @@ class AttribRequestClassification(AttribRequest):
             phrase_with_response = f'{last_heard_phrase} \nMy response: {llm_response}'
             req = ClassificationRequest(text = phrase_with_response)
             emotion_resp = self._classificaion_client(req)
-            if emotion_resp.probabilities[0] > self._classification_noise_threshold:
+            if len(emotion_resp.probabilities) > 0 and emotion_resp.probabilities[0] > self._classification_noise_threshold:
                 most_probable_emotion = emotion_resp.classes[0].lower()
 
             merged_emotion = self.merge_emotions(llm_emotion, most_probable_emotion)
@@ -372,20 +372,20 @@ class LangRequest:
         elapsed_after_update = datetime.now() - self._last_header_update_time
         if self._elapsed_events_after_update > self._max_events:
             if elapsed_after_update.total_seconds() > self._selection_cooldown_sec:
-                # if np.random.uniform() < self._header_change_probability:
-                # Chaning prompt on random, but different one
-                name_pool = [n for n in self._header_names if n != self._current_header_name]
-                if len(name_pool) == 0:
-                    return
+                if np.random.uniform() < self._header_change_probability:
+                    # Chaning prompt on random, but different one
+                    name_pool = [n for n in self._header_names if n != self._current_header_name]
+                    if len(name_pool) == 0:
+                        return
 
-                new_name_choice = np.random.choice(len(name_pool), size=1, replace=False).item()
-                self._current_header_name = name_pool[new_name_choice]
-                self._selected_header = self._headers[self._current_header_name]
-                self._previous_selected_header_idx = self._selected_header_idx
-                self._selected_header_idx = self._header_names.index(self._current_header_name)
+                    new_name_choice = np.random.choice(len(name_pool), size=1, replace=False).item()
+                    self._current_header_name = name_pool[new_name_choice]
+                    self._selected_header = self._headers[self._current_header_name]
+                    self._previous_selected_header_idx = self._selected_header_idx
+                    self._selected_header_idx = self._header_names.index(self._current_header_name)
 
-                self._last_header_update_time = datetime.now()
-                self._elapsed_events_after_update = 0
+                    self._last_header_update_time = datetime.now()
+                    self._elapsed_events_after_update = 0
 
     def perform_request(self, llm_caller, events, predicates, text = None):
         #
