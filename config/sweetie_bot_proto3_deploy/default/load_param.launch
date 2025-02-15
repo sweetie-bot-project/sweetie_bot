@@ -25,13 +25,9 @@
 	<!-- System prompts for LLM -->
 	<param name="lang_model/prompts/simple-en" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/simple-en.txt" ></param>
 	<param name="lang_model/prompts/simple-en-personality-1" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/simple-en-personality-1.txt" ></param>
-	<param name="lang_model/prompts/simple-en-personality-2" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/simple-en-personality-2.txt" ></param>
-	<param name="lang_model/prompts/simple-en-personality-3" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/simple-en-personality-3.txt" ></param>
 	<param name="lang_model/prompts/complex-en" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/complex-en.txt" ></param>
 	<param name="lang_model/prompts/failsafe-en" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/failsafe-en.txt" ></param>
 	<param name="lang_model/prompts/failsafe-en-personality-1" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/failsafe-en-personality-1.txt" ></param>
-	<param name="lang_model/prompts/failsafe-en-personality-2" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/failsafe-en-personality-2.txt" ></param>
-	<param name="lang_model/prompts/failsafe-en-personality-3" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/failsafe-en-personality-3.txt" ></param>
 	<param name="lang_model/prompts/default-ru" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/default-ru.txt" ></param>
 	<param name="lang_model/prompts/default-ja" textfile="$(find sweetie_bot_proto3_deploy)/default/ai_prompts/default-ja.txt" ></param>
 	<!-- other configuraton -->

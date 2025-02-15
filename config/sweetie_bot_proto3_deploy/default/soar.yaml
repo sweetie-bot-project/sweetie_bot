@@ -153,12 +153,12 @@ soar:
                           value_nomatch: 'statement'
                           stop_list: ["\n"]
                 'simple-en':
-                    prompt_header_names: [ "simple-en", "simple-en-personality-1", "simple-en-personality-2", "simple-en-personality-3" ]
-                    personality_names: [ "Sweetie Bot", "Princess Celestia", "Crazy Head", "Angry Head" ]
-                    personality_prefixes: [ "I'm Doctor Sweetie Bot. Let's continue our therapy session. ", "Princess Celestia is listening to you, my faithful student. ", "Here comes Crazy Head again... ", "Angry Head will hate you now. " ]
+                    prompt_header_names: [ "simple-en", "simple-en-personality-1" ]
+                    personality_names: [ "Sweetie Bot", "Sweetie Bot" ]
+                    personality_prefixes: [ "I'm Doctor Sweetie Bot. Let's continue our therapy session. ", "Hive security unit, model "Sweetie Bot", listening to your request. " ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
-                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r", "My emotion: {emotion} | Princess Celestia: {text}\n\r\n\r", "My emotion: {emotion} | Crazy Head: {text}\n\r\n\r", "My emotion: {emotion} | Angry Head: {text}\n\r\n\r"]
+                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r", "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
                         'talk-ignored': [ "Human: Human do not answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
@@ -170,7 +170,7 @@ soar:
                         - type: 'regex'
                           prompt: "My emotion: "
                           #regex: '\s*(?P<emotion_raw>\w+)\s*[|;]\s*Sweetie Bot: (?P<result>.*)'
-                          regexes: ['[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)', '[^|]*\|\s*[Pp]rincess\s+[Cc]elestia:\s*(?P<result>.*)', '[^|]*\|\s*[Cc]razy\s+[Hh]ead:\s*(?P<result>.*)', '[^|]*\|\s*[Aa]ngry\s+[Hh]ead:\s*(?P<result>.*)']
+                          regexes: ['[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)', '[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)']
                           stop_list: ["\n"]
                         - type: 'map'
                           nlp_model: 'en_core_web_sm'
@@ -204,12 +204,12 @@ soar:
                           value_match: 'question'
                           value_nomatch: 'statement'
                 'failsafe-en':
-                    prompt_header_names: [ "failsafe-en", "failsafe-en-personality-1", "failsafe-en-personality-2", "simple-en-personality-3"  ]
-                    personality_names: [ "Sweetie Bot", "Princess Celestia", "Crazy Head", "Angry Head" ]
-                    personality_prefixes: [ "I'm Doctor Sweetie Bot. Let's continue our therapy session. ", "Princess Celestia is listening to you, my faithful student. ", "Here comes Crazy Head again... ", "Angry Head will hate you now. " ]
+                    prompt_header_names: [ "failsafe-en", "failsafe-en-personality-1" ]
+                    personality_names: [ "Sweetie Bot", "Sweetie Bot" ]
+                    personality_prefixes: [ "I'm Doctor Sweetie Bot. Let's continue our therapy session. ", "Hive security unit, model "Sweetie Bot", listening to your request. " ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
-                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r", "My emotion: {emotion} | Princess Celestia: {text}\n\r\n\r", "My emotion: {emotion} | Crazy Head: {text}\n\r\n\r", "My emotion: {emotion} | Angry Head: {text}\n\r\n\r" ]
+                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r", "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
                         'talk-ignored': [ "Human: Human do not answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
@@ -221,7 +221,7 @@ soar:
                         - type: 'regex'
                           prompt: "My emotion: "
                           #regex: '\s*(?P<emotion_raw>\w+)\s*[|;]\s*Sweetie Bot: (?P<result>.*)'
-                          regexes: ['[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)', '[^|]*\|\s*[Pp]rincess\s+[Cc]elestia:\s*(?P<result>.*)', '[^|]*\|\s*[Cc]razy\s+[Hh]ead:\s*(?P<result>.*)', '[^|]*\|\s*[Aa]ngry\s+[Hh]ead:\s*(?P<result>.*)']
+                          regexes: ['[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)', '[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)']
                           stop_list: ["\n"]
                         - type: 'map'
                           nlp_model: 'en_core_web_sm'
