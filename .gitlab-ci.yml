@@ -22,9 +22,7 @@
       fi
       if [[ "$ROBOT" == "true" ]]; then
         touch \
-          hmi/sweetie_bot_motor_state_viewer/CATKIN_IGNORE \
-          hmi/sweetie_bot_rviz_interactions/CATKIN_IGNORE \
-          hmi/sweetie_bot_joint_trajectory_editor/CATKIN_IGNORE \
+          hmi/CATKIN_IGNORE \
           behavior/sweetie_bot_voice/CATKIN_IGNORE \
           behavior/sweetie_bot_gait_generator/CATKIN_IGNORE \
           inc/ifopt/CATKIN_IGNORE \
@@ -33,6 +31,10 @@
           inc/ifopt/ifopt_snopt/CATKIN_IGNORE \
           inc/towr/towr/CATKIN_IGNORE \
           inc/towr/towr_ros/CATKIN_IGNORE
+      else
+        touch \
+          hardware/sweetie_bot_self_test/CATKIN_IGNORE \
+          hardware/sweetie_bot_touch/CATKIN_IGNORE
       fi
     - |
       source "/opt/ros/$ROS_DISTRO/setup.bash"
@@ -55,8 +57,11 @@
         portaudio19-dev \
         ros-noetic-joint-state-publisher-gui \
         ros-noetic-rqt ros-noetic-rqt-service-caller \
+        ros-noetic-joy \
         autotalent \
         python3-speechd \
+        python3-requests \
+        python3-pyaudio \
         opus-tools \
         lame \
       || echo "ret code $?"

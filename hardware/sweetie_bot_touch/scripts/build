@@ -1,0 +1,2 @@
+#!/bin/bash
+sudo dtc -I dts -O dtb $(rospack find sweetie_bot_touch)/dts/cap1188.dts -o /boot/firmware/overlays/cap1188.dtbo

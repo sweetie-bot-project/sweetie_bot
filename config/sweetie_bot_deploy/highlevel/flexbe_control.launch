@@ -74,10 +74,10 @@
 			</node>
 			<group  if="$(arg run_nlp)">
 				<group  if="$(eval robot_name == 'sweetie_bot_proto3')">  <!-- Hack to get rid of error on proto2 config -->
-					<!-- Check if path to button exists -->
+					<!-- Check if path to button exists and have read access rights -->
 					<arg name="yaml_config" default="$(eval open(robot_profile_path + '/../default/hardware.yaml').read())" />
 					<arg name="button_dev" default="$(eval eval('_' + '_import_' + '_(\'yaml\')').safe_load(yaml_config)['hardware']['external_button']['sysfs_path'])" />
-					<arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').path.exists(button_dev))" />
+					<arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').access(button_dev,4))" />
 
 					<!-- run external button node if device is connected -->
 					<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">

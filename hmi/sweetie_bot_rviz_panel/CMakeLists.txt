@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(sweetie_bot_llm)
+project(sweetie_bot_rviz_panel)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,9 +8,12 @@ project(sweetie_bot_llm)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  sweetie_bot_text_msgs
-  sweetie_bot_load_balancer
+  pluginlib
+  roscpp
   rospy
+  rviz
+  std_srvs
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -20,7 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -70,7 +73,7 @@ catkin_python_setup()
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   audio_common_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
 
 ################################################
@@ -103,9 +106,9 @@ catkin_python_setup()
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES sweetie_bot_llm
-#  CATKIN_DEPENDS audio_common_msgs rospy
+  INCLUDE_DIRS include
+#  LIBRARIES sweetie_bot_rviz_panel
+#  CATKIN_DEPENDS pluginlib roscpp rospy rviz std_srvs
 #  DEPENDS system_lib
 )
 
@@ -116,13 +119,14 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/sweetie_bot_llm.cpp
+#   src/${PROJECT_NAME}/sweetie_bot_rviz_panel.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -133,7 +137,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/sweetie_bot_llm_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/sweetie_bot_rviz_panel_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,26 +157,6 @@ include_directories(
 #############
 ## Install ##
 #############
-install(PROGRAMS
-  scripts/llm_service_client
-  scripts/llm_api_service_node
-  scripts/llm_completion_node
-  scripts/llm_classification_node
-  scripts/classificator_app.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(FILES
-  scripts/config.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(DIRECTORY
-  launch
-  config
-  service
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
 
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
@@ -217,10 +201,78 @@ install(DIRECTORY
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_sweetie_bot_llm.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_sweetie_bot_rviz_panel.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+## This setting causes Qt's "MOC" generation to happen automatically.
+set(CMAKE_AUTOMOC ON)
+
+## This plugin includes Qt widgets, so we must include Qt.
+## We'll use the version that rviz used so they are compatible.
+if(rviz_QT_VERSION VERSION_LESS "5")
+  message(STATUS "Using Qt4 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
+  find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
+  ## pull in all required include dirs, define QT_LIBRARIES, etc.
+  include(${QT_USE_FILE})
+else()
+  message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
+  find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
+  ## make target_link_libraries(${QT_LIBRARIES}) pull in all required dependencies
+  set(QT_LIBRARIES Qt5::Widgets)
+endif()
+
+# Avoid keyword definition to avaid conflicts with boost or xapian etc
+# e.g. http://muddyazian.blogspot.de/2012/04/getting-qt-app-working-with-boost-using.html
+add_definitions(-DQT_NO_KEYWORDS)
+
+# Define source file
+set(${PROJECT_NAME}_SRCS
+  src/sweetie_bot_rviz_panel.cpp
+)
+
+# Define header file
+set(${PROJECT_NAME}_HDRS
+  include/${PROJECT_NAME}/sweetie_bot_rviz_panel.hpp
+)
+
+# Define ui file
+set(${PROJECT_NAME}_UIS
+  resource/sweetie_bot_rviz_panel.ui
+)
+
+# Create header from ui file (uic)
+if(rviz_QT_VERSION VERSION_LESS "5")
+    message(STATUS "Generate header for ui with rviz_QT_VERSION: ${rviz_QT_VERSION}")
+    qt4_wrap_ui(${PROJECT_NAME}_UIS_H ${${PROJECT_NAME}_UIS})
+    qt4_wrap_cpp(${PROJECT_NAME}_MOCS ${${PROJECT_NAME}_HDRS})
+else()
+    message(STATUS "Generate header for ui with rviz_QT_VERSION: ${rviz_QT_VERSION}")
+    qt5_wrap_ui(${PROJECT_NAME}_UIS_H ${${PROJECT_NAME}_UIS})
+    qt5_wrap_cpp(${PROJECT_NAME}_MOCS ${${PROJECT_NAME}_HDRS})
+endif()
+
+## Add library is needed in order to generate the header file from ui file.
+add_library(${PROJECT_NAME}
+  ${${PROJECT_NAME}_SRCS}
+  ${${PROJECT_NAME}_UIS_H}
+  ${${PROJECT_NAME}_MOCS} 
+)
+
+target_link_libraries(${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${QT_LIBRARIES}
+)
+
+install(FILES
+  sweetie_bot_rviz_panel.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(TARGETS ${PROJECT_NAME}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
