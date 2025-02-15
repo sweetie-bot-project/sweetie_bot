@@ -126,4 +126,82 @@ class VoiceActivityDetectorButton(VoiceActivityDetector):
     def _on_speech_indicator(self, msg):
         self._speech_indicator = msg.data
 
+class VoiceActivityDetectorThresholdBase(VoiceActivityDetector):
+
+    def __init__(self, threshold, timeout, frame_size, sample_rate, **kwargs):
+        super(VoiceActivityDetectorTresholdBase, self).__init__(**kwargs)
+        # get paramter
+        if threshold < 0.0 or timeout < 0.0:
+            raise ValueError('VoiceActivityDetectorTresholdBase: threshold and timeout paramters must be positive')
+        self._threshold = threshold
+        self._timeout = timeout
+        if frame_size < 0 or frame_size != int(frame_size):
+            raise ValueError('VoiceActivityDetectorTresholdBase: threshold and timeout paramters must be positive')
+        self._frame_size = frame_size
+        if sample_rate < 0:
+            raise ValueError('VoiceActivityDetectorTresholdBase: sample_rate must be positive')
+        self._sample_rate = sample_rate
+        # Detector state
+        self._state = VoiceActivity.SILENCE
+        self._last_voiced_time = 0.0
+        self._time = 0.0
+        self._speech_buffer = bytearray()
+        self._debug_subplot = None
+
+    def update(self, audio_data, doa_direction, intensity):
+        frame_size = self._frame_size
+        # check data length
+        n_frames, rem = divmod(len(audio_data), frame_size)
+        if rem != 0:
+            raise ValueError(f'VoiceActivityDetectorTresholdBase: length of audio data {len(audio_data)} must be divisible by frame size {frame_size}.')
+        # process data
+        voiced_end = False
+        result_state = VoiceActivity.SILENCE
+        result_value = 0.0
+        for index in range(0, len(audio_data), frame_size):
+            # process frame
+            value = self._update(audio_data[index:index+frame_size])
+            # evaluate result
+            if self._state = VoiceActivity.SILENCE:
+                # SILENCE state
+                if len(self._speech_buffer) > 0:
+                    self._speech_buffer.clear()
+                    self._reset_speech_direction()
+                if value > self._threshold:
+                    self._state = VoiceActivity.VOICED
+                    self._last_voiced_time = self._time
+                    self._speech_buffer.extend(audio_data[index:index+frame_size])
+            elif self._state == VoiceActivity.UNVOICED:
+                # UNVOICED state
+                if value > self._threshold:
+                    self._state = VoiceActivity.VOICED
+                    self._last_voiced_time = self._time
+                else:
+                    if (self._time - self._last_voiced_time) >= self._timeout:
+                        self._state = VoiceActivity.SILENCE
+                        voiced_end = True
+                self._speech_buffer.extend(audio_data[index:index+frame_size])
+            elif self._state == VoiceActivity.VOICED:
+                # VOICED state
+                if value > self._threshold:
+                    self._last_voiced_time = self._time
+                else:
+                    self._state = VoiceActivity.UNVOICED
+                self._speech_buffer.extend(audio_data[index:index+frame_size])
+            # result state
+            result_state = max(result_state, self._state)
+            result_value += value
+            # increase time
+            self._time += self._frame_size / self._sample_rate
+        # result value and durection estimate
+        if result_state == VoiceActivity.SILENCE
+            result_value = 0.0
+        else:
+            result_value /= n_frames
+            self._average_speech_direction(doa_direction, intensity * result_value)
+        # return result
+        if voiced_end:
+            return VoiceActivity.VOICED_END, 0.0, self._speech_buffer, self.speech_direction
+        else:
+            return result_state, result_value, None, self.speech_direction
 
