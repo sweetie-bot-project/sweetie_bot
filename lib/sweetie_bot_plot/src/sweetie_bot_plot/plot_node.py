@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import pyqtgraph as pg
@@ -103,7 +104,7 @@ class PlotNodeWindow(QMainWindow):
                     rospy.logerr(f'Incorrect curve {curve_msg.name} on  subplot "{subplot_msg.title}": dublicate name.')
                     continue
                 # curve type
-                if curve_msg.type not in (Curve.LINE, Curve.HISTOGRAM, Curve.SCATTER):
+                if curve_msg.type not in (Curve.LINE, Curve.LINE_APPEND, Curve.HISTOGRAM, Curve.SCATTER):
                     rospy.logerr(f'Unknovwn subplot {subplot_msg.title} type: {subplot_msg.type}.')
                     continue
                 if curve_msg.type != Curve.HISTOGRAM:
@@ -124,7 +125,7 @@ class PlotNodeWindow(QMainWindow):
                 else:
                     data = [ curve_msg.y ]
                 # plotting
-                if curve_msg.type == Curve.LINE:
+                if curve_msg.type in (Curve.LINE, Curve.LINE_APPEND):
                     # draw line
                     self._curves[full_name] = subplot.plot(*data, name = name, pen = pg.mkPen(color))
                 elif curve_msg.type == Curve.SCATTER:
@@ -149,10 +150,31 @@ class PlotNodeWindow(QMainWindow):
                 if curve is None:
                     raise RuntimeError(f'Update action failed: "{curve_msg.name}" on subplot "{subplot_msg.title}" is not present in layout.')
                 # update plot
-                if len(curve_msg.x) != 0:
-                    curve.setData(curve_msg.x, curve_msg.y)
+                if curve_msg.type != Curve.LINE_APPEND:
+                    # not append mode
+                    if len(curve_msg.x) != 0:
+                        curve.setData(curve_msg.x, curve_msg.y)
+                    else:
+                        curve.setData(curve_msg.y)
                 else:
-                    curve.setData(curve_msg.y)
+                    # append current data 
+                    # TODO: save original data in separate array, avoid memory allocation
+                    x, y = curve.getOriginalDataset()
+                    if len(curve_msg.x) != 0:
+                        if not np.all(np.diff(curve_msg.x) >= 0) or x[-1] > curve_msg.x[0]:
+                            raise RuntimeError(f'Update action failed: "{curve_msg.name}" on subplot "{subplot_msg.title}": x must be not-decreasing.')
+                        x = np.concatenate([x, curve_msg.x])
+                        y = np.concatenate([y, curve_msg.y])
+                        start = np.searchsorted(x, x[-1] - curve_msg.xlength)
+                        curve.setData(x[start:], y[start:])
+                    else:
+                        xlength = int(curve_msg.xlength)
+                        if xlength <= 0:
+                            raise RuntimeError(f'Update action failed: "{curve_msg.name}" on subplot "{subplot_msg.title}": xlength must be positive integer..')
+                        y = np.concatenate([y, curve_msg.y])
+                        curve.setData(y[-int(curve_msg.xlength):])
+
+
 
 def main():
     # init PyQt application
