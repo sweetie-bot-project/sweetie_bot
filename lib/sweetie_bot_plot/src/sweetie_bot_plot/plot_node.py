@@ -116,6 +116,16 @@ class PlotNodeWindow(QMainWindow):
                 if color not in colors:
                     rospy.logerr(f'Incorrect curve {curve_msg.name} on  subplot "{subplot_msg.title}": Unknow or dubplicate color {curve_msg.color}.')
                     continue
+                # curve style
+                for linestyle_spec, linestyle in ( ('--', Qt.DashLine), ('-.', Qt.DashDotLine), ('-', Qt.SolidLine), (':', Qt.DotLine), ('', Qt.SolidLine) ):
+                    if curve_msg.style.startswith(linestyle_spec):
+                        break
+                linesymbol = curve_msg.style[len(linestyle_spec):]
+                if linesymbol == '':
+                    linesymbol = None
+                elif len(linesymbol) > 1 or linesymbol not in 'ostd+phx':
+                    rospy.logwarn(f'Incorrect curve {curve_msg.name} on  subplot "{subplot_msg.title}": style {curve_msg.style} is not supported.')
+                    linesymbol = None
                 # curve data 
                 if ((len(curve_msg.x) != expected_x_len(curve_msg.y)) and len(curve_msg.x) != 0) or len(curve_msg.y) == 0:
                     rospy.logerr(f'Incorrect curve {curve_msg.name} on  subplot "{subplot_msg.title}": The size of x field must be same as th size of y field or zero. y must not be empty: len(x) = {len(curve_msg.x)},  len(y) = {len(curve_msg.y)},  expected_len(x) = {expected_x_len(curve_msg.y)}')
@@ -127,7 +137,7 @@ class PlotNodeWindow(QMainWindow):
                 # plotting
                 if curve_msg.type in (Curve.LINE, Curve.LINE_APPEND):
                     # draw line
-                    self._curves[full_name] = subplot.plot(*data, name = name, pen = pg.mkPen(color))
+                    self._curves[full_name] = subplot.plot(*data, name = name, pen = pg.mkPen(color), style = linestyle, symbol = linesymbol)
                 elif curve_msg.type == Curve.SCATTER:
                     # add points 
                     self._curves[full_name] = subplot.plot(*data, name = name, pen = None, symbolBrush = pg.mkBrush(color), symbol = 'o')
