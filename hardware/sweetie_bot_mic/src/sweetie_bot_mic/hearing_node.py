@@ -2,7 +2,7 @@
 import struct
 import sys
 from threading import Thread, Lock
-from queue import Queue
+from queue import Queue, Full as QueueFullError
 
 import numpy as np
 
@@ -43,6 +43,9 @@ class HearingNode:
         # DOA estimator and VAD configuration
         doa_config = rospy.get_param("~doa", {'type': 'none'})
         vad_config = rospy.get_param("~vad", {'type': 'none'})
+        # speech source tracking and end of speech detection paramteres
+        self._speech_timeout = rospy.get_param('~speech_timeout', 0.5)
+        self._speech_direction_tolerance = rospy.get_param('~speech_direction_tolerance', 60.0)
         # detections and marker publication parameters
         self._detections_are_published = rospy.get_param("~detections/publish_detections", True)
         self._markers_are_published = rospy.get_param("~detections/publish_markers", True)
@@ -73,10 +76,19 @@ class HearingNode:
         #
         # Node state 
         # 
+        # external block flag
         self._disable_hearing = False
+        # histogram
         self._intesity_histogram = np.ones(shape=(10,))
         self._intesity_histogram_lock = Lock()
-        self._processing_queue = Queue()
+        # speech detection tracker
+        self._speech_is_tracked = False
+        self._s_speech_direction = PyKDL.Vector()
+        self._speech_direction_intensity = 0.0
+        self._speech_buffer = bytearray()
+        self._speech_unvoiced_duration = 0.0
+        # transcribe request queue
+        self._processing_queue = Queue(maxsize = 50)
 
         #
         # Messages buffers
@@ -84,8 +96,11 @@ class HearingNode:
 
         header = Header(frame_id = self._mic_frame_id)
         # create object detection  message
+        self._msg_header = header
         self._detection_sound_msg = Detection(header = header, id = 0, label = 'sound', type = 'sound')
+        self._detection_sound_msg.pose.orientation.w = 1.0
         self._detection_speech_msg = Detection(header = header, id = 0, label = 'speech', type = 'speech')
+        self._detection_speech_msg.pose.orientation.w = 1.0
 
         # create visualization marker message (temporary)
         self._marker_sound_msg = Marker(header = header, ns = 'microphone', 
@@ -173,12 +188,30 @@ class HearingNode:
         wav_data += data
         return wav_data
 
+    def _average_speech_direction(self, doa_direction, intensity):
+        ''' Average speech source direction using intensity as weight. '''
+        self._speech_direction += doa_direction * intensity
+        self._speech_direction_intensity += intensity
+
+    def _reset_speech_direction(self):
+        ''' Reset averaged direction. '''
+        self._speech_direction = PyKDL.Vector()
+        self._speech_direction_intensity = 0.0
+
+    @property
+    def speech_direction(self):
+        ''' Get curernt averaged direction to speech source. '''
+        if self._speech_direction_intensity > 0.0:
+            return (1.0/self._speech_direction_intensity) * self._speech_direction
+        else:
+            return PyKDL.Vector()
+
     def _publish_detections(self, sound_event, s_sound_direction, s_speech_direction, s_T_m):
-        sound_flags = sound_event.sound_flags
-        intensity = sound_event.intensity
-        speech_probability = sound_event.speech_probability
         # form and publish messages
         if self._detections_are_published or self._markers_are_published:
+            sound_flags = sound_event.sound_flags
+            intensity = sound_event.intensity
+            speech_probability = sound_event.speech_probability
             # modify only detection messsages
             # visualization marker shares the same header and pose
             detections_msg = DetectionArray()
@@ -191,7 +224,7 @@ class HearingNode:
                     s_object_pos.z(self._detections_z_position)
                 pos.x, pos.y, pos.z = s_T_m.Inverse(s_object_pos)
                 detections_msg.detections.append(self._detection_sound_msg)
-                self._marker_sound_msg.color.a = min(intensity / self._intensity_normalization_divider, 1.0)
+                self._marker_sound_msg.color.a = min(intensity, 1.0)
                 markers_msg.markers.append(self._marker_sound_msg)
             # speech object
             if sound_flags & SoundEvent.SPEECH_DETECTING:
@@ -201,10 +234,13 @@ class HearingNode:
                     s_object_pos.z(self._detections_z_position)
                 pos.x, pos.y, pos.z = s_T_m.Inverse(s_object_pos)
                 detections_msg.detections.append(self._detection_speech_msg)
-                self._marker_speech_msg.color.a = min(speech_probability * intensity / self._intensity_normalization_divider, 1.0)
+                self._marker_speech_msg.color.a = min(speech_probability * intensity, 1.0)
                 markers_msg.markers.append(self._marker_speech_msg)
             # publish messages
             if len(detections_msg.detections) > 0:
+                # update headers (all messges share common header)
+                self._msg_header.stamp = sound_event.header.stamp
+                # publication
                 if self._detections_are_published:
                     self.pub_detections.publish(detections_msg)
                 if self._markers_are_published:
@@ -231,25 +267,69 @@ class HearingNode:
         # return result 
         return s_T_m, s_PT_m
 
+    def _track_speech(self, audio_data, intensity, s_sound_direction, vad_result, vad_likehood):
+        # check if first VOICED fragment is arrived 
+        if not self._speech_is_tracked and vad_result == VoiceActivity.VOICED:
+            # reset state
+            self._speech_buffer.clear()
+            self._speech_unvoiced_duration = 0.0
+            PyKDL.SetToZero(self._s_speech_direction)
+            self._speech_direction_intensity = 0.0
+            # new state
+            self._speech_is_tracked = True
+
+        # track current speech source
+        if self._speech_is_tracked:
+            # update state 
+            if vad_result in (VoiceActivity.VOICED, VoiceActivity.UNVOICED):
+                # process frame
+                self._speech_buffer.extend(audio_data.tobytes())
+                weight = intensity * vad_likehood
+                self._s_speech_direction += weight * s_sound_direction
+                self._speech_direction_intensity += weight
+            # reset timeut on VOICED fragment
+            if vad_result == VoiceActivity.VOICED:
+                self._speech_unvoiced_duration = 0.0
+            # check timeout on UNVOICED
+            if vad_result == VoiceActivity.UNVOICED:
+                self._speech_unvoiced_duration += len(main_channel_data) / self.gstreamer_audio.rate
+                if self._speech_unvoiced_duration > self._speech_timeout:
+                    # end of speech
+                    self._speech_is_tracked = False
+                    return SoundEvent.SPEECH_DECODED
+            # check external triger
+            if vad_result == VoiceActivity.SILENCE:
+                # end of speech
+                self._speech_is_tracked = False
+                return SoundEvent.SPEECH_DECODED
+            # continue speech tracking
+            return SoundEvent.SPEECH_DETECTING
+        else:
+            # speech is not tracked
+            return 0
+
     def on_audio(self, audio_data):
         # calculate sound rms
         main_channel_data = audio_data[:, self._main_channel]
         intensity = np.sqrt(np.sum(main_channel_data.astype(np.float32)**2) / len(main_channel_data)) 
 
-        # doa estimation
+        # doa estimation (microphone frame)
         m_sound_direction, doa_values = self.doa_estimator.update(audio_data)
 
-        # transform doa to stationary
+        # vad detector
+        vad_result, vad_likehood = self.vad_detector.update(main_channel_data)
+
+        # transform DOA data to stationary frame
         s_T_m, s_PT_m = self._get_transforms_from_mic_to_stationary()
         s_sound_direction = s_PT_m.M * m_sound_direction # use projectied transform to be correct for 2D estimate
 
-        # vad detector
-        vad_result, speech_probability, speech_audio_buffer, s_speech_direction  = self.vad_detector.update(main_channel_data, s_sound_direction, intensity)
+        # speech tracker
+        speech_flags = self._track_speech(main_channel_data, intensity, s_sound_direction, vad_result, vad_likehood)
 
         # sound event message
         sound_event = SoundEvent(header = Header(frame_id = self._mic_frame_id, stamp = rospy.Time.now()), 
                                  intensity = intensity / self._intensity_normalization_divider,
-                                 speech_probability = speech_probability,
+                                 speech_probability = vad_likehood,
                                  doa = Vector3(*m_sound_direction),
                                  doa_azimuth = self.doa_estimator.grid_azimuth, 
                                  doa_colatitude = self.doa_estimator.grid_colatitude,
@@ -258,18 +338,24 @@ class HearingNode:
         sound_flags = 0
         if intensity > self._sound_intensity_threshold:
             sound_flags |= SoundEvent.SOUND_DETECTING
-        if vad_result in (VoiceActivity.VOICED, VoiceActivity.UNVOICED):
-            sound_flags |= SoundEvent.SPEECH_DETECTING
-        elif vad_result == VoiceActivity.VOICED_END:
-            sound_flags |= SoundEvent.SPEECH_DECODED
-            speech_audio_buffer = self.buf_to_wav(speech_audio_buffer) # create copy
+        sound_flags |= speech_flags
         sound_event.sound_flags = sound_flags
 
+        # copy speech audio data fi it is necessary
+        if sound_flags & SoundEvent.SPEECH_DECODED:
+            speech_audio_buffer = self.buf_to_wav(self._speech_buffer) # create copy
+        else:
+            speech_audio_buffer = None
+
         # pass data for futher processing
-        self._processing_queue.put_nowait( (sound_event, speech_audio_buffer) )
+        try:
+            self._processing_queue.put_nowait( (sound_event, speech_audio_buffer) )
+        except QueueFullError:
+            rospy.logwarn('HearingNode: SoundEvent queue is full. Drop sound event. Maybe speech to text transcription is taking to long.')
 
         # publish object detections 
         if m_sound_direction != PyKDL.Vector.Zero():
+            s_speech_direction = self._s_speech_direction / self._speech_direction_intensity
             self._publish_detections(sound_event, s_sound_direction, s_speech_direction, s_T_m)
 
         # publish debug plot
