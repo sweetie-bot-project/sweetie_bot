@@ -136,13 +136,14 @@ class AttribRequest:
         cls = AttribRequest.subclass_map[type]
         return super(AttribRequest, cls).__new__(cls)
 
-    def __init__(self, type, prompt = None, stop_list = [], temperature = -1):
+    def __init__(self, type, prompt = None, stop_list = [], temperature = -1, feed_user_phrase = False):
         if prompt is not None:
             assert_param(prompt, 'prompt: must be str or None', allowed_types=(str,))
         self.prompt = prompt
         assert_param(stop_list, 'stop_list: must be list of strings', allowed_types=list, check_func=lambda v: all( isinstance(e, str) for e in v ))
         self.stop_list = stop_list
         self.temperature = temperature
+        self.feed_user_phrase = feed_user_phrase
 
 class AttribRequestRegex(AttribRequest):
 
@@ -335,7 +336,7 @@ class LangRequest:
         self._current_header_name = self._header_names[self._selected_header_idx]
         self._selected_header = self._headers[self._current_header_name]
         self._selection_cooldown_sec = header_change_probability or 0 #60
-        self._header_change_probability = header_change_probability or 0.5
+        self._header_change_probability = header_change_probability or 1 #0.5
         self._last_header_update_time = datetime.now()
         self._elapsed_events_after_update = 0
 
@@ -368,6 +369,18 @@ class LangRequest:
         if len(self._requests) == 0 or self._requests[0].prompt is None:
             raise ValueError('incorrect attrib_request declaraition: at leat one request should present, first request should contain prompt field.')
 
+    def change_to_header_with_id(self, new_header_id):
+        if new_header_id >= len(self._header_names):
+            return
+
+        self._current_header_name = self._header_names[new_header_id]
+        self._selected_header = self._headers[self._current_header_name]
+        self._previous_selected_header_idx = self._selected_header_idx
+        self._selected_header_idx = self._header_names.index(self._current_header_name)
+
+        self._last_header_update_time = datetime.now()
+        self._elapsed_events_after_update = 0
+
     def try_change_header(self):
         elapsed_after_update = datetime.now() - self._last_header_update_time
         if self._elapsed_events_after_update > self._max_events:
@@ -391,15 +404,14 @@ class LangRequest:
         #
         # form prompt
         #
-        self.try_change_header()
-        prompt = self._selected_header
+        prompt_tail = ""
         # verbolize predicates
         if self._max_predicates > 0:
             # sort by timestamp
             predicates.sort(key = lambda ev: ev.stamp)
             # verbolize last max_predicates
             for pred in predicates[-self._max_predicates:]:
-                prompt += pred.verbolize(self._fact_templates)
+                prompt_tail += pred.verbolize(self._fact_templates)
         # verbolize events
         if self._max_events > 0:
             # sort by timestamp
@@ -411,24 +423,54 @@ class LangRequest:
                 last_events.pop(0)
 
         for ev in last_events:
-            prompt += ev.verbolize(self._fact_templates, self._selected_header_idx)
+            prompt_tail += ev.verbolize(self._fact_templates, self._selected_header_idx)
 
         # Save last human phrase for later processing
         last_heard_phrase = None
         if len(last_events) > 0:
             last_heard_phrase = ev.text
 
+        #
+        # perform requests that parse user phrase
+        #
+        result = {}
+        success = True
+        kwargs = {}
+        try:
+            if last_heard_phrase is not None:
+                for request in self._requests:
+                    if request.feed_user_phrase:
+                        parse_result = request.parse(last_heard_phrase, **kwargs)
+                        if parse_result is None:
+                            success = False
+                            result['error_desc'] = 'User phrase parse error'
+
+                        # Entering into quest mode dialogue
+                        if 'quest_mode' in parse_result:
+                            if parse_result['quest_mode'] == 'hnb_quest_mode':
+                                self.change_to_header_with_id(hnb_personality := 1)
+
+                        print('parse result: ', parse_result)
+                        result.update( parse_result )
+        except Exception as e:
+            success = False
+            breakpoint()
+            result['error_desc'] = 'Unknown user phrase parse error'
+
         # add text
         if text is not None:
             template = self._fact_templates['text']
             if template is None:
-                prompt += text
+                prompt_tail += text
             else:
                 # get random template
                 if isinstance(template, list):
                     template = choice(template)
                 # use template
-                prompt += template % text
+                prompt_tail += template % text
+
+        self.try_change_header() # Stochastic personality change
+        prompt = self._selected_header + prompt_tail
 
         current_personality = self._personality_names[self._selected_header_idx]
         previous_personality = ''
@@ -440,11 +482,11 @@ class LangRequest:
         #
         # perform requests
         #
-        result = {}
-        success = True
-        kwargs = {}
         try:
             for request in self._requests:
+                if request.feed_user_phrase:
+                    continue # Skip already processed requests
+
                 # request lang model if prompt is present
                 if request.prompt is not None:
                     # update prompt
@@ -474,7 +516,7 @@ class LangRequest:
                     kwargs = dict(selected_prompt_i=self._selected_header_idx)
 
                 # parse result (current or prevoius)
-                parse_result = request.parse(resp.result, **kwargs)
+                parse_result = request.parse(resp.result, **kwargs)    
                 if parse_result is None:
                     # TODO: Better handle wrong emotion responses as '1'
                     # TODO: And figure out why is there two emotion requests happening

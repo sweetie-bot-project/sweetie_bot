@@ -115,7 +115,7 @@ sp {talk-llm*propose*greetin
 	(<s> ^operator <op> +, =)
 	(<op> ^name greeting ^substate verbolize ^process-args <proc>)
 	(<proc> ^object <obj> ^topic greet ^result <res-succeed>)
-	(<proc> ^text |Hello! I am Doctor Sweetie Bot! Press the button to start our therapy session.| ^animation-tag greeting ^lang <lang> ^emotion neutral ^type statement)
+	(<proc> ^text |Hello! I am Свитииибот! Speak while the button is pressed.| ^animation-tag greeting ^lang <lang> ^emotion neutral ^type statement)
 	(<res-succeed> ^print (concat |SPECIFIC: GREETING| (crlf)))
 }
 
