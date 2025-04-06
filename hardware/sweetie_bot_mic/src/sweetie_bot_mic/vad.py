@@ -101,14 +101,34 @@ class VoiceActivityDetectorIntensity(VoiceActivityDetector):
             raise RuntimeError("VoiceActivityDetectorIntensity: 'threshold' parameter must present and be positive numeric value.")
         # detector state
         self._speech_indicator = False
+        self._intesity = 0.0
+        # debug plot
+        self._debug_subplot = None
+        self._plot_xlength = 10.0
         # node constructed
         rospy.loginfo(f'VAD type: sound intesity threshold.')
 
     def update(self, audio_data):
-        intensity = np.sqrt(np.sum(audio_data.astype(np.float32)**2) / len(audio_data)) 
-        if intensity > self._threshold:
+        self._intensity = np.sqrt(np.sum(audio_data.astype(np.float32)**2) / len(audio_data)) 
+        if self._intensity > self._threshold:
             return VoiceActivity.VOICED, 1.0
         else:
             return VoiceActivity.UNVOICED, 1.0
+
+    def debug_plots(self, t):
+        ''' Return array of sweetie_bot_plot.msgs.Subplot object with debug information. '''
+        if self._debug_subplot is None:
+            from sweetie_bot_plot.msg import Plot, Subplot, Curve
+            self._debug_subplot = Subplot(title = 'Speech by sound intensity', xlabel = 't', ylabel= 'intensity',
+                                          curves = [ Curve(name = 'intensity', type = Curve.LINE_APPEND, xlength = self._plot_xlength, style='-', x = [ 0.0,], y = [0.0,]), 
+                                                     Curve(name = 'threshold', type = Curve.LINE, x = [ -self._plot_xlength, 0.0], y = [0.0, 0.0]),  
+                                                     Curve(name = 'speech flag', type = Curve.LINE_APPEND, xlength = self._plot_xlength, x = [ 0.0,], y = [0.0,]) ])
+        self._debug_subplot.curves[0].x[0] = t
+        self._debug_subplot.curves[0].y[0] = self._intensity
+        self._debug_subplot.curves[1].x[:] = t - self._plot_xlength, t
+        self._debug_subplot.curves[1].y[:] = self._threshold, self._threshold
+        self._debug_subplot.curves[2].x[0] = t
+        self._debug_subplot.curves[2].y[0] = 2 * self._threshold if (self._intensity > self._threshold) else 0.0
+        return (self._debug_subplot,)
 
 
