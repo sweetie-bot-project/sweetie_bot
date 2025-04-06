@@ -57,7 +57,7 @@ class DOAEstimator:
     def grid_values(self):
         raise NotImplementedError
 
-    def debug_plots(self):
+    def debug_plots(self, t):
         return ()
 
 
@@ -211,7 +211,7 @@ class DOAEstimatorPyRoomAcoustics(DOAEstimator):
         doa_values = self.doa_estimator.grid.values / doa_values_sum
         return doa_direction, doa_values
 
-    def debug_plots(self):
+    def debug_plots(self, t):
         # only 2D plot is supported
         if self.doa_estimator.dim != 2:
             return []

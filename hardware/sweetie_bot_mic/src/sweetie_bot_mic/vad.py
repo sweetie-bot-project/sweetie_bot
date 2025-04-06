@@ -1,6 +1,7 @@
 import rospy
 import PyKDL
 from enum import IntEnum
+import numpy as np
 
 from sweetie_bot_text_msgs.msg import SoundEvent
 from std_msgs.msg import Bool
@@ -50,8 +51,18 @@ class VoiceActivityDetector:
         '''
         raise NotImplementedError
 
-    def debug_plots(self):
-        ''' Return array of sweetie_bot_plot.msgs.Subplot object with debug information. '''
+    def debug_plots(self, t):
+        ''' Return array of sweetie_bot_plot.msgs.Subplot object with debug information.
+
+        Arguments
+        ---------
+        t: float
+            Current plot time.
+        Returns
+        -------
+        result: tuple(sweetie_bot_plot.msg.Subplot)
+            Subplot to add.
+        '''
         return ()
 
 class VoiceActivityDetectorNone(VoiceActivityDetector):
@@ -88,8 +99,9 @@ class VoiceActivityDetectorIntensity(VoiceActivityDetector):
         self._threshold = kwargs.get('threshold')
         if not isinstance(self._threshold, (int,float)) or self._threshold <= 0.0:
             raise RuntimeError("VoiceActivityDetectorIntensity: 'threshold' parameter must present and be positive numeric value.")
-
+        # detector state
         self._speech_indicator = False
+        # node constructed
         rospy.loginfo(f'VAD type: sound intesity threshold.')
 
     def update(self, audio_data):

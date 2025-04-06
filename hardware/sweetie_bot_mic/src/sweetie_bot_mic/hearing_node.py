@@ -417,8 +417,8 @@ class HearingNode:
             speech_likehood_subplot.curves[2].y[0] = 1.0 if sound_flags & SoundEvent.SPEECH_DETECTING else 0.0
             # add submodules plots
             del self._plot_msg.subplots[3:]
-            self._plot_msg.subplots.extend( self.doa_estimator.debug_plots() )
-            self._plot_msg.subplots.extend( self.vad_detector.debug_plots() )
+            self._plot_msg.subplots.extend( self.doa_estimator.debug_plots(t) )
+            self._plot_msg.subplots.extend( self.vad_detector.debug_plots(t) )
             # publish result
             self.pub_plot.publish(self._plot_msg)
 
