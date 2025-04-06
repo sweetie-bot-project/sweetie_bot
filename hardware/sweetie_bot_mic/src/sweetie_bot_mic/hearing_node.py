@@ -126,7 +126,11 @@ class HearingNode:
                                         curves = [ Curve(name = 'intensity', type = Curve.LINE_APPEND, xlength = xlength, style='-', x = [ 0.0,], y = [0.0,]), 
                                                    Curve(name = 'threshold', type = Curve.LINE, x = [ -xlength, 0.0], y = [0.0, 0.0]),  
                                                    Curve(name = 'sound flag', type = Curve.LINE_APPEND, xlength = xlength, x = [ 0.0,], y = [0.0,]) ])
-            self._plot_msg = Plot(title=rospy.get_name(), action=Plot.UPDATE, subplots = [ intensity_histogram_subplot, intensity_subplot ])
+            speech_likehood_subplot = Subplot(title = 'Speech likehood', xlabel = 't', ylabel= 'likehood',
+                                              curves = [ Curve(name = 'likehood', type = Curve.LINE_APPEND, xlength = xlength, style='-', x = [ 0.0,], y = [0.0,]), 
+                                                         Curve(name = 'VOICED/UNVOICED', type = Curve.LINE_APPEND, xlength = xlength, x = [ 0.0,], y = [0.0,]),
+                                                         Curve(name = 'speech flag', type = Curve.LINE_APPEND, xlength = xlength, x = [ 0.0,], y = [0.0,]) ])
+            self._plot_msg = Plot(title=rospy.get_name(), action=Plot.UPDATE, subplots = [ intensity_histogram_subplot, intensity_subplot, speech_likehood_subplot ])
         
         #
         # Node interface
@@ -300,7 +304,7 @@ class HearingNode:
                 self._speech_unvoiced_duration = 0.0
             # check timeout on UNVOICED
             if vad_result == VoiceActivity.UNVOICED:
-                self._speech_unvoiced_duration += len(main_channel_data) / self.gstreamer_audio.rate
+                self._speech_unvoiced_duration += len(audio_data) / self.gstreamer_audio.rate
                 if self._speech_unvoiced_duration > self._speech_timeout:
                     # end of speech
                     self._speech_is_tracked = False
@@ -403,8 +407,16 @@ class HearingNode:
             intensity_subplot.curves[1].y[:] = self._sound_intensity_threshold, self._sound_intensity_threshold
             intensity_subplot.curves[2].x[0] = t
             intensity_subplot.curves[2].y[0] = 2 * self._sound_intensity_threshold if sound_flags & SoundEvent.SOUND_DETECTING else 0.0
+            # speech likehood subplot
+            speech_likehood_subplot = self._plot_msg.subplots[2]
+            speech_likehood_subplot.curves[0].x[0] = t
+            speech_likehood_subplot.curves[0].y[0] = vad_likehood
+            speech_likehood_subplot.curves[1].x[0] = t
+            speech_likehood_subplot.curves[1].y[0] = 0.9 if vad_result == VoiceActivity.VOICED else (0.1 if vad_result == VoiceActivity.UNVOICED else 0.0)
+            speech_likehood_subplot.curves[2].x[0] = t
+            speech_likehood_subplot.curves[2].y[0] = 1.0 if sound_flags & SoundEvent.SPEECH_DETECTING else 0.0
             # add submodules plots
-            del self._plot_msg.subplots[2:]
+            del self._plot_msg.subplots[3:]
             self._plot_msg.subplots.extend( self.doa_estimator.debug_plots() )
             self._plot_msg.subplots.extend( self.vad_detector.debug_plots() )
             # publish result
