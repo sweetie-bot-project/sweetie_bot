@@ -56,6 +56,7 @@ class HearingNode:
         self._debug_plot = rospy.get_param("~debug_plot", True)
         self._intensity_histogram_forget_factor = rospy.get_param("~intensity_histogram_forget_factor", 0.999)
         self._intensity_histogram_step = rospy.get_param("~intensity_histogram_step", 100.0)
+        self._intensity_plot_duration = rospy.get_param("~intensity_plot_duration", 8.0)
 
         #
         # Direaction of arrival estimator and voice activity detector
@@ -78,7 +79,8 @@ class HearingNode:
         # 
         # external block flag
         self._disable_hearing = False
-        # histogram
+        # histogram and plot
+        self._plot_start_timestamp = rospy.Time.now()
         self._intesity_histogram = np.ones(shape=(10,))
         self._intesity_histogram_lock = Lock()
         # speech detection tracker
@@ -114,12 +116,17 @@ class HearingNode:
 
         # debug plot messages
         if self._debug_plot:
+            xlength = self._intensity_plot_duration
             # import plot message library
             from sweetie_bot_plot.msg import Plot, Subplot, Curve
             # create plot buffer
             intensity_histogram_subplot = Subplot(title = 'Sound intensity histogram', xlabel = 'intensity', ylabel= 'count',
                                                   curves = [ Curve(name = 'statistics', type = Curve.HISTOGRAM), Curve(name = 'now', type = Curve.HISTOGRAM)])
-            self._plot_msg = Plot(title=rospy.get_name(), action=Plot.UPDATE, subplots = [ intensity_histogram_subplot ])
+            intensity_subplot = Subplot(title = 'Sound intensity', xlabel = 't', ylabel= 'intensity',
+                                        curves = [ Curve(name = 'intensity', type = Curve.LINE_APPEND, xlength = xlength, style='-', x = [ 0.0,], y = [0.0,]), 
+                                                   Curve(name = 'threshold', type = Curve.LINE, x = [ -xlength, 0.0], y = [0.0, 0.0]),  
+                                                   Curve(name = 'sound flag', type = Curve.LINE_APPEND, xlength = xlength, x = [ 0.0,], y = [0.0,]) ])
+            self._plot_msg = Plot(title=rospy.get_name(), action=Plot.UPDATE, subplots = [ intensity_histogram_subplot, intensity_subplot ])
         
         #
         # Node interface
@@ -162,6 +169,7 @@ class HearingNode:
 
     def on_reset_statistics(self, request):
         # reset histogramm
+        self._plot_start_timestamp = rospy.Time.now()
         with self._intesity_histogram_lock:
             self._intesity_histogram = np.ones(shape=(10,))
         return TriggerResponse(success = True, message='Histogram is cleared.')
@@ -309,6 +317,8 @@ class HearingNode:
             return 0
 
     def on_audio(self, audio_data):
+        timestamp = rospy.Time.now()
+
         # calculate sound rms
         main_channel_data = audio_data[:, self._main_channel]
         intensity = np.sqrt(np.sum(main_channel_data.astype(np.float32)**2) / len(main_channel_data)) 
@@ -327,7 +337,7 @@ class HearingNode:
         speech_flags = self._track_speech(main_channel_data, intensity, s_sound_direction, vad_result, vad_likehood)
 
         # sound event message
-        sound_event = SoundEvent(header = Header(frame_id = self._mic_frame_id, stamp = rospy.Time.now()), 
+        sound_event = SoundEvent(header = Header(frame_id = self._mic_frame_id, stamp = timestamp), 
                                  intensity = intensity / self._intensity_normalization_divider,
                                  speech_probability = vad_likehood,
                                  doa = Vector3(*m_sound_direction),
@@ -381,8 +391,20 @@ class HearingNode:
             stat_plot.y = self._intesity_histogram / intensity_speech_sum
             now_plot.x = np.array([intensity_index, intensity_index + 1]) * self._intensity_histogram_step
             now_plot.y = [ p_speech ]
+            # intensity subplot
+            t = (timestamp - self._plot_start_timestamp).to_sec()
+            T = len(main_channel_data)/self.gstreamer_audio.rate
+            intensity_subplot = self._plot_msg.subplots[1]
+            intensity_subplot.curves[0].x[0] = t
+            intensity_subplot.curves[0].y[0] = intensity
+            intensity_subplot.curves[0].x = np.linspace(0.0, T, 256, endpoint=False) + np.round(t/T)*T
+            intensity_subplot.curves[0].y = main_channel_data.reshape(256, len(main_channel_data)//256).sum(axis=1)
+            intensity_subplot.curves[1].x[:] = t - self._intensity_plot_duration, t
+            intensity_subplot.curves[1].y[:] = self._sound_intensity_threshold, self._sound_intensity_threshold
+            intensity_subplot.curves[2].x[0] = t
+            intensity_subplot.curves[2].y[0] = 2 * self._sound_intensity_threshold if sound_flags & SoundEvent.SOUND_DETECTING else 0.0
             # add submodules plots
-            del self._plot_msg.subplots[1:]
+            del self._plot_msg.subplots[2:]
             self._plot_msg.subplots.extend( self.doa_estimator.debug_plots() )
             self._plot_msg.subplots.extend( self.vad_detector.debug_plots() )
             # publish result
