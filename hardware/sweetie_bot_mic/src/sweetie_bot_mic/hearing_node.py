@@ -397,8 +397,8 @@ class HearingNode:
             intensity_subplot = self._plot_msg.subplots[1]
             intensity_subplot.curves[0].x[0] = t
             intensity_subplot.curves[0].y[0] = intensity
-            intensity_subplot.curves[0].x = np.linspace(0.0, T, 256, endpoint=False) + np.round(t/T)*T
-            intensity_subplot.curves[0].y = main_channel_data.reshape(256, len(main_channel_data)//256).sum(axis=1)
+            #intensity_subplot.curves[0].x = np.linspace(0.0, T, 256, endpoint=False) + np.round(t/T)*T
+            #intensity_subplot.curves[0].y = main_channel_data.reshape(256, len(main_channel_data)//256).sum(axis=1)
             intensity_subplot.curves[1].x[:] = t - self._intensity_plot_duration, t
             intensity_subplot.curves[1].y[:] = self._sound_intensity_threshold, self._sound_intensity_threshold
             intensity_subplot.curves[2].x[0] = t
