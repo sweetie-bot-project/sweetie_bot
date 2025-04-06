@@ -23,6 +23,8 @@ doa:
     nfft: 1024
 vad:
     type: 'button'
+speech_timeout: 0.75
+speech_direction_tolerance: 60.0
 detections:
     publish_detections: True
     publish_markers: True
