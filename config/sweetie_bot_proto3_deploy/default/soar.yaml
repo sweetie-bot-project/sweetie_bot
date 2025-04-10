@@ -153,12 +153,12 @@ soar:
                           value_nomatch: 'statement'
                           stop_list: ["\n"]
                 'simple-en':
-                    prompt_header_names: [ "simple-en", "simple-en-personality-1" ]
-                    personality_names: [ "Sweetie Bot", "Sweetie bot" ]
-                    personality_prefixes: [ "Okay, I grant you permission to see a note. Let's continue our dialogue. Press a button. ", "Hive guardian, model Sweetie Bot, listening to your request. " ]
+                    prompt_header_names: [ "simple-en" ]
+                    personality_names: [ "Sweetie Bot" ]
+                    personality_prefixes: [ "Hello, my name is Sweetie Bot! Let's continue our dialogue! " ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
-                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r", "My emotion: {emotion} | Sweetie bot: {text}\n\r\n\r" ]
+                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
                         'talk-ignored': [ "Human: Human do not answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
@@ -170,7 +170,7 @@ soar:
                         - type: 'regex'
                           prompt: "My emotion: "
                           #regex: '\s*(?P<emotion_raw>\w+)\s*[|;]\s*Sweetie Bot: (?P<result>.*)'
-                          regexes: ['[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)', '[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)']
+                          regexes: ['[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)']
                           stop_list: ["\n"]
                         - type: 'map'
                           nlp_model: 'en_core_web_sm'
@@ -198,25 +198,25 @@ soar:
                             sad: [ 'neutral', 'sad', ]
                             fear: [ 'neutral', 'fear' ]
                             anger: [ 'anger' ]
-                        - type: 'regex-test'
-                          # regex: '.*([Gg]uard|[Hh]ive\s*[Ss]ecurity|[Uu]li|[Cc]hangeling).*'
-                          regex: '.*[Gg]uard.*'
-                          feed_user_phrase: true
-                          attrib: 'quest_mode'
-                          value_match: 'hnb_quest_mode'
-                          value_nomatch: 'standard_mode'
+                        # - type: 'regex-test'
+                        #   regex: '.*([Gg]uard|[Hh]ive\s*[Ss]ecurity|[Uu]li\s*[Ss]ecurity|(see|look|get|give|show|tell).*[Ll]etter.*(classified)?|([Cc]lassified|[Ss]ecret).*(letter|document)).*'
+                        #   # regex: '.*[Gg]uard.*'
+                        #   feed_user_phrase: true
+                        #   attrib: 'quest_mode'
+                        #   value_match: 'hnb_quest_mode'
+                        #   value_nomatch: 'standard_mode'
                         - type: 'regex-test'
                           regex: ".*\\?.*"
                           attrib: 'sentence-type'
                           value_match: 'question'
                           value_nomatch: 'statement'
                 'failsafe-en':
-                    prompt_header_names: [ "failsafe-en", "failsafe-en-personality-1" ]
-                    personality_names: [ "Sweetie Bot", "Sweetie bot" ]
-                    personality_prefixes: [ "Okay, I grant you permission to see a note. Let's continue our dialogue. Press a button. ", "Hive guardian, model Sweetie Bot, listening to your request. " ]
+                    prompt_header_names: [ "failsafe-en" ]
+                    personality_names: [ "Sweetie Bot" ]
+                    personality_prefixes: [ "Okay, I grant you permission to see a note. Let's continue our dialogue. " ]
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
-                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r", "My emotion: {emotion} | Sweetie bot: {text}\n\r\n\r" ]
+                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
                         'talk-ignored': [ "Human: Human do not answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
@@ -228,7 +228,7 @@ soar:
                         - type: 'regex'
                           prompt: "My emotion: "
                           #regex: '\s*(?P<emotion_raw>\w+)\s*[|;]\s*Sweetie Bot: (?P<result>.*)'
-                          regexes: ['[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)', '[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)']
+                          regexes: ['[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)']
                           stop_list: ["\n"]
                         - type: 'map'
                           nlp_model: 'en_core_web_sm'
@@ -256,13 +256,13 @@ soar:
                             sad: [ 'neutral', 'sad', ]
                             fear: [ 'neutral', 'fear' ]
                             anger: [ 'anger' ]
-                        - type: 'regex-test'
-                          # regex: '.*([Gg]uard|[Hh]ive\s*[Ss]ecurity|[Uu]li|[Cc]hangeling).*'
-                          regex: '.*[Gg]uard.*'
-                          feed_user_phrase: true
-                          attrib: 'quest_mode'
-                          value_match: 'hnb_quest_mode'
-                          value_nomatch: 'standard_mode'
+                        # - type: 'regex-test'
+                        #   regex: '.*([Gg]uard|[Hh]ive\s*[Ss]ecurity|[Uu]li\s*[Ss]ecurity|(see|look|get|give|show|tell).*[Ll]etter.*(classified)?|([Cc]lassified|[Ss]ecret).*(letter|document)).*'
+                        #   # regex: '.*[Gg]uard.*'
+                        #   feed_user_phrase: true
+                        #   attrib: 'quest_mode'
+                        #   value_match: 'hnb_quest_mode'
+                        #   value_nomatch: 'standard_mode'
                         - type: 'regex-test'
                           regex: ".*\\?.*"
                           attrib: 'sentence-type'
