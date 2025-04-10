@@ -63,8 +63,21 @@ class TranslateNode:
         if ( 'error' in response or 'translatedText' not in response):
             raise TranslateError('wrong response structure', response)
 
-        # Eliminate all dots, so TTS wouldn't have a chance to pronounce them
-        response['translatedText'] = response['translatedText'].replace('.', ';')
+        def replace_period_with_semicolon_in_chunks(s):
+            CHUNK_SIZE = 256
+            str_chunks = [s[i:min(i+CHUNK_SIZE, len(s))] for i in range(0, len(s), CHUNK_SIZE)]
+            chunk_last_period_indexes = [chunk.rfind('.') for chunk in str_chunks]
+            result_chunks = []
+            for chunk, last_period_index in zip(str_chunks, chunk_last_period_indexes):
+                # Don't touch period at the end of the chunk
+                chunk_before_last_period = chunk[:last_period_index]
+                chunk_before_last_period = chunk_before_last_period.replace('.', ';')
+                result_chunks.append(chunk_before_last_period + chunk[last_period_index:])
+            return ''.join(result_chunks)
+
+        # Eliminate most of dots, so TTS wouldn't have a chance to pronounce them.
+        # (but keep some of them to allow TTS to split long sentences into reasonable size chunks)
+        response['translatedText'] = replace_period_with_semicolon_in_chunks(response['translatedText'])
 
         # Eliminate all other unwanted characters, that TTS can potentially pronounce
         response['translatedText'] = re.sub("«|»", " ", response['translatedText'])
