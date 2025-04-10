@@ -369,17 +369,26 @@ class LangRequest:
         if len(self._requests) == 0 or self._requests[0].prompt is None:
             raise ValueError('incorrect attrib_request declaraition: at leat one request should present, first request should contain prompt field.')
 
-    def change_to_header_with_id(self, new_header_id):
-        if new_header_id >= len(self._header_names):
-            return
-
-        self._current_header_name = self._header_names[new_header_id]
+    def _update_header_variables(self, new_header_name):
+        self._current_header_name = new_header_name
         self._selected_header = self._headers[self._current_header_name]
         self._previous_selected_header_idx = self._selected_header_idx
         self._selected_header_idx = self._header_names.index(self._current_header_name)
 
         self._last_header_update_time = datetime.now()
         self._elapsed_events_after_update = 0
+
+    def change_to_header_with_id(self, new_header_id):
+        if new_header_id >= len(self._header_names):
+            return
+
+        self._update_header_variables(self._header_names[new_header_id])
+
+    def try_reset_header(self, default_header_id : int = 0):
+        elapsed_after_update = datetime.now() - self._last_header_update_time
+        if self._elapsed_events_after_update > self._max_events:
+            if elapsed_after_update.total_seconds() > self._selection_cooldown_sec:
+                self._update_header_variables(self._header_names[default_header_id])
 
     def try_change_header(self):
         elapsed_after_update = datetime.now() - self._last_header_update_time
@@ -392,13 +401,7 @@ class LangRequest:
                         return
 
                     new_name_choice = np.random.choice(len(name_pool), size=1, replace=False).item()
-                    self._current_header_name = name_pool[new_name_choice]
-                    self._selected_header = self._headers[self._current_header_name]
-                    self._previous_selected_header_idx = self._selected_header_idx
-                    self._selected_header_idx = self._header_names.index(self._current_header_name)
-
-                    self._last_header_update_time = datetime.now()
-                    self._elapsed_events_after_update = 0
+                    self._update_header_variables(name_pool[new_name_choice])
 
     def perform_request(self, llm_caller, events, predicates, text = None):
         #
@@ -433,6 +436,7 @@ class LangRequest:
         #
         # perform requests that parse user phrase
         #
+        # TODO: Do request queue and pull them from there sequentially
         result = {}
         success = True
         kwargs = {}
@@ -447,15 +451,16 @@ class LangRequest:
 
                         # Entering into quest mode dialogue
                         if 'quest_mode' in parse_result:
-                            if parse_result['quest_mode'] == 'hnb_quest_mode':
-                                self.change_to_header_with_id(hnb_personality := 1)
+                            quest_personality = 1 # Personality for the quest
+                            if parse_result['quest_mode'] == 'hnb_quest_mode' and self._selected_header_idx != quest_personality:
+                                self.change_to_header_with_id(quest_personality)
 
                         print('parse result: ', parse_result)
                         result.update( parse_result )
         except Exception as e:
             success = False
             breakpoint()
-            result['error_desc'] = 'Unknown user phrase parse error'
+            result['error_desc'] = 'Unknown user phrase parse error. Please, investigate it.'
 
         # add text
         if text is not None:
@@ -469,7 +474,8 @@ class LangRequest:
                 # use template
                 prompt_tail += template % text
 
-        self.try_change_header() # Stochastic personality change
+        self.try_reset_header()
+        # self.try_change_header() # Stochastic personality change
         prompt = self._selected_header + prompt_tail
 
         current_personality = self._personality_names[self._selected_header_idx]
@@ -542,7 +548,8 @@ class LangRequest:
             breakpoint()
             result['error_desc'] = f'Unknown LLM error. Please, investigate it.'
         else:
-            self._elapsed_events_after_update += 1
+            if last_heard_phrase is not None:
+                self._elapsed_events_after_update += 1
 
         print(f'Current prompt: {prompt}')
         print(f'Current personality: {self._personality_names[self._selected_header_idx]}')
