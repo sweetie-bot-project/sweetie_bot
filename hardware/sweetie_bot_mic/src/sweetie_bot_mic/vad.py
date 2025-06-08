@@ -91,6 +91,24 @@ class VoiceActivityDetectorButton(VoiceActivityDetector):
     def _on_speech_indicator(self, msg):
         self._speech_indicator = msg.data
 
+class VoiceActivityDetectorSilero_vad(VoiceActivityDetector):
+    ''' By silero_vad ROS topic message as speech indicator. '''
+    _detector_type = 'silero_vad'
+
+    def __init__(self, **kwargs):
+        # listen: mic button is pressed
+        self._sub_speech_indicator = rospy.Subscriber("mic_button", Bool, self._on_speech_indicator)
+        self._speech_indicator = False
+        rospy.loginfo(f"VAD type: silero_vad.")
+
+    def update(self, audio_data):
+        if self._speech_indicator:
+            return VoiceActivity.VOICED, 1.0
+        else: 
+            return VoiceActivity.SILENCE, 0.0
+
+    def _on_speech_indicator(self, msg):
+        self._speech_indicator = msg.data
 
 class VoiceActivityDetectorIntensity(VoiceActivityDetector):
     _detector_type = 'intensity'

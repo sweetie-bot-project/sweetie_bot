@@ -22,7 +22,16 @@ doa:
     azimuth: [ -90.0, 90.0, 32 ]
     nfft: 1024
 vad:
-    type: 'button'
+    #type: 'button'
+    type: 'intensity'
+    threshold: 500
+silero_vad:
+    type: 'silero_vad'
+    receive_ip: '127.0.0.1'
+    receive_port: 1234
+    treshhold_voised : 0.6
+    treshhold_unvoised: 0.4
+    treshhold_silence: 0.0
 speech_timeout: 0.75
 speech_direction_tolerance: 60.0
 detections:
