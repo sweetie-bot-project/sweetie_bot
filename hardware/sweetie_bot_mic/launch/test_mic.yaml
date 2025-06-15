@@ -21,17 +21,16 @@ doa:
     grid_type: '2d_linspace'
     azimuth: [ -90.0, 90.0, 32 ]
     nfft: 1024
-vad:
+svad:
     #type: 'button'
     type: 'intensity'
-    threshold: 500
-silero_vad:
+    threshold: 1000
+vad:
     type: 'silero_vad'
     receive_ip: '127.0.0.1'
     receive_port: 1234
-    treshhold_voised : 0.6
-    treshhold_unvoised: 0.4
-    treshhold_silence: 0.0
+    treshhold_voiced : 0.6
+    treshhold_unvoiced: 0.4
 speech_timeout: 0.75
 speech_direction_tolerance: 60.0
 detections:

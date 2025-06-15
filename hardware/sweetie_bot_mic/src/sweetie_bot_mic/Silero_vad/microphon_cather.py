@@ -7,7 +7,6 @@ import audioop
 import torch
 import threading
 # import matplotlib.pyplot as plt
-import time
 import struct
 
 # Настройка форматирования логов
@@ -78,14 +77,17 @@ def process_audio(data, client_socket):
     #     energies.pop(0)
 
     # Отправляем уверенность клиенту
+    
+    
     try:
         client_socket.send(struct.pack('f', new_confidence))
     except:
         pass
-
+    now = datetime.datetime.now()
     if new_confidence > 0.5:
-        print(f"Аудио обнаружено, <энергия>: {energy} <уверенность>: {new_confidence:.6f}")
-
+        print(f"{now.strftime('%S.%f')[:-3]} Аудио обнаружено, <энергия>: {energy} <уверенность>: {new_confidence:.6f}")
+    else:
+        print(f"{now.strftime('%S.%f')[:-3]} ")
 def handle_client(client_socket, client_address):
     global running
     try:

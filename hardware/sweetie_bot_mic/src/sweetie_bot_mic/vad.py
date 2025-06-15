@@ -6,6 +6,10 @@ import numpy as np
 from sweetie_bot_text_msgs.msg import SoundEvent
 from std_msgs.msg import Bool
 
+import socket
+import struct
+
+
 class VoiceActivity(IntEnum):
     SILENCE = 0,   # not speech fragment
     UNVOICED = 1,    # pause between voiced fragments
@@ -94,18 +98,119 @@ class VoiceActivityDetectorButton(VoiceActivityDetector):
 class VoiceActivityDetectorSilero_vad(VoiceActivityDetector):
     ''' By silero_vad ROS topic message as speech indicator. '''
     _detector_type = 'silero_vad'
-
+ 
     def __init__(self, **kwargs):
-        # listen: mic button is pressed
-        self._sub_speech_indicator = rospy.Subscriber("mic_button", Bool, self._on_speech_indicator)
-        self._speech_indicator = False
         rospy.loginfo(f"VAD type: silero_vad.")
+        rospy.loginfo(kwargs)
+        self.HOST = kwargs.get('receive_ip', '127.0.0.1') # Server address
+        self.PORT = kwargs.get('receive_port', 1234)   # Port for TCP connection
+        self.threshold_voiced = kwargs.get('treshhold_voiced', 0.6)
+        self.threshold_unvoiced = kwargs.get('treshhold_unvoiced', 0.4)
+        self.sock = None # Global variable for socket
+        self.is_connected = False 
+        self.audio_data_buf = bytes() # Buffer for audio in bytes
+        self.create_socket()
+        
+    def create_socket(self):
+        """Creating a new socket"""
+        try:
+            if self.sock is not None:
+                self.sock.close()
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.settimeout(10)  # Timeout on socket operation
+            return True
+        except Exception as e:
+            rospy.logerr(f"Error creating socket: {e}")
+            return False
+   
+    def connect_to_server(self):
+        """Connecting to the server with repeated attempts"""
+        rospy.loginfo("Connecting to Silero")
+        try:
+            while True:
+                if not self.create_socket():
+                    continue
+                else:break
 
-    def update(self, audio_data):
-        if self._speech_indicator:
-            return VoiceActivity.VOICED, 1.0
+            rospy.loginfo(f"Trying to connect to Silero server {self.HOST}:{self.PORT}")
+            self.sock.connect((self.HOST, self.PORT))
+            self.is_connected = True
+            rospy.loginfo("Success connection to Silero")
+            return True
+        except Exception as e:
+            rospy.logerr(f"Error connecting to Silero: {e}")
+            self.is_connected = False
+
+    def ensure_connection(self):
+        """Fix connection to Silero"""
+        if not self.is_connected:
+            return self.connect_to_server()
+        return True
+
+    def send_data(self,data):
+        """Sending audio_data to Silero"""
+        try:
+            if not self.ensure_connection():
+                return False
+            self.sock.send(data)
+            return True
+        except Exception as e:
+            rospy.logerr(f"Error sending audio_data to Silero: {e}")
+            self.is_connected = False
+            return False
+
+    def receive_confidence(self):
+        """reciving confidence metric from silero"""
+        try:
+            while True:
+                if not self.ensure_connection():
+                    continue
+                else:break
+
+            # We get 4 bytes (size float32)
+            data = self.sock.recv(4)
+            if not data:
+                rospy.logwarn("Empty data Silero")
+                self.is_connected = False
+
+            confidence = struct.unpack('f', data)[0]
+            return confidence
+        except socket.timeout:
+            rospy.logerr("Socket timeout error ")
+            # continue
+            pass
+        except Exception as e:
+            rospy.logerr(f"Error while reciving confidence metric from Silero: {e}")
+            self.is_connected = False
+            
+
+    def update(self, audio_data:np.ndarray):
+        # rospy.loginfo("len  audio_data {}".format(audio_data.__len__()))
+        self.audio_data_buf = audio_data.tobytes()
+        length = self.audio_data_buf.__len__()
+        # rospy.loginfo("len  audio_data in bytes {}".format(length))
+        if length<=1024:
+            rospy.logwarn("audio_data array length is not 4096 ")
+            return VoiceActivity.UNVOICED, 0
+        if length !=0 and length%1024 == 0:
+            self.send_data(self.audio_data_buf)
+            cycles = int(length/1024)
+            # rospy.loginfo("cycles {}".format(cycles))
+            confidence = list()
+            for part in range(cycles) :
+                confidence.append(self.receive_confidence())
+                # rospy.loginfo("Seneceived part {} of {}".format(part+1, length/1024))
+            if confidence is not None:
+                mx = max(confidence)
+                if mx > self.threshold_voiced:
+                    rospy.loginfo(f"Voice detected, confidence: {mx:.6f}")
+                    return VoiceActivity.VOICED, mx
+                else:
+                    rospy.loginfo(f"No voice, confidence: {mx:.6f}")
+                    return VoiceActivity.UNVOICED, mx
         else: 
-            return VoiceActivity.SILENCE, 0.0
+            rospy.logwarn("audio_data array length is not 4096 ")
+            return VoiceActivity.UNVOICED, 0  
 
     def _on_speech_indicator(self, msg):
         self._speech_indicator = msg.data
