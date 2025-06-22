@@ -191,7 +191,6 @@ class VoiceActivityDetectorSilero_vad(VoiceActivityDetector):
             rospy.logwarn("Silero: audio_data array length is not 4096 ")
             return VoiceActivity.UNVOICED, 0
         if length != 0 and length % 1024 == 0:
-            # Проверяем соединение, если не удалось восстановить — не отправляем
             if not self.ensure_connection():
                 rospy.logwarn("Silero: connection is not available, skipping audio fragment")
                 return VoiceActivity.UNVOICED, 0

@@ -1,3 +1,8 @@
+"""
+Run me in console
+gst-launch-1.0 alsasrc ! audioconvert ! audioresample ! mulawenc ! rtppcmupay ! udpsink host=127.0.0.1 port=5004
+"""
+
 import logging
 import socket
 import struct
