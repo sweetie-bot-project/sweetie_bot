@@ -8,6 +8,7 @@ import torch
 import threading
 # import matplotlib.pyplot as plt
 import struct
+import datetime
 
 # Настройка форматирования логов
 logger = logging.getLogger(__name__)

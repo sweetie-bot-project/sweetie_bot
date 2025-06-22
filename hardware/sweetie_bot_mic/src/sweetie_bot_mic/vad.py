@@ -108,7 +108,6 @@ class VoiceActivityDetectorSilero_vad(VoiceActivityDetector):
         self.threshold_unvoiced = kwargs.get('treshhold_unvoiced', 0.4)
         self.sock = None # Global variable for socket
         self.is_connected = False 
-        self.audio_data_buf = bytes() # Buffer for audio in bytes
         self.create_socket()
         
     def create_socket(self):
@@ -147,7 +146,7 @@ class VoiceActivityDetectorSilero_vad(VoiceActivityDetector):
             return self.connect_to_server()
         return True
 
-    def send_data(self,data):
+    def send_data(self, data):
         """Sending audio_data to Silero"""
         try:
             if not self.ensure_connection():
@@ -185,31 +184,39 @@ class VoiceActivityDetectorSilero_vad(VoiceActivityDetector):
             
 
     def update(self, audio_data:np.ndarray):
-        # rospy.loginfo("len  audio_data {}".format(audio_data.__len__()))
-        self.audio_data_buf = audio_data.tobytes()
-        length = self.audio_data_buf.__len__()
-        # rospy.loginfo("len  audio_data in bytes {}".format(length))
-        if length<=1024:
-            rospy.logwarn("audio_data array length is not 4096 ")
+        # Using only last frame
+        audio_data_buf = audio_data.tobytes()
+        length = len(audio_data_buf)
+        if length <= 1024:
+            rospy.logwarn("Silero: audio_data array length is not 4096 ")
             return VoiceActivity.UNVOICED, 0
-        if length !=0 and length%1024 == 0:
-            self.send_data(self.audio_data_buf)
-            cycles = int(length/1024)
-            # rospy.loginfo("cycles {}".format(cycles))
-            confidence = list()
-            for part in range(cycles) :
-                confidence.append(self.receive_confidence())
-                # rospy.loginfo("Seneceived part {} of {}".format(part+1, length/1024))
-            if confidence is not None:
+        if length != 0 and length % 1024 == 0:
+            # Проверяем соединение, если не удалось восстановить — не отправляем
+            if not self.ensure_connection():
+                rospy.logwarn("Silero: connection is not available, skipping audio fragment")
+                return VoiceActivity.UNVOICED, 0
+            if not self.send_data(audio_data_buf):
+                rospy.logwarn("Silero: Failed to send audio_data to Silero")
+                return VoiceActivity.UNVOICED, 0
+            cycles = int(length / 1024)
+            confidence = []
+            for part in range(cycles):
+                conf = self.receive_confidence()
+                if conf is not None:
+                    confidence.append(conf)
+            if confidence:
                 mx = max(confidence)
                 if mx > self.threshold_voiced:
-                    rospy.loginfo(f"Voice detected, confidence: {mx:.6f}")
+                    rospy.loginfo(f"Silero: Voice detected, confidence: {mx:.6f}")
                     return VoiceActivity.VOICED, mx
                 else:
-                    rospy.loginfo(f"No voice, confidence: {mx:.6f}")
+                    rospy.loginfo(f"Silero: No voice, confidence: {mx:.6f}")
                     return VoiceActivity.UNVOICED, mx
-        else: 
-            rospy.logwarn("audio_data array length is not 4096 ")
+            else:
+                rospy.logwarn("Silero: No confidence values received from Silero")
+                return VoiceActivity.UNVOICED, 0
+        else:
+            rospy.logwarn("Silero: audio_data array length is not 4096 ")
             return VoiceActivity.UNVOICED, 0  
 
     def _on_speech_indicator(self, msg):
