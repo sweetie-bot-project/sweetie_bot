@@ -4,46 +4,46 @@ import struct
 import threading
 import time
 
-# Настройка форматирования логов
+# Log formatting setup
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Создаем форматтер
+# Create formatter
 formatter = logging.Formatter('%(asctime)s.%(msecs)03d [gstrmr] %(levelname)s: %(message)s', datefmt='%M:%S')
 
-# Создаем обработчик для файла
+# Create file handler
 file_handler = logging.FileHandler('gstrmr.log')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-# Отключаем вывод в консоль
+# Disable console output
 logger.propagate = False
 
-# Настройки сокета
-HOST = '192.168.3.186'  # Адрес сервера
+# Socket settings
+HOST = '192.168.3.186'  # Server address
 HOST = '127.0.0.1'
-PORT = 1234             # Порт для TCP подключения
-RECONNECT_DELAY = 5     # Задержка перед повторным подключением в секундах
+PORT = 1234             # TCP connection port
+RECONNECT_DELAY = 5     # Delay before reconnecting in seconds
 
-# Глобальная переменная для сокета
+# Global variable for socket
 sock = None
 is_connected = False
 
 def create_socket():
-    """Создание нового сокета"""
+    """Create a new socket"""
     global sock
     try:
         if sock is not None:
             sock.close()
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(10)  # Таймаут на операции сокета
+        sock.settimeout(10)  # Socket operation timeout
         return True
     except Exception as e:
-        logger.error(f"Ошибка при создании сокета: {e}")
+        logger.error(f"Error creating socket: {e}")
         return False
 
 def connect_to_server():
-    """Подключение к серверу с повторными попытками"""
+    """Connect to server with retries"""
     global sock, is_connected
     while True:
         try:
@@ -51,25 +51,25 @@ def connect_to_server():
                 time.sleep(RECONNECT_DELAY)
                 continue
 
-            logger.info(f"Попытка подключения к {HOST}:{PORT}")
+            logger.info(f"Attempting to connect to {HOST}:{PORT}")
             sock.connect((HOST, PORT))
             is_connected = True
-            logger.info("Успешное подключение к серверу")
+            logger.info("Successfully connected to server")
             return True
         except Exception as e:
-            logger.error(f"Ошибка подключения: {e}")
+            logger.error(f"Connection error: {e}")
             is_connected = False
             time.sleep(RECONNECT_DELAY)
 
 def ensure_connection():
-    """Проверка и восстановление соединения при необходимости"""
+    """Check and restore connection if necessary"""
     global is_connected
     if not is_connected:
         return connect_to_server()
     return True
 
 def send_data(data):
-    """Отправка данных с обработкой ошибок"""
+    """Send data with error handling"""
     global is_connected
     try:
         if not ensure_connection():
@@ -77,12 +77,12 @@ def send_data(data):
         sock.send(data)
         return True
     except Exception as e:
-        logger.error(f"Ошибка при отправке данных: {e}")
+        logger.error(f"Error sending data: {e}")
         is_connected = False
         return False
 
 def receive_confidence():
-    """Получение значения confidence с обработкой ошибок"""
+    """Receive confidence value with error handling"""
     global is_connected
     while True:
         try:
@@ -90,21 +90,21 @@ def receive_confidence():
                 time.sleep(RECONNECT_DELAY)
                 continue
 
-            # Получаем 4 байта (размер float32)
+            # Receive 4 bytes (size of float32)
             data = sock.recv(4)
             if not data:
-                logger.warning("Получены пустые данные, переподключение...")
+                logger.warning("Received empty data, reconnecting...")
                 is_connected = False
                 continue
 
-            # Распаковываем значение confidence
+            # Unpack confidence value
             confidence = struct.unpack('f', data)[0]
             return confidence
         except socket.timeout:
-            logger.warning("Таймаут при получении данных")
+            logger.warning("Timeout while receiving data")
             continue
         except Exception as e:
-            logger.error(f"Ошибка при получении confidence: {e}")
+            logger.error(f"Error receiving confidence: {e}")
             is_connected = False
             time.sleep(RECONNECT_DELAY)
 
@@ -125,20 +125,20 @@ def appsink_audio_new_sample(appsink: GstApp.AppSink):
     (_, info) = buffer.map(Gst.MapFlags.READ)
     
     try:
-        # Отправляем аудио данные
+        # Send audio data
         if send_data(info.data):
-            # Получаем значение confidence
+            # Receive confidence value
             confidence = receive_confidence()
             if confidence is not None:
                 if confidence > 0.6:
-                    logger.info(f"Обнаружен голос, confidence: {confidence:.6f}")
+                    logger.info(f"Voice detected, confidence: {confidence:.6f}")
                 elif confidence < 0.4:
-                    logger.info(f"Нет голоса, confidence: {confidence:.6f}")
+                    logger.info(f"No voice, confidence: {confidence:.6f}")
                 else:
-                    logger.info(f"Пауза, confidence: {confidence:.6f}")
+                    logger.info(f"Pause, confidence: {confidence:.6f}")
             
     except Exception as e:
-        logger.error(f"Ошибка при обработке данных: {e}")
+        logger.error(f"Error processing data: {e}")
 
     buffer.unmap(info)
     return Gst.FlowReturn.OK
