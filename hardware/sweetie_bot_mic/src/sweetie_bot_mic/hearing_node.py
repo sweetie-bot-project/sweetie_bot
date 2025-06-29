@@ -23,6 +23,7 @@ from std_srvs.srv import Trigger, TriggerResponse
 from .gstreamer import GstreamerAudioSource
 from .doa_estimator import DOAEstimator
 from .vad import VoiceActivity, VoiceActivityDetector
+from .vad_silero import VoiceActivityDetectorSilero_vad
 
 class HearingNode:
 
