@@ -174,8 +174,6 @@ class GstreamerAudioSource(GstreamerPipeline):
         # add sample callback
         gstreamer_sink = self._gstreamer_pipeline.get_by_name('appsink-microphone-node')
         gstreamer_sink.connect("new-sample", GstreamerAudioSource._on_buffer, weakref.ref(self))
-        # start pipeline
-        self.start()
 
     @staticmethod
     def _on_buffer(sink, self_weakref):
