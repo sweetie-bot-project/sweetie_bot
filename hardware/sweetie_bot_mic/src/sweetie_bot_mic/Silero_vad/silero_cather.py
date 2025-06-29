@@ -1,3 +1,5 @@
+"""docker run --rm -p 1234:1234 silero_cather"""
+
 import logging
 import socket
 import numpy as np
@@ -39,10 +41,12 @@ BUFFER_LENGTH = 5
 buffer_size = 16000 * BUFFER_LENGTH  # 16000 - sample rate
 audio_buffer = collections.deque(maxlen=buffer_size)
 
-model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+# model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+#                               model='silero_vad',
+#                               force_reload=True)
+model, utils = torch.hub.load(repo_or_dir='./silero_model/',
                               model='silero_vad',
-                              force_reload=True)
-
+                              source="local")
 def int2float(sound):
     abs_max = np.abs(sound).max()
     sound = sound.astype('float32')
