@@ -110,6 +110,7 @@ class VoiceActivityDetectorSilero_vad(VoiceActivityDetector):
         self.is_connected = False 
         self.create_socket()
         
+        
     def create_socket(self):
         """Creating a new socket"""
         try:
@@ -206,10 +207,10 @@ class VoiceActivityDetectorSilero_vad(VoiceActivityDetector):
             if confidence:
                 mx = max(confidence)
                 if mx > self.threshold_voiced:
-                    rospy.loginfo(f"Silero: Voice detected, confidence: {mx:.6f}")
+                    rospy.logdebug(f"Silero: Voice detected, confidence: {mx:.6f}")
                     return VoiceActivity.VOICED, mx
                 else:
-                    rospy.loginfo(f"Silero: No voice, confidence: {mx:.6f}")
+                    rospy.logdebug(f"Silero: No voice, confidence: {mx:.6f}")
                     return VoiceActivity.UNVOICED, mx
             else:
                 rospy.logwarn("Silero: No confidence values received from Silero")
