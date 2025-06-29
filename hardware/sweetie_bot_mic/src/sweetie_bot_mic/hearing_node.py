@@ -13,8 +13,9 @@ from dynamic_reconfigure.server import Server as DynamicReconfigureServer
 
 from sweetie_bot_mic.cfg import microphoneConfig
 
-from sweetie_bot_text_msgs.msg import SoundEvent, Detection, DetectionArray, TextCommand
+from sweetie_bot_text_msgs.msg import SoundEvent, Detection, DetectionArray
 from sweetie_bot_text_msgs.srv import Transcribe, TranscribeRequest, TranscribeResponse
+from std_msgs.msg import Bool
 from visualization_msgs.msg import MarkerArray, Marker
 from std_msgs.msg import Header, ColorRGBA
 from geometry_msgs.msg import Vector3 
@@ -140,7 +141,7 @@ class HearingNode:
         # dynamic parameters
         self.dyn_paramters = DynamicReconfigureServer(microphoneConfig, self.on_parameters_update)
         # listen: robot speech event to avoid self-listening
-        self.sub_hearing_disable = rospy.Subscriber("mouth", TextCommand, self.on_hearing_disable)
+        self.sub_hearing_disable = rospy.Subscriber("voice_start_stop", Bool, self.on_hearing_disable)
         # advertise
         self.pub_sound_event = rospy.Publisher("sound_event", SoundEvent , queue_size=10)
         self.pub_detections = rospy.Publisher("detections", DetectionArray, queue_size=1)

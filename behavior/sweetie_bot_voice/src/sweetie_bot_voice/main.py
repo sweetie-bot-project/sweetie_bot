@@ -9,6 +9,7 @@ import six
 
 from sweetie_bot_load_balancer.balancer import Balancer, BalancerError
 
+from std_msgs.msg import Bool
 from sweetie_bot_text_msgs.msg import TextCommand
 from sweetie_bot_text_msgs.msg import TextActionAction as TextAction
 from sweetie_bot_text_msgs.msg import TextActionGoal, TextActionFeedback, TextActionResult
@@ -303,19 +304,28 @@ class VoiceNode():
         rospy.Subscriber('control', TextCommand, self.command_cb)
         self._voice_log_pub = rospy.Publisher('voice_log', TextCommand, queue_size=10)
         self._mouth_pub = rospy.Publisher('mouth', TextCommand, queue_size=1)
+        self._voice_start_stop_pub = rospy.Publisher('voice_start_stop', Bool, queue_size=2)
         self._action_server = actionlib.SimpleActionServer('~syn', TextAction, execute_cb=self.action_cb, auto_start=False)
         rospy.sleep(0.2)
         self._action_server.start()
         rospy.on_shutdown(self.shutdown_cb)
+
+    def _publish_voice_status(self, is_speaking):
+        if is_speaking:
+            self._mouth_pub.publish('mouth/speech', 'begin', '')
+            self._voice_start_stop_pub.publish(True)
+        else:
+            self._mouth_pub.publish('mouth/speech', 'end', '')
+            self._voice_start_stop_pub.publish(False)
             
     def _execute_text_command(self, cmd):
         # Check command type
         success = False
         if cmd.type == 'voice/play_wav':
             # Play specified sound file
-            self._mouth_pub.publish('mouth/speech', 'begin', '')
+            self._publish_voice_status(is_speaking = True)
             success = self._player.play(cmd.command)
-            self._mouth_pub.publish('mouth/speech', 'end', '')
+            self._publish_voice_status(is_speaking = False)
         elif cmd.type.startswith('voice/say'):
             # get lang code
             if len(cmd.type) >= 12:
@@ -346,7 +356,7 @@ class VoiceNode():
 
             # speech log, indicate that speech has started
             self._voice_log_pub.publish('log/voice/out/'+lang, cmd.command, '')
-            self._mouth_pub.publish('mouth/speech', 'begin', '')
+            self._publish_voice_status(is_speaking = True)
             # try to say text 
             for profile_name, profile in self._voice_profile.items():
                 # check if language is supported
@@ -359,7 +369,7 @@ class VoiceNode():
                 if success:
                     break
             # speech end
-            self._mouth_pub.publish('mouth/speech', 'end', '')
+            self._publish_voice_status(is_speaking = False)
             # log error
             if not success:
                 rospy.logerr('Text-to-speech translation failed: tried all profiles:  %s (%s)', cmd.command, lang)
