@@ -5,10 +5,11 @@
 
     <node pkg="sweetie_bot_mic" type="gstreamer_node" name="audio_transiver" output="screen">
         <rosparam unless="$(arg compression)" param="gstreamer_pipeline" subst_value="true">
-            "alsasrc  device=$(arg device) ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! audioconvert ! rtpL16pay ! udpsink host=$(arg target_host) port=12345"
+            <!--"alsasrc  device=$(arg device) ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! audioconvert ! rtpL16pay ! udpsink host=$(arg target_host) port=12345"-->
+            "alsasrc  device=$(arg device) ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! rtpgstpay config-interval=1 ! udpsink host=$(arg target_host) port=12345"
         </rosparam>
         <rosparam if="$(arg compression)" param="gstreamer_pipeline"  subst_value="true">
-            "alsasrc  device=$(arg device) ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! audioconvert ! vorbisenc ! rtpvorbispay ! udpsink host=$(arg target_host) port=12345"
+			"alsasrc  device=$(arg device) ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! audioconvert ! opusenc complexity=5 ! rtpopuspay ! udpsink host=$(arg target_host) port=12345"
         </rosparam>
     </node>
 </launch>
