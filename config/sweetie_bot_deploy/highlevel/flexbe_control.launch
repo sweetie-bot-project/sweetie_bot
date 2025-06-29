@@ -50,7 +50,7 @@
 			</include>
 			<!-- microphone transiver node -->
 			<node if="$(arg run_nlp)" pkg="sweetie_bot_mic" type="gstreamer_node" name="audio_transiver" output="screen">
-				<param name="target_host" type="str" value="$(arg host_address)"/>
+				<param name="host_address" type="str" value="$(arg host_address)"/>
 			</node>
 		</group>
 	</group>

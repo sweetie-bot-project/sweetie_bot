@@ -75,9 +75,10 @@ mic_button_hotkey_node:
     key_combination: [ 'ctrl','alt', 'w' ]
     enable_global_hotkey: True
 audio_transiver:
-    gstreamer_pipeline: "alsasrc device=plughw:ArrayUAC10 ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! audioconvert ! rtpL16pay ! udpsink host={target_host} port=12345"
+    gstreamer_pipeline: "alsasrc device={device} ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! rtpgstpay config-interval=1 ! udpsink host={host_address} port=12345"
+    device: "plughw:ArrayUAC10"
 microphone:
-    gstreamer_pipeline: "udpsrc port=12345 ! application/x-rtp,media=audio,clock-rate=16000,encoding-name=L16,channels=6 ! queue ! rtpL16depay ! audioconvert"
+    gstreamer_pipeline: "udpsrc port=12345 ! application/x-rtp,media=application,clock-rate=90000,encoding-name=X-GST ! queue ! rtpgstdepay ! audioconvert"
     n_channels: 6
     main_channel: 0
     sample_rate: 16000
@@ -87,6 +88,7 @@ microphone:
     microphone_frame_id: 'microphone_link'
     stationary_frame_id: 'base_link_path'
     doa:
+        type: 'pyroomacoustics'
         algorithm: 'NormMUSIC'
         #algorithm: 'SRP'
         #algorithm: 'FRIDA'
@@ -101,6 +103,8 @@ microphone:
         nfft: 1024
     vad:
         type: 'button'
+        #type: 'intensity'
+        #threshold: 1500
     detections:
         publish_detections: True
         publish_markers: True
