@@ -7,6 +7,7 @@
 
 	<!-- override default configuration -->
 	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto3_deploy)/proto32/herkulex_feedback.yaml" ></rosparam> 
+	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/proto32/hmi_robot.yaml" ></rosparam> 
 
     <!-- additional components' configuration-->
 	<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto3_deploy)/proto32/servo_inv.yaml" ></rosparam> 

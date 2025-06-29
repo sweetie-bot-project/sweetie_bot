@@ -1,0 +1,103 @@
+voice:
+    gender: 'female'
+    gender_translation_hints:
+        'female': 'She said'
+        'male': 'He said'
+        'unknown': 'They said'
+    sound_packages: [ ]
+    lang: 'ru,en'
+    ladspa_path: ~/.ladspa/
+    voice_profile:
+        coqui-ai:
+            type: 'coqui-ai'
+            langs: [ 'en', 'es', 'fr', 'de', 'it', 'pt', 'pl', 'tr', 'ru', 'nl', 'cs', 'ar', 'zh', 'hu', 'ko', 'ja', 'hi' ]
+            enabled: true
+            coqui_ai_params:
+                speaker: "Asya Anara"
+            balancer_config:
+                # Min priority value = 100
+                server_choices:
+                    local_host:
+                        priority: 10
+                        url: 'http://127.0.0.1:5002/api/tts'
+                    remote_host:
+                        priority: 20
+                        url: 'https://ai.sweetie.bot/tts/api/tts'
+        rhvoice:
+            type: 'rhvoice'
+            enabled: true
+            langs: [ 'ru' ]
+            rhvoice_params:
+                relative_volume:         1.0  # in percents devided by 100
+                relative_rate:           0.9  # in percents devided by 100
+                relative_pitch:          0.6  # in percents devided by 100
+                #relative_pitch_russian: 0.60 # in percents devided by 100
+                #relative_pitch_english: 0.75 # in percents devided by 100
+            gstreamer_pipeline: 'audioconvert ! audioresample
+                ! volume volume=6.0'
+        rhvoice_robotized:
+            type: 'rhvoice'
+            enabled: true
+            langs: [ 'ru' ]
+            rhvoice_params:
+                relative_volume:        1.0 # in percents devided by 100
+                relative_rate:          0.9 # in percents devided by 100
+                relative_pitch:         0.6 # in percents devided by 100
+            gstreamer_pipeline: 'audioconvert ! audioresample
+                ! ladspa-autotalent-so-autotalent
+                        concert-a="440.00"
+                        fixed-pitch="0.0"
+                        pull-to-fixed-pitch="0.193"
+                        a="-1" ab="0" b="0" bb="-1"
+                        c="0" d="-1" db="-1" e="-1"
+                        eb="0" f="0" g="-1" gb="-1"
+                        correction-strength="1"
+                        correction-smoothness="0"
+                        pitch-shift="0.2"
+                        output-scale-rotate="0"
+                        lfo-depth="0"
+                        lfo-rate="2.29"
+                        lfo-shape="0"
+                        lfo-symmetry="0.2"
+                        lfo-quantization="0"
+                        formant-correction="1"
+                        formant-warp="0.4"
+                        mix="1.0"
+                ! audioresample ! audioconvert ! audiorate ! audiowsinclimit mode=low-pass cutoff=7000 length=10001 window=blackman
+                ! volume volume=6.0'
+        speechd:
+            type: 'speechd'
+            langs: [ 'ru', 'en' ]
+            module: 'festival'
+eyes:
+    start_blinking: true
+mic_button_hotkey_node:
+    key_combination: [ 'ctrl','alt', 'w' ]
+    enable_global_hotkey: True
+audio_transiver:
+    gstreamer_pipeline: "alsasrc device={device} ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! rtpgstpay config-interval=1 ! udpsink host={host_address} port=12345"
+    device: "plughw:ArrayUAC10"
+microphone:
+    gstreamer_pipeline: "alsasrc device=plughw:ArrayUAC10"
+    n_channels: 6
+    main_channel: 0
+    sample_rate: 16000
+    update_rate: 4.0
+    sound_intensity_threshold: 300
+    intensity_normalization_divider: 2000
+    microphone_frame_id: 'microphone_link'
+    stationary_frame_id: 'base_link_path'
+    doa:
+        type: 'none'
+    vad:
+        type: 'button'
+        #type: 'intensity'
+        #threshold: 1500
+    detections:
+        publish_detections: True
+        publish_markers: True
+        distance: 2.0
+        2d_z_position: 1.0
+    debug_plot: True
+    intensity_histogram_forget_factor: 0.99
+    intensity_histogram_step: 100
