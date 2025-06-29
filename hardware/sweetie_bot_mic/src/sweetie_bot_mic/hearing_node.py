@@ -150,6 +150,7 @@ class HearingNode:
         # transcribe service
         rospy.wait_for_service('/transcribe_api', 5.0)
         self._transcribe_service_call = rospy.ServiceProxy("/transcribe_api", Transcribe, persistent=True)
+        self._transcribe_service_call.wait_for_service(timeout=5.0 )
         self._transcribe_thread = Thread(target = self.on_transcribe)
         # tf
         self.tf_listener = tf.TransformListener()
