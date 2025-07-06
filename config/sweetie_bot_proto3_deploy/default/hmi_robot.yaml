@@ -102,9 +102,8 @@ microphone:
         grid_size: 32
         nfft: 1024
     vad:
-        type: 'button'
-        #type: 'intensity'
-        #threshold: 1500
+        type: 'intensity'
+        threshold: 2000
     detections:
         publish_detections: True
         publish_markers: True

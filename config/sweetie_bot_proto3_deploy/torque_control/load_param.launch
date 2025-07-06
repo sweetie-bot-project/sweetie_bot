@@ -13,6 +13,9 @@
 	<param name="conf_file/herkulex_servos_leg12_cpf" textfile="$(find sweetie_bot_proto3_deploy)/torque_control/herkulex_servos_leg12.cpf" ></param>
 	<param name="conf_file/herkulex_servos_leg34_cpf" textfile="$(find sweetie_bot_proto3_deploy)/torque_control/herkulex_servos_leg34.cpf" ></param>
 
+	<!-- other torque_control specific configuraton -->
+	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/torque_control/vision.yaml" ></rosparam>
+
 	<!-- override configuration for start oun real hardware-->
 	<group if="$(arg run_real)">
 		<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto3_deploy)/torque_control/run_real_override.yaml" ></rosparam> 

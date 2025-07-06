@@ -1,0 +1,7 @@
+vision:
+    camera_matrix: [ 528.692,       0,  626.516,
+                           0, 528.624,  446.949,
+                           0,       0,        1, ]
+    apply_undistortion: true
+    distortion_coefficients: [ 0.0822447, -0.0308937, 0.00202824, -0.000289281, -0.126112, 0.0142227, 0.0697336, -0.159254, 0, 0, 0, 0, 0, 0, ]
+    input_stream: 'udpsrc port=5000 ! application/x-rtp, encoding-name=JPEG,payload=26 !  rtpjpegdepay !  jpegdec ! videoflip method=rotate-180 ! videoconvert ! appsink'
