@@ -41,15 +41,22 @@ def estimate_speech_confidence(data):
     # return result 
     return confidence
 
+def recv_exact(sock, size):
+    data = b''
+    while len(data) < size:
+        chunk = sock.recv(size - len(data))
+        if not chunk:
+            # Connection closed or error
+            raise ConnectionError("Connection lost while receiving data")
+        data += chunk
+    return data
+
 def handle_client(client_socket, client_address):
     print(f"Client connected: {client_address}")
     try:
-        # main data processing loop
         while True:
             # receive data
-            data = client_socket.recv(DATA_CHUNK_SIZE)
-            if not data: 
-                break # connection closed
+            data = recv_exact(client_socket, DATA_CHUNK_SIZE)
             # estimate speech confidence
             confidence = estimate_speech_confidence(data)
             # send result
@@ -68,6 +75,7 @@ def main():
     try:
         while True:
             client_socket, client_address = server_socket.accept()
+            client_socket.settimeout(5.0)
             threading.Thread(target=handle_client, args=(client_socket, client_address)).start()
     except KeyboardInterrupt:
         print("\nShutting down...")
