@@ -167,7 +167,11 @@ class HearingNode:
         #
         # start audio processing
         #
-        self.gstreamer_audio.start()
+        try:
+            self.gstreamer_audio.start()
+        except RuntimeError as e:
+            rospy.logerr('gstreamer pipeline start error: %s', e)
+            self.on_gstreamer_error(None)
         self._transcribe_thread.start()
 
     def on_gstreamer_error(self, msg):
@@ -189,11 +193,7 @@ class HearingNode:
         return TriggerResponse(success = True, message='Histogram is cleared.')
 
     def on_hearing_disable(self, msg):
-        self._disable_hearing = msg.data
-        if self._disable_hearing: 
-            self.gstreamer_audio.stop()
-        else:
-            self.gstreamer_audio.start()
+        self.gstreamer_audio.enabled = not msg.data
 
     def buf_to_wav(self, data):
         # prepare wav data

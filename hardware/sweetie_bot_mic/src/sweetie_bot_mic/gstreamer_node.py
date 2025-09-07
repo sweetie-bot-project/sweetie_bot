@@ -35,7 +35,11 @@ class GstreamerNode(GstreamerPipeline):
         # init gstreamer pipeline
         super(GstreamerNode, self).__init__(pipeline_string, on_error = self.on_error, on_warning = on_warning)
         # start streaming
-        self.start()
+        try:
+            self.start()
+        except RuntimeError as e:
+            rospy.logerr('gstreamer pipeline start error: %s', e)
+            self.on_error(None)
 
     def on_error(self, msg):
         rospy.signal_shutdown('gstreamer error') 
