@@ -1,0 +1,14 @@
+KeyPressed:
+    enable_group: "buttons"
+    joy_topic: "/touch_raw"
+    key_topic: "/touch"
+    buttons:
+        1: "nose"
+        2: "forehead"
+        3: "cheek_left"
+        4: "forehead_left"
+        5: "cheek_right"
+        6: "forehead_right"
+    axes_positive: {}
+    axes_negative: {}
+

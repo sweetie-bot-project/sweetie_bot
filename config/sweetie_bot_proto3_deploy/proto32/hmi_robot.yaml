@@ -71,6 +71,8 @@ voice:
             module: 'festival'
 eyes:
     start_blinking: true
+touch_driver:
+    dev: "/dev/input/js0"
 mic_button_hotkey_node:
     key_combination: [ 'ctrl','alt', 'w' ]
     enable_global_hotkey: True

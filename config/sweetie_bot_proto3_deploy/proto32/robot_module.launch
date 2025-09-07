@@ -26,4 +26,8 @@
 	<node ns="hardware" machine="sweetiebot" name="battery_monitor" pkg="sweetie_bot_battery_monitor" type="battery_monitor" if="false">
 		<remap from="battery_state" to="$(arg robot_ns)/battery_state" />
 	</node>
+	<!-- run touch sensor driver -->
+	<node pkg="joy" type="joy_node" name="joy_node" output="screen">
+		<remap from="joy" to="touch_raw" />
+	</node>
 </launch>

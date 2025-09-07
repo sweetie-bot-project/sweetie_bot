@@ -356,6 +356,18 @@ sp {talk-llm*propose*dance
 	(<res> ^status succeed ^print (concat |SPECIFIC: DANCE.| (crlf)))
 }
 
+# boop
+sp {talk-llm*propose*touch-nose
+	(state <s> ^substate talk-llm  -^talking ^lang <lang> ^io.input-link.touch <touch> ^most-recent-event.object <obj>)
+	(<touch> ^pressed <btn>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name rule-answering-on-event ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic touch ^text |Do not touch me!| ^animation-tag rejection ^lang en ^emotion unamused_look ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^print (concat |SPECIFIC: TOUCH.| (crlf)))
+}
+
 #
 # look-at
 #
