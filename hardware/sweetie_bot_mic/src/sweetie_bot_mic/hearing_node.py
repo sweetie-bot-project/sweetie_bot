@@ -47,6 +47,7 @@ class HearingNode:
         vad_config = rospy.get_param("~vad", {'type': 'none'})
         # speech source tracking and end of speech detection paramteres
         self._speech_timeout = rospy.get_param('~speech_timeout', 0.5)
+        speech_forestalling = rospy.get_param('~speech_forestalling', 0.0)
         self._speech_direction_tolerance = rospy.get_param('~speech_direction_tolerance', 60.0)
         # detections and marker publication parameters
         self._detections_are_published = rospy.get_param("~detections/publish_detections", True)
@@ -75,6 +76,12 @@ class HearingNode:
         rospy.loginfo(f'audio: actual update rate {sample_rate/buffer_size} Hz (requested {update_rate} Hz), buffer size {buffer_size} samples, main channel {self._main_channel}.')
         self.gstreamer_audio = GstreamerAudioSource(pipeline=gstreamer_pipeline, sample_rate=sample_rate, buffer_size=buffer_size, n_channels = n_channels,  
                                               on_audio = self.on_audio, on_error = self.on_gstreamer_error, on_warning = None)
+
+        # frestalling parameter in samples
+        self._speech_forestalling_samples = int(speech_forestalling // self.gstreamer_audio.rate)
+        if self._speech_forestalling_samples > buffer_size:
+            self._speech_forestalling_samples = buffer_size
+            rospy.logwarn('requested speech_forestalling value %f second is reduced to maximal supported value %f', speech_forestalling, buffer_size/self.gstreamer_audio.rate)
 
         #
         # Node state 
@@ -150,7 +157,7 @@ class HearingNode:
             self.pub_plot = rospy.Publisher("plot", Plot, queue_size=1)
             self.srv_statistics_reset = rospy.Service('~reset_statistics', Trigger, self.on_reset_statistics)
         # transcribe service
-        rospy.wait_for_service('/transcribe_api', 5.0)
+        # rospy.wait_for_service('/transcribe_api', 5.0)
         self._transcribe_service_call = rospy.ServiceProxy("/transcribe_api", Transcribe, persistent=True)
         self._transcribe_service_call.wait_for_service(timeout=5.0 )
         self._transcribe_thread = Thread(target = self.on_transcribe)
@@ -286,7 +293,6 @@ class HearingNode:
         # check if first VOICED fragment is arrived 
         if not self._speech_is_tracked and vad_result == VoiceActivity.VOICED:
             # reset state
-            self._speech_buffer.clear()
             self._speech_unvoiced_duration = 0.0
             PyKDL.SetToZero(self._s_speech_direction)
             self._speech_direction_intensity = 0.0
@@ -320,7 +326,9 @@ class HearingNode:
             # continue speech tracking
             return SoundEvent.SPEECH_DETECTING
         else:
-            # speech is not tracked
+            # speech is not tracked: save tcurrent chunk in audio buffer
+            self._speech_buffer.clear()
+            self._speech_buffer.extend( audio_data[self._speech_forestalling_samples:].tobytes() )
             return 0
 
     def on_audio(self, audio_data):
