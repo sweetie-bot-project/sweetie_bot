@@ -1,8 +1,7 @@
 <launch>
-    <arg name="balancer_config" default="{'server_choices': {'local_host': {'priority': 10, 'url': 'https://ai.sweetie.bot/stt/'}, 'remote_host': {'priority': 20, 'url': 'http://localhost:8577'}}}"/>
     <arg name="enable_translation" default="False"/>
     <node pkg="sweetie_bot_stt" type="stt_service_node" name="transcriber" output="screen">
-        <rosparam param="balancer_config" subst_value="True">$(arg balancer_config)</rosparam>
+        <rosparam command="load" file="$(find sweetie_bot_stt)/launch/test.yaml" />
         <rosparam param="enable_translation" subst_value="True">$(arg enable_translation)</rosparam>
     </node>
 </launch>

@@ -19,11 +19,36 @@
 
 # ELABORATIONS
 
+sp {wait*elaborate*wait-processes
+	(state <s> ^substate wait ^superstate.operator.process <proc>)
+-->
+	(<s> ^wait-process <proc>)
+}
+
+sp {wait*elaborate*wait-exclude-process
+	(state <s> ^substate ^superstate <ss>)
+	(<ss> ^substate wait ^operator.process-link <proc>)
+-->
+	(<s> ^wait-exclude-process <proc>)
+}
+
+sp {wait*elaborate*wait-processes-to-non-wait-state
+	(state <s> ^substate ^superstate <ss>)
+	(<ss> ^wait-process <proc>)
+	-(<s> ^wait-exclude-process <proc>)
+-->
+	(<s> ^wait-process <proc>)
+}
+
+
+# DECISIONS
+
+# do nothing if not process to wait
 sp {wait*propose*wait-behavior-create
-	(state <s> ^substate wait ^io.output-link <ol>)
+	(state <s> ^substate wait -^wait-process ^io.output-link <ol>)
 	(<ol> -^nop)
 -->
-	(<s> ^operator <op> +, <)
+	(<s> ^operator <op> +)
 	(<op> ^name wait-behavior-create ^type automatic ^add-output-command nop ^output-command-args <cmd>)
 	(<cmd> ^automatic-remove yes ^cycle 1)
 }
@@ -32,8 +57,14 @@ sp {wait*propose*wait-behavior-cycle
 	(state <s> ^substate wait ^io.output-link.nop <cmd>)
 	(<cmd> -^status ^cycle <cycle>)
 -->
-	(<s> ^operator <op> +, <)
+	(<s> ^operator <op> +)
    	(<op> ^name wait-behavior-cycle ^type automatic ^parent <cmd> ^attribute cycle ^remove-value <cycle> ^link-value (+ <cycle> 1))
 }
 
-
+# contiune execcution of one process if it is active
+sp {wait*propose*wait-process
+	(state <s> ^substate wait ^wait-process <proc> ^beliefs.process <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name wait-continue-process ^process-link <proc>)
+}

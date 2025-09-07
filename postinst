@@ -1,0 +1,21 @@
+#!/bin/bash -e
+UDEV_DIR=/etc/udev/rules.d
+UDEV=(
+  /opt/ros/sweetie_bot/share/sweetie_bot_mic/udev/60-respeaker.rules
+)
+
+if [ -d ${UDEV_DIR} ]; then
+    for u in ${UDEV[0]}; do
+        if ! [ -f ${UDEV_DIR}/${u##*/} ]; then
+	    echo Installing udev rule: ${u##*/}
+            cp ${u} ${UDEV_DIR}
+	    need_udev_reload=1
+	fi
+    done
+fi
+
+if ! [ -z ${need_udev_reload} ]; then
+  udevadm control --reload-rules && udevadm trigger && echo "Udev rules reloaded!" || echo "WARNING: Can't reload udev rules." && true
+fi
+
+exit 0

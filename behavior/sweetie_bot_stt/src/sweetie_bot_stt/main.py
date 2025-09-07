@@ -9,9 +9,7 @@ from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResp
 
 
 class TranscriberNode(object):
-    DEFAULT_CONFIG = dict(server_choices=dict(
-        local_host = {'url': 'http://localhost:8577/'},
-    ))
+    DEFAULT_CONFIG = { "server_choices": { "remote_host": { "priority": 10, "url": 'https://ai.sweetie.bot/stt/'}}}
 
     def __init__(self):
         self.enable_translation = rospy.get_param("~enable_translation", True)
@@ -52,15 +50,12 @@ class TranscriberNode(object):
     def transcribe(self, req):
         # request transcribe server
         try:
-            response, _ = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
+            response, duration = self.balancer.request_available_server(files={'file': ('audio.wav', req.data)}, decode_json=True)
         except Exception as e:
             rospy.logerr(f'transcriber: {e}')
             return TranscribeResponse(status = str(e))
 
-        rospy.loginfo('Transcription %s (%.2fs) [%s]: "%s"' % (response['status'],
-                                                               response['transcribe_duration'],
-                                                               response['language'],
-                                                               response['text']))
+        rospy.loginfo('Transcription %s (client %.2fs, server %.2fs) [%s]: "%s"', response['status'], duration, response['transcribe_duration'], response['language'], response['text'])
         # Publish translated verssion of the text as well
         self.voice_log.publish('log/voice/in/en', response['text'], '')
 

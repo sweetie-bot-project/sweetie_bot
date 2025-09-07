@@ -28,6 +28,7 @@
 			<remap from="/update" to="$(arg robot_ns)/hmi/update"/>
 			<remap from="/update_full" to="$(arg robot_ns)/hmi/update_full"/>
 			<env name="LC_NUMERIC" value="C" /> <!-- this fixes crash induced by .DAE mesh files -->
+			<env name="DISABLE_ROS1_EOL_WARNINGS" value="1" />
 		</node>
 		<!-- robot balance visualization -->
 		<node name="dynamics_visualizer" pkg="sweetie_bot_dynamics" type="visualizer" >

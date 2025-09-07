@@ -35,30 +35,43 @@
 #
 
 
-# START BEHAVIOR
+
+# ELABORATIONS
+
+# add process if any action is performed
+sp {flexbe*elaborate*add-porcess
+	(state <s> ^substate flexbe ^process-status pending ^operator <op> + ^process <proc>)
+	(<op> ^name {<<|start-behavior| |abort-behavior|>>})
+-->
+	(<op> ^type automatic ^add-process <proc>)
+}
+
+# DECISIONS
+
+# flexbe cmd in output link is present but not related to active process
+# check if behavior is interruptable and abort it it is possible
+sp {flexbe*propose*abort
+	(state <s> ^substate flexbe ^process <proc> ^io.output-link.flexbe <cmd>)
+	(<cmd> ^process {<> <proc>} ^interruptable {<< hard soft >> <abort-type>} -^abort)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name abort-behavior ^type automatic ^parent <cmd> ^attribute abort ^link-value <abort-type>)
+}
+
 
 # propose start flexbe behavior if no flexbe is running
 sp {flexbe*propose*start*behavior
-	(state <s> ^substate flexbe  ^io.output-link <ol> ^args.behavior <bh> ^process <proc>)
+	(state <s> ^substate flexbe  ^io.output-link <ol> ^args.behavior <bh>)
 	(<ol> -^flexbe)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name flexbe-start-behavior ^behavior <bh> ^param <p> ^type automatic ^add-process <proc>)
-}
-
-# copy behavior params mentioned under ^param attribute
-sp {flexbe*elaborate*behavior-params
-	(state <s> ^substate flexbe ^operator <op> + ^args <args>)
-	(<op> ^name flexbe-start-behavior ^param <p>)
-	(<args> ^param ^<attr> <value>)
--->
-	(<p> ^<attr> <value>)
+	(<op> ^name start-behavior ^behavior <bh> ^param <p>)
 }
 
 # copy behavior params mentioned in flexbe command description
 sp {flexbe*elaborate*behavior-params-flexbe-cmd
 	(state <s> ^substate flexbe ^operator <op> + ^args <args> ^mem.flexbe-command <cmd>)
-	(<op> ^name flexbe-start-behavior ^behavior <name> ^param <p>)
+	(<op> ^name start-behavior ^behavior <name> ^param <p>)
 	(<cmd> ^name <name> ^param <attr>)
 	(<args> ^<attr> <value>)
 -->
@@ -66,9 +79,9 @@ sp {flexbe*elaborate*behavior-params-flexbe-cmd
 }
 
 # create output link command
-sp {flexbe*apply*start*behavior
+sp {flexbe*apply*start-behavior
 	(state <s> ^substate flexbe ^operator <op> ^io.output-link <ol> ^process <proc>)
-	(<op> ^name flexbe-start-behavior ^behavior <bh> ^param <p>)
+	(<op> ^name start-behavior ^behavior <bh> ^param <p>)
 -->
 	(<ol> ^flexbe <cmd>)
 	(<cmd> ^name <bh> ^param <p>)
@@ -76,15 +89,13 @@ sp {flexbe*apply*start*behavior
 	(write |Execute FlexBe behavior | <bh> (crlf))
 }
 
-# interruptability of flexbe command
-sp {flexbe*elaborate*interruptability
+# create interruptability property (o-support)
+sp {flexbe*apply*start-behavior-intrruptable
 	(state <s> ^substate flexbe ^process <proc> ^superstate.operator.interruptable <mode> ^io.output-link.flexbe <cmd>)
 	(<cmd> ^process <proc>)
 -->
 	(<cmd> ^interruptable <mode>)
 }
-
-# WAIT BEHAVIOR
 	
 # wait flexbe behavior 
 sp {flexbe*propose*wait 
@@ -102,50 +113,36 @@ sp {flexbe*propose*wait
 #	(<cmd> ^status succeed)
 #}
 
-# COMPLETE BEHAVIOR
+# COGNITION
 
-# cognition completion operator: finish process with coresponding status
+# cognition completion operator: finish process with coresponding status and remove cmd
 sp {flexbe*propose*complete
-	(state <s> ^bottom-state 1 ^io.output-link.flexbe <cmd>)
+	(state <s> ^bottom-state 1 ^io.output-link <ol>)
+	(<ol> ^flexbe <cmd>)
 	(<cmd> ^status <status> ^process <proc>)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name flexbe-complete ^substate flexbe ^cmd <cmd> ^type automatic cognition ^finish-status <status> ^finish-process <proc>)
+	(<op> ^name flexbe-complete ^type automatic cognition ^finish-status <status> ^finish-process <proc>)
+	(<op> ^parent <ol> ^attribute flexbe ^remove-value <cmd>)
+	(<op> ^print (concat |Flexbe: complete behavior with status | <status> (crlf)))
 }
 
 # elaborate add-events commands for failed and invalid_pose outcome
 sp {flexbe*elaborate*complete-events
 	(state <s> ^bottom-state 1 ^operator <op> +)
-	(<op> ^name flexbe-complete ^status {<<|failed| |invalid_pose|>> <status>})
+	(<op> ^name flexbe-complete ^finish-status {<<|failed| |invalid_pose|>> <status>})
 -->
 	(<op> ^add-event <ev>)
 	(<ev> ^name error ^subsystem flexbe ^type <status>)
 }
 
-sp {flexbe*apply*complete*remove-command
-	(state <s> ^bottom-state 1 ^operator <op> ^io.output-link <ol>)
-	(<op> ^name flexbe-complete ^substate flexbe ^finish-status <status> ^cmd <cmd>)
-	(<ol> ^flexbe <cmd>)
--->
-	(<ol> ^flexbe <cmd> -)
-	(write |Flexbe: complete behavior with status | <status> (crlf))
-}
-
-# BEHAVIOR CONFLICT
-
-# flexbe cmd in output link is present but not related to active process
-# check if behavior is interruptable and abort it if it is possible
-sp {flexbe*propose*abort
-	(state <s> ^substate flexbe ^process-status pending ^io.output-link.flexbe <cmd>)
-	(<cmd> ^interruptable {<< hard soft >> <abort-type>} -^abort)
+# abort flexbe if process is removed
+sp {flexbe*propose*abort-on-process-removal
+	(state <s> ^bottom-state 1 ^beliefs.event <ev> ^io.output-link.flexbe <cmd>)
+	(<cmd> ^interruptable {<< hard soft >> <abort-type>} -^abort ^process <proc>)
+	(<ev> ^reason {<<|terminated| |deadline|>>} ^process <proc>)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name abort-behavior ^cmd <cmd> ^abort <abort-type>)
+	(<op> ^name flexbe-abort-behavior-on-process-removal ^type cognition automatic ^parent <cmd> ^attribute abort ^link-value <abort-type>)
 }
 
-sp {flexbe*apply*abort
-	(state <s> ^substate flexbe ^operator <op>)
-	(<op> ^name abort-behavior ^cmd <cmd> ^abort <abort-type>)
--->
-	(<cmd> ^abort <abort-type>)
-}

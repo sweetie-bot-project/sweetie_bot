@@ -71,6 +71,7 @@ classification_model:
                 url: 'https://ai.sweetie.bot/classification/'
 
 transcriber:
+    enable_translation: True
     balancer_config:
         # Min priority value = 100
         server_choices:
@@ -91,3 +92,4 @@ translator:
             remote_host:
                 priority: 20
                 url: 'https://ai.sweetie.bot/trans/'
+

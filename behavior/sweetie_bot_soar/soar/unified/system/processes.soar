@@ -35,7 +35,7 @@ sp {process*elaborate*recover-existing-process
 # auto-created process
 sp {process*elaborate*auto-create-process
 	(state <s> -^process-origin {<<|user| |recovered|>>} ^superstate.operator <op>)
-	(<op> -^type cognition ^name <name> ^substate <substate>)
+	(<op> -^type cognition ^name <name> ^substate <substate> ^process-args)
 -->
 	(<s> ^process <proc> ^process-origin auto ^process-status pending)
 	(<proc> ^name <name> ^substate <substate>)
@@ -64,6 +64,16 @@ sp {process*elaborate*process-status-pending
 }
 
 # ELABORATIONS
+
+# deduce continue process operator substate if nothing provided
+sp {process*elaborate*operator-process-link-substate
+	(state <s> ^operator <op> +)
+	(<op> ^process-link <proc>)
+	(<proc> ^substate <substate>)
+	-(<op> ^substate {<> <substate>})
+-->
+	(<op> ^substate <substate>)
+}
 
 # attach related processe to substate using link to superprocess
 sp {process*elaborate*attach-subprocesse-to-state

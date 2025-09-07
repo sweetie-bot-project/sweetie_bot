@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os, sys, copy, re
+import os, sys, copy, re, time
 import tempfile
 import rospy, actionlib, roslib, rospkg
 from threading import Event
+import six
 
-from sweetie_bot_load_balancer.balancer import Balancer
+from sweetie_bot_load_balancer.balancer import Balancer, BalancerError
+
+from std_msgs.msg import Bool
 from sweetie_bot_text_msgs.msg import TextCommand
 from sweetie_bot_text_msgs.msg import TextActionAction as TextAction
 from sweetie_bot_text_msgs.msg import TextActionGoal, TextActionFeedback, TextActionResult
@@ -19,16 +22,12 @@ from sound_play.libsoundplay import SoundClient
 #             its initialization crashes without any error messages.
 from rhvoice_wrapper import TTS
 
-import six
-
 soundhandle = SoundClient(blocking=True)
 rospack = rospkg.RosPack()
 
 import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GLib
-
-voice_log = rospy.Publisher('voice_log', TextCommand, queue_size=10)
 
 class TTSInterface:
     def __init__(self, langs):
@@ -38,10 +37,7 @@ class TTSInterface:
         return lang in self._langs
 
     def speak(self, text, language):
-        # voice log
-        global voice_log
-        voice_log.publish('log/voice/out/'+language, text, '')
-        pass
+        raise NotImplementedError
 
 class TTSCoquiAi(TTSInterface):
     speaker = ""
@@ -49,26 +45,22 @@ class TTSCoquiAi(TTSInterface):
         local_host = {'url': 'http://127.0.0.1:5002/api/tts'},
     ))
 
-    def __init__(self, init_params, **kwargs):
+    def __init__(self, balancer_config, init_params, **kwargs):
         super(TTSCoquiAi, self).__init__(**kwargs)
         self.speaker = init_params['speaker']
-
-        balancer_config = rospy.get_param("~balancer_config", self.DEFAULT_CONFIG)
-        self.balancer = Balancer(
-            balancer_config,
+        self.balancer = Balancer(balancer_config,
             loggers={'debug': rospy.logdebug, 'warn': rospy.logwarn, 'info': rospy.loginfo},
         )
 
     def speak(self, text, language):
-        super().speak(text, language)
-
         try:
             request = { "text": text, "language_id": f'{language}-cn' if language == 'zh' else language, "speaker_id": self.speaker }
             response, _ = self.balancer.request_available_server(data=request)
-        except Exception as e:
-            rospy.logerr(f'text to speach error: {e}')
+        except BalancerError as e:
+            rospy.logerr('TTSCoquiAi: text to speach error: %s', e)
             return False
 
+        # TODO: rewrite using gstreamer
         temp_dir = tempfile.mkdtemp()
         temp_file = os.path.join(temp_dir, "output.wav")
 
@@ -92,7 +84,6 @@ class TTSSpeechDispatcher(TTSInterface):
         self._client.set_output_module(module)
 
     def speak(self, text, lang):
-        super().speak(text, lang)
         ev = Event()
         self._client.set_language(lang)
         self._client.speak(text, callback = lambda cb_type: ev.set(), event_types=(self._speechd.CallbackType.CANCEL, self._speechd.CallbackType.END))
@@ -124,7 +115,6 @@ class TTSRhvoiceWrapper(TTSInterface):
             self._gstreamer_pipeline.set_state(Gst.State.NULL)
 
     def speak(self, text, lang):
-        super().speak(text, lang)
         Gst.Event.new_flush_start()
 
         # Get synthesized PCM sound from RHVoice server
@@ -238,10 +228,10 @@ class PlayerGstreamer():
 
 class VoiceNode():
     def __init__(self):
-        rospy.init_node('voice', anonymous = True)
+        rospy.init_node('voice')
         self.enable_translate = rospy.get_param("~enable_translate", True)
         if self.enable_translate:
-            self.do_translate = rospy.ServiceProxy('translate', Translate)
+            self.translate_srv_call = rospy.ServiceProxy('translate', Translate)
 
         profiles_config = rospy.get_param('~voice_profile') 
         if profiles_config is None or not isinstance(profiles_config, dict):
@@ -255,6 +245,7 @@ class VoiceNode():
         # load voice profiles
         self._voice_profile = {}
         for name, profile_config in profiles_config.items():
+            # TODO Use Factory Pattern
             try:
                 if not profile_config.get('enabled'):
                     continue
@@ -275,7 +266,8 @@ class VoiceNode():
                     self._voice_profile[name] = TTSSpeechDispatcher(**speechd_params)
                 elif profile_type == 'coqui-ai':
                     coqui_ai_params = profile_config.get('coqui_ai_params')
-                    self._voice_profile[name] = TTSCoquiAi(coqui_ai_params, langs=langs)
+                    balancer_config = profile_config.get('balancer_config')
+                    self._voice_profile[name] = TTSCoquiAi(balancer_config, coqui_ai_params, langs=langs)
                 else:
                     rospy.logwarn('Unknown voice profile "%s" of type: %s' % (name, profile_type))
             except GLib.Error as e:
@@ -288,6 +280,8 @@ class VoiceNode():
         if len(self._voice_profile) == 0:
             rospy.logerr('At least one voice profile must be specified.')
             sys.exit(2)
+
+        rospy.loginfo(f'Voice profiles: {[self._voice_profile.keys()]}')
 
         # get and configure player
         sound_packages = rospy.get_param('~sound_packages', [])
@@ -308,25 +302,36 @@ class VoiceNode():
 
         # register ROS interface
         rospy.Subscriber('control', TextCommand, self.command_cb)
-        self.pub = rospy.Publisher('mouth', TextCommand, queue_size=1)
+        self._voice_log_pub = rospy.Publisher('voice_log', TextCommand, queue_size=10)
+        self._mouth_pub = rospy.Publisher('mouth', TextCommand, queue_size=1)
+        self._voice_start_stop_pub = rospy.Publisher('voice_start_stop', Bool, queue_size=2)
         self._action_server = actionlib.SimpleActionServer('~syn', TextAction, execute_cb=self.action_cb, auto_start=False)
         rospy.sleep(0.2)
         self._action_server.start()
         rospy.on_shutdown(self.shutdown_cb)
+
+    def _publish_voice_status(self, is_speaking):
+        if is_speaking:
+            self._mouth_pub.publish('mouth/speech', 'begin', '')
+            self._voice_start_stop_pub.publish(True)
+        else:
+            self._mouth_pub.publish('mouth/speech', 'end', '')
+            self._voice_start_stop_pub.publish(False)
             
     def _execute_text_command(self, cmd):
         # Check command type
-        ret = False
+        success = False
         if cmd.type == 'voice/play_wav':
             # Play specified sound file
-            self.pub.publish('mouth/speech', 'begin', '')
-            ret = self._player.play(cmd.command)
-            self.pub.publish('mouth/speech', 'end', '')
+            self._publish_voice_status(is_speaking = True)
+            success = self._player.play(cmd.command)
+            self._publish_voice_status(is_speaking = False)
         elif cmd.type.startswith('voice/say'):
             # get lang code
             if len(cmd.type) >= 12:
                 lang = cmd.type.rsplit('/',1)[-1]
             elif len(cmd.type) == 9:
+                # TODO: remove?
                 if cmd.options != '':
                     lang = cmd.options
                 else:
@@ -336,34 +341,42 @@ class VoiceNode():
                 return False
 
             # Publish original text before the translation as well
-            voice_log.publish(f'log/voice/out/{lang}', cmd.command, '')
-
-            rospy.loginfo(u"Text: {}".format(cmd.command))
+            self._voice_log_pub.publish('log/voice/out/en', cmd.command, '')
+            rospy.loginfo(f"Text: {cmd.command}")
 
             # translate to source lang
             if self.enable_translate and lang !='en':
                 #gender_hint = self.gender_translation_hints[self.voice_gender]
                 gender_hint = ''
-                cmd.command = self.translate_text(self, lang, cmd.command, gender_hint)
+                translated_text = self.translate_text(cmd.command, lang, gender_hint)
+                if translated_text is not None:
+                    cmd.command = translated_text
+                else:
+                    lang = 'en' # ????
 
-            # find profile
-            profile = None
-            for k, p in self._voice_profile.items():
-                if p.is_lang_supported(lang):
-                    profile = p
+            # speech log, indicate that speech has started
+            self._voice_log_pub.publish('log/voice/out/'+lang, cmd.command, '')
+            self._publish_voice_status(is_speaking = True)
+            # try to say text 
+            for profile_name, profile in self._voice_profile.items():
+                # check if language is supported
+                if not profile.is_lang_supported(lang):
+                    continue
+                # use profile
+                rospy.loginfo('use %s profile to say: %s (%s)', profile_name, cmd.command, lang)
+                success = profile.speak(cmd.command, lang)
+                # exit on success
+                if success:
                     break
-            if profile is None:
-                rospy.logerr('Unsupported laguage code: %s' % lang)
-                return False
+            # speech end
+            self._publish_voice_status(is_speaking = False)
+            # log error
+            if not success:
+                rospy.logerr('Text-to-speech translation failed: tried all profiles:  %s (%s)', cmd.command, lang)
             # Invoke text-to-speech subsystem
-            rospy.logdebug('use %s profile to say: %s (%s)' % (k, cmd.command, lang))
-            self.pub.publish('mouth/speech', 'begin', '')
-            ret = profile.speak(cmd.command, lang)
-            self.pub.publish('mouth/speech', 'end', '')
-        return ret
+        return success
 
-    @staticmethod
-    def translate_text(self, target, text, hint=''):
+    def translate_text(self, text, target_lang, hint=''):
 
         if isinstance(text, six.binary_type):
             text = text.decode("utf-8")
@@ -371,8 +384,12 @@ class VoiceNode():
         if hint:
             text = u'{}: """{}"""'.format(hint, text)
 
-        result = self.do_translate(text=text, source='en', target=target)
-        translated_text = result.text
+        try:
+            result = self.translate_srv_call(text=text, source='en', target=target_lang)
+            translated_text = result.text
+        except rospy.ServiceException as e:
+            rospy.logerr(f'Translation from "en" to "{target_lang}" failed: {e}')
+            return None
 
         # Extrat text from wrapped translation with hint
         if hint:
@@ -381,8 +398,8 @@ class VoiceNode():
             translated_text = re.sub('&quot;', '', translated_text)
             translated_text = translated_text.strip("«»\"' ")
 
-        rospy.loginfo(u"Translation: {}".format(translated_text))
-        rospy.loginfo(u"Received target language: {}".format(target))
+        rospy.loginfo("Translation: %s", translated_text)
+        rospy.loginfo("Received target language: %s", target_lang)
 
         return translated_text
 

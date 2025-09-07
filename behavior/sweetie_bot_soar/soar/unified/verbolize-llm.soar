@@ -20,6 +20,7 @@
 # PROCESS RESULT STATUSES
 #
 # * succeed --- text action succced and animation outcome is received
+# * missing --- verbolize is unable to focus on person
 #
 # SIDE EFFECTS
 #
@@ -54,6 +55,10 @@ sp {verbolize-llm*elaborate*best-requests
 -->
 	(<s> ^proposed-request <name>)
 }
+
+#
+# TODO: look at interlocutor
+#
 
 #
 # remove request if it is not related with our process
@@ -118,8 +123,9 @@ sp {verbolize-llm*propose*verbolization
 -->
 	(<s> ^operator <op> +)
 	(<op> ^name verbolizing-llm ^substate verbolize ^process-args <args>)
-	(<args> ^topic llm ^object <obj> ^text <text> ^animation-tag <emotion> ^lang <lang> ^emotion <emotion> ^type <type> ^result <res>)
-	(<res> ^status succeed ^parent <proc> ^attribute verbolize-status ^link-value succeed)
+	(<args> ^topic llm ^object <obj> ^text <text> ^animation-tag <emotion> ^lang <lang> ^emotion <emotion> ^type <type> ^result <res-succeed> <res-missing>)
+	(<res-succeed> ^status succeed ^parent <proc> ^attribute verbolize-status ^link-value succeed)
+	(<res-missing> ^status missing ^parent <proc> ^attribute verbolize-status ^link-value missing)
 }
 
 sp {verbolize-llm*propose*verbolization-wait
@@ -133,10 +139,10 @@ sp {verbolize-llm*propose*verbolization-wait
 sp {verbolize-llm*propose*terminate-verbolize-llm
 	(state <s> ^bottom-state 1 ^beliefs <b>)
 	(<b> ^process <proc>)
-	(<proc> ^substate verbolize-llm ^verbolize-status succeed ^cmd <cmd>)
+	(<proc> ^substate verbolize-llm ^verbolize-status <status> ^cmd <cmd>)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name terminate-verbolize-llm ^type cognition automatic)
-	(<op> ^finish-process <proc> ^finish-status succeed ^remove-output-command lang-model ^output-command-args <cmd>)
+	(<op> ^finish-process <proc> ^finish-status <status> ^remove-output-command lang-model ^output-command-args <cmd>)
 }
 

@@ -1,0 +1,41 @@
+#gstreamer_pipeline: "alsasrc device=plughw:ArrayUAC10"
+#gstreamer_pipeline: "udpsrc port=12345 ! application/x-rtp,media=audio,clock-rate=16000,encoding-name=L16,channels=6 ! queue ! rtpL16depay ! audioconvert"
+#gstreamer_pipeline: "udpsrc port=12345 ! application/x-rtp,media=application,clock-rate=90000,encoding-name=X-GST ! queue ! rtpgstdepay ! audioconvert" 
+gstreamer_pipeline: 'udpsrc port=12345 ! application/x-rtp,media=audio,clock-rate=48000,encoding-name=MULTIOPUS,num_streams=(string)"4",coupled_streams=(string)"2",channel_mapping=(string)"0\,4\,1\,2\,3\,5",encoding-params=(string)"6",sprop-maxcapturerate=(string)"16000",payload=96 ! queue ! rtpopusdepay ! opusdec ! audioconvert'
+n_channels: 6
+main_channel: 0
+sample_rate: 16000
+update_rate: 4.0
+sound_intensity_threshold: 300
+intensity_normalization_divider: 2000
+microphone_frame_id: 'microphone_link'
+stationary_frame_id: 'microphone_link'
+doa:
+    type: 'pyroomacoustics'
+    algorithm: 'NormMUSIC'
+    #algorithm: 'SRP'
+    #algorithm: 'FRIDA'
+    #algorithm: 'MUSIC'
+    #algorithm: 'TOPS'
+    mic_coords: [ 0.02285, -0.02285, 0.0, 0.02285, 0.02285, 0.0, -0.02285, 0.02285, 0.0, -0.02285, -0.02285, 0.0 ]
+    mic_channels: [ 1, 2, 3, 4 ]
+    grid_type: '2d_circle'
+    grid_size: 32
+    #grid_type: '3d_linspace'
+    #azimuth: [-180.0, 180.0, 32]
+    #colatitude: [10.0, 90.0, 8]
+    nfft: 1024
+vad:
+    #type: 'button'
+    type: 'intensity'
+    threshold: 500
+speech_timeout: 0.75
+speech_direction_tolerance: 60.0
+detections:
+    publish_detections: True
+    publish_markers: True
+    distance: 2.0
+    2d_z_position: 1.0
+debug_plot: True
+intensity_histogram_forget_factor: 0.99
+intensity_histogram_step: 100

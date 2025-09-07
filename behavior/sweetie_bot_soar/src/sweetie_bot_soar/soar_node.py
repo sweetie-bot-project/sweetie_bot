@@ -4,7 +4,7 @@ from . import input_modules
 from . import output_modules
 
 import os, sys
-import rospy, rospkg
+import rospy
 from std_srvs.srv import Trigger, TriggerResponse
 from std_srvs.srv import SetBool, SetBoolResponse
 

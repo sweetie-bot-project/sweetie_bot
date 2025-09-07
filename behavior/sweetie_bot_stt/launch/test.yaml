@@ -1,0 +1,12 @@
+enable_translation: true
+balancer_config:
+  server_choices:
+    local_host: 
+      priority: 10
+      url: 'https://ai.sweetie.bot/stt/'
+    remote_host:
+      priority: 20
+      url: 'http://localhost:8577'
+    remote_host:
+      priority: 20
+      url: 'http://192.168.3.128:5000/'

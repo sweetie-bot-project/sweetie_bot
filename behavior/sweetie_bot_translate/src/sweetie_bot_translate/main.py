@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import os, time, json
 from copy import copy
+import six
+import re
 
 import rospy
 from rospy_message_converter import message_converter
@@ -10,9 +12,6 @@ from sweetie_bot_load_balancer.balancer import Balancer
 from sweetie_bot_text_msgs.srv import LibreTranslate, LibreTranslateRequest, LibreTranslateResponse
 from sweetie_bot_text_msgs.srv import Translate, TranslateRequest, TranslateResponse
 from sweetie_bot_text_msgs.msg import TextCommand
-
-import six
-import re
 
 class TranslateError(RuntimeError):
     def __init__(self, msg, details = ''):

@@ -35,11 +35,14 @@ class Soar:
         self._output_modules_map = dict()
         self._active_output_modules = set()
 
-    def __del__(self):
-        # remove all output modules
+    def _unload_io_modules(self):
         self._input_modules.clear()
         self._output_modules_map.clear()
         self._active_output_modules.clear()
+
+    def __del__(self):
+        # remove all output modules
+        self._unload_io_modules()
 
     def checkNoErrors(self):
         # check soar kernel
@@ -160,17 +163,17 @@ class Soar:
                 output_link_config = rospy.get_param("~output")
                 self._output_modules_map = { m.getCommandName(): m for m in  output_modules.load_modules(output_link_config) }
                 rospy.loginfo("Loaded %d output modules" % len(self._output_modules_map))
-            except RuntimeError as e:
-                rospy.logerr("SOAR configuration: input/output link initialization failed: " + str(e))
-                return False
-            except KeyError as e:
-                rospy.logerr("SOAR configuration: input/output link initialization failed: " + str(e))
+            except (RuntimeError, KeyError) as e:
+                rospy.logerr("SOAR configuration: input/output link initialization failed: %s" % e)
+                self._unload_io_modules()
                 return False
             except tf.Exception as e:
-                rospy.logerr("SOAR configuration: tf exception: " + str(e))
+                rospy.logerr("SOAR configuration: tf exception: %s" % e)
+                self._unload_io_modules()
                 return False
             except rospy.exceptions.ROSException as e:
-                rospy.logerr("SOAR configuration: ROS exception: " + str(e))
+                rospy.logerr("SOAR configuration: ROS exception: %s" % e)
+                self._unload_io_modules()
                 return False
         
             # load reasoning rules

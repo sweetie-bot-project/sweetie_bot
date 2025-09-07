@@ -11,33 +11,73 @@
 #				[^sound <sound-file>] [^scene <scene>] [^character <character>]
 #				[^lang <lang>] [^type <type>])
 #
-# Say person <obj> about <topic> with <text> or <sound-file> and using animation tagged with <tag>.
+# Look at person <obj> and then say about <topic> with <text> or <sound-file> using animation tagged with <tag>. 
+# 
+# State publishes SpeechVisualization message with attributes ^text <text>, ^sound <sound>, ^character <character>, ^scene <scene>.
 #
 # Set ^animation-tag to none to skip animation. Multiply ^animation-tag may be specified.
 # Substate consider only animation tagged with talk tag. Animation preferences are following:
 #  * two tags is matched (most preferable)
 #  * one tag is matched
-#  * animation have ^teg general
-#
-# State publishes SpeechVisualization message with attributes text, sound, character, scene.
-#
+#  * animation have ^tag general
 #
 # PROCESS RESULT STATUSES
 #
 # * succeed --- text action succced and animation outcome is received
+# * missing --- unable to focus on interlocutor
 #
 # SIDE EFFECTS
 #
 # Substates:
 #
-# tect-action, flexbe, look-at
+# text-action, flexbe, look-at
 #
-# Process:
+# Events:
 #
 # * (^name talk-said ^object <object> ^topic <topic> ^text <text>) --- said to <object> about <topic>.
 #
 
+
+#
 # DECISION RULES
+#
+
+# LOOK AT INTERLOCUTOR BEFORE SAY ANYTHING
+
+# focus on interlocutor before any other actions
+# this operator will be active until look-at does not set status
+sp {verbolize*propose*focusing-on-interlocutor
+	(state <s> ^substate verbolize ^args <args> ^process <proc>)
+	(<args> ^object <obj> -^skip look-at) 
+	(<proc> -^focusing-on-interlocutor-status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name focusing-on-interlocutor ^substate look-at ^process-args <a> ^priority 50)
+    (<a> ^object <obj> ^deadline-time 5.0)
+}
+
+# detect that object in focus, procced to actual verbolization
+sp {verbolize*propose*focusing-on-interlocutor-succeed
+	(state <s> ^bottom-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name looking-at ^object <obj> ^focusing-process.subprocess-of <proc>)
+	(<proc> ^substate verbolize ^object <obj> -^focusing-on-interlocutor-status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name focusing-on-interlocutor-succeed ^type cognition automatic)
+    (<op> ^parent <proc> ^attribute focusing-on-interlocutor-status ^link-value succced)
+}
+
+# detect focusing has failed
+sp {verbolize*propose*focusing-on-interlocutor-mssing
+	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
+	(<ev> ^name focusing-on-interlocutor ^reason deadline ^process.subprocess-of <proc>)
+	(<proc> ^substate verbolize -^focusing-on-interlocutor-status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name focusing-on-interlocutor-failed ^type cognition automatic)
+    (<op> ^parent <proc> ^attribute focusing-on-interlocutor-status ^link-value failed)
+    (<op> ^finish-process <proc> ^finish-status missing)
+}
 
 # PERFORM TEXT ACTION
 
@@ -46,14 +86,14 @@
 # synthesis has lower priority then predefined sounds
 sp {verbolize*propose*text-action-sound
 	(state <s> ^substate verbolize -^saying-text-action ^args <args> ^process <proc>)
-	(<args> ^sound <file> ^topic <topic> ^object <obj>)
+	(<args> ^sound <file>)
 	(<proc> -^text-action-status -^text-action-sound-failed)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name saying-text-action ^substate text-action ^process-args <a> ^priority 27)
     (<a> ^type |voice/play_wav| ^command <file> ^result <r-succeed> <r-failed>)
 	(<r-succeed> ^status succeed ^parent <proc> ^attribute text-action-status ^link-value succeed ^add-event <ev-new>)
-	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^memorization-time 3600.0)
+	(<ev-new> ^name talk-said ^memorization-time 3600.0)
 	(<r-succeed> ^print (concat |TALK: text action play file: | <file> (crlf)))
 	(<r-failed> ^status failed ^parent <proc> ^attribute text-action-sound-failed ^link-value yes)
 }
@@ -63,16 +103,27 @@ sp {verbolize*propose*text-action-sound
 # synthesis has lower priority then predefined sounds
 sp {verbolize*propose*text-action-text
 	(state <s> ^substate verbolize -^saying-text-action ^args <args> ^process <proc>)
-	(<args> ^text <text> ^topic <topic> ^object <obj> ^lang <lang> ^emotion <emotion> ^type <type>)
+	(<args> ^text <text> ^lang <lang>)
 	(<proc> -^text-action-status)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name saying-text-action ^substate text-action ^process-args <a> ^priority 25)
     (<a> ^type (concat |voice/say/| <lang>) ^command <text> ^result <r>)
 	(<r> ^status succeed ^parent <proc> ^attribute text-action-status ^link-value succeed ^add-event <ev-new>)
-	(<ev-new> ^name talk-said ^object <obj> ^topic <topic> ^text <text> ^lang <lang> ^emotion <emotion> ^type <type> ^memorization-time 3600.0)
+	(<ev-new> ^name talk-said ^text <text> ^lang <lang> ^memorization-time 3600.0)
 	(<r> ^print (concat |TALK: text action say: | <text> (crlf)))
 }
+
+# add ^type and ^emotion attributes to talk-said event
+sp {verbolize*elaborte*text-action-result-evet-attributes
+	(state <s> ^substate verbolize ^operator <op> + ^args <args>)
+	(<op> ^name saying-text-action ^process-args.result.add-event <ev>)
+	(<ev> ^name talk-said)
+	(<args> ^{<<|emotion| |type| |topic| |object|>> <attrib>} <value>)
+-->
+	(<ev> ^<attrib> <value>)
+}
+
 
 # SEND VISUALIZATION MESSAGE
 
@@ -176,25 +227,33 @@ sp {verbolize*elaborate*say-execute-animation-is-relative
 
 # look at speaker if animation is finished
 sp {verbolize*propose*looking-at-speaker
-	(state <s> ^substate verbolize ^process <proc>)
+	(state <s> ^substate verbolize -^looking-at-speaker ^process <proc>)
 	(<proc> ^animation-status succeed ^object <obj>)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name looking-at-speaker ^substate look-at ^process-args <a> ^priority 20)
-	(<a> ^object <obj> ^timeout 5.0 ^delay 1.0)
+	(<a> ^object <obj>)
 }
 
-# waiting is worst choice
-sp {verbolize*elaborate*waiting
+# waiting for subprocess
+sp {verbolize*propose*wait
 	(state <s> ^substate verbolize)
 -->
 	(<s> ^operator <op> +, <)
-	(<op> ^name waiting ^substate wait)
+	(<op> ^name wait ^substate wait)
+}
+
+sp {verbolize*elaborate*waiting-subprocess
+	(state <s> ^substate verbolize ^{<<|performing-animation| |looking-at-speaker| |saying-text-action|>>} <proc> ^operator <op> +)
+	(<op> ^name wait ^substate wait)
+-->
+	(<op> ^process <proc>)
 }
 
 # PREFERENCES
 #
 # Utility:
+# focus on speaker --- 50
 # ditch aniamtion --- 40
 # perform aniamtion
 #     two matching tags --- 32

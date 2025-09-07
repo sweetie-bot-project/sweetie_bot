@@ -3,7 +3,8 @@ soar:
     autostart: false
     agent_package: "sweetie_bot_soar"
     agent_file: "soar/unified-proto3.soar"
-    # agent_file: "soar/test_llm.soar"
+    #agent_file: "soar/tests/test_lookat.soar"
+    #agent_file: "soar/tests/test_attention.soar"
     input:
         rand:
             type: "rand"
@@ -25,7 +26,7 @@ soar:
             body_frame: "base_link"
             head_frame: "head_link4"
             distance_bins_map: { names: [ "close", "near", "far" ], values: [ 0.3, 3.0] }
-            yaw_bins_map: { names: [ "right", "center", "left" ], values: [ -0.52, 0.52] }
+            yaw_bins_map: { names: [ "back", "right", "center", "left", "back" ], values: [ -1.57, -0.52, 0.52, 1.57] }
             time_bins_map: { names: [ "now", "just", "recently", "long-time" ], values: [ 2.0, 10.0, 120.0] }
         body-pose:
             type: "pose_joints"
@@ -53,13 +54,25 @@ soar:
         sound:
             type: "sound_speech"
             topic: "sound_event"
-            speech_timeout: 2.5
-            intensity_bins_map: { names: [ "low", "med", "high" ], values: [ 10.0, 20.0 ] }
+            speech_timeout: 1.5
+            intensity_bins_map: { names: [ "low", "medium", "high" ], values: [ 0.3, 0.6 ] }
             lang_filter: ['en', 'ru', 'zh']
-            map_parsers:
-                'en': 
+            object_filter: ['human']
+            object_max_n: 3
+            object_evaluation_alpha: 0.85
+            undetected_angle_tolerance: 0.5 # +/- 30 deg
+            undetected_intensity_accept_ratio: 0.90
+            nlp_parsers:
+                #'en': 
+                    #type: 'lexical_tree'
+                    #nlp_model: 'en_core_web_sm'
+                #'ru':
+                    #type: 'lexical_tree'
+                    #nlp_model: 'en_core_web_sm'
+                'en':
+                    type: 'word_map'
                     nlp_model: 'en_core_web_sm'
-                    map:
+                    map: 
                         greeting: [hello, hi, greet]
                         goodbye: [goodbye, bye]
                         dance: [dance]
@@ -68,6 +81,7 @@ soar:
                         give: [give]
                         hoof: [hoof, hand, leg, hooves]
                 'ru':
+                    type: 'word_map'
                     nlp_model: 'en_core_web_sm'
                     map:
                         greeting: [hello, hi, greet]
@@ -78,8 +92,9 @@ soar:
                         give: [give]
                         hoof: [hoof, hand, leg, hooves]
                 'zh':
+                    type: 'word_map'
                     nlp_model: 'en_core_web_sm'
-                    map:
+                    map: 
                         greeting: [hello, hi, greet]
                         goodbye: [goodbye, bye]
                         dance: [dance]
@@ -98,6 +113,9 @@ soar:
             action_ns: "voice/syn"
         speech-visualization:
             topic: "hmi/speech_visualization"
+        look-at:
+            controller: "motion/controller/look_at"
+            period: 0.1
         lang-model:
             service_ns: "llm_request"
             requests:

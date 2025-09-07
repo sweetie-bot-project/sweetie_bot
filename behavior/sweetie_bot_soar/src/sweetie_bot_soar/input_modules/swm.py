@@ -1,9 +1,11 @@
 from . import input_module
 
 import math
+from threading import Lock
+from dataclasses import dataclass
+
 import rospy
 import tf
-from threading import Lock
 
 from std_msgs.msg import Header
 from geometry_msgs.msg import Pose, PoseStamped
@@ -11,6 +13,12 @@ from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detec
 
 from flexbe_core.proxy import ProxyTransformListener
 from .bins import BinsMap
+
+@dataclass(eq = True, frozen = True)
+class ObjectKeyTuple:
+    id : int
+    label : str
+    type : str
 
 class SpatialObject:
     def __init__(self, id, label, type, timestamp, timeout, frame_id, pose):
@@ -28,6 +36,9 @@ class SpatialObject:
         self.frame_id = frame_id
         self.pose = pose
 
+    def __repr__(self):
+        return f'SpatialObject(label="{self.label}", id={self.id}, type="{self.type}", creation={self.creation_time}, update={self.update_time}, perceive_begin={self.perceive_begin_time}, perceive_end_time={self.perceive_end_time})'
+
     def updateVisible(self, timestamp, pose):
         self.update_time = timestamp
         self.pose = pose
@@ -41,10 +52,10 @@ class SpatialObject:
         self.perceive_begin_time = None
 
     def isOutdated(self, time_now):
-        return self.perceive_end_time != None and (self.perceive_end_time + self.memorize_time) < time_now
+        return self.perceive_end_time is not None and (self.perceive_end_time + self.memorize_time) < time_now
 
-    def isVisible(self, time_now):
-        return self.perceive_end_time != None
+    def isVisible(self):
+        return self.perceive_end_time is None
 
     def getPose(self, frame_id, tf_buffer):
         pose_stamped = PoseStamped(pose = self.pose, header = Header(frame_id = self.frame_id))
@@ -91,7 +102,25 @@ class SpatialObjectSoarView:
         # remove WME
         self.wme_id.DestroyWME()
 
+
 class SpatialWorldModel:
+    _swm_instance_ref = None
+    _update_callbacks = []
+
+    @staticmethod
+    def get_swm():
+        swm_ref = SpatialWorldModel._swm_instance_ref
+        return swm_ref if swm_ref is not None else None
+
+    @staticmethod
+    def add_update_callback(callback):
+        if callback not in SpatialWorldModel._update_callbacks:
+            SpatialWorldModel._update_callbacks.append(callback)
+
+    @staticmethod
+    def remove_update_callback(callback):
+        SpatialWorldModel._update_callbacks.remove(callback)
+
     @staticmethod
     def distance(p):
         return math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z)
@@ -102,7 +131,12 @@ class SpatialWorldModel:
             self.soar_view = soar_view
 
     def __init__(self, name, config, agent):
+        # add fileds to prevent AttributeError during destruction
+        self._sensor_id = None
         self._detections_sub = None
+        # check if SWM exists
+        if SpatialWorldModel._swm_instance_ref is not None:
+            raise RuntimeError('SWM input_module: only one SWM instance can exist')
 
         # get input link WME ids
         input_link_id = agent.GetInputLink()
@@ -144,6 +178,28 @@ class SpatialWorldModel:
         self._soar_view_remove_list = []
         self._last_update_time = rospy.Time.now().to_sec();
 
+        # register SWM
+        SpatialWorldModel._swm_instance_ref = self
+
+    @property
+    def world_frame(self):
+        return self._world_frame
+
+    def get_objects(self, object_filter = None):
+        with self._memory_lock:
+            if object_filter is None:
+                return { key_tuple: mem_elem.spatial_object for key_tuple, mem_elem in self._memory_map.items() }
+            else:
+                return { key_tuple: mem_elem.spatial_object for key_tuple, mem_elem in self._memory_map.items() if object_filter(mem_elem.spatial_object) }
+
+    def get_object_soar_view(self, key_tuple):
+        mem_elem = self._memory_map.get(key_tuple)
+        return mem_elem.soar_view if mem_elem is not None else None
+
+    def get_object(self, key_tuple):
+        mem_elem = self._memory_map.get(key_tuple)
+        return mem_elem.spatial_object if mem_elem is not None else None
+
     def detectionCallback(self, msg):
         with self._memory_lock:
             # iterate over detected objects 
@@ -172,7 +228,7 @@ class SpatialWorldModel:
                     continue
 
                 # search detected object in index
-                key_tuple = (detection_msg.id, detection_msg.label, detection_msg.type)
+                key_tuple = ObjectKeyTuple(detection_msg.id, detection_msg.label, detection_msg.type)
                 # check if corrsponding object exists
                 mem_elem = self._memory_map.get(key_tuple)
                 if mem_elem != None:
@@ -187,6 +243,10 @@ class SpatialWorldModel:
             time_now = rospy.Time.now().to_sec();
             if time_now - self._last_update_time > self._seen_timeout:
                 self.__updateSpatialMemory(time_now)
+
+        # call callbacks
+        for callback in self._update_callbacks:
+            callback(self)
 
     def __updateSpatialMemory(self, time_now):
         self._last_update_time = time_now
@@ -226,7 +286,7 @@ class SpatialWorldModel:
                     mem_elem.soar_view = soar_view
                 # visibility timestamp
                 soar_view.updateChildWME( 'visible', self._time_bins_map(time_now - spatial_object.update_time) ) # string
-                soar_view.updateChildWME( 'appeared', self._time_bins_map(time_now - spatial_object.creation_time) ) # string
+                soar_view.updateChildWME( 'perceived-first-time', self._time_bins_map(time_now - spatial_object.creation_time) ) # string
                 if spatial_object.perceive_begin_time != None:
                     soar_view.updateChildWME('perceive-begin', self._time_bins_map(time_now - spatial_object.perceive_begin_time) ) # string
                 else:
@@ -246,8 +306,11 @@ class SpatialWorldModel:
 
     def __del__(self):
         # remove sensor wme and ROS subscriber
-        self._sensor_id.DestroyWME()
+        if self._sensor_id:
+            self._sensor_id.DestroyWME()
         if self._detections_sub:
             self._detections_sub.unregister()
+        # unregister SWM
+        SpatialWorldModel._swm_instance_ref = None
 
 input_module.register("swm", SpatialWorldModel)

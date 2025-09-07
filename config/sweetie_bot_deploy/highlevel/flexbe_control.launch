@@ -16,10 +16,12 @@
 	<arg name="run_flexbe" default="true" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 	<arg name="run_flexbe_gui" default="false" doc="Start flexbe gui."/>
 
+	<arg name="host_address" default="127.0.0.1" doc="IP address of host computer."/>
+	<arg name="robot_address" default="127.0.0.1" doc="IP address of robot on-board computer."/>
+
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
 	<machine name="sweetiebot" address="localhost" user="$(env USER)" default="true"/>
 	<!--<machine name="sweetiebot" address="$(eval robot_name.replace('sweetie_bot_',''))" user="sweetie" default="never"/>-->
-
 
 	<!-- load parameters -->
 	<group if="$(arg host)">
@@ -41,10 +43,16 @@
 			<arg name="overlays" value="$(arg robot_profile_path) control motion_core" /> 
 			<arg name="interactive" value="false" /> 
 		</include>
-		<!-- robot-specific ROS nodes -->
-		<include if="$(eval robot and run_real)" file="$(arg robot_profile_path)/robot_module.launch">
-			<arg name="robot_ns" value="$(arg robot_ns)" /> 
-		</include>
+		<group if="$(arg robot)">
+			<!-- robot-specific ROS nodes -->
+			<include if="$(arg run_real)" file="$(arg robot_profile_path)/robot_module.launch">
+				<arg name="robot_ns" value="$(arg robot_ns)" /> 
+			</include>
+			<!-- microphone transiver node -->
+			<node if="$(arg run_nlp)" pkg="sweetie_bot_mic" type="gstreamer_node" name="audio_transiver" output="screen">
+				<param name="host_address" type="str" value="$(arg host_address)"/>
+			</node>
+		</group>
 	</group>
 
 	<!-- robot nodes on host side -->
@@ -66,42 +74,42 @@
 			<node pkg="sweetie_bot_body_language" name="body_language" type="body_language" output="screen"/>
 			<!-- <node pkg="sweetie_bot_body_language" name="led" type="led" output="screen"/> -->
 			<!-- voice node  -->
-			<env name="LD_PRELOAD" value="/usr/lib/x86_64-linux-gnu/libffi.so.7" />
-			<!-- sound play is necessary for voice to function -->
-			<include file="$(find sound_play)/soundplay_node.launch" />
 			<node pkg="sweetie_bot_voice" type="voice" name="voice" output="screen">
 				<remap from="control" to="$(arg robot_ns)/control" />
 			</node>
+			<!-- sound play is necessary for voice to function -->
+			<include file="$(find sound_play)/soundplay_node.launch" />
+			<!-- natural language processing -->
+			<!-- TODO: unification with voice? -->
 			<group  if="$(arg run_nlp)">
-				<group  if="$(eval robot_name == 'sweetie_bot_proto3')">  <!-- Hack to get rid of error on proto2 config -->
-					<!-- Check if path to button exists and have read access rights -->
-					<arg name="yaml_config" default="$(eval open(robot_profile_path + '/../default/hardware.yaml').read())" />
-					<arg name="button_dev" default="$(eval eval('_' + '_import_' + '_(\'yaml\')').safe_load(yaml_config)['hardware']['external_button']['sysfs_path'])" />
-					<arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').access(button_dev,4))" />
-
-					<!-- run external button node if device is connected -->
-					<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
-						<remap from="pushed" to="$(arg robot_ns)/mic_button" />
-						<!-- rename path param for consistency of config -->
-						<remap from="~port" to="~sysfs_path" />
-					</node>
-				</group>
-
+				<!-- microphone button: external button -->
+				<!-- TODO: use param or write node -->
+				<!-- Check if path to button exists and have read access rights -->
+				<arg name="yaml_config" default="$(eval open(robot_profile_path + '/../default/hardware.yaml').read())" />
+				<arg name="button_dev" default="$(eval eval('_' + '_import_' + '_(\'yaml\')').safe_load(yaml_config)['hardware']['external_button']['sysfs_path'])" />
+				<arg name="run_button" default="$(eval eval('_' + '_import_' + '_(\'os\')').access(button_dev,4))" />
+				<!-- run external button node if device is connected -->
+				<node ns="hardware" name="external_button" pkg="rosserial_arduino" type="serial_node.py" if="$(arg run_button)">
+					<remap from="pushed" to="$(arg robot_ns)/mic_button" />
+					<!-- rename path param for consistency of config -->
+					<remap from="~port" to="~sysfs_path" />
+				</node>
+				<!-- microphone button: keyboard combo -->
+				<node pkg="sweetie_bot_mic_button" type="mic_button_hotkey_node" name="mic_button_hotkey_node" output="screen" >
+					<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
+				</node>
 				<!-- microphone node -->
 				<node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
 					<remap from="sound_event" to="$(arg robot_ns)/sound_event" />
-					<remap from="mic_button" to="$(arg robot_ns)/mic_button" />
+					<remap from="detections" to="$(arg robot_ns)/detections" />
+					<remap from="hmi/detections" to="$(arg robot_ns)/hmi/detections" />
+					<remap from="/tf" to="$(arg robot_ns)/tf" />
+					<remap from="/tf_static" to="$(arg robot_ns)/tf_static" />
 				</node>
 				<!-- transcription node -->
-				<node pkg="sweetie_bot_stt" type="stt_service_node" name="transcriber" output="screen">
-					<remap from="transcribe_api" to="$(arg robot_ns)/transcribe_api" />
-					<remap from="transcribe" to="$(arg robot_ns)/transcribe" />
-				</node>
+				<node pkg="sweetie_bot_stt" type="stt_service_node" name="transcriber" output="screen" /> 
 				<!-- translation node -->
-				<node pkg="sweetie_bot_translate" type="translate_service_node" name="translator" output="screen">
-					<remap from="translate" to="$(arg robot_ns)/translate" />
-					<remap from="libre_translate" to="$(arg robot_ns)/libre_translate" />
-				</node>
+				<node pkg="sweetie_bot_translate" type="translate_service_node" name="translator" output="screen" />
 				<!-- language model interface node -->
 				<node pkg="sweetie_bot_llm" type="llm_completion_node" name="lang_model" output="screen">
 					<remap from="llm_request" to="$(arg robot_ns)/llm_request" />
