@@ -66,7 +66,7 @@ class VoiceActivityDetectorSilero_vad(VoiceActivityDetector):
             # send data to server
             self.sock.send(audio_data_buf)
             # receive confidence
-            confidence_data = self.sock.recv(4 * (length/self.DATA_CHUNK_SIZE))
+            confidence_data = self.sock.recv(4*(length//self.DATA_CHUNK_SIZE))
             if len(confidence_data) == 0:
                 raise ConnectionAbortedError()
             # decode confidence

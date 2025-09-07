@@ -133,7 +133,7 @@ class GstreamerPipeline(object):
     def stop(self):
         state = self._gstreamer_pipeline.current_state
         if state in [Gst.State.READY, Gst.State.PAUSED, Gst.State.PLAYING]:
-            self._gstreamer_pipeline.set_state(Gst.State.READY)
+            self._gstreamer_pipeline.set_state(Gst.State.PAUSED)
         else:
             raise RuntimeError(f'GstreamerPipeline: pipeline is closed or in error state: {state}')
 
