@@ -60,6 +60,7 @@ lang_model:
             stop: ["\n私の感情：", "\n人間：", "\n"]
 
 transcriber:
+    enable_translation: True
     balancer_config:
         # Min priority value = 100
         server_choices:

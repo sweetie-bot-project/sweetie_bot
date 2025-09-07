@@ -102,8 +102,14 @@ microphone:
         grid_size: 32
         nfft: 1024
     vad:
-        type: 'intensity'
-        threshold: 2000
+        type: 'silero_vad'
+        receive_ip: 'ai.sweetie.bot'
+        receive_port: 1234
+        treshhold_voiced : 0.6
+        treshhold_unvoiced: 0.4
+    speech_timeout: 0.75
+    speech_forestalling: 0.2
+    speech_direction_tolerance: 60.0
     detections:
         publish_detections: True
         publish_markers: True
