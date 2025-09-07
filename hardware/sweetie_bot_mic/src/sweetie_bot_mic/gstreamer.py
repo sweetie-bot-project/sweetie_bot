@@ -130,6 +130,7 @@ class GstreamerPipeline(object):
         else:
             raise RuntimeError(f'GstreamerPipeline: pipeline is closed or in error state: {state}')
 
+
     def stop(self):
         state = self._gstreamer_pipeline.current_state
         if state in [Gst.State.READY, Gst.State.PAUSED, Gst.State.PLAYING]:
@@ -175,6 +176,16 @@ class GstreamerAudioSource(GstreamerPipeline):
         # add sample callback
         gstreamer_sink = self._gstreamer_pipeline.get_by_name('appsink-microphone-node')
         gstreamer_sink.connect("new-sample", GstreamerAudioSource._on_buffer, weakref.ref(self))
+        # state
+        self._enabled = True
+
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value):
+        self._enabled = value
 
     @staticmethod
     def _on_buffer(sink, self_weakref):
@@ -196,6 +207,9 @@ class GstreamerAudioSource(GstreamerPipeline):
                 self = self_weakref()
                 if self is None:
                     break
+                # check that data processing is enabled
+                if not self._enabled:
+                    continue
                 # construct numpy object over buffer
                 data = np.frombuffer(buffer_map.data, dtype=np.int16)
                 chunk_per_channel = len(data) // self.available_channels
