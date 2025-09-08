@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 log() {
     echo
@@ -33,11 +33,11 @@ CMD_APP="roslaunch sweetie_bot_deploy joint_space_control.launch robot_name:=swe
 $CMD_APP 2>&1 > app.log & APP=$!; sleep 100; scrot screenshot-towr.png
 kill -SIGINT $APP; wait $APP; EXIT_APP_TOWR=$?; log $EXIT_APP_TOWR app.log "$CMD_APP"
 
-kill -SIGINT $ROS_CORE
+kill -SIGINT $ROS_CORE || true
 wait $ROS_CORE
 EXIT_CORE=$?
 
-kill -SIGINT $VIRT_DISPLAY
+kill -SIGINT $VIRT_DISPLAY || true
 wait $VIRT_DISPLAY
 EXIT_VIRT_DISPLAY=$?
 
