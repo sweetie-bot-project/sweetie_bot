@@ -98,7 +98,7 @@ microphone:
     microphone_frame_id: 'microphone_link'
     stationary_frame_id: 'base_link_path'
     doa:
-        type: 'pyroomacoustics'
+        type: 'none'
         algorithm: 'NormMUSIC'
         #algorithm: 'SRP'
         #algorithm: 'FRIDA'
@@ -112,11 +112,11 @@ microphone:
         grid_size: 32
         nfft: 1024
     vad:
-        type: 'silero_vad'
-        receive_ip: 'ai.sweetie.bot'
-        receive_port: 1234
-        treshhold_voiced : 0.6
-        treshhold_unvoiced: 0.4
+        type: 'button'
+        #receive_ip: 'ai.sweetie.bot'
+        #receive_port: 1234
+        #treshhold_voiced : 0.6
+        #treshhold_unvoiced: 0.4
     speech_timeout: 0.75
     speech_forestalling: 0.2
     speech_direction_tolerance: 60.0
