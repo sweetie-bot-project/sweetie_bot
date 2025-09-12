@@ -1,0 +1,26 @@
+[Unit]
+Description=Sweetie Bot Silero VAD Server
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+# change to your user
+User=sweetie
+WorkingDirectory=/path/to/sweetie_bot_mic/Silero_vad
+Type=simple
+Environment=conda_path=miniconda3/condabin
+Environment=VENV=speech-doa-detection
+Environment=PORT=1234
+StandardError=journal
+StandardOutput=journal
+#TimeoutStartSec=100
+ExecStart=/bin/bash -ec "\
+    source ${HOME}/miniconda3/etc/profile.d/conda.sh; \
+    conda activate ${VENV}; \
+    python3 -u silero_server.py -p ${PORT}"
+Restart=on-failure
+TimeoutSec=600
+
+
