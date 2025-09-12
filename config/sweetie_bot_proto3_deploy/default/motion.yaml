@@ -12,11 +12,17 @@ kinematics_inv:
     eps_vel: 0.01
     zero_vel_at_singularity: true
     max_joint_velocity: 18.7 # 60 grad per discretization period
-    services: [ solver_ik_factory_trac_ik ]
+    services: [ solver_ik_factory_trac_ik, solver_ik_factory_kdl_sqp ]
     solver_ik_factory_trac_ik:
-        kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
+        kinematic_chains: [ head, nose ]
         eps_pos: 0.0001
         timeout_pos: 0.003
+    solver_ik_factory_kdl_sqp:
+        kinematic_chains: [ leg1, leg3, leg4, leg2 ]
+        eps_pos: 0.0001
+        timeout: 0.003
+        weight_rot: 0.1
+        weight_q_opt: 0.001
 kinematics_fwd:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
