@@ -4,7 +4,7 @@ After=systemd-timesyncd.service network-online.target
 
 [Service]
 Type=oneshot
-User=sweetie
+User=root
 Group=sudo
 ExecStart=-/bin/bash -c "source /opt/ros/sweetie_bot/setup.bash && rosrun sweetie_bot_self_test test"
 

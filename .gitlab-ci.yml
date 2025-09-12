@@ -63,6 +63,7 @@
         python3-speechd \
         python3-requests \
         python3-pyaudio \
+        python3-evdev \
         opus-tools \
         lame \
       || echo "ret code $?"
