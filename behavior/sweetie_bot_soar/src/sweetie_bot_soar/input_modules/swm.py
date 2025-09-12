@@ -297,12 +297,21 @@ class SpatialWorldModel:
                     soar_view.removeChildWME('perceive-end')
                 # position relative to head
                 pose = spatial_object.getPose( self._head_frame, self._tf_listener )
-                soar_view.updateChildWME( 'distance-head', self._distance_bins_map( SpatialWorldModel.distance(pose.position) ) ) # string
-                soar_view.updateChildWME( 'yaw-head', self._yaw_bins_map( math.atan2(pose.position.y, pose.position.x) ) ) # string
+                distance = SpatialWorldModel.distance(pose.position)
+                soar_view.updateChildWME( 'distance-head', self._distance_bins_map(distance)) # string
+                soar_view.updateChildWME( 'distance-head-numeric', distance ) # float
+                yaw = math.atan2(pose.position.y, pose.position.x)
+                soar_view.updateChildWME( 'yaw-head', self._yaw_bins_map(yaw)) # string
+                soar_view.updateChildWME( 'yaw-head-numeric', yaw ) # float
                 # position relative to bode
                 pose = spatial_object.getPose( self._body_frame, self._tf_listener )
-                soar_view.updateChildWME( 'distance-body', self._distance_bins_map( SpatialWorldModel.distance(pose.position) ) ) # string
-                soar_view.updateChildWME( 'yaw-body', self._yaw_bins_map( math.atan2(pose.position.y, pose.position.x) ) ) # string
+                distance = SpatialWorldModel.distance(pose.position)
+                soar_view.updateChildWME( 'distance-body', self._distance_bins_map(distance)) # string
+                soar_view.updateChildWME( 'distance-body-numeric', distance ) # float
+                yaw = math.atan2(pose.position.y, pose.position.x)
+                soar_view.updateChildWME( 'yaw-body', self._yaw_bins_map(yaw)) # string
+                soar_view.updateChildWME( 'yaw-body-numeric', math.degrees(yaw) ) # float
+                soar_view.updateChildWME( 'yaw-body-abs-numeric', abs(math.degrees(yaw)) ) # float
 
     def __del__(self):
         # remove sensor wme and ROS subscriber
