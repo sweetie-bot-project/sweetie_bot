@@ -4,12 +4,21 @@
   <struct name="groups" type="PropertyBag">
     <description>Herkulex servo description.</description>
     <struct name="default" type="PropertyBag">
-      <simple name="torque_mode_on" type="ulong">
-        <value>96</value>
-      </simple>
-      <simple name="torque_mode_brake" type="ulong">
-        <value>64</value>
-      </simple>
+      <struct name="modes" type="PropertyBag">
+        <description>Modes applicable to given group.</description>
+        <struct name="on" type="PropertyBag">
+          <description>Servo is on.</description>
+          <simple name="torque_control" type="ulong"> <value>96</value> </simple>
+        </struct>
+        <struct name="free" type="PropertyBag">
+          <description>Servo is off.</description>
+          <simple name="torque_control" type="ulong"> <value>0</value> </simple>
+        </struct>
+        <struct name="brake" type="PropertyBag">
+          <description>Servo is off.</description>
+          <simple name="torque_control" type="ulong"> <value>64</value> </simple>
+        </struct>
+      </struct>
       <struct name="registers_init" type="PropertyBag">
         <description>These values are written to RAM register of ALL servos after reboot. The servo-specific values override them.</description>
         <simple name="ack_policy" type="ulong">
