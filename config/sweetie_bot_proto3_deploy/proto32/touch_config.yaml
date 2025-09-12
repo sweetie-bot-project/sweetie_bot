@@ -6,9 +6,9 @@ KeyPressed:
         1: "nose"
         2: "forehead"
         3: "cheek_left"
-        4: "forehead_left"
+        4: "temple_left"
         5: "cheek_right"
-        6: "forehead_right"
+        6: "temple_right"
     axes_positive: {}
     axes_negative: {}
 

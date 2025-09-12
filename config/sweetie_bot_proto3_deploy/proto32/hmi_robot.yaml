@@ -77,10 +77,11 @@ mic_button_hotkey_node:
     key_combination: [ 'ctrl','alt', 'w' ]
     enable_global_hotkey: True
 audio_transiver:
-    gstreamer_pipeline: "alsasrc device={device} ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! rtpgstpay config-interval=1 ! udpsink host={host_address} port=12345"
-    device: "plughw:ArrayUAC10"
+    gstreamer_pipeline: "pulsesrc device={device} ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! rtpgstpay config-interval=1 ! udpsink host={host_address} port=12345"
+    #device: "plughw:ArrayUAC10"
+    device: "alsa_input.usb-SEEED_ReSpeaker_4_Mic_Array__UAC1.0_-00.multichannel-input"
 microphone:
-    gstreamer_pipeline: "alsasrc device=plughw:ArrayUAC10"
+    gstreamer_pipeline: "pulsesrc device=alsa_input.usb-SEEED_ReSpeaker_4_Mic_Array__UAC1.0_-00.multichannel-input"
     n_channels: 6
     main_channel: 0
     sample_rate: 16000
