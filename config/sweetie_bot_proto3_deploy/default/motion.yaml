@@ -9,6 +9,7 @@ aggregator_ref:
 kinematics_inv:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head, nose ]
+    files: [ kinematics_inv_joint_limits.cpf ]
     eps_vel: 0.01
     zero_vel_at_singularity: true
     max_joint_velocity: 18.7 # 60 grad per discretization period
@@ -19,6 +20,7 @@ kinematics_inv:
         timeout_pos: 0.003
     solver_ik_factory_kdl_sqp:
         kinematic_chains: [ leg1, leg3, leg4, leg2 ]
+        files: [ kinematics_inv_joint_opt_poses.cpf ]
         eps_pos: 0.0001
         timeout: 0.003
         weight_rot: 0.1

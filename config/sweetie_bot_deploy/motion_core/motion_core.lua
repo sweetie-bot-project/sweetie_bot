@@ -95,13 +95,10 @@ kinematics_fwd:configure()
 ros:import("sweetie_bot_kinematics")
 depl:loadComponent("kinematics_inv", "sweetie_bot::motion::KinematicsInv")
 kinematics_inv = depl:getPeer("kinematics_inv")
--- load configuration from cpf
-kinematics_inv:loadService("marshalling")
-kinematics_inv:provides("marshalling"):loadProperties(config.file("kinematics_inv_joint_limits.cpf"))
 -- get ROS parameteres and services
 config.get_peer_rosparams(kinematics_inv)
 -- data flow: controller <-> aggregator_ref
-depl:connect("kinematics_inv.in_joints_seed_sorted", "aggregator_ref.out_joints_sorted", rtt.Variable("ConnPolicy"))
+depl:connect("kinematics_inv.in_joints_sorted", "aggregator_ref.out_joints_sorted", rtt.Variable("ConnPolicy"))
 depl:connect("kinematics_inv.out_joints", "aggregator_ref.in_joints", rtt.Variable("ConnPolicy"))
 -- connect to RobotModel
 depl:connectServices("kinematics_inv", "aggregator_ref")
@@ -156,7 +153,6 @@ aggregator_real:loadService("rosparam")
 aggregator_real:getProperty("publish_on_timer"):set(false)
 aggregator_real:getProperty("publish_on_event"):set(true)
 --set properties
-aggregator_real:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
 aggregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
 aggregator_real:provides("rosparam"):getParam("","robot_model")
 --get other properties
