@@ -1,0 +1,19 @@
+<package format="2">
+  <name>sweetie_bot_joint_state_publisher</name>
+  <version>1.0.0</version>
+  <description>
+    This package contains a GUI tool to interfacing FollowJointState controller of SweetieBot robot.
+  </description>
+  <author email="davidvlu@gmail.com">David V. Lu!!</author>
+  <author email="jacquelinekay1@gmail.com">Jackie Kay</author>
+  <author email="goncharovoi@yandex.ru">disRecord</author>
+  <maintainer email="goncharovoi@yandex.ru">disRecord</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>python_qt_binding</exec_depend>
+  <exec_depend>rospy</exec_depend>
+</package>

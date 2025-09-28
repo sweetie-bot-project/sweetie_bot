@@ -1,0 +1,366 @@
+# Software License Agreement (BSD License)
+#
+# Copyright (c) 2010, Willow Garage, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Willow Garage, Inc. nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+import math
+import random
+from collections import namedtuple
+
+import rospy
+from actionlib import GoalStatus, SimpleActionClient
+
+from python_qt_binding.QtCore import Qt, pyqtSlot, pyqtSignal as Signal, QSignalBlocker
+from python_qt_binding.QtGui import QFont
+from python_qt_binding.QtWidgets import QApplication, QHBoxLayout, QLabel, QDoubleSpinBox, QPushButton, QSlider, QVBoxLayout, QGridLayout, QScrollArea, QSpinBox, QWidget, QCheckBox
+
+from std_msgs.msg import Header
+from sweetie_bot_control_msgs.msg import SetOperationalAction, SetOperationalGoal, SetOperationalResult, SetOperationalFeedback
+from sweetie_bot_kinematics_msgs.msg import SupportState
+
+RANGE = 10000
+
+class JointStatePublisherGui(QWidget):
+    # datatypes
+    JointInfo = namedtuple('JointInfo', 'joint editbox slider')
+
+    # signals
+    joint_state_update_signal = Signal()
+    controller_active_signal = Signal()
+    controller_done_signal = Signal(int, SetOperationalResult)
+    controller_feedback_signal = Signal(SetOperationalFeedback)
+    supports_update_signal = Signal(SupportState)
+
+    def __init__(self, title, jsp):
+        super(JointStatePublisherGui, self).__init__()
+        # get ROS paramters
+        num_rows = rospy.get_param('~num_rows', 0)
+        if not isinstance(num_rows, int) or num_rows < 0:
+            raise ValueError('"num_rows" parameter must non-negative integer')
+        resources = rospy.get_param('~resources', ['leg1', 'leg2', 'leg3', 'leg4', 'head'])
+        if not isinstance(resources, list) or any(not isinstance(r, str) for r in resources):
+            raise ValueError('"resources" must be  a list of joint groups names..')
+        supports = rospy.get_param('~supports', ['leg1', 'leg2', 'leg3', 'leg4'])
+        if not isinstance(supports, list) or any(not isinstance(r, str) for r in supports):
+            raise ValueError('"supports" must be a list of kinematic chains names')
+
+        # ROS interface
+        # FollowJointState controller action
+        self._set_opertional_ac = SimpleActionClient('/motion/controller/joint_state', SetOperationalAction)
+        self._set_opertional_ac.wait_for_server(rospy.Duration(10.0))
+        # support publishing and subscription
+        self.supports_pub = rospy.Publisher('assign_supports', SupportState, queue_size=5)
+        self.supports_sub = rospy.Subscriber('supports', SupportState, lambda msg: self.supports_update_signal.emit(msg))
+
+        # connection to joint_state_publisher
+        self.joint_state_update_signal.connect(self.onJointStateUpdate)
+        self.jsp = jsp
+        self.jsp.set_source_update_cb(lambda : self.joint_state_update_signal.emit())
+
+        #
+        # GUI creation
+        #
+        self.setWindowTitle(title)
+        font = QFont("Helvetica", 9, QFont.Bold)
+        # overall widget layout
+        vlayout = QVBoxLayout(self)
+
+        ### Set operationl button and resources checkboxes ###
+        controller_layout = QHBoxLayout()
+        self.set_operational_button = QPushButton("FollowJointState: UNKNOWN", self)
+        self.set_operational_button.setCheckable(True)
+        controller_layout.addWidget(self.set_operational_button)
+        self.resources_widgets = {}
+        for resource in resources:
+            checkbox = QCheckBox(resource, self)
+            checkbox.setCheckState(Qt.PartiallyChecked)
+            checkbox.setStyleSheet("QCheckBox:disabled { color: black; }")
+            checkbox.stateChanged.connect(lambda state, name=resource: self.onResourceChange(name, state))
+            self.resources_widgets[resource] = checkbox
+            controller_layout.addWidget(checkbox)
+            # controller_layout.addWidget(QLabel(resource, self))
+        controller_layout.addStretch()
+        controller_widget = QWidget()
+        controller_widget.setLayout(controller_layout)
+        vlayout.addWidget(controller_widget)
+
+        # connect signals: button
+        self.set_operational_button.clicked.connect(self.onSetOperational)
+        # connect signals: SetOperationalAction related signals
+        self.controller_active_signal.connect(self.onControllerActive)
+        self.controller_done_signal.connect(self.onControllerDone)
+        self.controller_feedback_signal.connect(self.onControllerFeedback)
+
+        ### Support checkboxes ###
+        support_layout = QHBoxLayout()
+        label = QLabel('Supports:')
+        label.setStyleSheet('font-weight: bold')
+        support_layout.addWidget(label)
+        self.support_widgets = {}
+        for support in supports:
+            checkbox = QCheckBox(support, self)
+            checkbox.setTristate(False)
+            checkbox.stateChanged.connect(lambda state, name=support: self.onSupportChange(name, state))
+            self.support_widgets[support] = checkbox
+            support_layout.addWidget(checkbox)
+        support_layout.addStretch()
+        support_widget = QWidget()
+        support_widget.setLayout(support_layout)
+        vlayout.addWidget(support_widget)
+        # signals
+        self.supports_update_signal.connect(self.onSupportsUpdate)
+
+        ### Generate sliders ###
+        self.joint_map = {}
+        sliders = []
+        for name in self.jsp.joint_list:
+            # check if joint can be controlled
+            if name not in self.jsp.free_joints:
+                continue
+            joint = self.jsp.free_joints[name]
+            if joint['min'] == joint['max']:
+                continue
+            # joint layout
+            joint_layout = QVBoxLayout()
+            row_layout = QHBoxLayout()
+            # name
+            label = QLabel(name)
+            label.setFont(font)
+            row_layout.addWidget(label)
+            # value
+            editbox = QDoubleSpinBox(self)
+            editbox.setRange(joint['min'], joint['max'])
+            editbox.setSingleStep(0.05)
+            editbox.setDecimals(2)
+            row_layout.addWidget(editbox)
+            joint_layout.addLayout(row_layout)
+            # slider
+            slider = QSlider(Qt.Horizontal)
+            slider.setFont(font)
+            slider.setRange(0, RANGE)
+            slider.setValue(int(RANGE/2))
+            joint_layout.addWidget(slider)
+            # connect relatd signals
+            editbox.valueChanged.connect(lambda event,name=name: self.onEditboxChanged(name))
+            slider.valueChanged.connect(lambda event,name=name: self.onSliderChanged(name))
+            # add to layout and joint map
+            self.joint_map[name] = JointStatePublisherGui.JointInfo(joint, editbox, slider)
+            sliders.append(joint_layout)
+
+        # Determine number of rows to be used in grid
+        self.num_rows = num_rows
+        # if desired num of rows wasn't set, default behaviour is a vertical layout
+        if self.num_rows == 0:
+            self.num_rows = len(sliders)  # equals VBoxLayout
+
+        # Generate positions in grid and place sliders there
+        self.gridlayout = QGridLayout()
+        self.positions = self.generate_grid_positions(len(sliders), self.num_rows)
+        for item, pos in zip(sliders, self.positions):
+            self.gridlayout.addLayout(item, *pos)
+
+        # Add sliders grid to widget as scrollable area
+        scrollable = QWidget()
+        scrollable.setLayout(self.gridlayout)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(scrollable)
+        vlayout.addWidget(scroll)
+
+        ### Additaonal interfaces: buttons for centering sliders and etc ###
+        ctrbutton = QPushButton('Center', self)
+        ctrbutton.clicked.connect(self.center_event)
+        vlayout.addWidget(ctrbutton)
+        maxrowsupdown = QSpinBox()
+        maxrowsupdown.setMinimum(1)
+        maxrowsupdown.setMaximum(len(sliders))
+        maxrowsupdown.setValue(self.num_rows)
+        maxrowsupdown.valueChanged.connect(self.reorggrid_event)
+        vlayout.addWidget(maxrowsupdown)
+
+        ### general layout ###
+        self.setLayout(vlayout)
+
+        # Set zero positions read from parameters
+        self.center()
+
+    def onSetOperational(self):
+        if self.set_operational_button.isFlat():
+            # controller is assumed active so cancel current goal
+            rospy.loginfo(f'JointState controller CANCEL request is send.')
+            self._set_opertional_ac.cancel_goal()
+        else:
+            # controller is assumed not active
+            goal = SetOperationalGoal(operational = True, resources = [ name for name, check_box in self.resources_widgets.items() if check_box.isChecked() ]) 
+            rospy.loginfo(f'JointState controller ACTIVATION request is send.')
+            self._set_opertional_ac.send_goal(goal,
+                                              active_cb = lambda: self.controller_active_signal.emit(),
+                                              done_cb = lambda state, result: self.controller_done_signal.emit(state, result),
+                                              feedback_cb = lambda feedback: self.controller_feedback_signal.emit(feedback)
+                                             )
+
+    def onResourceChange(self, name, state):
+        # check state change caused bu user: cannnot set Checked
+        checkbox = self.resources_widgets[name]
+        if state == Qt.Checked:
+            with QSignalBlocker(checkbox) as blocker:
+                checkbox.setCheckState(Qt.Unchecked)
+
+    def onSupportChange(self, name, state):
+        # publish new support state
+        msg = SupportState()
+        msg.header.stamp = rospy.Time.now()
+        for name, checkbox in self.support_widgets.items():
+            msg.name.append(name)
+            msg.support.append(1.0 if checkbox.isChecked() else 0.0)
+        self.supports_pub.publish(msg)
+
+    @pyqtSlot(SupportState)
+    def onSupportsUpdate(self, msg):
+        for name, support in zip(msg.name, msg.support):
+            checkbox = self.support_widgets.get(name)
+            if checkbox is not None:
+                with QSignalBlocker(checkbox) as blocker:
+                    checkbox.setChecked(support > 0.0)
+
+    @pyqtSlot()
+    def onControllerActive(self):
+        self.set_operational_button.setStyleSheet("background-color: green; color: white; font-weight: bold")
+        self.set_operational_button.setFlat(True)
+        self.set_operational_button.setText("FollowJointState ON (ACTIVE)")
+        rospy.loginfo(f'JointState controller is ACTIVE.')
+        # disable resource selection from user
+        for checkbox in self.resources_widgets.values():
+            checkbox.setDisabled(True)
+
+    @pyqtSlot(int, SetOperationalResult)
+    def onControllerDone(self, state, result):
+        self.set_operational_button.setStyleSheet("background-color : red; color: white; font-weight: bold")
+        self.set_operational_button.setFlat(False)
+        state_string = GoalStatus.to_string(state)
+        self.set_operational_button.setText(f"FollowJointState: OFF ({state_string})")
+        rospy.loginfo(f'JointState controller is {state_string}: {result.error_string} ({result.error_code})')
+        # enable resource selection
+        for checkbox in self.resources_widgets.values():
+            checkbox.setDisabled(False)
+            if checkbox.checkState() == Qt.Checked:
+                with QSignalBlocker(checkbox) as blocker:
+                    checkbox.setCheckState(Qt.PartiallyChecked)
+
+    @pyqtSlot(SetOperationalFeedback)
+    def onControllerFeedback(self, feedback):
+        for name, checkbox in self.resources_widgets.items():
+            if checkbox.checkState() == Qt.Unchecked:
+                continue
+            # mark resource acquired
+            with QSignalBlocker(checkbox) as blocker:
+                if name in feedback.resources:
+                    checkbox.setCheckState(Qt.Checked)
+                else:
+                    checkbox.setCheckState(Qt.PartiallyChecked)
+        rospy.loginfo(f'JointState controller resources: %s', feedback.resources)
+
+    @pyqtSlot()
+    def onJointStateUpdate(self):
+        self.updateFromJointState()
+
+    def onSliderChanged(self, name):
+        print('slider')
+        joint_info = self.joint_map[name]
+        # get new value
+        value = self.sliderToValue(joint_info.slider.value(), joint_info.joint)
+        # assign value to JSP and editbox
+        joint_info.joint['position'] = value
+        with QSignalBlocker(joint_info.editbox) as blocker:
+            joint_info.editbox.setValue(value)
+
+    def onEditboxChanged(self, name):
+        print('edit')
+        joint_info = self.joint_map[name]
+        # get new value
+        value = joint_info.editbox.value()
+        # assign value to slider and editbox
+        joint_info.joint['position'] = value
+        with QSignalBlocker(joint_info.slider) as blocker:
+            joint_info.slider.setValue( self.valueToSlider(value, joint_info.joint) )
+
+    def updateFromJointState(self):
+        print('update')
+        for joint_info in self.joint_map.values():
+            # get value
+            value = joint_info.joint['position']
+            # update slider and editbox
+            with QSignalBlocker(joint_info.slider) as blocker:
+                joint_info.slider.setValue( self.valueToSlider(value, joint_info.joint) )
+            with QSignalBlocker(joint_info.editbox) as blocker:
+                joint_info.editbox.setValue(value)
+
+    def center_event(self, event):
+        self.center()
+
+    def center(self):
+        rospy.loginfo("Centering")
+        for joint_info in self.joint_map.values():
+            joint_info.joint['position'] = joint_info.joint['zero']
+        self.updateFromJointState()
+
+    def reorggrid_event(self, event):
+        self.reorganize_grid(event)
+
+    def reorganize_grid(self, number_of_rows):
+        self.num_rows = number_of_rows
+
+        # Remove items from layout (won't destroy them!)
+        items = []
+        for pos in self.positions:
+            item = self.gridlayout.itemAtPosition(*pos)
+            items.append(item)
+            self.gridlayout.removeItem(item)
+
+        # Generate new positions for sliders and place them in their new spots
+        self.positions = self.generate_grid_positions(len(items), self.num_rows)
+        for item, pos in zip(items, self.positions):
+            self.gridlayout.addLayout(item, *pos)
+
+    def generate_grid_positions(self, num_items, num_rows):
+        if num_rows == 0:
+            return []
+        positions = [(y, x) for x in range(int((math.ceil(float(num_items) / num_rows)))) for y in range(num_rows)]
+        positions = positions[:num_items]
+        return positions
+
+    @staticmethod
+    def valueToSlider(value, joint):
+        return int((value - joint['min']) * float(RANGE) / (joint['max'] - joint['min']))
+
+    @staticmethod
+    def sliderToValue(slider, joint):
+        pctvalue = slider / float(RANGE)
+        return joint['min'] + (joint['max']-joint['min']) * pctvalue
