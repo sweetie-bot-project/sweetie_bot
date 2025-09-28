@@ -1,5 +1,7 @@
 joint_state_ref:
     num_rows: 7
+    resources: [ leg1, leg2, leg3, leg4, head, eyes, ears, mouth ]
+    supports: [ leg1, leg2, leg3, leg4 ]
 dynamics_visualizer:
     robot_model_namespace: "/motion"
     display_twist: true

@@ -8,13 +8,14 @@
 	<group ns="$(arg robot_ns)/hmi">
 		<!-- global remapping -->
 		<remap from="robot_description" to="$(arg robot_ns)/robot_description"/>
-
 		<!-- manual joints control -->
-		<node name="joint_state_ref" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui">
+		<node name="joint_state_ref" pkg="sweetie_bot_joint_state_publisher" type="sweetie_bot_joint_state_publisher">
 			<rosparam param="source_list">["joint_states_reset"]</rosparam>
 			<param name="rate" value="5"/>
 			<remap from="joint_states" to="$(arg robot_ns)/motion/controller/joint_state/in_joints_ref"/>
 			<remap from="joint_states_reset" to="$(arg robot_ns)/motion/controller/joint_state/out_joints_src_reset"/>
+			<remap from="supports" to="$(arg robot_ns)/motion/aggregator_ref/out_supports_sorted"/>
+			<remap from="assign_supports" to="$(arg robot_ns)/motion/aggregator_ref/in_supports"/>
 		</node>
 		<!-- vizualization -->
 		<!-- NOTE: rviz is lauched in root namespace due to problems with moveit plugin.
