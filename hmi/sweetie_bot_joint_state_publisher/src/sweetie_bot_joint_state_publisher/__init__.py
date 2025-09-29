@@ -39,7 +39,7 @@ from actionlib import GoalStatus, SimpleActionClient
 
 from python_qt_binding.QtCore import Qt, pyqtSlot, pyqtSignal as Signal, QSignalBlocker
 from python_qt_binding.QtGui import QFont
-from python_qt_binding.QtWidgets import QApplication, QHBoxLayout, QLabel, QDoubleSpinBox, QPushButton, QSlider, QVBoxLayout, QGridLayout, QScrollArea, QSpinBox, QWidget, QCheckBox
+from python_qt_binding.QtWidgets import QApplication, QHBoxLayout, QLabel, QDoubleSpinBox, QPushButton, QSlider, QVBoxLayout, QGridLayout, QScrollArea, QSpinBox, QWidget, QCheckBox, QGroupBox, QFrame
 
 from std_msgs.msg import Header
 from sweetie_bot_control_msgs.msg import SetOperationalAction, SetOperationalGoal, SetOperationalResult, SetOperationalFeedback
@@ -47,15 +47,160 @@ from sweetie_bot_kinematics_msgs.msg import SupportState
 
 RANGE = 10000
 
+class SetOperationalWidget(QFrame):
+    controller_active_signal = Signal()
+    controller_done_signal = Signal(int, SetOperationalResult)
+    controller_feedback_signal = Signal(SetOperationalFeedback)
+
+    ResourceWidgets = namedtuple('ResourceWidgets', 'selector indicator')
+
+    def __init__(self, name, action_ns, resources, autostart = False, parent = None):
+        # call superclass constructor
+        super(SetOperationalWidget, self).__init__(parent)
+        self.setFrameStyle(QFrame.Box)
+        self.setFrameShadow(QFrame.Plain)
+        self._name = name
+
+        # ROS interface
+        self._set_opertional_ac = SimpleActionClient(action_ns, SetOperationalAction)
+        self._set_opertional_ac.wait_for_server(rospy.Duration(1.0))
+
+        # Widget creation
+        layout = QGridLayout()
+        # title
+        title_label = QLabel(f'{name}')
+        title_label.setStyleSheet("font-weight: bold")
+        layout.addWidget(title_label, 0, 0)
+        # on/off button
+        self._set_operational_button = QPushButton("TURN ON", self)
+        self._set_operational_button.setCheckable(True)
+        layout.addWidget(self._set_operational_button, 0, 1)
+        # status 
+        self._status_label = QLabel("UNKNOWN", self)
+        layout.addWidget(self._status_label, 1, 0, 1, 2)
+        # desc
+        layout.addWidget(QLabel('Requested resources:'), 0, 2)
+        layout.addWidget(QLabel('Controlled resources:'), 1, 2)
+        # resources selctors and indicators
+        self._resources_widgets = {}
+        for col, resource in enumerate(resources):
+            selector = QCheckBox(resource, self)
+            selector.setTristate(False)
+            selector.setChecked(True)
+            indicator = QCheckBox(resource, self)
+            indicator.setTristate(False)
+            indicator.setChecked(False)
+            indicator.setDisabled(True)
+            self._resources_widgets[resource] = self.ResourceWidgets(selector, indicator)
+            layout.addWidget(selector, 0, col + 3)
+            layout.addWidget(indicator, 1, col + 3)
+        # add layoutA
+        self.setLayout(layout)
+
+        # connect signals: button
+        self._set_operational_button.clicked.connect(self.onSetOperational)
+        # connect signals: SetOperationalAction related signals
+        self.controller_active_signal.connect(self.onControllerActive)
+        self.controller_done_signal.connect(self.onControllerDone)
+        self.controller_feedback_signal.connect(self.onControllerFeedback)
+
+        # autostart
+        if autostart:
+            self.onSetOperational()
+
+    def onSetOperational(self):
+        if self._set_operational_button.isFlat():
+            # check if goal is not lost
+            goal_status = self._set_opertional_ac.get_state()
+            if goal_status in [GoalStatus.PENDING, GoalStatus.ACTIVE]:
+                # controller is assumed active so cancel current goal
+                self._status_label.setText('CANCELLING...') 
+                self._set_opertional_ac.cancel_goal()
+                rospy.loginfo(f'{self._name} controller CANCEL request is send.')
+            else:
+                # goal is lost
+                state_string = GoalStatus.to_string(goal_status)
+                rospy.loginfo(f'{self._name} is in unexpected state {state_string}')
+                # button state
+                self._set_operational_button.setText("TURN ON")
+                self._set_operational_button.setFlat(False)
+                # status indicator
+                self._status_label.setText(f"INACTIVE ({state_string})")
+                self._status_label.setStyleSheet("background-color : red; color: white; font-weight: bold")
+                # deselect resources
+                for widget in self.resources_widgets.values():
+                    widget.indicator.setCheckState(Qt.Unchecked)
+
+        else:
+            # check if contrlloeer is available
+            if self._set_opertional_ac.wait_for_server(rospy.Duration(1.0)):
+                # controller is assumed not active
+                goal = SetOperationalGoal(operational = True, resources = [ name for name, widgets in self._resources_widgets.items() if widgets.selector.isChecked() ]) 
+                self._set_opertional_ac.send_goal(goal,
+                                                  active_cb = lambda: self.controller_active_signal.emit(),
+                                                  done_cb = lambda state, result: self.controller_done_signal.emit(state, result),
+                                                  feedback_cb = lambda feedback: self.controller_feedback_signal.emit(feedback)
+                                                 )
+                # status indicator
+                self._status_label.setStyleSheet("background-color: transparent; color: black; font-weight: normal")
+                self._status_label.setText('ACTIVATING...') 
+                #logging
+                rospy.loginfo(f'{self._name} controller ACTIVATION request is send.')
+            else:
+                # action is not vavliable
+                rospy.loginfo(f'{self._name} controller is not available.')
+                # button state
+                self._set_operational_button.setFlat(False)
+                # status indicator
+                self._status_label.setText("UNAVAILABLE")
+                self._status_label.setStyleSheet("background-color : black; color: white; font-weight: bold")
+
+
+
+    @pyqtSlot()
+    def onControllerActive(self):
+        # button
+        self._set_operational_button.setText("TURN OFF")
+        self._set_operational_button.setFlat(True)
+        # status indicator
+        self._status_label.setText("ACTIVE")
+        self._status_label.setStyleSheet("background-color: green; color: white; font-weight: bold")
+        # logging
+        rospy.loginfo(f'{self._name} controller is ACTIVE.')
+
+    @pyqtSlot(int, SetOperationalResult)
+    def onControllerDone(self, state, result):
+        state_string = GoalStatus.to_string(state)
+        # button state
+        self._set_operational_button.setText("TURN ON")
+        self._set_operational_button.setFlat(False)
+        # status indicator
+        self._status_label.setText(f"INACTIVE ({state_string})")
+        self._status_label.setStyleSheet("background-color : red; color: white; font-weight: bold")
+        # deselect resources
+        for widget in self._resources_widgets.values():
+            widget.indicator.setCheckState(Qt.Unchecked)
+        # logging
+        rospy.loginfo(f'{self._name} controller is {state_string}: {result.error_string} ({result.error_code})')
+
+    @pyqtSlot(SetOperationalFeedback)
+    def onControllerFeedback(self, feedback):
+        # set indicators
+        for name, widgets in self._resources_widgets.items():
+            if name in feedback.resources:
+                widgets.indicator.setCheckState(Qt.Checked)
+            else:
+                widgets.indicator.setCheckState(Qt.Unchecked)
+        # logging
+        rospy.loginfo(f'{self._name} controller resources: %s', feedback.resources)
+
+
 class JointStatePublisherGui(QWidget):
     # datatypes
     JointInfo = namedtuple('JointInfo', 'joint editbox slider')
 
     # signals
     joint_state_update_signal = Signal()
-    controller_active_signal = Signal()
-    controller_done_signal = Signal(int, SetOperationalResult)
-    controller_feedback_signal = Signal(SetOperationalFeedback)
     supports_update_signal = Signal(SupportState)
 
     def __init__(self, title, jsp):
@@ -72,10 +217,7 @@ class JointStatePublisherGui(QWidget):
             raise ValueError('"supports" must be a list of kinematic chains names')
 
         # ROS interface
-        # FollowJointState controller action
-        self._set_opertional_ac = SimpleActionClient('/motion/controller/joint_state', SetOperationalAction)
-        self._set_opertional_ac.wait_for_server(rospy.Duration(10.0))
-        # support publishing and subscription
+        # supports publishing and subscription
         self.supports_pub = rospy.Publisher('assign_supports', SupportState, queue_size=5)
         self.supports_sub = rospy.Subscriber('supports', SupportState, lambda msg: self.supports_update_signal.emit(msg))
 
@@ -92,35 +234,15 @@ class JointStatePublisherGui(QWidget):
         # overall widget layout
         vlayout = QVBoxLayout(self)
 
-        ### Set operationl button and resources checkboxes ###
-        controller_layout = QHBoxLayout()
-        self.set_operational_button = QPushButton("FollowJointState: UNKNOWN", self)
-        self.set_operational_button.setCheckable(True)
-        controller_layout.addWidget(self.set_operational_button)
-        self.resources_widgets = {}
-        for resource in resources:
-            checkbox = QCheckBox(resource, self)
-            checkbox.setCheckState(Qt.PartiallyChecked)
-            checkbox.setStyleSheet("QCheckBox:disabled { color: black; }")
-            checkbox.stateChanged.connect(lambda state, name=resource: self.onResourceChange(name, state))
-            self.resources_widgets[resource] = checkbox
-            controller_layout.addWidget(checkbox)
-            # controller_layout.addWidget(QLabel(resource, self))
-        controller_layout.addStretch()
-        controller_widget = QWidget()
-        controller_widget.setLayout(controller_layout)
+        ### Set operationl widget ###
+        controller_widget = SetOperationalWidget('MainTorqueSwitch', '/motion/controller/torque_off', resources, parent = self)
         vlayout.addWidget(controller_widget)
-
-        # connect signals: button
-        self.set_operational_button.clicked.connect(self.onSetOperational)
-        # connect signals: SetOperationalAction related signals
-        self.controller_active_signal.connect(self.onControllerActive)
-        self.controller_done_signal.connect(self.onControllerDone)
-        self.controller_feedback_signal.connect(self.onControllerFeedback)
+        controller_widget = SetOperationalWidget('FollowJointState', '/motion/controller/joint_state', resources, autostart = False, parent = self)
+        vlayout.addWidget(controller_widget)
 
         ### Support checkboxes ###
         support_layout = QHBoxLayout()
-        label = QLabel('Supports:')
+        label = QLabel('Supports selector')
         label.setStyleSheet('font-weight: bold')
         support_layout.addWidget(label)
         self.support_widgets = {}
@@ -131,7 +253,9 @@ class JointStatePublisherGui(QWidget):
             self.support_widgets[support] = checkbox
             support_layout.addWidget(checkbox)
         support_layout.addStretch()
-        support_widget = QWidget()
+        support_widget = QFrame()
+        support_widget.setFrameStyle(QFrame.Box)
+        support_widget.setFrameShadow(QFrame.Plain)
         support_widget.setLayout(support_layout)
         vlayout.addWidget(support_widget)
         # signals
@@ -211,28 +335,6 @@ class JointStatePublisherGui(QWidget):
         # Set zero positions read from parameters
         self.center()
 
-    def onSetOperational(self):
-        if self.set_operational_button.isFlat():
-            # controller is assumed active so cancel current goal
-            rospy.loginfo(f'JointState controller CANCEL request is send.')
-            self._set_opertional_ac.cancel_goal()
-        else:
-            # controller is assumed not active
-            goal = SetOperationalGoal(operational = True, resources = [ name for name, check_box in self.resources_widgets.items() if check_box.isChecked() ]) 
-            rospy.loginfo(f'JointState controller ACTIVATION request is send.')
-            self._set_opertional_ac.send_goal(goal,
-                                              active_cb = lambda: self.controller_active_signal.emit(),
-                                              done_cb = lambda state, result: self.controller_done_signal.emit(state, result),
-                                              feedback_cb = lambda feedback: self.controller_feedback_signal.emit(feedback)
-                                             )
-
-    def onResourceChange(self, name, state):
-        # check state change caused bu user: cannnot set Checked
-        checkbox = self.resources_widgets[name]
-        if state == Qt.Checked:
-            with QSignalBlocker(checkbox) as blocker:
-                checkbox.setCheckState(Qt.Unchecked)
-
     def onSupportChange(self, name, state):
         # publish new support state
         msg = SupportState()
@@ -249,43 +351,6 @@ class JointStatePublisherGui(QWidget):
             if checkbox is not None:
                 with QSignalBlocker(checkbox) as blocker:
                     checkbox.setChecked(support > 0.0)
-
-    @pyqtSlot()
-    def onControllerActive(self):
-        self.set_operational_button.setStyleSheet("background-color: green; color: white; font-weight: bold")
-        self.set_operational_button.setFlat(True)
-        self.set_operational_button.setText("FollowJointState ON (ACTIVE)")
-        rospy.loginfo(f'JointState controller is ACTIVE.')
-        # disable resource selection from user
-        for checkbox in self.resources_widgets.values():
-            checkbox.setDisabled(True)
-
-    @pyqtSlot(int, SetOperationalResult)
-    def onControllerDone(self, state, result):
-        self.set_operational_button.setStyleSheet("background-color : red; color: white; font-weight: bold")
-        self.set_operational_button.setFlat(False)
-        state_string = GoalStatus.to_string(state)
-        self.set_operational_button.setText(f"FollowJointState: OFF ({state_string})")
-        rospy.loginfo(f'JointState controller is {state_string}: {result.error_string} ({result.error_code})')
-        # enable resource selection
-        for checkbox in self.resources_widgets.values():
-            checkbox.setDisabled(False)
-            if checkbox.checkState() == Qt.Checked:
-                with QSignalBlocker(checkbox) as blocker:
-                    checkbox.setCheckState(Qt.PartiallyChecked)
-
-    @pyqtSlot(SetOperationalFeedback)
-    def onControllerFeedback(self, feedback):
-        for name, checkbox in self.resources_widgets.items():
-            if checkbox.checkState() == Qt.Unchecked:
-                continue
-            # mark resource acquired
-            with QSignalBlocker(checkbox) as blocker:
-                if name in feedback.resources:
-                    checkbox.setCheckState(Qt.Checked)
-                else:
-                    checkbox.setCheckState(Qt.PartiallyChecked)
-        rospy.loginfo(f'JointState controller resources: %s', feedback.resources)
 
     @pyqtSlot()
     def onJointStateUpdate(self):
