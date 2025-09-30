@@ -33,15 +33,18 @@
 import math
 import random
 from collections import namedtuple
+from xmlrpc.client import Binary
+from io import BytesIO
 
 import rospy
 from actionlib import GoalStatus, SimpleActionClient
 
-from python_qt_binding.QtCore import Qt, pyqtSlot, pyqtSignal as Signal, QSignalBlocker
-from python_qt_binding.QtGui import QFont
-from python_qt_binding.QtWidgets import QApplication, QHBoxLayout, QLabel, QDoubleSpinBox, QPushButton, QSlider, QVBoxLayout, QGridLayout, QScrollArea, QSpinBox, QWidget, QCheckBox, QGroupBox, QFrame
+from python_qt_binding.QtCore import Qt, pyqtSlot, pyqtSignal as Signal, QSignalBlocker, QRegularExpression
+from python_qt_binding.QtGui import QFont, QRegularExpressionValidator
+from python_qt_binding.QtWidgets import QApplication, QHBoxLayout, QLabel, QDoubleSpinBox, QPushButton, QSlider, QVBoxLayout, QGridLayout, QScrollArea, QSpinBox, QWidget, QCheckBox, QFrame, QComboBox
 
 from std_msgs.msg import Header
+from sensor_msgs.msg import JointState
 from sweetie_bot_control_msgs.msg import SetOperationalAction, SetOperationalGoal, SetOperationalResult, SetOperationalFeedback
 from sweetie_bot_kinematics_msgs.msg import SupportState
 
@@ -54,7 +57,7 @@ class SetOperationalWidget(QFrame):
 
     ResourceWidgets = namedtuple('ResourceWidgets', 'selector indicator')
 
-    def __init__(self, name, action_ns, resources, autostart = False, parent = None):
+    def __init__(self, name, action_ns, resources, parent = None, autostart = False, desc = None):
         # call superclass constructor
         super(SetOperationalWidget, self).__init__(parent)
         self.setFrameStyle(QFrame.Box)
@@ -70,6 +73,8 @@ class SetOperationalWidget(QFrame):
         # title
         title_label = QLabel(f'{name}')
         title_label.setStyleSheet("font-weight: bold")
+        if desc is not None:
+            title_label.setToolTip(desc)
         layout.addWidget(title_label, 0, 0)
         # on/off button
         self._set_operational_button = QPushButton("TURN ON", self)
@@ -197,7 +202,7 @@ class SetOperationalWidget(QFrame):
 
 class JointStatePublisherGui(QWidget):
     # datatypes
-    JointInfo = namedtuple('JointInfo', 'joint editbox slider')
+    JointInfo = namedtuple('JointInfo', 'joint editbox slider selector')
 
     # signals
     joint_state_update_signal = Signal()
@@ -215,6 +220,9 @@ class JointStatePublisherGui(QWidget):
         supports = rospy.get_param('~supports', ['leg1', 'leg2', 'leg3', 'leg4'])
         if not isinstance(supports, list) or any(not isinstance(r, str) for r in supports):
             raise ValueError('"supports" must be a list of kinematic chains names')
+        self.pose_ns = rospy.get_param('~pose_ns', '/saved_msgs/joint_state')
+        if not isinstance(self.pose_ns, str):
+            raise ValueError('"pose_ns" must be a paramter namespace name.')
 
         # ROS interface
         # supports publishing and subscription
@@ -235,14 +243,15 @@ class JointStatePublisherGui(QWidget):
         vlayout = QVBoxLayout(self)
 
         ### Set operationl widget ###
-        controller_widget = SetOperationalWidget('MainTorqueSwitch', '/motion/controller/torque_off', resources, parent = self)
+        controller_widget = SetOperationalWidget('MainTorqueSwitch', '/motion/controller/torque_off', resources, self, desc = 'This controller turns off joints from selected joint groups.')
         vlayout.addWidget(controller_widget)
-        controller_widget = SetOperationalWidget('FollowJointState', '/motion/controller/joint_state', resources, autostart = False, parent = self)
+        controller_widget = SetOperationalWidget('FollowJointState', '/motion/controller/joint_state', resources, self, autostart = False, desc = 'This controller make robot joints to follow pose published by this utility.')
         vlayout.addWidget(controller_widget)
 
         ### Support checkboxes ###
         support_layout = QHBoxLayout()
         label = QLabel('Supports selector')
+        label.setToolTip('The checkboxes mark the kinematic chains that are assumed in contact with the supporting surface.\n Click checkbox to change chain state. Note it may be immediatelly overriden by an active controller.')
         label.setStyleSheet('font-weight: bold')
         support_layout.addWidget(label)
         self.support_widgets = {}
@@ -261,6 +270,42 @@ class JointStatePublisherGui(QWidget):
         # signals
         self.supports_update_signal.connect(self.onSupportsUpdate)
 
+        ### Joint states save/load widget ###
+        state_layout = QHBoxLayout()
+        state_label = QLabel('Named JointState')
+        state_label.setToolTip(f'Save selected joints states to ROS parameter with given name in namespace "{self.pose_ns}". Joints are marked with checkboxes.\nLoad joint states from ROS paramters. In this case selection will be overriden.')
+        state_label.setStyleSheet('font-weight: bold')
+        state_layout.addWidget(state_label)
+        self.pose_combobox = QComboBox(self)
+        self.pose_combobox.setEditable(True)
+        self.pose_combobox.setValidator(QRegularExpressionValidator(QRegularExpression('[A-Za-z_][A-Za-z0-9_]*')))
+        state_layout.addWidget(self.pose_combobox)
+        save_button = QPushButton('Save State', self)
+        state_layout.addWidget(save_button)
+        load_button = QPushButton('Load State', self)
+        state_layout.addWidget(load_button)
+        state_layout.addStretch()
+        select_all_button = QPushButton('Select All Joints', self)
+        state_layout.addWidget(select_all_button)
+        select_no_button = QPushButton('Select No Joints', self)
+        state_layout.addWidget(select_no_button)
+        state_widget = QFrame()
+        state_widget.setFrameStyle(QFrame.Box)
+        state_widget.setFrameShadow(QFrame.Plain)
+        state_widget.setLayout(state_layout)
+        vlayout.addWidget(state_widget)
+        
+        # load poses names
+        poses = rospy.get_param(self.pose_ns, {})
+        for name in poses.keys():
+            self.pose_combobox.addItem(name)
+
+        # signals
+        save_button.clicked.connect(self.onSaveState)
+        load_button.clicked.connect(self.onLoadState)
+        select_all_button.clicked.connect(self.onSelectAllJoints)
+        select_no_button.clicked.connect(self.onSelectNoJoints)
+
         ### Generate sliders ###
         self.joint_map = {}
         sliders = []
@@ -274,15 +319,17 @@ class JointStatePublisherGui(QWidget):
             # joint layout
             joint_layout = QVBoxLayout()
             row_layout = QHBoxLayout()
-            # name
-            label = QLabel(name)
-            label.setFont(font)
-            row_layout.addWidget(label)
+            # name/selector
+            selector = QCheckBox(name)
+            selector.setFont(font)
+            selector.setTristate(False)
+            selector.setChecked(True)
+            row_layout.addWidget(selector)
             # value
             editbox = QDoubleSpinBox(self)
             editbox.setRange(joint['min'], joint['max'])
             editbox.setSingleStep(0.05)
-            editbox.setDecimals(2)
+            editbox.setDecimals(3)
             row_layout.addWidget(editbox)
             joint_layout.addLayout(row_layout)
             # slider
@@ -295,7 +342,7 @@ class JointStatePublisherGui(QWidget):
             editbox.valueChanged.connect(lambda event,name=name: self.onEditboxChanged(name))
             slider.valueChanged.connect(lambda event,name=name: self.onSliderChanged(name))
             # add to layout and joint map
-            self.joint_map[name] = JointStatePublisherGui.JointInfo(joint, editbox, slider)
+            self.joint_map[name] = JointStatePublisherGui.JointInfo(joint, editbox, slider, selector)
             sliders.append(joint_layout)
 
         # Determine number of rows to be used in grid
@@ -376,8 +423,56 @@ class JointStatePublisherGui(QWidget):
         with QSignalBlocker(joint_info.slider) as blocker:
             joint_info.slider.setValue( self.valueToSlider(value, joint_info.joint) )
 
+    def onSaveState(self):
+        # form message with current pose
+        msg = JointState()
+        for name, joint_info in self.joint_map.items():
+            if joint_info.selector.isChecked():
+                msg.name.append(name)
+                msg.position.append(joint_info.joint['position'])
+        # save message to parameter
+        buf = BytesIO()
+        msg.serialize(buf)
+        value = Binary(buf.getvalue())
+        param = self.pose_ns + '/' + self.pose_combobox.currentText()
+        rospy.set_param(param, value)
+        # logging
+        rospy.loginfo(f'Current pose ({len(msg.name)} joints) is saved to parameter {param}.')
+
+    def onLoadState(self):
+        # load pose from paramter
+        param = self.pose_ns + '/' + self.pose_combobox.currentText()
+        try:
+            value = rospy.get_param(param)
+        except KeyError:
+            rospy.logerr(f'ROS paramter {param} does not exists.')
+            return
+        if not isinstance(value, Binary):
+            rospy.logerr(f'ROS parameter {param} is not Binary type.')
+            return
+        # deserialize it
+        msg = JointState()
+        msg.deserialize(value.data)
+        # apply pose
+        self.onSelectNoJoints()
+        for name, position in zip(msg.name, msg.position):
+            joint_info = self.joint_map.get(name)
+            if joint_info is not None:
+                joint_info.selector.setChecked(True)
+                joint_info.joint['position'] = position
+        self.updateFromJointState()
+        # logging 
+        rospy.loginfo(f'Load pose ({len(msg.name)} joints) form parameter {param}.')
+
+    def onSelectAllJoints(self):
+        for joint_info in self.joint_map.values():
+            joint_info.selector.setChecked(True)
+
+    def onSelectNoJoints(self):
+        for joint_info in self.joint_map.values():
+            joint_info.selector.setChecked(False)
+
     def updateFromJointState(self):
-        print('update')
         for joint_info in self.joint_map.values():
             # get value
             value = joint_info.joint['position']
