@@ -3,12 +3,14 @@ from . import input_module
 import math
 from threading import Lock
 from dataclasses import dataclass
+import copy
 
 import rospy
 import tf
 
-from std_msgs.msg import Header
-from geometry_msgs.msg import Pose, PoseStamped
+from std_msgs.msg import Header, ColorRGBA
+from geometry_msgs.msg import Pose, PoseStamped, Vector3
+from visualization_msgs.msg import MarkerArray, Marker
 from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
 
 from flexbe_core.proxy import ProxyTransformListener
@@ -60,6 +62,65 @@ class SpatialObject:
     def getPose(self, frame_id, tf_buffer):
         pose_stamped = PoseStamped(pose = self.pose, header = Header(frame_id = self.frame_id))
         return tf_buffer.transformPose(frame_id, pose_stamped).pose
+
+
+@dataclass(frozen=True)
+class MarkerProps:
+    type: int
+    scale: Vector3
+    shift: Vector3
+    color: ColorRGBA
+
+class SpatialObjectMarker:
+    _marker_id = 0
+    _marker_type_map = {
+                'human': MarkerProps(Marker.CYLINDER, Vector3(0.1, 0.1, 1.0), Vector3(0.0, 0.0, -0.5), ColorRGBA(0.0, 1.0, 0.0, 1.0)),
+                'hand': MarkerProps(Marker.CYLINDER, Vector3(0.15, 0.15, 0.05), Vector3(0.0, 0.0, 0.0), ColorRGBA(0.0, 1.0, 0.0, 1.0)),
+                'pony': MarkerProps(Marker.CUBE, Vector3(0.20, 0.20, 0.20), Vector3(0.0, 0.0, 0.0), ColorRGBA(1.0, 1.0, 0.0, 1.0)),
+            }
+    _marker_type_default = MarkerProps(Marker.SPHERE, Vector3(0.2, 0.2, 0.2), Vector3(0.0, 0.0, 0.0), ColorRGBA(1.0, 0.0, 0.0, 1.0))
+
+    def __init__(self, spatial_object, lifetime = 1.0):
+        # get obect properties
+        self._marker_props = self._marker_type_map.get(spatial_object.type, self._marker_type_default)
+        # object marker
+        header = Header(frame_id = spatial_object.frame_id)
+        self._object_marker = Marker(header = header, ns = 'swm', id = self._marker_id, action = Marker.ADD, lifetime = rospy.Duration(lifetime),
+                                     type = self._marker_props.type, scale = self._marker_props.scale, color = self._marker_props.color)
+        # text marker
+        self._text_marker = Marker(header = header, ns = 'swm', id = self._marker_id + 1, action = Marker.ADD, lifetime = rospy.Duration(lifetime),
+                                                   type = Marker.TEXT_VIEW_FACING, scale = Vector3(0.0, 0.0, 0.02), color = ColorRGBA(1.0, 1.0, 1.0, 1.0))
+        # increase marker unique id
+        SpatialObjectMarker._marker_id += 10
+
+    def update(self, spatial_object, stamp):
+        # object marker
+        self._object_marker.header.stamp = stamp
+        self._object_marker.color.a = 1.0 if spatial_object.isVisible() else 0.3
+        self._object_marker.pose = copy.deepcopy(spatial_object.pose)
+        position = self._object_marker.pose.position
+        position.x += self._marker_props.shift.x
+        position.y += self._marker_props.shift.y
+        position.z += self._marker_props.shift.z
+        # text marker
+        self._text_marker.header.stamp = stamp
+        self._text_marker.pose = copy.deepcopy(spatial_object.pose)
+        self._text_marker.pose.position.z += 0.2
+        # extract paramters
+        now = stamp.to_sec()
+        label = spatial_object.label
+        obj_type = spatial_object.type
+        creation = spatial_object.creation_time - now
+        update = spatial_object.update_time - now
+        if spatial_object.isVisible():
+            visibility = f'VISIBLE, perceive_begin: {spatial_object.perceive_begin_time - now:.1f}'
+        else:
+            visibility = f'INVISIBLE, perceive_end: {spatial_object.perceive_end_time - now:.1f}'
+        # update text
+        self._text_marker.text = f'({label}, {obj_type})\ncreation: {creation:.1f}, update: {update:.1f}\n{visibility}'
+
+    def getMarkers(self):
+        return (self._object_marker, self._text_marker)
 
 class SpatialObjectSoarView:
     def __init__(self, spatial_object, parent_wme_id):
@@ -126,9 +187,10 @@ class SpatialWorldModel:
         return math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z)
 
     class MemoryElement:
-        def __init__(self, spatial_object, soar_view):
+        def __init__(self, spatial_object, soar_view, marker = None):
             self.spatial_object = spatial_object
             self.soar_view = soar_view
+            self.marker = marker
 
     def __init__(self, name, config, agent):
         # add fileds to prevent AttributeError during destruction
@@ -167,10 +229,22 @@ class SpatialWorldModel:
             self._time_bins_map = BinsMap( config['time_bins_map'] )
         except KeyError:
             raise RuntimeError('SWM input module: "distance_bins_map" , "yaw_bins_map", "time_bins_map" parameters must present.')
+        self._markers_period = config.get('markers_publication_period', 0.0)
+        if  not isinstance(self._markers_period, (float, int)) or self._markers_period < 0.0:
+            raise RuntimeError('SWM input module: "markers_publication_period" parameter must be non-negative float.')
+        markers_topic = config.get('markers_topic')
+        if not markers_topic or not isinstance(markers_topic, str):
+            raise RuntimeError('SWM input module: "markers_topic" parameter must be str.')
 
         # add topic subscriber and tf buffer
         self._tf_listener = ProxyTransformListener().listener()
         self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
+        # marker publications
+        self._markers_pub = rospy.Publisher(markers_topic, MarkerArray, queue_size=5)
+        if self._markers_period > 0.0:
+            self._markers_timer = rospy.Timer(rospy.Duration(self._markers_period), lambda event: self._publishMarkers())
+        else:
+            self._markers_timer = None
 
         # map with memorized objects
         self._memory_lock = Lock()
@@ -237,7 +311,8 @@ class SpatialWorldModel:
                 else:
                     # add new SpatialObject but do not create corresponding SOAR view
                     spatial_object = SpatialObject( detection_msg.id, detection_msg.label, detection_msg.type, timestamp, self._timeout, self._world_frame, pose_stamped.pose )
-                    self._memory_map[key_tuple] = SpatialWorldModel.MemoryElement(spatial_object, None)
+                    marker = SpatialObjectMarker(spatial_object) if self._markers_timer is not None else None
+                    self._memory_map[key_tuple] = SpatialWorldModel.MemoryElement(spatial_object, None, marker)
 
             # check time of last update
             time_now = rospy.Time.now().to_sec();
@@ -247,6 +322,19 @@ class SpatialWorldModel:
         # call callbacks
         for callback in self._update_callbacks:
             callback(self)
+
+    def _publishMarkers(self):
+        # form MarkerArray form updated markers
+        marker_array = MarkerArray()
+        stamp = rospy.Time.now()
+        with self._memory_lock:
+            for mem_elem in self._memory_map.values():
+                marker = mem_elem.marker
+                if marker is not None:
+                    marker.update(mem_elem.spatial_object, stamp)
+                    marker_array.markers.extend(marker.getMarkers())
+        # publish
+        self._markers_pub.publish(marker_array)
 
     def __updateSpatialMemory(self, time_now):
         self._last_update_time = time_now
