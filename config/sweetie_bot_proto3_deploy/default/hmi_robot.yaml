@@ -85,20 +85,23 @@ mic_button_hotkey_node:
     key_combination: [ 'ctrl','alt', 'w' ]
     enable_global_hotkey: True
 audio_transiver:
-    gstreamer_pipeline: "pulsesrc device={device} ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! rtpgstpay config-interval=1 ! udpsink host={host_address} port=12345"
-    device: "alsa_input.usb-SEEED_ReSpeaker_4_Mic_Array__UAC1.0_-00.multichannel-input"
+    gstreamer_pipeline: "alsasrc device={device} ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! rtpgstpay config-interval=1 ! udpsink host={host_address} port=12345"
+    device: "plughw:ArrayUAC10"
+    #gstreamer_pipeline: "pulsesrc device={device} ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! rtpgstpay config-interval=1 ! udpsink host={host_address} port=12345"
+    #device: "alsa_input.usb-SEEED_ReSpeaker_4_Mic_Array__UAC1.0_-00.multichannel-input"
 microphone:
     gstreamer_pipeline: "udpsrc port=12345 ! application/x-rtp,media=application,clock-rate=90000,encoding-name=X-GST ! queue ! rtpgstdepay ! audioconvert"
     n_channels: 6
     main_channel: 0
     sample_rate: 16000
     update_rate: 4.0
-    sound_intensity_threshold: 300
+    sound_intensity_threshold: 600
     intensity_normalization_divider: 2000
     microphone_frame_id: 'microphone_link'
     stationary_frame_id: 'base_link_path'
     doa:
         type: 'none'
+        #type: 'pyroomacoustics'
         algorithm: 'NormMUSIC'
         #algorithm: 'SRP'
         #algorithm: 'FRIDA'
