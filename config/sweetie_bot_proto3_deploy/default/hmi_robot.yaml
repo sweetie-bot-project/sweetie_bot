@@ -4,7 +4,7 @@ voice:
         'female': 'She said'
         'male': 'He said'
         'unknown': 'They said'
-    sound_packages: [ ]
+    sound_packages: [ 'sweetie_bot_sounds' ]
     lang: 'ru,en'
     ladspa_path: ~/.ladspa/
     balancer_config:

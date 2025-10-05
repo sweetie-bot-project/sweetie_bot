@@ -186,6 +186,7 @@ class PlayerGstreamer():
         # paly sound
         rospy.loginfo('Playing sound: {0} ({1}).'.format(name, filename))
         # invoke gstreamer pipe
+        self._player.set_property("volume", 1.0)
         self._player.set_property("uri", "file://" + filename)
         self._player.set_state(Gst.State.READY)
         self._player.set_state(Gst.State.PLAYING)
