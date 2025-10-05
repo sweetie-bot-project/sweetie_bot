@@ -21,8 +21,8 @@ kinematics_inv:
     solver_ik_factory_kdl_sqp:
         kinematic_chains: [ leg1, leg3, leg4, leg2 ]
         files: [ kinematics_inv_joint_opt_poses.cpf ]
-        eps_pos: 0.0001
-        timeout: 0.003
+        eps_pos: 0.001
+        timeout: 0.004
         weight_rot: 0.1
         weight_q_opt: 0.001
 kinematics_fwd:
