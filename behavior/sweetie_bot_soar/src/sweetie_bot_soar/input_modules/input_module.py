@@ -22,29 +22,33 @@ def load_modules(agent, input_link_config):
             raise RuntimeError("Input module %s type is unknown." % module_name)
     return input_modules
 
+def get_config_parameter(module, config, name, default_value = None, allowed_types = None, check_func = lambda v: True, error_desc = None):
+    print(allowed_types)
+    # check input config
+    if allowed_types is None:
+        if default_value is not None:
+            allowed_types = type(default_value)
+        else:
+            raise ValueError('get_config_parameter: default_value or allowed_types must be supplied.')
+    # get parameter
+    value = config.get(name)
+    # check if paramter is not specified and default_value exists
+    if value == None and default_value is not None:
+        value = default_value
+    # check if parameter value correct
+    if not isinstance(value, allowed_types) or not check_func(value):
+        if error_desc is None:
+            error_desc = 'input module %s: parameter %s is not present or invalid.' % (module, name)
+        raise RuntimeError(error_desc)
+    # return parater value
+    return value
+
 class InputModule:
     def __init__(self, name):
         self._name = name
 
-    def getConfigParameter(self, config, name, default_value = None, allowed_types = None, check_func = lambda v: True, error_desc = None):
-        # check input config
-        if allowed_types is None:
-            if default_value is not None:
-                allowed_types = type(default_value)
-            else:
-                raise ValueError('getConfigParameter: default_value or allowed_types must be supplied.')
-        # get parameter
-        value = config.get(name)
-        # check if paramter is not specified and default_value exists
-        if value == None and default_value is not None:
-            value = default_value
-        # check if parameter value correct
-        if not isinstance(value, allowed_types) or not check_func(value):
-            if error_desc is None:
-                error_desc = '`%s` input module: parameter %s is not present or invalid.' % (self._name, name)
-            raise RuntimeError(error_desc)
-        # return parater value
-        return value
+    def getConfigParameter(self, *args, **kwargs):
+        return get_config_parameter(self._name, *args, **kwargs)
 
 class InputModuleFlatSoarView(InputModule):
     def __init__(self, name, agent):

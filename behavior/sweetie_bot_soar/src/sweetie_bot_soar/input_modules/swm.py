@@ -1,4 +1,4 @@
-from . import input_module
+from .input_module import get_config_parameter, register, InputModule
 
 import math
 from threading import Lock
@@ -62,7 +62,6 @@ class SpatialObject:
     def getPose(self, frame_id, tf_buffer):
         pose_stamped = PoseStamped(pose = self.pose, header = Header(frame_id = self.frame_id))
         return tf_buffer.transformPose(frame_id, pose_stamped).pose
-
 
 @dataclass(frozen=True)
 class MarkerProps:
@@ -164,7 +163,7 @@ class SpatialObjectSoarView:
         self.wme_id.DestroyWME()
 
 
-class SpatialWorldModel:
+class SpatialWorldModel(InputModule):
     _swm_instance_ref = None
     _update_callbacks = []
 
@@ -193,6 +192,8 @@ class SpatialWorldModel:
             self.marker = marker
 
     def __init__(self, name, config, agent):
+        # superclass constructor
+        super(SpatialWorldModel, self).__init__(name)
         # add fileds to prevent AttributeError during destruction
         self._sensor_id = None
         self._detections_sub = None
@@ -205,36 +206,20 @@ class SpatialWorldModel:
         self._sensor_id = input_link_id.CreateIdWME(name)
 
         # get configuration from parameters
-        detection_topic = config.get('topic')
-        if not detection_topic:
-            raise RuntimeError('SWM input module: "topic" parameter is not defined.')
-        self._seen_timeout = config.get('visibility_timeout')
-        if not self._seen_timeout or not isinstance(self._seen_timeout, (int,float)) or self._seen_timeout < 0.0:
-            raise RuntimeError('SWM input module: "visibity_timeout" parameter is not defined or incorrect.')
-        self._timeout = config.get('timeout')
-        if not self._timeout or not isinstance(self._timeout, (int,float)) or self._timeout < 0.0:
-            raise RuntimeError('SWM input module: "timeout" parameter is not defined or incorrect.')
-        self._world_frame = config.get('world_frame')
-        if not self._world_frame or not isinstance(self._world_frame, str):
-            raise RuntimeError('SWM input module: "world_frame" parameter must be string.')
-        self._head_frame = config.get('head_frame')
-        if not self._head_frame or not isinstance(self._head_frame, str):
-            raise RuntimeError('SWM input module: "head_frame" parameter must be string.')
-        self._body_frame = config.get('body_frame')
-        if not self._body_frame or not isinstance(self._body_frame, str):
-            raise RuntimeError('SWM input module: "body_frame" parameter must be string.')
+        detection_topic = self.getConfigParameter(config, 'topic', allowed_types=str)
+        self._seen_timeout = self.getConfigParameter(config, 'visibility_timeout', allowed_types=(int,float), check_func=lambda v: v >= 0.0)
+        self._timeout = self.getConfigParameter(config, 'timeout', allowed_types=(int,float), check_func=lambda v: v >= 0.0)
+        self._world_frame = self.getConfigParameter(config, 'world_frame', allowed_types=str)
+        self._head_frame = self.getConfigParameter(config, 'head_frame', allowed_types=str)
+        self._body_frame = self.getConfigParameter(config, 'body_frame', allowed_types=str)
         try:
             self._distance_bins_map = BinsMap( config['distance_bins_map'] )
             self._yaw_bins_map = BinsMap( config['yaw_bins_map'] )
             self._time_bins_map = BinsMap( config['time_bins_map'] )
         except KeyError:
             raise RuntimeError('SWM input module: "distance_bins_map" , "yaw_bins_map", "time_bins_map" parameters must present.')
-        self._markers_period = config.get('markers_publication_period', 0.0)
-        if  not isinstance(self._markers_period, (float, int)) or self._markers_period < 0.0:
-            raise RuntimeError('SWM input module: "markers_publication_period" parameter must be non-negative float.')
-        markers_topic = config.get('markers_topic')
-        if not markers_topic or not isinstance(markers_topic, str):
-            raise RuntimeError('SWM input module: "markers_topic" parameter must be str.')
+        self._markers_period = self.getConfigParameter(config, 'markers_publication_period', 0.0, allowed_types=(int,float), check_func=lambda v: v >= 0.0)
+        markers_topic = self.getConfigParameter(config, 'markers_topic', allowed_types=str)
 
         # add topic subscriber and tf buffer
         self._tf_listener = ProxyTransformListener().listener()
@@ -274,13 +259,13 @@ class SpatialWorldModel:
         mem_elem = self._memory_map.get(key_tuple)
         return mem_elem.spatial_object if mem_elem is not None else None
 
+
     def detectionCallback(self, msg):
         with self._memory_lock:
             # iterate over detected objects 
             for detection_msg in msg.detections:
                 # quick fix for id change
                 detection_msg.id = 0
-
                 # extract timestamp
                 timestamp = detection_msg.header.stamp.to_sec()
                 # extract pose from detection_msg
@@ -300,7 +285,6 @@ class SpatialWorldModel:
                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
                     rospy.logwarn('SWM: unable to transform detection (%s, %s) from %s to %s: %s' % (detection_msg.label, detection_msg.type, pose_stamped.header.frame_id, self._world_frame, e))
                     continue
-
                 # search detected object in index
                 key_tuple = ObjectKeyTuple(detection_msg.id, detection_msg.label, detection_msg.type)
                 # check if corrsponding object exists
@@ -308,6 +292,7 @@ class SpatialWorldModel:
                 if mem_elem != None:
                     # renew timestamp and pose of SpatialObject but not update SOAR view
                     mem_elem.spatial_object.updateVisible(timestamp, pose_stamped.pose)
+
                 else:
                     # add new SpatialObject but do not create corresponding SOAR view
                     spatial_object = SpatialObject( detection_msg.id, detection_msg.label, detection_msg.type, timestamp, self._timeout, self._world_frame, pose_stamped.pose )
@@ -410,4 +395,4 @@ class SpatialWorldModel:
         # unregister SWM
         SpatialWorldModel._swm_instance_ref = None
 
-input_module.register("swm", SpatialWorldModel)
+register("swm", SpatialWorldModel)
