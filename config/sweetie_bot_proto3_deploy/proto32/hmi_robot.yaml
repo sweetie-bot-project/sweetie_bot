@@ -4,7 +4,6 @@ voice:
         'female': 'She said'
         'male': 'He said'
         'unknown': 'They said'
-    sound_packages: [ ]
     lang: 'ru,en'
     ladspa_path: ~/.ladspa/
     voice_profile:
@@ -88,10 +87,24 @@ microphone:
     update_rate: 4.0
     sound_intensity_threshold: 300
     intensity_normalization_divider: 2000
-    microphone_frame_id: 'microphone_link'
+    microphone_frame_id: 'odom_combined'
+    #microphone_frame_id: 'microphone_link'
     stationary_frame_id: 'base_link_path'
     doa:
+        #type: 'none'
         type: 'none'
+        algorithm: 'NormMUSIC'
+        #algorithm: 'SRP'
+        #algorithm: 'FRIDA'
+        #algorithm: 'MUSIC'
+        #algorithm: 'TOPS'
+        mic_coords: [ 0.02285, -0.02285, 0.0, 0.02285, 0.02285, 0.0, -0.02285, 0.02285, 0.0, -0.02285, -0.02285, 0.0 ]
+        mic_channels: [ 1, 2, 3, 4 ]
+        freq_range: [ 80.0, 2000.0 ]
+        mode: 'far'
+        grid_type: '2d_circle'
+        grid_size: 32
+        nfft: 1024
     vad:
         type: 'button'
     speech_timeout: 0.75

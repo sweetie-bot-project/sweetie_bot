@@ -63,7 +63,7 @@ sp {initialization*apply*joint-trajectory
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8>)
+	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12> <c13>)
 	(<c1> ^name head_node ^tag confirmation greeting pleased joy neutral ^tag general ^tag talk ^relative yes)
 	(<c2> ^name head_shake ^tag rejection disappointed anger sad ^tag talk ^relative yes)
 	(<c3> ^name head_suprised ^tag question surprise ^tag general ^tag talk ^relative yes)
@@ -72,18 +72,23 @@ sp {initialization*apply*joint-trajectory
 	(<c6> ^name greeting ^tag greeting brohoof ^tag talk)
 	(<c7> ^name get_unconscious ^tag faint ^tag talk)
 	(<c8> ^name dance_stamp ^tag joy dance ^tag talk)
+	(<c9> ^name enjoy_left_cheek_scratch ^tag cheek_left ^tag talk ^relative yes)
+	(<c10> ^name enjoy_left_temple_scratch ^tag temple_left ^tag talk ^relative yes)
+	(<c11> ^name enjoy_right_cheek_scratch ^tag cheek_right ^tag talk ^relative yes)
+	(<c12> ^name enjoy_right_temple_scratch ^tag temple_right ^tag talk ^relative yes)
+	(<c13> ^name continue_enjoy_scratch ^tag tactile_joy ^tag talk ^relative yes)
 }
 
 sp {initialization*apply*animation-tag-emotion-mapping
   (state <s> ^name initialization ^operator <op> ^mem <m>)
   (<op> ^name initialization ^stage 2)
 -->
-  (<m> ^emotion <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12> <c13>)
+  (<m> ^emotion <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12> <c13> <c14>)
   (<c1> ^name begging_look ^tag begging love)
   (<c2> ^name evil_look ^tag rejection disappointed anger)
   (<c3> ^name surprised_look ^tag surprise rejection greeting)
-  (<c4> ^name happy_look ^tag pleased joy)
-  (<c5> ^name pleasure_look ^tag pleased confirmation dance joy)
+  (<c4> ^name happy_look ^tag pleased joy tactile_joy)
+  (<c5> ^name pleasure_look ^tag pleased confirmation dance joy tactile_joy)
   (<c6> ^name tender_look ^tag pleased greeting brohoof joy love)
   (<c7> ^name scared_look ^tag fear)
   (<c8> ^name very_scared_look ^tag fear)
@@ -92,6 +97,7 @@ sp {initialization*apply*animation-tag-emotion-mapping
   (<c11> ^name unamused_look ^tag anger rejection )
   (<c12> ^name sad_look ^tag sad disappointed)
   (<c13> ^name normal ^tag general confirmation question greeting brohoof long none neutral)
+  (<c14> ^name enjoyment_look ^tag tactile_joy)
 }
 
 #sp {initialization*apply*compound*action

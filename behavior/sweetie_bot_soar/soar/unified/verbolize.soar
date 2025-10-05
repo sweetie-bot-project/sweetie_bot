@@ -7,7 +7,7 @@
 # DECISION OPERATOR
 #
 # (<op> ^name @name@ ^substate verbolize ^process-args <args>)
-#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag>
+#   (<args> ^object <obj> ^topic <topic> ^text <text> ^animation-tag <tag> ^emotion <emotion>
 #				[^sound <sound-file>] [^scene <scene>] [^character <character>]
 #				[^lang <lang>] [^type <type>])
 #

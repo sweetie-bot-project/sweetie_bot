@@ -359,11 +359,48 @@ sp {talk-llm*propose*dance
 # boop
 sp {talk-llm*propose*touch-nose
 	(state <s> ^substate talk-llm  -^talking ^lang <lang> ^io.input-link.touch <touch> ^most-recent-event.object <obj>)
-	(<touch> ^pressed <btn>)
+	(<touch> ^pressed nose)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name rule-answering-on-event ^substate verbolize ^process-args <args>)
-	(<args> ^object <obj> ^topic touch ^text |Do not touch me!| ^animation-tag rejection ^lang en ^emotion unamused_look ^type statement)
+	(<args> ^object <obj> ^topic touch ^sound squeak_nose ^lang en ^emotion tactile_joy ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^print (concat |SPECIFIC: TOUCH.| (crlf)))
+}
+
+# forehead touch
+sp {talk-llm*propose*touch-forehead
+	(state <s> ^substate talk-llm  -^talking ^lang <lang> ^io.input-link.touch <touch> ^most-recent-event.object <obj>)
+	(<touch> ^pressed forehead)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name rule-answering-on-event ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic touch ^text |Do not touch my nose!| |Do not touch me there!| |Hands off me!| |I don't like this!| |You make me feel uncomfortable!| ^animation-tag rejection ^lang <lang> ^emotion rejection ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^print (concat |SPECIFIC: TOUCH.| (crlf)))
+}
+
+sp {talk-llm*propose*touch-cheek-or-temple
+	(state <s> ^substate talk-llm  -^talking ^lang <lang> ^io.input-link.touch <touch> ^most-recent-event <ev>)
+	(<touch> ^pressed {<<|cheek_left| |cheek_right| |temple_left| |temple_right|>> <spot>})
+	(<ev> ^object <obj>)
+	-(<ev> ^name talk-said ^topic <spot>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name rule-answering-on-event ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic <spot> ^text |Mmmmm| |Yeah| |Yes. Please touch this spot.| |Yes. Touch me here.| |Oh yeah, right there.| |Purrr| |That's such a bliss!| ^animation-tag <spot> ^lang <lang> ^emotion tactile_joy ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^print (concat |SPECIFIC: TOUCH.| (crlf)))
+}
+
+sp {talk-llm*propose*touch-cheek-or-temple-again
+	(state <s> ^substate talk-llm  -^talking ^lang <lang> ^io.input-link.touch <touch> ^most-recent-event <ev>)
+	(<touch> ^pressed {<<|cheek_left| |cheek_right| |temple_left| |temple_right|>> <spot>})
+	(<ev> ^object <obj> ^name talk-said ^topic <spot>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name rule-answering-on-event ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic <spot> ^text |Do not stop please.| |This feels so good!| |Oh yeah, right there.| |Purrr| |I forgive you for everything.| |That's such a bliss!| ^animation-tag tactile_joy ^lang <lang> ^emotion tactile_joy ^type statement)
 	(<args> ^result <res>)
 	(<res> ^status succeed ^print (concat |SPECIFIC: TOUCH.| (crlf)))
 }

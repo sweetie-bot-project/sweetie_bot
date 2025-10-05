@@ -486,7 +486,7 @@ class LangModel(output_module.OutputModule):
                     elif item_attr == 'predicate':
                         predicates.append( Predicate(item_id.ConvertToIdentifier()) )
                 except WMEParseError as e:
-                    rospy.logwarn('^%s %s parse error: %s' & (item_attr, item_id.GetValueAsString(), e))
+                    rospy.logwarn('^%s %s parse error: %s' % (item_attr, item_id.GetValueAsString(), e))
 
             # get request
             if item_attr == 'request':
