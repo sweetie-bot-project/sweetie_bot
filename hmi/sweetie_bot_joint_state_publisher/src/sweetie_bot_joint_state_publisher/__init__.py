@@ -249,6 +249,7 @@ class JointStatePublisherGui(QWidget):
         vlayout.addWidget(controller_widget)
 
         ### Support checkboxes ###
+        self._support_saved_state = None
         support_layout = QHBoxLayout()
         label = QLabel('Supports selector')
         label.setToolTip('The checkboxes mark the kinematic chains that are assumed in contact with the supporting surface.\n Click checkbox to change chain state. Note it may be immediatelly overriden by an active controller.')
@@ -262,6 +263,12 @@ class JointStatePublisherGui(QWidget):
             self.support_widgets[support] = checkbox
             support_layout.addWidget(checkbox)
         support_layout.addStretch()
+        support_all_button = QPushButton('Set All')
+        support_layout.addWidget(support_all_button)
+        support_none_button = QPushButton('Set None')
+        support_layout.addWidget(support_none_button)
+        support_restore_button = QPushButton('Restore')
+        support_layout.addWidget(support_restore_button)
         support_widget = QFrame()
         support_widget.setFrameStyle(QFrame.Box)
         support_widget.setFrameShadow(QFrame.Plain)
@@ -269,6 +276,9 @@ class JointStatePublisherGui(QWidget):
         vlayout.addWidget(support_widget)
         # signals
         self.supports_update_signal.connect(self.onSupportsUpdate)
+        support_all_button.clicked.connect(self.onSupportAll)
+        support_none_button.clicked.connect(self.onSupportNone)
+        support_restore_button.clicked.connect(self.onSupportRestore)
 
         ### Joint states save/load widget ###
         state_layout = QHBoxLayout()
@@ -398,6 +408,30 @@ class JointStatePublisherGui(QWidget):
             if checkbox is not None:
                 with QSignalBlocker(checkbox) as blocker:
                     checkbox.setChecked(support > 0.0)
+
+    def _set_support(self, value):
+        self._support_saved_state = {}
+        for name, checkbox in self.support_widgets.items():
+            self._support_saved_state[name] = checkbox.isChecked()
+            with QSignalBlocker(checkbox) as blocker:
+                checkbox.setChecked(value)
+        self.onSupportChange(None, None)
+
+    def onSupportAll(self):
+        self._set_support(True)
+        
+    def onSupportNone(self):
+        self._set_support(False)
+
+    def onSupportRestore(self):
+        if self._support_saved_state is not None:
+            for name, checkbox in self.support_widgets.items():
+                value = self._support_saved_state.get(name)
+                if value is not None:
+                    with QSignalBlocker(checkbox) as blocker:
+                        checkbox.setChecked(value)
+        self.onSupportChange(None, None)
+        
 
     @pyqtSlot()
     def onJointStateUpdate(self):
