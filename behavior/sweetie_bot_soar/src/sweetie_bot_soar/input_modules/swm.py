@@ -63,6 +63,54 @@ class SpatialObject:
         pose_stamped = PoseStamped(pose = self.pose, header = Header(frame_id = self.frame_id))
         return tf_buffer.transformPose(frame_id, pose_stamped).pose
 
+class PoseFilter:
+    subclass_map = {}
+
+    def __new__(cls, config):
+        # get type name
+        type_name = get_config_parameter('PoseFilter', config, 'type', allowed_types=str)
+        # factory implementatipacy
+        cls = PoseFilter.subclass_map[type_name]
+        return super(PoseFilter, cls).__new__(cls)
+
+    def __init_subclass__(cls, name):
+        # subcalsses registration
+        super(PoseFilter, cls).__init_subclass__()
+        PoseFilter.subclass_map[name] = cls
+
+    def __call__(self, spatial_object, detection_msg, detection_pose_transformed, tf_listener):
+        raise NotImplemented
+
+class PoseFilterNone(PoseFilter, name = 'none'):
+    def __call__(self, spatial_object, detection_msg, detection_pose_trasformed, tf_listener):
+        return detection_pose_trasformed
+
+class PoseFilterMaxvel(PoseFilter, name = 'maxvel'):
+    def __init__(self, config):
+        super(PoseFilterMaxvel, self).__init__()
+        # get paramters
+        self._difftime = rospy.Duration(get_config_parameter('PoseFilter.Maxvel', config, 'velocity_estimator_difftime', default_value=0.2, check_func=lambda v: v > 0.0))
+        self._maxvel_linear = get_config_parameter('PoseFilter.Maxvel', config, 'velocity_linear_threshold', allowed_types=float)
+        self._maxvel_angular = get_config_parameter('PoseFilter.Maxvel', config, 'velocity_angular_threshold', allowed_types=float)
+
+    def __call__(self, spatial_object, detection_msg, detection_pose_transformed, tf_listener):
+        # check that sensor frame is motionless
+        try:
+            vel, rot = tf_listener.lookupTwist(detection_msg.header.frame_id, spatial_object.frame_id, detection_msg.header.stamp, self._difftime)
+            vel_abs = math.hypot(*vel)
+            rot_abs = math.hypot(*rot)
+            sensor_frame_is_moving = vel_abs > self._maxvel_linear or rot_abs > self._maxvel_angular
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+            rospy.logwarn('PoseFilterMaxvel: unable to estimate %s frame speed relative to %s frame: %s' % (detection_msg.header.frame_id, spatial_object.frame_id, e))
+            sensor_frame_is_moving = True
+        # debug output
+        # print(f'PoseFilterMaxvel: {spatial_object.frame_id}, {detection_msg.header.frame_id}: ({vel_abs} {rot_abs}) -- {sensor_frame_is_moving}')
+        # if frame is moving ignore detected pose
+        if sensor_frame_is_moving:
+            return spatial_object.pose
+        else:
+            return detection_pose_transformed
+
 @dataclass(frozen=True)
 class MarkerProps:
     type: int
@@ -85,7 +133,7 @@ class SpatialObjectMarker:
         # object marker
         header = Header(frame_id = spatial_object.frame_id)
         self._object_marker = Marker(header = header, ns = 'swm', id = self._marker_id, action = Marker.ADD, lifetime = rospy.Duration(lifetime),
-                                     type = self._marker_props.type, scale = self._marker_props.scale, color = self._marker_props.color)
+                                     type = self._marker_props.type, scale = copy.copy(self._marker_props.scale), color = copy.copy(self._marker_props.color))
         # text marker
         self._text_marker = Marker(header = header, ns = 'swm', id = self._marker_id + 1, action = Marker.ADD, lifetime = rospy.Duration(lifetime),
                                                    type = Marker.TEXT_VIEW_FACING, scale = Vector3(0.0, 0.0, 0.02), color = ColorRGBA(1.0, 1.0, 1.0, 1.0))
@@ -218,6 +266,7 @@ class SpatialWorldModel(InputModule):
             self._time_bins_map = BinsMap( config['time_bins_map'] )
         except KeyError:
             raise RuntimeError('SWM input module: "distance_bins_map" , "yaw_bins_map", "time_bins_map" parameters must present.')
+        filter_config = self.getConfigParameter(config, 'pose_filter', allowed_types=dict, error_desc=f'input module {self._name}: "pose_filter" configuration parameter must present and be a dict with filter declaration.')
         self._markers_period = self.getConfigParameter(config, 'markers_publication_period', 0.0, allowed_types=(int,float), check_func=lambda v: v >= 0.0)
         markers_topic = self.getConfigParameter(config, 'markers_topic', allowed_types=str)
 
@@ -230,6 +279,9 @@ class SpatialWorldModel(InputModule):
             self._markers_timer = rospy.Timer(rospy.Duration(self._markers_period), lambda event: self._publishMarkers())
         else:
             self._markers_timer = None
+
+        # pose filter
+        self._pose_filter = PoseFilter(filter_config)
 
         # map with memorized objects
         self._memory_lock = Lock()
@@ -291,7 +343,8 @@ class SpatialWorldModel(InputModule):
                 mem_elem = self._memory_map.get(key_tuple)
                 if mem_elem != None:
                     # renew timestamp and pose of SpatialObject but not update SOAR view
-                    mem_elem.spatial_object.updateVisible(timestamp, pose_stamped.pose)
+                    filtered_pose = self._pose_filter(mem_elem.spatial_object, detection_msg, pose_stamped.pose, self._tf_listener)
+                    mem_elem.spatial_object.updateVisible(timestamp, filtered_pose)
 
                 else:
                     # add new SpatialObject but do not create corresponding SOAR view

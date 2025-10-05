@@ -23,7 +23,6 @@ def load_modules(agent, input_link_config):
     return input_modules
 
 def get_config_parameter(module, config, name, default_value = None, allowed_types = None, check_func = lambda v: True, error_desc = None):
-    print(allowed_types)
     # check input config
     if allowed_types is None:
         if default_value is not None:
