@@ -337,6 +337,11 @@ class SpatialWorldModel(InputModule):
                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
                     rospy.logwarn('SWM: unable to transform detection (%s, %s) from %s to %s: %s' % (detection_msg.label, detection_msg.type, pose_stamped.header.frame_id, self._world_frame, e))
                     continue
+                # fix object orientation
+                pose_stamped.pose.orientation.x = 0.0
+                pose_stamped.pose.orientation.y = 0.0
+                pose_stamped.pose.orientation.z = 0.0
+                pose_stamped.pose.orientation.w = 1.0
                 # search detected object in index
                 key_tuple = ObjectKeyTuple(detection_msg.id, detection_msg.label, detection_msg.type)
                 # check if corrsponding object exists
