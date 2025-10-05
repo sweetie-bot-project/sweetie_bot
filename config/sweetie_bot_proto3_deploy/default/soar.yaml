@@ -32,8 +32,14 @@ soar:
             distance_bins_map: { names: [ "close", "near", "far" ], values: [ 0.3, 3.0] }
             yaw_bins_map: { names: [ "back", "right", "center", "left", "back" ], values: [ -1.57, -0.52, 0.52, 1.57] }
             time_bins_map: { names: [ "now", "just", "recently", "long-time" ], values: [ 2.0, 10.0, 120.0] }
+            pose_filter:
+              # type: 'none'
+              type: 'maxvel'
+              velocity_estimator_difftime: 0.1
+              velocity_linear_threshold: 0.01   # 1 cm/s
+              velocity_angular_threshold: 0.087 # 5 deg/s
             markers_topic: '/hmi/swm_markers'
-            markers_publication_period: 0.5
+            markers_publication_period: 0.2
         body-pose:
             type: "pose_joints"
             topic: "joint_states"
