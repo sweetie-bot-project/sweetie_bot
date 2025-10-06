@@ -1,7 +1,7 @@
 <launch>
     <arg name="device" default="/dev/input/event0"/>
     <node pkg="joy" type="joy_node" name="joy_node" output="screen">
-        <rosparam param="device" subst_value="True">$(arg device)</rosparam>
+        <rosparam param="dev" subst_value="True">$(arg device)</rosparam>
     </node>
    <node name="print_joy" pkg="rostopic" type="rostopic" args="echo /joy" output="screen" />
 </launch>
