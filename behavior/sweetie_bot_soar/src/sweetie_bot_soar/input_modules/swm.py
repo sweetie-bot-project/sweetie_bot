@@ -311,7 +311,6 @@ class SpatialWorldModel(InputModule):
         mem_elem = self._memory_map.get(key_tuple)
         return mem_elem.spatial_object if mem_elem is not None else None
 
-
     def detectionCallback(self, msg):
         with self._memory_lock:
             # iterate over detected objects 

@@ -10,14 +10,14 @@ class BinsMap:
         if not isinstance(names, list) or not isinstance(values, list):
             raise error
         if len(values) + 1 != len(names):
-            raise RuntimeError("BinMap has inconsistent names and values lists lengths." % name)
+            raise RuntimeError("BinMap has inconsistent names and values lists lengths: %s and %s" % (names, values))
         # check if parameters are correct
         v_prev = None
         for v in values:
             if not isinstance(v, (int, float)):
                 raise error
             if v_prev != None and v_prev >= v:
-                raise RuntimeError("BinMap values list must be ordered." % name)
+                raise RuntimeError("BinMap values list must be ordered: %s" % values)
         for n in names:
             if not isinstance(n, str):
                 raise error
