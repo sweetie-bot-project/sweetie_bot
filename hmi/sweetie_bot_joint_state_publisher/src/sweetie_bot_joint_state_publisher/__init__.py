@@ -93,9 +93,10 @@ class SetOperationalWidget(QFrame):
             selector.setTristate(False)
             selector.setChecked(True)
             indicator = QCheckBox(resource, self)
-            indicator.setTristate(False)
-            indicator.setChecked(False)
+            indicator.setTristate(True)
+            indicator.setCheckState(Qt.PartiallyChecked)
             indicator.setDisabled(True)
+            indicator.setStyleSheet("QCheckBox { font-weight: bold; } QCheckBox::disabled:checked { color : green } QCheckBox::disabled:unchecked { color : red }")
             self._resources_widgets[resource] = self.ResourceWidgets(selector, indicator)
             layout.addWidget(selector, 0, col + 3)
             layout.addWidget(indicator, 1, col + 3)
@@ -184,7 +185,7 @@ class SetOperationalWidget(QFrame):
         self._status_label.setStyleSheet("background-color : red; color: white; font-weight: bold")
         # deselect resources
         for widget in self._resources_widgets.values():
-            widget.indicator.setCheckState(Qt.Unchecked)
+            widget.indicator.setCheckState(Qt.PartiallyChecked)
         # logging
         rospy.loginfo(f'{self._name} controller is {state_string}: {result.error_string} ({result.error_code})')
 
@@ -288,12 +289,15 @@ class JointStatePublisherGui(QWidget):
         state_layout.addWidget(state_label)
         self.pose_combobox = QComboBox(self)
         self.pose_combobox.setEditable(True)
+        self.pose_combobox.setInsertPolicy(QComboBox.InsertAlphabetically)
         self.pose_combobox.setValidator(QRegularExpressionValidator(QRegularExpression('[A-Za-z_][A-Za-z0-9_]*')))
         state_layout.addWidget(self.pose_combobox)
         save_button = QPushButton('Save State', self)
         state_layout.addWidget(save_button)
         load_button = QPushButton('Load State', self)
         state_layout.addWidget(load_button)
+        del_button = QPushButton('Delete State', self)
+        state_layout.addWidget(del_button)
         state_layout.addStretch()
         select_all_button = QPushButton('Select All Joints', self)
         state_layout.addWidget(select_all_button)
@@ -313,6 +317,7 @@ class JointStatePublisherGui(QWidget):
         # signals
         save_button.clicked.connect(self.onSaveState)
         load_button.clicked.connect(self.onLoadState)
+        del_button.clicked.connect(self.onDeleteState)
         select_all_button.clicked.connect(self.onSelectAllJoints)
         select_no_button.clicked.connect(self.onSelectNoJoints)
 
@@ -438,7 +443,6 @@ class JointStatePublisherGui(QWidget):
         self.updateFromJointState()
 
     def onSliderChanged(self, name):
-        print('slider')
         joint_info = self.joint_map[name]
         # get new value
         value = self.sliderToValue(joint_info.slider.value(), joint_info.joint)
@@ -448,7 +452,6 @@ class JointStatePublisherGui(QWidget):
             joint_info.editbox.setValue(value)
 
     def onEditboxChanged(self, name):
-        print('edit')
         joint_info = self.joint_map[name]
         # get new value
         value = joint_info.editbox.value()
@@ -497,6 +500,20 @@ class JointStatePublisherGui(QWidget):
         self.updateFromJointState()
         # logging 
         rospy.loginfo(f'Load pose ({len(msg.name)} joints) form parameter {param}.')
+
+    def onDeleteState(self):
+        # delete ROS paramter
+        name = self.pose_combobox.currentText()
+        param = self.pose_ns + '/' + self.pose_combobox.currentText()
+        try:
+            rospy.delete_param(param)
+        except KeyError:
+            rospy.logerr(f'ROS paramter {param} does not exists.')
+        else:
+            rospy.loginfo(f'Remove pose parameter {param}.')
+        # remove paramter from combobox
+        index = self.pose_combobox.currentIndex()
+        self.pose_combobox.removeItem(index)
 
     def onSelectAllJoints(self):
         for joint_info in self.joint_map.values():
