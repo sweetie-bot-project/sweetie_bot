@@ -1220,7 +1220,7 @@ bool ClopGenerator::callbackSaveTrajectory(SaveTrajectoryRequest& req, SaveTraje
 
 	// create FollowStepSequence goal in planning frame
 	FollowStepSequenceGoal steps_msg;
-	steps_msg.header.stamp = ros::Time::now();
+	steps_msg.header.stamp = ros::Time();
 	steps_msg.header.frame_id = planning_frame;
 	steps_msg.append = false;
 	steps_msg.position_tolerance = last_request_goal.position_tolerance;

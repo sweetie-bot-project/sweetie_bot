@@ -208,7 +208,11 @@ void TrajectoryEditor::on_dublicatePoseButton_clicked()
 
 void TrajectoryEditor::on_saveTrajectoryButton_clicked()
 {
-    loader_.setParam(trajectories_param_name + "/" + ui.comboBox->currentText().toStdString(), joint_trajectory_data_.getTrajectoryMsg());
+    // get trajectory and reset timestamp
+    control_msgs::FollowJointTrajectoryGoal msg(joint_trajectory_data_.getTrajectoryMsg());
+    msg.trajectory.header.stamp = ros::Time();
+    // write it to parameter
+    loader_.setParam(trajectories_param_name + "/" + ui.comboBox->currentText().toStdString(), msg);
     // std::string cmd = "rosparam dump `rospack find sweetie_bot_deploy`/joint_state_control/joint_trajectories.yaml " + trajectories_param_name;
     // system( cmd.c_str() );
     updateParamList();
