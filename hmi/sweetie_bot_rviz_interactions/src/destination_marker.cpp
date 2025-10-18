@@ -226,7 +226,7 @@ void DestinationMarker::invokeClopGenerator(const geometry_msgs::Pose& base_goal
     static bool is_ee_goals_init = false;
     static std::vector<sweetie_bot_gait_generator::EndEffectorGoal> ee_goals;
     if (!is_ee_goals_init) {
-      setEndEffectorTargets(ee_goals, ee_names);
+      setEndEffectorTargets(ee_goals, ee_names, sweetie_bot_gait_generator::EndEffectorGoal::NOMINAL_POSE);
 
       is_ee_goals_init = true;
     }
@@ -252,13 +252,7 @@ void DestinationMarker::toNominal()
     if (!ee_names.empty()) {
       // end effector goals
       std::vector<sweetie_bot_gait_generator::EndEffectorGoal> ee_goals;
-      setEndEffectorTargets(ee_goals, ee_names, sweetie_bot_gait_generator::EndEffectorGoal::PATH_FINAL);
-
-      setEndEffectorPosition(ee_goals[0],  0.080425,  0.0386, 0.0);
-      setEndEffectorPosition(ee_goals[1],  0.080425, -0.0386, 0.0);
-      setEndEffectorPosition(ee_goals[2], -0.080425,  0.0386, 0.0);
-      setEndEffectorPosition(ee_goals[3], -0.080425, -0.0386, 0.0);
-
+      setEndEffectorTargets(ee_goals, ee_names, sweetie_bot_gait_generator::EndEffectorGoal::NOMINAL_POSE);
       goal.ee_goal.insert(goal.ee_goal.begin(), ee_goals.begin(), ee_goals.end());
     }
 
