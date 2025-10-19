@@ -40,20 +40,20 @@ soar:
               velocity_angular_threshold: 0.087 # 5 deg/s
             markers_topic: '/hmi/swm_markers'
             markers_publication_period: 0.2
-        body-pose:
-            type: "pose_joints"
-            topic: "joint_states"
-            storage_ns: "saved_msgs"
-            pose_list: [ "body_nominal", "body_crouched" ]
-            tolerance: 0.174 # 10 degrees
-            time_bins_map: { names: [ "recently", "long-time" ], values: [ 60.0 ] }
-        head-pose:
+        head:
             type: "pose_joints"
             topic: "joint_states"
             storage_ns: "saved_msgs"
             pose_list: [ "head_nominal" ]
             tolerance: 0.174 # 10 degrees
-            time_bins_map: { names: [ "recently", "long-time" ], values: [ 60.0 ] }
+            time_bins_map: { names: [ "just", "recently", "long-time" ], values: [ 10.0, 60.0 ] }
+        body:
+            type: "pose_joints"
+            topic: "joint_states"
+            storage_ns: "saved_msgs"
+            pose_list: [ "body_nominal", "body_walk", "body_zero", "body_zero_crouched", "body_crouched" ]
+            tolerance: 0.174 # 10 degrees
+            time_bins_map: { names: [ "just", "recently", "long-time" ], values: [ 10.0, 60.0 ] }
         battery:
             type: "battery"
             topic: "battery_state"

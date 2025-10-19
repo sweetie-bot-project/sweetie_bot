@@ -52,11 +52,40 @@ sp {initialization*apply*compound*action
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-#	(<m> ^compound-action <c5> <c6> <c7>)
-	(<m> ^compound-action <c6> <c7>)
-#	(<c5> ^name push_up ^tag alone) # Disabled push_up as it produces outliers due to working joint_state_publisher
-	(<c6> ^name show_off ^tag alone)
-	(<c7> ^name head_bored ^tag alone)
+	(<m> ^compound-action <c1> <c2> <c3> <c4> <c5> <c6>)
+	(<c1> ^name show_off ^tag alone voiced ^start-pose body_zero ^end-pose body_zero ^duration 6.0 ^resource head body)
+	(<c2> ^name head_bored ^tag alone voiced ^start-pose head_nominal ^end-pose head_nominal ^duration 6.0 ^resource head)
+	(<c3> ^name body_zero_to_nominal ^tag trajectory ^start-pose body_zero ^end-pose body_nominal ^duration 6.0 ^resource body)
+	(<c4> ^name body_nominal_to_zero ^tag trajectory ^start-pose body_nominal ^end-pose body_zero ^duration 6.0 ^resource body)
+	(<c5> ^name body_zero_to_walk ^tag trajectory ^start-pose body_zero ^end-pose body_walk ^duration 6.0 ^resource body)
+	(<c6> ^name body_walk_to_zero ^tag trajectory ^start-pose body_walk ^end-pose body_zero ^duration 6.0 ^resource body)
+}
+
+sp {initialization*apply*step-sequence
+	(state <s> ^name initialization ^operator <op> ^mem <m>)
+	(<op> ^name initialization ^stage 2)
+-->
+	(<m> ^step-sequence <c1> <c2> <c3> <c4> <c5> <c6>)
+	(<c1> ^name trot_forward15 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
+	(<c2> ^name trot_backward15 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
+	(<c3> ^name trot_rot_left45 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 4.0 ^resource body)
+	(<c4> ^name trot_rot_right45 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 4.0 ^resource body)
+	(<c5> ^name trot_rot_left90 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
+	(<c6> ^name trot_rot_right90 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
+}
+
+sp {initialization*apply*joint-state
+	(state <s> ^name initialization ^operator <op> ^mem <m>)
+	(<op> ^name initialization ^stage 2)
+-->
+	(<m> ^joint-state <c1> <c2> <c3> <c4> <c5> <c6> <c7>)
+	(<c1> ^name body_zero ^resource body)
+	(<c2> ^name body_nominal ^resource body)
+	(<c3> ^name body_walk ^resource body)
+	(<c4> ^name body_zero_crouched ^resource body)
+	(<c5> ^name body_crouched ^resource body)
+	(<c6> ^name head_nominal ^resource head)
+	(<c7> ^name nomianal ^resource body head)
 }
 
 sp {initialization*apply*joint-trajectory
@@ -64,19 +93,19 @@ sp {initialization*apply*joint-trajectory
 	(<op> ^name initialization ^stage 2)
 -->
 	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12> <c13>)
-	(<c1> ^name head_node ^tag confirmation greeting pleased joy neutral ^tag general ^tag talk ^relative yes)
-	(<c2> ^name head_shake ^tag rejection disappointed anger sad ^tag talk ^relative yes)
-	(<c3> ^name head_suprised ^tag question surprise ^tag general ^tag talk ^relative yes)
-	(<c4> ^name head_look_around ^tag long neutral ^tag general ^tag talk)
-	(<c5> ^name hoof_stamp ^tag rejection anger ^tag talk)
-	(<c6> ^name greeting ^tag greeting brohoof ^tag talk)
-	(<c7> ^name get_unconscious ^tag faint ^tag talk)
-	(<c8> ^name dance_stamp ^tag joy dance ^tag talk)
-	(<c9> ^name enjoy_left_cheek_scratch ^tag cheek_left ^tag talk ^relative yes)
-	(<c10> ^name enjoy_left_temple_scratch ^tag temple_left ^tag talk ^relative yes)
-	(<c11> ^name enjoy_right_cheek_scratch ^tag cheek_right ^tag talk ^relative yes)
-	(<c12> ^name enjoy_right_temple_scratch ^tag temple_right ^tag talk ^relative yes)
-	(<c13> ^name continue_enjoy_scratch ^tag tactile_joy ^tag talk ^relative yes)
+	(<c1> ^name head_node ^tag confirmation greeting pleased joy neutral ^tag general ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 2.0)
+	(<c2> ^name head_shake ^tag rejection disappointed anger sad ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 3.0)
+	(<c3> ^name head_suprised ^tag question surprise ^tag general ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 3.0)
+	(<c4> ^name head_look_around ^tag long neutral ^tag general ^tag talk ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 4.5)
+	(<c5> ^name hoof_stamp ^tag rejection anger ^tag talk  ^start-pose body_zero ^end-pose body_zero ^resource body ^duration 6.0)
+	(<c8> ^name dance_stamp ^tag joy dance ^tag talk  ^start-pose body_zero ^end-pose body_zero ^resource body ^duration 6.5)
+	(<c6> ^name greeting ^tag greeting brohoof ^tag talk  ^start-pose body_zero ^end-pose body_zero ^resource body ^duration 12.0)
+	(<c7> ^name get_unconscious ^tag faint ^tag talk ^start-pose body_zero ^end-pose body_zero ^resource body ^duration 6.0)
+	(<c9> ^name enjoy_left_cheek_scratch ^tag cheek_left ^tag talk ^relative yes ^start-pose head_nominal ^resource head ^duration 2.0)
+	(<c10> ^name enjoy_left_temple_scratch ^tag temple_left ^tag talk ^relative yes ^start-pose head_nominal ^resource head ^duration 3.0)
+	(<c11> ^name enjoy_right_cheek_scratch ^tag cheek_right ^tag talk ^relative yes ^start-pose head_nominal ^resource head ^duration 2.0)
+	(<c12> ^name enjoy_right_temple_scratch ^tag temple_right ^tag talk ^relative yes ^start-pose head_nominal ^resource head ^duration 3.0)
+	(<c13> ^name continue_enjoy_scratch ^tag tactile_joy ^tag talk ^relative yes ^resource head ^duration 3.0)
 }
 
 sp {initialization*apply*animation-tag-emotion-mapping
@@ -99,32 +128,6 @@ sp {initialization*apply*animation-tag-emotion-mapping
   (<c13> ^name normal ^tag general confirmation question greeting brohoof long none neutral)
   (<c14> ^name enjoyment_look ^tag tactile_joy)
 }
-
-#sp {initialization*apply*compound*action
-#	(state <s> ^name initialization ^operator <op> ^mem <m>)
-#	(<op> ^name initialization ^stage 2)
-#-->
-#	(<m> ^compound-action <c1> <c2> <c3> <c4> <c5> <c6> <c7>)
-#	(<c1> ^name greeting_acquitance_procedure ^tag greet ^tag talk)
-#	(<c2> ^name greeting_friendship_programs ^tag greet ^tag talk)
-#	(<c3> ^name point_do_not_touch ^tag anger ^topic comfort-zone ^tag talk)
-#	(<c4> ^name hoof_stamp_do_you_want_attention ^tag anger ^tag talk)
-#	(<c5> ^name prance_maximum_fun ^tag fun ^tag general ^tag alone)
-#	(<c6> ^name menace ^tag anger ^tag alone)
-#	(<c7> ^name head_ask_about_sister ^tag talk)
-#}
-#
-#sp {initialization*apply*joint-trajectory
-#	(state <s> ^name initialization ^operator <op> ^mem <m>)
-#	(<op> ^name initialization ^stage 2)
-#-->
-#	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5>)
-#	(<c1> ^name head_node ^tag confirmation ^tag talk ^relative yes)
-#	(<c2> ^name head_shake ^tag rejection ^tag talk ^relative yes)
-#	(<c3> ^name head_suprised ^tag question ^tag surprise  ^tag general ^tag talk ^relative yes)
-#	(<c4> ^name greeting ^tag greet ^tag general ^tag talk)
-#	(<c5> ^name applause ^tag confirmation rejection ^tag talk)
-#}
 
 #
 # FINISH INITIALIZATION
