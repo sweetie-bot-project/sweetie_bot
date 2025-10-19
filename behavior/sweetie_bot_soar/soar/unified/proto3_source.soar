@@ -13,6 +13,7 @@ source flexbe.soar
 source text-action.soar
 # high level actions
 source animation.soar
+source movement.soar
 source lookat2.soar
 source attention.soar
 # talk

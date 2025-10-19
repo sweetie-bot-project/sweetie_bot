@@ -12,12 +12,12 @@
 # MOVEMENT DRIVE
 #
 
-# Propose perform animation (no one around)
-sp {movement*propose*decide-animation
+## Propose perform animation (no one around)
+sp {moving*propose*decide-animation
 	(state <s> ^name movement ^substate general -^performing-animation)
 -->
 	(<s> ^operator <op> +, =)
-   	(<op> ^name performing-animation ^substate animation ^process-args <a>)
+   	(<op> ^name performing-animation ^substate movement ^process-args <a>)
 	(<a> ^tag alone ^deadline-time 30.0)
 }
 
@@ -54,70 +54,70 @@ sp {curiosity*propose*attention
    	(<o> ^name look-at-multiple-objects ^substate attention ^process-args <a>)
 }
 
+##
+## SOCIAL DRIVE
+## 
 #
-# SOCIAL DRIVE
-# 
-
-# ELABORATIONS
-
-# elaborate talking process link
-sp {social*elaborate*talk
-	(state <s> ^name social ^substate general ^{<<|talking-on-desire| |talking-on-request|>>} <proc>)
--->
-	(<s> ^talking <proc>)
-}
-
-# DECISION OPERATORS: HUMAN INTERACTION
-
-# continue talk
-sp {talker*propose*talk-continue
-	(state <s> ^name social ^substate general ^talking <proc>)
-	(<proc> ^substate <substate>)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name talking-continue ^substate <substate> ^process-link <proc>)
-}
-
-# SELECT HUMAN TO TALK
-
-# select stranger if we are looking at him
-sp {social*propose*talk-start
-	(state <s> ^name social ^substate general -^talking ^beliefs-stable.predicate <pred> ^beliefs <b>)
-	(<pred> ^name looking-at ^object <obj>)
-	(<obj> ^type human)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name talking-on-desire ^substate talk-llm ^process-args <a>)
-	(<a> ^object <obj>)
-}
-
-# reject talk if previous talk is not forgeted
-sp {social*preference*talk-start*reject-recent
-	(state <s> ^name social ^substate general ^operator <op> + ^predicates.process <proc>)
-	(<op> ^name talking-on-desire ^process-args.object <obj>)
-	(<proc> ^name talking-on-desire ^status succeed ^object <obj>)
--->
-	(<s> ^operator <op> -)
-}
-
-# reject talk human ignors-me sweetie 
-sp {social*preference*talk-start*reject-ignor-me
-	(state <s> ^name social ^substate general ^operator <op> + ^beliefs.predicate <pred>)
-	(<op> ^name talking-on-desire ^process-args.object <obj>)
-	(<pred> ^name ignors-me ^actor <obj>)
--->
-	(<s> ^operator <op> -)
-}
-
-# start is human satrted to say something
-sp {social*propose*talk-on-greeting
-	(state <s> ^name social ^substate general -^talking ^beliefs-stable.predicate <pred> ^io.input-link.sound.speech 1)
-	(<pred> ^name looking-at ^object <obj>)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name talking-on-request ^substate talk-llm ^process-args <a>)
-	(<a> ^object <obj>)
-}
+## ELABORATIONS
+#
+## elaborate talking process link
+#sp {social*elaborate*talk
+#	(state <s> ^name social ^substate general ^{<<|talking-on-desire| |talking-on-request|>>} <proc>)
+#-->
+#	(<s> ^talking <proc>)
+#}
+#
+## DECISION OPERATORS: HUMAN INTERACTION
+#
+## continue talk
+#sp {talker*propose*talk-continue
+#	(state <s> ^name social ^substate general ^talking <proc>)
+#	(<proc> ^substate <substate>)
+#-->
+#	(<s> ^operator <o> +, =)
+#   	(<o> ^name talking-continue ^substate <substate> ^process-link <proc>)
+#}
+#
+## SELECT HUMAN TO TALK
+#
+## select stranger if we are looking at him
+#sp {social*propose*talk-start
+#	(state <s> ^name social ^substate general -^talking ^beliefs-stable.predicate <pred> ^beliefs <b>)
+#	(<pred> ^name looking-at ^object <obj>)
+#	(<obj> ^type human)
+#-->
+#	(<s> ^operator <o> +, =)
+#   	(<o> ^name talking-on-desire ^substate talk-llm ^process-args <a>)
+#	(<a> ^object <obj>)
+#}
+#
+## reject talk if previous talk is not forgeted
+#sp {social*preference*talk-start*reject-recent
+#	(state <s> ^name social ^substate general ^operator <op> + ^predicates.process <proc>)
+#	(<op> ^name talking-on-desire ^process-args.object <obj>)
+#	(<proc> ^name talking-on-desire ^status succeed ^object <obj>)
+#-->
+#	(<s> ^operator <op> -)
+#}
+#
+## reject talk human ignors-me sweetie 
+#sp {social*preference*talk-start*reject-ignor-me
+#	(state <s> ^name social ^substate general ^operator <op> + ^beliefs.predicate <pred>)
+#	(<op> ^name talking-on-desire ^process-args.object <obj>)
+#	(<pred> ^name ignors-me ^actor <obj>)
+#-->
+#	(<s> ^operator <op> -)
+#}
+#
+## start is human satrted to say something
+#sp {social*propose*talk-on-greeting
+#	(state <s> ^name social ^substate general -^talking ^beliefs-stable.predicate <pred> ^io.input-link.sound.speech 1)
+#	(<pred> ^name looking-at ^object <obj>)
+#-->
+#	(<s> ^operator <o> +, =)
+#   	(<o> ^name talking-on-request ^substate talk-llm ^process-args <a>)
+#	(<a> ^object <obj>)
+#}
 
 #
 # SECURITY

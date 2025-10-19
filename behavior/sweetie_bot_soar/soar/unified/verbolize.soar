@@ -176,22 +176,6 @@ sp {verbolize*propose*emotion
 
 # SELECT AND PERFORM ANIMATION
 
-# select general animations
-sp {verbolize*elaborate*animation-general
-	(state <s> ^substate verbolize ^mem.joint-trajectory <anim>)
-	(<anim> ^tag talk general)
--->
-	(<s> ^animation <anim>)
-}
-
-# select all matching animations
-sp {verbolize*elaborate*animation-matching-tag
-	(state <s> ^substate verbolize ^args.animation-tag <tag> ^mem.joint-trajectory <anim>)
-	(<anim> ^tag talk <tag>)
--->
-	(<s> ^animation <anim>)
-}
-
 # animation-tag none disables animation: succeed it immediately
 sp {verbolize*propose*ditch-animation
 	(state <s> ^substate verbolize -^performing-animation ^args.animation-tag none ^process <proc>)
@@ -201,26 +185,41 @@ sp {verbolize*propose*ditch-animation
 	(<op> ^name ditch-animation ^type automatic ^priority 40 ^parent <proc> ^attribute animation-status ^link-value succeed)
 }
 
-# propose animations, agument process predicate if animation succeed
+# propose animations and add tags
 sp {verbolize*propose*animation
-	(state <s> ^substate verbolize -^performing-animation ^animation <anim> ^process <proc>)
+	(state <s> ^substate verbolize -^performing-animation)
 	(<proc> -^animation-status)
-	(<anim> ^name <animation-name>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name performing-animation ^substate flexbe ^animation <anim> ^process-args <a>)
-    (<a> ^behavior ExecuteJointTrajectory ^joint_trajectory <animation-name> ^result <r>)
-	(<r> ^status succeed invalid_pose failed ^parent <proc> ^attribute animation-status ^link-value succeed)
+	(<op> ^name performing-animation ^substate movement ^process-args <a> ^priority 30)
+    (<a> ^required-tag talk)
 }
 
-# elaborate is_relative ExecuteJointTrajectory parameter
-sp {verbolize*elaborate*say-execute-animation-is-relative
-	(state <s> ^substate verbolize ^operator <op> +)
-	(<op> ^name performing-animation ^process-args <args> ^animation.relative)
+# map animation tags to movement tags
+sp {verbolize*elaborate*animation-tags-map
+    (state <s> ^substate verbolize)
 -->
-	(<args> ^is_relative True)
+    (<s> ^animation-tag-map <m>)
+	(<m> ^animation-tag tag ^animation-required-tag required-tag ^animation-prohibit-tag prohibit-tag)
 }
 
+sp {verbolize*elaborate*animation-tags
+    (state <s> ^substate verbolize ^operator <op> + ^animation-tag-map <map> ^args.<from> <tag>)
+    (<op> ^name performing-animation ^process-args <a>)
+	(<map> ^<from> <to>)
+-->
+    (<a> ^<to> <tag>)
+}
+
+# mark animation finished when subrocess is terminated
+sp {verbolize*propose*animation-is-finished
+    (state <s> ^bottom-state 1 ^beliefs.event <ev>)
+    (<ev> ^name performing-animation ^substate movement ^reason {<<|terminated| |rejected|>>} ^process.subprocess-of <proc>)
+    (<proc> ^substate verbolize -^animation-status)
+-->
+    (<s> ^operator <op> +, =)
+    (<op> ^name verbolize-animation-is-finished ^type cognition automatic ^parent <proc> ^attribute animation-status ^link-value succeed)
+}
 
 # WAITING
 # TODO: correct implementation of parallel processe: both substates should be placed in stack
@@ -255,40 +254,11 @@ sp {verbolize*elaborate*waiting-subprocess
 # Utility:
 # focus on speaker --- 50
 # ditch aniamtion --- 40
-# perform aniamtion
-#     two matching tags --- 32
-#     one matching tags --- 31
-#     no  matching tags --- 30
+# perform aniamtion -- 30
 # perform text action --- 25
 # looking at speaker --- 20
 # waiting --- worst
 #
-
-# calculate animation priority: two tags
-sp {verbolize*elaborate*animation-two-tag-priority
-	(state <s> ^substate verbolize ^operator <op> + ^args <args>)
-	(<args> ^animation-tag <tag1> ^animation-tag {<> <tag1> <tag2>})
-	(<op> ^name performing-animation ^animation <anim>)
-	(<anim> ^tag <tag1> ^tag <tag2>)
--->
-	(<op> ^priority 32)
-}
-
-# calculate animation priority: one tag
-sp {verbolize*elaborate*animation-one-tag-priority
-	(state <s> ^substate verbolize ^operator <op> + ^args.animation-tag <tag>)
-	(<op> ^name performing-animation ^animation.tag <tag> -^priority 32)
--->
-	(<op> ^priority 31)
-}
-
-# calculate animation priority: no tags
-sp {verbolize*elaborate*animation-no-tag-priority
-	(state <s> ^substate verbolize ^operator <op> +)
-	(<op> ^name performing-animation -^priority 32 -^priority 31)
--->
-	(<op> ^priority 30)
-}
 
 # prefer operator with higher priority
 sp {verbolize*prefer*priority
