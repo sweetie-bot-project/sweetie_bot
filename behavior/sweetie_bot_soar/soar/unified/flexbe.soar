@@ -46,6 +46,12 @@ sp {flexbe*elaborate*add-porcess
 	(<op> ^type automatic ^add-process <proc>)
 }
 
+sp {flexbe*elaborate*interruptable
+	(state <s> ^substate flexbe ^superstate.operator.interruptable <mode>)
+-->
+	(<s> ^interruptable <mode>)
+}
+
 # DECISIONS
 
 # flexbe cmd in output link is present but not related to active process
@@ -55,7 +61,7 @@ sp {flexbe*propose*abort
 	(<cmd> ^process {<> <proc>} ^interruptable {<< hard soft >> <abort-type>} -^abort)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name abort-behavior ^type automatic ^parent <cmd> ^attribute abort ^link-value <abort-type>)
+	(<op> ^name abort-behavior ^type automatic ^parent <cmd> ^attribute abort ^link-value <abort-type> ^print |Abort behavior|)
 }
 
 
@@ -80,7 +86,7 @@ sp {flexbe*elaborate*behavior-params-flexbe-cmd
 
 # create output link command
 sp {flexbe*apply*start-behavior
-	(state <s> ^substate flexbe ^operator <op> ^io.output-link <ol> ^process <proc>)
+	(state <s> ^substate flexbe ^operator <op> -^interruptable ^io.output-link <ol> ^process <proc>)
 	(<op> ^name start-behavior ^behavior <bh> ^param <p>)
 -->
 	(<ol> ^flexbe <cmd>)
@@ -89,12 +95,14 @@ sp {flexbe*apply*start-behavior
 	(write |Execute FlexBe behavior | <bh> (crlf))
 }
 
-# create interruptability property (o-support)
 sp {flexbe*apply*start-behavior-intrruptable
-	(state <s> ^substate flexbe ^process <proc> ^superstate.operator.interruptable <mode> ^io.output-link.flexbe <cmd>)
-	(<cmd> ^process <proc>)
+	(state <s> ^substate flexbe ^operator <op> ^interruptable <mode> ^io.output-link <ol> ^process <proc>)
+	(<op> ^name start-behavior ^behavior <bh> ^param <p>)
 -->
-	(<cmd> ^interruptable <mode>)
+	(<ol> ^flexbe <cmd>)
+	(<cmd> ^name <bh> ^param <p> ^interruptable <mode>)
+	(<cmd> ^process <proc>)
+	(write |Execute FlexBe behavior | <bh> (crlf))
 }
 	
 # wait flexbe behavior 
