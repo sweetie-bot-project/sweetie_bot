@@ -16,6 +16,7 @@ source animation.soar
 source movement.soar
 source lookat2.soar
 source attention.soar
+source joystick-proto3.soar
 # talk
 source verbolize.soar
 source verbolize-llm.soar

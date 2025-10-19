@@ -40,6 +40,26 @@ sp {movement*propose*wait
 }
 
 #
+# JOYSTICK
+#
+
+# execute joystick commands
+sp {obey*propose*joystick
+	(state <s> ^name obey ^substate general ^io.input-link.joystick.pressed ^process <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name joystick-control ^substate joystick ^process-link <proc>)
+}
+
+sp {obey*propose*wait
+	(state <s> ^name obey ^substate general ^joystick-control <proc>)
+	(<proc> ^substate <substate>)
+-->
+	(<s> ^operator <o> +, =)
+   	(<o> ^name wait-proccess ^substate <substate> ^drive obey ^process-link <proc>)
+}
+
+#
 # CURIOSITY DRIVE
 #
 
