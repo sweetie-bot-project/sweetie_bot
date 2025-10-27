@@ -49,7 +49,7 @@ class ExecuteSetPoseSM(Behavior):
 
 	def create(self):
 		# x:207 y:429, x:737 y:257
-		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
+		_state_machine = OperatableStateMachine(outcomes=['succeed', 'failed'])
 		_state_machine.userdata.set_supports = self.set_supports
 
 		# Additional creation code can be added inside the following tags
@@ -68,7 +68,7 @@ class ExecuteSetPoseSM(Behavior):
 			# x:459 y:441
 			OperatableStateMachine.add('PublishSupports',
 										PublisherState(topic='motion/aggregator_ref/in_supports', msg_type=SupportState, value={'name':['leg1','leg2','leg3','leg4'], 'support':[1.0,1.0,1.0,1.0]}),
-										transitions={'done': 'finished', 'failed': 'failed'},
+										transitions={'done': 'succeed', 'failed': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off})
 
 			# x:513 y:354
@@ -80,7 +80,7 @@ class ExecuteSetPoseSM(Behavior):
 			# x:399 y:292
 			OperatableStateMachine.add('CheckSetSupports',
 										DecisionState(outcomes=['true', 'false'], conditions=lambda x: 'true' if x else 'false'),
-										transitions={'true': 'Wait', 'false': 'finished'},
+										transitions={'true': 'Wait', 'false': 'succeed'},
 										autonomy={'true': Autonomy.Off, 'false': Autonomy.Off},
 										remapping={'input_value': 'set_supports'})
 

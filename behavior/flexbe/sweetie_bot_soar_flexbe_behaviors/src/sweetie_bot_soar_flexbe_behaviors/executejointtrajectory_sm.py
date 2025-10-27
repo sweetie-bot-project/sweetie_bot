@@ -9,10 +9,8 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_states.decision_state import DecisionState
-from sweetie_bot_flexbe_states.check_joint_state import CheckJointState
 from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from sweetie_bot_flexbe_states.execute_joint_trajectory_relative import ExecuteJointTrajectoryRelative
-from sweetie_bot_flexbe_states.set_joint_state import SetJointState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 import rospy
@@ -72,18 +70,6 @@ class ExecuteJointTrajectorySM(Behavior):
 										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param=self.joint_trajectory, trajectory_ns='saved_msgs/joint_trajectory'),
 										transitions={'success': 'succeed', 'partial_movement': 'invalid_pose', 'invalid_pose': 'invalid_pose', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
-
-			# x:351 y:333
-			OperatableStateMachine.add('CheckHeadPose',
-										CheckJointState(outcomes=['head_nominal', 'unknown'], pose_ns='saved_msgs/joint_state', tolerance=0.17, joint_topic="joint_states", timeout=1.0),
-										transitions={'head_nominal': 'AnmationAbsolute', 'unknown': 'SetHeadNominal'},
-										autonomy={'head_nominal': Autonomy.Off, 'unknown': Autonomy.Off})
-
-			# x:576 y:398
-			OperatableStateMachine.add('SetHeadNominal',
-										SetJointState(controller='motion/controller/joint_state_head', pose_param='head_nominal', pose_ns='saved_msgs/joint_state', tolerance=0.03, timeout=10.0, joint_topic="joint_states"),
-										transitions={'done': 'AnmationAbsolute', 'failed': 'failed', 'timeout': 'invalid_pose'},
-										autonomy={'done': Autonomy.Off, 'failed': Autonomy.Off, 'timeout': Autonomy.Off})
 
 			# x:756 y:40
 			OperatableStateMachine.add('AnimationRelative',

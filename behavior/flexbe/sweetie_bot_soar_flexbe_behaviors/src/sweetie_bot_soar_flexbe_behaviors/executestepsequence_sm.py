@@ -8,7 +8,6 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
-from sweetie_bot_flexbe_states.execute_joint_trajectory import ExecuteJointTrajectory
 from sweetie_bot_flexbe_states.execute_step_sequence import ExecuteStepSequence
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
@@ -58,13 +57,7 @@ class ExecuteStepSequenceSM(Behavior):
 			# x:127 y:182
 			OperatableStateMachine.add('StepSequence',
 										ExecuteStepSequence(controller='motion/controller/step_sequence', trajectory_param=self.action_name, trajectory_ns='saved_msgs/step_sequence'),
-										transitions={'success': 'succeed', 'partial_movement': 'Crouch', 'invalid_pose': 'Crouch', 'failure': 'failed'},
-										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
-
-			# x:412 y:178
-			OperatableStateMachine.add('Crouch',
-										ExecuteJointTrajectory(action_topic='motion/controller/joint_trajectory', trajectory_param='body_walk_begin', trajectory_ns='saved_msgs/joint_trajectory'),
-										transitions={'success': 'StepSequence', 'partial_movement': 'invalid_pose', 'invalid_pose': 'invalid_pose', 'failure': 'failed'},
+										transitions={'success': 'succeed', 'partial_movement': 'invalid_pose', 'invalid_pose': 'invalid_pose', 'failure': 'failed'},
 										autonomy={'success': Autonomy.Off, 'partial_movement': Autonomy.Off, 'invalid_pose': Autonomy.Off, 'failure': Autonomy.Off})
 
 
