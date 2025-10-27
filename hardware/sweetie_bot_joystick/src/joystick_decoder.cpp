@@ -28,7 +28,7 @@ class JoyDecoderBase
 		void callbackJoyMsg(const sensor_msgs::Joy::ConstPtr& msg);
 
 	public:
-		JoyDecoderBase(ros::NodeHandle& nh, const YAML::Node& node);
+		JoyDecoderBase(ros::NodeHandle& nh, const std::string& name, const YAML::Node& node);
 		virtual ~JoyDecoderBase() = default;
 
 		bool isEnabled() { return is_enabled_; }
@@ -36,9 +36,9 @@ class JoyDecoderBase
 		void setEnabled(bool enabled);
 };
 
-JoyDecoderBase::JoyDecoderBase(ros::NodeHandle& nh, const YAML::Node& node)
+JoyDecoderBase::JoyDecoderBase(ros::NodeHandle& nh, const std::string& name, const YAML::Node& node)
 {
-	set_enable_sub_ = nh.subscribe(node["enable_group"].as<std::string>(), 1, &JoyDecoderBase::callbackSetEnable, this);
+	set_enable_sub_ = nh.subscribe(name, 1, &JoyDecoderBase::callbackSetEnable, this);
 	is_enabled_ = false;
 	joy_sub_ = nh.subscribe(node["joy_topic"].as<std::string>(), 1, &JoyDecoderBase::callbackJoyMsg, this);
 }
@@ -79,7 +79,7 @@ class KeyPressed : public JoyDecoderBase
 		void decodeHook(const sensor_msgs::Joy& msg) override;
 
 	public:
-		KeyPressed(ros::NodeHandle& nh, const YAML::Node& node);
+		KeyPressed(ros::NodeHandle& nh, const std::string& name, const YAML::Node& node);
 };
 
 void KeyPressed::addKey(KeyMapping& key_map, int key, const std::string& key_value) {
@@ -99,8 +99,8 @@ void KeyPressed::addKey(KeyMapping& key_map, int key, const std::string& key_val
 }
 
 
-KeyPressed::KeyPressed(ros::NodeHandle& nh, const YAML::Node& node) :
-		JoyDecoderBase(nh, node)
+KeyPressed::KeyPressed(ros::NodeHandle& nh, const std::string& name, const YAML::Node& node) :
+		JoyDecoderBase(nh, name, node)
 {
 	// extract key_map and fill key_set
 	YAML::Node map_node = node["buttons"];
@@ -183,7 +183,7 @@ class JointAxes: public JoyDecoderBase
 		void decodeHook(const sensor_msgs::Joy& msg) override;
 		void enableHook() override;
 	public:
-		JointAxes(ros::NodeHandle& nh, const YAML::Node& node);
+		JointAxes(ros::NodeHandle& nh, const std::string& name, const YAML::Node& node);
 };
 
 
@@ -211,8 +211,8 @@ void JointAxes::addKey(KeyMapping& key_map, int key, const YAML::Node& node) {
 	joints_.position[joint_index] = key_info.speed ? 0.5*(key_info.min + key_info.max) : key_info.min;
 }
 
-JointAxes::JointAxes(ros::NodeHandle& nh, const YAML::Node& node) :
-		JoyDecoderBase(nh, node)
+JointAxes::JointAxes(ros::NodeHandle& nh, const std::string& name, const YAML::Node& node) :
+		JoyDecoderBase(nh, name, node)
 {
 	// extract key_map and fill key_set
 	YAML::Node map_node = node["buttons"];
@@ -298,10 +298,11 @@ int main(int argc, char **argv)
 		// parse aconfiguration
 		YAML::Node node = YAML::Load(yaml_config);
 		for(YAML::iterator it = node.begin(); it != node.end(); it++) {
-			std::string decoder_type = it->first.as<std::string>();
+			std::string name = it->first.as<std::string>();
+			std::string decoder_type = it->second["type"].as<std::string>();
 			// create corresponding decoder
-			if (decoder_type == "KeyPressed") decoders.emplace_back( new JoyDecoder::KeyPressed(nh, it->second) );
-			else if (decoder_type == "JointAxes") decoders.emplace_back( new JoyDecoder::JointAxes(nh, it->second) );
+			if (decoder_type == "KeyPressed") decoders.emplace_back( new JoyDecoder::KeyPressed(nh, name, it->second) );
+			else if (decoder_type == "JointAxes") decoders.emplace_back( new JoyDecoder::JointAxes(nh, name, it->second) );
 			else {
 				throw YAML::Exception(YAML::Mark::null_mark(), "JoystickDecoder: unknown decoder_type: " + decoder_type);
 			}
