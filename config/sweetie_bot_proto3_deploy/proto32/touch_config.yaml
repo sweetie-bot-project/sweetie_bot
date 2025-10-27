@@ -1,5 +1,5 @@
-KeyPressed:
-    enable_group: "buttons"
+buttons:
+    type: KeyPressed
     joy_topic: "/touch_raw"
     key_topic: "/touch"
     buttons:

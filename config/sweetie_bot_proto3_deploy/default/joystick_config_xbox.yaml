@@ -1,12 +1,12 @@
-KeyPressed:
-    enable_group: "buttons"
+buttons:
+    type: KeyPressed
     joy_topic: "joystick"
     key_topic: "keys_pressed"
     buttons:
         0: "3"
         1: "2"
         3: "4"
-        4: "0"
+        4: "1"
         6: "L1"
         7: "R1"
         10: "select"
@@ -16,22 +16,22 @@ KeyPressed:
         1: "tumble"
         2: "tumble"
         3: "tumble"
-        4: "R2"
-        5: "L2"
-        6: "right"
-        7: "down"
+        6: "left"
+        7: "up"
     axes_negative:
         0: "tumble"
         1: "tumble"
         2: "tumble"
         3: "tumble"
-        6: "left"
-        7: "up"
-JointAxes:
-    enable_group: "eyes"
+        4: "R2"
+        5: "L2"
+        6: "right"
+        7: "down"
+eyes:
+    type: JointAxes
     joy_topic: "joystick"
     joints_topic: "eyes_joints_ref"
-    buttons: { }
+    buttons: {}
     axes:
         0:
             joint: "eyes_yaw"
@@ -43,10 +43,11 @@ JointAxes:
             speed: 0.0
             min: -1.2
             max: 1.2
-JointAxes:
-    enable_group: "head"
+head:
+    type: JointAxes
     joy_topic: "joystick"
     joints_topic: "head_joints_ref"
+    buttons: {}
     axes:
         4:
             joint: "joint51"

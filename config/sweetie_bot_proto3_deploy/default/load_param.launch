@@ -36,5 +36,7 @@
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/soar.yaml" ></rosparam>
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/vision.yaml" ></rosparam>
 	<rosparam command="load" file="$(find sweetie_bot_proto3_deploy)/default/hmi_robot.yaml" ></rosparam>
+	<!-- joystick decoders -->
 	<param name="conf_file/joystick_config_yaml" textfile="$(find sweetie_bot_proto3_deploy)/default/joystick_config.yaml" ></param>
+	<param name="conf_file/touch_config_yaml" textfile="$(find sweetie_bot_proto3_deploy)/proto32/touch_config.yaml" ></param>
 </launch>
