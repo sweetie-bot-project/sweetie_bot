@@ -92,7 +92,7 @@ sp {initialization*apply*joint-trajectory
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12> <c13>)
+	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12> <c13> <c14> <c15> <c16> <c17> <c18> <c19>)
 	(<c1> ^name head_node ^tag confirmation greeting pleased joy neutral ^tag general ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 2.0)
 	(<c2> ^name head_shake ^tag rejection disappointed anger sad ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 3.0)
 	(<c3> ^name head_suprised ^tag question surprise ^tag general ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 3.0)
@@ -106,6 +106,12 @@ sp {initialization*apply*joint-trajectory
 	(<c11> ^name enjoy_right_cheek_scratch ^tag cheek_right ^tag talk ^relative yes ^start-pose head_nominal ^resource head ^duration 2.0)
 	(<c12> ^name enjoy_right_temple_scratch ^tag temple_right ^tag talk ^relative yes ^start-pose head_nominal ^resource head ^duration 3.0)
 	(<c13> ^name continue_enjoy_scratch ^tag tactile_joy ^tag talk ^relative yes ^resource head ^duration 3.0)
+	(<c14> ^name body_crouch_begin ^tag pose ^start-pose body_nominal ^end-pose body_crouched ^resource body ^duration 1.5)
+	(<c15> ^name body_crouch_end ^tag pose ^start-pose body_crouched ^end-pose body_nominal ^resource body ^duration 1.5)
+	(<c16> ^name body_walk_begin ^tag pose ^start-pose body_nominal ^end-pose body_walk ^resource body ^duration 1.0)
+	(<c17> ^name body_walk_end ^tag pose ^start-pose body_walk ^end-pose body_nominal ^resource body ^duration 1.0)
+	(<c18> ^name body_zero_crouch_begin ^tag pose ^start-pose body_zero ^end-pose body_zero_crouched ^resource body ^duration 1.5)
+	(<c19> ^name body_zero_crouch_end ^tag pose ^start-pose body_zero_crouched ^end-pose body_zero ^resource body ^duration 1.5)
 }
 
 sp {initialization*apply*animation-tag-emotion-mapping
