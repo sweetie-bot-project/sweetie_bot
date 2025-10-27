@@ -22,7 +22,7 @@
 #
 # select best-matched movement to execute.
 #
-# (<op> ^name @name@ ^substate set-pose ^process-args <args>)
+# (<op> ^name @name@ ^substate move-to-pose ^process-args <args>)
 #   (<args> ^pose-name <name>)
 # 
 # assume pose with name <name>.
@@ -32,44 +32,58 @@
 # * success -- movement was executed.
 # * failed -- failure reason: unknown trajectory/pose, resources unavailabe, unable to execute movement.
 #
+# GLOABL ELABORATIONS
+#
+# (<s> ^beliefs.current-pose <pose1> ... )
+#
+# Current poses for head and body, derived poses.
+#
 # SIDE EFFECTS
 #
 # Processes:
 #
 # * (^name <name> ^substate movement ^movement-name <name> ^state <state>) --- executing movement
-# * (^name <name> ^substate set-pose ^pose-name <mname>) --- assuming pose
+# * (^name <name> ^substate move-to-pose ^pose-name <mname>) --- assuming pose
 #
 # Events:
 #
-
-# TODO: state: first-attemp, force-set-pose, seccond-attempt
-# TODO: compound poses suppport during movement planning
-# ideas: 
-# 1) compund poses db 
-# 2) final pose and current traget pose
-# 3) move to target pose
-
+# TODO: prevent infinite loop ExecuteSetPose succeed without pose change (check flexbe behavior)
+# TODO: split to two files
+# TODO: more stable cognition rules (exclude mark-processed)
 	
+
+# COGNITION ELABORATIONS
+
+# elaborate current pose
+sp {elaborate*beliefs*current-pose
+    (state <s> ^top-state 1 ^io.input-link.{<<|head| |body|>>}.pose {<> unknown <current-pose>} ^beliefs <b>)
+-->
+    (<b> ^current-pose <current-pose>)
+}
+
+# elaborate compound poses
+# TODO: universal compound poses
+sp {elaborate*beliefs*current-pose-nominal 
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^current-pose head_nominal body_nominal)
+-->
+	(<b> ^current-pose nominal)
+}
+
+sp {elaborate*beliefs*current-pose-zero
+    (state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^current-pose head_nominal body_zero)
+-->
+    (<b> ^current-pose zero)
+}
 
 # ELABORATIONS
 
-# elaborate current pose
+# elaborate current pose in substate
 sp {elaborate*movement*current-pose
-    (state <s> ^substate {<<|movement| |move-to-pose|>>} ^io.input-link.{<<|head| |body|>>}.pose {<> unknown <current-pose>})
+    (state <s> ^substate {<<|movement| |move-to-pose|>>} ^beliefs.current-pose <current-pose>)
 -->
     (<s> ^current-pose <current-pose>)
-}
-
-# elaborate noinal pose
-sp {elaborate*movement*current-pose-nominal 
-    (state <s> ^substate {<<|movement| |move-to-pose|>>} ^current-pose head_nominal body_nominal)
--->
-    (<s> ^current-pose nominal)
-}
-sp {elaborate*movement*current-pose-zero
-    (state <s> ^substate {<<|movement| |move-to-pose|>>} ^current-pose head_nominal body_zero)
--->
-    (<s> ^current-pose zero)
 }
 
 # find trajector by name 
@@ -81,9 +95,30 @@ sp {elaborate*movement*movement-by-name
     (<frame> ^trajectory <tr> ^args <args> ^type <type>)
 }
 
+# elaborate target poses
+sp {elaborate*move-to-pose*taget-pose-main
+	(state <s> ^substate move-to-pose ^args.pose-name <target>)
+-->
+	(<s> ^target-pose <target> ^target-pose-main <target>)
+}
+
+# elaborate compound poses
+# TODO: universal compound poses
+sp {elaborate*move-to-pose*taget-pose-zero
+	(state <s> ^substate move-to-pose ^traget-pose zero)
+-->
+	(<s> ^target-pose body_zero head_nominal)
+}
+
+sp {elaborate*move-to-pose*taget-pose-nominal
+	(state <s> ^substate move-to-pose ^traget-pose nominal)
+-->
+	(<s> ^target-pose body_nominal head_nominal)
+}
+
 # find trajectory by start-end pose
 sp {elaborate*move-to-pose*movement-by-start-end-pose
-    (state <s> ^substate move-to-pose ^args.pose-name <target-pose> ^mem <m> ^current-pose <current-pose>)
+    (state <s> ^substate move-to-pose ^target-pose <target-pose> ^mem <m> ^current-pose <current-pose>)
     (<m> ^{<<|joint-trajectory| |step-sequence| |compound-action|>> <type>} <tr>)
     (<tr> ^start-pose <current-pose> ^end-pose {<> <current-pose> <target-pose>})
 -->
@@ -149,7 +184,7 @@ sp {propose*movement*execute-movement-from-start-pose
 	(<op> ^name execute-movement ^substate flexbe ^trajectory <tr> ^process-args <args>)
 }
 
-# if movement is relative execute then execute it
+# if movement is relative then execute it
 sp {propose*movement*execute-movement-relative
     (state <s> ^substate movement ^movement <mv>)
     (<mv> ^trajectory <tr> ^args <args> ^relative)
@@ -158,7 +193,7 @@ sp {propose*movement*execute-movement-relative
 	(<op> ^name execute-movement ^substate flexbe ^trajectory <tr> ^process-args <args>)
 }
 
-# if start pose is different the change it to start pose
+# if start pose is different from  trajectory start pose then change it to start pose
 sp {propose*movement*execute-movement-to-start-pose
     (state <s> ^substate movement ^movement.trajectory.start-pose <start-pose>)
 -->
@@ -169,7 +204,7 @@ sp {propose*movement*execute-movement-to-start-pose
 
 # fail if movement found but no action can be executed
 sp {propose*movement*failed-no-action
-    (state <s> ^substate movement -^movement ^process <proc>)
+    (state <s> ^substate movement ^movement ^process <proc>)
 -->
     (<s> ^operator <op> +, <)
 	(<op> ^name failed-on-unavailable ^type automatic ^finish-process <proc> ^finish-status failed)
@@ -202,6 +237,14 @@ sp {propose*move-to-pose*set-pose
     (<s> ^operator <op> +, =)
 	(<op> ^name set-pose ^substate flexbe ^pose <st> ^process-args <a>)
     (<a> ^behavior ExecuteSetPose ^pose <target-pose>)
+}
+
+# fail if no action can be executed
+sp {propose*move-to-pose*failed-no-action
+	(state <s> ^substate move-to-pose ^process <proc>)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name failed-on-unavailable ^type automatic ^finish-process <proc> ^finish-status failed)
 }
 
 # PREFERENCES 
@@ -306,20 +349,32 @@ sp {prefer*movement*reject-on-forced-set-pose
 
 # PREFERENCES: move-to-pose
 
-# prefer short trajectories
-sp {prefer*move-top-pose*prefer-short-movements
-    (state <s> ^substate move-to-pose ^operator <op1> + {<> <op1> <op2>} +)
-    (<op1> ^name execute-movement ^trajectory.duration <d1>)
-    (<op2> ^name execute-movement ^trajectory.duration {> <d1>})
+# prefer trajectories which coresponds main target pose
+sp {prefer*move-top-pose*prefer-desired-end-pose
+    (state <s> ^substate move-to-pose ^operator <op1> + {<> <op1> <op2>} + ^target-pose-main <main-target>)
+    (<op1> ^name execute-movement ^trajectory.end-pose <main-target>)
+    (<op2> ^name execute-movement ^trajectory.end-pose {<> <main-target>})
 -->
     (<s> ^operator <op1> > <op2>)
 }
 
-# prefer fewer resources for set pose
+# prefer short trajectories
+sp {prefer*move-top-pose*prefer-short-movements
+	(state <s> ^substate move-to-pose ^operator <op1> + {<> <op1> <op2>} +)
+	(<op1> ^name execute-movement ^trajectory <tr1>) 
+	(<tr1> ^end-pose <target> ^duration <d1>)
+	(<op2> ^name execute-movement ^trajectory <tr2>) 
+	(<tr2> ^end-pose <target> ^duration {> <d1>})
+-->
+	(<s> ^operator <op1> > <op2>)
+}
+
+
+# prefer set pose in one stage
 sp {prefer*move-top-pose*prefer-fwewer-resources
-    (state <s> ^substate move-to-pose ^operator <op1> + {<> <op1> <op2>} +)
-    (<op1> ^name set-pose ^pose.resource <res>)
-    (<op2> ^name set-pose ^pose.resource {<> <res>})
+    (state <s> ^substate move-to-pose ^operator <op1> + {<> <op1> <op2>} + ^target-pose-main <target>)
+    (<op1> ^name set-pose ^pose.name  <target>)
+    (<op2> ^name set-pose ^pose.name {<> <target>})
 -->
     (<s> ^operator <op1> > <op2>)
 }
@@ -386,32 +441,24 @@ sp {propose*movement*move-to-pose-finished
 
 # COGNITION RULES: move-to-pose
 
-# move-to-pose succeed if target pose is assumed when subprocess is finished
-#sp {propose*move-to-pose*succeeed
-#    (state <s> ^bottom-state 1 ^beliefs.process <proc> ^io.input-link.pose.pose <pose>)
-#    (<proc> ^name move-to-pose ^name <pose>)
-#-->
-#    (<s> ^operator <op> +, =)
-#    (<op> ^name move-to-pose-succeed ^type automatic cognition ^finish-process <proc> ^finish-status succeed)
-#}
 sp {propose*move-to-pose*succeed
-    (state <s> ^bottom-state 1 ^beliefs.event <ev> ^io.input-link.{<<|body| |head|>>}.pose <current-pose>)
-    (<ev> ^name {<<|execute-movement| |set-pose|>>} ^reason terminated ^process.subprocess-of <proc> -^processed move-to-pose-succeed)
-    (<proc> ^substate move-to-pose ^pose-name <current-pose>)
+	(state <s> ^bottom-state 1 ^beliefs <b>)
+	(<b> ^event <ev> ^current-pose <current-pose>)
+	(<ev> ^name {<<|execute-movement| |set-pose|>>} ^reason terminated ^process.subprocess-of <proc> -^processed move-to-pose-succeed)
+	(<proc> ^substate move-to-pose ^pose-name <current-pose>)
 -->
-    (<s> ^operator <op> +, =)
-    (<op> ^name move-to-pose-succeed ^type automatic cognition ^finish-process <proc> ^finish-status succeed ^mark-processed <ev>)
+	(<s> ^operator <op> +, =)
+	(<op> ^name move-to-pose-succeed ^type automatic cognition ^finish-process <proc> ^finish-status succeed ^mark-processed <ev>)
 }
 
-# move-to-pose failed if target pose is not assumed when subprocess if finished
+# move-to-pose failed if any subacrion is failed
+# TODO: remove this rule? 
 sp {propose*move-to-pose*failed
-    (state <s> ^bottom-state 1 ^beliefs.event <ev> ^io.input-link <il>)
-    (<ev> ^name {<<|execute-movement| |set-pose|>>} ^reason terminated ^process.subprocess-of <proc> -^processed move-to-pose-failed)
-    (<proc> ^substate move-to-pose ^pose-name <target-pose>)
-    -(<il> ^body.pose <target-pose>)
-    -(<il> ^head.pose <target-pose>)
+	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
+	(<ev> ^name {<<|execute-movement| |set-pose|>>} ^reason terminated ^status {<<|failed| |invalid_pose|>>} ^process.subprocess-of <proc> -^processed move-to-pose-failed)
+	(<proc> ^substate move-to-pose)
 -->
-    (<s> ^operator <op> +, =)
-    (<op> ^name move-to-pose-failed ^type automatic cognition ^finish-process <proc> ^finish-status failed ^mark-processed <ev>)
+	(<s> ^operator <op> +, =)
+	(<op> ^name move-to-pose-failed ^type automatic cognition ^finish-process <proc> ^finish-status failed ^mark-processed <ev>)
 }
 
