@@ -106,4 +106,4 @@ def get_classification_result():
     '''
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host=app.config['HOST'], port=app.config['PORT'])
