@@ -39,8 +39,8 @@ sp {joystick*elaborate*key-maps-step-sequence
 	(state <s> ^substate joystick)
 -->
 	(<s> ^mapping <m1> <m2> <m3> <m4> <m5> <m6>)
-	(<m1> ^key |up| ^type movement ^movement-name |trot_forward15|)
-	(<m2> ^key |down| ^type movement ^movement-name |trot_backward15|)
+	(<m1> ^key |up| ^type movement ^movement-name |trot_forward30|)
+	(<m2> ^key |down| ^type movement ^movement-name |trot_backward30|)
 	(<m3> ^key |left| ^type movement ^movement-name |trot_rot_left90|)
 	(<m4> ^key |right| ^type movement ^movement-name |trot_rot_right90|)
 	(<m5> ^key |left| |up| ^type movement ^movement-name |trot_rot_left45|)

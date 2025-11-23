@@ -65,13 +65,17 @@ sp {initialization*apply*step-sequence
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^step-sequence <c1> <c2> <c3> <c4> <c5> <c6>)
+	(<m> ^step-sequence <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10>)
 	(<c1> ^name trot_forward15 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
 	(<c2> ^name trot_backward15 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
 	(<c3> ^name trot_rot_left45 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 4.0 ^resource body)
 	(<c4> ^name trot_rot_right45 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 4.0 ^resource body)
 	(<c5> ^name trot_rot_left90 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
 	(<c6> ^name trot_rot_right90 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
+	(<c7> ^name trot_forward30 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
+	(<c8> ^name trot_backward30 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
+	(<c9> ^name trot_forward23 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
+	(<c10> ^name trot_backward23 ^tag walking ^start-pose body_walk ^end-pose body_walk ^duration 7.0 ^resource body)
 }
 
 sp {initialization*apply*joint-state
