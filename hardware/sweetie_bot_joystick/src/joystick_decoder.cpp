@@ -252,7 +252,7 @@ void JointAxes::decodeKey(KeyMapping& key_map, int key, double value, double dt)
 		}
 		else {
 			if (value != 0.0) {
-				double pos = joints_.position[ki.index] + ki.speed*dt;
+				double pos = joints_.position[ki.index] + value*ki.speed*dt;
 				if (pos < ki.min) pos = ki.min;
 				if (pos > ki.max) pos = ki.max;
 				joints_.position[ki.index] = pos;
