@@ -24,7 +24,7 @@
 
 # derive drives which should be excluded beacuse they are considered in superstate
 sp {general*elaborate*exclude-drives
-	(state <s> ^substate general ^superstate.{<<|drive-active| |drive-exclude|>>} <d>)
+	(state <s>  ^superstate.{<<|drive-active| |drive-exclude|>>} <d>)
 -->
 	(<s> ^drive-exclude <d>)
 }
@@ -82,4 +82,5 @@ sp {general*propose*wait
 	(<s> ^operator <op> +, <)
 	(<op> ^name waiting ^substate wait)
 }
+
 

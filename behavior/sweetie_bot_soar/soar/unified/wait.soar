@@ -40,12 +40,41 @@ sp {wait*elaborate*wait-processes-to-non-wait-state
 	(<s> ^wait-process <proc>)
 }
 
+# exclude all drives
+sp {wait*elaborate*termainl
+	(state <s> ^substate wait ^superstate.operator.exclusive)
+-->
+	(<s> ^wait-exclusive 1)
+}
+
+# check there any drives to be selected
+sp {wait*elaborate*possible-drive
+	(state <s> ^substate wait ^mem.drive <d> -^drive-exclude <d> -^wait-exclusive)
+-->
+	(<s> ^drive-possible <d>)
+}
 
 # DECISIONS
 
-# do nothing if not process to wait
+# contiune execcution of one ыгиprocess if it is active
+sp {wait*propose*wait-process-continue
+	(state <s> ^substate wait ^wait-process <proc> ^beliefs.process <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name wait-continue-process ^process-link <proc>)
+}
+
+# switch to next drive if it is possible
+sp {wait*propose*wait-process-top-level
+	(state <s> ^substate wait -^wait-process ^drive-possible <d>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name top-level-goal)
+}
+
+# do nothing if not process to wait and no drives is available
 sp {wait*propose*wait-behavior-create
-	(state <s> ^substate wait -^wait-process ^io.output-link <ol>)
+	(state <s> ^substate wait -^wait-process -^drive-possible ^io.output-link <ol>)
 	(<ol> -^nop)
 -->
 	(<s> ^operator <op> +)
@@ -61,10 +90,3 @@ sp {wait*propose*wait-behavior-cycle
    	(<op> ^name wait-behavior-cycle ^type automatic ^parent <cmd> ^attribute cycle ^remove-value <cycle> ^link-value (+ <cycle> 1))
 }
 
-# contiune execcution of one process if it is active
-sp {wait*propose*wait-process
-	(state <s> ^substate wait ^wait-process <proc> ^beliefs.process <proc>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name wait-continue-process ^process-link <proc>)
-}
