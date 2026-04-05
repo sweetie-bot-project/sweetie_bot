@@ -32,6 +32,14 @@
 
 # ELABORATIONS
 
+# TODO: split eyes and head
+
+sp {look-at*elaborate*resources
+	(state <s> ^substate look-at)
+-->
+	(<s> ^required-resource head)
+}
+
 sp {look-at*elaborate*my-look-at-cmd
 	(state <s> ^substate look-at ^args.object <obj> ^io.output-link.look-at <cmd>)
 	(<obj> ^label <label> ^type <type>)

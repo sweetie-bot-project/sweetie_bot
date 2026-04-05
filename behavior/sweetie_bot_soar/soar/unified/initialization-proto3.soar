@@ -30,7 +30,7 @@ sp {initialization*apply*drives
 	(<d3> ^name security ^activation 0 ^importance 10)
 	(<d4> ^name curiosity ^activation 0 ^importance 5)
 	(<d5> ^name social ^activation 0 ^importance 6)
-	(<d6> ^name dummy ^activation 0 ^importance 11)
+	(<d6> ^name comfort ^activation 0 ^importance 1)
 }
 
 sp {initialization*apply*flexbe-commands
@@ -46,7 +46,6 @@ sp {initialization*apply*flexbe-commands
 	(<c4> ^name ExecuteJointTrajectoryAndSay ^param joint_trajectory text text_delay is_relative lang)
 	(<c5> ^name ExecuteSetPose ^param pose)
 }
-
 
 sp {initialization*apply*compound*action
 	(state <s> ^name initialization ^operator <op> ^mem <m>)

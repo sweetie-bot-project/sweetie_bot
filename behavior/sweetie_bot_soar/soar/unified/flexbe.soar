@@ -38,6 +38,13 @@
 
 # ELABORATIONS
 
+# fexbe resource is always required
+sp {flexbe*elaborate*required-resources
+	(state <s> ^substate flexbe)
+-->
+	(<s> ^required-resource flexbe)
+}
+
 # add process if any action is performed
 sp {flexbe*elaborate*add-porcess
 	(state <s> ^substate flexbe ^process-status pending ^operator <op> + ^process <proc>)

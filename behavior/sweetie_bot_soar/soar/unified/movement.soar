@@ -193,6 +193,14 @@ sp {propose*movement*execute-movement-relative
 	(<op> ^name execute-movement ^substate flexbe ^trajectory <tr> ^process-args <args>)
 }
 
+# add resources 
+sp {elaborate*movevent*movement-resource
+    (state <s> ^substate movement ^operator <op> +)
+	(<op> ^name execute-movement ^trajectory.resource <res>)
+-->
+    (<op> ^required-resource <res>)
+}
+
 # if start pose is different from  trajectory start pose then change it to start pose
 sp {propose*movement*execute-movement-to-start-pose
     (state <s> ^substate movement ^movement.trajectory.start-pose <start-pose>)
@@ -222,6 +230,13 @@ sp {propose*move-to-pose*pose-to-pose
 	(<op> ^name execute-movement ^substate flexbe ^trajectory <tr> ^process-args <a>)
 }
 
+sp {propose*move-to-pose*pose-to-pose-resource
+    (state <s> ^substate move-to-pose ^operator <op> +)
+	(<op> ^name execute-movement ^trajectory.resource <res>)
+-->
+    (<op> ^required-resource <res>)
+}
+
 sp {propose*move-to-pose*pose-to-pose-continue
     (state <s> ^substate move-to-pose ^execute-movement <proc>)
 -->
@@ -239,6 +254,13 @@ sp {propose*move-to-pose*set-pose
     (<a> ^behavior ExecuteSetPose ^pose <target-pose>)
 }
 
+sp {propose*move-to-pose*set-pose-resources
+    (state <s> ^substate move-to-pose ^operator <op> +)
+	(<op> ^name set-pose ^pose.resource <res>)
+-->
+    (<op> ^required-resource <res>)
+}
+
 # fail if no action can be executed
 sp {propose*move-to-pose*failed-no-action
 	(state <s> ^substate move-to-pose ^process <proc>)
@@ -253,9 +275,8 @@ sp {propose*move-to-pose*failed-no-action
 
 # reject movement selection if corresponding resource is unavailable
 sp {prefer*movement*choice-reject-unavailable
-    (state <s> ^substate movement ^operator <op> + ^beliefs.predicate <pred>)
+    (state <s> ^substate movement ^operator <op> + ^blocked-resource <res>)
     (<op> ^name choose-movement ^trajectory.resource <res>)
-    (<pred> ^name unavailable-resource ^resource <res>)
 -->
     (<s> ^operator <op> -)
 }
@@ -321,14 +342,7 @@ sp {prefer*momvemnt*start-pose-is-current
 
 ### movememnt executon ###
 
-# reject trajectory if corresponding resource is unavailable
-sp {prefer*movement*reject-unavailable
-    (state <s> ^substate {<<|movement| |move-to-pose|>>} ^operator <op> + ^beliefs.predicate <pred>)
-    (<op> ^name execute-movement ^trajectory.resource <res>)
-    (<pred> ^name unavailable-resource ^resource <res>)
--->
-    (<s> ^operator <op> -)
-}
+# reject trajectory if corresponding resource is unavailable --- automatic by resource system
 
 # prefer movement over move-to-pose
 sp {prefer*movement*prefer-movement-over-pose-change

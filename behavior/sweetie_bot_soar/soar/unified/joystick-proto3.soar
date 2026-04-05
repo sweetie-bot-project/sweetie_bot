@@ -23,6 +23,13 @@
 # ELABORATIONS
 #
 
+# reserve resources
+sp {joystick*elaborate*reserved-resources
+	(state <s> ^substate joystick)
+-->
+	(<s> ^reserved-resource head body)
+}
+
 # map between buttons and animations tags
 sp {joystick*elaborate*key-maps-animations
 	(state <s> ^substate joystick)
