@@ -1,5 +1,6 @@
 trace -d 0
 source system/system_source.soar
+source resources.soar
 # agent initialization
 source initialization-proto3.soar
 # cyclic o-support actions

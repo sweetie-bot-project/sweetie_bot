@@ -1,0 +1,82 @@
+#
+# RESOURCES HANDLING
+#
+# STATE LEVEL
+#
+# Each process state may have following agumentation:
+#   (<s> ^blocked-resource <name>)
+#        Resources acquired by process in stata below. This WME is deduced automatically 
+#   (<s> ^reserved-resource <name>)
+#        Resource is for current top-level goal (general substate) by one on of subprocesses. It will be blocked for other goals and its subprocesses.
+#   (<s> ^required-resource <name>)
+#        Resource is required by current process. This WME is added by process state elaborations.
+#        
+# * If conflict is detected (the same process have blocked ` and required resource), then operator, which produced state is prohibited. 
+# * This method is the best if state always blocks specific resources.
+#
+# OPERATOR LEVEL
+#
+# Substate operator with additional attributes:
+#
+# (<op> ^name @name@ ^substate @substate@ ^process-args <args> ^required-resource <res1> <res2>)
+#
+# * If any resource is blocked then operator prohibited.
+# * Process predicate is augumanted with corresponding ^required-resource attributes.
+# * Corresponding resources are blocked in substate.
+# * This method is the best for states which utilizes resources-agnostic low-level states (flexbe, set-operational) to create assotiation with resourse.
+#
+
+# elaborate blocked resource in subprocess state
+sp {process*elaborate*blocked-resource-common
+	(state <s> ^superstate <ss>)
+	(<ss> ^{<<|blocked-resource| |required-resource|>>} <res>)
+-->
+	(<s> ^blocked-resource <res>)
+}
+
+# in subprocess tree of current goal preserve reserved resources
+sp {process*elaborate*reserved-resource-non-general
+	(state <s> -^substate general ^superstate <ss>)
+	(<ss> ^reserved-resource <res>)
+-->
+	(<s> ^reserved-resource <res>)
+}
+
+# in subprocess tree of current goal preserve reserved resources
+sp {process*elaborate*reserved-resource-generall
+	(state <s> ^substate general ^superstate <ss>)
+	(<ss> ^reserved-resource <res>)
+-->
+	(<s> ^blocked-resource <res>)
+}
+
+# reject process if required resource is blocked
+sp {process*prefer*prohibit-resource-conflict
+	(state <s> ^blocked-resource <res> ^required-resource <res> ^superstate <ss>)
+	(<ss> ^operator <op>)
+-->
+	(<ss> ^operator <op> -)
+}
+
+# reject substate operators which requires blocked resource
+sp {process*prefer*prohibit-operator-by-resource
+	(state <s> ^blocked-resource <res> ^operator <op> +)
+	(<op> ^required-resource <res>)
+-->
+	(<s> ^operator <op> -)
+}
+
+# add to process predicate resources supplied as operator attributes
+sp {process*apply*add-required-resource
+	(state <s> ^substate ^process <proc> ^superstate.operator.required-resource <res>)
+-->
+	(<proc> ^required-resource <res>)
+}
+
+# propagate resources from process to state
+sp {process*elaborate*add-state-resource-attr
+	(state <s> ^substate ^process.required-resource <res>)
+-->
+	(<s> ^required-resource <res>)
+}
+
