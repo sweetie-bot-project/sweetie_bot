@@ -6,3 +6,4 @@ from . import speech_visualization
 from . import nop
 from . import lang
 from . import look_at
+from . import set_mode
