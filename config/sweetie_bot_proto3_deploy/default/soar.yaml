@@ -62,7 +62,13 @@ soar:
             type: "herkulex_servos"
             topic: "motion/herkulex/servo_states"
             overheat_temperature: 83.0
-            ignore_joints: [ 'head_joint1', 'ear_r_joint', 'ear_l_joint', 'mouth_joint' ]
+            ignore_joints: [ 'ear_r_joint', 'ear_l_joint', 'mouth_joint' ]
+            groups:
+              head: [ 'head_joint1', 'head_joint2', 'head_joint3', 'head_joint4' ]
+              body: [ 'leg1_joint1', 'leg1_joint2', 'leg1_joint3', 'leg1_joint4', 'leg1_joint5', 'leg1_joint6',
+                      'leg2_joint1', 'leg2_joint2', 'leg2_joint3', 'leg2_joint4', 'leg2_joint5', 'leg2_joint6',
+                      'leg3_joint1', 'leg3_joint2', 'leg3_joint3', 'leg3_joint4', 'leg3_joint5', 'leg3_joint6',
+                      'leg4_joint1', 'leg4_joint2', 'leg4_joint3', 'leg4_joint4', 'leg4_joint5', 'leg4_joint6' ]
         sound:
             type: "sound_speech"
             topic: "sound_event"

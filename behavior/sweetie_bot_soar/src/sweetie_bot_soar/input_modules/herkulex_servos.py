@@ -13,15 +13,18 @@ class HerkulexServos:
         self._sensor_id = input_link_id.CreateIdWME(name)
 
         # get configuration from parameters
-        servo_state_topic = config.get("topic")
-        if not servo_state_topic or not isinstance(servo_state_topic, str):
-            raise RuntimeError("HerkulexServos input module: 'topic' parameter is not defined or is not string.")
-        self._overheat_temperature = config.get("overheat_temperature")
-        if not self._overheat_temperature or not isinstance(self._overheat_temperature, (float, int)):
-            raise RuntimeError("HerkulexServos input module: 'overheat_temperature' parameter is not defined or is not number.")
-        self._ignore_joints = config.get("ignore_joints", [])
-        if not isinstance(self._ignore_joints, list):
-            raise RuntimeError("HerkulexServos input module: 'ignore_joints' parameter must be list of strings.")
+        servo_state_topic = input_module.get_config_parameter(name, config, 'topic', allowed_types = str)
+        self._overheat_temperature = input_module.get_config_parameter(name, config, "overheat_temperature", allowed_types = (float, int))
+        self._ignore_joints = input_module.get_config_parameter(name, config, "ignore_joints", default_value = [], check_func = lambda jnts: all(isinstance(v, str) for v in jnts))
+        joint_groups = input_module.get_config_parameter(name, config, "groups", default_value = {}, 
+                                                         check_func = lambda grps: all(isinstance(k, str) and isinstance(v, list) for k, v in grps.items()),
+                                                         error_desc= f"input module {name}: groups dict must contain (str, list) pairs where key represents group name and list elements are servo names in group.")
+        self._groups = {}
+        try:
+            for k, v in joint_groups.items():
+                self._groups[k] = set(v)
+        except TypeError:
+            raise TypeError(f"input module {name}: group {k}: incorect group declaration {v}")
 
         # subscriber    
         self._servo_state_sub = rospy.Subscriber(servo_state_topic, HerkulexState, self.newServoStateCallback)
@@ -33,6 +36,9 @@ class HerkulexServos:
         self._off_servos = set()
         # WME ids
         self._status_wmes_ids = {}
+        self._set_wmes = {'failed': {}, 'off': {}, 'overheat': {}}
+        for k in self._groups.keys():
+            self._set_wmes[k] = {}
 
     def newServoStateCallback(self, msg):
         # check ignore list
@@ -71,6 +77,20 @@ class HerkulexServos:
                 status_id.DestroyWME()
                 del self._status_wmes_ids[status]
 
+    def update_set_wmes(self, name, values):
+		# get current set values: bind new name to dict element
+        set_values_ids = self._set_wmes[name]
+        # compare with new values
+        addlist = values - set_values_ids.keys()
+        dellist = set_values_ids.keys() - values
+        # add or remove new wmes
+        for value in addlist:
+            set_values_ids[value] = self._sensor_id.CreateStringWME(name, value)
+        for value in dellist:
+            wme_id = set_values_ids[value]
+            wme_id.DestroyWME()
+            del set_values_ids[value]
+
     def update(self):
         with self._lock:
             # set status flags
@@ -78,6 +98,22 @@ class HerkulexServos:
             self.update_status_wme('failed', len(self._failed_servos) != 0)
             self.update_status_wme('overheat', len(self._overheat_servos) != 0)
             self.update_status_wme('off', len(self._off_servos) != 0)
+            # update detailed servo info
+            self.update_set_wmes('failed', self._failed_servos)
+            self.update_set_wmes('off', self._off_servos)
+            self.update_set_wmes('overheat', self._overheat_servos)
+            # groups
+            for group, servos in self._groups.items():
+                status = set()
+                if not servos.isdisjoint(self._failed_servos):
+                    status.add('failed')
+                if not servos.isdisjoint(self._overheat_servos):
+                    status.add('overheat')
+                if not servos.isdisjoint(self._off_servos):
+                    status.add('off')
+                if len(status) == 0:
+                    status.add('normal')
+                self.update_set_wmes(group, status)
 
     def __del__(self):
         # remove sensor wme and ROS subscriber
