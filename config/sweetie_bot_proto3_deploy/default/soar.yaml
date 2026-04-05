@@ -47,6 +47,8 @@ soar:
             pose_list: [ "head_nominal" ]
             tolerance: 0.174 # 10 degrees
             time_bins_map: { names: [ "just", "recently", "long-time" ], values: [ 10.0, 60.0 ] }
+            movement_detection_joints: [ 'head_joint1', 'head_joint2', 'head_joint3', 'head_joint4' ]
+            movement_detection_velocity_threshold: 0.1
         body:
             type: "pose_joints"
             topic: "joint_states"
@@ -54,6 +56,11 @@ soar:
             pose_list: [ "body_nominal", "body_walk", "body_zero", "body_zero_crouched", "body_crouched" ]
             tolerance: 0.174 # 10 degrees
             time_bins_map: { names: [ "just", "recently", "long-time" ], values: [ 10.0, 60.0 ] }
+            movement_detection_joints: [ 'leg1_joint1', 'leg1_joint2', 'leg1_joint3', 'leg1_joint4', 'leg1_joint5', 'leg1_joint6',
+                      'leg2_joint1', 'leg2_joint2', 'leg2_joint3', 'leg2_joint4', 'leg2_joint5', 'leg2_joint6',
+                      'leg3_joint1', 'leg3_joint2', 'leg3_joint3', 'leg3_joint4', 'leg3_joint5', 'leg3_joint6',
+                      'leg4_joint1', 'leg4_joint2', 'leg4_joint3', 'leg4_joint4', 'leg4_joint5', 'leg4_joint6' ]
+            movement_detection_velocity_threshold: 0.1
         battery:
             type: "battery"
             topic: "battery_state"

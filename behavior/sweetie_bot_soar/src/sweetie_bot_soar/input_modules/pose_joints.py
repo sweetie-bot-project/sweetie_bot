@@ -33,6 +33,13 @@ class PoseJoints:
             self._time_bins_map = BinsMap( config['time_bins_map'] )
         except KeyError:
             raise RuntimeError('Pose input module: "time_bins_map" parameter must present.')
+        mov_joints = config.get("movement_detection_joints")
+        if not isinstance(mov_joints, list) or not all(isinstance(p, str) for p in mov_joints):
+            raise RuntimeError("Pose input module: 'movement_detection_joints' must be list of strings.")
+        self._mov_joints = set(mov_joints)
+        self._mov_tolerance = config.get("movement_detection_velocity_threshold")
+        if not isinstance(self._mov_tolerance, (int, float)) or self._mov_tolerance < 0.0:
+            raise RuntimeError("Pose input module: 'movement_detection_velocity_threshold' must be positive number.")
 
         # load poses mentioned in list from Parameter Server
         self._pose_list = []
@@ -58,6 +65,7 @@ class PoseJoints:
         # WME ids cache
         self._pose_wme_id = self._sensor_id.CreateStringWME("pose", "unknown")
         self._time_wme_id = self._sensor_id.CreateStringWME("change-time", self._time_bins_map(0.0))
+        self._mov_wme_id = self._sensor_id.CreateIntWME("moving", 0)
         # last pose index and pose change time
         self._last_pose_index = None
         self._last_pose_change_time = rospy.Time.now()
@@ -76,6 +84,16 @@ class PoseJoints:
 
         # get current time
         time_now = rospy.Time.now()
+
+        # check movement
+        moving = False
+        for joint, vel in zip(joint_state_msg.name, joint_state_msg.velocity):
+            if joint in self._mov_joints and vel > self._mov_tolerance:
+                moving = True
+                break
+        # update movement WME
+        if moving != bool(self._mov_wme_id.GetValue()):
+            self._mov_wme_id.Update(int(moving))
 
         # check current pose
         if self._last_pose_index != None:
@@ -98,7 +116,8 @@ class PoseJoints:
                 return
 
         # pose not found
-        if self._last_pose_index != None:
+        # check if previous pose is known
+        if self._last_pose_index is not None:
             # pose was known: chnge WMEs and reset time
             self._last_pose_change_time = time_now
             self._last_pose_index = None
@@ -106,8 +125,15 @@ class PoseJoints:
             self._time_wme_id.Update( self._time_bins_map(0.0) )
             return
         else:
-            # pose remains unknown: update time
-            time_value = self._time_bins_map( (time_now - self._last_pose_change_time).to_sec() );
+            # pose remains unknown
+            if moving:
+                # pose is changing so continously reset time
+                self._last_pose_change_time = time_now
+                time_value = self._time_bins_map(0.0)
+            else:
+                # update time
+                time_value = self._time_bins_map( (time_now - self._last_pose_change_time).to_sec() );
+            # update time WME
             if time_value != self._time_wme_id.GetValue():
                 self._time_wme_id.Update(time_value)
             return
