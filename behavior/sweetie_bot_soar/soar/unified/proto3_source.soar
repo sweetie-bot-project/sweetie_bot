@@ -23,6 +23,6 @@ source verbolize-llm.soar
 source talk/talk_simple.soar
 # main behavior
 source general.soar
-source general_simple-proto3.soar
+source general-proto3.soar
 # debug
 source debug.soar
