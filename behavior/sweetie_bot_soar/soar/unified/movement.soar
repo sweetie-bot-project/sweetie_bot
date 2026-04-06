@@ -79,6 +79,13 @@ sp {elaborate*beliefs*current-pose-zero
 
 # ELABORATIONS
 
+# fexbe resource is required to perform any maeningfull action
+sp {movement*elaborate*reserve-flexbe
+	(state <s> ^substate ^substate {<<|movement| |move-to-pose|>>})
+-->
+	(<s> ^reserved-resource flexbe)
+}
+
 # elaborate current pose in substate
 sp {elaborate*movement*current-pose
     (state <s> ^substate {<<|movement| |move-to-pose|>>} ^beliefs.current-pose <current-pose>)
