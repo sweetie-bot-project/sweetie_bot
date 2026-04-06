@@ -83,7 +83,7 @@ sp {wait*propose*wait-behavior-create
 }
 
 sp {wait*propose*wait-behavior-cycle
-	(state <s> ^substate wait ^io.output-link.nop <cmd>)
+	(state <s> ^substate wait -^wait-process -^drive-possible ^io.output-link.nop <cmd>)
 	(<cmd> -^status ^cycle <cycle>)
 -->
 	(<s> ^operator <op> +)
