@@ -40,6 +40,14 @@ sp {talk-llm*propose*expecting-to-leave
 # ELABORATIONS 
 #
 
+# reserve speech subsystem
+sp {talk-llm*elaborate*resources
+	(state <s> ^substate talk-llm)
+-->
+	(<s> ^reserved-resource speech)
+}
+
+
 # RECENT TALK EVENTS
 
 # create basic agumentation for talk substate

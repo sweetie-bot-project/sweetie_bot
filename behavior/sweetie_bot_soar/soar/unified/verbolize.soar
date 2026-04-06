@@ -37,6 +37,12 @@
 # * (^name talk-said ^object <object> ^topic <topic> ^text <text>) --- said to <object> about <topic>.
 #
 
+# reserve speech subsystem
+sp {verbolize*elaborate*resources
+	(state <s> ^substate verbolize-llm)
+-->
+	(<s> ^blocked-resource speech)
+}
 
 #
 # DECISION RULES
