@@ -9,12 +9,30 @@
 #
 
 #
-# COMFORT DRIVE
+# MOVEMENT DRIVE
 #
 
+# detect if resources assotiated with head/body are acqured
+# if any resource is acquired assume "service" where range action is
+# limited by moving to more comfort pose
+
+sp {general-movememnt*drive*elaborate*mode-haed-driven
+	(state <s> ^name movement ^substate general ^blocked-resource head -^blocked-resource body)
+-->
+	(<s> ^mode head-driven)
+}
+
+sp {general-movement*drive*elaborate*mode-full
+	(state <s> ^name movement ^substate general -^blocked-resource head -^blocked-resource body)
+-->
+	(<s> ^mode full)
+}
+
+### head-driven mode (comfort body pose accoding to head position)
+
 # assume nominal pose if it is keeped too long
-sp {security*propose*body-to-comfort-pose
-	(state <s> ^name comfort ^substate general ^io.input-link.body <body>)
+sp {general-movement*propose*body-to-comfort-pose-head-mode
+	(state <s> ^name movement ^substate general ^mode head-driven ^io.input-link.body <body>)
 	(<body> -^pose body_nominal -^change-time just)
 -->
 	(<s> ^operator <op> +, =)
@@ -22,42 +40,52 @@ sp {security*propose*body-to-comfort-pose
     (<a> ^pose-name  body_nominal)
 }
 
-#
-# MOVEMENT DRIVE
-#
+### full mode (control head and body)
+
+sp {general-movmemnt*propose*body-to-comfort-pose-full-mode
+	(state <s> ^name movement ^substate general ^mode full ^io.input-link.body.pose {<> body_nominal})
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name body-to-comfort-pose ^substate move-to-pose ^process-args <a>)
+    (<a> ^pose-name  body_nominal)
+}
 
 # Propose perform animation (no one around)
-sp {moving*propose*decide-animation
-	(state <s> ^name movement ^substate general)
+# do this only if pose has not changed for some time
+sp {general-movement*propose*animation
+	(state <s> ^name movement ^substate general ^mode full ^io.input-link.body <body>)
+	(<body> ^change-time {<> just})
 -->
 	(<s> ^operator <op> +, =)
    	(<op> ^name performing-animation ^substate movement ^process-args <a>)
 	(<a> ^tag alone ^deadline-time 30.0)
 }
 
-# invoke RandHeadMovements for random timeout instead of animation 
-sp {movement*propose*rand*head*movements
-	(state <s> ^name movement ^substate general)
+# invoke RandHeadMovements for random timeout 
+# do this only in nominal pose
+sp {general-movement*propose*rand-head-movements
+	(state <s> ^name movement ^substate general ^mode full ^io.input-link.body.pose body_nominal)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name moving-head ^substate flexbe ^process-args <a> ^required-resource head ^interruptable hard)
 	(<a> ^behavior ExecuteRandHeadMovements ^timeout (+ 10 (rand-int 20)))
 }
 
-# wait 
+### wait for started process
+
 sp {movement*propose*wait
-	(state <s> ^name movement ^substate general ^{<<|performing-animation| |moving-head|>>} <proc>)
+	(state <s> ^name movement ^substate general ^subprocess <proc>)
 	(<proc> ^substate <substate>)
 -->
-	(<s> ^operator <o> +, =)
+	(<s> ^operator <o> +)
    	(<o> ^name wait-proccess ^substate <substate> ^drive movement ^process-link <proc>)
 }
 
-# prefer wait current porcess over starting new
-sp {movement*prefer*wait
+# prefer continuation of current process over other actions
+sp {general-movememt*prefer*wait-active-subprocess
 	(state <s> ^name movement ^substate general ^operator <op1> + ^operator <op2> +)
 	(<op1> ^name wait-proccess)
-	(<op2> ^name {<<|performing-animation| |moving-head|>>})
+	(<op2> ^name {<> wait-proccess})
 -->
 	(<s> ^operator <op1> > <op2>)
 }
