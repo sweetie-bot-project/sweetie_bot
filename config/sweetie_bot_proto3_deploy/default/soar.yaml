@@ -49,6 +49,13 @@ soar:
             time_bins_map: { names: [ "just", "recently", "long-time" ], values: [ 10.0, 60.0 ] }
             movement_detection_joints: [ 'head_joint1', 'head_joint2', 'head_joint3', 'head_joint4' ]
             movement_detection_velocity_threshold: 0.1
+        head-tf:
+            type: "pose_tf"
+            target_frame: "microphone_link"
+            base_frame: "base_link"
+            inclination_bins_map: { names: [ "vertical", "tilted", "strong-tilted" ], values: [ 15.0, 45.0 ] } # degrees
+            heading_bins_map: { names: [ "strong-left", "left", "forward", "right", "strong-right" ], values: [ -45.0, -15.0, 15.0, 45.0 ] } # degrees
+            time_bins_map: { names: [ "just", "recently", "long-time" ], values: [ 10.0, 60.0 ] }
         body:
             type: "pose_joints"
             topic: "joint_states"

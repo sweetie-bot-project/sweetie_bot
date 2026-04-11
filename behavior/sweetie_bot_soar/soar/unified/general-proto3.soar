@@ -40,6 +40,26 @@ sp {general-movement*propose*body-to-comfort-pose-head-mode
     (<a> ^pose-name  body_nominal)
 }
 
+# rotate body after the head
+sp {general-movement*propose*body-to-comfort-pose-head-mode-head-left
+	(state <s> ^name movement ^substate general ^mode head-driven ^io.input-link.head-tf <head>)
+	(<head> ^heading strong-left -^heading-change-time just)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name body-to-comfort-pose ^substate movement ^process-args <a>)
+    (<a> ^movement-name trot_rot_left45)
+}
+
+sp {general-movement*propose*body-to-comfort-pose-head-mode-head-right
+	(state <s> ^name movement ^substate general ^mode head-driven ^io.input-link.head-tf <head>)
+	(<head> ^heading strong-right -^heading-change-time just)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name body-to-comfort-pose ^substate movement ^process-args <a>)
+    (<a> ^movement-name trot_rot_right45)
+}
+
+
 ### full mode (control head and body)
 
 sp {general-movmemnt*propose*body-to-comfort-pose-full-mode
