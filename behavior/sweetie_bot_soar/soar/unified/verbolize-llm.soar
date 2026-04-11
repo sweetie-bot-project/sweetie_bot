@@ -31,6 +31,12 @@
 # * (^name talk-said ^object <object> ^topic llm ^text <text> ^type [statement|question]) --- said to <object> about <topic>.
 #
 
+# reserve speech subsystem
+sp {verbolize-llm*elaborate*resources
+	(state <s> ^substate verbolize-llm)
+-->
+	(<s> ^reserved-resource speech)
+}
 
 ## elaborate requests order
 sp {verbolize-llm*elaborate*requests

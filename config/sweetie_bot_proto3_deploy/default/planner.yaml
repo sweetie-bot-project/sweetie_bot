@@ -13,7 +13,7 @@ gait_generator:
         LF:
             name: "leg1"
             frame_id: "leg1_link6"
-            nominal_stance: [ 0.042, 0.057, -0.27 ]
+            nominal_stance: [ 0.0393, 0.057, -0.27 ]
             bounding_box: [ -0.01, 0.04, -1.0, 1.0, 0.08, -0.23 ]
             bounding_sphere: [ 0.0228, 0.0442, -0.0397, 0.235 ] # 0.24
             contact_point: [ 0.0, 0.0, -0.035 ]
@@ -21,7 +21,7 @@ gait_generator:
         RF:
             name: "leg2"
             frame_id: "leg2_link6"
-            nominal_stance: [ 0.042, -0.057, -0.27 ]
+            nominal_stance: [ 0.0393, -0.057, -0.27 ]
             bounding_box: [ -0.01, -0.08, -1.0, 1.0, -0.04, -0.23 ]
             bounding_sphere: [ 0.0228, -0.0442, -0.0397, 0.235 ]
             contact_point: [ 0.0, 0.0, -0.035 ]
@@ -29,7 +29,7 @@ gait_generator:
         LH:
             name: "leg3"
             frame_id: "leg3_link6"
-            nominal_stance: [ -0.175, 0.078, -0.27 ]
+            nominal_stance: [ -0.1335, 0.079, -0.27 ]
             bounding_box: [ -1.0, 0.04, -1.0, -0.10, 0.12, -0.23 ]
             bounding_sphere: [ -0.124, 0.048, -0.031, 0.26 ] # 0.265
             contact_point: [ 0.0, 0.0, -0.035 ]
@@ -37,7 +37,7 @@ gait_generator:
         RH: 
             name: "leg4"
             frame_id: "leg4_link6"
-            nominal_stance: [ -0.175, -0.078, -0.27 ]
+            nominal_stance: [ -0.1335, -0.079, -0.27 ]
             bounding_box: [ -1.0, -0.12, -1.0, -0.10, -0.04, -0.23 ]
             bounding_sphere: [ -0.124, -0.048, -0.031, 0.26 ]
             contact_point: [ 0.0, 0.0, -0.035 ]

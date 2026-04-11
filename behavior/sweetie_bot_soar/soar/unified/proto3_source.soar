@@ -1,5 +1,6 @@
 trace -d 0
 source system/system_source.soar
+source resources.soar
 # agent initialization
 source initialization-proto3.soar
 # cyclic o-support actions
@@ -12,15 +13,16 @@ source wait.soar
 source flexbe.soar
 source text-action.soar
 # high level actions
-source animation.soar
+source movement.soar
 source lookat2.soar
 source attention.soar
+source joystick-proto3.soar
 # talk
 source verbolize.soar
 source verbolize-llm.soar
 source talk/talk_simple.soar
 # main behavior
 source general.soar
-source general_simple-proto3.soar
+source general-proto3.soar
 # debug
 source debug.soar

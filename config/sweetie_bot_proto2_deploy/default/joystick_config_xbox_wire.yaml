@@ -1,4 +1,5 @@
-KeyPressed:
+buttons:
+    type: KeyPressed
     enable_group: "buttons"
     joy_topic: "joystick"
     key_topic: "keys_pressed"
@@ -28,7 +29,8 @@ KeyPressed:
         2: "L2"
         6: "right"
         7: "down"
-JointAxes:
+eyes:
+    type: JointAxes
     enable_group: "eyes"
     joy_topic: "joystick"
     joints_topic: "eyes_joints_ref"
@@ -44,8 +46,8 @@ JointAxes:
             speed: 0.0
             min: -1.2
             max: 1.2
-JointAxes:
-    enable_group: "head"
+head:
+    type: JointAxes
     joy_topic: "joystick"
     joints_topic: "head_joints_ref"
     buttons: { }

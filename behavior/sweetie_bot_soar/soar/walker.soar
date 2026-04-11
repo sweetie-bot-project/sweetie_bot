@@ -1,3 +1,0 @@
-pushd walker
-source walker_source.soar
-popd

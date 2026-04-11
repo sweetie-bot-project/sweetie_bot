@@ -4,7 +4,8 @@
 
         <!-- Check if device is connected -->
         <arg name="dev" default="false" />
-        <arg name="is_dev_exists" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists('$(arg dev)') else 'false')" />
+        <!--<arg name="is_dev_exists" default="$(eval 'true' if eval('_' + '_import_' + '_(\'os\')').path.exists('$(arg dev)') else 'false')" />-->
+        <arg name="is_dev_exists" default="true" />
 
         <group if="$(arg is_dev_exists)">
 		<node ns="$(arg robot_ns)/hmi" pkg="joy" type="joy_node" name="ps3_joy" output="screen" >

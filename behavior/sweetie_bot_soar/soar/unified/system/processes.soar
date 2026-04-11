@@ -80,7 +80,7 @@ sp {process*elaborate*attach-subprocesse-to-state
 	(state <s> ^process <sp> ^beliefs.process <proc>)
 	(<proc> ^name <name> ^subprocess-of <sp>)
 -->
-	(<s> ^<name> <proc>)
+	(<s> ^<name> <proc> ^subprocess <proc>)
 }
 
 # automatically attach process to superstate process
