@@ -225,6 +225,38 @@ sp {automatic*apply*finish-process
 	(log 1 (concat |FINISH PROCESS | <name> | | <pred> | WITH STATUS | <status> (crlf)))
 }
 
+# if process is not started, reject causing it operator and form event with linked process
+sp {automatic*apply*finish-process-pending
+	(state <s> ^operator <op> ^process-status pending ^process <proc> ^superstate <ss> ^beliefs <b> ^time.now <time>)
+	(<op> ^type automatic ^finish-status <status> ^finish-process <proc>)
+	(<proc> ^name <name>)
+	(<ss> ^operator <sop>)
+-->
+	(<ss> ^operator <sop> -)
+	(<b> ^event <ev>)
+	(<ev> ^name <name> ^reason terminated rejected ^status <status> ^process <proc> ^initiated-at <time>)
+	(<proc> ^status <status>)
+	(log 1 (concat |REJECT PROCESS | <name> | | <proc> | WITH STATUS | <status> (crlf)))
+}
+
+# make process argument o-supported
+sp {automatic*apply*finish-process-pending-o-support
+	(state <s> ^operator <op> ^process-status pending ^process <proc>)
+	(<op> ^type automatic ^finish-status <status> ^finish-process <proc>)
+	(<proc> ^<attrib> <value>)
+-->
+	(<proc> ^<attrib> <value>)
+}
+
+# status map support: deduce finish-status from map
+sp {automatic*elaborate*finish-process-status-from-map
+	(state <s> ^operator <op> +)
+	(<op> ^type automatic ^finish-status-map {<=> |string| <from>} <map> ^finish-process <pred>)
+	(<map> ^from <from> ^to <status>)
+-->
+	(<op> ^finish-status <status>)
+}
+
 #
 # RETVAL SUPPORT
 #

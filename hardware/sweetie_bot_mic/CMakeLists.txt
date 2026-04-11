@@ -5,21 +5,15 @@ project(sweetie_bot_mic)
 # add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  rospy
-  sweetie_bot_text_msgs
-  dynamic_reconfigure
+find_package(catkin REQUIRED COMPONENTS 
+	rospy
+	dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's coundEvent
 # find_package(Boost REQUIRED COMPONENTS system)
 
-
-## Uncomment this if the package has a setup.py. This macro ensures
-## modules and global scripts declared therein get installed
-## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+## Uncomment this if the package has a setup.py. 
 catkin_python_setup()
 
 ################################################
@@ -59,7 +53,7 @@ catkin_python_setup()
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 generate_dynamic_reconfigure_options(
-  cfg/Respeaker.cfg
+  cfg/microphone.cfg
 )
 
 
@@ -72,12 +66,7 @@ generate_dynamic_reconfigure_options(
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES sweetie_bot_mic
-#  CATKIN_DEPENDS rospy
-#  DEPENDS system_lib
-)
+catkin_package(CATKIN_DEPENDS dynamic_reconfigure)
 
 ###########
 ## Build ##
@@ -124,7 +113,7 @@ catkin_package(
 ## Install ##
 #############
 install(DIRECTORY
-  launch
+  launch udev
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
@@ -135,6 +124,7 @@ install(DIRECTORY
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/microphone
+  scripts/gstreamer_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

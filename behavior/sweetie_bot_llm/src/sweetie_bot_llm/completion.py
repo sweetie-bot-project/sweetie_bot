@@ -7,21 +7,12 @@ from copy import copy
 import rospy
 from rospy_message_converter import message_converter
 
-from sweetie_bot_load_balancer.balancer import Balancer
+from sweetie_bot_load_balancer.balancer import Balancer, BalancerError
 from sweetie_bot_text_msgs.srv import Complete, CompleteRequest, CompleteResponse
 from sweetie_bot_text_msgs.srv import CompleteSimple, CompleteSimpleRequest, CompleteSimpleResponse
 from sweetie_bot_text_msgs.srv import CompleteRaw, CompleteRawRequest, CompleteRawResponse
 from sweetie_bot_text_msgs.msg import TextCommand
 
-
-class CompleteError(RuntimeError):
-    def __init__(self, msg, details = ''):
-        super(CompleteError, self).__init__(msg)
-        self._details = details
-
-    @property
-    def details(self):
-        return self._details
 
 class CompleteNode:
     DEFAULT_CONFIG = dict(server_choices=dict(
@@ -52,7 +43,7 @@ class CompleteNode:
     def extract_response_text(self, response):
         # check response structure
         if ( 'choices' not in response or len(response['choices'])==0 or 'text' not in response['choices'][0]):
-            raise CompleteError('wrong response structure', response.get('detail', 'Unknown error'))
+            raise BalancerException('wrong response structure', response.get('detail', 'Unknown error'))
 
         # convert to unicode
         try:
@@ -60,7 +51,8 @@ class CompleteNode:
             text = response['choices'][0]['text'].encode('utf-8').strip()
             text = text.decode()
         except UnicodeDecodeError:
-            raise CompleteError('unicode decode error', response.get('detail', 'Unknown error'))
+            raise BalancerException('unicode decode error', response.get('detail', 'Unknown error'))
+            # TODO use other exception tiype
 
         return text
 
@@ -70,9 +62,9 @@ class CompleteNode:
         # send it to servers
         try:
             text, duration = self.balancer.request_available_server(json=request, decode_json=True)
-        except Exception as e:
-            rospy.logerr(e + f': {e.details}' if hasattr(e, 'details') else '')
-            return CompleteResponse(status = e)
+        except BalancerError as e:
+            rospy.logerr('%s: %s', e, e.details)
+            return CompleteResponse(status = str(e))
         # return result
         return CompleteResponse(status='ok', text = text, duration=duration)
 
@@ -92,8 +84,8 @@ class CompleteNode:
         # send it to server
         try:
             text, duration = self.balancer.request_available_server(json=request, decode_json=True)
-        except Exception as e:
-            rospy.logerr(e + f': {e.details}' if hasattr(e, 'details') else '')
+        except BalancerError as e:
+            rospy.logerr('%s: %s', e, e.details)
             return CompleteRawResponse(error_code = CompleteRawResponse.SERVER_UNREACHABLE)
 
         self.log_llm.publish('log/llm/out/'+msg.profile_name, text, '')
@@ -116,9 +108,9 @@ class CompleteNode:
         # send it to server
         try:
             text, duration = self.balancer.request_available_server(json=request, decode_json=True)
-        except Exception as e:
-            rospy.logerr(e + f': {e.details}' if hasattr(e, 'details') else '')
-            return CompleteSimpleResponse(data = TextCommand(type = "complete/error", command = e))
+        except BalancerError as e:
+            rospy.logerr('%s: %s', e, e.details)
+            return CompleteSimpleResponse(data = TextCommand(type = "complete/error", command = str(e)))
         # return result
         return CompleteSimpleResponse(data = TextCommand(type = "complete/response", command = text))
 

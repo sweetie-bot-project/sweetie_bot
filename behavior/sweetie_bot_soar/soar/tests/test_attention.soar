@@ -1,0 +1,83 @@
+# disable debug messages
+trace -d 0
+# cd to unified
+pushd .
+cd ../unified
+# system 
+source system/system_source.soar
+# agent initialization
+source initialization-proto3.soar
+# cyclic o-support actions
+source cycle.soar
+# cognition modules
+source vision.soar
+# low lever actions
+source wait.soar
+source lookat2.soar
+source attention2.soar
+source flexbe.soar
+# debug
+source debug.soar
+# return 
+popd
+
+#
+# TEST ATTENTION
+#
+sp {test-lookat*elaborate*name
+	(state <s> ^substate general)
+-->
+	(<s> ^name test-attention)
+}
+
+# count visible objects (not used, just count test)
+
+#sp {test-attention*propose*count-start
+#	(state <s> ^name test-attention -^visible-object-count ^beliefs.object <obj>)
+#	(<obj> ^input-link.visible now)
+#	-(<s> ^visible-object <obj>)
+#-->
+#	(<s> ^operator <op> +)
+#	(<op> ^type cognition automatic)
+#	(<op> ^parent <s> ^attribute visible-object ^link-value <obj>)
+#	(<op> ^parent-2 <s> ^attribute-2 visible-object-count ^link-value-2 1)
+#}
+#
+#sp {test-attention*propose*count-plus
+#	(state <s> ^name test-attention ^visible-object-count <num> ^beliefs.object <obj>)
+#	(<obj> ^input-link.visible now)
+#	-(<s> ^visible-object <obj>)
+#-->
+#	(<s> ^operator <op> +)
+#	(<op> ^type cognition automatic)
+#	(<op> ^parent <s> ^attribute visible-object ^link-value <obj>)
+#	(<op> ^parent-2 <s> ^attribute-2 visible-object-count ^remove-value-2 <num> ^link-value-2 (+ <num> 1))
+#}
+#
+#sp {test-attention*propose*count-minus
+#	(state <s> ^name test-attention ^visible-object <obj> ^visible-object-count <num>)
+#	(<obj> ^input-link.visible {<> now})
+#-->
+#	(<s> ^operator <op> +)
+#	(<op> ^type cognition automatic)
+#	(<op> ^parent <s> ^attribute visible-object ^remove-value <obj>)
+#	(<op> ^parent-2 <s> ^attribute-2 visible-object-count ^remove-value-2 <num> ^link-value-2 (- <num> 1))
+#}
+
+# start new
+sp {test-lookat*propose*focusing-attention
+	(state <s> ^substate general -^focusing-attention ^beliefs.object <obj>)
+	(<obj> ^input-link.visible now)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name focusing-attention ^substate attention ^process-args <a>)
+	(<a> ^object <obj>)
+}
+
+# do nothning
+sp {test-lookat*propose*wait
+	(state <s> ^substate general)
+-->
+	(<s> ^operator <op> +, <)
+	(<op> ^name wait ^substate wait)
+}

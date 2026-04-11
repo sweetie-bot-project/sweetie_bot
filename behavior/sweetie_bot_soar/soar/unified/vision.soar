@@ -8,7 +8,7 @@
 ## Note! when hand pose triplet (id, label, type) changes object recreated
 sp {vision*elaborate*object
 	(state <s> ^top-state 1 ^io.input-link.swm.object <swm-obj> ^beliefs <b>)
-	(<swm-obj> ^label {<> None <label>} ^type {<<|human| |pony_face| |pony| |hand|>> <type>})
+	(<swm-obj> ^label {<> None <label>} ^type {<<|human| |pony_face| |pony| |hand| |sound| |speech|>> <type>})
 -->
 	(<b> ^object <obj>)
 	(<obj> ^name <label> ^label <label> ^type <type> ^input-link <swm-obj>)

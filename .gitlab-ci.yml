@@ -30,7 +30,8 @@
           inc/ifopt/ifopt_ipopt/CATKIN_IGNORE \
           inc/ifopt/ifopt_snopt/CATKIN_IGNORE \
           inc/towr/towr/CATKIN_IGNORE \
-          inc/towr/towr_ros/CATKIN_IGNORE
+          inc/towr/towr_ros/CATKIN_IGNORE \
+          hardware/sweetie_bot_mic_button/CATKIN_IGNORE
       else
         touch \
           hardware/sweetie_bot_self_test/CATKIN_IGNORE \

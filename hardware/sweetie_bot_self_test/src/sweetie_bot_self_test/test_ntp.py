@@ -27,3 +27,18 @@ class TestNTP:
     )
     def test_ntp(self, value):
         assert 'y' == value[0]
+
+    @pytest.mark.parametrize(
+        ("device"),
+        [
+            ("/dev/rtc0")
+        ],
+        ids=['hwclock']
+    )
+    def test_hwclock(self, device):
+        p = sp.Popen(['hwclock','-r','-f',device], stdout=sp.PIPE, stderr=sp.PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            print(stderr, end="")
+            raise
+        return True

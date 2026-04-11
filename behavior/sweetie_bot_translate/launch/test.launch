@@ -1,6 +1,6 @@
 <launch>
     <arg name="balancer_config" default="{'server_choices': {'local_host': {'priority': 40, 'url': 'http://127.0.0.1:5001/translate'}, 'remote_host': {'priority': 20, 'url': 'https://ai.sweetie.bot/trans/'}}}"/>
     <node pkg="sweetie_bot_translate" type="translate_service_node" name="translator" output="screen">
-        <rosparam param="libre_translate_servers" subst_value="True">$(arg balancer_config)</rosparam>
+        <rosparam param="balancer_config" subst_value="True">$(arg balancer_config)</rosparam>
     </node>
 </launch>

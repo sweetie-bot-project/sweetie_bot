@@ -1,0 +1,13 @@
+<launch>
+	<arg name="remote" default="True"/>
+	<arg name="compression" default="True"/>
+
+	<include file="$(find sweetie_bot_stt)/launch/test.launch" />
+	<include file="$(find sweetie_bot_mic_button)/launch/test.launch" />
+
+	<node pkg="sweetie_bot_mic" type="microphone" name="microphone" output="screen">
+		<rosparam command="load" file="$(find sweetie_bot_mic)/launch/test_respeaker.yaml" />
+		<param unless="$(arg remote)" name="gstreamer_pipeline" value="alsasrc device=plughw:ArrayUAC10" />
+		<param if="$(eval remote and not compression)" name="gstreamer_pipeline" value="udpsrc port=12345 ! application/x-rtp,media=application,clock-rate=90000,encoding-name=X-GST ! queue ! rtpgstdepay ! audioconvert" />
+	</node>
+</launch>

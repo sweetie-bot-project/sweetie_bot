@@ -74,8 +74,14 @@ end
 -- * @c activity_period ROS parameter (int) is used to set peer Activity period.
 -- * @c priority ROS parameter (int) is used to set peer RT priority.
 -- * @c services ROS parameter (string[]) contains list of services that should be loaded in compnent.
+<<<<<<< HEAD
 -- * @c load_cpf ROS parameter (string[]) contains .cpf file names to load into peer or service. Each name is
 --     expanded to full path with config.file() call. 
+=======
+-- * @c files ROS parameter (string[]) contains list of names of cpf files with parameters to load to component 
+--   (config.file() is used to get file path). This paramter can be used to load paramter on component and 
+--   in services declared with @c services parameter.
+>>>>>>> master
 --
 -- After special parameters is processed component's and subservices' properties are assigned
 -- by getAll() call (rosparam).
@@ -104,28 +110,31 @@ function config.get_peer_rosparams(peer)
 	if period then
 		peer:setPeriod(period)
 	end
+	-- use rosparam `files` to load properties from cpf files
+	local files = config.get_rosparam("~" .. peer:getName() .. "/files", "string[]")
+	if files then
+		peer:loadService("marshalling")
+		for k, file in ipairs(files) do 
+			print("Load properties from file " .. file .. " to " .. peer:getName())
+			peer:provides("marshalling"):loadProperties(config.file(file))
+		end
+	end
 	-- use rosparam `services` to load additionaol services
 	local services = config.get_rosparam("~" .. peer:getName() .. "/services", "string[]")
 	if services then
 		for k, service in ipairs(services) do 
 			-- print("Load service " .. service .. " into " .. peer:getName())
+			-- load service
 			peer:loadService(service)
-			-- load .cpf into service
-			local cpfs = config.get_rosparam("~" .. peer:getName() .. "/" .. service .. "/load_cpf", "string[]")
-			if cpfs then
-				for _, file in ipairs(cpfs) do
-					peer:loadService("marshalling")
+			-- use rosparam `<service>/files` to load properties from cpf files
+			local files = config.get_rosparam("~" .. peer:getName() .. "/" .. service .. "/files", "string[]")
+			if files then
+				peer:loadService("marshalling")
+				for k, file in ipairs(files) do 
+					print("Load properties from file " .. file .. " to service " .. peer:getName() .. "." .. service)
 					peer:provides("marshalling"):loadServiceProperties(config.file(file), service)
 				end
 			end
-		end
-	end
-	-- load .cpf int peer
-	local cpfs = config.get_rosparam("~" .. peer:getName() .. "/load_cpf", "string[]")
-	if cpfs then
-		for _, file in ipairs(cpfs) do
-			peer:loadService("marshalling")
-			peer:provides("marshalling"):loadProperties(config.file(file))
 		end
 	end
 	-- load parameters from parameter server

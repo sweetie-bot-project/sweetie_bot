@@ -32,8 +32,8 @@
 #
 # Predicates:
 #
-# * (^name looking-at ^object <obj> ^focusing-proccess <proc>) --- object is in focus for for at least <delay> seconds.
-# * (^name looking-at-verifing ^object <obj> ^focusing-proccess <proc>) --- object is in focus.
+# * (^name looking-at ^object <obj> ^focusing-process <proc>) --- object is in focus for for at least <delay> seconds.
+# * (^name looking-at-verifing ^object <obj> ^focusing-process <proc>) --- object is in focus.
 #
 
 # ELABOARTIONS
@@ -47,12 +47,12 @@ sp {look-at*elaborate*looking-at-verifing
 	(<il> ^visible now ^yaw-head center)
 -->
 	(<b> ^predicate <pred>)
-	(<pred> ^name looking-at-verifing ^object <obj> ^focusing-proccess <proc>)
+	(<pred> ^name looking-at-verifing ^object <obj> ^focusing-process <proc>)
 }
 
 sp {look-at*elaborate*looking-at-verifing-treshhold
 	(state <s> ^top-state 1 ^beliefs.predicate <pred>)
-	(<pred> ^name looking-at-verifing ^initiated-at <time> ^focusing-proccess.delay <delay>)
+	(<pred> ^name looking-at-verifing ^initiated-at <time> ^focusing-process.delay <delay>)
 -->
 	(<pred> ^delay-time (+ <time> <delay>))
 }
@@ -61,11 +61,11 @@ sp {look-at*elaborate*looking-at-verifing-treshhold
 sp {look-at*elaborate*looking-at
 	(state <s> ^top-state 1 ^beliefs <b> ^time <clock>)
 	(<b> ^predicate <pred>)
-	(<pred> ^name looking-at-verifing ^delay-time <delay-time> ^object <obj> ^focusing-proccess <proc>)
+	(<pred> ^name looking-at-verifing ^delay-time <delay-time> ^object <obj> ^focusing-process <proc>)
 	-(<clock> ^now {<= <delay-time>})
 -->
 	(<b> ^predicate <pred-new>)
-	(<pred-new> ^name looking-at ^object <obj> ^focusing-proccess <proc>)
+	(<pred-new> ^name looking-at ^object <obj> ^focusing-process <proc>)
 }
 
 # DECISION OPERATORS
@@ -88,7 +88,7 @@ sp {look-at*propose*completion-failed
 	(state <s> ^bottom-state 1 ^beliefs.event <ev> ^beliefs-stable <bs>)
 	(<ev> ^name focusing-at ^reason {<< |deadline| |terminated| >>} -^processed look-at-focus-failed ^process <proc>)
 	-{(<bs> ^predicate <pred>)
-	  (<pred> ^name looking-at ^focusing-proccess <proc>)
+	  (<pred> ^name looking-at ^focusing-process <proc>)
     }
 -->
 	(<s> ^operator <op> +, =)
@@ -100,7 +100,7 @@ sp {look-at*propose*completion-succeed
 	(state <s> ^bottom-state 1 ^beliefs.event <ev> ^beliefs-stable <bs>)
 	(<ev> ^name focusing-at ^reason {<< |deadline| |terminated| >>} -^processed look-at-focus-succeed ^process <proc>)
 	(<bs> ^predicate <pred>)
-	(<pred> ^name looking-at ^focusing-proccess <proc>)
+	(<pred> ^name looking-at ^focusing-process <proc>)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name look-at-focus-succeed ^type cognition automatic ^finish-status succeed ^finish-super-process-of <proc> ^mark-processed <ev>) 

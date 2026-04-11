@@ -239,7 +239,7 @@ void DestinationMarker::invokeClopGenerator(const geometry_msgs::Pose& base_goal
     static bool is_ee_goals_init = false;
     static std::vector<sweetie_bot_gait_generator::EndEffectorGoal> ee_goals;
     if (!is_ee_goals_init) {
-      setEndEffectorTargets(ee_goals, ee_names);
+      setEndEffectorTargets(ee_goals, ee_names, sweetie_bot_gait_generator::EndEffectorGoal::NOMINAL_POSE);
 
       is_ee_goals_init = true;
     }
@@ -265,39 +265,7 @@ void DestinationMarker::toNominal()
     if (!ee_names.empty()) {
       // end effector goals
       std::vector<sweetie_bot_gait_generator::EndEffectorGoal> ee_goals;
-      setEndEffectorTargets(ee_goals, ee_names, sweetie_bot_gait_generator::EndEffectorGoal::PATH_FINAL);
-      // get nominal poses from towr configuration
-      try {
-        // get paramters
-        XmlRpc::XmlRpcValue towr_model;
-        ros::param::get(gait_generator_ns + "/towr_model", towr_model);
-        // iterate over ee
-        for(auto& ee_goal : ee_goals) {
-          bool ee_is_found = false;
-          // find it  in towr model
-          for(auto it = towr_model.begin(); it != towr_model.end(); it++) {
-            if (it->second.getType() == XmlRpc::XmlRpcValue::TypeStruct &&
-                it->second.hasMember("name") && it->second["name"] == ee_goal.name) 
-            {
-              // ee definition is found
-              XmlRpc::XmlRpcValue& ee_nominal_stance = it->second["nominal_stance"];
-              setEndEffectorPosition(ee_goal, ee_nominal_stance[0],  ee_nominal_stance[1], 0.0);
-              ee_is_found = true;
-              break;
-            }
-          }
-          // check if ee is found
-          if (!ee_is_found) {
-            ROS_ERROR_STREAM("Unable to find ee " << ee_goal.name << " in towr_mode form ns " << gait_generator_ns << "/towr_model.");
-            return;
-          }
-        }
-      }
-      catch (XmlRpc::XmlRpcException& e) {
-        ROS_ERROR_STREAM("Unable to parse towr_mode form ns " << gait_generator_ns << "/towr_model: " << e.getMessage());
-        return;
-      }
-      // add ee goals
+      setEndEffectorTargets(ee_goals, ee_names, sweetie_bot_gait_generator::EndEffectorGoal::NOMINAL_POSE);
       goal.ee_goal.insert(goal.ee_goal.begin(), ee_goals.begin(), ee_goals.end());
     }
 

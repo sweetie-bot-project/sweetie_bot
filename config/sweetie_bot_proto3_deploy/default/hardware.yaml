@@ -1,4 +1,4 @@
-hardware:     
+hardware:
     battery_monitor:
         period: 2.0
         sysfs_path: '/sys/class/power_supply/BAT0'

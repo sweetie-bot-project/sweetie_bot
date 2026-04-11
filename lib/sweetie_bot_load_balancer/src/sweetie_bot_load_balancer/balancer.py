@@ -1,5 +1,6 @@
 import time
 import requests
+from collections import namedtuple
 
 from typing import Tuple
 from typing import Any
@@ -17,13 +18,18 @@ class BalancerError(RuntimeError):
     def details(self):
         return self._details
 
-    def __str__(self):
-        return self.details
-
 class Balancer:
 
+    Server = namedtuple('Server', 'name url priority')
+
     def __init__(self, config, loggers=None, fallback_func=None, postprocess_func=None):
-        self.server_choices = {} if 'server_choices' not in config else config['server_choices']
+        # get server list
+        try:
+            self.servers = [ Balancer.Server(server_name, **server_desc) for server_name, server_desc in config['server_choices'].items() ]
+        except (TypeError, KeyError, AttributeError):
+            raise BalancerError("'server_choices' parameter must present and have the following format { <name> : {'url': <url>, 'priority': <pri> }, ... }")
+        self.servers = sorted(self.servers, key = lambda server: server.priority)
+        # logger
         if loggers:
             self.log_debug = loggers['debug']
             self.log_warn  = loggers['warn']
@@ -32,61 +38,56 @@ class Balancer:
             self.log_debug = lambda x: print(f'Balancer [DEBUG]: {x}')
             self.log_warn  = lambda x: print(f'Balancer [WARN]: {x}')
             self.log_inro  = lambda x: print(f'Balancer [INFO]: {x}')
-            
+        # function callbacks
         self.fallback_function = fallback_func
         self.postprocess_function = postprocess_func
 
-        self.log_info(f'servers: {self.server_choices}')
+        self.log_info(f'servers: {self.servers}')
 
     def request_available_server(self, decode_json=False, **kwargs):
         # display request
         self.log_debug(f"request: \n\n {kwargs} \n\n")
-
-        LOWEST_PRIORITY = 100
-        def priority_sorting(server_item: Tuple[str, Any]) -> int:
-            return server_item[1].get('priority', LOWEST_PRIORITY)
-            
+        # try servers in priority order
         response = None
-        server_name, server_url = None, None
-        for name, server in sorted(self.server_choices.items(), key=priority_sorting):
+        for server in self.servers:
+            # request server
             try:
                 start = time.time()
-                response = requests.post(server['url'], **kwargs)
+                response = requests.post(server.url, **kwargs)
                 duration = time.time() - start
-
-                if response.status_code == 200:
-                    server_name, server_url = name, server['url']
-                    break
-                else:
-                    self.log_warn(f'server {name} ({server_url}) request error {response.status_code}: {response.reason}')
-                    continue # try the next server
-
             except requests.ConnectionError as e:
-                self.log_warn(f'connection error with server {name} ({server_url}): {e}')
+                 self.log_warn(f'connection error with {server}: {e}')
+                 continue
+            # check response
+            if response.status_code == 200:
+                # success
+                break
+            else:
+                self.log_warn(f'{server} request error {response.status_code}: {response.reason}')
+                response = None
 
         # check if response is received
-        if response is None or response.status_code != 200:
+        if response is None:
+            # if fallback function is present use it to produce response
             if self.fallback_function is None:
                 raise BalancerError('unable to get response: tried all servers.')
             else:
                 fallback_response = self.fallback_function(kwargs)
                 return fallback_response, 0
-
-        # decode
+        # decode 
         if decode_json:
             try:
                 response = response.json()
             except ValueError:
                 # TODO: Check behavior when there's html page returned in response to replace some error codes
                 raise BalancerError('json: can not decode response', response.content)
-
+        # call postprocessing
         if self.postprocess_function:
             try:
                 response = self.postprocess_function(response)
             except Exception as e:
                 # TODO: Check behavior when there's html page returned in response to replace some error codes
-                raise BalancerError(f'postprocess: got an error during postprocess phase: {e}', e.details)
-
-        self.log_debug(f'server {server_name} response: \n\n {response} \n\n')
-
+                raise BalancerError(f'postprocess: got an error during postprocess phase: {e}', response.get('detail', 'Unknown error'))
+        # return result
+        self.log_debug(f'{server} response: \n\n {response} \n\n')
         return response, duration

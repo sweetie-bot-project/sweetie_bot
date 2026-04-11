@@ -157,7 +157,6 @@ aggregator_real:loadService("rosparam")
 aggregator_real:getProperty("publish_on_timer"):set(false)
 aggregator_real:getProperty("publish_on_event"):set(true)
 --set properties
-aggregator_real:provides("marshalling"):loadProperties(config.file("kinematic_chains.cpf"));
 aggregator_real:provides("marshalling"):loadServiceProperties(config.file("kinematic_chains.cpf"), "robot_model")
 aggregator_real:provides("rosparam"):getParam("","robot_model")
 --get other properties
