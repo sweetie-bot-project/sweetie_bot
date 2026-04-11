@@ -15,6 +15,9 @@ class WME:
             raise TypeError("WME value mismatch")
         if old_value != value:
             self._wme_id.Update(value)
+            return True
+        else:
+            return False
     
     def destroy(self):
         self._wme_id.DestroyWME()
