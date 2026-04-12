@@ -1,6 +1,6 @@
 <launch>
     <arg name="balancer_config" default="{'server_choices': {'local_host': {'priority': 10, 'url': 'https://ai.sweetie.bot/llm/v1/completions'}, 'remote_host': {'priority': 20, 'url': 'http://localhost:5000/v1/completions'}}}"/>
-    <node pkg="sweetie_bot_llm" type="llm_service_node" name="lang_model" output="screen">
+    <node pkg="sweetie_bot_llm" type="llm_completion_node" name="lang_model" output="screen">
         <rosparam param="balancer_config" subst_value="True">$(arg balancer_config)</rosparam>
         <rosparam file="$(find sweetie_bot_llm)/config/en/profile.yaml" ns="profile/en" />
         <rosparam file="$(find sweetie_bot_llm)/config/ru/profile.yaml" ns="profile/ru" />

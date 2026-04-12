@@ -1,0 +1,9 @@
+<library path="lib/libsweetie_bot_rviz_panel">
+
+  <class type="sweetie_bot_rviz_panel::sweetieBotRvizPanel" base_class_type="rviz::Panel">
+    <description>
+      A simple panel widget with buttons.
+    </description>
+  </class>
+
+</library>

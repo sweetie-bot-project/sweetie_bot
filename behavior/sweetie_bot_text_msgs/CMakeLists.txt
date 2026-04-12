@@ -32,6 +32,7 @@ add_service_files(
   Complete.srv
   CompleteSimple.srv
   CompleteRaw.srv
+  Classification.srv
   LibreTranslate.srv
   Translate.srv
 )
@@ -65,13 +66,4 @@ install(DIRECTORY
   info
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
-
-###########
-## Build ##
-###########
-
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-# include_directories(include)
-include_directories(${catkin_INCLUDE_DIRS})
 

@@ -155,8 +155,16 @@ include_directories(
 #############
 install(PROGRAMS
   scripts/llm_service_client
-  scripts/llm_service_node
   scripts/llm_api_service_node
+  scripts/llm_completion_node
+  scripts/llm_classification_node
+  scripts/classification_api_service_node
+  scripts/classificator_app.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(FILES
+  scripts/config.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

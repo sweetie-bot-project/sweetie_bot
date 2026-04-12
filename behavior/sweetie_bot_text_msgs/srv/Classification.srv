@@ -1,0 +1,9 @@
+string text
+---
+string[] classes
+float32[] probabilities
+uint8 error_code
+
+uint8 SUCCESS=0
+uint8 UNKNOWN_PROFILE=1
+uint8 SERVER_UNREACHABLE=2

@@ -88,49 +88,23 @@ sp {elaborate*state-events-predicates-pool
 # BOTTOM AND TOP STATE MARKS
 #
 
-sp {elaborate*delay
-	(state <s> ^superstate ^substate)
--->
-	(<s> ^delay 1)
-}
-
-sp {elaborate*not-bottom-state
-	(state <s> ^superstate <ss> ^substate ^delay -^type cognition)
--->
-	(<ss> ^bottom-state 0)
-}
-
-sp {elaborate*bottom-state
-	(state <s> ^superstate <ss> ^substate -^bottom-state 0 -^type cognition)
--->
-	(<s> ^bottom-state 1)
-}
-
-
 sp {elaborate*top-state
 	(state <s> ^superstate nil)
 -->
-	(<s> ^top-state 1)
+	(<s> ^top-state 1 ^level 1)
 }
 
-#
-# STATE IMPASSE: apply cognition operators
-#
+sp {elaborate*decision-state-level
+	(state <s> ^superstate <ss> ^substate -^type cognition)
+	(<ss> ^level <level>)
+-->
+	(<s> ^level (+ <level> 1))
+}
 
-sp {elaborate*state-impass-bottom-state
-	(state <s> ^impasse no-change ^attribute state)
+sp {elaborate*bottom-state
+	(state <s> ^level <level>)
+	-(state <ss> ^level {> <level>})
 -->
 	(<s> ^bottom-state 1)
-}
-
-# propagate memory access to subgoal substates
-sp {elaborate*state-imapsse*state-io-mem-beliefs
-	(state <s>  ^impasse no-change ^attribute state ^superstate <ss>)
-	(<ss> ^io <io> ^beliefs <b> ^beliefs-stable <bs> ^mem <m>)
--->
-	(<s> ^io <io>)
-	(<s> ^mem <m>)
-	(<s> ^beliefs <b>)
-	(<s> ^beliefs-stable <bs>)
 }
 

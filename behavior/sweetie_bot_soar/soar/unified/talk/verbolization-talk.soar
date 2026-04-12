@@ -3,7 +3,7 @@
 #
 # Perform verblization of talk-related predicates
 #
-# * (<pred> ^name possible-talk-topic ^object <obj> ^topic <a-topic> ^previous-topic <q-topic> ^reaction talk-answered ^deadline-time 60.0) --- possible reaction to 
+# * (<pred> ^name possible-talk-topic ^object <obj> ^topic <a-topic> ^previous-topic <q-topic> ^reaction talk-answered ^deadline-time 60.0) --- possible reaction to
 # *	(<pred> ^name ignor-possibility ^actor <obj> ^topic <topic> ^deadline-time 60.0) --- question is possibly being ignored.
 # *	(<pred> ^name ignor-topic ^actor <obj> ^topic <topic> ^deadline-time 600.0) --- question on specific topic is being ignored.
 # *	(<pred> ^name ignor-me ^actor <obj>) --- speaker ignores me.
@@ -130,12 +130,12 @@ sp {verbolization*elaborate*remark-about-ignorance
 	(<pred1> ^name ignor-possibility ^actor <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic ignorance-remark ^utility 60 ^type reaction ^animation-tag angry)
+	(<f> ^topic ignorance-remark ^utility 60 ^type reaction ^animation-tag anger)
 	(<f> ^text |Ты не слышишь меня? Я обратилась к тебе!| |Не надо меня игнорировать.|)
 }
 
 sp {talk-said*propose*said-about-ignorance
-	(state <s> ^substate talk-said ^topic ignorance-remark ^object <obj> ^actions <a> ^beliefs.predicate <pred>)	
+	(state <s> ^substate talk-said ^topic ignorance-remark ^object <obj> ^actions <a> ^beliefs.predicate <pred>)
 	(<pred> ^name ignor-possibility ^actor <obj>)
 -->
 	(<a> ^remove-predicate <pred>)
@@ -162,7 +162,7 @@ sp {talk-answered*propose*terminate-ignor-topic
 	(<b> ^predicate <pred>)
 	(<pred> ^name ignor-topic ^actor <obj> ^topic <topic>)
 -->
-	(<a> ^remove-predicate <pred>)	
+	(<a> ^remove-predicate <pred>)
 }
 
 
@@ -178,7 +178,7 @@ sp {verbolization*elaborate*remark-about-ignor-me-addition
 	-(<clock> ^just {>= <time>})
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic ignor-me-remark ^utility 70 ^type statement ^animation-tag angry)
+	(<f> ^topic ignor-me-remark ^utility 70 ^type statement ^animation-tag anger)
 	(<f> ^text |Ты игнорируешь меня!| |Ты не отвечаешь! Невозможно с тобой разговаривать!|)
 }
 
@@ -189,7 +189,7 @@ sp {verbolization*elaborate*remark-about-ignor-me
 	(<pred> ^name ignor-me ^actor <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic ignor-me-remark ^utility 20 ^type statement ^animation-tag angry)
+	(<f> ^topic ignor-me-remark ^utility 20 ^type statement ^animation-tag anger)
 	(<f> ^text |Я помню, как ты игнорировал меня и не извинился!|)
 }
 
@@ -205,7 +205,7 @@ sp {talk-answered*elaborate*ignor-me-excused
 	(<a> ^remove-predicate <pred>)
 }
 
-#	
+#
 # make remark about nonsense
 #
 
@@ -220,7 +220,7 @@ sp {verbolization*elaborate*remark-about-nonsense
 }
 
 sp {talk-said*propose*said-about-nonsense
-	(state <s> ^substate talk-said ^topic nonsense-remark ^object <obj> ^actions <a> ^beliefs.predicate <pred>)	
+	(state <s> ^substate talk-said ^topic nonsense-remark ^object <obj> ^actions <a> ^beliefs.predicate <pred>)
 	(<pred> ^name nonsense-possibility ^actor <obj>)
 -->
 	(<a> ^remove-predicate <pred>)
@@ -236,12 +236,12 @@ sp {verbolization*elaborate*remark-about-interruption
 	(<pred1> ^name interrupted-me ^actor <obj>)
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic interrupt-remark ^utility 60 ^type reaction ^animation-tag angry)
+	(<f> ^topic interrupt-remark ^utility 60 ^type reaction ^animation-tag anger)
 	(<f> ^text |Пожалуйста, не перебивай меня! Показывай карточку, когда я жду ответа.| |Показывай карточку, когда я окончила говорить, а когда я ее увидела --- убирай.|)
 }
 
 sp {talk-said*propose*said-about-interruption
-	(state <s> ^substate talk-said ^topic interrupt-remark ^object <obj> ^actions <a> ^beliefs.predicate <pred>)	
+	(state <s> ^substate talk-said ^topic interrupt-remark ^object <obj> ^actions <a> ^beliefs.predicate <pred>)
 	(<pred> ^name interrupted-me ^actor <obj>)
 -->
 	(<a> ^remove-predicate <pred>)
@@ -252,14 +252,14 @@ sp {talk-said*propose*said-about-interruption
 #
 
 # on predicate addition
-sp {verbolization*elaborate*remark-about-nonsense-me-addition 
+sp {verbolization*elaborate*remark-about-nonsense-me-addition
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v> ^time <clock>)
 	(<b> ^predicate <pred>)
 	(<pred> ^name nonsense-me ^actor <obj> ^initiated-at <time>)
 	-(<clock> ^just {>= <time>})
 -->
 	(<v> ^frame <f>)
-	(<f> ^topic nonsense-me-remark ^utility 60 ^type statement ^animation-tag angry)
+	(<f> ^topic nonsense-me-remark ^utility 60 ^type statement ^animation-tag anger)
 	(<f> ^text |Прекрати говорить чушь!| |Хватит! У меня болит голова от твоих карточек!|)
 }
 
@@ -292,7 +292,7 @@ sp {talk-answered*propose*terminate-nonsense-me
 	(<b> ^predicate <pred>)
 	(<pred> ^name nonsense-me ^actor <obj>)
 -->
-	(<a> ^remove-predicate <pred>)	
+	(<a> ^remove-predicate <pred>)
 	(<s> ^reaction <r>)
 	(<r> ^topic nonsense-me-terminated ^type reaction ^animation-tag surprise pleased)
 	(<r> ^text |Ты научился пользоваться карточками! Силен!| |Теперь ты умеешь пользоваться карточками. Люди поддаются дрессировке!.|)

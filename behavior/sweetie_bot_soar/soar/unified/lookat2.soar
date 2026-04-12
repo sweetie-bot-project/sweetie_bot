@@ -1,0 +1,157 @@
+#
+# LOOK AT
+#
+# DESCRIPTION
+#
+# Focus attention on given object presented in SWM.
+#
+# DECISION OPERATOR
+#
+# (<op> ^name @name@ ^substate look-at ^process-args <args>)
+#   (<args> ^object <obj>)
+#
+# Look at <obj>. Action is preemeted if process is removed (deadline) or output cmd is aborted (controller switch, abrot request).
+# If ^object is not visible it previous postion from SWM is used.
+#
+# PROCESS RESULT STATUSES
+#
+# * succeed -- look_at controller started and have been preemted by ^abort request or controller switch.
+# * error -- can not comunicate controller or invald cmd
+# * failed -- corresponding SWM object do not present
+#
+# SIDE EFFECTS
+#
+# Output link: 
+#
+# look-at 
+#
+# Predicates:
+#
+# * (^name looking-at ^object <obj> ^looking-at-proccess <proc>) --- object robot looking at is visible and is in center of viewfield
+#
+
+# ELABORATIONS
+
+sp {look-at*elaborate*my-look-at-cmd
+	(state <s> ^substate look-at ^args.object <obj> ^io.output-link.look-at <cmd>)
+	(<obj> ^label <label> ^type <type>)
+	(<cmd> ^label <label> ^type <type>)
+-->
+	(<s> ^my-look-at-cmd <cmd>)
+}
+
+sp {look-at*elaborate*other-look-at-cmd
+	(state <s> ^substate look-at ^io.output-link.look-at <cmd> -^my-look-at-cmd)
+-->
+	(<s> ^other-look-at-cmd <cmd>)
+}
+
+sp {look-at*elaborate*add-process
+	(state <s> ^substate look-at ^process-status pending ^operator <op> + ^process <proc>)
+	(<op> ^name {<<|abort-look-at-cmd| |create-look-at-cmd|>>})
+-->
+	(<op> ^add-process <proc>)
+}
+
+# DECISION OPERATORS
+
+# stop other look-at command if it is active
+sp {look-at*propose*abort-look-at-cmd
+	(state <s> ^substate look-at  ^other-look-at-cmd <cmd>)
+	(<cmd> -^abort)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name abort-look-at-cmd ^type automatic ^parent <cmd> ^attribute abort ^link-value hard)
+}
+
+# wait until other look-at command is stopped
+sp {look-at*propose*abort-look-at-cmd-wait
+	(state <s> ^substate look-at  ^other-look-at-cmd <cmd>)
+	(<cmd> ^abort)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name wait-abort-look-at-cmd ^substate wait)
+}
+
+# start look-at cmd
+sp {look-at*propose*start-look-at-cmd
+	(state <s> ^substate look-at ^args.object <obj> -^other-look-at-cmd -^my-look-at-cmd ^process <proc>)
+	(<obj> ^label <label> ^type <type>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name create-look-at-cmd ^object <obj> ^look-at-process <proc> ^type automatic)
+}
+
+sp {look-at*apply*start-look-at-cmd
+	(state <s> ^substate look-at ^operator <op> ^io.output-link <ol>)
+	(<op> ^name create-look-at-cmd ^object <obj> ^look-at-process <proc>)
+	(<obj> ^label <label> ^type <type>)
+-->
+	(<ol> ^look-at <cmd>)
+	(<cmd> ^label <label> ^type <type> ^process <proc>)
+	(write |LookAt: issue look-at cmd on | <label> |, | <type> (crlf))
+}
+
+# start process if exicting look-at cmd is reused
+sp {look-at*propose*start-process-old-command
+	(state <s> ^substate look-at ^process-status pending ^my-look-at-cmd <cmd> ^process <proc>)
+	(<cmd> ^process <proc-old>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name reuse-lookat-cmd ^type automatic ^add-process <proc>)
+	(<op> ^finish-status succeed ^finish-process <proc-old>)
+	(<op>  ^parent <cmd> ^attribute proccess ^remove-value <proc-old>)
+}
+
+
+# wait until other look-at command is stopped
+sp {look-at*propose*look-at-cmd-wait
+	(state <s> ^substate look-at ^process-status active ^my-look-at-cmd)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name wait-look-at-cmd ^substate wait)
+}
+
+# COGNITION
+
+# terminate process if output cmd is finished
+sp {look-at*propose*finish-process
+	(state <s> ^bottom-state 1 ^io.output-link.look-at <cmd>)
+	(<cmd> ^status <status> ^process <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name look-at-finish-process ^cmd <cmd> ^type automatic cognition ^finish-status <status> ^finish-process <proc>)
+}
+
+sp {look-at*apply*finish-process
+	(state <s> ^operator <op> ^io.output-link <ol>)
+	(<op> ^name look-at-finish-process ^cmd <cmd> ^finish-status <status>)
+-->
+	(<ol> ^look-at <cmd> -)
+	(write |LookAt: complete behavior with status | <status> (crlf))
+}
+
+# remove cmd if process is finished
+sp {look-at*propose*finish-process-abort-cmd
+	(state <s> ^bottom-state 1 ^io.output-link.look-at <cmd> ^beliefs <b>)
+	(<cmd> -^abort ^process <proc>)
+   	(<b> -^process <proc>) 
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name look-at-finish-process-abort-cmd ^type automatic cognition ^parent <cmd> ^attribute abort ^link-value hard)
+}
+
+# ELABOARTIONS
+
+# detect "object in the center" situation
+sp {look-at*elaborate*looking-at
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^process <proc>)
+	(<proc> ^substate look-at ^object <obj>)
+	(<obj> ^input-link <il>)
+	(<il> ^visible now ^yaw-head center)
+-->
+	(<b> ^predicate <pred>)
+	(<pred> ^name looking-at ^object <obj> ^focusing-process <proc>)
+}
+

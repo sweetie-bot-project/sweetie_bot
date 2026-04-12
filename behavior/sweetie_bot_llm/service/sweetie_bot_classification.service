@@ -1,0 +1,20 @@
+[Unit]
+Description=Sweetie Bot Classificator API service
+Wants=network-online.target
+After=network-online.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+# set your production variables in .env
+Environment=CONFIGURATION_SETUP="config.ProductionConfig"
+Environment=APP_NAME="classificator_app"
+# change to your user
+User=sweetie
+#TimeoutStartSec=100
+# change textgen to your conda environment's name
+ExecStart=/bin/bash -c "source /opt/ros/sweetie_bot/setup.bash && rosrun sweetie_bot_llm classification_api_service_node textgen_v1"
+Restart=on-failure
+TimeoutSec=600

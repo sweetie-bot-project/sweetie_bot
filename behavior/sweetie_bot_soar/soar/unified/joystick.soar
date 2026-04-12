@@ -1,7 +1,7 @@
 # JOYSTICK SUBSTATE
 #
 # Robots movements are controlled by joystick.
-#  
+#
 # DECISION OPERATOR
 #
 # (<op> ^name @name@ ^substate joystick)
@@ -19,24 +19,24 @@
 # None
 #
 
-# 
+#
 # ELABORATIONS
 #
 
 # map between buttons and animations tags
 sp {joystick*elaborate*key-maps-animations
-	(state <s> ^substate joystick) 
+	(state <s> ^substate joystick)
 -->
 	(<s> ^mapping <m1> <m2> <m3> <m4>)
 	(<m1> ^key |1| ^type animation ^tag greet)
 	(<m2> ^key |2| ^type animation ^tag talk)
 	(<m3> ^key |3| ^type animation ^tag alone)
-	(<m4> ^key |4| ^type animation ^tag angry)
+	(<m4> ^key |4| ^type animation ^tag anger)
 }
 
 # map between buttons and step sequences (proto2)
 sp {joystick*elaborate*key-maps-step-sequence
-	(state <s> ^substate joystick) 
+	(state <s> ^substate joystick)
 -->
 	(<s> ^mapping <m1> <m2> <m3> <m4> <m5> <m6> <m7> <m8> <m9> <m10> <m11> <m12> <m13> <m14> <m15>)
 	(<m1> ^key |left| ^type step-sequence ^name |turn_left_45|)
@@ -58,7 +58,7 @@ sp {joystick*elaborate*key-maps-step-sequence
 
 # convert pressed button to action according to mapping (1 button)
 sp {joystick*elaborate*action-match-1
-	(state <s> ^substate joystick ^io.input-link.joystick <joy> ^mapping <m>) 
+	(state <s> ^substate joystick ^io.input-link.joystick <joy> ^mapping <m>)
 	(<m> ^key <k1> -^key {<> <k1>})
 	(<joy> ^pressed <k1>)
 -->
@@ -68,7 +68,7 @@ sp {joystick*elaborate*action-match-1
 
 # convert pressed button to action according to mapping (2 buttons)
 sp {joystick*elaborate*action-match-2
-	(state <s> ^substate joystick ^io.input-link.joystick <joy> ^mapping <m>) 
+	(state <s> ^substate joystick ^io.input-link.joystick <joy> ^mapping <m>)
 	(<m> ^key <k1> ^key {<> <k1> <k2>} -^key {<> <k1> <> <k2>})
 	(<joy> ^pressed <k1> <k2>)
 -->
@@ -78,7 +78,7 @@ sp {joystick*elaborate*action-match-2
 
 # convert pressed button to action according to mapping (3 buttons)
 sp {joystick*elaborate*action-match-3
-	(state <s> ^substate joystick ^io.input-link.joystick <joy> ^mapping <m>) 
+	(state <s> ^substate joystick ^io.input-link.joystick <joy> ^mapping <m>)
 	(<m> ^key <k1> ^key {<> <k1> <k2>} ^key {<> <k1> <> <k2> <k3>})
 	(<joy> ^pressed <k1> <k2> <k3>)
 -->
@@ -139,4 +139,3 @@ sp {joystick*prefer*priority
 -->
 	(<s> ^operator <op2> < <op1>)
 }
-

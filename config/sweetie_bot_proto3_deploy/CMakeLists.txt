@@ -27,7 +27,7 @@ catkin_package(
 #############
 
 # Scripts installation
-install(DIRECTORY default tinker torque_control joint_trajectories
+install(DIRECTORY default tinker torque_control joint_trajectories proto32
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # bash script

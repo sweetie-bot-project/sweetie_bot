@@ -1,4 +1,4 @@
 #! /usr/bin/env python3
-from sweetie_bot_mic.main import *
+from sweetie_bot_mic.hearing_node import *
 if __name__ == '__main__':
         main()

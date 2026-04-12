@@ -47,7 +47,8 @@ sp {movement*propose*wait
 
 sp {curiosity*propose*attention
 	(state <s> ^name curiosity ^substate general ^beliefs.object <obj>)
-	(<obj> ^input-link.visible now)
+	(<obj> ^input-link <il>)
+	(<il> ^visible now ^yaw-body {<<|left| |center| |right|>>})
 -->
 	(<s> ^operator <o> +, =)
    	(<o> ^name look-at-multiple-objects ^substate attention ^process-args <a>)
@@ -155,7 +156,7 @@ sp {security*propose*say-overheat
 	(<s> ^operator <op> +, =)
 	(<op> ^name say-overheat ^type automatic ^add-predicate <pred-new> ^add-output-command textcmd ^output-command-args <cmd>)
 	(<pred-new> ^name said-about-overheat ^deadline-time 30.0)
-	(<cmd> ^type |voice/say/en| ^command |My motors have overheated! I'll stay still for some time.|)
+	(<cmd> ^type |voice/say/ru| ^command |My motors have overheated! I'll stay still for some time.|)
 }
 
 # say about servos failure
@@ -166,7 +167,7 @@ sp {security*propose*say-servo-failed
 	(<s> ^operator <op> +, =)
 	(<op> ^name say-servo-failed ^type automatic ^add-predicate <pred-new> ^add-output-command textcmd ^output-command-args <cmd>)
 	(<pred-new> ^name said-about-servo-failed ^deadline-time 30.0)
-	(<cmd> ^type |voice/say/en| ^command |One of my servos failed! Help me!| ^automatic-remove yes)
+	(<cmd> ^type |voice/say/ru| ^command |One of my servos failed! Help me!| ^automatic-remove yes)
 }
 
 # wait until servos are normal

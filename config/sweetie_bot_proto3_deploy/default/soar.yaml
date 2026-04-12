@@ -3,7 +3,8 @@ soar:
     autostart: false
     agent_package: "sweetie_bot_soar"
     agent_file: "soar/unified-proto3.soar"
-    # agent_file: "soar/test_llm.soar"
+    #agent_file: "soar/tests/test_lookat.soar"
+    #agent_file: "soar/tests/test_attention.soar"
     input:
         rand:
             type: "rand"
@@ -16,6 +17,10 @@ soar:
             type: "joystick"
             topic: "/hmi/joy_decoder/keys_pressed"
             last_activity_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 10.0, 300.0] }
+        touch:
+            type: "joystick"
+            topic: "/touch"
+            last_activity_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 3.0, 30.0 ] }
         swm:
             type: "swm"
             topic: "detections"
@@ -25,8 +30,16 @@ soar:
             body_frame: "base_link"
             head_frame: "head_link4"
             distance_bins_map: { names: [ "close", "near", "far" ], values: [ 0.3, 3.0] }
-            yaw_bins_map: { names: [ "right", "center", "left" ], values: [ -0.52, 0.52] }
+            yaw_bins_map: { names: [ "back", "right", "center", "left", "back" ], values: [ -1.57, -0.52, 0.52, 1.57] }
             time_bins_map: { names: [ "now", "just", "recently", "long-time" ], values: [ 2.0, 10.0, 120.0] }
+            pose_filter:
+              # type: 'none'
+              type: 'maxvel'
+              velocity_estimator_difftime: 0.1
+              velocity_linear_threshold: 0.01   # 1 cm/s
+              velocity_angular_threshold: 0.087 # 5 deg/s
+            markers_topic: '/hmi/swm_markers'
+            markers_publication_period: 0.2
         body-pose:
             type: "pose_joints"
             topic: "joint_states"
@@ -53,11 +66,34 @@ soar:
         sound:
             type: "sound_speech"
             topic: "sound_event"
-            speech_timeout: 2.5
-            intensity_bins_map: { names: [ "low", "med", "high" ], values: [ 10.0, 20.0 ] }
-            lang_filter: ['en', 'zh']
-            map_parsers:
-                'en': 
+            speech_timeout: 1.5
+            intensity_bins_map: { names: [ "low", "medium", "high" ], values: [ 0.3, 0.6 ] }
+            lang_filter: ['en', 'ru', 'zh']
+            object_filter: ['human']
+            object_max_n: 3
+            object_evaluation_alpha: 0.85
+            undetected_angle_tolerance: 0.5 # +/- 30 deg
+            undetected_intensity_accept_ratio: 0.90
+            nlp_parsers:
+                #'en': 
+                    #type: 'lexical_tree'
+                    #nlp_model: 'en_core_web_sm'
+                #'ru':
+                    #type: 'lexical_tree'
+                    #nlp_model: 'en_core_web_sm'
+                'en':
+                    type: 'word_map'
+                    nlp_model: 'en_core_web_sm'
+                    map: 
+                        greeting: [hello, hi, greet]
+                        goodbye: [goodbye, bye]
+                        dance: [dance]
+                        sing: [sing]
+                        please: [please]
+                        give: [give]
+                        hoof: [hoof, hand, leg, hooves]
+                'ru':
+                    type: 'word_map'
                     nlp_model: 'en_core_web_sm'
                     map:
                         greeting: [hello, hi, greet]
@@ -68,8 +104,9 @@ soar:
                         give: [give]
                         hoof: [hoof, hand, leg, hooves]
                 'zh':
+                    type: 'word_map'
                     nlp_model: 'en_core_web_sm'
-                    map:
+                    map: 
                         greeting: [hello, hi, greet]
                         goodbye: [goodbye, bye]
                         dance: [dance]
@@ -77,16 +114,6 @@ soar:
                         please: [please]
                         give: [give]
                         hoof: [hoof, hand, leg, hooves]
-                # 'ru':
-                #     nlp_model: 'en_core_web_sm'
-                #     map:
-                #         greeting: [hello, hi, greet]
-                #         goodbye: [goodbye, bye]
-                #         dance: [dance]
-                #         sing: [sing]
-                #         please: [please]
-                #         give: [give]
-                #         hoof: [hoof, hand, leg, hooves]
     output:
         nop:
             delay: 0.2
@@ -98,6 +125,9 @@ soar:
             action_ns: "voice/syn"
         speech-visualization:
             topic: "hmi/speech_visualization"
+        look-at:
+            controller: "motion/controller/look_at"
+            period: 0.1
         lang-model:
             service_ns: "llm_request"
             requests:
@@ -115,16 +145,31 @@ soar:
                     attrib_requests:
                         - type: 'map'
                           nlp_model: 'en_core_web_sm'
-                          map: 
-                            anger: [ 'anger' ]
-                            happy: [ 'happiness', 'love', 'happy' ]
-                            neutral: [ 'indifference', 'neutral', 'nothing' ]
-                            sad: [ 'sadness', 'sad' ]
-                            scared: [ 'scary', 'fright' ]
+                          map:
+                            love: [ 'love' ]
+                            joy: [ 'joy', 'happy', 'happiness' ]
+                            surprise: [ 'surprise' ]
+                            neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
+                            sad: [ 'sad', 'sadness' ]
+                            fear: [ 'fear', 'scared', 'scary', 'fright' ]
+                            anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
                           attrib: 'emotion'
                           prompt: "Sweetie thinks about human's answer and the emotion she feels is "
                           leading_text: "The emotion Sweetie feels is "
                           stop_list: ['.', '!', "\n"]
+                        - type: 'classification'
+                          classification_model: 'bert_sentiment'
+                          attrib: 'additional_emotion'
+                          fallback_value: 'neutral'
+                          leading_text: ''
+                          merge_map:
+                            love: [ 'love' ]
+                            joy: [ 'neutral', 'joy', ]
+                            surprise: [ 'neutral', 'surprise' ]
+                            neutral: [ 'neutral', 'surprise', 'fear', 'sad' ]
+                            sad: [ 'neutral', 'sad', ]
+                            fear: [ 'neutral', 'fear' ]
+                            anger: [ 'anger' ]
                         - type: 'regex'
                           regex: '(?P<result>[^"]+)"'
                           prompt: 'Sweetie says "'
@@ -158,12 +203,27 @@ soar:
                           attrib: 'emotion'
                           fallback_value: 'neutral'
                           leading_text: ''
-                          map: 
+                          map:
+                            love: [ 'love' ]
+                            joy: [ 'joy', 'happy', 'happiness' ]
+                            surprise: [ 'surprise' ]
+                            neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
+                            sad: [ 'sad', 'sadness' ]
+                            fear: [ 'fear', 'scared', 'scary', 'fright' ]
+                            anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
+                        - type: 'classification'
+                          classification_model: 'bert_sentiment'
+                          attrib: 'additional_emotion'
+                          fallback_value: 'neutral'
+                          leading_text: ''
+                          merge_map:
+                            love: [ 'love' ]
+                            joy: [ 'neutral', 'joy', ]
+                            surprise: [ 'neutral', 'surprise' ]
+                            neutral: [ 'neutral', 'surprise', 'fear', 'sad' ]
+                            sad: [ 'neutral', 'sad', ]
+                            fear: [ 'neutral', 'fear' ]
                             anger: [ 'anger' ]
-                            happy: [ 'happiness', 'love', 'happy' ]
-                            neutral: [ 'indifference', 'neutral', 'nothing' ]
-                            sad: [ 'sadness', 'sad' ]
-                            scared: [ 'scary', 'fright' ]
                         - type: 'regex-test'
                           regex: ".*\\?.*"
                           attrib: 'sentence-type'
@@ -192,16 +252,29 @@ soar:
                           attrib: 'emotion'
                           fallback_value: 'neutral'
                           leading_text: ''
-                          map: 
+                          map:
+                            love: [ 'love' ]
+                            joy: [ 'joy', 'happy', 'happiness' ]
+                            surprise: [ 'surprise' ]
+                            neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
+                            sad: [ 'sad', 'sadness' ]
+                            fear: [ 'fear', 'scared', 'scary', 'fright' ]
+                            anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
+                        - type: 'classification'
+                          classification_model: 'bert_sentiment'
+                          attrib: 'additional_emotion'
+                          fallback_value: 'neutral'
+                          leading_text: ''
+                          merge_map:
+                            love: [ 'love' ]
+                            joy: [ 'neutral', 'joy', ]
+                            surprise: [ 'neutral', 'surprise' ]
+                            neutral: [ 'neutral', 'surprise', 'fear', 'sad' ]
+                            sad: [ 'neutral', 'sad', ]
+                            fear: [ 'neutral', 'fear' ]
                             anger: [ 'anger' ]
-                            happy: [ 'happiness', 'love', 'happy' ]
-                            neutral: [ 'indifference', 'neutral', 'nothing' ]
-                            sad: [ 'sadness', 'sad' ]
-                            scared: [ 'scary', 'fright' ]
                         - type: 'regex-test'
                           regex: ".*\\?.*"
                           attrib: 'sentence-type'
                           value_match: 'question'
                           value_nomatch: 'statement'
-
-

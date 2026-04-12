@@ -153,9 +153,7 @@ function config.file(conf_file)
 	end
 	-- try to get rosparam
 	local user = os.getenv ( "USER" )
-        tmp_root_dir = "/tmp/sweetie_bot"
-	lfs.mkdir(tmp_root_dir)
-	tmp_dir = "/tmp/sweetie_bot/" .. user
+	tmp_dir = "/tmp/sweetie_bot_" .. user
 	lfs.mkdir( tmp_dir )
 	local buffer = config.get_rosparam(conf_file_param, 'string')
 	if buffer then

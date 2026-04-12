@@ -50,7 +50,7 @@ class FlexBe(output_module.OutputModule):
                 goal.input_input_keys.append(key_id.GetAttribute())
                 goal.input_values.append(input_key_id.GetValueAsString())
         # send goal to server
-        rospy.loginfo("flexbe output module: executing behavior %s.", goal.behavior_name)
+        rospy.loginfo("flexbe output module: executing behavior %s with paramters %s", goal.behavior_name, {key: value for key, value in zip(goal.arg_keys, goal.arg_values)})
         self._action_client.send_goal(goal)
         return None
 
@@ -63,6 +63,7 @@ class FlexBe(output_module.OutputModule):
             if abort_id:
                 if abort_id.GetValueAsString() == "hard":
                     # cancel goal immediatelly
+                    rospy.loginfo("flexbe output module: cancel behavior.")
                     self._action_client.cancel_goal()
             return None
         # Goal is completed.

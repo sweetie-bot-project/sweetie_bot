@@ -3,7 +3,7 @@
 #
 # Perform verblization of talk-related predicates
 #
-# * (<pred> ^name possible-talk-topic ^object <obj> ^topic <a-topic> ^previous-topic <q-topic> ^reaction talk-answered ^deadline-time 60.0) --- possible reaction to 
+# * (<pred> ^name possible-talk-topic ^object <obj> ^topic <a-topic> ^previous-topic <q-topic> ^reaction talk-answered ^deadline-time 60.0) --- possible reaction to
 # *	(<pred> ^name ignor-possibility ^actor <obj> ^topic <topic> ^deadline-time 60.0) --- question is possibly being ignored.
 # *	(<pred> ^name ignor-topic ^actor <obj> ^topic <topic> ^deadline-time 600.0) --- question on specific topic is being ignored.
 # *	(<pred> ^name ignor-me ^actor <obj>) --- speaker ignores me.
@@ -32,7 +32,7 @@ sp {verbolization*propose*remove-greeted-predicate
 	(<op> ^name remove-greeted-predicate ^type cognition automatic ^remove-predicate <pred>)
 }
 
-# dislike speaker 
+# dislike speaker
 sp {verbolization*elaborate*dislike-from-ignor-me-nonsense-me
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^predicate <pred>)
@@ -45,7 +45,7 @@ sp {verbolization*elaborate*dislike-from-ignor-me-nonsense-me
 # VERBOLIZATION RULES
 
 #
-# greeting 
+# greeting
 #
 
 # elabotare greeting frame base
@@ -164,7 +164,7 @@ sp {talk-heard*elaborate*greeting-acquitance-greeted-rejection
 	(<obj> ^label <label>)
 -->
 	(<s> ^reaction <f>)
-	(<f> ^topic greeting ^type reaction ^animation-tag angry)
+	(<f> ^topic greeting ^type reaction ^animation-tag anger)
 	(<f> ^text |Хватит! Еще один "привет" и ты умрешь!|)
 }
 
@@ -213,15 +213,15 @@ sp {verbolization*elaborate*goodbye
 # register in beliefs that no questions left
 sp {verbolization*elaborate*no-questions-left*initiate
 	(state <s> ^substate talk ^beliefs <b> ^object <obj> ^verbolization <v>)
-	-{(<v> ^frame <f>) 
-	  (<f> ^type question ^topic {<> goodbye <topic>}) 
-	  -(<v> ^ignor-topic <topic>) 
-	  -(<v> ^reject-topic <topic>) 
+	-{(<v> ^frame <f>)
+	  (<f> ^type question ^topic {<> goodbye <topic>})
+	  -(<v> ^ignor-topic <topic>)
+	  -(<v> ^reject-topic <topic>)
     }
 	-{(<b> ^predicate <pred>)
 	  (<pred> ^name no-questions-for-speaker ^object <obj>)
     }
--->	
+-->
 	(<s> ^operator <op> +, =)
 	(<op> ^type cognition automatic ^add-predicate <pred>)
 	(<pred> ^name no-questions-for-speaker ^object <obj> ^deadline-time 180.0 ^talk-deadline-time (rand-float 0.0 180.0))
@@ -240,10 +240,10 @@ sp {verbolization*elaborate*no-questions-left*terminate
 	(<b> ^predicate <pred>)
 	(<pred> ^name no-questions-for-speaker ^object <obj>)
 	(<v> ^frame <f>)
-	(<f> ^type question ^topic {<> goodbye <topic>}) 
-	-(<v> ^ignor-topic <topic>) 
-	-(<v> ^reject-topic <topic>) 
--->	
+	(<f> ^type question ^topic {<> goodbye <topic>})
+	-(<v> ^ignor-topic <topic>)
+	-(<v> ^reject-topic <topic>)
+-->
 	(<s> ^operator <op> +, =)
 	(<op> ^type cognition automatic ^remove-predicate <pred>)
 }

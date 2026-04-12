@@ -6,22 +6,23 @@ WantedBy=multi-user.target
 
 [Service]
 Type=simple
+Environment=COQUI_TOS_AGREED=1
 Environment=MODEL_NAME=tts_models--multilingual--multi-dataset--xtts_v2
 Environment=MODEL_FILE=model.pth
 Environment=MODEL_CONF=config.json
 Environment=MODEL_SPEAKER=speakers_xtts.pth
 Environment=conda_path=miniconda3/condabin
 Environment=VENV=tts
-Environment=PORT=5002
+Environment=PORT=5603
 # change to your user
 User=sweetie
 #TimeoutStartSec=100
-
 ExecStart=/bin/bash -c "\
     TTS_PATH=$HOME/.local/share/tts; \
     MODEL_PATH=$TTS_PATH/$MODEL_NAME; \
     source ${HOME}/miniconda3/etc/profile.d/conda.sh; \
     conda activate ${VENV}; \
+    [ -f $MODEL_PATH/$MODEL_FILE ] || tts --model_name $${MODEL_NAME//--/\/} --list_language_idxs; \
     tts-server \
         --model_path $MODEL_PATH/$MODEL_FILE \
         --config_path $MODEL_PATH/$MODEL_CONF \

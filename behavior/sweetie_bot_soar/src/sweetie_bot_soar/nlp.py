@@ -1,5 +1,6 @@
 import spacy
 
+
 class SpacyInstance:
     _spacy_models = {}
     def __new__(cls, model, *args, **kwargs):

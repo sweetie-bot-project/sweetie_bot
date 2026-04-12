@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "cpf.dtd">
+<properties>
+  <struct name="leg1_q_opt" type="array">
+     <description>Optimal pose</description>
+     <simple name="Element0" type="double"><value>0.00</value></simple>
+     <simple name="Element1" type="double"><value>0.00</value></simple>
+     <simple name="Element2" type="double"><value>0.97</value></simple>
+     <simple name="Element3" type="double"><value>-1.05</value></simple>
+     <simple name="Element4" type="double"><value>0.00</value></simple>
+     <simple name="Element5" type="double"><value>0.00</value></simple>
+     <simple name="Element6" type="double"><value>0.00</value></simple>
+  </struct>
+  <struct name="leg3_q_opt" type="array">
+     <description>Optimal pose</description>
+     <simple name="Element0" type="double"><value>0.00</value></simple>
+     <simple name="Element1" type="double"><value>0.00</value></simple>
+     <simple name="Element2" type="double"><value>-1.04</value></simple>
+     <simple name="Element3" type="double"><value>1.12</value></simple>
+     <simple name="Element4" type="double"><value>-0.52</value></simple>
+     <simple name="Element5" type="double"><value>0.00</value></simple>
+     <simple name="Element6" type="double"><value>0.00</value></simple>
+  </struct>
+  <struct name="leg4_q_opt" type="array">
+     <description>Optimal pose</description>
+     <simple name="Element0" type="double"><value>0.00</value></simple>
+     <simple name="Element1" type="double"><value>0.00</value></simple>
+     <simple name="Element2" type="double"><value>-1.04</value></simple>
+     <simple name="Element3" type="double"><value>1.12</value></simple>
+     <simple name="Element4" type="double"><value>-0.52</value></simple>
+     <simple name="Element5" type="double"><value>0.00</value></simple>
+     <simple name="Element6" type="double"><value>0.00</value></simple>
+  </struct>
+  <struct name="leg2_q_opt" type="array">
+     <description>Optimal pose</description>
+     <simple name="Element0" type="double"><value>0.00</value></simple>
+     <simple name="Element1" type="double"><value>0.00</value></simple>
+     <simple name="Element2" type="double"><value>0.97</value></simple>
+     <simple name="Element3" type="double"><value>-1.05</value></simple>
+     <simple name="Element4" type="double"><value>0.00</value></simple>
+     <simple name="Element5" type="double"><value>0.00</value></simple>
+     <simple name="Element6" type="double"><value>0.00</value></simple>
+  </struct>
+</properties>

@@ -1,0 +1,7 @@
+<launch>
+    <arg name="balancer_config" default="{'server_choices': {'local_host': {'priority': 10, 'url':
+    'http://127.0.0.1:5011/'}, 'remote_host': {'priority': 20, 'url': 'https://ai.sweetie.bot/classification/'}}}"/>
+    <node pkg="sweetie_bot_llm" type="llm_classification_node" name="classification_model" output="screen">
+        <rosparam param="balancer_config" subst_value="True">$(arg balancer_config)</rosparam>
+    </node>
+</launch>
