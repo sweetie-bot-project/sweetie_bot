@@ -39,9 +39,9 @@
 
 # reserve speech subsystem
 sp {verbolize*elaborate*resources
-	(state <s> ^substate verbolize-llm)
+	(state <s> ^substate verbolize)
 -->
-	(<s> ^blocked-resource speech)
+	(<s> ^required-resource speech)
 }
 
 #
@@ -193,7 +193,7 @@ sp {verbolize*propose*ditch-animation
 
 # propose animations and add tags
 sp {verbolize*propose*animation
-	(state <s> ^substate verbolize -^performing-animation)
+	(state <s> ^substate verbolize -^performing-animation ^process <proc>)
 	(<proc> -^animation-status)
 -->
 	(<s> ^operator <op> +, =)

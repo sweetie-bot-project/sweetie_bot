@@ -107,7 +107,7 @@ sp {process*elaborate*start-process-transitive
 
 # automatically start process if subprocess is started 
 sp {process*apply*add-process*superstate-process
-	(state <s> ^operator <op> ^process <p> ^pending-superstate-process <sp>)
+	(state <s> ^operator <op> + ^process <p> ^pending-superstate-process <sp>)
 	(<op> ^type automatic ^add-process <p>)
 -->
 	(<op> ^add-process <sp>)

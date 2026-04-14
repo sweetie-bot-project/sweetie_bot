@@ -46,6 +46,15 @@ sp {beliefs*elaborate*predicate-events-fast-access
 	(<b> ^<reason> <ev>)
 }
 
+# add substate to process-related events
+sp {beliefs*elaborate*process-event-substate
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^process.substate <name>)
+-->
+	(<ev> ^substate <name>)
+}
+
 # BELIEF CREATION DETECTION
 
 # newly created belief does not have `^initiated-at` attribute.
