@@ -281,7 +281,7 @@ sp {verbolize*prefer*priority
 sp {verbolize*propose*terminate-verbolize
 	(state <s> ^bottom-state 1 ^beliefs <b>)
 	(<b> ^process <proc>)
-	(<proc> ^substate verbolize ^text-action-status succeed ^animation-status)
+	(<proc> ^substate verbolize ^text-action-status succeed)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name terminate-verbolize ^type cognition automatic ^finish-process <proc> ^finish-status succeed)
