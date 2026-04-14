@@ -36,7 +36,7 @@ sp {process*elaborate*blocked-resource-common
 
 # in subprocess tree of current goal preserve reserved resources
 sp {process*elaborate*reserved-resource-non-general
-	(state <s> -^substate general -^required-resource <res> ^superstate <ss>)
+	(state <s> ^substate {<> general} -^required-resource <res> ^superstate <ss>)
 	(<ss> ^reserved-resource <res>)
 -->
 	(<s> ^reserved-resource <res>)
@@ -57,7 +57,7 @@ sp {process*prefer*prohibit-resource-conflict
 	(<op> ^name <name>)
 -->
 	(<ss> ^operator <op> ~)
-	(log 1 (concat |REJECT superstate operator | <op> | | <name> | in | <ss> | from | <s> (crlf)))
+	(log 1 (concat |REJECT superstate operator | <op> | | <name> | in | <ss> | from | <s> | for | <res> (crlf)))
 }
 
 # reject substate operators which requires blocked resource

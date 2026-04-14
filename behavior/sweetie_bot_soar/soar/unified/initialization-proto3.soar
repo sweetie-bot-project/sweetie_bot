@@ -146,5 +146,5 @@ sp {apply*initialization-second-stage*name
 	(state <s> ^name initialization ^operator <op>)
 	(<op> ^name initialization ^stage 3)
 -->
-	(<s> ^substate general)
+	(<s> ^name root ^substate wait)
 }

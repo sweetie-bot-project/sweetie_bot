@@ -64,12 +64,21 @@ sp {wait*propose*wait-process-continue
 	(<op> ^name wait-continue-process ^process-link <proc>)
 }
 
-# switch to next drive if it is possible
-sp {wait*propose*wait-process-top-level
+# add operators to switch on next driver in all states
+sp {wait*propose*general-next-drive
 	(state <s> ^substate wait -^wait-process ^drive-possible <d>)
+	(<d> ^name <name>)
 -->
-	(<s> ^operator <op> +, =)
-	(<op> ^name top-level-goal)
+	(<s> ^operator <op> +)
+	(<op> ^name <name> ^substate general ^drive <d>)
+}
+
+sp {wait*prefer*general-next-drive-importance
+	(state <s> ^substate wait ^operator <op1> + ^operator {<> <op1> <op2>} +)
+	(<op1> ^substate general ^drive.importance <i1>)
+	(<op2> ^substate general ^drive.importance {< <i1>})
+-->
+	(<s> ^operator <op1> > <op2>)
 }
 
 # do nothing if not process to wait and no drives is available
