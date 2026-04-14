@@ -82,7 +82,7 @@ voice:
 eyes:
     start_blinking: true
 mic_button_hotkey_node:
-    key_combination: [ 'ctrl','alt', 'w' ]
+    key_combination: [ 'ctrl', 'e' ]
     enable_global_hotkey: True
 audio_transiver:
     gstreamer_pipeline: "alsasrc device={device} ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! rtpgstpay config-interval=1 ! udpsink host={host_address} port=12345"

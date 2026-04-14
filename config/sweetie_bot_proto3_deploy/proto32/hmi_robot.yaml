@@ -73,7 +73,7 @@ eyes:
 touch_driver:
     dev: "/dev/input/js0"
 mic_button_hotkey_node:
-    key_combination: [ 'ctrl','alt', 'w' ]
+    key_combination: [ 'ctrl', 'e' ]
     enable_global_hotkey: True
 audio_transiver:
     gstreamer_pipeline: "alsasrc device={device} ! audio/x-raw,format=S16LE,channels=6,rate=16000,layout=interleaved ! rtpgstpay config-interval=1 ! udpsink host={host_address} port=12345"
@@ -93,8 +93,8 @@ microphone:
     #microphone_frame_id: 'microphone_link'
     stationary_frame_id: 'base_link_path'
     doa:
-        type: 'none'
-        #type: 'pyroomacoustics'
+        #type: 'none'
+        type: 'pyroomacoustics'
         algorithm: 'NormMUSIC'
         #algorithm: 'SRP'
         #algorithm: 'FRIDA'
