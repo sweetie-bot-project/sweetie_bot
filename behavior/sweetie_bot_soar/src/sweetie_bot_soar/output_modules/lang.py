@@ -1,3 +1,5 @@
+import traceback
+
 from . import output_module
 import rospy
 import actionlib
@@ -76,7 +78,7 @@ class TalkEvent():
                 self.emotion = emotion_id.GetValueAsString()
             else:
                 self.emotion = 'neutral'
-                rospy.logerr('Cannot find emotion!!!')
+                rospy.logwarn('lang output module: emotion WME is not provided.')
         else:
             self.text = None
 
@@ -148,6 +150,9 @@ class AttribRequestRegex(AttribRequest):
         if self._regex.groups != len(self._regex.groupindex) or self._regex.groups == 0:
             raise ValueError('regexp (%s): must be at least one match group, all groups must be named.' % regex)
 
+    def __repr__(self):
+        return f'AttribRequestRegex({self._regex})'
+
     def parse(self, text, **kwargs):
         m = self._regex.match(text)
         # check if match is succesfull
@@ -158,7 +163,7 @@ class AttribRequestRegex(AttribRequest):
         result = {}
         for attr in self._regex.groupindex:
             val = m.group(attr)
-            print('attr: ', attr, ' vaule: ', val)
+            #print('attr: ', attr, ' vaule: ', val)
             if m.group(attr) is not None:
                 result[attr] = val
             else:
@@ -185,6 +190,9 @@ class AttribRequestRegexTest(AttribRequest):
         self._value_nomatch = value_nomatch
         if value_nomatch is None and value_nomatch is None:
             raise TypeError('value_match or value_nomatch cannot be both None')
+
+    def __repr__(self):
+        return f'AttribRequestRegexTest({self._regex}, attrib={self._attrib}, value_match={self._value_match}, value_nomatch={self._value_nomatch})'
 
     def parse(self, text, **kwargs):
         m = self._regex.match(text)
@@ -219,6 +227,9 @@ class AttribRequestMap(AttribRequest):
             assert_param(fallback_value, 'fallback_value: must be string', allowed_types=str)
         self._fallback_value = fallback_value
 
+    def __repr__(self):
+        return f'AttribRequestMap({self._map}, fallback_value={self._fallback_value}, attrib={self._attrib})'
+
     def parse(self, text, **kwargs):
         tokens = self._nlp(self._leading_text + ' ' + text)
         # process parsed tokens and find key
@@ -242,7 +253,7 @@ AttribRequest.subclass_map.update({'map': AttribRequestMap})
 
 class AttribRequestClassification(AttribRequest):
 
-    def __init__(self, merge_map, attrib, leading_text = '', fallback_value = None, classification_model='bert_sentiment', **kwargs):
+    def __init__(self, merge_map, attrib, override_attrib = None, leading_text = '', fallback_value = None, classification_model='bert_sentiment', **kwargs):
         super(AttribRequestClassification, self).__init__(**kwargs)
         # connect classification service
         # TODO: Add model selection
@@ -255,12 +266,17 @@ class AttribRequestClassification(AttribRequest):
         # save attrib name
         assert_param(attrib, 'attrib: must be string', allowed_types=str)
         self._attrib = attrib
+        assert_param(override_attrib, 'override_attrib: must be string or none', allowed_types=(str, None))
+        self._override_attrib = override_attrib
         assert_param(leading_text, 'leading_text: must be string', allowed_types=str)
         self._leading_text = leading_text
         if fallback_value is not None:
             assert_param(fallback_value, 'fallback_value: must be string', allowed_types=str)
         self._fallback_value = fallback_value
         self._classification_noise_threshold = 0.1
+
+    def __repr__(self):
+        return f'AttribRequestClassification({self._merge_map}, attrib={self._attrib})'
 
     def merge_emotions(self, llm_emotion, classificator_emotion):
         consistent_emotions = self._merge_map[llm_emotion]
@@ -282,16 +298,22 @@ class AttribRequestClassification(AttribRequest):
             phrase_with_response = f'{last_heard_phrase} \nMy response: {llm_response}'
             req = ClassificationRequest(text = phrase_with_response)
             emotion_resp = self._classificaion_client(req)
+            rospy.loginfo(f'Clasificator response: {type(emotion_resp)}' + repr(emotion_resp))
             if emotion_resp.probabilities[0] > self._classification_noise_threshold:
                 most_probable_emotion = emotion_resp.classes[0].lower()
 
             merged_emotion = self.merge_emotions(llm_emotion, most_probable_emotion)
-            print('emotion classification: ', dict(zip(emotion_resp.classes, emotion_resp.probabilities)))
+            #print('emotion classification: ', dict(zip(emotion_resp.classes, emotion_resp.probabilities)))
+            merged_emotion = llm_emotion
 
-            return { 'emotion': merged_emotion,
-                     self._attrib: merged_emotion }
+            if self._override_attrib is not None:
+                return { self._override_attrib: merged_emotion, self._attrib: most_probable_emotion }
+            else:
+                return { self._attrib: merged_emotion }
+
         # failure
         if self._fallback_value is None:
+            rospy.logwarn('lang output module: AttribRequestClassification: request to classifaction model has failed: %s" ' % llm_response)
             return None
         else:
             return { self._attrib: self._fallback_value }
@@ -426,16 +448,16 @@ class LangRequest:
                     # TODO: And figure out why is there two emotion requests happening
                     # NOTE: Maybe better instruction following models would give more stable outputs? -Mike
                     success = False
-                    result['error_desc'] = 'LLM response parse error.'
+                    result['error_desc'] = f'LLM response parse error: parser {request}, llm result {resp.result}'
                 else:
-                    print('parse result: ', parse_result)
+                    rospy.loginfo('parse result: %s' % parse_result)
                     result.update( parse_result )
         except rospy.ServiceException as e:
             success = False
             result['error_desc'] = f'LLM service error: {e}.'
         except Exception as e:
             success = False
-            result['error_desc'] = f'Unknown LLM error. Please, investigate it.'
+            result['error_desc'] = f'Unknown LLM error during request {request}: {repr(e)}:' + str(traceback.format_exc())
 
         #
         # return result

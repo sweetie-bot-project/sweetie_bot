@@ -75,7 +75,7 @@ soar:
         servos:
             type: "herkulex_servos"
             topic: "motion/herkulex/servo_states"
-            overheat_temperature: 83.0
+            overheat_temperature: 80.0
             ignore_joints: [ 'ear_r_joint', 'ear_l_joint', 'mouth_joint' ]
             groups:
               head: [ 'head_joint1', 'head_joint2', 'head_joint3', 'head_joint4' ]
@@ -86,7 +86,7 @@ soar:
         sound:
             type: "sound_speech"
             topic: "sound_event"
-            speech_timeout: 1.5
+            speech_timeout: 2.5
             intensity_bins_map: { names: [ "low", "medium", "high" ], values: [ 0.3, 0.6 ] }
             lang_filter: ['en', 'ru', 'zh']
             object_filter: ['human']
@@ -95,12 +95,6 @@ soar:
             undetected_angle_tolerance: 0.5 # +/- 30 deg
             undetected_intensity_accept_ratio: 0.90
             nlp_parsers:
-                #'en': 
-                    #type: 'lexical_tree'
-                    #nlp_model: 'en_core_web_sm'
-                #'ru':
-                    #type: 'lexical_tree'
-                    #nlp_model: 'en_core_web_sm'
                 'en':
                     type: 'word_map'
                     nlp_model: 'en_core_web_sm'
@@ -156,7 +150,7 @@ soar:
                     prompt_fact_templates:
                         'talk-heard': [ "Human says \"{text}\"\n"  ]
                         'talk-said': [ "Sweetie says \"{text}\"\n" ]
-                        'talk-ignored': [ "Human do not answer.\n" ]
+                        'talk-ignored': [ "Human didn't answer.\n" ]
                         'talk-no-answer': [ "Human says nothing.\n" ]
                         'talk-illegible': [ "Human says something illegible.\n" ]
                     max_events: 5
@@ -170,24 +164,26 @@ soar:
                             joy: [ 'joy', 'happy', 'happiness' ]
                             surprise: [ 'surprise' ]
                             neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
-                            sad: [ 'sad', 'sadness' ]
+                            sadness: [ 'sad', 'sadness' ]
                             fear: [ 'fear', 'scared', 'scary', 'fright' ]
                             anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
                           attrib: 'emotion'
+                          fallback_value: 'neutral'
                           prompt: "Sweetie thinks about human's answer and the emotion she feels is "
                           leading_text: "The emotion Sweetie feels is "
                           stop_list: ['.', '!', "\n"]
                         - type: 'classification'
                           classification_model: 'bert_sentiment'
                           attrib: 'additional_emotion'
+                          override_attrib: 'emotion'
                           fallback_value: 'neutral'
                           leading_text: ''
                           merge_map:
                             love: [ 'love' ]
                             joy: [ 'neutral', 'joy', ]
                             surprise: [ 'neutral', 'surprise' ]
-                            neutral: [ 'neutral', 'surprise', 'fear', 'sad' ]
-                            sad: [ 'neutral', 'sad', ]
+                            neutral: [ 'neutral', 'surprise', 'fear', 'sadness' ]
+                            sadness: [ 'neutral', 'sadness', ]
                             fear: [ 'neutral', 'fear' ]
                             anger: [ 'anger' ]
                         - type: 'regex'
@@ -205,7 +201,7 @@ soar:
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
                         'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
-                        'talk-ignored': [ "Human: Human do not answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
+                        'talk-ignored': [ "Human: Human didn't answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
                     max_events: 6
@@ -228,22 +224,23 @@ soar:
                             joy: [ 'joy', 'happy', 'happiness' ]
                             surprise: [ 'surprise' ]
                             neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
-                            sad: [ 'sad', 'sadness' ]
+                            sadness: [ 'sad', 'sadness' ]
                             fear: [ 'fear', 'scared', 'scary', 'fright' ]
                             anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
                         - type: 'classification'
                           classification_model: 'bert_sentiment'
                           attrib: 'additional_emotion'
+                          override_attrib: 'additional_emotion'
                           fallback_value: 'neutral'
                           leading_text: ''
                           merge_map:
                             love: [ 'love' ]
                             joy: [ 'neutral', 'joy', ]
                             surprise: [ 'neutral', 'surprise' ]
-                            neutral: [ 'neutral', 'surprise', 'fear', 'sad' ]
-                            sad: [ 'neutral', 'sad', ]
+                            neutral: [ 'neutral', 'surprise', 'fear', 'sadness' ]
+                            sadness: [ 'neutral', 'sadness', ]
                             fear: [ 'neutral', 'fear' ]
-                            anger: [ 'anger' ]
+                            anger: [ 'angry', 'anger', 'mad', 'unhappy' ]
                         - type: 'regex-test'
                           regex: ".*\\?.*"
                           attrib: 'sentence-type'
@@ -254,7 +251,7 @@ soar:
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
                         'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
-                        'talk-ignored': [ "Human: Human do not answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
+                        'talk-ignored': [ "Human: Human didn't answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
                         'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
                     max_events: 2
@@ -277,22 +274,9 @@ soar:
                             joy: [ 'joy', 'happy', 'happiness' ]
                             surprise: [ 'surprise' ]
                             neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
-                            sad: [ 'sad', 'sadness' ]
+                            sadness: [ 'sad', 'sadness' ]
                             fear: [ 'fear', 'scared', 'scary', 'fright' ]
                             anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
-                        - type: 'classification'
-                          classification_model: 'bert_sentiment'
-                          attrib: 'additional_emotion'
-                          fallback_value: 'neutral'
-                          leading_text: ''
-                          merge_map:
-                            love: [ 'love' ]
-                            joy: [ 'neutral', 'joy', ]
-                            surprise: [ 'neutral', 'surprise' ]
-                            neutral: [ 'neutral', 'surprise', 'fear', 'sad' ]
-                            sad: [ 'neutral', 'sad', ]
-                            fear: [ 'neutral', 'fear' ]
-                            anger: [ 'anger' ]
                         - type: 'regex-test'
                           regex: ".*\\?.*"
                           attrib: 'sentence-type'

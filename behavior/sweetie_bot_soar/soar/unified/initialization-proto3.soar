@@ -96,7 +96,7 @@ sp {initialization*apply*joint-trajectory
 -->
 	(<m> ^joint-trajectory <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8> <c9> <c10> <c11> <c12> <c13> <c14> <c15> <c16> <c17> <c18> <c19>)
 	(<c1> ^name head_node ^tag confirmation greeting pleased joy neutral ^tag general ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 2.0)
-	(<c2> ^name head_shake ^tag rejection disappointed anger sad ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 3.0)
+	(<c2> ^name head_shake ^tag rejection disappointed anger sadness ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 3.0)
 	(<c3> ^name head_suprised ^tag question surprise ^tag general ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 3.0)
 	(<c4> ^name head_look_around ^tag long neutral ^tag general ^tag talk ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 4.5)
 	(<c5> ^name hoof_stamp ^tag rejection anger ^tag talk  ^start-pose body_zero ^end-pose body_zero ^resource body ^duration 6.0)
@@ -132,7 +132,7 @@ sp {initialization*apply*animation-tag-emotion-mapping
   (<c9> ^name raised_right_eyebrow_look ^tag question neural)
   (<c10> ^name raised_left_eyebrow_look ^tag question neural)
   (<c11> ^name unamused_look ^tag anger rejection )
-  (<c12> ^name sad_look ^tag sad disappointed)
+  (<c12> ^name sad_look ^tag sadness disappointed)
   (<c13> ^name normal ^tag general confirmation question greeting brohoof long none neutral)
   (<c14> ^name enjoyment_look ^tag tactile_joy)
 }
