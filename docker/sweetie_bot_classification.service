@@ -1,0 +1,24 @@
+[Unit]
+Description=Sweetie Bot Classification API service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/app/sweetie_bot_classification
+Environment=PATH=/opt/venv-main/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=CONFIGURATION_SETUP=config.ProductionConfig
+Environment=APP_NAME=classificator_app
+Environment=HOST=0.0.0.0
+Environment=PORT=5005
+Environment=MODEL_DIR=/root/models/classification/Bert-Base-Emotion-Sentiment-Analysis
+Environment=CLASSIFICATION_MODEL_REPO=Thamognya/Bert-Base-Emotion-Sentiment-Analysis
+StandardError=journal
+StandardOutput=journal
+ExecStartPre=/opt/venv-main/bin/python3 /app/sweetie_bot_classification/download_classification_model.py
+ExecStart=/opt/venv-main/bin/python3 /app/sweetie_bot_classification/app.py
+Restart=on-failure
+RestartSec=5
+TimeoutSec=600
+
+[Install]
+WantedBy=multi-user.target

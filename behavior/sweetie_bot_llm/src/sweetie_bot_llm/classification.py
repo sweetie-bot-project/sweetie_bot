@@ -23,7 +23,7 @@ class ClassificationError(RuntimeError):
 
 class ClassificationNode:
     DEFAULT_CONFIG = dict(server_choices=dict(
-        local_host = {'url': 'http://127.0.0.1:5000/classification'},
+        local_host = {'url': 'http://127.0.0.1:5005/classification'},
     ))
 
     def __init__(self):

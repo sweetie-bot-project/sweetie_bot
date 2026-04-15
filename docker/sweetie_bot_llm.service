@@ -1,0 +1,18 @@
+[Unit]
+Description=Sweetie Bot LLM API service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/text-generation-webui
+Environment=PATH=/opt/venv-webui/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=/root
+StandardError=journal
+StandardOutput=journal
+ExecStart=/app/sweetie_bot_llm/start_llm.sh
+Restart=on-failure
+RestartSec=5
+TimeoutSec=600
+
+[Install]
+WantedBy=multi-user.target

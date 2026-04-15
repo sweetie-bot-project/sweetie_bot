@@ -1,0 +1,64 @@
+services:
+  sweetie_bot_services:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-}
+        PYTORCH_INDEX_URL: ${PYTORCH_INDEX_URL:-https://download.pytorch.org/whl/cu121}
+        GITHUB_RELEASES_PROXY_BASE: ${GITHUB_RELEASES_PROXY_BASE:-}
+        ARGOS_PACKAGE_INDEX: ${ARGOS_PACKAGE_INDEX:-}
+        LLM_MODEL_REPO: ${LLM_MODEL_REPO:-}
+        LLM_REPO: ${LLM_REPO:-https://github.com/oobabooga/text-generation-webui.git}
+        LLM_REF: ${LLM_REF:-v3.23}
+    ports:
+      - "5000:5000" # llm api
+      - "5001:5001" # llm webui
+      - "5002:5002" # libretranslate
+      - "5003:5003" # tts voice
+      - "5004:5004" # stt
+      - "5005:5005" # classification
+      - "5006:5006" # silero vad
+    env_file:
+      - .env
+    environment:
+      CONFIGURATION_SETUP: "config.ProductionConfig"
+      COMPUTE_TYPE: "float16"
+      COMPUTE_DEVICE: "cuda"
+      BEAM_SIZE: "5"
+      PYTHONUNBUFFERED: "1"
+      TZ: ${TZ:-UTC}
+
+      HF_TOKEN: ${HF_TOKEN:-}
+      ARGOS_PACKAGE_INDEX: ${ARGOS_PACKAGE_INDEX:-}
+      LT_UPDATE_MODELS: ${LT_UPDATE_MODELS:-}
+
+      COQUI_TOS_AGREED: 1
+
+      CLASSIFICATION_MODEL_DIR: ${CLASSIFICATION_MODEL_DIR:-/root/models/classification/Bert-Base-Emotion-Sentiment-Analysis}
+
+      #LLM_MODEL: ${LLM_MODEL:-llama-13b-4bit-128g}
+      #LLM_LOADER: ${LLM_LOADER:-ExLlamav2}
+      #LLM_PORT: ${LLM_PORT:-5003}
+      #LLM_MODEL_DIR: ${LLM_MODEL_DIR:-/opt/text-generation-webui/models}
+
+    volumes:
+      - huggingface_cache:/root/.cache/huggingface
+      - libretranslate_data:/root/.local/share
+      - libretranslate_cache:/root/.local/cache
+      - voice_models:/root/.local/share/tts
+      - silero_cache:/root/.cache/torch
+      - classification_models:/root/models/classification
+      - llm_models:/opt/text-generation-webui/user_data/models
+
+    gpus: all
+    restart: unless-stopped
+
+volumes:
+  huggingface_cache:
+  libretranslate_data:
+  libretranslate_cache:
+  voice_models:
+  silero_cache:
+  classification_models:
+  llm_models:

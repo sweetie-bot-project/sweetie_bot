@@ -17,7 +17,7 @@ model = os.getenv('MODEL_DIR', os.path.join(home, '.cache/huggingface/hub/models
 if not os.path.isdir(model):
     model='medium'
 
-audio_model = model = WhisperModel(model, device=device, compute_type=compute_type)
+model = WhisperModel(model, device=device, compute_type=compute_type)
 
 ret = { "status": "", "text": "", "language": "", "transcribe_duration": 0, "audio_duration": 0 }
 
@@ -38,7 +38,7 @@ def create_binary():
           app.logger.debug("Content type: %s", request.content_type.split(";")[0])
         if request.content_length:
           app.logger.debug("Content length: %s", request.content_length)
-        if request.content_type.startswith("multipart/form-data"):
+        if request.content_type and request.content_type.startswith("multipart/form-data"):
             file = request.files.get("file")
             if file is None:
                 return ret, "400 Error! Wrong form-data type"
@@ -66,7 +66,7 @@ def create_binary():
         app.logger.debug("Length of input data: %d", l)
         start = time.time()
         try:
-          segments, result = audio_model.transcribe(temp_file, beam_size=5)
+          segments, result = model.transcribe(temp_file, beam_size=int(beam_size))
         except:
           return ret, "400 Error! Invalid data"
         transcribe_duration = time.time() - start

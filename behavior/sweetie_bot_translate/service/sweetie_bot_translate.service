@@ -7,7 +7,7 @@ WantedBy=multi-user.target
 [Service]
 Type=simple
 Environment=VENV=translate
-Environment=PORT=5001
+Environment=PORT=5002
 # change to your user
 User=sweetie
 ExecStart=-/bin/bash -c "source ${HOME}/miniconda3/etc/profile.d/conda.sh && \

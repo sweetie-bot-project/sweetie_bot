@@ -1,6 +1,6 @@
 """
 Run me in console
-gst-launch-1.0 alsasrc ! audioconvert ! audioresample ! mulawenc ! rtppcmupay ! udpsink host=127.0.0.1 port=5004
+gst-launch-1.0 alsasrc ! audioconvert ! audioresample ! mulawenc ! rtppcmupay ! udpsink host=127.0.0.1 port=5007
 """
 
 import logging
@@ -27,7 +27,7 @@ logger.propagate = False
 # Socket settings
 HOST = '192.168.3.186'  # Server address
 HOST = '127.0.0.1'
-PORT = 1234             # TCP connection port
+PORT = 5006             # TCP connection port
 RECONNECT_DELAY = 5     # Delay before reconnecting in seconds
 
 # Global variable for socket
@@ -156,7 +156,7 @@ pipeline = Gst.Pipeline.new("rtp_pipeline")
 
 # Create elements
 udpsrc = Gst.ElementFactory.make("udpsrc", "udpsrc")
-udpsrc.set_property("port", 5004)
+udpsrc.set_property("port", 5007)
 udpsrc.set_property("caps", Gst.caps_from_string("application/x-rtp"))
 queue = Gst.ElementFactory.make("queue", "queue")
 queue.set_property("max-size-bytes", 1024)

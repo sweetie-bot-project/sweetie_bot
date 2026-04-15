@@ -19,7 +19,7 @@ voice:
                 server_choices:
                     local_host:
                         priority: 10
-                        url: 'https://127.0.0.1:5002/tts/api/tts'
+                        url: 'https://127.0.0.1:5003/tts/api/tts'
                     remote_host:
                         priority: 20
                         url: 'https://ai.sweetie.bot/tts/api/tts'

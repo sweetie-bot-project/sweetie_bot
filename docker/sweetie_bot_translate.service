@@ -1,0 +1,14 @@
+[Unit]
+Description=Sweetie Bot Translate
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/app/sweetie_bot_translate
+Environment=PATH=/opt/venv-main/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/local/bin/start-libretranslate.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

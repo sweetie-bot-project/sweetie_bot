@@ -1,0 +1,22 @@
+[Unit]
+Description=Sweetie Bot Voice API service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/app/sweetie_bot_voice
+
+Environment=PATH=/opt/venv-tts/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=/root
+
+StandardError=journal
+StandardOutput=journal
+
+ExecStart=/opt/venv-tts/bin/python /app/sweetie_bot_voice/check_tts_model_and_start_voice_service.py
+
+Restart=on-failure
+RestartSec=5
+TimeoutSec=600
+
+[Install]
+WantedBy=multi-user.target

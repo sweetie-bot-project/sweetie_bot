@@ -1,0 +1,17 @@
+[Unit]
+Description=Sweetie Bot Silero VAD service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/app/sweetie_bot_silero
+StandardError=journal
+StandardOutput=journal
+Environment=PATH=/opt/venv-main/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/bin/bash -lc 'exec /opt/venv-main/bin/python3 /app/sweetie_bot_silero/silero_server.py --host 0.0.0.0 --port 5006 --model-cache-path /root/.cache/torch/hub'
+Restart=on-failure
+RestartSec=5
+TimeoutSec=600
+
+[Install]
+WantedBy=multi-user.target

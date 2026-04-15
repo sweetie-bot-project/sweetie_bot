@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(
                 )
 
 parser.add_argument('-t', '--host', type=str, default='0.0.0.0', help='The host to listen on')
-parser.add_argument('-p', '--port', type=int, default=1234, help='The port to listen on')
+parser.add_argument('-p', '--port', type=int, default=5006, help='The port to listen on')
 parser.add_argument('-c', '--model-cache-path', type=str,  help='The path to cache the Silero VAD model')
 parser.add_argument('-f', '--force-model-download', action='store_true', help='Force the model to be downloaded')
 parser.add_argument('-r', '--model-repo', type=str, default='snakers4/silero-vad', help='Repository with Silero VAD model')

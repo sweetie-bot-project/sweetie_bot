@@ -24,7 +24,7 @@ class TranslateError(RuntimeError):
 
 class TranslateNode:
     DEFAULT_CONFIG = dict(server_choices=dict(
-        local_host = {'url': 'http://127.0.0.1:5001/translate'},
+        local_host = {'url': 'http://127.0.0.1:5002/translate'},
     ))
 
     def __init__(self):
