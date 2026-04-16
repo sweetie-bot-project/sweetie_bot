@@ -30,6 +30,8 @@
 			<max value="1" />
 		</param>
 
+		<param type="text" name="resources" default="head eyes" label="resources" hint="LookAt controller resources: head, eyes (space separated list)." />
+
 	</params>
 
 

@@ -12,7 +12,7 @@ from sweetie_bot_flexbe_states.object_detection_monitor import ObjectDetectionMo
 from sweetie_bot_flexbe_states.set_operational import SetOperational
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
-
+import re
 # [/MANUAL_IMPORT]
 
 
@@ -33,8 +33,9 @@ class ExecuteLookAtSM(Behavior):
 		# parameters of this behavior
 		self.add_parameter('label', '*')
 		self.add_parameter('type', '*')
-		self.add_parameter('timeout', 30.0)
-		self.add_parameter('transform_delay', 0.0)
+		self.add_parameter('timeout', 30)
+		self.add_parameter('transform_delay', 0)
+		self.add_parameter('resources', 'head eyes')
 
 		# references to used behaviors
 
@@ -56,7 +57,7 @@ class ExecuteLookAtSM(Behavior):
 		
 		# [/MANUAL_CREATE]
 
-		# x:30 y:353, x:130 y:353, x:230 y:353, x:311 y:368, x:651 y:309, x:537 y:357, x:391 y:376, x:793 y:299, x:830 y:475
+		# x:30 y:353, x:130 y:353, x:230 y:353, x:311 y:368, x:651 y:309, x:537 y:357, x:391 y:376, x:793 y:299
 		_sm_lookatcontainer_0 = ConcurrencyContainer(outcomes=['finished', 'failed'], conditions=[
 										('finished', [('LookAtOperational', 'done')]),
 										('failed', [('LookAtOperational', 'failure')]),
@@ -69,7 +70,7 @@ class ExecuteLookAtSM(Behavior):
 		with _sm_lookatcontainer_0:
 			# x:101 y:80
 			OperatableStateMachine.add('LookAtOperational',
-										SetOperational(controller='motion/controller/look_at', operational=True, resources=['head'], sync=True),
+										SetOperational(controller='motion/controller/look_at', operational=True, resources=re.split('\s+', self.resources), sync=True),
 										transitions={'done': 'finished', 'failure': 'failed'},
 										autonomy={'done': Autonomy.Off, 'failure': Autonomy.Off})
 
