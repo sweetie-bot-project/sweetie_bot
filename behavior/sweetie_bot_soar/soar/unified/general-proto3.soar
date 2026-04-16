@@ -220,7 +220,7 @@ sp {social*propose*talk-on-greeting
 sp {security*elaborate*reserved-overheat
 	(state <s> ^name security ^substate general ^io.input-link.servos.{<<|head| |body|>> <group>} {<<|overheat| |off|>>})
 -->
-	(<s> ^reserved-resource <res>)
+	(<s> ^reserved-resource <group>)
 }
 
 # DECISION OPERATORS
@@ -228,7 +228,7 @@ sp {security*elaborate*reserved-overheat
 # place head in nominal position on servos overheat
 sp {security*propose*head-to-nominal
 	(state <s> ^name security ^substate general ^io.input-link <il> )
-	(<il> ^servos.head overheat ^head-pose.pose {<> head_nominal})
+	(<il> ^servos.head overheat ^head.pose {<> head_nominal})
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name move-to-nominal-pose ^substate move-to-pose ^process-args <a>)
@@ -238,7 +238,7 @@ sp {security*propose*head-to-nominal
 # place body in nominal position on servos overheat
 sp {security*propose*body-to-nominal
 	(state <s> ^name security ^substate general ^io.input-link <il> )
-	(<il> ^servos.body overheat ^body-pose.pose {<> body_nominal})
+	(<il> ^servos.body overheat ^body.pose {<> body_nominal})
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name move-to-nominal-pose ^substate move-to-pose ^process-args <a>)

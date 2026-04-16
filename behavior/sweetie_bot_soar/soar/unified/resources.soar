@@ -52,12 +52,12 @@ sp {process*elaborate*reserved-resource-generall
 
 # reject process if required/reserved resource is already blocked
 sp {process*prefer*prohibit-resource-conflict
-	(state <s> ^blocked-resource <res> ^{<<|required-resource| |reserved-resource|>>} <res> ^superstate <ss>)
-	(<ss> ^operator <op>)
+	(state <s> ^blocked-resource <res> ^{<<|required-resource| |reserved-resource|>>} <res> ^superstate <ss> ^substate <s-name>)
+	(<ss> ^operator <op> ^substate <ss-name>)
 	(<op> ^name <name>)
 -->
 	(<ss> ^operator <op> ~)
-	(log 1 (concat |REJECT superstate operator | <op> | | <name> | in | <ss> | from | <s> | for | <res> (crlf)))
+	(log 1 (concat |REJECT superstate operator | <op> | | <name> | in | <ss> | (| <ss-name> |) from | <s> | (| <s-name> |) for | <res> (crlf)))
 }
 
 # reject substate operators which requires blocked resource
