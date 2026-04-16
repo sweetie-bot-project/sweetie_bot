@@ -260,6 +260,7 @@ class SpatialWorldModel(InputModule):
         self._world_frame = self.getConfigParameter(config, 'world_frame', allowed_types=str)
         self._head_frame = self.getConfigParameter(config, 'head_frame', allowed_types=str)
         self._body_frame = self.getConfigParameter(config, 'body_frame', allowed_types=str)
+        self._eyes_frame = self.getConfigParameter(config, 'eyes_frame', allowed_types=str)
         try:
             self._distance_bins_map = BinsMap( config['distance_bins_map'] )
             self._yaw_bins_map = BinsMap( config['yaw_bins_map'] )
@@ -442,6 +443,12 @@ class SpatialWorldModel(InputModule):
                 soar_view.updateChildWME( 'yaw-body', self._yaw_bins_map(yaw)) # string
                 soar_view.updateChildWME( 'yaw-body-numeric', math.degrees(yaw) ) # float
                 soar_view.updateChildWME( 'yaw-body-abs-numeric', abs(math.degrees(yaw)) ) # float
+                # position relative to eyes
+                pose = spatial_object.getPose( self._eyes_frame, self._tf_listener )
+                distance = SpatialWorldModel.distance(pose.position)
+                yaw = math.atan2(pose.position.y, pose.position.x)
+                soar_view.updateChildWME( 'yaw-eyes', self._yaw_bins_map(yaw)) # string
+                soar_view.updateChildWME( 'yaw-eyes-numeric', yaw ) # float
 
     def __del__(self):
         # remove sensor wme and ROS subscriber
