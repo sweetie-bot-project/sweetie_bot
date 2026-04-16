@@ -31,29 +31,65 @@
 #
 
 # ELABORATIONS
+#
+# deduce controlled/required resources
+#
 
-# TODO: split eyes and head
-
-sp {look-at*elaborate*resources
+# mandatory required resource
+sp {look-at*elaborate*controlled-resources-eyes
 	(state <s> ^substate look-at)
 -->
-	(<s> ^required-resource head eyes)
+	(<s> ^controlled-resource eyes ^required-resource eyes)
 }
 
-sp {look-at*elaborate*my-look-at-cmd
-	(state <s> ^substate look-at ^args.object <obj> ^io.output-link.look-at <cmd>)
+# optional required resource
+sp {look-at*elaborate*controlled-resources-head
+	(state <s> ^substate look-at -^blocked-resource head)
+-->
+	(<s> ^controlled-resource head ^required-resource head)
+}
+
+sp {look-at*elaborate*controlled-resources-body
+	(state <s> ^substate look-at ^args.aggresive -^blocked-resource body)
+-->
+	(<s> ^controlled-resource body ^required-resource body)
+}
+
+sp {look-at*elaborate*controlled-resources-head-eyes
+	(state <s> ^substate look-at ^controlled-resource head eyes)
+-->
+	(<s> ^controlled-resource head-eyes)
+}
+
+#
+# output link cmd recovering
+# 
+
+# exact command present at output link
+sp {look-at*elaborate*my-look-at-cmd-head-or-eyes
+	(state <s> ^substate look-at ^args.object <obj> ^controlled-resource {<<|head| |eyes|>> <res>} -^controlled-resource head-eyes ^io.output-link.look-at <cmd>)
 	(<obj> ^label <label> ^type <type>)
-	(<cmd> ^label <label> ^type <type>)
+	(<cmd> ^label <label> ^type <type> ^resource <res>)
 -->
 	(<s> ^my-look-at-cmd <cmd>)
 }
 
+sp {look-at*elaborate*my-look-at-cmd-head-and-eyes
+	(state <s> ^substate look-at ^args.object <obj> ^controlled-resource head-eyes ^io.output-link.look-at <cmd>)
+	(<obj> ^label <label> ^type <type>)
+	(<cmd> ^label <label> ^type <type> ^resource head eyes)
+-->
+	(<s> ^my-look-at-cmd <cmd>)
+}
+
+#  command at output link is different
 sp {look-at*elaborate*other-look-at-cmd
 	(state <s> ^substate look-at ^io.output-link.look-at <cmd> -^my-look-at-cmd)
 -->
 	(<s> ^other-look-at-cmd <cmd>)
 }
 
+# look-at process start operators
 sp {look-at*elaborate*add-process
 	(state <s> ^substate look-at ^process-status pending ^operator <op> + ^process <proc>)
 	(<op> ^name {<<|abort-look-at-cmd| |create-look-at-cmd|>>})
@@ -72,38 +108,28 @@ sp {look-at*propose*abort-look-at-cmd
 	(<op> ^name abort-look-at-cmd ^type automatic ^parent <cmd> ^attribute abort ^link-value hard)
 }
 
-# wait until other look-at command is stopped
-sp {look-at*propose*abort-look-at-cmd-wait
-	(state <s> ^substate look-at  ^other-look-at-cmd <cmd>)
-	(<cmd> ^abort)
--->
-	(<s> ^operator <op> +)
-	(<op> ^name wait-abort-look-at-cmd ^substate wait)
-}
-
 # start look-at cmd
 sp {look-at*propose*start-look-at-cmd
 	(state <s> ^substate look-at ^args.object <obj> -^other-look-at-cmd -^my-look-at-cmd ^process <proc>)
 	(<obj> ^label <label> ^type <type>)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name create-look-at-cmd ^object <obj> ^look-at-process <proc> ^type automatic)
+	(<op> ^name create-look-at-cmd  ^type automatic ^add-output-command look-at ^output-command-args <cmd>)
+	(<cmd> ^label <label> ^type <type> ^process <proc>)
+	(<op> ^log (concat |LookAt: issue look-at cmd on | <label> |, | <type> (crlf)))
 }
 
-sp {look-at*apply*start-look-at-cmd
-	(state <s> ^substate look-at ^operator <op> ^io.output-link <ol>)
-	(<op> ^name create-look-at-cmd ^object <obj> ^look-at-process <proc>)
-	(<obj> ^label <label> ^type <type>)
+sp {look-at*elaborate*start-look-at-cmd-resources
+	(state <s> ^substate look-at ^operator <op> + ^controlled-resource {<<|head| |eyes|>> <res>})
+	(<op> ^name create-look-at-cmd ^output-command-args <cmd>)
 -->
-	(<ol> ^look-at <cmd>)
-	(<cmd> ^label <label> ^type <type> ^resource head eyes ^process <proc>)
-	(write |LookAt: issue look-at cmd on | <label> |, | <type> (crlf))
+	(<cmd> ^resource <res>)
 }
 
 # start process if exicting look-at cmd is reused
 sp {look-at*propose*start-process-old-command
-	(state <s> ^substate look-at ^process-status pending ^my-look-at-cmd <cmd> ^process <proc>)
-	(<cmd> ^process {<> <proc> <proc-old>})
+	(state <s> ^substate look-at ^my-look-at-cmd <cmd> ^process <proc>)
+	(<cmd> ^process {<> <proc> <proc-old>} -^abort)
 -->
 	(<s> ^operator <op> +)
 	(<op> ^name reuse-lookat-cmd ^type automatic ^add-process <proc>)
@@ -111,31 +137,18 @@ sp {look-at*propose*start-process-old-command
 	(<op>  ^parent <cmd> ^attribute proccess ^remove-value <proc-old> ^link-value <proc>)
 }
 
-# wait until other look-at command is stopped
-sp {look-at*propose*look-at-cmd-wait
-	(state <s> ^substate look-at ^process-status active ^my-look-at-cmd)
--->
-	(<s> ^operator <op> +)
-	(<op> ^name wait-look-at-cmd ^substate wait)
-}
-
 # COGNITION
 
 # terminate process if output cmd is finished
 sp {look-at*propose*finish-process
-	(state <s> ^bottom-state 1 ^io.output-link.look-at <cmd>)
+	(state <s> ^bottom-state 1 ^io.output-link <ol>)
+	(<ol> ^look-at <cmd>)
 	(<cmd> ^status <status> ^process <proc>)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name look-at-finish-process ^cmd <cmd> ^type automatic cognition ^finish-status <status> ^finish-process <proc>)
-}
-
-sp {look-at*apply*finish-process
-	(state <s> ^operator <op> ^io.output-link <ol>)
-	(<op> ^name look-at-finish-process ^cmd <cmd> ^finish-status <status>)
--->
-	(<ol> ^look-at <cmd> -)
-	(write |LookAt: complete behavior with status | <status> (crlf))
+	(<op> ^parent <ol> ^attribute look-at ^remove-value <cmd>)
+	(<op> ^log |LookAt: complete behavior with status | <status> (crlf))
 }
 
 # remove cmd if process is finished
@@ -148,15 +161,33 @@ sp {look-at*propose*finish-process-abort-cmd
 	(<op> ^name look-at-finish-process-abort-cmd ^type automatic cognition ^parent <cmd> ^attribute abort ^link-value hard)
 }
 
-# ELABOARTIONS
+# COGNITION ELABOARTIONS
 
-# detect "object in the center" situation
-sp {look-at*elaborate*looking-at
+sp {look-at*elaborate*process-cmd
+	(state <s> ^top-state 1 ^beliefs <b> ^io.output-link.look-at <cmd>)
+	(<cmd> ^process <proc> ^resource <res>)
+-->
+	(<proc> ^controlled-resource <res>)
+}
+
+# detect "object in the center" situation if head is controlled
+sp {look-at*elaborate*looking-at-head 
 	(state <s> ^top-state 1 ^beliefs <b>)
 	(<b> ^process <proc>)
-	(<proc> ^substate look-at ^object <obj>)
+	(<proc> ^substate look-at ^object <obj> ^controlled-resource head)
 	(<obj> ^input-link <il>)
 	(<il> ^visible now ^yaw-head center)
+-->
+	(<b> ^predicate <pred>)
+	(<pred> ^name looking-at ^object <obj> ^focusing-process <proc>)
+}
+
+sp {look-at*elaborate*looking-at-eyes
+	(state <s> ^top-state 1 ^beliefs <b>)
+	(<b> ^process <proc>)
+	(<proc> ^substate look-at ^object <obj> -^controlled-resource head)
+	(<obj> ^input-link <il>)
+	(<il> ^visible now ^yaw-eyes center)
 -->
 	(<b> ^predicate <pred>)
 	(<pred> ^name looking-at ^object <obj> ^focusing-process <proc>)
