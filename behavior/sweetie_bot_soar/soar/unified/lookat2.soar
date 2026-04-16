@@ -37,7 +37,7 @@
 sp {look-at*elaborate*resources
 	(state <s> ^substate look-at)
 -->
-	(<s> ^required-resource head)
+	(<s> ^required-resource head eyes)
 }
 
 sp {look-at*elaborate*my-look-at-cmd
@@ -96,7 +96,7 @@ sp {look-at*apply*start-look-at-cmd
 	(<obj> ^label <label> ^type <type>)
 -->
 	(<ol> ^look-at <cmd>)
-	(<cmd> ^label <label> ^type <type> ^process <proc>)
+	(<cmd> ^label <label> ^type <type> ^resource head eyes ^process <proc>)
 	(write |LookAt: issue look-at cmd on | <label> |, | <type> (crlf))
 }
 

@@ -34,9 +34,17 @@ class LookAt(output_module.OutputModule):
             rospy.logerr("lookat output module: label and type attributes must present.")
             return "error"
         object_key = ObjectKeyTuple( 0, label_id.GetValueAsString(), type_id.GetValueAsString() )
+        # get resources
+        resources = []
+        while True:
+            resource_id = cmd_id.FindByAttribute("resource", len(resources))
+            if resource_id is not None:
+                resources.append(resource_id.GetValueAsString())
+            else:
+                break
         # start controller
         try:
-            goal = SetOperationalGoal(operational = True, resources = ['head'])
+            goal = SetOperationalGoal(operational = True, resources = resources)
             self._set_operational_aclient.send_goal(goal)
         except Exception as e:
             rospy.logwarn('lookat output module: Failed to send the SetOperational command:\n%s' % str(e))
