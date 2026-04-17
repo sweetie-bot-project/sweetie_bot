@@ -7,11 +7,13 @@ import copy
 
 import rospy
 import tf
+import PyKDL as kdl
 
 from std_msgs.msg import Header, ColorRGBA
 from geometry_msgs.msg import Pose, PoseStamped, Vector3
 from visualization_msgs.msg import MarkerArray, Marker
 from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
+from sweetie_bot_kinematics_msgs.msg import RigidBodyState
 
 from flexbe_core.proxy import ProxyTransformListener
 from .bins import BinsMap
@@ -78,11 +80,11 @@ class PoseFilter:
         super(PoseFilter, cls).__init_subclass__()
         PoseFilter.subclass_map[name] = cls
 
-    def __call__(self, spatial_object, detection_msg, detection_pose_transformed, tf_listener):
+    def __call__(self, spatial_object, detection_msg, detection_pose_transformed):
         raise NotImplemented
 
 class PoseFilterNone(PoseFilter, name = 'none'):
-    def __call__(self, spatial_object, detection_msg, detection_pose_trasformed, tf_listener):
+    def __call__(self, spatial_object, detection_msg, detection_pose_trasformed):
         return detection_pose_trasformed
 
 class PoseFilterMaxvel(PoseFilter, name = 'maxvel'):
@@ -91,20 +93,52 @@ class PoseFilterMaxvel(PoseFilter, name = 'maxvel'):
         # get paramters
         self._difftime = rospy.Duration(get_config_parameter('PoseFilter.Maxvel', config, 'velocity_estimator_difftime', default_value=0.2, check_func=lambda v: v > 0.0))
         self._maxvel_linear = get_config_parameter('PoseFilter.Maxvel', config, 'velocity_linear_threshold', allowed_types=float)
-        self._maxvel_angular = get_config_parameter('PoseFilter.Maxvel', config, 'velocity_angular_threshold', allowed_types=float)
+        self._maxvel_angular = get_config_parameter('PoseFilter.Maxvel', config, 'velocity_angular_threshold', allowed_types=float, check_func=lambda v: v > 0.0)
+        motion_ns = get_config_parameter('PoseFilter.Maxvel', config, 'motion_ns', allowed_types=str)
+        self._sensor_kinematic_chain = get_config_parameter('PoseFilter.Maxvel', config, 'sensor_kinematic_chain', allowed_types=str)
 
-    def __call__(self, spatial_object, detection_msg, detection_pose_transformed, tf_listener):
+        # create susbscribers for speed monitoring
+        self._limbs_sub = rospy.Subscriber(motion_ns + '/kinematics_fwd/out_limbs_fixed', RigidBodyState, self.rbsCallback)
+        self._base_sub = rospy.Subscriber(motion_ns + '/odometry_ref/out_base', RigidBodyState, self.rbsCallback)
+
+        # cache
+        self._lock = Lock()
+        self._w_T_b = kdl.Frame()
+        self._w_t_b = kdl.Twist()
+        self._b_T_h = kdl.Frame()
+        self._b_t_h = kdl.Twist()
+
+    @staticmethod
+    def frameFromMsg(msg):
+        return kdl.Frame(kdl.Rotation(*msg.M.data), 
+                         kdl.Vector(msg.p.x, msg.p.y, msg.p.z))
+
+    @staticmethod
+    def twistFromMsg(msg):
+        return kdl.Twist(kdl.Vector(msg.linear.x, msg.linear.y, msg.linear.z), 
+                         kdl.Vector(msg.angular.x, msg.angular.y, msg.angular.z))
+
+    def rbsCallback(self, msg):
+        with self._lock:
+            for k, name in enumerate(msg.name):
+                if name == 'base_link':
+                    self._w_T_b = self.frameFromMsg(msg.frame[k])
+                    self._w_t_b = self.twistFromMsg(msg.twist[k])
+                elif name == self._sensor_kinematic_chain:
+                    self._b_T_h = self.frameFromMsg(msg.frame[k])
+                    self._b_t_h = self.twistFromMsg(msg.twist[k])
+
+    def __call__(self, spatial_object, detection_msg, detection_pose_transformed):
+        # calculate pose twist of sensor frame in ground fixed frame
+        with self._lock:
+            w_t_h = self._w_t_b + self._w_T_b * self._b_t_h
+            wh_t_h = w_t_h.RefPoint(self._w_T_b * self._b_T_h.p)
         # check that sensor frame is motionless
-        try:
-            vel, rot = tf_listener.lookupTwist(detection_msg.header.frame_id, spatial_object.frame_id, detection_msg.header.stamp, self._difftime)
-            vel_abs = math.hypot(*vel)
-            rot_abs = math.hypot(*rot)
-            sensor_frame_is_moving = vel_abs > self._maxvel_linear or rot_abs > self._maxvel_angular
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
-            rospy.logwarn('PoseFilterMaxvel: unable to estimate %s frame speed relative to %s frame: %s' % (detection_msg.header.frame_id, spatial_object.frame_id, e))
-            sensor_frame_is_moving = True
+        vel_abs = wh_t_h.vel.Norm()
+        rot_abs = wh_t_h.rot.Norm()
+        sensor_frame_is_moving = vel_abs > self._maxvel_linear or rot_abs > self._maxvel_angular
         # debug output
-        # print(f'PoseFilterMaxvel: {spatial_object.frame_id}, {detection_msg.header.frame_id}: ({vel_abs} {rot_abs}) -- {sensor_frame_is_moving}')
+        #print(f'PoseFilterMaxvel: {spatial_object.frame_id}, {detection_msg.header.frame_id}: ({vel_abs} {rot_abs}) -- {sensor_frame_is_moving}')
         # if frame is moving ignore detected pose
         if sensor_frame_is_moving:
             return spatial_object.pose
@@ -274,13 +308,6 @@ class SpatialWorldModel(InputModule):
         # add topic subscriber and tf buffer
         self._tf_listener = ProxyTransformListener().listener()
         self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
-        # marker publications
-        self._markers_pub = rospy.Publisher(markers_topic, MarkerArray, queue_size=5)
-        if self._markers_period > 0.0:
-            self._markers_timer = rospy.Timer(rospy.Duration(self._markers_period), lambda event: self._publishMarkers())
-        else:
-            self._markers_timer = None
-
         # pose filter
         self._pose_filter = PoseFilter(filter_config)
 
@@ -292,6 +319,14 @@ class SpatialWorldModel(InputModule):
 
         # register SWM
         SpatialWorldModel._swm_instance_ref = self
+
+        # marker publications timer
+        self._markers_pub = rospy.Publisher(markers_topic, MarkerArray, queue_size=5)
+        if self._markers_period > 0.0:
+            self._markers_timer = rospy.Timer(rospy.Duration(self._markers_period), lambda event: self._publishMarkers())
+        else:
+            self._markers_timer = None
+
 
     @property
     def world_frame(self):
@@ -348,7 +383,7 @@ class SpatialWorldModel(InputModule):
                 mem_elem = self._memory_map.get(key_tuple)
                 if mem_elem != None:
                     # renew timestamp and pose of SpatialObject but not update SOAR view
-                    filtered_pose = self._pose_filter(mem_elem.spatial_object, detection_msg, pose_stamped.pose, self._tf_listener)
+                    filtered_pose = self._pose_filter(mem_elem.spatial_object, detection_msg, pose_stamped.pose)
                     mem_elem.spatial_object.updateVisible(timestamp, filtered_pose)
 
                 else:

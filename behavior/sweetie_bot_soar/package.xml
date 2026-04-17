@@ -20,11 +20,13 @@
   <exec_depend>sweetie_bot_text_msgs</exec_depend>
   <exec_depend>sweetie_bot_herkulex_msgs</exec_depend>
   <exec_depend>sweetie_bot_joystick</exec_depend>
+  <exec_depend>sweetie_bot_kinematics_msgs</exec_depend>
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>tf</exec_depend>
   <exec_depend>actionlib</exec_depend>
   <exec_depend>flexbe_core</exec_depend>
+  <exec_depend>PyKDL</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

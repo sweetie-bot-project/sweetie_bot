@@ -84,7 +84,7 @@ depl:connect("aggregator_ref.out_joints_sorted", "kinematics_fwd.in_joints_sorte
 -- connect to RobotModel
 depl:connectServices("kinematics_fwd", "aggregator_ref")
 -- publish pose to ROS
--- depl:stream("kinematics_fwd.out_limbs_fixed", ros:topic("~kinematics_fwd/out_limbs_fixed"))
+depl:stream("kinematics_fwd.out_limbs_fixed", ros:topic("~kinematics_fwd/out_limbs_fixed"))
 
 kinematics_fwd:configure()
 
