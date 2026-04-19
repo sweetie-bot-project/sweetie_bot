@@ -25,7 +25,7 @@ class ObjectKeyTuple:
     type : str
 
 class SpatialObject:
-    def __init__(self, id, label, type, timestamp, timeout, frame_id, pose):
+    def __init__(self, id, label, type, timestamp, frame_id, pose):
         # object general properties
         self.label = label
         self.id = id
@@ -35,33 +35,55 @@ class SpatialObject:
         self.update_time = timestamp
         self.perceive_begin_time = timestamp
         self.perceive_end_time = None
-        self.memorize_time = timeout
+        self.inside_viewfield_begin_time = timestamp
         # spatial properties
         self.frame_id = frame_id
         self.pose = pose
+        self.pose_is_reliable = True
 
     def __repr__(self):
-        return f'SpatialObject(label="{self.label}", id={self.id}, type="{self.type}", creation={self.creation_time}, update={self.update_time}, perceive_begin={self.perceive_begin_time}, perceive_end_time={self.perceive_end_time})'
+        return f'SpatialObject(label="{self.label}", id={self.id}, type="{self.type}", creation={self.creation_time}, update={self.update_time}, perceive_begin={self.perceive_begin_time}, perceive_end={self.perceive_end_time}, inside_viewfield={self.inside_viewfield_begin_time})'
 
     def updateVisible(self, timestamp, pose):
         self.update_time = timestamp
         self.pose = pose
+        self.pose_is_reliable = True
         self.perceive_end_time = None
-        if self.perceive_begin_time == None:
+        if self.perceive_begin_time is None:
             self.perceive_begin_time = timestamp
+        if self.inside_viewfield_begin_time == None:
+            self.inside_viewfield_begin_time = timestamp
 
-    def updateInvisible(self, timestamp):
-        if self.perceive_end_time == None:
+    def updateState(self, timestamp, seen_timeout = 2.0, in_viewfield = False):
+        # if object was not detected in last period of time then mark it invisible
+        if timestamp - self.update_time < seen_timeout:
+            return
+        # update perceive end time
+        if self.perceive_end_time is None:
             self.perceive_end_time = timestamp
-        self.perceive_begin_time = None
+        # process viewfiled information
+        if in_viewfield:
+            if self.inside_viewfield_begin_time is None:
+                self.inside_viewfield_begin_time = timestamp
+            else:
+                # check if object is inside viefield but is invisible
+                in_viewfield = self.inside_viewfield_begin_time + seen_timeout < timestamp
+                not_visible = self.perceive_end_time + seen_timeout < timestamp
+                self.pose_is_reliable = not (in_viewfield and not_visible)
+        else:
+            self.inside_viewfield_begin_time = None
 
-    def isOutdated(self, time_now):
-        return self.perceive_end_time is not None and (self.perceive_end_time + self.memorize_time) < time_now
+    def isPoseReliable(self):
+        return self.pose_is_reliable
+
+    def isOutdated(self, timestamp, memorize_time):
+        return self.perceive_end_time is not None and (self.perceive_end_time + memorize_time) < timestamp
 
     def isVisible(self):
         return self.perceive_end_time is None
 
     def getPose(self, frame_id, tf_buffer):
+        # return pose
         pose_stamped = PoseStamped(pose = self.pose, header = Header(frame_id = self.frame_id))
         return tf_buffer.transformPose(frame_id, pose_stamped).pose
 
@@ -196,7 +218,12 @@ class SpatialObjectMarker:
         if spatial_object.isVisible():
             visibility = f'VISIBLE, perceive_begin: {spatial_object.perceive_begin_time - now:.1f}'
         else:
-            visibility = f'INVISIBLE, perceive_end: {spatial_object.perceive_end_time - now:.1f}'
+            if spatial_object.isPoseReliable():
+                visibility = f'INVISIBL, perceive_end: {spatial_object.perceive_end_time - now:.1f}'
+                self._object_marker.color.a = 0.3
+            else:
+                visibility = f'UNRELIABLE, perceive_end: {spatial_object.perceive_end_time - now:.1f}'
+                self._object_marker.color.a = 0.05
         # update text
         self._text_marker.text = f'({label}, {obj_type})\ncreation: {creation:.1f}, update: {update:.1f}\n{visibility}'
 
@@ -290,11 +317,14 @@ class SpatialWorldModel(InputModule):
         # get configuration from parameters
         detection_topic = self.getConfigParameter(config, 'topic', allowed_types=str)
         self._seen_timeout = self.getConfigParameter(config, 'visibility_timeout', allowed_types=(int,float), check_func=lambda v: v >= 0.0)
-        self._timeout = self.getConfigParameter(config, 'timeout', allowed_types=(int,float), check_func=lambda v: v >= 0.0)
+        self._memorize_time = self.getConfigParameter(config, 'memorize_time', allowed_types=(int,float), check_func=lambda v: v >= 0.0)
         self._world_frame = self.getConfigParameter(config, 'world_frame', allowed_types=str)
+        self._camera_frame = self.getConfigParameter(config, 'camera_frame', allowed_types=str)
         self._head_frame = self.getConfigParameter(config, 'head_frame', allowed_types=str)
         self._body_frame = self.getConfigParameter(config, 'body_frame', allowed_types=str)
         self._eyes_frame = self.getConfigParameter(config, 'eyes_frame', allowed_types=str)
+        self._horz_fov = self.getConfigParameter(config, 'horizontal_field_of_view', allowed_types=(int,float))
+        self._vert_fov = self.getConfigParameter(config, 'vertical_field_of_view', allowed_types=(int,float))
         try:
             self._distance_bins_map = BinsMap( config['distance_bins_map'] )
             self._yaw_bins_map = BinsMap( config['yaw_bins_map'] )
@@ -388,7 +418,7 @@ class SpatialWorldModel(InputModule):
 
                 else:
                     # add new SpatialObject but do not create corresponding SOAR view
-                    spatial_object = SpatialObject( detection_msg.id, detection_msg.label, detection_msg.type, timestamp, self._timeout, self._world_frame, pose_stamped.pose )
+                    spatial_object = SpatialObject( detection_msg.id, detection_msg.label, detection_msg.type, timestamp, self._world_frame, pose_stamped.pose )
                     marker = SpatialObjectMarker(spatial_object) if self._markers_timer is not None else None
                     self._memory_map[key_tuple] = SpatialWorldModel.MemoryElement(spatial_object, None, marker)
 
@@ -416,15 +446,23 @@ class SpatialWorldModel(InputModule):
 
     def __updateSpatialMemory(self, time_now):
         self._last_update_time = time_now
+        #cam_trans, cam_rot = self._tf_listener.lookupTransform(self._world_frame, self._camera_frame, rospy.Time(0))
+        #T = TransformStamped(transform = Transform(rotation = cam_rot, translation = cam_trans, header = Header(frame_id = self._world_frame), child_frame_id = self._camera_frame)
         # iterate over objects, mark unseen invisible and mark to remove outdated 
         remove_list = []
         for key_tuple, mem_elem in self._memory_map.items():
             spatial_object = mem_elem.spatial_object
-            # if object was not detected in last period of time then mark it invisible
-            if time_now - spatial_object.update_time > self._seen_timeout:
-                spatial_object.updateInvisible(time_now)
+            # check camera fov
+            #TODO optimize trasform
+            pose = spatial_object.getPose(self._camera_frame, self._tf_listener)
+            distance = self.distance(pose.position)
+            inside_fov = math.degrees(math.asin(abs(pose.position.x)/distance)) < self._horz_fov and \
+                         math.degrees(math.asin(abs(pose.position.y)/distance)) < self._vert_fov
+            # update state
+            spatial_object.updateState(time_now, self._seen_timeout, inside_fov)
+            #print(f'updateState: ({spatial_object.label}, {spatial_object.type}): is_visible: {spatial_object.isVisible()}, inside_fov {inside_fov}, pose_reliable {spatial_object.isPoseReliable()}')
             # check if object is outdated
-            if spatial_object.isOutdated(time_now):
+            if spatial_object.isOutdated(time_now, self._memorize_time):
                 # mark to remove remove outdtated objects: they can be roved only inside SOAR context, so place them in remove list
                 if mem_elem.soar_view != None:
                     self._soar_view_remove_list.append(mem_elem.soar_view)
@@ -461,6 +499,11 @@ class SpatialWorldModel(InputModule):
                     soar_view.updateChildWME('perceive-end', self._time_bins_map(time_now - spatial_object.perceive_end_time) ) # string
                 else:
                     soar_view.removeChildWME('perceive-end')
+                # pose status
+                if spatial_object.isPoseReliable():
+                    soar_view.updateChildWME( 'pose-status', 'reliable') # string
+                else:
+                    soar_view.updateChildWME( 'pose-status', 'unreliable') # string
                 # position relative to head
                 pose = spatial_object.getPose( self._head_frame, self._tf_listener )
                 distance = SpatialWorldModel.distance(pose.position)

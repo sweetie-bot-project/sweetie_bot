@@ -2,8 +2,8 @@ soar:
     update_period: 0.2
     autostart: false
     agent_package: "sweetie_bot_soar"
-    agent_file: "soar/unified-proto3.soar"
-    #agent_file: "soar/tests/test_lookat.soar"
+    #agent_file: "soar/unified-proto3.soar"
+    agent_file: "soar/tests/test_lookat.soar"
     #agent_file: "soar/tests/test_attention.soar"
     input:
         rand:
@@ -24,12 +24,15 @@ soar:
         swm:
             type: "swm"
             topic: "detections"
-            timeout: 600
             visibility_timeout: 2
+            memorize_time: 600
             world_frame: "odom_combined"
+            camera_frame: "camera_link_optical"
             body_frame: "base_link"
             head_frame: "head_link4"
             eyes_frame: "eyes_link_yaw"
+            horizontal_field_of_view: 60 # from 112.2 deg
+            vertical_field_of_view: 50 # from 90.2 deg
             distance_bins_map: { names: [ "close", "near", "far" ], values: [ 0.3, 3.0] }
             yaw_bins_map: { names: [ "back", "right", "center", "left", "back" ], values: [ -1.57, -0.52, 0.52, 1.57] }
             time_bins_map: { names: [ "now", "just", "recently", "long-time" ], values: [ 2.0, 10.0, 120.0] }
