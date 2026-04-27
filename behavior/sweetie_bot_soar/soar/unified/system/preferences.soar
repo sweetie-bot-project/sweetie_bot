@@ -1,20 +1,79 @@
 # PREFERENCES 
 
-# SYSTEM AND COGNITION OPERATORS
+#
+# OPERATOR PREFERENCES 
+#
+# Types:
+# - system
+# - cognition
+# - decision-enter
+# - decision
+# - decision-exit
+#
 
-sp {prefer*system-cognition-best
+# Derive operators priorities based on type.
+
+sp {elaborate*type-priorioty-system
 	(state <s> ^operator <o> +)
-	(<o> ^type {<< system cognition >>})
+	(<o> ^type system)
 -->
-	(<s> ^operator <o> > =)
+	(<s> ^operator <o>  =)
+	(<o> ^type-priority 4)
 }
 
-sp {prefer*system-over-cognition
+sp {elaborate*type-priority-cognition
+	(state <s> ^operator <o> +)
+	(<o> ^type cognition)
+-->
+	(<s> ^operator <o>  =)
+	(<o> ^type-priority 3)
+}
+
+sp {elaborate*type-priority-decision-enter
+	(state <s> ^operator <o> +)
+	(<o> ^type decision-enter)
+-->
+	(<o> ^type-priority 2)
+}
+
+sp {elaborate*type-priority-decision
+	(state <s> ^operator <o> +)
+	(<o> ^type decision)
+-->
+	(<o> ^type-priority 1)
+}
+
+sp {elaborate*type-priorioty-decision-exit
+	(state <s> ^operator <o> +)
+	(<o> ^type decision-exit)
+-->
+	(<o> ^type-priority 0)
+}
+
+# Use priority to add preferences
+
+sp {prefer*type-priority
    (state <s> ^operator <o1> +  ^operator {<> <o1> <o2>} +)
-   (<o1> ^type system)
-   (<o2> ^type cognition)
+   (<o1> ^type-priority <pri1>)
+   (<o2> ^type-priority {< <pri1>})
 -->
    (<s> ^operator <o1> > <o2>)
+}
+
+sp {prefer*type-priority-lt-default
+   (state <s> ^operator <o1> +  ^operator {<> <o1> <o2>} +)
+   (<o1> -^type-priority)
+   (<o2> ^type-priority {< 1})
+-->
+   (<s> ^operator <o1> > <o2>)
+}
+
+sp {prefer*type-priority-gt-default
+   (state <s> ^operator <o1> +  ^operator {<> <o1> <o2>} +)
+   (<o1> -^type-priority)
+   (<o2> ^type-priority {> 1})
+-->
+   (<s> ^operator <o1> < <o2>)
 }
 
 # DRIVED OPERATOR PREFERENCES

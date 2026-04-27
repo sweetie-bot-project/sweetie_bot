@@ -17,73 +17,12 @@
 # None.
 #
 
-# ELABORATIONS
-
-sp {wait*elaborate*wait-processes
-	(state <s> ^substate wait ^superstate.operator.process <proc>)
--->
-	(<s> ^wait-process <proc>)
-}
-
-sp {wait*elaborate*wait-exclude-process
-	(state <s> ^substate ^superstate <ss>)
-	(<ss> ^substate wait ^operator.process-link <proc>)
--->
-	(<s> ^wait-exclude-process <proc>)
-}
-
-sp {wait*elaborate*wait-processes-to-non-wait-state
-	(state <s> ^substate ^superstate <ss>)
-	(<ss> ^wait-process <proc>)
-	-(<s> ^wait-exclude-process <proc>)
--->
-	(<s> ^wait-process <proc>)
-}
-
-# exclude all drives
-sp {wait*elaborate*termainl
-	(state <s> ^substate wait ^superstate.operator.exclusive)
--->
-	(<s> ^wait-exclusive 1)
-}
-
-# check there any drives to be selected
-sp {wait*elaborate*possible-drive
-	(state <s> ^substate wait ^mem.drive <d> -^drive-exclude <d> -^wait-exclusive)
--->
-	(<s> ^drive-possible <d>)
-}
 
 # DECISIONS
 
-# contiune execcution of one ыгиprocess if it is active
-sp {wait*propose*wait-process-continue
-	(state <s> ^substate wait ^wait-process <proc> ^beliefs.process <proc>)
--->
-	(<s> ^operator <op> +, =)
-	(<op> ^name wait-continue-process ^process-link <proc>)
-}
-
-# add operators to switch on next driver in all states
-sp {wait*propose*general-next-drive
-	(state <s> ^substate wait -^wait-process ^drive-possible <d>)
-	(<d> ^name <name>)
--->
-	(<s> ^operator <op> +)
-	(<op> ^name <name> ^substate general ^drive <d>)
-}
-
-sp {wait*prefer*general-next-drive-importance
-	(state <s> ^substate wait ^operator <op1> + ^operator {<> <op1> <op2>} +)
-	(<op1> ^substate general ^drive.importance <i1>)
-	(<op2> ^substate general ^drive.importance {< <i1>})
--->
-	(<s> ^operator <op1> > <op2>)
-}
-
 # do nothing if not process to wait and no drives is available
 sp {wait*propose*wait-behavior-create
-	(state <s> ^substate wait -^wait-process -^drive-possible ^io.output-link <ol>)
+	(state <s> ^substate wait ^io.output-link <ol>)
 	(<ol> -^nop)
 -->
 	(<s> ^operator <op> +)
@@ -92,7 +31,7 @@ sp {wait*propose*wait-behavior-create
 }
 
 sp {wait*propose*wait-behavior-cycle
-	(state <s> ^substate wait -^wait-process -^drive-possible ^io.output-link.nop <cmd>)
+	(state <s> ^substate wait ^io.output-link.nop <cmd>)
 	(<cmd> -^status ^cycle <cycle>)
 -->
 	(<s> ^operator <op> +)

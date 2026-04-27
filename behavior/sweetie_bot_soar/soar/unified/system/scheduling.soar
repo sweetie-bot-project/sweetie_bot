@@ -1,0 +1,137 @@
+#
+# PROCESSES SCHEDULING
+#
+# Automated process continuation.
+#
+# * Terminology:
+#   - Process is considered selected if it have dedicated substate in SOAR substate stack. Otherwise it is unselected.
+#   - Selected process may be active or pending depending on if process predicate is created.
+#   - Unselected process may be only active.
+#   - Process is orphaned if superprocess is finished and its predicate is removed.
+#
+# * Superprocess can explicitly propose and select it subprocess
+#   - If subprocess predicate already exists it means that subprocess is being continued.
+#
+# * If there is no more selectable decision opertors in process state then scheduling is performed:
+#   - System searchs process to continue: 
+#     + This process must be active unselected process.
+#     + Its superprocess must be already selected.
+#     + The state of superprocess must be closest to bottom one. 
+#     + If there is still several processe like this the user prefernce rules must be provided to select the best.
+#   - If there is not such process then random orphaned process is selected.
+#     + It will be immeditelly terminated after selection if coresponding rule is not prohibeted by user.
+#
+# * If no unselected processes is left wait is called.
+#
+
+
+# GLOBAL ELABORATIONS
+
+# create evaluation space
+sp {scheduling*elaborate*process-frame
+	(state <s> ^substate)
+-->
+	(<s> ^scheduling <sch>)
+}
+
+# add direct subprocess to evaluation space
+sp {scheduling*elaborate*register-direct-subprocess
+	(state <s> ^substate ^subprocess <proc> ^level <level> ^scheduling <sp>)
+-->
+	(<sp> ^process <frame>)
+	(<frame> ^link <proc> ^level <level> ^parent-substate <s>)
+}
+
+# propagate subprocess from parent scheduling frame to 
+sp {scheduling*elaborate*propagate-process
+	(state <s> ^scheduling <sp> ^superstate.scheduling.process <frame>)
+	(<frame> ^link <proc>)
+	-(<s> ^process <proc>)
+-->
+	(<sp> ^process <frame>)
+}
+
+# orphaned process state type
+sp {scheduling*elaborate*orphaned-process-state
+	(state <s> ^substate ^superstate.operator <op>)
+	(<op> ^name scheduling-orphaned-process)
+-->
+	(<s> ^type orphaned)
+}
+
+# DECISIONS 
+
+# propose execute direct subprocesses without creation of scheduling state
+sp {scheduling*propose*direct-subprocess 
+	(state <s> ^substate ^subprocess <proc> ^level <level>)
+	(<proc> ^name <name> ^substate <substate>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name <name> ^substate <substate> ^type scheduling decision-exit ^process-link <proc> ^level <level>)
+}
+
+# create scheduling state if no direct subprocesses to execute
+sp {scheduling*propose*scheduling 
+	(state <s> ^substate -^subprocess ^process)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name scheduling ^substate scheduling ^type decision-exit)
+}
+
+# propose subrocesse which do not have state
+sp {scheduling*propose*subprocess 
+	(state <s> ^substate scheduling ^scheduling.process <frame>)
+	(<frame> ^level <level> ^link <proc> ^parent-substate <ps>)
+	(<proc> ^name <name> ^substate <substate>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name <name> ^substate <substate> ^type scheduling ^process-link <proc> ^level <level> ^parent-substate <ps>)
+}
+
+# prefer subprocess with higher level
+sp {scheduling*prefer*top-subprocess 
+	(state <s> ^substate ^operator <op1> + ^operator {<> <op1> <op2>} +)
+	(<op1> ^type scheduling ^level <level1>)
+	(<op2> ^type scheduling ^level {< <level1>})
+-->
+	(<s> ^operator <op1> > <op2>)
+}
+
+# orphaned processes Scheduling
+sp {scheduling*propose*orphaned-subprocess 
+	(state <s> ^substate scheduling ^scheduling <sp> ^beliefs <b>)
+	(<sp> -^<level>)
+	(<b> ^process <proc>)
+	(<proc> ^substate {<> root <substate>} ^subprocess-of <sproc>)
+	-(<b> ^process <sproc>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name scheduling-orphaned-process ^substate <substate> ^process-link <proc>)
+}
+
+# finish orphaned process (can be prohibited by user rules)
+sp {scheduling*propose*finish-orphaned-process
+	(state <s> ^substate ^type orphaned ^process <proc>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name scheduling-finish-orphaned ^type automatic decision-enter ^finish-process <proc> ^finish-status orphaned)
+}
+
+# wait if nothing to do
+sp {scheduling*propose*wait
+	(state <s> ^substate scheduling ^scheduling <sched>)
+	(<sched> -^<level>)
+-->
+	(<s> ^operator <op> +)
+	(<op> ^name scheduling-wait ^substate wait)
+}
+
+# prefer orphaned process over wait
+sp {scheduling*prefer*orohaned-over-wait
+	(state <s> ^substate ^operator <op1> + ^operator {<> <op1> <op2>} +)
+	(<op1> ^name scheduling-orphaned-process)
+	(<op2> ^name scheduling-wait) 
+-->
+	(<s> ^operator <op1> > <op2>)
+}
+

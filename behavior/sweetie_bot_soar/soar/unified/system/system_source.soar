@@ -8,3 +8,5 @@ source automatic-operator-apply-rules.soar
 source automatic-output-link.soar
 # continos actions support
 source processes.soar
+source resources.soar
+source scheduling.soar

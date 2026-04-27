@@ -60,31 +60,6 @@ sp {elaborate*state-events-predicates-pool
 }
 
 #
-# INTENTION BELIEFS
-# 
-# beliefs which map presence of specific substate in goal hierarchy
-#
-
-# create intention beliefs
-#sp {elaborate*state-intention
-#	(state <s> ^substate <substate-name> ^beliefs <b>)
-#-->
-#	(<b> ^intention <i>)
-#	(<i> ^name <substate-name>)
-#}
-
-# remove intantion belief once bottom state is changed
-#sp {elaborate*remove-state-intention
-#	:o-support
-#	(state <s> ^bottom-state 1 ^beliefs <b>)
-#	(<b> ^intention <i>)
-#	(<i> ^name <name>)
-#	-(state <si> ^substate <name>)
-#-->
-#	(<b> ^intention <i> -)
-#}
-
-#
 # BOTTOM AND TOP STATE MARKS
 #
 

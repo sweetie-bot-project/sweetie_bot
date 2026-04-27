@@ -98,7 +98,7 @@ sp {initialization*apply*joint-trajectory
 	(<c1> ^name head_node ^tag confirmation greeting pleased joy neutral ^tag general ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 2.0)
 	(<c2> ^name head_shake ^tag rejection disappointed anger sadness ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 3.0)
 	(<c3> ^name head_suprised ^tag question surprise ^tag general ^tag talk ^relative yes ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 3.0)
-	(<c4> ^name head_look_around ^tag long neutral ^tag general ^tag talk ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 4.5)
+	(<c4> ^name head_look_around ^tag long neutral search ^tag general ^tag talk ^start-pose head_nominal ^end-pose head_nominal ^resource head ^duration 4.5)
 	(<c5> ^name hoof_stamp ^tag rejection anger ^tag talk  ^start-pose body_zero ^end-pose body_zero ^resource body ^duration 6.0)
 	(<c8> ^name dance_stamp ^tag joy dance ^tag talk  ^start-pose body_zero ^end-pose body_zero ^resource body ^duration 6.5)
 	(<c6> ^name greeting ^tag greeting brohoof ^tag talk  ^start-pose body_zero ^end-pose body_zero ^resource body ^duration 12.0)
@@ -146,5 +146,6 @@ sp {apply*initialization-second-stage*name
 	(state <s> ^name initialization ^operator <op>)
 	(<op> ^name initialization ^stage 3)
 -->
-	(<s> ^name root ^substate wait)
+	(<s> ^name root ^substate root ^process <proc> ^process-origin user)
+	(<proc> ^name root ^substate root)
 }

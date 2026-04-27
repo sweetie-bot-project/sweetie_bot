@@ -22,73 +22,32 @@
 
 # GLOBAL DECISION
 
-# add wait fallback operator 
-sp {global*propose*general-next-drive
-	(state <s> ^substate -^type cognition -^drive-possible)
+# propose drive-related subprocesses if it is not active
+sp {root*propose*drive-based-substate
+	(state <s> ^name root ^substate root ^mem.drive <d> -^<name>)
+	(<d> ^name <name>)
 -->
-	(<s> ^operator <op> +)
-	(<op> ^name general-wait-fallback ^substate wait)
+	(<s> ^operator <op> +, =)
+	(<op> ^name <name> ^substate general ^process-args <args>)
+	(<args> ^drive <d>)
 }
 
-# prefer any local operator over wait fallback
-sp {global*prefer*general-next-drive-worst-choice
-	(state <s> ^operator <op1> + ^operator {<> <op1> <op2>} +)
-	(<op1> ^name general-wait-fallback ^substate wait)
-	(<op2> ^name {<> general-wait-fallback})
+# immediatelly start proposed subprocess 
+sp {general*propose*start-general-process
+	(state <s> ^substate general ^process-status pending ^process <proc>)
 -->
-	(<s> ^operator <op1> < <op2>)
+	(<s> ^operator <op> +, =)
+	(<op> ^name general-start-process ^type automatic ^add-process <proc>)
 }
 
-# ELABORATIONS
-
-# derive drives which should be excluded beacuse they are considered in superstate
-sp {general*elaborate*exclude-drives
-	(state <s>  ^superstate.{<<|drive-active| |drive-exclude|>>} <d>)
+# preferences for scheduling subprocesses
+sp {root*prefer*general-subprocesses
+	(state <s> ^substate ^operator <op1> + ^operator <op2> +)
+	(<op1> ^type scheduling ^substate general ^process-link.drive.importance <pri1>)
+	(<op2> ^type scheduling ^substate general ^process-link.drive.importance {< <pri1>})
 -->
-	(<s> ^drive-exclude <d>)
+	(<s> ^operator <op1> > <op2>)
 }
 
-# deduce active drive from operator
-sp {general*elaborate*active-drive
-	(state <s> ^substate general ^superstate.operator.drive <d>)
--->
-	(<s> ^drive-active <d>)
-}
-
-# attach existing top-level process 
-sp {general*elaborate*attach-top-level-process
-	(state <s> ^substate general ^name <name> ^beliefs.process <proc>)
-	(<proc> ^name <name> ^substate general)
--->
-	(<s> ^process <proc> ^process-status active)
-}
-
-# create top-level process
-sp {general*elaborate*create-top-level-process
-	(state <s> ^substate general ^name <name> -^process-status active)
--->
-	(<s> ^process <proc> ^process-status pending)
-	(<proc> ^name <name> ^substate general)
-}
-
-#
-# DECISION RULES
-#
-
-## the worst possible choice: select next drive
-#sp {general*propose*select-next-drive
-#	(state <s> ^name ^substate general)
-#-->
-#	(<s> ^operator <op> +, <, =)
-#	(<op> ^name top-level-goal ^substate general)
-#}
-#
-## the worst possible choice: wait if no drives left
-#sp {general*propose*wait
-#	(state <s> -^name ^substate general)
-#-->
-#	(<s> ^operator <op> +, <)
-#	(<op> ^name waiting ^substate wait)
-#}
 
 
