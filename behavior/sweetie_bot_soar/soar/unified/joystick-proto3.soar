@@ -88,13 +88,6 @@ sp {joystick*elaborate*action-match-3
 # DECISION OPERATORS
 #
 
-# wait if nothing to do
-sp {joystick*propose*wait
-	(state <s> ^substate joystick)
---> (<s> ^operator <op> +, =)
-	(<op> ^name waiting-joystick-command ^substate wait ^priority 0)
-}
-
 # general-action
 sp {joystick*propose*action
 	(state <s> ^substate joystick ^action <a>)

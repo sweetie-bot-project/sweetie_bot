@@ -65,14 +65,6 @@ sp {text-action*apply*start-text-action
 	(<cmd> ^process <proc>)
 }
 
-# wait text-action behavior 
-sp {text-action*propose*wait 
-	(state <s> ^substate text-action)
--->
-	(<s> ^operator <op> +, <)
-	(<op> ^name text-action-wait-cmd ^substate wait)
-}
-
 # COGNITION
 
 # finish process with coresponding status and remove output command 

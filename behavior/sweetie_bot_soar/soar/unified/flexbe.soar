@@ -112,14 +112,6 @@ sp {flexbe*apply*start-behavior-intrruptable
 	(write |Execute FlexBe behavior | <bh> (crlf))
 }
 	
-# wait flexbe behavior 
-sp {flexbe*propose*wait 
-	(state <s> ^substate flexbe)
--->
-	(<s> ^operator <op> +, <)
-	(<op> ^name flexbe-wait-cmd ^substate wait)
-}
-
 #sp {flexbe*apply*wait-debug
 #	(state <s> ^substate flexbe ^operator <op> ^io.output-link.flexbe <cmd>)
 #	(<op> ^name flexbe-wait-cmd ^substate wait)

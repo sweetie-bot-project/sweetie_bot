@@ -240,21 +240,6 @@ sp {verbolize*propose*looking-at-speaker
 	(<a> ^object <obj>)
 }
 
-# waiting for subprocess
-sp {verbolize*propose*wait
-	(state <s> ^substate verbolize)
--->
-	(<s> ^operator <op> +, <)
-	(<op> ^name wait ^substate wait)
-}
-
-sp {verbolize*elaborate*waiting-subprocess
-	(state <s> ^substate verbolize ^{<<|performing-animation| |looking-at-speaker| |focusing-on-interlocutor| |saying-text-action|>>} <proc> ^operator <op> +)
-	(<op> ^name wait ^substate wait)
--->
-	(<op> ^process <proc>)
-}
-
 # PREFERENCES
 #
 # Utility:
