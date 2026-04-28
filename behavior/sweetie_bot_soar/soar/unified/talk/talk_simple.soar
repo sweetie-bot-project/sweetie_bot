@@ -465,7 +465,7 @@ sp {talk-llm*propose*searching-anyone
      }
 -->
 	(<s> ^operator <op> +, <, =)
-	(<op> ^name searching-anyone ^substate flexbe ^process-args <a> ^interruptable hard)
+	(<op> ^name searching-anyone ^substate flexbe ^process-args <a> ^interruptable hard ^required-resource head speech)
 	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text |Where did everyone go?| ^lang <lang>)
 }
 
@@ -501,7 +501,7 @@ sp {talk-llm*propose*searching-missing-speaker
 	-(<il> ^visible {<<|now| |just|>>})
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name searching-missing-speaker ^substate flexbe ^process-args <a> ^interruptable hard)
+	(<op> ^name searching-missing-speaker ^substate flexbe ^process-args <a> ^interruptable hard ^required-resource head speech)
 	(<a> ^object <obj> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text (concat |Where are you, interlocutor | <label> |?|) ^lang <lang>)
 }
 
