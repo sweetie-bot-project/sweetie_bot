@@ -46,13 +46,13 @@ def main() -> int:
         "/opt/venv-tts/lib/python3.10/site-packages/TTS/server/server.py",
     )
 
-    model_name = env("TTS_MODEL_NAME", "tts_models/en/vctk/vits")
+    model_name = env("TTS_MODEL_NAME", "tts_models/multilingual/multi-dataset/xtts_v2")
     port = env("TTS_PORT", "5003")
     use_cuda = env("TTS_USE_CUDA", "true")
 
-    model_file = env("TTS_MODEL_FILE", "")
-    config_file = env("TTS_CONFIG_FILE", "")
-    speakers_file = env("TTS_SPEAKERS_FILE", "")
+    model_file = env("TTS_MODEL_FILE", "model.pth")
+    config_file = env("TTS_CONFIG_FILE", "config.json")
+    speakers_file = env("TTS_SPEAKERS_FILE", "speakers_xtts.pth")
 
     model_dir = Path(env("TTS_MODEL_DIR", str(model_dir_from_name(model_name))))
 
