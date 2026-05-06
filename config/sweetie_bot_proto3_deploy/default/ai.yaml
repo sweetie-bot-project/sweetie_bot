@@ -65,7 +65,7 @@ classification_model:
         server_choices:
             local_host:
                 priority: 10
-                url: 'http://localhost:5011/'
+                url: 'http://localhost:5005/'
             remote_host:
                 priority: 20
                 url: 'https://ai.sweetie.bot/classification/'
@@ -77,7 +77,7 @@ transcriber:
         server_choices:
             local_host:
                 priority: 10
-                url: 'http://localhost:8577/'
+                url: 'http://localhost:5004/'
             remote_host:
                 priority: 20
                 url: 'https://ai.sweetie.bot/stt/'
@@ -88,7 +88,7 @@ translator:
         server_choices:
             local_host:
                 priority: 10
-                url: 'http://127.0.0.1:5001/translate'
+                url: 'http://127.0.0.1:5002/translate'
             remote_host:
                 priority: 20
                 url: 'https://ai.sweetie.bot/trans/'
