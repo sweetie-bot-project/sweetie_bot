@@ -232,7 +232,7 @@ sp {security*propose*head-to-nominal
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name move-to-nominal-pose ^substate move-to-pose ^process-args <a>)
-    (<a>  ^pose head_nominal)
+    (<a>  ^pose-name head_nominal)
 }
 
 # place body in nominal position on servos overheat
@@ -242,7 +242,7 @@ sp {security*propose*body-to-nominal
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name move-to-nominal-pose ^substate move-to-pose ^process-args <a>)
-    (<a>  ^pose body_nominal)
+    (<a>  ^pose-name body_nominal)
 }
 
 # say about overheat

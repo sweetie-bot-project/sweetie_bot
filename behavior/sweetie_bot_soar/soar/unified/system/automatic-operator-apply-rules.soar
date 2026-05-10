@@ -232,7 +232,7 @@ sp {automatic*apply*finish-process-pending
 	(<proc> ^name <name>)
 	(<ss> ^operator <sop>)
 -->
-	(<ss> ^operator <sop> -)
+	(<ss> ^operator <sop> ~)
 	(<b> ^event <ev>)
 	(<ev> ^name <name> ^reason terminated rejected ^status <status> ^process <proc> ^initiated-at <time>)
 	(<proc> ^status <status>)
