@@ -8,25 +8,39 @@
         <description>Modes applicable to given group.</description>
         <struct name="on" type="PropertyBag">
           <description>Servo is on.</description>
-          <simple name="torque_control" type="ulong"> <value>96</value> </simple>
+          <simple name="torque_control" type="ulong">
+            <value>96</value>
+          </simple>
         </struct>
         <struct name="free" type="PropertyBag">
           <description>Servo is off.</description>
-          <simple name="torque_control" type="ulong"> <value>0</value> </simple>
+          <simple name="torque_control" type="ulong">
+            <value>0</value>
+          </simple>
         </struct>
         <struct name="brake" type="PropertyBag">
           <description>Servo is off.</description>
-          <simple name="torque_control" type="ulong"> <value>64</value> </simple>
+          <simple name="torque_control" type="ulong">
+            <value>64</value>
+          </simple>
         </struct>
         <struct name="normal" type="PropertyBag">
           <description>Base servo configuration.</description>
-          <simple name="position_kp" type="ulong"> <value>100</value> </simple>
-          <simple name="position_kd" type="ulong"> <value>0</value> </simple>
+          <simple name="position_kp" type="ulong">
+            <value>100</value>
+          </simple>
+          <simple name="position_kd" type="ulong">
+            <value>0</value>
+          </simple>
         </struct>
         <struct name="walking" type="PropertyBag">
           <description>Confiuration for more presice movements.</description>
-          <simple name="position_kp" type="ulong"> <value>230</value> </simple>
-          <simple name="position_kd" type="ulong"> <value>500</value> </simple>
+          <simple name="position_kp" type="ulong">
+            <value>230</value>
+          </simple>
+          <simple name="position_kd" type="ulong">
+            <value>500</value>
+          </simple>
         </struct>
       </struct>
       <struct name="registers_init" type="PropertyBag">
@@ -76,7 +90,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>581</value>
+        <value>595</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -95,7 +109,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>209</value>
+        <value>216</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -114,7 +128,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>510</value>
+        <value>516</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -133,7 +147,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>647</value>
+        <value>654</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -152,7 +166,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>597</value>
+        <value>608</value>
       </simple>
       <simple name="scale" type="double">
         <description>Servo postion scale factor.</description>
@@ -175,7 +189,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>533</value>
+        <value>525</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -194,7 +208,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>428</value>
+        <value>427</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -213,7 +227,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>611</value>
+        <value>613</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -232,7 +246,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>538</value>
+        <value>572</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -251,7 +265,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>455</value>
+        <value>417</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
@@ -270,7 +284,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>374</value>
+        <value>339</value>
       </simple>
       <simple name="scale" type="double">
         <description>Servo postion scale factor.</description>
@@ -293,7 +307,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>532</value>
+        <value>531</value>
       </simple>
       <simple name="reverse" type="boolean">
         <description>Reverse direction flag.</description>
