@@ -97,7 +97,7 @@ sp {attention*propose*switch-atention-focus
 # prefer switch attention over look at
 sp {attention*prefer*switch
 	(state <s> ^substate attention ^operator <op1> + ^operator {<> <op1> <op2>} +)
-	(<op1> ^name focusing-attention)
+	(<op1> ^name focusing-attention -^type continue-subprocess)
 	(<op2> ^name continue-focusing-attention)
 -->
 	(<s> ^operator <op1> > <op2>)

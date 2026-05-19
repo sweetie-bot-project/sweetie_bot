@@ -63,11 +63,12 @@ sp {scheduling*elaborate*orphaned-process-state
 
 # propose execute direct subprocesses without creation of scheduling state
 sp {scheduling*propose*direct-subprocess 
-	(state <s> ^substate ^subprocess <proc> ^level <level>)
-	(<proc> ^name <name> ^substate <substate>)
+	(state <s> ^substate <p-substate> ^subprocess <proc> ^level <level>)
+	(<proc> ^name <name> )
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name <name> ^substate <substate> ^type scheduling decision-exit ^process-link <proc> ^level <level>)
+	(<op> ^name <name> ^type scheduling decision-exit continue-subprocess ^process-link <proc>)
+	(<op> ^subprocess <proc> ^parent <s> ^level <level>)
 }
 
 # create scheduling state if no direct subprocesses to execute
@@ -78,14 +79,15 @@ sp {scheduling*propose*scheduling
 	(<op> ^name scheduling ^substate scheduling ^type decision-exit)
 }
 
-# propose subrocesse which do not have state
+# propose subprocesse which do not have state
 sp {scheduling*propose*subprocess 
 	(state <s> ^substate scheduling ^scheduling.process <frame>)
 	(<frame> ^level <level> ^link <proc> ^parent-substate <ps>)
-	(<proc> ^name <name> ^substate <substate>)
+	(<proc> ^name <name>)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name <name> ^substate <substate> ^type scheduling ^process-link <proc> ^level <level> ^parent-substate <ps>)
+	(<op> ^name <name> ^type scheduling continue-subprocess ^process-link <proc>)
+	(<op> ^subprocess <proc> ^level <level> ^parent <ps>)
 }
 
 # prefer subprocess with higher level
