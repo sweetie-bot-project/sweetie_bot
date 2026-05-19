@@ -159,9 +159,9 @@ sp {elaborate*movement*compound-action-args
 # relative parameter -- valid only for movement state
 sp {elaborate*movement*trajectory-joint-trajectory-relative
     (state <s> ^substate movement ^movement <fr>)
-    (<fr> ^trajectory.relative yes)
+    (<fr> ^trajectory.relative yes ^args <args>)
 -->
-    (<fr> ^args <args> ^relative yes)
+    (<fr> ^relative yes)
     (<args> ^is_relative True)
 }
 
