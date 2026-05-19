@@ -91,25 +91,6 @@ sp {general-movement*propose*rand-head-movements
 	(<a> ^behavior ExecuteRandHeadMovements ^timeout (+ 10 (rand-int 20)))
 }
 
-### wait for started process
-
-sp {movement*propose*wait
-	(state <s> ^name movement ^substate general ^subprocess <proc>)
-	(<proc> ^substate <substate>)
--->
-	(<s> ^operator <o> +)
-   	(<o> ^name wait-proccess ^substate <substate> ^drive movement ^process-link <proc>)
-}
-
-# prefer continuation of current process over other actions
-sp {general-movememt*prefer*wait-active-subprocess
-	(state <s> ^name movement ^substate general ^operator <op1> + ^operator <op2> +)
-	(<op1> ^name wait-proccess)
-	(<op2> ^name {<> wait-proccess})
--->
-	(<s> ^operator <op1> > <op2>)
-}
-
 #
 # JOYSTICK
 #
@@ -136,10 +117,16 @@ sp {obey*propose*wait
 
 # SWITCH ATTENTION OVER MULTIPLE OBJECTS
 
-sp {curiosity*propose*attention
+sp {curiosity*elaboraty*intrestiong-object
 	(state <s> ^name curiosity ^substate general ^beliefs.object <obj>)
 	(<obj> ^input-link <il>)
 	(<il> ^visible now ^yaw-body {<<|left| |center| |right|>>})
+-->
+	(<s> ^intresting-object <obj>)
+}
+
+sp {curiosity*propose*attention
+	(state <s> ^name curiosity ^substate general ^intresting-object)
 -->
 	(<s> ^operator <o> +, =)
    	(<o> ^name look-at-multiple-objects ^substate attention ^process-args <a>)
