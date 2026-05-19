@@ -32,3 +32,6 @@
 [submodule "hmi/sweetie_bot_motor_state_viewer"]
 	path = hmi/sweetie_bot_motor_state_viewer
 	url = ../sweetie_bot_motor_state_viewer.git
+[submodule "config/sweetie_bot_sounds"]
+	path = config/sweetie_bot_sounds
+	url = ../sweetie_bot_sounds.git
