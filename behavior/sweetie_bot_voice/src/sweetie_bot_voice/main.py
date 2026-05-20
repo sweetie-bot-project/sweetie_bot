@@ -42,7 +42,7 @@ class TTSInterface:
 class TTSCoquiAi(TTSInterface):
     speaker = ""
     DEFAULT_CONFIG = dict(server_choices=dict(
-        local_host = {'url': 'http://127.0.0.1:5002/api/tts'},
+        local_host = {'url': 'http://127.0.0.1:5003/api/tts'},
     ))
 
     def __init__(self, balancer_config, init_params, **kwargs):
