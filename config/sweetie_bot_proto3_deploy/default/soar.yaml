@@ -2,8 +2,8 @@ soar:
     update_period: 0.2
     autostart: false
     agent_package: "sweetie_bot_soar"
-    #agent_file: "soar/unified-proto3.soar"
-    agent_file: "soar/tests/test_lookat.soar"
+    agent_file: "soar/unified-proto3.soar"
+    #agent_file: "soar/tests/test_lookat.soar"
     #agent_file: "soar/tests/test_attention.soar"
     input:
         rand:
