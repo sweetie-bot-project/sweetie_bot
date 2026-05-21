@@ -66,7 +66,7 @@
       </simple>
       <simple name="offset" type="ulong">
         <description>Servo zero position offset (raw).</description>
-        <value>820</value>
+        <value>872</value>
       </simple>
       <simple name="scale" type="double">
         <description>Servo postion scale factor.</description>

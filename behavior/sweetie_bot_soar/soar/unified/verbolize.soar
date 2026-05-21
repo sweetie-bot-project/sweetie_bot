@@ -232,7 +232,7 @@ sp {verbolize*propose*animation-is-finished
 
 # look at speaker if animation is finished
 sp {verbolize*propose*looking-at-speaker
-	(state <s> ^substate verbolize -^looking-at-speaker ^process <proc>)
+	(state <s> ^substate verbolize -^looking-at-speaker -^focusing-on-interlocutor ^process <proc>)
 	(<proc> ^animation-status succeed ^object <obj>)
 -->
 	(<s> ^operator <op> +, =)
