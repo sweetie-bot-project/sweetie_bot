@@ -4,6 +4,7 @@ import math
 from threading import Lock
 from dataclasses import dataclass
 import copy
+import weakref
 
 import rospy
 import tf
@@ -279,7 +280,10 @@ class SpatialWorldModel(InputModule):
     @staticmethod
     def get_swm():
         swm_ref = SpatialWorldModel._swm_instance_ref
-        return swm_ref if swm_ref is not None else None
+        if swm_ref is not None:
+            return swm_ref()
+        else:
+            return None
 
     @staticmethod
     def add_update_callback(callback):
@@ -348,7 +352,7 @@ class SpatialWorldModel(InputModule):
         self._last_update_time = rospy.Time.now().to_sec();
 
         # register SWM
-        SpatialWorldModel._swm_instance_ref = self
+        SpatialWorldModel._swm_instance_ref = weakref.ref(self)
 
         # marker publications timer
         self._markers_pub = rospy.Publisher(markers_topic, MarkerArray, queue_size=5)
