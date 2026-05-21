@@ -183,7 +183,7 @@ sp {propose*movement*choose-movement-required
 
 # if robot is in start pose of movement then execute it
 sp {propose*movement*execute-movement-from-start-pose
-    (state <s> ^substate movement ^movement <mv> ^current-pose <current-pose>)
+    (state <s> ^substate movement -^subprocess ^movement <mv> ^current-pose <current-pose>)
     (<mv> ^trajectory <tr> ^args <args> -^relative)
     (<tr> ^start-pose <current-pose>)
 -->
@@ -193,7 +193,7 @@ sp {propose*movement*execute-movement-from-start-pose
 
 # if movement is relative then execute it
 sp {propose*movement*execute-movement-relative
-    (state <s> ^substate movement ^movement <mv>)
+    (state <s> ^substate movement -^subprocess ^movement <mv>)
     (<mv> ^trajectory <tr> ^args <args> ^relative)
 -->
     (<s> ^operator <op> +, =)
@@ -210,7 +210,7 @@ sp {elaborate*movevent*movement-resource
 
 # if start pose is different from  trajectory start pose then change it to start pose
 sp {propose*movement*execute-movement-to-start-pose
-    (state <s> ^substate movement ^movement.trajectory.start-pose <start-pose>)
+    (state <s> ^substate movement -^subprocess ^movement.trajectory.start-pose <start-pose>)
 -->
     (<s> ^operator <op> +, =)
 	(<op> ^name move-to-start-pose ^substate move-to-pose ^process-args <args>)
@@ -219,7 +219,7 @@ sp {propose*movement*execute-movement-to-start-pose
 
 # fail if movement found but no action can be executed
 sp {propose*movement*failed-no-action
-    (state <s> ^substate movement ^movement ^process <proc>)
+    (state <s> ^substate movement -^subprocess ^movement ^process <proc>)
 -->
     (<s> ^operator <op> +, <)
 	(<op> ^name failed-on-unavailable ^type automatic ^finish-process <proc> ^finish-status failed)
@@ -229,7 +229,7 @@ sp {propose*movement*failed-no-action
 
 # execute elaborated movement
 sp {propose*move-to-pose*pose-to-pose
-    (state <s> ^substate move-to-pose ^movement <fr>)
+    (state <s> ^substate move-to-pose -^subprocess ^movement <fr>)
     (<fr> ^trajectory <tr> ^args <a>)
     (<tr> ^name <name>)
 -->
@@ -253,7 +253,7 @@ sp {propose*move-to-pose*pose-to-pose-continue
 
 # set pose 
 sp {propose*move-to-pose*set-pose
-    (state <s> ^substate move-to-pose ^args.pose-name <target-pose> ^mem.joint-state <st>)
+    (state <s> ^substate move-to-pose -^subprocess ^args.pose-name <target-pose> ^mem.joint-state <st>)
     (<st> ^name <target-pose>)
 -->
     (<s> ^operator <op> +, =)
@@ -270,7 +270,7 @@ sp {propose*move-to-pose*set-pose-resources
 
 # fail if no action can be executed
 sp {propose*move-to-pose*failed-no-action
-	(state <s> ^substate move-to-pose ^process <proc>)
+	(state <s> ^substate move-to-pose -^subprocess ^process <proc>)
 -->
 	(<s> ^operator <op> +, <)
 	(<op> ^name failed-on-unavailable ^type automatic ^finish-process <proc> ^finish-status failed)

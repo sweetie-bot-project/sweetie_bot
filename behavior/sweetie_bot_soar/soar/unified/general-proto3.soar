@@ -32,7 +32,7 @@ sp {general-movement*drive*elaborate*mode-full
 
 # assume nominal pose if it is keeped too long
 sp {general-movement*propose*body-to-comfort-pose-head-mode
-	(state <s> ^name movement ^substate general ^mode head-driven ^io.input-link.body <body>)
+	(state <s> ^name movement ^substate general ^mode head-driven -^subprocess ^io.input-link.body <body>)
 	(<body> -^pose body_nominal -^change-time just)
 -->
 	(<s> ^operator <op> +, =)
@@ -42,7 +42,7 @@ sp {general-movement*propose*body-to-comfort-pose-head-mode
 
 # rotate body after the head
 sp {general-movement*propose*body-to-comfort-pose-head-mode-head-left
-	(state <s> ^name movement ^substate general ^mode head-driven ^io.input-link.head-tf <head>)
+	(state <s> ^name movement ^substate general ^mode head-driven -^subprocess ^io.input-link.head-tf <head>)
 	(<head> ^heading strong-left -^heading-change-time just)
 -->
 	(<s> ^operator <op> +, =)
@@ -51,7 +51,7 @@ sp {general-movement*propose*body-to-comfort-pose-head-mode-head-left
 }
 
 sp {general-movement*propose*body-to-comfort-pose-head-mode-head-right
-	(state <s> ^name movement ^substate general ^mode head-driven ^io.input-link.head-tf <head>)
+	(state <s> ^name movement ^substate general ^mode head-driven -^subprocess ^io.input-link.head-tf <head>)
 	(<head> ^heading strong-right -^heading-change-time just)
 -->
 	(<s> ^operator <op> +, =)
@@ -63,7 +63,7 @@ sp {general-movement*propose*body-to-comfort-pose-head-mode-head-right
 ### full mode (control head and body)
 
 sp {general-movmemnt*propose*body-to-comfort-pose-full-mode
-	(state <s> ^name movement ^substate general ^mode full ^io.input-link.body.pose {<> body_nominal})
+	(state <s> ^name movement ^substate general ^mode full -^subprocess ^io.input-link.body.pose {<> body_nominal})
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name body-to-comfort-pose ^substate move-to-pose ^process-args <a>)
@@ -73,7 +73,7 @@ sp {general-movmemnt*propose*body-to-comfort-pose-full-mode
 # Propose perform animation (no one around)
 # do this only if pose has not changed for some time
 sp {general-movement*propose*animation
-	(state <s> ^name movement ^substate general ^mode full ^io.input-link.body <body>)
+	(state <s> ^name movement ^substate general ^mode full -^subprocess ^io.input-link.body <body>)
 	(<body> ^change-time {<> just})
 -->
 	(<s> ^operator <op> +, =)
@@ -84,7 +84,7 @@ sp {general-movement*propose*animation
 # invoke RandHeadMovements for random timeout 
 # do this only in nominal pose
 sp {general-movement*propose*rand-head-movements
-	(state <s> ^name movement ^substate general ^mode full ^io.input-link.body.pose body_nominal)
+	(state <s> ^name movement ^substate general ^mode full -^subprocess ^io.input-link.body.pose body_nominal)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name moving-head ^substate flexbe ^process-args <a> ^required-resource head ^interruptable hard)
@@ -101,14 +101,6 @@ sp {obey*propose*joystick
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name joystick-control ^substate joystick ^process-link <proc>)
-}
-
-sp {obey*propose*wait
-	(state <s> ^name obey ^substate general ^joystick-control <proc>)
-	(<proc> ^substate <substate>)
--->
-	(<s> ^operator <o> +, =)
-   	(<o> ^name wait-proccess ^substate <substate> ^drive obey ^process-link <proc>)
 }
 
 #
