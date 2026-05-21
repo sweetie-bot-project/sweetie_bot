@@ -97,10 +97,10 @@ sp {general-movement*propose*rand-head-movements
 
 # execute joystick commands
 sp {obey*propose*joystick
-	(state <s> ^name obey ^substate general ^io.input-link.joystick.pressed ^process <proc>)
+	(state <s> ^name obey ^substate general ^io.input-link.joystick.pressed)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name joystick-control ^substate joystick ^process-link <proc>)
+	(<op> ^name joystick-control ^substate joystick ^process-args <args>)
 }
 
 #

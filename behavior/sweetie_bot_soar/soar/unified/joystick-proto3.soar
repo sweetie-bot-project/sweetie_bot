@@ -90,7 +90,7 @@ sp {joystick*elaborate*action-match-3
 
 # general-action
 sp {joystick*propose*action
-	(state <s> ^substate joystick ^action <a>)
+	(state <s> ^substate joystick -^executing-joystick-command ^action <a>)
 	(<a> ^type <substate> ^priority <pri>)
 -->
 	(<s> ^operator <op> +, =)
@@ -114,13 +114,13 @@ sp {joystick*elaborate*movement
 	(<args> ^<attr> <value>)
 }
 
-# wait execution of action
-sp {joystick*propose*wait-execution
-	(state <s> ^substate joystick ^executing-joystick-command <proc>)
-	(<proc> ^substate <substate>)
+# terminate process if no more user activity
+sp {joystick*propose*terminate-process
+	(state <s> ^substate joystick -^executing-joystick-command ^io.input-link.joystick <joy> ^process <proc>)
+	(<joy> ^last-activity {<> now} -^pressed)
 -->
-	(<s> ^operator <op> +, =)
-	(<op> ^name waiting-execution-joystick-command ^substate <substate> ^process-link <proc> ^priority 10)
+	(<s> ^operator <op> +)
+	(<op> ^name terminate-joystick-process ^type automatic ^finish-process <proc> ^finish-status succeed)
 }
 
 #
