@@ -115,7 +115,7 @@ sp {scheduling*propose*orphaned-subprocess
 sp {scheduling*propose*finish-orphaned-process
 	(state <s> ^substate ^type orphaned ^process <proc>)
 -->
-	(<s> ^operator <op> +)
+	(<s> ^operator <op> +, =)
 	(<op> ^name scheduling-finish-orphaned ^type automatic decision-enter ^finish-process <proc> ^finish-status orphaned)
 }
 
