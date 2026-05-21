@@ -60,12 +60,12 @@ head:
             speed: -0.4
             min: 0.0
             max: 0.8
-        3:
+        4:
             joint: "head_joint2"
             speed: 0.0
             min: -0.3
             max: 0.3
-        2:
+        3:
             joint: "head_joint4"
             speed: 0.0
             min: -0.8

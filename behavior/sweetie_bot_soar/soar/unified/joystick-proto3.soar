@@ -37,7 +37,7 @@ sp {joystick*elaborate*key-maps-animations
 	(<s> ^mapping <m1> <m2> <m3> <m4>)
 	(<m1> ^key |1| ^type movement ^movement-name head_node)
 	(<m2> ^key |2| ^type movement ^movement-name head_shake)
-	(<m3> ^key |3| ^type movement ^movement-name greeting)
+	(<m3> ^key |3| ^type movement ^movement-name greeting2)
 	(<m4> ^key |4| ^type movement ^tag talk)
 }
 
