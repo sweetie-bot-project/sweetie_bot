@@ -91,5 +91,5 @@ translator:
                 url: 'http://127.0.0.1:5001/translate'
             remote_host:
                 priority: 20
-                url: 'https://ai.sweetie.bot/trans/'
+                url: 'https://ai.sweetie.bot/translate'
 
