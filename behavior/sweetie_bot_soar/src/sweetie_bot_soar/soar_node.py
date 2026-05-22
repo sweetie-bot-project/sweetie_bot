@@ -26,16 +26,19 @@ class SoarNode:
         self.period = 1.0
         # configure node: by default perform 3 attempts with 5 second period
         attempts = rospy.get_param("~reconfiguration_attempts", 3)
+        exit_on_fail = rospy.get_param("~exit_on_configuration_failed", True)
         timer = rospy.Rate(0.2)
         while not self.reconfigure():
             if attempts <= 0:
-                rospy.logwarn("SOAR abandoned reconfiguration attempts.")
-                break
+                if exit_on_fail:
+                    sys.exit(1)
+                else:
+                    rospy.logwarn("SOAR abandoned reconfiguration attempts. Trigger configuration manually.")
+                    break
             else:
                 attempts -= 1
                 rospy.logwarn("SOAR will attemt to reconfigure in 5 seconds.")
                 timer.sleep()
-                        
 
     def reconfigureCallback(self, req):
         self.soar.stop()
@@ -50,7 +53,9 @@ class SoarNode:
     def setOperationalCallback(self, req):
         state = self.soar.getState()
         if state == SoarState.UNCONFIGURED:
-            return SetBoolResponse(success = False, message = 'Node is not configured.')
+            if not self.soar.configure():
+                rospy.logerr("SOAR configuration failed.")
+                return SetBoolResponse(success = False, message = 'SOAR configuration falied.')
 
         if req.data:
             result = self.soar.start()
@@ -62,7 +67,9 @@ class SoarNode:
     def triggerOperationalCallback(self, req):
         state = self.soar.getState()
         if state == SoarState.UNCONFIGURED:
-            return SetBoolResponse(success = False, message = 'Node is not configured.')
+            if not self.soar.configure():
+                rospy.logerr("SOAR configuration failed.")
+                return TriggerResponse(success = False, message = 'SOAR configuration falied.')
 
         if state == SoarState.STOPPED:
             result = self.soar.start()

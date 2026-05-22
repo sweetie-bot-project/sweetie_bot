@@ -1,6 +1,8 @@
 soar:
     update_period: 0.2
     autostart: false
+    reconfiguration_attempts: 0
+    exit_on_configuration_failed: True
     agent_package: "sweetie_bot_soar"
     agent_file: "soar/unified-proto3.soar"
     #agent_file: "soar/tests/test_lookat.soar"
