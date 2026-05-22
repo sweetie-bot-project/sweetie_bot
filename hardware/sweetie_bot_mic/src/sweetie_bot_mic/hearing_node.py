@@ -272,9 +272,9 @@ class HearingNode:
         # get transform from microphone to stationary frame
         try:
             trans, rot = self.tf_listener.lookupTransform(self._stationary_frame_id, self._mic_frame_id, rospy.Time(0))
-        except tf.Exception as e:
-            rospy.logerr('tf request failed: %s', str(e))
-            # failsafe      values
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+            rospy.logwarn_throttle(1.0, 'unable to transform from %s to %s: %s', self._mic_frame_id, self._stationary_frame_id, e)
+            # failsafe values
             trans = (0, 0, 0)
             rot = (0, 0, 0, 1.0)
         # represent it as KDL frame

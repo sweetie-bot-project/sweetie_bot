@@ -312,7 +312,7 @@ class SpatialWorldModel(InputModule):
         self._detections_sub = None
         # check if SWM exists
         if SpatialWorldModel._swm_instance_ref is not None:
-            raise RuntimeError('SWM input_module: only one SWM instance can exist')
+            raise RuntimeError('SWM input module: only one SWM instance can exist')
 
         # get input link WME ids
         input_link_id = agent.GetInputLink()
@@ -404,7 +404,7 @@ class SpatialWorldModel(InputModule):
                         pose_stamped = self._tf_listener.transformPose(self._world_frame, pose_stamped)
                         break
                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
-                    rospy.logwarn('SWM: unable to transform detection (%s, %s) from %s to %s: %s' % (detection_msg.label, detection_msg.type, pose_stamped.header.frame_id, self._world_frame, e))
+                    rospy.logwarn('SWM input module: unable to transform detection (%s, %s) from %s to %s: %s' % (detection_msg.label, detection_msg.type, pose_stamped.header.frame_id, self._world_frame, e))
                     continue
                 # fix object orientation
                 pose_stamped.pose.orientation.x = 0.0
@@ -457,11 +457,15 @@ class SpatialWorldModel(InputModule):
         for key_tuple, mem_elem in self._memory_map.items():
             spatial_object = mem_elem.spatial_object
             # check camera fov
-            #TODO optimize trasform
-            pose = spatial_object.getPose(self._camera_frame, self._tf_listener)
-            distance = self.distance(pose.position)
-            inside_fov = math.degrees(math.asin(abs(pose.position.x)/distance)) < self._horz_fov and \
-                         math.degrees(math.asin(abs(pose.position.y)/distance)) < self._vert_fov
+            #TODO optimize transform
+            try:
+                pose = spatial_object.getPose(self._camera_frame, self._tf_listener)
+                distance = self.distance(pose.position)
+                inside_fov = math.degrees(math.asin(abs(pose.position.x)/distance)) < self._horz_fov and \
+                             math.degrees(math.asin(abs(pose.position.y)/distance)) < self._vert_fov
+            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+                rospy.logwarn_throttle(1.0, 'SWM input module: unable to transform object (%s, %s) from %s to %s: %s', spatial_object.label, spatial_object.type, spatial_object.frame_id, self._camera_frame, e)
+                inside_fov = False
             # update state
             spatial_object.updateState(time_now, self._seen_timeout, inside_fov)
             #print(f'updateState: ({spatial_object.label}, {spatial_object.type}): is_visible: {spatial_object.isVisible()}, inside_fov {inside_fov}, pose_reliable {spatial_object.isPoseReliable()}')
@@ -508,29 +512,19 @@ class SpatialWorldModel(InputModule):
                     soar_view.updateChildWME( 'pose-status', 'reliable') # string
                 else:
                     soar_view.updateChildWME( 'pose-status', 'unreliable') # string
-                # position relative to head
-                pose = spatial_object.getPose( self._head_frame, self._tf_listener )
-                distance = SpatialWorldModel.distance(pose.position)
-                soar_view.updateChildWME( 'distance-head', self._distance_bins_map(distance)) # string
-                soar_view.updateChildWME( 'distance-head-numeric', distance ) # float
-                yaw = math.atan2(pose.position.y, pose.position.x)
-                soar_view.updateChildWME( 'yaw-head', self._yaw_bins_map(yaw)) # string
-                soar_view.updateChildWME( 'yaw-head-numeric', yaw ) # float
-                # position relative to bode
-                pose = spatial_object.getPose( self._body_frame, self._tf_listener )
-                distance = SpatialWorldModel.distance(pose.position)
-                soar_view.updateChildWME( 'distance-body', self._distance_bins_map(distance)) # string
-                soar_view.updateChildWME( 'distance-body-numeric', distance ) # float
-                yaw = math.atan2(pose.position.y, pose.position.x)
-                soar_view.updateChildWME( 'yaw-body', self._yaw_bins_map(yaw)) # string
-                soar_view.updateChildWME( 'yaw-body-numeric', math.degrees(yaw) ) # float
-                soar_view.updateChildWME( 'yaw-body-abs-numeric', abs(math.degrees(yaw)) ) # float
-                # position relative to eyes
-                pose = spatial_object.getPose( self._eyes_frame, self._tf_listener )
-                distance = SpatialWorldModel.distance(pose.position)
-                yaw = math.atan2(pose.position.y, pose.position.x)
-                soar_view.updateChildWME( 'yaw-eyes', self._yaw_bins_map(yaw)) # string
-                soar_view.updateChildWME( 'yaw-eyes-numeric', yaw ) # float
+                # relative positions for head, body and eyes
+                for name, frame_id in zip(('head', 'body', 'eyes'), (self._head_frame, self._body_frame, self._eyes_frame)):
+                    try:
+                        pose = spatial_object.getPose( frame_id, self._tf_listener )
+                        yaw = math.atan2(pose.position.y, pose.position.x)
+                        soar_view.updateChildWME( 'yaw-{name}', self._yaw_bins_map(yaw)) # string
+                        soar_view.updateChildWME( 'yaw-{name}-numeric', yaw ) # float
+                        if name != 'eyes':
+                            distance = SpatialWorldModel.distance(pose.position)
+                            soar_view.updateChildWME( f'distance-{name}', self._distance_bins_map(distance)) # string
+                            soar_view.updateChildWME( f'distance-{name}-numeric', distance ) # float
+                    except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+                        rospy.logwarn_throttle(2.0, 'SWM input module: unable to transform object (%s, %s) from %s to %s: %s', spatial_object.label, spatial_object.type, spatial_object.frame_id, frame_id, e)
 
     def __del__(self):
         # remove sensor wme and ROS subscriber
@@ -540,5 +534,7 @@ class SpatialWorldModel(InputModule):
             self._detections_sub.unregister()
         # unregister SWM
         SpatialWorldModel._swm_instance_ref = None
+        # call superclass destructor
+        super(SpatialWorldModel, self).__del__()
 
 register("swm", SpatialWorldModel)

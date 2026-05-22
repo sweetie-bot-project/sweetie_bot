@@ -55,9 +55,10 @@ class PoseTF(InputModuleFlatSoarView):
         # get base pose from tf
         try:
             [p, quat] = self._listener.lookupTransform(self._base_frame, self._target_frame, rospy.Time())
-        except tf.Exception:
-            rospy.logerr("PoseTF input module: unable to transform.")
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+            rospy.logwarn_throttle(1.0, 'PoseTF input module: unable to get transform from %s to %s: %s', self._base_frame, self._target_frame, e)
             self._status_wme.update("no-tf")
+            return
 
         # caluclate properties
         T = quaternion_matrix(quat)
