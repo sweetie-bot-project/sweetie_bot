@@ -107,7 +107,7 @@ sp {scheduling*propose*orphaned-subprocess
 	(<proc> ^substate {<> root <substate>} ^subprocess-of <sproc>)
 	-(<b> ^process <sproc>)
 -->
-	(<s> ^operator <op> +)
+	(<s> ^operator <op> +, =)
 	(<op> ^name scheduling-orphaned-process ^substate <substate> ^process-link <proc>)
 }
 
