@@ -1,3 +1,4 @@
+from . import input_module
 from .input_module import get_config_parameter, register, InputModule
 
 import math
@@ -309,14 +310,15 @@ class SpatialWorldModel(InputModule):
         super(SpatialWorldModel, self).__init__(name)
         # add fileds to prevent AttributeError during destruction
         self._sensor_id = None
-        self._detections_sub = None
-        # check if SWM exists
-        if SpatialWorldModel._swm_instance_ref is not None:
-            raise RuntimeError('SWM input module: only one SWM instance can exist')
+        self._markers_timer = None
 
         # get input link WME ids
         input_link_id = agent.GetInputLink()
         self._sensor_id = input_link_id.CreateIdWME(name)
+
+        # check if SWM exists
+        if SpatialWorldModel._swm_instance_ref is not None:
+            raise RuntimeError('SWM input module: only one SWM instance can exist')
 
         # get configuration from parameters
         detection_topic = self.getConfigParameter(config, 'topic', allowed_types=str)
@@ -360,7 +362,6 @@ class SpatialWorldModel(InputModule):
             self._markers_timer = rospy.Timer(rospy.Duration(self._markers_period), lambda event: self._publishMarkers())
         else:
             self._markers_timer = None
-
 
     @property
     def world_frame(self):
@@ -527,14 +528,17 @@ class SpatialWorldModel(InputModule):
                         rospy.logwarn_throttle(2.0, 'SWM input module: unable to transform object (%s, %s) from %s to %s: %s', spatial_object.label, spatial_object.type, spatial_object.frame_id, frame_id, e)
 
     def __del__(self):
-        # remove sensor wme and ROS subscriber
+        # remove sensor wme 
         if self._sensor_id:
             self._sensor_id.DestroyWME()
+        # release ROS resources
         if self._detections_sub:
             self._detections_sub.unregister()
+        if self._markers_timer:
+            self._markers_timer = None
         # unregister SWM
         SpatialWorldModel._swm_instance_ref = None
         # call superclass destructor
         super(SpatialWorldModel, self).__del__()
 
-register("swm", SpatialWorldModel)
+input_module.register("swm", SpatialWorldModel)

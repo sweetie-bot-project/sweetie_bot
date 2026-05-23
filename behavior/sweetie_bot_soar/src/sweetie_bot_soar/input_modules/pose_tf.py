@@ -1,4 +1,5 @@
 from . import input_module
+from .input_module import InputModuleFlatSoarView
 
 from threading import Lock
 from math import acos, atan2, degrees

@@ -1,4 +1,5 @@
 from . import input_module
+from .input_module import InputModule
 
 from threading import Lock
 from copy import copy
@@ -7,22 +8,24 @@ import tf
 
 from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
 
-class Camera:
+class Camera(InputModule):
     def __init__(self, name, config, agent):
+        super(Camera, self).__init__(name)
+
+        # preinit
         self._detections_sub = None
 
         # get input link WME ids
         input_link_id = agent.GetInputLink()
         self._sensor_id = input_link_id.CreateIdWME(name)
+
         # configuration
-        detection_topic = config.get("topic")
-        if not detection_topic:
-            raise RuntimeError("Camera input module: 'topic' parameter is not defined.")
-        self._timeout = config.get("timeout")
-        if not self._timeout or not isinstance(self._timeout, (int,float)) or self._timeout < 0.0:
-            raise RuntimeError("Camera input module: 'timeout' parameter is not defined or incorrect.")
-        # add topic subscriber and tf buffer
+        detection_topic = self.getConfigParameter('topic', allowed_types=str)
+        self._timeout = self.getConfigParameter('timeout', allowed_types=(int,float), check_func=lambda x: x >= 0, error_desc='must be positive')
+
+        # add topic subscriber
         self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
+
         # message buffers
         self._lock = Lock()
         self._detections_msg = []
@@ -83,5 +86,7 @@ class Camera:
         self._sensor_id.DestroyWME()
         if self._detections_sub:
             self._detections_sub.unregister()
+        # supercalss destructor
+        super(Camera, self).__del__()
 
 input_module.register("camera", Camera)

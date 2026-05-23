@@ -1,4 +1,5 @@
 from . import input_module
+from .input_module import InputModule
 
 from threading import Lock
 
@@ -8,8 +9,11 @@ from sensor_msgs.msg import JointState
 from . import robot_pose
 from .bins import BinsMap
 
-class PoseJoints:
+class PoseJoints(InputModule):
     def __init__(self, name, config, agent):
+        super(PoseJoints, self).__init__(name)
+
+        # preinit
         self._joint_state_sub = None
 
         # get input link WME ids
@@ -17,29 +21,17 @@ class PoseJoints:
         self._sensor_id = input_link_id.CreateIdWME(name)
 
         # get configuration from parameters
-        joint_state_topic = config.get("topic")
-        if not joint_state_topic or not isinstance(joint_state_topic, str):
-            raise RuntimeError("Pose input module: 'topic' parameter is not defined or is not string.")
-        storage_ns = config.get("storage_ns")
-        if not storage_ns or not isinstance(storage_ns, str):
-            raise RuntimeError("Pose input module: 'storage_ns' parameter is not defined or is not string.")
-        pose_name_list = config.get("pose_list")
-        if not pose_name_list or not isinstance(pose_name_list, list) or not all(isinstance(p, str) for p in pose_name_list):
-            raise RuntimeError("Pose input module: 'pose_list' must be list of strings.")
-        default_tolerance = config.get("tolerance")
-        if not default_tolerance or not isinstance(default_tolerance, (float, int)) or default_tolerance < 0:
-            raise RuntimeError("Pose input module: 'default_tolerance' must be positive nuber.")
+        joint_state_topic = self.getConfigParameter(config, 'topic', allowed_types=str)
+        storage_ns = self.getConfigParameter(config, 'storage_ns', allowed_types=str)
+        pose_name_list = self.getConfigParameter(config, 'pose_list', allowed_types=list, check_func = lambda lst: all(isinstance(p, str) for p in lst), error_desc = 'must be list of string.')
+        default_tolerance = self.getConfigParameter(config, 'tolerance', allowed_types=(float, int), check_func = lambda tol: tol >= 0.0, error_desc='must be positive number.')
         try:
             self._time_bins_map = BinsMap( config['time_bins_map'] )
-        except KeyError:
-            raise RuntimeError('Pose input module: "time_bins_map" parameter must present.')
-        mov_joints = config.get("movement_detection_joints")
-        if not isinstance(mov_joints, list) or not all(isinstance(p, str) for p in mov_joints):
-            raise RuntimeError("Pose input module: 'movement_detection_joints' must be list of strings.")
+        except (KeyError, TypeError, ValueError) as e:
+            raise ValueError('PoseJoint input module: "time_bins_map" parameter is not present or invalid.') from e
+        mov_joints = self.getConfigParameter(config, 'movement_detection_joints', allowed_types=list, check_func = lambda lst: all(isinstance(p, str) for p in lst), error_desc = 'must be list of string.')
         self._mov_joints = set(mov_joints)
-        self._mov_tolerance = config.get("movement_detection_velocity_threshold")
-        if not isinstance(self._mov_tolerance, (int, float)) or self._mov_tolerance < 0.0:
-            raise RuntimeError("Pose input module: 'movement_detection_velocity_threshold' must be positive number.")
+        self._mov_tolerance= self.getConfigParameter(config, 'movement_detection_velocity_threshold', allowed_types=(float, int), check_func = lambda tol: tol >= 0.0, error_desc='must be positive number.')
 
         # load poses mentioned in list from Parameter Server
         self._pose_list = []
@@ -143,5 +135,7 @@ class PoseJoints:
         self._sensor_id.DestroyWME()
         if self._joint_state_sub:
             self._joint_state_sub.unregister()
+        # call superclass destructor
+        super(PoseJoints, self).__del__()
 
 input_module.register("pose_joints", PoseJoints)

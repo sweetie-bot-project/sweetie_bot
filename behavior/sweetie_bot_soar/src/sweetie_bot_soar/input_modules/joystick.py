@@ -1,4 +1,5 @@
 from . import input_module
+from .input_module import InputModule
 
 from copy import copy
 from threading import Lock
@@ -8,19 +9,23 @@ from sweetie_bot_joystick.msg import KeyPressed
 
 from .bins import BinsMap
 
-class Joystick:
+class Joystick(InputModule):
     def __init__(self, name, config, agent):
+        super(Joystick, self).__init__(name)
+
+        #preinit
         self._joy_sub = None
 
-        input_link_id = agent.GetInputLink()
         # add sensor element  
+        input_link_id = agent.GetInputLink()
         self._sensor_id = input_link_id.CreateIdWME(name)
+
         # configuration
-        joy_topic = config.get("topic")
-        if not joy_topic:
-            raise RuntimeError("Joystick input module: topic parameter is not defined.")
-        # add joystick subscriber and buffer
+        joy_topic = self.getConfigParameter(config, "topic", allowed_types=str)
+
+        # add joystick subscriber
         self._joy_sub = rospy.Subscriber(joy_topic, KeyPressed, self.joyCallback)
+
         # buffers
         self._lock = Lock()
         self._pressed_keys = []
@@ -80,5 +85,7 @@ class Joystick:
         self._sensor_id.DestroyWME()
         if self._joy_sub != None:
             self._joy_sub.unregister()
+        # supercalss destructor
+        super(Joystick, self).__del__()
 
 input_module.register("joystick", Joystick)

@@ -1,22 +1,27 @@
 from . import input_module
+from .input_module import InputModule
 
 from threading import Lock
 import rospy
 
 from sweetie_bot_herkulex_msgs.msg import HerkulexState
 
-class HerkulexServos:
+class HerkulexServos(InputModule):
     def __init__(self, name, config, agent):
+        super(HerkulexServos, self).__init__(name)
+
+        # preinit 
         self._servo_state_sub = None
+
         # get input link WME ids
         input_link_id = agent.GetInputLink()
         self._sensor_id = input_link_id.CreateIdWME(name)
 
         # get configuration from parameters
-        servo_state_topic = input_module.get_config_parameter(name, config, 'topic', allowed_types = str)
-        self._overheat_temperature = input_module.get_config_parameter(name, config, "overheat_temperature", allowed_types = (float, int))
-        self._ignore_joints = input_module.get_config_parameter(name, config, "ignore_joints", default_value = [], check_func = lambda jnts: all(isinstance(v, str) for v in jnts))
-        joint_groups = input_module.get_config_parameter(name, config, "groups", default_value = {}, 
+        servo_state_topic = self.getConfigParameter(config, 'topic', allowed_types = str)
+        self._overheat_temperature = self.getConfigParameter(config, "overheat_temperature", allowed_types = (float, int))
+        self._ignore_joints = self.getConfigParameter(config, "ignore_joints", default_value = [], check_func = lambda jnts: all(isinstance(v, str) for v in jnts))
+        joint_groups = self.getConfigParameter(config, "groups", default_value = {}, 
                                                          check_func = lambda grps: all(isinstance(k, str) and isinstance(v, list) for k, v in grps.items()),
                                                          error_desc= f"input module {name}: groups dict must contain (str, list) pairs where key represents group name and list elements are servo names in group.")
         self._groups = {}
@@ -120,5 +125,7 @@ class HerkulexServos:
         self._sensor_id.DestroyWME()
         if self._servo_state_sub:
             self._servo_state_sub.unregister()
+        # superclass destructor
+        super(HerkulexState, self).__del__()
 
 input_module.register("herkulex_servos", HerkulexServos)

@@ -1,4 +1,5 @@
-from .input_module import InputModuleFlatSoarView, register
+from . import input_module
+from .input_module import InputModuleFlatSoarView
 from .bins import BinsMap
 from ..nlp import SpacyInstance
 from .swm import SpatialWorldModel, ObjectKeyTuple
@@ -366,5 +367,7 @@ class SoundSpeech(InputModuleFlatSoarView):
         # remove sensor wme and ROS subscriber
         if self._sound_event_sub:
             self._sound_event_sub.unregister()
+        # supercalss destructor
+        super(SoundSpeech, self).__del__()
 
-register("sound_speech", SoundSpeech)
+input_module.register("sound_speech", SoundSpeech)

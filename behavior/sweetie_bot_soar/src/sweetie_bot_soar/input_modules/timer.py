@@ -10,12 +10,12 @@ class Clock(input_module.InputModule):
         input_link_id = agent.GetInputLink()
         self._sensor_wme_id = agent.CreateIdWME(input_link_id, name)
         # get parameters
-        self._simulation_timestep = self.getConfigParameter(config, 'simulation_timestep', allowed_types = (type(None), int, float), check_func = lambda v: v > 0.0 if v != None else True)
+        self._simulation_timestep = self.getConfigParameter(config, 'simulation_timestep', allowed_types = (int, float), optional = True, check_func = lambda v: v > 0.0 if v != None else True)
         self._just_delay = self.getConfigParameter(config, 'just_delay', allowed_types = (int, float), check_func = lambda v: v > 0.0)
         self._recently_delay = self.getConfigParameter(config, 'recently_delay', allowed_types = (int, float), check_func = lambda v: v > 0.0)
         self._long_time_delay = self.getConfigParameter(config, 'long_time_delay', allowed_types = (int, float), check_func = lambda v: v > 0.0)
         # create clocks
-        if self._simulation_timestep == None:
+        if self._simulation_timestep is None:
             time_now = rospy.get_rostime().to_sec()
         else:
             print("SOAR clock input module: timestep debug mode.")
