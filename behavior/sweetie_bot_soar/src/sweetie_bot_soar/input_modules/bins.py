@@ -1,6 +1,6 @@
 class BinsMap:
     def __init__(self, param):
-        error = RuntimeError("BinsMap parameter must contains numerical list `values` and string list `names`.")
+        error = TypeError("BinsMap parameter must be dictionary of the folowing format: { 'names': <list of string>, 'values': <list of values> }.")
         # check provided configuration parameter
         if not isinstance(param, dict):
             raise error
@@ -10,14 +10,14 @@ class BinsMap:
         if not isinstance(names, list) or not isinstance(values, list):
             raise error
         if len(values) + 1 != len(names):
-            raise RuntimeError("BinMap has inconsistent names and values lists lengths: %s and %s" % (names, values))
+            raise ValueError("BinMap has inconsistent names and values lists lengths: %s and %s" % (names, values))
         # check if parameters are correct
         v_prev = None
         for v in values:
             if not isinstance(v, (int, float)):
                 raise error
             if v_prev != None and v_prev >= v:
-                raise RuntimeError("BinMap values list must be ordered: %s" % values)
+                raise ValueError("BinMap values list must be ordered: %s" % values)
         for n in names:
             if not isinstance(n, str):
                 raise error
