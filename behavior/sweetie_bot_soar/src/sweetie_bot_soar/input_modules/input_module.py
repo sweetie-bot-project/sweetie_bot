@@ -50,50 +50,21 @@ def get_config_parameter(module, config, name, default_value = None, allowed_typ
     return value
 
 class InputModule:
-    def __init__(self, name):
+    def __init__(self, name, agent):
         self._name = name
+        # create sensor WME
+        input_link_id = agent.GetInputLink()
+        self._sensor_id = input_link_id.CreateIdWME(name)
+
+    @property
+    def sensor_id(self):
+        return self._sensor_id
 
     def getConfigParameter(self, *args, **kwargs):
         return get_config_parameter(self._name, *args, **kwargs)
 
-class InputModuleFlatSoarView(InputModule):
-    def __init__(self, name, agent):
-        super(InputModuleFlatSoarView, self).__init__(name)
-        # create sensor WME
-        input_link_id = agent.GetInputLink()
-        self._sensor_id = input_link_id.CreateIdWME(name)
-        # create child id map
-        self._child_ids = {}
-    
-    def updateChildWME(self, attrib, value):
-        # bool to int
-        if isinstance(value, bool):
-            value = 1 if value else 0
-        # check if corresponding child WME exists
-        child_id = self._child_ids.get(attrib)
-        if child_id == None:
-            # create WME and add it to map
-            if isinstance(value, int):
-                self._child_ids[attrib] = self._sensor_id.CreateIntWME(attrib, value)
-            elif isinstance(value, float):
-                self._child_ids[attrib] = self._sensor_id.CreateFloatWME(attrib, value)
-            elif isinstance(value, str):
-                self._child_ids[attrib] = self._sensor_id.CreateStringWME(attrib, value)
-            else:
-                raise TypeError('SOAR attribute value must be int, float or string.')
-        else:
-            # update existing WME
-            if child_id.GetValue() != value:
-                child_id.Update(value)
-
-    def removeChildWME(self, attrib):
-        child_id = self._child_ids.get(attrib)
-        if child_id != None:
-            del self._child_ids[attrib]
-            child_id.DestroyWME()
-
     def __del__(self):
         # remove WME
         self._sensor_id.DestroyWME()
-        # call superclass destructor
-        super(InputModuleFlatSoarView, self).__del__()
+
+

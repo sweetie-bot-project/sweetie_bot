@@ -307,14 +307,11 @@ class SpatialWorldModel(InputModule):
 
     def __init__(self, name, config, agent):
         # superclass constructor
-        super(SpatialWorldModel, self).__init__(name)
-        # add fileds to prevent AttributeError during destruction
-        self._sensor_id = None
-        self._markers_timer = None
+        super(SpatialWorldModel, self).__init__(name, agent)
 
-        # get input link WME ids
-        input_link_id = agent.GetInputLink()
-        self._sensor_id = input_link_id.CreateIdWME(name)
+        # add fileds to prevent AttributeError during destruction
+        self._detections_sub = None
+        self._markers_timer = None
 
         # check if SWM exists
         if SpatialWorldModel._swm_instance_ref is not None:
@@ -528,9 +525,6 @@ class SpatialWorldModel(InputModule):
                         rospy.logwarn_throttle(2.0, 'SWM input module: unable to transform object (%s, %s) from %s to %s: %s', spatial_object.label, spatial_object.type, spatial_object.frame_id, frame_id, e)
 
     def __del__(self):
-        # remove sensor wme
-        if self._sensor_id:
-            self._sensor_id.DestroyWME()
         # release ROS resources
         if self._detections_sub:
             self._detections_sub.unregister()

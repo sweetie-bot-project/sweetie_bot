@@ -1,5 +1,6 @@
 from . import input_module
 from .input_module import InputModule
+from .wme_proxy import SetWMEProxy
 
 from threading import Lock
 import rospy
@@ -8,14 +9,10 @@ from sweetie_bot_herkulex_msgs.msg import HerkulexState
 
 class HerkulexServos(InputModule):
     def __init__(self, name, config, agent):
-        super(HerkulexServos, self).__init__(name)
+        super(HerkulexServos, self).__init__(name, agent)
 
         # preinit 
         self._servo_state_sub = None
-
-        # get input link WME ids
-        input_link_id = agent.GetInputLink()
-        self._sensor_id = input_link_id.CreateIdWME(name)
 
         # get configuration from parameters
         servo_state_topic = self.getConfigParameter(config, 'topic', allowed_types = str)
@@ -40,10 +37,11 @@ class HerkulexServos(InputModule):
         self._failed_servos = set()
         self._off_servos = set()
         # WME ids
-        self._status_wmes_ids = {}
-        self._set_wmes = {'failed': {}, 'off': {}, 'overheat': {}}
-        for k in self._groups.keys():
-            self._set_wmes[k] = {}
+        self._status_wmes = SetWMEProxy(self._sensor_id, 'status')
+        self._failed_servos_wmes = SetWMEProxy(self._sensor_id, 'falied')
+        self._off_servos_wmes = SetWMEProxy(self._sensor_id, 'off')
+        self._overheat_servos_wmes = SetWMEProxy(self._sensor_id, 'overheat')
+        self._groups_status_wmes = { group: SetWMEProxy(self._sensor_id, group) for group in self._groups.keys() }
 
     def newServoStateCallback(self, msg):
         # check ignore list
@@ -72,41 +70,17 @@ class HerkulexServos(InputModule):
             else:
                 self._overheat_servos.discard(msg.name)
 
-    def update_status_wme(self, status, value):
-        if value:
-            if status not in self._status_wmes_ids:
-                self._status_wmes_ids[status] = self._sensor_id.CreateStringWME('status', status)
-        else:
-            status_id = self._status_wmes_ids.get(status)
-            if status_id != None:
-                status_id.DestroyWME()
-                del self._status_wmes_ids[status]
-
-    def update_set_wmes(self, name, values):
-		# get current set values: bind new name to dict element
-        set_values_ids = self._set_wmes[name]
-        # compare with new values
-        addlist = values - set_values_ids.keys()
-        dellist = set_values_ids.keys() - values
-        # add or remove new wmes
-        for value in addlist:
-            set_values_ids[value] = self._sensor_id.CreateStringWME(name, value)
-        for value in dellist:
-            wme_id = set_values_ids[value]
-            wme_id.DestroyWME()
-            del set_values_ids[value]
-
     def update(self):
         with self._lock:
             # set status flags
-            self.update_status_wme('normal', len(self._off_servos) == 0 and len(self._failed_servos) == 0 and len(self._overheat_servos) == 0) 
-            self.update_status_wme('failed', len(self._failed_servos) != 0)
-            self.update_status_wme('overheat', len(self._overheat_servos) != 0)
-            self.update_status_wme('off', len(self._off_servos) != 0)
+            self._status_wmes.set_present('normal', len(self._off_servos) == 0 and len(self._failed_servos) == 0 and len(self._overheat_servos) == 0) 
+            self._status_wmes.set_present('failed', len(self._failed_servos) != 0)
+            self._status_wmes.set_present('overheat', len(self._overheat_servos) != 0)
+            self._status_wmes.set_present('off', len(self._off_servos) != 0)
             # update detailed servo info
-            self.update_set_wmes('failed', self._failed_servos)
-            self.update_set_wmes('off', self._off_servos)
-            self.update_set_wmes('overheat', self._overheat_servos)
+            self._failed_servos_wmes.assign(self._failed_servos)
+            self._off_servos_wmes.assign(self._off_servos)
+            self._overheat_servos_wmes.assign(self._overheat_servos)
             # groups
             for group, servos in self._groups.items():
                 status = set()
@@ -118,11 +92,10 @@ class HerkulexServos(InputModule):
                     status.add('off')
                 if len(status) == 0:
                     status.add('normal')
-                self.update_set_wmes(group, status)
+                self._groups_status_wmes[group].assign(status)
 
     def __del__(self):
-        # remove sensor wme and ROS subscriber
-        self._sensor_id.DestroyWME()
+        # remove ROS subscriber
         if self._servo_state_sub:
             self._servo_state_sub.unregister()
         # superclass destructor

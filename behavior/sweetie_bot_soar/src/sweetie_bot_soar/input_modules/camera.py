@@ -10,14 +10,10 @@ from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detec
 
 class Camera(InputModule):
     def __init__(self, name, config, agent):
-        super(Camera, self).__init__(name)
+        super(Camera, self).__init__(name, agent)
 
         # preinit
         self._detections_sub = None
-
-        # get input link WME ids
-        input_link_id = agent.GetInputLink()
-        self._sensor_id = input_link_id.CreateIdWME(name)
 
         # configuration
         detection_topic = self.getConfigParameter('topic', allowed_types=str)
@@ -82,8 +78,7 @@ class Camera(InputModule):
             wme_id.DestroyWME()
 
     def __del__(self):
-        # remove sensor wme and ROS subscriber
-        self._sensor_id.DestroyWME()
+        # remove ROS subscriber
         if self._detections_sub:
             self._detections_sub.unregister()
         # supercalss destructor

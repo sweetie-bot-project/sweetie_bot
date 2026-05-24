@@ -1,6 +1,7 @@
 from . import input_module
-from .input_module import InputModuleFlatSoarView
+from .input_module import InputModule
 from .bins import BinsMap
+from .wme_proxy import SingleValueWMEProxy
 from ..nlp import SpacyInstance
 from .swm import SpatialWorldModel, ObjectKeyTuple
 
@@ -112,15 +113,18 @@ class EvaluationFrame:
 # input module iplementation
 #
 
-class SoundSpeech(InputModuleFlatSoarView):
+class SoundSpeech(InputModule):
     WAITING = 0
     LISTENING = 1
     DISPLAYING = 2
 
     def __init__(self, name, config, agent):
-        self._sound_event_sub = None
-        # call supercalss constructor
+        # call superclass constructor
         super(SoundSpeech, self).__init__(name, agent)
+
+        # preinit
+        self._sound_event_sub = None
+
         # get configuration from parameters
         sound_event_topic = self.getConfigParameter(config, 'topic', allowed_types = (str,))
         self._speech_timeout = self.getConfigParameter(config, 'speech_timeout', default_value = 1.0)
@@ -150,9 +154,11 @@ class SoundSpeech(InputModuleFlatSoarView):
                 self._parsers[lang] = Parser(**conf)
         except TypeError as e:
             raise KeyError('incorrect parser declaraition: missing or superfluous parameters (%s): error %s' % ([request.keys()], e))
+
         # subscriber    
         self._sound_event_sub = rospy.Subscriber(sound_event_topic, SoundEvent, self.newSoundEventCallback, queue_size = 10)
         self._tf_listener = ProxyTransformListener().listener()
+
         # message buffers
         self._lock = Lock()
         self._last_sound_event = SoundEvent()
@@ -163,6 +169,13 @@ class SoundSpeech(InputModuleFlatSoarView):
         # direction 
         self._object_intensity_map= {}
 
+        # wme proxies
+        self._sound_wme = SingleValueWMEProxy(self._sensor_id, 'sound', False)
+        self._speech_wme = SingleValueWMEProxy(self._sensor_id, 'speech', False)
+        self._intensity_wme = SingleValueWMEProxy(self._sensor_id, 'intensity', self._intensity_bins_map(0.0))
+        self._text_wme = None
+        self._lang_wme = None
+
     def newSoundEventCallback(self, sound_event):
         # processing FSM
         while True:
@@ -170,7 +183,7 @@ class SoundSpeech(InputModuleFlatSoarView):
             rospy.logdebug('sound: sound event processing: state: %s, msg: %s', self._state, sound_event)
             # print('sound: sound event processing: state: %s, msg: %s' % (self._state, sound_event))
 
-            # waiting speech 
+            # waiting speech
             if self._state == SoundSpeech.WAITING:
                 
                 # speech is heard, transit to LISTENING
@@ -315,11 +328,11 @@ class SoundSpeech(InputModuleFlatSoarView):
         with self._lock:
             # set status flags
             sound = bool(self._last_sound_event.sound_flags & SoundEvent.SOUND_DETECTING)
-            self.updateChildWME('sound', sound) 
+            self._sound_wme.update(sound)
             speech = bool(self._last_sound_event.sound_flags & SoundEvent.SPEECH_DETECTING)
-            self.updateChildWME('speech', speech) 
+            self._speech_wme.update(speech)
             # add sound intensity
-            self.updateChildWME('intensity', self._intensity_bins_map(self._last_sound_event.intensity)) 
+            self._intensity_wme.update(self._intensity_bins_map(self._last_sound_event.intensity))
             # update text if necessary
             if self._text_is_updated:
                 self._text_is_updated = False
@@ -329,9 +342,15 @@ class SoundSpeech(InputModuleFlatSoarView):
                     # filter text by lang
                     if lang not in self._lang_filter:
                         return
-                    # updtae text
-                    self.updateChildWME('text', text)
-                    self.updateChildWME('lang', lang)
+                    # update text and lang WMEs
+                    if self._text_wme is None:
+                        self._text_wme = self._sensor_id.CreateStringWME('text', text)
+                    else:
+                        self._text_wme.Update(text)
+                    if self._lang_wme is None:
+                        self._lang_wme = self._sensor_id.CreateStringWME('lang', lang)
+                    else:
+                        self._lang_wme.Update(lang)
                     # remove nlp results and speech sources
                     self.remove_all_wme_by_attr('nlp')
                     self.remove_all_wme_by_attr('speech-source')
@@ -356,8 +375,12 @@ class SoundSpeech(InputModuleFlatSoarView):
                                 is_first = False
                 else:
                     # remove WMEs
-                    self.removeChildWME('text')
-                    self.removeChildWME('lang')
+                    if self._text_wme is not None:
+                        self._text_wme.DestroyWME()
+                        self._text_wme = None
+                    if self._lang_wme is not None:
+                        self._lang_wme.DestroyWME()
+                        self._lang_wme = None
                     # remove elements and speech sources
                     self.remove_all_wme_by_attr('nlp')
                     self.remove_all_wme_by_attr('speech-source')

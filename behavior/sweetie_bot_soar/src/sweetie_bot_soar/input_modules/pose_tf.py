@@ -1,6 +1,3 @@
-from . import input_module
-from .input_module import InputModuleFlatSoarView
-
 from threading import Lock
 from math import acos, atan2, degrees
 
@@ -9,13 +6,14 @@ from numpy.linalg import norm
 from tf.transformations import quaternion_matrix
 
 from .bins import BinsMap
-from .wme import WME
-from .input_module import InputModuleFlatSoarView
+from .wme_proxy import SingleValueWMEProxy
+from . import input_module
+from .input_module import InputModule
 
 from flexbe_core.proxy import ProxyTransformListener
 
 
-class PoseTF(InputModuleFlatSoarView):
+class PoseTF(InputModule):
 
     def __init__(self, name, config, agent):
         # call supercalss constructor
@@ -41,13 +39,13 @@ class PoseTF(InputModuleFlatSoarView):
         self._heading_change_time = time_now
 
         # WME cache
-        self._inclination_wme = WME(self._sensor_id, "inclination", self._incline_bins_map(0.0))
-        self._inclination_time_wme = WME(self._sensor_id, "inclination-change-time", self._time_bins_map(0.0)) 
-        self._heading_wme = WME(self._sensor_id, "heading", self._heading_bins_map(0.0))
-        self._heading_time_wme = WME(self._sensor_id, "heading-change-time", self._time_bins_map(0.0)) 
-        self._x_wme = WME(self._sensor_id, "x", 0.0)
-        self._y_wme = WME(self._sensor_id, "y", 0.0)
-        self._status_wme = WME(self._sensor_id, "status", "ok")
+        self._inclination_wme = SingleValueWMEProxy(self._sensor_id, "inclination", self._incline_bins_map(0.0))
+        self._inclination_time_wme = SingleValueWMEProxy(self._sensor_id, "inclination-change-time", self._time_bins_map(0.0)) 
+        self._heading_wme = SingleValueWMEProxy(self._sensor_id, "heading", self._heading_bins_map(0.0))
+        self._heading_time_wme = SingleValueWMEProxy(self._sensor_id, "heading-change-time", self._time_bins_map(0.0)) 
+        self._x_wme = SingleValueWMEProxy(self._sensor_id, "x", 0.0)
+        self._y_wme = SingleValueWMEProxy(self._sensor_id, "y", 0.0)
+        self._status_wme = SingleValueWMEProxy(self._sensor_id, "status", "ok")
 
 
     def update(self):

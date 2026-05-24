@@ -1,5 +1,6 @@
 from . import input_module
 from .input_module import InputModule
+from .wme_proxy import SetWMEProxy
 
 from copy import copy
 from threading import Lock
@@ -11,17 +12,17 @@ from .bins import BinsMap
 
 class Joystick(InputModule):
     def __init__(self, name, config, agent):
-        super(Joystick, self).__init__(name)
+        super(Joystick, self).__init__(name, agent)
 
         #preinit
         self._joy_sub = None
 
-        # add sensor element  
-        input_link_id = agent.GetInputLink()
-        self._sensor_id = input_link_id.CreateIdWME(name)
-
         # configuration
         joy_topic = self.getConfigParameter(config, "topic", allowed_types=str)
+        try:
+            self._last_activity_bins_map = BinsMap( config['last_activity_bins_map'] )
+        except KeyError:
+            raise RuntimeError('Joystick input module: "last_activity_bins_map" parameters must present.')
 
         # add joystick subscriber
         self._joy_sub = rospy.Subscriber(joy_topic, KeyPressed, self.joyCallback)
@@ -32,11 +33,10 @@ class Joystick(InputModule):
         self._pressed_keys_new_value = False
         # last activity timestamp
         self._last_activity_timestamp = 0.0
-        try:
-            self._last_activity_bins_map = BinsMap( config['last_activity_bins_map'] )
-        except KeyError:
-            raise RuntimeError('Joystick input module: "last_activity_bins_map" parameters must present.')
-        self._last_activity_id = self._sensor_id.CreateStringWME('last-activity', self._last_activity_bins_map(rospy.Time.now().to_sec()))
+        
+        # wmes
+        self._last_activity_wme = self._sensor_id.CreateStringWME('last-activity', self._last_activity_bins_map(rospy.Time.now().to_sec()))
+        self._pressed_wmes = SetWMEProxy(self._sensor_id, 'pressed')
 
     def joyCallback(self, msg):
         with self._lock:
@@ -50,39 +50,24 @@ class Joystick(InputModule):
             if not self._pressed_keys_new_value:
                 return
             self._pressed_keys_new_value = False
-            # form list of WMEs for addition and deletion
-            add_key_list = copy(self._pressed_keys)
-            del_wme_list = []
+            # copy pressed keys list
+            pressed_keys = copy(self._pressed_keys)
 
-        # iterate over child wme
-        for i in range(self._sensor_id.GetNumberChildren()):
-            child_id = self._sensor_id.GetChild(i)
-            # check all WME's which symbolize pressed keys
-            # form add and del list but do not touch already added elements
-            if child_id.GetAttribute() == "pressed":
-                value = child_id.GetValueAsString()
-                if value in add_key_list:
-                    add_key_list.remove(value)
-                else:
-                    del_wme_list.append(child_id) 
-        # del not pressed keys
-        for wme_id in del_wme_list:
-            wme_id.DestroyWME()
-        # add new elements
-        for pressed_key in add_key_list:
-            self._sensor_id.CreateStringWME("pressed", pressed_key)
+        # update pressed WMEs
+        changed = self._pressed_wmes.assign(pressed_keys)
+
         # update activity timestamp
         time_now =  rospy.Time.now().to_sec()
-        if add_key_list or del_wme_list:
+        if changed:
             self._last_activity_timestamp = time_now
+
         # update activity wme if necessary
         value = self._last_activity_bins_map(time_now - self._last_activity_timestamp)
-        if self._last_activity_id.GetValue() != value:
-            self._last_activity_id.Update(value)
+        if self._last_activity_wme.GetValue() != value:
+            self._last_activity_wme.Update(value)
 
     def __del__(self):
-        # remove sensor wme and ROS subscriber
-        self._sensor_id.DestroyWME()
+        # remove ROS subscriber
         if self._joy_sub != None:
             self._joy_sub.unregister()
         # supercalss destructor

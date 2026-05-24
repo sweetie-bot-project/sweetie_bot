@@ -3,23 +3,19 @@ from .input_module import InputModule
 
 from random import random
 
-class Rand(InputModule):
+class Rand:
 
     def __init__(self, name, config, agent):
-        super(Rand, self).__init__(name)
-        self._agent = agent
-        self._input_link_id = agent.GetInputLink()
-        # add random value element  
-        self._sensor_id = agent.CreateFloatWME(self._input_link_id, name, random())
+        # create WME
+        input_link_id = agent.GetInputLink()
+        self._sensor_id = input_link_id.CreateFloatWME(name, random())
 
     def update(self):
         # update random value
-        self._agent.Update(self._sensor_id, random())
+        self._sensor_id.Update(random())
 
-    def __del__(self):
-        # remove sensor wme
-        self._agent.DestroyWME(self._sensor_id)
-        # supercalss destructor
-        super(Rand, self).__del__()
+    def __dell__(self):
+        # remove WME
+        self._sensor_id.DestroyWME()
 
 input_module.register("rand", Rand)

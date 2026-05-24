@@ -11,14 +11,10 @@ from .bins import BinsMap
 
 class PoseJoints(InputModule):
     def __init__(self, name, config, agent):
-        super(PoseJoints, self).__init__(name)
+        super(PoseJoints, self).__init__(name, agent)
 
         # preinit
         self._joint_state_sub = None
-
-        # get input link WME ids
-        input_link_id = agent.GetInputLink()
-        self._sensor_id = input_link_id.CreateIdWME(name)
 
         # get configuration from parameters
         joint_state_topic = self.getConfigParameter(config, 'topic', allowed_types=str)
@@ -83,6 +79,7 @@ class PoseJoints(InputModule):
             if joint in self._mov_joints and vel > self._mov_tolerance:
                 moving = True
                 break
+
         # update movement WME
         if moving != bool(self._mov_wme_id.GetValue()):
             self._mov_wme_id.Update(int(moving))
@@ -131,8 +128,7 @@ class PoseJoints(InputModule):
             return
 
     def __del__(self):
-        # remove sensor wme and ROS subscriber
-        self._sensor_id.DestroyWME()
+        # remove ROS subscriber
         if self._joint_state_sub:
             self._joint_state_sub.unregister()
         # call superclass destructor

@@ -1,5 +1,5 @@
 from . import input_module
-from .input_module import InputModuleFlatSoarView
+from .input_module import InputModule
 
 from threading import Lock
 
@@ -8,7 +8,7 @@ from sensor_msgs.msg import BatteryState
 
 from .bins import BinsMap
 
-class Battery(InputModuleFlatSoarView):
+class Battery(InputModule):
     def __init__(self, name, config, agent):
         super(Battery, self).__init__(name, agent)
         
