@@ -518,8 +518,8 @@ class SpatialWorldModel(InputModule):
                     try:
                         pose = spatial_object.getPose( frame_id, self._tf_listener )
                         yaw = math.atan2(pose.position.y, pose.position.x)
-                        soar_view.updateChildWME( 'yaw-{name}', self._yaw_bins_map(yaw)) # string
-                        soar_view.updateChildWME( 'yaw-{name}-numeric', yaw ) # float
+                        soar_view.updateChildWME( f'yaw-{name}', self._yaw_bins_map(yaw)) # string
+                        soar_view.updateChildWME( f'yaw-{name}-numeric', yaw ) # float
                         if name != 'eyes':
                             distance = SpatialWorldModel.distance(pose.position)
                             soar_view.updateChildWME( f'distance-{name}', self._distance_bins_map(distance)) # string
@@ -528,7 +528,7 @@ class SpatialWorldModel(InputModule):
                         rospy.logwarn_throttle(2.0, 'SWM input module: unable to transform object (%s, %s) from %s to %s: %s', spatial_object.label, spatial_object.type, spatial_object.frame_id, frame_id, e)
 
     def __del__(self):
-        # remove sensor wme 
+        # remove sensor wme
         if self._sensor_id:
             self._sensor_id.DestroyWME()
         # release ROS resources
