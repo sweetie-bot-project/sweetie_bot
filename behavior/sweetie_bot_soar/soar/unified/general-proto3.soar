@@ -87,7 +87,7 @@ sp {general-movement*propose*rand-head-movements
 	(state <s> ^name movement ^substate general ^mode full -^subprocess ^io.input-link.body.pose body_nominal)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name moving-head ^substate flexbe ^process-args <a> ^required-resource head ^interruptable hard)
+	(<op> ^name moving-head ^substate flexbe ^process-args <a> ^required-resource head ^interruptable volatile)
 	(<a> ^behavior ExecuteRandHeadMovements ^timeout (+ 10 (rand-int 20)))
 }
 

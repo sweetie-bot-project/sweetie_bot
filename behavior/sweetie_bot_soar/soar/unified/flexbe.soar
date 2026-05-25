@@ -16,8 +16,11 @@
 #
 # DECISION OPERATOR
 #
-# (<op> ^name <name> ^substate flexbe ^process-args <args> [^interruptable [hard|soft]])
+# (<op> ^name <name> ^substate flexbe ^process-args <args> [^interruptable volatile])
 #   (<args> ^behavior <behavior-name> ^<parameter-name> <parameter-value> ...)
+#
+# Attribute '^interruptable volatile' inditcates that behavior can be aborted in any moment
+# without danger.
 #
 # PROCESS RESULT STATUSES
 #
@@ -54,9 +57,9 @@ sp {flexbe*elaborate*add-porcess
 }
 
 sp {flexbe*elaborate*interruptable
-	(state <s> ^substate flexbe ^superstate.operator.interruptable <mode>)
+	(state <s> ^substate flexbe ^superstate.operator.interruptable <type>)
 -->
-	(<s> ^interruptable <mode>)
+	(<s> ^interruptable <type>)
 }
 
 # DECISIONS
@@ -65,10 +68,10 @@ sp {flexbe*elaborate*interruptable
 # check if behavior is interruptable and abort it it is possible
 sp {flexbe*propose*abort
 	(state <s> ^substate flexbe ^process <proc> ^io.output-link.flexbe <cmd>)
-	(<cmd> ^process {<> <proc>} ^interruptable {<< hard soft >> <abort-type>} -^abort)
+	(<cmd> ^process {<> <proc>} -^abort)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name abort-behavior ^type automatic ^parent <cmd> ^attribute abort ^link-value <abort-type> ^print |Abort behavior|)
+	(<op> ^name abort-behavior ^type automatic ^parent <cmd> ^attribute abort ^link-value graceful_stop ^print |Abort behavior|)
 }
 
 
@@ -103,11 +106,11 @@ sp {flexbe*apply*start-behavior
 }
 
 sp {flexbe*apply*start-behavior-intrruptable
-	(state <s> ^substate flexbe ^operator <op> ^interruptable <mode> ^io.output-link <ol> ^process <proc>)
+	(state <s> ^substate flexbe ^operator <op> ^interruptable <type> ^io.output-link <ol> ^process <proc>)
 	(<op> ^name start-behavior ^behavior <bh> ^param <p>)
 -->
 	(<ol> ^flexbe <cmd>)
-	(<cmd> ^name <bh> ^param <p> ^interruptable <mode>)
+	(<cmd> ^name <bh> ^param <p> ^interruptable <type>)
 	(<cmd> ^process <proc>)
 	(write |Execute FlexBe behavior | <bh> (crlf))
 }
@@ -146,10 +149,10 @@ sp {flexbe*elaborate*complete-events
 # abort flexbe if process is removed
 sp {flexbe*propose*abort-on-process-removal
 	(state <s> ^bottom-state 1 ^beliefs.event <ev> ^io.output-link.flexbe <cmd>)
-	(<cmd> ^interruptable {<< hard soft >> <abort-type>} -^abort ^process <proc>)
+	(<cmd> -^abort ^process <proc>)
 	(<ev> ^reason {<<|terminated| |deadline|>>} ^process <proc>)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name flexbe-abort-behavior-on-process-removal ^type cognition automatic ^parent <cmd> ^attribute abort ^link-value <abort-type>)
+	(<op> ^name flexbe-abort-behavior-on-process-removal ^type cognition automatic ^parent <cmd> ^attribute abort ^link-value graceful_stop)
 }
 

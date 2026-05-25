@@ -105,7 +105,7 @@ sp {look-at*propose*abort-look-at-cmd
 	(<cmd> -^abort)
 -->
 	(<s> ^operator <op> +)
-	(<op> ^name abort-look-at-cmd ^type automatic ^parent <cmd> ^attribute abort ^link-value hard)
+	(<op> ^name abort-look-at-cmd ^type automatic ^parent <cmd> ^attribute abort ^link-value graceful_stop)
 }
 
 # wait until look-at command is stopped
@@ -175,7 +175,7 @@ sp {look-at*propose*finish-process-abort-cmd
    	(<b> -^process <proc>) 
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name look-at-finish-process-abort-cmd ^type automatic cognition ^parent <cmd> ^attribute abort ^link-value hard)
+	(<op> ^name look-at-finish-process-abort-cmd ^type automatic cognition ^parent <cmd> ^attribute abort ^link-value graceful_stop)
 }
 
 # COGNITION ELABOARTIONS

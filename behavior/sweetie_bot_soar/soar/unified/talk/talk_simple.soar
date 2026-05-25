@@ -313,8 +313,9 @@ sp {talk-llm*propose*failsafe-answer
 
 # ignorance reaction
 sp {talk-llm*propose*ignor-me-answer
-	(state <s> ^substate talk-llm -^talking ^beliefs.predicate <pred> ^lang <lang> ^visible-interlocutor <obj> ^time.just <time> ^recent-events <ev-pool>)
+	(state <s> ^substate talk-llm -^talking ^beliefs.predicate <pred> ^lang <lang> ^time.just <time> ^recent-events <ev-pool>)
 	(<pred> ^name ignors-me ^actor <obj> ^initiated-at {> <time>})
+	(<obj> ^input-link.visible now)
 	-{(<ev-pool> ^event <ev>)
 	  (<ev> ^name talk-said ^object <obj> ^topic ignors-me)
     }
@@ -465,7 +466,7 @@ sp {talk-llm*propose*searching-anyone
      }
 -->
 	(<s> ^operator <op> +, <, =)
-	(<op> ^name searching-anyone ^substate flexbe ^process-args <a> ^interruptable hard ^required-resource head speech)
+	(<op> ^name searching-anyone ^substate flexbe ^process-args <a> ^interruptable volatile ^required-resource head speech)
 	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text |Where did everyone go?| ^lang <lang>)
 }
 
@@ -477,7 +478,7 @@ sp {talk-llm*propose*seaching-anyone-abort
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name searching-anyone-abort ^type automatic cognition)
-	(<op> ^parent <cmd> ^attribute abort ^link-value hard)
+	(<op> ^parent <cmd> ^attribute abort ^link-value graceful_stop)
 }
 
 # finish talk if no one is found
@@ -501,7 +502,7 @@ sp {talk-llm*propose*searching-missing-speaker
 	-(<il> ^visible {<<|now| |just|>>})
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name searching-missing-speaker ^substate flexbe ^process-args <a> ^interruptable hard ^required-resource head speech)
+	(<op> ^name searching-missing-speaker ^substate flexbe ^process-args <a> ^interruptable volatile ^required-resource head speech)
 	(<a> ^object <obj> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text (concat |Where are you, interlocutor | <label> |?|) ^lang <lang>)
 }
 
@@ -524,7 +525,7 @@ sp {talk-llm*propose*seaching-missing-speaker-found
 -->
 	(<s> ^operator <op> +)
 	(<op> ^name searching-missing-speaker-abort ^type automatic cognition)
-	(<op> ^parent <cmd> ^attribute abort ^link-value hard)
+	(<op> ^parent <cmd> ^attribute abort ^link-value graceful_stop)
 }
 
 # add missing predicate if speaker is not found
