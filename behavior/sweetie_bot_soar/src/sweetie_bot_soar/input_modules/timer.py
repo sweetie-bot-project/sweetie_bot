@@ -4,9 +4,7 @@ import rospy
 
 class Clock(input_module.InputModule):
 
-    def __init__(self, name, config, agent):
-        super(Clock, self).__init__(name, agent)
-
+    def _init(self, name, config, agent):
         # get parameters
         self._simulation_timestep = self.getConfigParameter(config, 'simulation_timestep', allowed_types = (int, float), optional = True, check_func = lambda v: v > 0.0 if v != None else True)
         self._just_delay = self.getConfigParameter(config, 'just_delay', allowed_types = (int, float), check_func = lambda v: v > 0.0)

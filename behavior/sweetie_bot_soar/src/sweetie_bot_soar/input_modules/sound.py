@@ -118,10 +118,7 @@ class SoundSpeech(InputModule):
     LISTENING = 1
     DISPLAYING = 2
 
-    def __init__(self, name, config, agent):
-        # call superclass constructor
-        super(SoundSpeech, self).__init__(name, agent)
-
+    def _init(self, name, config, agent):
         # preinit
         self._sound_event_sub = None
 
@@ -155,10 +152,6 @@ class SoundSpeech(InputModule):
         except TypeError as e:
             raise KeyError('incorrect parser declaraition: missing or superfluous parameters (%s): error %s' % ([request.keys()], e))
 
-        # subscriber    
-        self._sound_event_sub = rospy.Subscriber(sound_event_topic, SoundEvent, self.newSoundEventCallback, queue_size = 10)
-        self._tf_listener = ProxyTransformListener().listener()
-
         # message buffers
         self._lock = Lock()
         self._last_sound_event = SoundEvent()
@@ -175,6 +168,11 @@ class SoundSpeech(InputModule):
         self._intensity_wme = SingleValueWMEProxy(self._sensor_id, 'intensity', self._intensity_bins_map(0.0))
         self._text_wme = None
         self._lang_wme = None
+
+        # subscriber    
+        self._sound_event_sub = rospy.Subscriber(sound_event_topic, SoundEvent, self.newSoundEventCallback, queue_size = 10)
+        self._tf_listener = ProxyTransformListener().listener()
+
 
     def newSoundEventCallback(self, sound_event):
         # processing FSM
@@ -386,11 +384,9 @@ class SoundSpeech(InputModule):
                     self.remove_all_wme_by_attr('speech-source')
                     self.remove_all_wme_by_attr('best-speech-source')
 
-    def __del__(self):
+    def _deinit(self):
         # remove sensor wme and ROS subscriber
         if self._sound_event_sub:
             self._sound_event_sub.unregister()
-        # supercalss destructor
-        super(SoundSpeech, self).__del__()
 
 input_module.register("sound_speech", SoundSpeech)

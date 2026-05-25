@@ -269,7 +269,7 @@ class SpatialObjectSoarView:
         #else:
         #    raise KeyError('WME with attribute "%s" is not registered')
 
-    def __del__(self):
+    def deinit(self):
         # remove WME
         self.wme_id.DestroyWME()
 
@@ -305,10 +305,7 @@ class SpatialWorldModel(InputModule):
             self.soar_view = soar_view
             self.marker = marker
 
-    def __init__(self, name, config, agent):
-        # superclass constructor
-        super(SpatialWorldModel, self).__init__(name, agent)
-
+    def _init(self, name, config, agent):
         # add fileds to prevent AttributeError during destruction
         self._detections_sub = None
         self._markers_timer = None
@@ -338,9 +335,6 @@ class SpatialWorldModel(InputModule):
         self._markers_period = self.getConfigParameter(config, 'markers_publication_period', 0.0, allowed_types=(int,float), check_func=lambda v: v >= 0.0)
         markers_topic = self.getConfigParameter(config, 'markers_topic', allowed_types=str)
 
-        # add topic subscriber and tf buffer
-        self._tf_listener = ProxyTransformListener().listener()
-        self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
         # pose filter
         self._pose_filter = PoseFilter(filter_config)
 
@@ -353,6 +347,9 @@ class SpatialWorldModel(InputModule):
         # register SWM
         SpatialWorldModel._swm_instance_ref = weakref.ref(self)
 
+        # add topic subscriber and tf buffer
+        self._tf_listener = ProxyTransformListener().listener()
+        self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
         # marker publications timer
         self._markers_pub = rospy.Publisher(markers_topic, MarkerArray, queue_size=5)
         if self._markers_period > 0.0:
@@ -524,15 +521,14 @@ class SpatialWorldModel(InputModule):
                     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
                         rospy.logwarn_throttle(2.0, 'SWM input module: unable to transform object (%s, %s) from %s to %s: %s', spatial_object.label, spatial_object.type, spatial_object.frame_id, frame_id, e)
 
-    def __del__(self):
+    def _deinit(self):
         # release ROS resources
         if self._detections_sub:
             self._detections_sub.unregister()
         if self._markers_timer:
+            self._markers_timer.shutdown()
             self._markers_timer = None
         # unregister SWM
         SpatialWorldModel._swm_instance_ref = None
-        # call superclass destructor
-        super(SpatialWorldModel, self).__del__()
 
 input_module.register("swm", SpatialWorldModel)

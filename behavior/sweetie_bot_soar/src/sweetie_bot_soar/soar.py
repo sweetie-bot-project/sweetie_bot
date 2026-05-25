@@ -36,6 +36,9 @@ class Soar:
         self._active_output_modules = set()
 
     def _unload_io_modules(self):
+        # input modules
+        for module in self._input_modules:
+            module.deinit()
         self._input_modules.clear()
         self._output_modules_map.clear()
         self._active_output_modules.clear()
@@ -130,9 +133,7 @@ class Soar:
                 return False
 
             # destroy input and output modules
-            self._input_modules.clear()
-            self._output_modules_map.clear()
-            self._active_output_modules.clear()
+            self._unload_io_modules()
             # reset soar 
             self._agent.InitSoar()
             # clear production memory

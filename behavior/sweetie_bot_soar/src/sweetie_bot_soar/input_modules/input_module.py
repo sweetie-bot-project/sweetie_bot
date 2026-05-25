@@ -1,3 +1,5 @@
+import rospy
+
 _registered_input_modules_types = {}
 
 def register(module_type, class_type):
@@ -10,16 +12,23 @@ def load_modules(agent, input_link_config):
     # get input modules configuration from Parameter Server
     if not isinstance(input_link_config, dict):
         raise TypeError("input link configuration must be dictionary.")
-    # process configuration
-    for module_name, module_config in input_link_config.items():
-        module_type = module_config.get("type")
-        if module_type == None or not isinstance(module_type, str):
-            raise TypeError(f"input module '{module_name}' does not have valid 'type' parameter.")
-        module = _registered_input_modules_types.get(module_type)
-        if module_type:
-            input_modules.append( module(module_name, module_config, agent) )
-        else: 
-            raise ValueError(f"input module '{module_name}' type '{module_type}' is unknown.")
+    try:
+        # process configuration
+        for module_name, module_config in input_link_config.items():
+            module_type = module_config.get("type")
+            if module_type == None or not isinstance(module_type, str):
+                raise TypeError(f"input module '{module_name}' does not have valid 'type' parameter.")
+            module = _registered_input_modules_types.get(module_type)
+            if module_type:
+                input_modules.append( module(module_name, module_config, agent) )
+            else: 
+                raise ValueError(f"input module '{module_name}' type '{module_type}' is unknown.")
+    except Exception as e:
+        # deinit configured modules
+        for module in input_modules:
+            module.deinit()
+        # rethrow exception
+        raise
     return input_modules
 
 def get_config_parameter(module, config, name, default_value = None, allowed_types = None, optional = False, check_func = lambda v: True, error_desc = ''):
@@ -50,11 +59,45 @@ def get_config_parameter(module, config, name, default_value = None, allowed_typ
     return value
 
 class InputModule:
-    def __init__(self, name, agent):
+    def __init__(self, name, config, agent):
         self._name = name
         # create sensor WME
         input_link_id = agent.GetInputLink()
         self._sensor_id = input_link_id.CreateIdWME(name)
+        # call internal init
+        try: 
+            self._init(name, config, agent)
+        except Exception as e:
+            self.deinit()
+            raise
+
+    # module interface
+
+    def _init(self, name, config, agent):
+        raise NotImplementedError
+
+    def update(self):
+        raise NotImplementedError
+
+    def _deinit(self):
+        pass
+
+    # initialization/deinitalization support
+
+    def deinit(self):
+        # check if module deinitialised
+        if self._sensor_id is None:
+            return
+        # call parent internal deinit method
+        try:
+            self._deinit()
+        except Exception as e:
+            rospy.logerr(f"input module '%s': deinitialization falied: %s", self._name, e)
+        # remove WME
+        self._sensor_id.DestroyWME()
+        self._sensor_id = None
+
+    # helper methods
 
     @property
     def sensor_id(self):
@@ -62,9 +105,4 @@ class InputModule:
 
     def getConfigParameter(self, *args, **kwargs):
         return get_config_parameter(self._name, *args, **kwargs)
-
-    def __del__(self):
-        # remove WME
-        self._sensor_id.DestroyWME()
-
 

@@ -15,9 +15,7 @@ from flexbe_core.proxy import ProxyTransformListener
 
 class PoseTF(InputModule):
 
-    def __init__(self, name, config, agent):
-        # call supercalss constructor
-        super(PoseTF, self).__init__(name, agent)
+    def _init(self, name, config, agent):
 
         # get configuration from psearameters
         self._target_frame = self.getConfigParameter(config, "target_frame", allowed_types = str)
@@ -46,7 +44,6 @@ class PoseTF(InputModule):
         self._x_wme = SingleValueWMEProxy(self._sensor_id, "x", 0.0)
         self._y_wme = SingleValueWMEProxy(self._sensor_id, "y", 0.0)
         self._status_wme = SingleValueWMEProxy(self._sensor_id, "status", "ok")
-
 
     def update(self):
         # time

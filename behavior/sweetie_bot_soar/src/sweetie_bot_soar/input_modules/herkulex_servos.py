@@ -8,9 +8,7 @@ import rospy
 from sweetie_bot_herkulex_msgs.msg import HerkulexState
 
 class HerkulexServos(InputModule):
-    def __init__(self, name, config, agent):
-        super(HerkulexServos, self).__init__(name, agent)
-
+    def _init(self, name, config, agent):
         # preinit 
         self._servo_state_sub = None
 
@@ -28,9 +26,6 @@ class HerkulexServos(InputModule):
         except TypeError:
             raise TypeError(f"input module {name}: group {k}: incorect group declaration {v}")
 
-        # subscriber    
-        self._servo_state_sub = rospy.Subscriber(servo_state_topic, HerkulexState, self.newServoStateCallback)
-
         # message buffers
         self._lock = Lock()
         self._overheat_servos = set()
@@ -42,6 +37,9 @@ class HerkulexServos(InputModule):
         self._off_servos_wmes = SetWMEProxy(self._sensor_id, 'off')
         self._overheat_servos_wmes = SetWMEProxy(self._sensor_id, 'overheat')
         self._groups_status_wmes = { group: SetWMEProxy(self._sensor_id, group) for group in self._groups.keys() }
+
+        # subscriber    
+        self._servo_state_sub = rospy.Subscriber(servo_state_topic, HerkulexState, self.newServoStateCallback)
 
     def newServoStateCallback(self, msg):
         # check ignore list
@@ -94,11 +92,9 @@ class HerkulexServos(InputModule):
                     status.add('normal')
                 self._groups_status_wmes[group].assign(status)
 
-    def __del__(self):
+    def _deinit(self):
         # remove ROS subscriber
         if self._servo_state_sub:
             self._servo_state_sub.unregister()
-        # superclass destructor
-        super(HerkulexState, self).__del__()
 
 input_module.register("herkulex_servos", HerkulexServos)

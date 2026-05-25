@@ -10,9 +10,7 @@ from . import robot_pose
 from .bins import BinsMap
 
 class PoseJoints(InputModule):
-    def __init__(self, name, config, agent):
-        super(PoseJoints, self).__init__(name, agent)
-
+    def _init(self, name, config, agent):
         # preinit
         self._joint_state_sub = None
 
@@ -43,9 +41,6 @@ class PoseJoints(InputModule):
                 self._pose_list.append( robot_pose.PoseWithDefaultTolerance(pose_name, msg, default_tolerance) )
             else:
                 self._pose_list.append( robot_pose.PoseWithTolerance(pose_name, msg, tol_msg, default_tolerance) )
-       
-        # subscriber    
-        self._joint_state_sub = rospy.Subscriber(joint_state_topic, JointState, self.newJointStateCallback)
 
         # message buffers
         self._lock = Lock()
@@ -57,6 +52,9 @@ class PoseJoints(InputModule):
         # last pose index and pose change time
         self._last_pose_index = None
         self._last_pose_change_time = rospy.Time.now()
+       
+        # subscriber    
+        self._joint_state_sub = rospy.Subscriber(joint_state_topic, JointState, self.newJointStateCallback)
 
     def newJointStateCallback(self, msg):
         # buffer msg
@@ -127,11 +125,9 @@ class PoseJoints(InputModule):
                 self._time_wme_id.Update(time_value)
             return
 
-    def __del__(self):
+    def _deinit(self):
         # remove ROS subscriber
         if self._joint_state_sub:
             self._joint_state_sub.unregister()
-        # call superclass destructor
-        super(PoseJoints, self).__del__()
 
 input_module.register("pose_joints", PoseJoints)

@@ -11,9 +11,7 @@ from sweetie_bot_joystick.msg import KeyPressed
 from .bins import BinsMap
 
 class Joystick(InputModule):
-    def __init__(self, name, config, agent):
-        super(Joystick, self).__init__(name, agent)
-
+    def _init(self, name, config, agent):
         #preinit
         self._joy_sub = None
 
@@ -23,9 +21,6 @@ class Joystick(InputModule):
             self._last_activity_bins_map = BinsMap( config['last_activity_bins_map'] )
         except KeyError:
             raise RuntimeError('Joystick input module: "last_activity_bins_map" parameters must present.')
-
-        # add joystick subscriber
-        self._joy_sub = rospy.Subscriber(joy_topic, KeyPressed, self.joyCallback)
 
         # buffers
         self._lock = Lock()
@@ -37,6 +32,9 @@ class Joystick(InputModule):
         # wmes
         self._last_activity_wme = self._sensor_id.CreateStringWME('last-activity', self._last_activity_bins_map(rospy.Time.now().to_sec()))
         self._pressed_wmes = SetWMEProxy(self._sensor_id, 'pressed')
+
+        # add joystick subscriber
+        self._joy_sub = rospy.Subscriber(joy_topic, KeyPressed, self.joyCallback)
 
     def joyCallback(self, msg):
         with self._lock:
@@ -66,11 +64,9 @@ class Joystick(InputModule):
         if self._last_activity_wme.GetValue() != value:
             self._last_activity_wme.Update(value)
 
-    def __del__(self):
+    def _deinit(self):
         # remove ROS subscriber
         if self._joy_sub != None:
             self._joy_sub.unregister()
-        # supercalss destructor
-        super(Joystick, self).__del__()
 
 input_module.register("joystick", Joystick)

@@ -14,7 +14,7 @@ class Rand:
         # update random value
         self._sensor_id.Update(random())
 
-    def __dell__(self):
+    def deinit(self):
         # remove WME
         self._sensor_id.DestroyWME()
 

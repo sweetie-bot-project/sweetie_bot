@@ -9,9 +9,7 @@ import tf
 from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detection as DetectionMsg
 
 class Camera(InputModule):
-    def __init__(self, name, config, agent):
-        super(Camera, self).__init__(name, agent)
-
+    def _init(self, name, config, agent):
         # preinit
         self._detections_sub = None
 
@@ -19,13 +17,13 @@ class Camera(InputModule):
         detection_topic = self.getConfigParameter('topic', allowed_types=str)
         self._timeout = self.getConfigParameter('timeout', allowed_types=(int,float), check_func=lambda x: x >= 0, error_desc='must be positive')
 
-        # add topic subscriber
-        self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
-
         # message buffers
         self._lock = Lock()
         self._detections_msg = []
         self._detections_wme_map = {}
+
+        # add topic subscriber
+        self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
 
     def detectionCallback(self, msg):
         # buffer msg
@@ -77,11 +75,9 @@ class Camera(InputModule):
             del self._detections_wme_map[key_tuple]
             wme_id.DestroyWME()
 
-    def __del__(self):
+    def _deinit(self):
         # remove ROS subscriber
         if self._detections_sub:
             self._detections_sub.unregister()
-        # supercalss destructor
-        super(Camera, self).__del__()
 
 input_module.register("camera", Camera)
