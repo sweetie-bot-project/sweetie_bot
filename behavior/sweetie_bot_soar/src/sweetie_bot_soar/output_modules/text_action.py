@@ -33,28 +33,44 @@ class TextAction(output_module.OutputModule):
         self._action_client.send_goal(goal)
         return None
 
-    def updateHook(self, cmd_id):
-        # check goal state
+    def updateHook(self, cmd_id, external_abort_request):
+        # get goal state
         status = self._action_client.get_state()
+        
+        # Goal is active. 
         if status in (GoalStatus.ACTIVE, GoalStatus.PENDING):
-            # Goal is active. Check for abort request.
-            abort_id = cmd_id.FindByAttribute("abort", 0)
-            if abort_id is not None:
+            # Check for agent abort request.
+            agent_abort_request = False
+            if cmd_id is None:
+                agent_abort_request = True
+            else:
+                abort_id = cmd_id.FindByAttribute("abort", 0)
+                if abort_id is not None:
+                    agent_abort_request = True
+            if agent_abort_request:
                 self._action_client.cancel_goal()
                 return "aborted"
+
+            # Check for external abort request
+            if external_abort_request is not None:
+                self._action_client.cancel_goal()
+                return "aborted"
+
+            # continue execution (ACTIVE, PENDING)
             return None
+
         # Goal is completed.
         if status == GoalStatus.SUCCEEDED:
             return 'succeed'
-        if status in [ GoalStatus.RECALLED, GoalStatus.PREEMPTED ]:
+        if status in (GoalStatus.RECALLED, GoalStatus.PREEMPTED):
             rospy.loginfo("TextAction output module:  behavior execution was preempted.")
             return "aborted"
-        if status in [ GoalStatus.REJECTED, GoalStatus.ABORTED ]:
+        if status in (GoalStatus.REJECTED, GoalStatus.ABORTED, GoalStatus.LOST):
             rospy.loginfo("TextAction output module:  behavior execution has failed with error.")
             return "failed"
-        else:
-            rospy.loginfo("TextAction output module:  behavior execution has failed: %s.", status)
-            return "failed"
+
+        # continue execution (RECALLING, PREEMPTING)
+        return None
 
 output_module.register("text-action", TextAction)
 

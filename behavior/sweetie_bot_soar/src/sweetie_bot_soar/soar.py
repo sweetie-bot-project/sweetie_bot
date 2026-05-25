@@ -1,4 +1,5 @@
 import Python_sml_ClientInterface as sml
+import sys
 
 from . import input_modules
 from . import output_modules
@@ -25,6 +26,8 @@ class Soar:
         self._kernel.RegisterForSystemEvent(sml.smlEVENT_SYSTEM_START, Soar.startCallback, self) 
         self._kernel.RegisterForSystemEvent(sml.smlEVENT_SYSTEM_STOP, Soar.stopCallback, self) 
         self._kernel.RegisterForUpdateEvent(sml.smlEVENT_AFTER_ALL_OUTPUT_PHASES, Soar.updateCallback, self) 
+        self._kernel.RegisterForAgentEvent(sml.smlEVENT_BEFORE_AGENT_REINITIALIZED, Soar.beforeReinitCallback, self) 
+        self._kernel.RegisterForAgentEvent(sml.smlEVENT_AFTER_AGENT_REINITIALIZED, Soar.afterReinitCallback, self) 
         # perform configuration
         self._lock_cond = threading.Condition() # condition variable to protect 
         self._state = SoarState.UNCONFIGURED
@@ -40,8 +43,14 @@ class Soar:
         for module in self._input_modules:
             module.deinit()
         self._input_modules.clear()
+        # request to stop active modules
+        for module in self._active_output_modules:
+            rospy.loginfo(f"Request abort {module.getCommandName()} output module.")
+            module.update(None, abort_request = 'graceful_stop')
+        # delete modules
         self._output_modules_map.clear()
         self._active_output_modules.clear()
+        rospy.loginfo("Unload IO modeles.")
 
     def __del__(self):
         # remove all output modules
@@ -50,13 +59,26 @@ class Soar:
     def checkNoErrors(self):
         # check soar kernel
         if self._kernel.HadError():
-            rospy.logerr("SOAR kernel error: " + agent.GetLastErrorDescription())
+            rospy.logerr("SOAR kernel error: %s", agent.GetLastErrorDescription())
             return False
 
         return True
 
     def printCallback(event_id, self, agent, message):
         rospy.loginfo("SOAR log: " + message.strip())
+
+    def beforeReinitCallback(event_id, self, agent):
+        with self._lock_cond: 
+            # destroy input modules, stop and destroy outptut
+            self._unload_io_modules()
+         
+    def afterReinitCallback(event_id, self, agent):
+        with self._lock_cond:
+            # STOPPED: soar-init event in configured state -> restore modules
+            # UNCONFIGURED: soar-init event in unconfigured state -> do not restore modules
+            if self._state == SoarState.STOPPED:
+                if not self._load_io_modules():
+                    self._state = SoarState.UNCONFIGURED
 
     def startCallback(event_id, self, kernel):
         # called in SOAR stream when kernel is started
@@ -134,14 +156,39 @@ class Soar:
 
             # destroy input and output modules
             self._unload_io_modules()
+            # set state unconfigured to prevent reconfiguration after soar reinit
+            self._state = SoarState.UNCONFIGURED
             # reset soar 
             self._agent.InitSoar()
             # clear production memory
             self._agent.ExecuteCommandLine("production excise")
 
-            # finished
-            self._state = SoarState.UNCONFIGURED
             return True
+
+    def _load_io_modules(self):
+        # input and output link initialization
+        try:
+            # load input modules (they are creating WME)
+            input_link_config = rospy.get_param("~input")
+            self._input_modules = input_modules.load_modules(self._agent, input_link_config)
+            rospy.loginfo("Loaded %d input modules", len(self._input_modules))
+            # load output modules
+            output_link_config = rospy.get_param("~output")
+            self._output_modules_map = { m.getCommandName(): m for m in  output_modules.load_modules(output_link_config) }
+            rospy.loginfo("Loaded %d output modules", len(self._output_modules_map))
+            return True
+        except RuntimeError as e:
+            rospy.logerr("SOAR configuration: input/output link initialization failed: %s", e)
+            self._unload_io_modules()
+            return False
+        except tf.Exception as e:
+            rospy.logerr("SOAR configuration: tf exception: %s", e)
+            self._unload_io_modules()
+            return False
+        except rospy.exceptions.ROSException as e:
+            rospy.logerr("SOAR configuration: ROS exception: %s", e)
+            self._unload_io_modules()
+            return False
 
     def configure(self):
         with self._lock_cond:
@@ -153,28 +200,9 @@ class Soar:
             if not isinstance(self._update_period, (float, int)) or self._update_period < 0:
                 rospy.logerr("update_period parameter must be positive number.")
                 return False
-
+        
             # input and output link initialization
-            try:
-                # load input modules (they are creating WME)
-                input_link_config = rospy.get_param("~input")
-                self._input_modules = input_modules.load_modules(self._agent, input_link_config)
-                rospy.loginfo("Loaded %d input modules" % len(self._input_modules))
-                # load output modules
-                output_link_config = rospy.get_param("~output")
-                self._output_modules_map = { m.getCommandName(): m for m in  output_modules.load_modules(output_link_config) }
-                rospy.loginfo("Loaded %d output modules" % len(self._output_modules_map))
-            except (RuntimeError, KeyError) as e:
-                rospy.logerr("SOAR configuration: input/output link initialization failed: %s" % e)
-                self._unload_io_modules()
-                return False
-            except tf.Exception as e:
-                rospy.logerr("SOAR configuration: tf exception: %s" % e)
-                self._unload_io_modules()
-                return False
-            except rospy.exceptions.ROSException as e:
-                rospy.logerr("SOAR configuration: ROS exception: %s" % e)
-                self._unload_io_modules()
+            if not self._load_io_modules():
                 return False
         
             # load reasoning rules
@@ -184,7 +212,7 @@ class Soar:
                 try:
                     agent_path = rospkg.RosPack().get_path(agent_pkg)
                 except rospkg.ResourceNotFound:
-                    rospy.logerr("SOAR configuration: incorrect agent package name: " + agent_pkg)
+                    rospy.logerr("SOAR configuration: incorrect agent package name: %s", agent_pkg)
                     return False
             # get agent file name
             agent_file = rospy.get_param("~agent_file", None)
@@ -198,7 +226,7 @@ class Soar:
 
             # check if everything ok
             if self._agent.HadError():
-                rospy.logerr("SOAR configuration failed: " + self._agent.GetLastErrorDescription())
+                rospy.logerr("SOAR configuration failed: %s", self._agent.GetLastErrorDescription())
                 return False
 
             self._state = SoarState.STOPPED
@@ -219,7 +247,7 @@ class Soar:
             m.update(output_link_id)
             if not m.isRunning():
                 remove_list.append(m)
-        self._active_output_modules.difference_update( remove_list )
+        self._active_output_modules.difference_update(remove_list)
 
         # commit changes
         self._agent.Commit()
@@ -236,12 +264,13 @@ class Soar:
             if not module:
                 # unknown command
                 cmd_id.CreateStringWME("status", "error") 
-                rospy.logerr("SOAR step: unknown command '%s' is skipped." % cmd_name)
+                rospy.logerr("SOAR step: unknown command '%s' is skipped.", cmd_name)
                 continue
             if module.isRunning() and cmd_id.GetTimeTag() != module.getTimeTag():
                 # output module is busy
                 cmd_id.CreateStringWME("status", "busy") 
-                rospy.logerr("SOAR step: attemting to execute command '%s' before previous command instance is finished." % cmd_name)
+                rospy.logerr("SOAR step: attemting to execute command '%s' before previous command instance is finished.", cmd_name)
+                rospy.logerr("SOAR step: active modules: %s", self._active_output_modules)
                 continue
             # start module 
             module.start(cmd_id)
@@ -249,7 +278,7 @@ class Soar:
                 self._active_output_modules.add(module)
         # print executed commands list
         if any([cmd != 'nop' for cmd in cmd_list]):
-            rospy.loginfo("SOAR output commands: %s " % str(cmd_list))
+            rospy.loginfo("SOAR output commands: %s ", cmd_list)
 
     def step(self, minor_step = False):
         """ Perform SOAR reasoning cycle. """
