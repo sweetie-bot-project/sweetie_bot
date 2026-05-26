@@ -1,5 +1,5 @@
 from . import input_module
-from .input_module import InputModule
+from .input_module import InputModulesLoader
 
 from random import random
 
@@ -18,4 +18,4 @@ class Rand:
         # remove WME
         self._sensor_id.DestroyWME()
 
-input_module.register("rand", Rand)
+InputModulesLoader.register("rand", Rand)

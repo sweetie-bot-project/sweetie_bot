@@ -1,16 +1,13 @@
-from . import output_module
+from .output_module import OutputModule, OutputModulesLoader
 
 import rospy
 from sweetie_bot_text_msgs.msg import TextCommand
 
-class TextCmd(output_module.OutputModule):
+class TextCmd(OutputModule):
 
-    def __init__(self, config):
-        super(TextCmd, self).__init__("textcmd")
-        # module initialization
-        cmd_topic = config.get("topic")
-        if not cmd_topic:
-            raise RuntimeError("TextCmd output module: 'topic' parameter is not defined.")
+    def _init(self, name, config):
+        # get configuration
+        cmd_topic = self.getConfigParameter(config, 'topic', allowed_types=str)
         # create publisher
         self._cmd_pub = rospy.Publisher(cmd_topic, TextCommand, queue_size=1)
 
@@ -31,4 +28,4 @@ class TextCmd(output_module.OutputModule):
         self._cmd_pub.publish(msg)
         return "succeed"
 
-output_module.register("textcmd", TextCmd)
+OutputModulesLoader.register("textcmd", TextCmd)

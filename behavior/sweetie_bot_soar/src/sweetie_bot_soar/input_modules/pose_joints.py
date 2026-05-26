@@ -1,5 +1,5 @@
 from . import input_module
-from .input_module import InputModule
+from .input_module import InputModule, InputModulesLoader
 
 from threading import Lock
 
@@ -130,4 +130,4 @@ class PoseJoints(InputModule):
         if self._joint_state_sub:
             self._joint_state_sub.unregister()
 
-input_module.register("pose_joints", PoseJoints)
+InputModulesLoader.register("pose_joints", PoseJoints)

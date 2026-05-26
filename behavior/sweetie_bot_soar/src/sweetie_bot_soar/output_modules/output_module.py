@@ -1,49 +1,34 @@
-_registered_output_modules_types = {}
+from ..config_parse import get_config_parameter
+from ..module import ModulesLoader, UnlodableModule
 
-def register(name, class_type):
-    if name in _registered_output_modules_types:
-        raise RuntimeError("Dublicate input module name: " + name)
-    _registered_output_modules_types[name] = class_type
+class OutputModulesLoader(ModulesLoader):
+    _loader_name = 'oputput module loader'
+    _modules_registry = {}
 
-def load_modules(output_link_config):
-    output_modules = []
-    # get output modules configuration from Parameter Server
-    if not isinstance(output_link_config, dict):
-        raise RuntimeError("Output link configuration parameters tree is not supplied.")
-    # process configuration
-    for module_name, module_config in output_link_config.items():
-        module_type = _registered_output_modules_types.get(module_name)
-        if module_type:
-            output_modules.append( module_type(module_config) )
-        else: 
-            raise RuntimeError("Output module %s type is unknown." % module_name)
-    return output_modules
+class OutputModule(UnlodableModule):
 
-class OutputModule(object):
-    def __init__(self, name):
+    def __init__(self, name, config, *args, **kwargs):
         self._is_running = False
-        self._name = name
         self._cmd_timetag = None
+        # unlodabale module constructor
+        super(OutputModule, self).__init__(name, config, *args, **kwargs)
 
-    def getConfigParameter(self, config, name, default_value = None, allowed_types = None, check_func = lambda v: True, error_desc = None):
-        # check input config
-        if allowed_types is None:
-            if default_value is not None:
-                allowed_types = type(default_value)
-            else:
-                raise ValueError('`%s` output module:  default_value or allowed_types must be supplied.' % self._name)
-        # get parameter
-        value = config.get(name)
-        # check if paramter is not specified and default_value exists
-        if value == None and default_value is not None:
-            value = default_value
-        # check if parameter value correct
-        if not isinstance(value, allowed_types) or not check_func(value):
-            if error_desc is None:
-                error_desc = '`%s` output module: parameter %s is not present or invalid.' % (self._name, name)
-            raise ValueError(error_desc)
-        # return parater value
-        return value
+    # module interface
+
+    def startHook(self, cmd_id):
+        return None
+
+    def updateHook(self, cmd_id, request_abort = False):
+        raise NotImplementedError
+
+    # module commom methods
+
+    def getConfigParameter(self, config, name, *args, **kwargs):
+        try:
+            return get_config_parameter(config, name, *args, **kwargs)
+        except (KeyError, ValueError, TypeError) as e:
+            e.args = (f"input module '{self._name}'",) + e.args
+            raise
 
     def start(self, cmd_wme_id):
         if self._is_running:
@@ -102,13 +87,4 @@ class OutputModule(object):
 
     def isRunning(self):
         return self._is_running
-
-    # module interface
-
-    def startHook(self, cmd_id):
-        return None
-
-    def updateHook(self, cmd_id, request_abort = False):
-        raise NotImplementedError
-
 

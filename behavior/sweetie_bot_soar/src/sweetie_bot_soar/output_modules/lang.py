@@ -1,6 +1,5 @@
 import traceback
 
-from . import output_module
 import rospy
 import actionlib
 from  actionlib import GoalStatus
@@ -8,7 +7,9 @@ from  actionlib import GoalStatus
 from random import choice
 import re
 from string import Formatter
+
 from ..nlp import SpacyInstance
+from .output_module import OutputModule, OutputModulesLoader
 
 from sweetie_bot_text_msgs.srv import CompleteRaw, CompleteRawRequest, CompleteRawResponse
 from sweetie_bot_text_msgs.srv import Classification, ClassificationRequest, ClassificationResponse
@@ -465,11 +466,10 @@ class LangRequest:
         return success, result, prompt
 
 
-class LangModel(output_module.OutputModule):
+class LangModel(OutputModule):
 
-    def __init__(self, config):
-        super(LangModel, self).__init__("lang-model")
-        # module initialization
+    def _init(self, name, config):
+        # get configuration
         service_ns = self.getConfigParameter(config, "service_ns", allowed_types=str)
         # create Service client
         rospy.wait_for_service(service_ns, timeout=5.0)
@@ -483,7 +483,6 @@ class LangModel(output_module.OutputModule):
         except TypeError as e:
             # raise KeyError('incorrect request declaraition (%s): missing or superfluous parameters: %s' % (req_name, e))
             raise e
-
 
     def startHook(self, cmd_id):
         #
@@ -551,5 +550,4 @@ class LangModel(output_module.OutputModule):
             rospy.logerr('lang_model output module: failed: %s' % result['error_desc'])
             return 'error'
 
-
-output_module.register("lang-model", LangModel)
+OutputModulesLoader.register("lang-model", LangModel)

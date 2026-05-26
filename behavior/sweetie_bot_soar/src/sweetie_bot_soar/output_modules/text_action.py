@@ -1,4 +1,4 @@
-from . import output_module
+from .output_module import OutputModulesLoader, OutputModule
 
 import rospy
 import actionlib
@@ -6,14 +6,11 @@ from  actionlib import GoalStatus
 
 from sweetie_bot_text_msgs.msg import TextActionAction, TextActionGoal, TextActionResult
 
-class TextAction(output_module.OutputModule):
+class TextAction(OutputModule):
 
-    def __init__(self, config):
-        super(TextAction, self).__init__("text-action")
-        # module initialization
-        action_ns = config.get("action_ns")
-        if not action_ns:
-            raise RuntimeError("TextAction output module: 'action_ns' parameter is not defined.")
+    def _init(self, name, config):
+        # get configuration
+        action_ns = self.getConfigParameter(config, 'action_ns', allowed_types=str)
         # create actionlib client
         self._action_client = actionlib.SimpleActionClient(action_ns, TextActionAction)
 
@@ -72,6 +69,6 @@ class TextAction(output_module.OutputModule):
         # continue execution (RECALLING, PREEMPTING)
         return None
 
-output_module.register("text-action", TextAction)
+OutputModulesLoader.register("text-action", TextAction)
 
 

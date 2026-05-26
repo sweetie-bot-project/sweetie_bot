@@ -1,4 +1,4 @@
-from . import output_module
+from .output_module import OutputModule, OutputModulesLoader
 
 import rospy
 import actionlib
@@ -9,10 +9,9 @@ from flexbe_msgs.msg import BehaviorExecutionGoal
 from flexbe_msgs.msg import BehaviorExecutionResult
 
 
-class FlexBe(output_module.OutputModule):
+class FlexBe(OutputModule):
 
-    def __init__(self, config):
-        super(FlexBe, self).__init__("flexbe")
+    def _init(self, name, config):
         # module initialization
         action_ns = config.get("action_ns")
         if not action_ns:
@@ -122,4 +121,4 @@ class FlexBe(output_module.OutputModule):
         # Contine execution (RECALLING, PREEMPTING)
         return None
         
-output_module.register("flexbe", FlexBe)
+OutputModulesLoader.register("flexbe", FlexBe)

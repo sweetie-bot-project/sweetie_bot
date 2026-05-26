@@ -1,16 +1,13 @@
-from . import output_module
+from .output_module import OutputModule, OutputModulesLoader
 
 import rospy
 from sweetie_bot_text_msgs.msg import SpeechVisualization as SpeechVisualizationMsg
 
-class SpeechVisualization(output_module.OutputModule):
+class SpeechVisualization(OutputModule):
 
-    def __init__(self, config):
-        super(SpeechVisualization, self).__init__("speech-visualization")
-        # module initialization
-        cmd_topic = config.get("topic")
-        if not cmd_topic:
-            raise RuntimeError("SpeechVisualization output module: 'topic' parameter is not defined.")
+    def _init(self, name, config):
+        # get configuration 
+        cmd_topic = self.getConfigParameter(config, 'topic', allowed_types=str)
         # create publisher
         self._cmd_pub = rospy.Publisher(cmd_topic, SpeechVisualizationMsg, queue_size=1)
 
@@ -31,4 +28,4 @@ class SpeechVisualization(output_module.OutputModule):
         self._cmd_pub.publish(msg)
         return "succeed"
 
-output_module.register("speech-visualization", SpeechVisualization)
+OutputModulesLoader.register("speech-visualization", SpeechVisualization)

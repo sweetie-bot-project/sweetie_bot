@@ -1,5 +1,6 @@
 from . import input_module
-from .input_module import get_config_parameter, register, InputModule
+from .input_module import InputModule, InputModulesLoader
+from ..config_parse import get_config_parameter
 
 import math
 from threading import Lock
@@ -90,22 +91,36 @@ class SpatialObject:
         return tf_buffer.transformPose(frame_id, pose_stamped).pose
 
 class PoseFilter:
-    subclass_map = {}
+    _filter_name = 'base'
+    _subclass_map = {}
 
     def __new__(cls, config):
         # get type name
-        type_name = get_config_parameter('PoseFilter', config, 'type', allowed_types=str)
+        type_name = PoseFilter.getConfigParameter(config, 'type', allowed_types=str)
         # factory implementatipacy
-        cls = PoseFilter.subclass_map[type_name]
+        cls = PoseFilter._subclass_map[type_name]
         return super(PoseFilter, cls).__new__(cls)
 
     def __init_subclass__(cls, name):
         # subcalsses registration
         super(PoseFilter, cls).__init_subclass__()
-        PoseFilter.subclass_map[name] = cls
+        PoseFilter._subclass_map[name] = cls
+        cls._filter_name = name
 
     def __call__(self, spatial_object, detection_msg, detection_pose_transformed):
         raise NotImplemented
+
+    def deinit(self):
+        pass
+
+    @classmethod
+    def getConfigParameter(cls, config, name, *args, **kwargs):
+        try:
+            return get_config_parameter(config, name, *args, **kwargs)
+        except (KeyError, ValueError, TypeError) as e:
+            e.args = (f'pose filter {cls._filter_name}',) + e.args
+            raise
+
 
 class PoseFilterNone(PoseFilter, name = 'none'):
     def __call__(self, spatial_object, detection_msg, detection_pose_trasformed):
@@ -115,11 +130,11 @@ class PoseFilterMaxvel(PoseFilter, name = 'maxvel'):
     def __init__(self, config):
         super(PoseFilterMaxvel, self).__init__()
         # get paramters
-        self._difftime = rospy.Duration(get_config_parameter('PoseFilter.Maxvel', config, 'velocity_estimator_difftime', default_value=0.2, check_func=lambda v: v > 0.0))
-        self._maxvel_linear = get_config_parameter('PoseFilter.Maxvel', config, 'velocity_linear_threshold', allowed_types=float)
-        self._maxvel_angular = get_config_parameter('PoseFilter.Maxvel', config, 'velocity_angular_threshold', allowed_types=float, check_func=lambda v: v > 0.0)
-        motion_ns = get_config_parameter('PoseFilter.Maxvel', config, 'motion_ns', allowed_types=str)
-        self._sensor_kinematic_chain = get_config_parameter('PoseFilter.Maxvel', config, 'sensor_kinematic_chain', allowed_types=str)
+        self._difftime = rospy.Duration(self.getConfigParameter(config, 'velocity_estimator_difftime', default_value=0.2, check_func=lambda v: v > 0.0))
+        self._maxvel_linear = self.getConfigParameter(config, 'velocity_linear_threshold', allowed_types=float)
+        self._maxvel_angular = self.getConfigParameter(config, 'velocity_angular_threshold', allowed_types=float, check_func=lambda v: v > 0.0)
+        motion_ns = self.getConfigParameter(config, 'motion_ns', allowed_types=str)
+        self._sensor_kinematic_chain = self.getConfigParameter(config, 'sensor_kinematic_chain', allowed_types=str)
 
         # create susbscribers for speed monitoring
         self._limbs_sub = rospy.Subscriber(motion_ns + '/kinematics_fwd/out_limbs_fixed', RigidBodyState, self.rbsCallback)
@@ -131,6 +146,10 @@ class PoseFilterMaxvel(PoseFilter, name = 'maxvel'):
         self._w_t_b = kdl.Twist()
         self._b_T_h = kdl.Frame()
         self._b_t_h = kdl.Twist()
+
+    def deinit(self):
+        self._limbs_sub.unregister()
+        self._base_sub.unregister()
 
     @staticmethod
     def frameFromMsg(msg):
@@ -309,6 +328,8 @@ class SpatialWorldModel(InputModule):
         # add fileds to prevent AttributeError during destruction
         self._detections_sub = None
         self._markers_timer = None
+        self._pose_filter = None
+
 
         # check if SWM exists
         if SpatialWorldModel._swm_instance_ref is not None:
@@ -418,7 +439,10 @@ class SpatialWorldModel(InputModule):
                 else:
                     # add new SpatialObject but do not create corresponding SOAR view
                     spatial_object = SpatialObject( detection_msg.id, detection_msg.label, detection_msg.type, timestamp, self._world_frame, pose_stamped.pose )
-                    marker = SpatialObjectMarker(spatial_object) if self._markers_timer is not None else None
+                    if self._markers_timer is not None:
+                        marker = SpatialObjectMarker(spatial_object) 
+                    else:
+                        marker = None
                     self._memory_map[key_tuple] = SpatialWorldModel.MemoryElement(spatial_object, None, marker)
 
             # check time of last update
@@ -528,7 +552,9 @@ class SpatialWorldModel(InputModule):
         if self._markers_timer:
             self._markers_timer.shutdown()
             self._markers_timer = None
+        if self._pose_filter:
+            self._pose_filter.deinit()
         # unregister SWM
         SpatialWorldModel._swm_instance_ref = None
 
-input_module.register("swm", SpatialWorldModel)
+InputModulesLoader.register("swm", SpatialWorldModel)

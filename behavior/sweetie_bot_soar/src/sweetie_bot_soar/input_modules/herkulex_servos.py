@@ -1,5 +1,5 @@
 from . import input_module
-from .input_module import InputModule
+from .input_module import InputModule, InputModulesLoader
 from .wme_proxy import SetWMEProxy
 
 from threading import Lock
@@ -97,4 +97,4 @@ class HerkulexServos(InputModule):
         if self._servo_state_sub:
             self._servo_state_sub.unregister()
 
-input_module.register("herkulex_servos", HerkulexServos)
+InputModulesLoader.register("herkulex_servos", HerkulexServos)

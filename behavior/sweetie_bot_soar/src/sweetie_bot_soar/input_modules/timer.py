@@ -1,8 +1,8 @@
-from . import input_module
+from .input_module import InputModule, InputModulesLoader
 
 import rospy
 
-class Clock(input_module.InputModule):
+class Clock(InputModule):
 
     def _init(self, name, config, agent):
         # get parameters
@@ -43,4 +43,4 @@ class Clock(input_module.InputModule):
         # update cycle counter
         self._cycle_id.Update(self._cycle)
 
-input_module.register("clock", Clock)
+InputModulesLoader.register("clock", Clock)

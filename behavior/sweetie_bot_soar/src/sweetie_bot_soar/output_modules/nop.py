@@ -1,12 +1,10 @@
-from . import output_module
+from .output_module import OutputModule, OutputModulesLoader
 
 import rospy
 
-class NOp(output_module.OutputModule):
+class NOp(OutputModule):
 
-    def __init__(self, config):
-        super(NOp, self).__init__("nop")
-
+    def _init(self, name, config):
         # configuration
         self._delay = config.get("delay")
         if not isinstance(self._delay, (int, float)) or self._delay < 0:
@@ -16,4 +14,4 @@ class NOp(output_module.OutputModule):
         rospy.sleep(self._delay)
         return "succeed"
 
-output_module.register("nop", NOp)
+OutputModulesLoader.register("nop", NOp)

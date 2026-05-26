@@ -8,7 +8,7 @@ from tf.transformations import quaternion_matrix
 from .bins import BinsMap
 from .wme_proxy import SingleValueWMEProxy
 from . import input_module
-from .input_module import InputModule
+from .input_module import InputModule, InputModulesLoader
 
 from flexbe_core.proxy import ProxyTransformListener
 
@@ -80,4 +80,4 @@ class PoseTF(InputModule):
         self._x_wme.update(p[0])
         self._y_wme.update(p[1])
 
-input_module.register("pose_tf", PoseTF)
+InputModulesLoader.register("pose_tf", PoseTF)

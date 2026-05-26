@@ -1,12 +1,11 @@
-from . import output_module
+from .output_module import OutputModule, OutputModulesLoader
 
 import rospy
 from sweetie_bot_control_msgs.srv import SetMode, SetModeResponse, SetModeRequest
 
-class SetModeModule(output_module.OutputModule):
+class SetModeModule(OutputModule):
 
-    def __init__(self, config):
-        super(SetModeModule, self).__init__("set-mode")
+    def _init(self, name, config):
         # module initialization
         service_ns = self.getConfigParameter(config, "service_ns", allowed_types=str)
         # create Service client
@@ -35,4 +34,4 @@ class SetModeModule(output_module.OutputModule):
         else:
             return 'failed'
 
-output_module.register("set-mode", SetModeModule)
+OutputModulesLoader.register("set-mode", SetModeModule)

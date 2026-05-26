@@ -1,5 +1,5 @@
 from . import input_module
-from .input_module import InputModule
+from .input_module import InputModule, InputModulesLoader
 
 from threading import Lock
 
@@ -52,4 +52,4 @@ class Battery(InputModule):
         if self._battery_state_sub:
             self._battery_state_sub.unregister()
 
-input_module.register("battery", Battery)
+InputModulesLoader.register("battery", Battery)

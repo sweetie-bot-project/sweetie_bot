@@ -1,5 +1,5 @@
 from . import input_module
-from .input_module import InputModule
+from .input_module import InputModule, InputModulesLoader
 from .bins import BinsMap
 from .wme_proxy import SingleValueWMEProxy
 from ..nlp import SpacyInstance
@@ -389,4 +389,4 @@ class SoundSpeech(InputModule):
         if self._sound_event_sub:
             self._sound_event_sub.unregister()
 
-input_module.register("sound_speech", SoundSpeech)
+InputModulesLoader.register("sound_speech", SoundSpeech)

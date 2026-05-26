@@ -1,5 +1,5 @@
 from . import input_module
-from .input_module import InputModule
+from .input_module import InputModule, InputModulesLoader
 from .wme_proxy import SetWMEProxy
 
 from copy import copy
@@ -69,4 +69,4 @@ class Joystick(InputModule):
         if self._joy_sub != None:
             self._joy_sub.unregister()
 
-input_module.register("joystick", Joystick)
+InputModulesLoader.register("joystick", Joystick)

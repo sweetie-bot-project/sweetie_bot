@@ -1,5 +1,5 @@
 from . import input_module
-from .input_module import InputModule
+from .input_module import InputModule, InputModulesLoader
 
 from threading import Lock
 from copy import copy
@@ -80,4 +80,4 @@ class Camera(InputModule):
         if self._detections_sub:
             self._detections_sub.unregister()
 
-input_module.register("camera", Camera)
+InputModulesLoader.register("camera", Camera)

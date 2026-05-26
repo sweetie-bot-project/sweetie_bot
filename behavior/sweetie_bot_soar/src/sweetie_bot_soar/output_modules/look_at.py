@@ -1,4 +1,4 @@
-from . import output_module
+from .output_module import OutputModulesLoader, OutputModule
 from ..input_modules.swm import ObjectKeyTuple, SpatialWorldModel
 
 import rospy
@@ -9,19 +9,19 @@ from sweetie_bot_control_msgs.msg import SetOperationalAction, SetOperationalGoa
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Header
 
-class LookAt(output_module.OutputModule):
+class LookAt(OutputModule):
 
-    def __init__(self, config):
-        super(LookAt, self).__init__("look-at")
-        # module initialization
+    def _init(self, name, config):
+        # preinit
+        self._timer = None
+
+        # get configuration
         action_ns = self.getConfigParameter(config, "controller", allowed_types = str)
         self._period = rospy.Duration( self.getConfigParameter(config, "period", allowed_types = float, default_value = 0.1) )
         # create actionlib client
         self._set_operational_aclient = actionlib.SimpleActionClient(action_ns, SetOperationalAction)
         # create publisher
         self._pose_pub = rospy.Publisher(action_ns + "/in_pose_ref", PoseStamped, queue_size = 1)
-        # timer
-        self._timer = None
         # object to monitor
         self._object_key = None
         self._object_not_found = False
@@ -127,7 +127,7 @@ class LookAt(output_module.OutputModule):
         # continue exection (RECALLING, PREEMPTING)
         return None
 
-    def __del__(self):
+    def __deinit(self):
         # stop timer
         if self._timer is not None:
             self._timer.shutdown()
@@ -135,7 +135,7 @@ class LookAt(output_module.OutputModule):
         if self._set_operational_aclient.get_state() in (GoalStatus.ACTIVE, GoalStatus.PENDING):
             self._set_operational_aclient.cancel_goal()
         
-output_module.register("look-at", LookAt)
+OutputModulesLoader.register("look-at", LookAt)
 
 
 

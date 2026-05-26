@@ -1,8 +1,8 @@
 import Python_sml_ClientInterface as sml
 import sys
 
-from . import input_modules
-from . import output_modules
+from .input_modules import InputModulesLoader
+from .output_modules import OutputModulesLoader
 
 import os, threading
 import rospy, rospkg, tf
@@ -46,8 +46,10 @@ class Soar:
         # request to stop active modules
         for module in self._active_output_modules:
             rospy.loginfo(f"Request abort {module.getCommandName()} output module.")
-            module.update(None, abort_request = 'graceful_stop')
+            module.update(self._agent.GetOutputLink(), abort_request = 'graceful_stop')
         # delete modules
+        for module in self._input_modules:
+            module.deinit()
         self._output_modules_map.clear()
         self._active_output_modules.clear()
         rospy.loginfo("Unload IO modeles.")
@@ -170,23 +172,23 @@ class Soar:
         try:
             # load input modules (they are creating WME)
             input_link_config = rospy.get_param("~input")
-            self._input_modules = input_modules.load_modules(self._agent, input_link_config)
+            self._input_modules = InputModulesLoader.load(input_link_config, self._agent)
             rospy.loginfo("Loaded %d input modules", len(self._input_modules))
             # load output modules
             output_link_config = rospy.get_param("~output")
-            self._output_modules_map = { m.getCommandName(): m for m in  output_modules.load_modules(output_link_config) }
+            self._output_modules_map = { m.getCommandName(): m for m in OutputModulesLoader.load(output_link_config) }
             rospy.loginfo("Loaded %d output modules", len(self._output_modules_map))
             return True
-        except RuntimeError as e:
-            rospy.logerr("SOAR configuration: input/output link initialization failed: %s", e)
+        except (KeyError, ValueError, TypeError) as e:
+            rospy.logerr("SOAR configuration: input/output link initialization failed: %s", str.join(': ', e.args))
             self._unload_io_modules()
             return False
         except tf.Exception as e:
-            rospy.logerr("SOAR configuration: tf exception: %s", e)
+            rospy.logerr("SOAR configuration: tf exception: %s", str.join(': ', e.args))
             self._unload_io_modules()
             return False
         except rospy.exceptions.ROSException as e:
-            rospy.logerr("SOAR configuration: ROS exception: %s", e)
+            rospy.logerr("SOAR configuration: ROS exception: %s", str.join(': ', e.args))
             self._unload_io_modules()
             return False
 
