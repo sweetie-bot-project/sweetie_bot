@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sweetie_bot_vision_proxy</name>
+  <version>0.0.1</version>
+  <description>MJPEG vision proxy node over WebSocket</description>
+
+  <maintainer email="fsdfur@gmail.com">mutronics</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+
+  <export/>
+</package>
+
