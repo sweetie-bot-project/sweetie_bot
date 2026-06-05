@@ -28,7 +28,7 @@ class ObjectKeyTuple:
     type : str
 
 class SpatialObject:
-    def __init__(self, id, label, type, timestamp, frame_id, pose):
+    def __init__(self, id, label, type, timestamp, frame_id, pose, depth_source = 'unknown'):
         # object general properties
         self.label = label
         self.id = id
@@ -43,14 +43,19 @@ class SpatialObject:
         self.frame_id = frame_id
         self.pose = pose
         self.pose_is_reliable = True
+        # how the 3D position was obtained: 'measured' (real depth map) | 'estimated' (height heuristic,
+        # i.e. the depth net was unavailable/stale) | 'unknown'. Lets cognition weight position trust.
+        self.depth_source = depth_source
 
     def __repr__(self):
         return f'SpatialObject(label="{self.label}", id={self.id}, type="{self.type}", creation={self.creation_time}, update={self.update_time}, perceive_begin={self.perceive_begin_time}, perceive_end={self.perceive_end_time}, inside_viewfield={self.inside_viewfield_begin_time})'
 
-    def updateVisible(self, timestamp, pose):
+    def updateVisible(self, timestamp, pose, depth_source = None):
         self.update_time = timestamp
         self.pose = pose
         self.pose_is_reliable = True
+        if depth_source is not None:
+            self.depth_source = depth_source
         self.perceive_end_time = None
         if self.perceive_begin_time is None:
             self.perceive_begin_time = timestamp
@@ -242,8 +247,12 @@ class SpatialObjectMarker:
             else:
                 visibility = f'UNRELIABLE, perceive_end: {spatial_object.perceive_end_time - now:.1f}'
                 self._object_marker.color.a = 0.05
+        # fade objects whose position is only height-estimated (no real depth) so it reads as approximate
+        if getattr(spatial_object, 'depth_source', 'unknown') == 'estimated':
+            self._object_marker.color.a *= 0.6
         # update text
-        self._text_marker.text = f'({label}, {obj_type})\ncreation: {creation:.1f}, update: {update:.1f}\n{visibility}'
+        depth_src = getattr(spatial_object, 'depth_source', 'unknown')
+        self._text_marker.text = f'({label}, {obj_type}) [{depth_src}]\ncreation: {creation:.1f}, update: {update:.1f}\n{visibility}'
 
     def getMarkers(self):
         return (self._object_marker, self._text_marker)
@@ -397,6 +406,9 @@ class SpatialWorldModel(InputModule):
                 detection_msg.id = 0
                 # extract timestamp
                 timestamp = detection_msg.header.stamp.to_sec()
+                # how the vision system obtained this 3D position (measured depth vs height heuristic)
+                attribs = dict(zip(detection_msg.attribute, detection_msg.value))
+                depth_source = attribs.get('depth_source', 'unknown')
                 # extract pose from detection_msg
                 try:
                     while True:
@@ -426,11 +438,11 @@ class SpatialWorldModel(InputModule):
                 if mem_elem != None:
                     # renew timestamp and pose of SpatialObject but not update SOAR view
                     filtered_pose = self._pose_filter(mem_elem.spatial_object, detection_msg, pose_stamped.pose)
-                    mem_elem.spatial_object.updateVisible(timestamp, filtered_pose)
+                    mem_elem.spatial_object.updateVisible(timestamp, filtered_pose, depth_source)
 
                 else:
                     # add new SpatialObject but do not create corresponding SOAR view
-                    spatial_object = SpatialObject( detection_msg.id, detection_msg.label, detection_msg.type, timestamp, self._world_frame, pose_stamped.pose )
+                    spatial_object = SpatialObject( detection_msg.id, detection_msg.label, detection_msg.type, timestamp, self._world_frame, pose_stamped.pose, depth_source )
                     if self._markers_timer is not None:
                         marker = SpatialObjectMarker(spatial_object) 
                     else:
@@ -523,6 +535,9 @@ class SpatialWorldModel(InputModule):
                     soar_view.updateChildWME( 'pose-status', 'reliable') # string
                 else:
                     soar_view.updateChildWME( 'pose-status', 'unreliable') # string
+                # depth provenance: 'measured' (real depth map) vs 'estimated' (height heuristic,
+                # depth net unavailable/stale) — cognition can trust measured positions more.
+                soar_view.updateChildWME( 'depth-source', spatial_object.depth_source) # string
                 # relative positions for head, body and eyes
                 for name, frame_id in zip(('head', 'body', 'eyes'), (self._head_frame, self._body_frame, self._eyes_frame)):
                     try:
