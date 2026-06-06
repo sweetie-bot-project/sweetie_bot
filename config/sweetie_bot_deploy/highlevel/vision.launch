@@ -8,24 +8,16 @@
 	         one tracker/fusion and pulls the camera stream (GStreamer UDP).
 	     Provider container(s) are started MANUALLY for now (sweetie_bot_vision/scripts/run_provider.py);
 	     their startup will be folded in once the container deploy stage is finished. Tune the core via
-	     env (SBVISION_REPO / SBVISION_LOCAL / SBVISION_GST_PORT / SBVISION_REMOTE / SBVISION_TOKEN ...). -->
-	<arg name="run_real" default="false" doc="Run on real robot."/>
-	<arg name="robot_name" default="sweetie_bot_proto2" doc="Robot-specific configuration packages prefix."/>
-	<arg name="robot_profile" default="default" doc="Configuration profile under '{robot_name}_deploy/{robot_profile}'."/>
-	<arg name="robot_profile_path" default="$(eval find(arg('robot_name')+'_deploy') + '/' + arg('robot_profile'))" doc="Fully qualified path to the configuration profile."/>
-	<arg name="robot_ns" default="/" doc="Namespace where to run robot components "/>
-
-	<arg name="record_video" default="false" doc="Record video stream from camera."/>
-
-	<arg name="config_overide" default="false" doc="If set to true loads provided configuration file before."/>
-	<arg name="config_file" default="vision.yaml" doc="Configuration file name in robot profile directory."/>
+	     env (SBVISION_REPO / SBVISION_LOCAL / SBVISION_GST_PORT / SBVISION_REMOTE / SBVISION_TOKEN ...).
+	     NB unlike the old monolith, the federation does NOT read the deploy vision.yaml rosparams — the
+	     camera model lives in the core's config/camera_proto3.json and the gasket params are inline — so
+	     this launch has no robot_profile/config_overide machinery (and no per-robot _deploy dependency). -->
+	<arg name="run_real" default="false" doc="Run on real robot (else simulation)."/>
+	<arg name="robot_ns" default="/" doc="Namespace where to run robot components."/>
+	<arg name="record_video" default="false" doc="Record the camera video stream (real only)."/>
 
 	<!-- spatial TF frame the detections are expressed in (real camera vs simulation camera) -->
 	<arg name="frame_id" default="$(eval 'camera_link_optical' if arg('run_real') else 'camera_link_simulation')"/>
-
-	<group if="$(arg config_overide)">
-		<rosparam command="load" file="$(eval arg('robot_profile_path') + '/' + arg('config_file'))"  ></rosparam>
-	</group>
 
 	<!-- ROS gasket: fused PerceptionFrames (localhost socket) -> DetectionArray. Named 'vision' so the
 	     external detections contract is unchanged vs the old monolith node. -->
