@@ -12,6 +12,7 @@
   <arg name="remote_port"        default="8443" />
   <arg name="remote_insecure"    default="true" />
   <arg name="remote_token"       default="" />
+  <arg name="remote_max_staleness_ms" default="1500" />
   <arg name="fuser_host"         default="127.0.0.1" />
   <arg name="fuser_port"         default="9100" />
   <arg name="gst_port"           default="5000" />
@@ -39,6 +40,7 @@
     <param name="remote_port"         value="$(arg remote_port)" />
     <param name="remote_insecure"     value="$(arg remote_insecure)" />
     <param name="remote_token"        value="$(arg remote_token)" />
+    <param name="remote_max_staleness_ms" value="$(arg remote_max_staleness_ms)" />
     <param name="fuser_host"          value="$(arg fuser_host)" />
     <param name="fuser_port"          value="$(arg fuser_port)" />
     <param name="ring_size"           value="$(arg ring_size)" />

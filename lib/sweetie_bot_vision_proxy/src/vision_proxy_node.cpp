@@ -46,6 +46,7 @@
 #include <unistd.h>
 
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <cstdint>
 #include <cstring>
@@ -233,6 +234,63 @@ private:
     std::unique_ptr<websocket::stream<beast::ssl_stream<tcp::socket>>> ws_;
 };
 
+// Wraps a (slow / unreliable) remote ProviderConn in its OWN thread: latest-frame-in / latest-result-out,
+// so the fast local loop NEVER blocks on it. The main loop submit()s the current frame and reads the
+// remote's most-recent fresh result (within max_age_ms); a slow/down remote just yields nothing that
+// frame and self-heals in its own thread. Mirrors the native AsyncDepthClient's best-effort tier.
+class RemoteWorker {
+public:
+    RemoteWorker(std::unique_ptr<ProviderConn> conn, double max_age_ms)
+        : conn_(std::move(conn)), max_age_ms_(max_age_ms) {
+        th_ = std::thread(&RemoteWorker::loop, this);
+    }
+    ~RemoteWorker() { stop(); }
+    std::string name() const { return conn_->name(); }
+    void submit(const std::vector<uint8_t>& msg) {
+        { std::lock_guard<std::mutex> lk(m_); in_ = msg; have_in_ = true; }
+        cv_.notify_one();
+    }
+    bool latest(std::vector<uint8_t>& out) {
+        std::lock_guard<std::mutex> lk(m_);
+        if (!have_out_) return false;
+        double age = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - out_time_).count();
+        if (age > max_age_ms_) return false;          // too stale -> skip this frame
+        out = out_;
+        return true;
+    }
+    void stop() {
+        { std::lock_guard<std::mutex> lk(m_); running_ = false; }
+        cv_.notify_all();
+        if (th_.joinable()) th_.join();
+    }
+private:
+    void loop() {
+        while (true) {
+            std::vector<uint8_t> msg;
+            {
+                std::unique_lock<std::mutex> lk(m_);
+                cv_.wait(lk, [&]{ return !running_ || have_in_; });
+                if (!running_) return;
+                msg = in_; have_in_ = false;          // take the LATEST submitted frame (drop intermediates)
+            }
+            std::vector<uint8_t> body;
+            if (conn_->query(msg, body)) {            // blocking on ITS own stream (may be slow) — off the fast loop
+                std::lock_guard<std::mutex> lk(m_);
+                out_ = std::move(body); have_out_ = true;
+                out_time_ = std::chrono::steady_clock::now();
+            }
+        }
+    }
+    std::unique_ptr<ProviderConn> conn_;
+    double max_age_ms_;
+    std::thread th_;
+    std::mutex m_; std::condition_variable cv_;
+    std::vector<uint8_t> in_, out_;
+    bool have_in_ = false, have_out_ = false, running_ = true;
+    std::chrono::steady_clock::time_point out_time_;
+};
+
 class VisionProxyNode {
 public:
     VisionProxyNode() : nh_(), pnh_("~") {
@@ -248,6 +306,7 @@ public:
         pnh_.param<std::string>("remote_target", remote_target_, "/");
         pnh_.param<bool>("remote_insecure", remote_insecure_, true);
         pnh_.param<std::string>("remote_token", remote_token_, "");
+        pnh_.param<double>("remote_max_staleness_ms", remote_max_staleness_ms_, 1500.0);
         pnh_.param<std::string>("fuser_host", fuser_host_, "127.0.0.1");
         pnh_.param<int>("fuser_port", fuser_port_, 9100);
         pnh_.param<int>("ring_size", ring_size_, 60);
@@ -490,11 +549,13 @@ private:
     }
 
     void worker_loop() {
-        std::vector<std::unique_ptr<ProviderConn>> conns;
-        conns.push_back(std::make_unique<WsProvider>(prov_host_, prov_port_, prov_target_));
+        WsProvider local(prov_host_, prov_port_, prov_target_);     // local = synchronous FAST path
+        std::vector<std::unique_ptr<RemoteWorker>> remotes;          // remotes = async best-effort, off the loop
         if (!remote_host_.empty())
-            conns.push_back(std::make_unique<WssProvider>(remote_host_, remote_port_, remote_target_,
-                                                          remote_insecure_, remote_token_));
+            remotes.push_back(std::make_unique<RemoteWorker>(
+                std::make_unique<WssProvider>(remote_host_, remote_port_, remote_target_,
+                                              remote_insecure_, remote_token_),
+                remote_max_staleness_ms_));
         while (running_.load() && ros::ok()) {
             Frame f;
             if (!latest_blocking(f)) break;
@@ -504,11 +565,15 @@ private:
             std::vector<uint8_t> msg(sizeof(FrameHeader) + f.jpeg.size());
             std::memcpy(msg.data(), &h, sizeof(FrameHeader));
             std::memcpy(msg.data() + sizeof(FrameHeader), f.jpeg.data(), f.jpeg.size());
-            // fan out to all providers; collect each one's body (best-effort: a down tier is skipped)
+            // LOCAL: synchronous (the fast critical path). REMOTES: hand off the latest frame to their
+            // worker threads and attach whatever fresh result they already have — NEVER blocking here.
             std::vector<std::vector<uint8_t>> bodies;
-            for (auto& c : conns) {
-                std::vector<uint8_t> body;
-                if (c->query(msg, body)) bodies.push_back(std::move(body));
+            std::vector<uint8_t> lb;
+            if (local.query(msg, lb)) bodies.push_back(std::move(lb));
+            for (auto& r : remotes) {
+                r->submit(msg);
+                std::vector<uint8_t> rb;
+                if (r->latest(rb)) bodies.push_back(std::move(rb));
             }
             if (bodies.empty()) { ros::Duration(0.05).sleep(); continue; }   // no provider answered
             std::string reply;
@@ -530,6 +595,7 @@ private:
             publish_detections(dets, hdr);
             publish_skeletons(dets, hdr);
         }
+        for (auto& r : remotes) r->stop();
     }
 
     ros::NodeHandle nh_, pnh_;
@@ -538,6 +604,7 @@ private:
                 fuser_host_, image_topic_, image_frame_id_, det_topic_, skel_topic_;
     int prov_port_ = 8080, remote_port_ = 8443, fuser_port_ = 9100, ring_size_ = 60, rot_deg_ = 0;
     bool remote_insecure_ = true;
+    double remote_max_staleness_ms_ = 1500.0;
     GstElement* pipeline_p_ = nullptr; GstAppSink* appsink_ = nullptr;
     std::atomic<bool> running_{false};
     std::thread worker_;

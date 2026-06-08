@@ -8,12 +8,20 @@
 	<arg name="robot_ns" default="/" doc="Namespace where to run robot components."/>
 	<arg name="record_video" default="false" doc="Record the camera video stream (real only)."/>
 	<arg name="frame_id" default="$(eval 'camera_link_optical' if arg('run_real') else 'camera_link_simulation')"/>
+	<arg name="remote_host" default="" doc="remote (server) provider over wss; empty=local-only."/>
+	<arg name="remote_port" default="8443"/>
+	<arg name="remote_insecure" default="true"/>
+	<arg name="remote_token" default=""/>
 
 	<group ns="$(arg robot_ns)">
 		<include file="$(find sweetie_bot_vision_proxy)/launch/vision_proxy.launch">
 			<arg name="image_frame_id"   value="$(arg frame_id)"/>
 			<arg name="detections_topic" value="detections"/>
 			<arg name="tracker"          value="human"/>
+			<arg name="remote_host"      value="$(arg remote_host)"/>
+			<arg name="remote_port"      value="$(arg remote_port)"/>
+			<arg name="remote_insecure"  value="$(arg remote_insecure)"/>
+			<arg name="remote_token"     value="$(arg remote_token)"/>
 		</include>
 	</group>
 
