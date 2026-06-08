@@ -1,39 +1,22 @@
 <launch>
-	<!-- Vision subsystem — FEDERATION (2026-06 consolidation). Replaces the retired monolith
-	     (vino_launcher/vision_node). Two co-launched pieces, both from the sweetie_bot_vision package:
-	       * vision_detection_gasket — the ONLY rospy node: receives fused PerceptionFrames from the
-	         native core over a localhost socket and publishes sweetie_bot_text_msgs/DetectionArray.
-	       * vision_fusion_core_wrapper.sh — launches the ROS-FREE native fusion core under the py3.10
-	         "core venv" (the robot ROS python is pydantic-v1 and cannot import the v2 core). It owns the
-	         one tracker/fusion and pulls the camera stream (GStreamer UDP).
-	     Provider container(s) are started MANUALLY for now (sweetie_bot_vision/scripts/run_provider.py);
-	     their startup will be folded in once the container deploy stage is finished. Tune the core via
-	     env (SBVISION_REPO / SBVISION_LOCAL / SBVISION_GST_PORT / SBVISION_REMOTE / SBVISION_TOKEN ...).
-	     NB unlike the old monolith, the federation does NOT read the deploy vision.yaml rosparams — the
-	     camera model lives in the core's config/camera_proto3.json and the gasket params are inline — so
-	     this launch has no robot_profile/config_overide machinery (and no per-robot _deploy dependency). -->
+	<!-- Vision subsystem — FEDERATION + C++ vision_proxy (2026-06). The retired python gasket + native
+	     core are replaced by the single C++ sweetie_bot_vision_proxy node (front transport + visualizer +
+	     ROS publisher) and the ROS-free py3.10 tracker-fuser, brought up by vision_proxy.launch. Provider
+	     container(s) are started MANUALLY for now (sweetie_bot_vision/scripts/run_provider.py). Gated by
+	     flexbe_control.launch run_vision:=true. -->
 	<arg name="run_real" default="false" doc="Run on real robot (else simulation)."/>
 	<arg name="robot_ns" default="/" doc="Namespace where to run robot components."/>
 	<arg name="record_video" default="false" doc="Record the camera video stream (real only)."/>
-
-	<!-- spatial TF frame the detections are expressed in (real camera vs simulation camera) -->
 	<arg name="frame_id" default="$(eval 'camera_link_optical' if arg('run_real') else 'camera_link_simulation')"/>
 
-	<!-- ROS gasket: fused PerceptionFrames (localhost socket) -> DetectionArray. Named 'vision' so the
-	     external detections contract is unchanged vs the old monolith node. -->
-	<node pkg="sweetie_bot_vision" type="vision_detection_gasket" name="vision" ns="$(arg robot_ns)" output="screen" respawn="true">
-		<param name="listen_host"    value="127.0.0.1" />
-		<param name="listen_port"    value="9099" />
-		<param name="topic"          value="detections" />
-		<param name="frame_id"       value="$(arg frame_id)" />
-		<param name="skeleton_topic" value="/hmi/vision_skeletons" />
-		<remap from="detections" to="$(arg robot_ns)/detections" />
-	</node>
+	<group ns="$(arg robot_ns)">
+		<include file="$(find sweetie_bot_vision_proxy)/launch/vision_proxy.launch">
+			<arg name="image_frame_id"   value="$(arg frame_id)"/>
+			<arg name="detections_topic" value="detections"/>
+			<arg name="tracker"          value="human"/>
+		</include>
+	</group>
 
-	<!-- ROS-free native fusion core under the py3.10 core venv (via wrapper). Owns the one tracker. -->
-	<node pkg="sweetie_bot_vision" type="vision_fusion_core_wrapper.sh" name="vision_fusion_core" ns="$(arg robot_ns)" output="screen" respawn="true" />
-
-	<!-- start recording video stream (real only) -->
 	<node if="$(eval record_video and run_real)" pkg="sweetie_bot_vision" type="gstreamer_record" name="videostream_recorder" ns="$(arg robot_ns)" respawn="true">
 	</node>
 </launch>

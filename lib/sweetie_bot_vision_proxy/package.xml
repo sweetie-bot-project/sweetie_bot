@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sweetie_bot_vision_proxy</name>
+  <version>0.2.0</version>
+  <description>
+    C++ front transport + visualizer for the Sweetie Bot vision federation: gstreamer ingest, cyclic
+    frame ring buffer, Boost.Beast WebSocket to the provider container, flat-JSON round-trip to the
+    py3.10 tracker-fuser, and overlay/publish to ROS (/image_raw, /detections, /hmi/vision_skeletons,
+    /vision_proxy/result_json). Restores the original vision_proxy prototype's design; replaces the
+    python gasket as the single ROS face.
+  </description>
+  <maintainer email="nverzn@gmail.com">Sweetie Bot</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+  <depend>sweetie_bot_text_msgs</depend>
+
+  <!-- system deps resolved via find_package/pkg-config: Boost(system,thread), OpenCV,
+       gstreamer-1.0 + gstreamer-app-1.0, jsoncpp -->
+  <depend>libboost-system-dev</depend>
+  <depend>libjsoncpp-dev</depend>
+</package>

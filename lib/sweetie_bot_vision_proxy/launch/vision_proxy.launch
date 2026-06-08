@@ -1,0 +1,42 @@
+<launch>
+  <!--
+    Vision federation front + visualizer (the new C++ proxy) + the py3.10 tracker-fuser.
+    Replaces the old gasket+core. The provider container(s) are started MANUALLY (run_provider.py).
+    Included by the deploy sweetie_bot_deploy/highlevel/vision.launch under the run_vision gate, so it
+    comes up with flexbe_control.launch run_vision:=true.
+  -->
+  <arg name="provider_host"      default="127.0.0.1" />
+  <arg name="provider_port"      default="8080" />
+  <arg name="fuser_host"         default="127.0.0.1" />
+  <arg name="fuser_port"         default="9100" />
+  <arg name="gst_port"           default="5000" />
+  <arg name="ring_size"          default="60" />
+  <arg name="image_topic"        default="/image_raw" />
+  <arg name="image_frame_id"     default="camera_link_optical" />
+  <arg name="detections_topic"   default="detections" />
+  <arg name="skeleton_topic"     default="/hmi/vision_skeletons" />
+  <arg name="camera_rotation_deg" default="0" />
+  <arg name="tracker"            default="human" />
+
+  <!-- py3.10 tracker-fuser SERVICE (ROS-free; bash wrapper execs the sbcore-venv). From sweetie_bot_vision. -->
+  <node pkg="sweetie_bot_vision" type="vision_proxy_fuser_wrapper.sh" name="vision_proxy_fuser"
+        output="screen" respawn="true">
+    <env name="SBVISION_FUSER"  value="$(arg fuser_host):$(arg fuser_port)" />
+    <env name="SBVISION_TRACKER" value="$(arg tracker)" />
+  </node>
+
+  <!-- C++ front transport + visualizer + ROS publisher (the single ROS face). -->
+  <node pkg="sweetie_bot_vision_proxy" type="vision_proxy_node" name="vision_proxy" output="screen" respawn="true">
+    <param name="pipeline" value="udpsrc port=$(arg gst_port) ! application/x-rtp,encoding-name=JPEG,payload=26 ! rtpjpegdepay ! jpegparse ! appsink name=sink emit-signals=true sync=false drop=true max-buffers=1" />
+    <param name="provider_host"       value="$(arg provider_host)" />
+    <param name="provider_port"       value="$(arg provider_port)" />
+    <param name="fuser_host"          value="$(arg fuser_host)" />
+    <param name="fuser_port"          value="$(arg fuser_port)" />
+    <param name="ring_size"           value="$(arg ring_size)" />
+    <param name="image_topic"         value="$(arg image_topic)" />
+    <param name="image_frame_id"      value="$(arg image_frame_id)" />
+    <param name="detections_topic"    value="$(arg detections_topic)" />
+    <param name="skeleton_topic"      value="$(arg skeleton_topic)" />
+    <param name="camera_rotation_deg" value="$(arg camera_rotation_deg)" />
+  </node>
+</launch>
