@@ -1,15 +1,14 @@
 // sweetie_bot_vision_proxy — the C++ front transport + visualizer of the vision federation.
 //
-// Restores the original prototype's design into the federation: gstreamer ingest -> monotonic
-// frame_id -> cyclic ring buffer -> Boost.Beast WebSocket to the provider container (FrameHeader+JPEG
-// up, VRES+bytes down) -> relay the provider bytes opaquely to the py3.10 tracker-fuser over a TCP
-// socket (msgpack envelope) -> parse the fuser's flat-JSON tracked reply -> draw boxes+keypoints on the
-// ring frame and publish /image_raw, plus /detections (DetectionArray) + /hmi/vision_skeletons
-// (MarkerArray) + /vision_proxy/result_json. The gasket is gone — this node is the single ROS face.
+// gstreamer ingest -> monotonic frame_id -> cyclic ring buffer -> WebSocket to the provider
+// container(s) (FrameHeader+JPEG up, VRES+bytes down) -> relay the provider bytes opaquely to the
+// py3.10 tracker-fuser over a TCP socket (msgpack envelope) -> parse the fuser's flat-JSON tracked
+// reply -> draw boxes+keypoints on the ring frame and publish /image_raw, plus /detections
+// (DetectionArray) + /hmi/vision_skeletons (MarkerArray) + /vision_proxy/result_json. Single ROS face.
 //
-// PHASE 1: a single LOCAL provider over plain ws (ws://127.0.0.1:8080). Multi-container (wss/depth) is
-// a later extension. The forward msgpack envelope is hand-encoded (no msgpack-cxx dep); the python
-// fuser unpacks it with stdlib msgpack.
+// PHASE 2: MULTI-container WS client — `ws` to the LOCAL container (loopback) + `wss` (TLS) to an
+// optional REMOTE container; each frame is fanned to all enabled providers and their result bodies are
+// merged by the fuser (which from_wire's each). Forward msgpack envelope hand-encoded (no msgpack-cxx).
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Header.h>
@@ -27,8 +26,13 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
 #include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/beast.hpp>
+#include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
+#include <boost/beast/websocket/ssl.hpp>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -46,6 +50,7 @@
 #include <cstdint>
 #include <cstring>
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -55,6 +60,7 @@
 namespace beast = boost::beast;
 namespace websocket = beast::websocket;
 namespace net = boost::asio;
+namespace ssl = boost::asio::ssl;
 using tcp = net::ip::tcp;
 
 // ---- wire framing (must byte-match perfusion/transport/protocol.py) ----
@@ -126,6 +132,107 @@ static void mp_bin32(std::vector<uint8_t>& b, const uint8_t* data, uint32_t n) {
     b.insert(b.end(), data, data + n);
 }
 
+// strip the VRES header from a provider reply -> opaque body bytes (returns frame_id, 0 if no header).
+static uint64_t strip_vres(const std::string& raw, std::vector<uint8_t>& body) {
+    if (raw.size() >= sizeof(VresHeader) && std::memcmp(raw.data(), "VRES", 4) == 0) {
+        VresHeader vh; std::memcpy(&vh, raw.data(), sizeof(VresHeader));
+        size_t off = vh.header_size ? vh.header_size : sizeof(VresHeader);
+        if (off <= raw.size()) body.assign(raw.begin() + off, raw.end());
+        return vh.frame_id;
+    }
+    body.assign(raw.begin(), raw.end());
+    return 0;
+}
+
+// ---- provider connections: ws (local) and wss (remote). Lazy (re)connect; query = write+read+strip. ----
+struct ProviderConn {
+    virtual ~ProviderConn() {}
+    virtual std::string name() const = 0;
+    virtual bool query(const std::vector<uint8_t>& frame_msg, std::vector<uint8_t>& body) = 0;
+};
+
+class WsProvider : public ProviderConn {
+public:
+    WsProvider(std::string h, int p, std::string t) : host_(std::move(h)), target_(std::move(t)), port_(p) {}
+    std::string name() const override { return "ws://" + host_ + ":" + std::to_string(port_); }
+    bool query(const std::vector<uint8_t>& msg, std::vector<uint8_t>& body) override {
+        try {
+            if (!ws_) connect();
+            ws_->write(net::buffer(msg));
+            beast::flat_buffer rb; ws_->read(rb);
+            strip_vres(beast::buffers_to_string(rb.data()), body);
+            return true;
+        } catch (const std::exception& e) {
+            ROS_WARN_STREAM_THROTTLE(3.0, name() << " query failed (reconnect next): " << e.what());
+            ws_.reset(); ioc_.reset();
+            return false;
+        }
+    }
+private:
+    void connect() {
+        ioc_ = std::make_unique<net::io_context>();
+        tcp::resolver res(*ioc_);
+        ws_ = std::make_unique<websocket::stream<tcp::socket>>(*ioc_);
+        auto r = res.resolve(host_, std::to_string(port_));
+        net::connect(ws_->next_layer(), r.begin(), r.end());
+        ws_->set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
+        ws_->handshake(host_, target_);
+        ws_->binary(true);
+        ROS_INFO_STREAM("connected " << name());
+    }
+    std::string host_, target_; int port_;
+    std::unique_ptr<net::io_context> ioc_;
+    std::unique_ptr<websocket::stream<tcp::socket>> ws_;
+};
+
+class WssProvider : public ProviderConn {
+public:
+    WssProvider(std::string h, int p, std::string t, bool insec, std::string tok)
+        : host_(std::move(h)), target_(std::move(t)), token_(std::move(tok)), port_(p), insecure_(insec) {}
+    std::string name() const override { return "wss://" + host_ + ":" + std::to_string(port_); }
+    bool query(const std::vector<uint8_t>& msg, std::vector<uint8_t>& body) override {
+        try {
+            if (!ws_) connect();
+            ws_->write(net::buffer(msg));
+            beast::flat_buffer rb; ws_->read(rb);
+            strip_vres(beast::buffers_to_string(rb.data()), body);
+            return true;
+        } catch (const std::exception& e) {
+            ROS_WARN_STREAM_THROTTLE(3.0, name() << " query failed (reconnect next): " << e.what());
+            ws_.reset(); ctx_.reset(); ioc_.reset();
+            return false;
+        }
+    }
+private:
+    void connect() {
+        ioc_ = std::make_unique<net::io_context>();
+        ctx_ = std::make_unique<ssl::context>(ssl::context::tlsv12_client);
+        ctx_->set_default_verify_paths();
+        ctx_->set_verify_mode(insecure_ ? ssl::verify_none : ssl::verify_peer);
+        tcp::resolver res(*ioc_);
+        ws_ = std::make_unique<websocket::stream<beast::ssl_stream<tcp::socket>>>(*ioc_, *ctx_);
+        if (!SSL_set_tlsext_host_name(ws_->next_layer().native_handle(), host_.c_str()))
+            throw beast::system_error(beast::error_code(
+                static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
+        auto r = res.resolve(host_, std::to_string(port_));
+        net::connect(beast::get_lowest_layer(*ws_), r.begin(), r.end());
+        ws_->next_layer().handshake(ssl::stream_base::client);
+        ws_->set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
+        std::string tok = token_;
+        ws_->set_option(websocket::stream_base::decorator([tok](websocket::request_type& req) {
+            req.set(beast::http::field::user_agent, "vision_proxy_node");
+            if (!tok.empty()) req.set(beast::http::field::authorization, "Bearer " + tok);
+        }));
+        ws_->handshake(host_, target_);
+        ws_->binary(true);
+        ROS_INFO_STREAM("connected " << name() << (insecure_ ? " (insecure)" : ""));
+    }
+    std::string host_, target_, token_; int port_; bool insecure_;
+    std::unique_ptr<net::io_context> ioc_;
+    std::unique_ptr<ssl::context> ctx_;
+    std::unique_ptr<websocket::stream<beast::ssl_stream<tcp::socket>>> ws_;
+};
+
 class VisionProxyNode {
 public:
     VisionProxyNode() : nh_(), pnh_("~") {
@@ -135,6 +242,12 @@ public:
         pnh_.param<std::string>("provider_host", prov_host_, "127.0.0.1");
         pnh_.param<int>("provider_port", prov_port_, 8080);
         pnh_.param<std::string>("provider_target", prov_target_, "/");
+        // optional REMOTE provider over wss (empty host -> local-only)
+        pnh_.param<std::string>("remote_host", remote_host_, "");
+        pnh_.param<int>("remote_port", remote_port_, 8443);
+        pnh_.param<std::string>("remote_target", remote_target_, "/");
+        pnh_.param<bool>("remote_insecure", remote_insecure_, true);
+        pnh_.param<std::string>("remote_token", remote_token_, "");
         pnh_.param<std::string>("fuser_host", fuser_host_, "127.0.0.1");
         pnh_.param<int>("fuser_port", fuser_port_, 9100);
         pnh_.param<int>("ring_size", ring_size_, 60);
@@ -172,8 +285,9 @@ public:
         }
         running_.store(true);
         worker_ = std::thread(&VisionProxyNode::worker_loop, this);
-        ROS_INFO_STREAM("vision_proxy_node up: provider ws://" << prov_host_ << ":" << prov_port_
-                        << prov_target_ << " fuser " << fuser_host_ << ":" << fuser_port_);
+        ROS_INFO_STREAM("vision_proxy_node up: local ws://" << prov_host_ << ":" << prov_port_
+                        << (remote_host_.empty() ? "" : (" + remote wss://" + remote_host_ + ":" +
+                            std::to_string(remote_port_))) << " fuser " << fuser_host_ << ":" << fuser_port_);
         return true;
     }
 
@@ -219,12 +333,6 @@ private:
         if (!running_.load()) return false;
         out = latest_; latest_valid_ = false; return true;
     }
-    bool ring_get(uint64_t id, Frame& out) {
-        std::lock_guard<std::mutex> lk(mtx_);
-        auto it = ring_.find(id);
-        if (it == ring_.end()) return false;
-        out = it->second; return true;
-    }
 
     // ---- fuser TCP socket (length-prefixed; request=msgpack envelope, reply=flat-json) ----
     bool fuser_connect() {
@@ -245,15 +353,16 @@ private:
         while (n) { ssize_t k = ::recv(fuser_fd_, p, n, 0); if (k <= 0) return false; p += k; n -= k; }
         return true;
     }
-    // send {frame_id, stamp_ns, provider_results:[body], jpeg}; receive flat-json string.
-    bool fuser_roundtrip(const Frame& f, const std::vector<uint8_t>& body, std::string& reply) {
+    // send {frame_id, stamp_ns, provider_results:[body...], jpeg}; receive flat-json string.
+    bool fuser_roundtrip(const Frame& f, const std::vector<std::vector<uint8_t>>& bodies, std::string& reply) {
         if (!fuser_connect()) return false;
         std::vector<uint8_t> env;
         mp_u8(env, 0x84);                                 // fixmap(4)
         mp_str(env, "frame_id");  mp_u64(env, f.frame_id);
         mp_str(env, "stamp_ns");  mp_u64(env, f.capture_ts_ns);
-        mp_str(env, "provider_results"); mp_u8(env, 0x91); // array(1)
-        mp_bin32(env, body.data(), static_cast<uint32_t>(body.size()));
+        mp_str(env, "provider_results");
+        mp_u8(env, 0x90 | static_cast<uint8_t>(bodies.size() & 0x0f));   // fixarray (n<=15)
+        for (const auto& b : bodies) mp_bin32(env, b.data(), static_cast<uint32_t>(b.size()));
         mp_str(env, "jpeg"); mp_bin32(env, f.jpeg.data(), static_cast<uint32_t>(f.jpeg.size()));
         uint32_t len = htonl(static_cast<uint32_t>(env.size()));
         if (!send_all(reinterpret_cast<uint8_t*>(&len), 4) || !send_all(env.data(), env.size())) {
@@ -341,7 +450,7 @@ private:
     }
 
     void publish_detections(const std::vector<TrackedDet>& dets, const std_msgs::Header& hdr) {
-        sweetie_bot_text_msgs::DetectionArray arr;
+        sweetie_bot_text_msgs::DetectionArray arr;   // DetectionArray has no header; each Detection carries one
         for (const auto& d : dets) {
             sweetie_bot_text_msgs::Detection m;
             m.header = hdr;
@@ -381,22 +490,11 @@ private:
     }
 
     void worker_loop() {
-        while (running_.load() && ros::ok()) {
-            try { session(); }
-            catch (const std::exception& e) { ROS_ERROR_STREAM("provider session error: " << e.what()); }
-            if (running_.load() && ros::ok()) { ROS_WARN("provider reconnect in 2s"); ros::Duration(2.0).sleep(); }
-        }
-    }
-    void session() {
-        net::io_context ioc;
-        tcp::resolver resolver(ioc);
-        websocket::stream<tcp::socket> ws(ioc);
-        auto results = resolver.resolve(prov_host_, std::to_string(prov_port_));
-        net::connect(ws.next_layer(), results.begin(), results.end());
-        ws.set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
-        ws.handshake(prov_host_, prov_target_);
-        ws.binary(true);
-        ROS_INFO_STREAM("connected to provider ws://" << prov_host_ << ":" << prov_port_);
+        std::vector<std::unique_ptr<ProviderConn>> conns;
+        conns.push_back(std::make_unique<WsProvider>(prov_host_, prov_port_, prov_target_));
+        if (!remote_host_.empty())
+            conns.push_back(std::make_unique<WssProvider>(remote_host_, remote_port_, remote_target_,
+                                                          remote_insecure_, remote_token_));
         while (running_.load() && ros::ok()) {
             Frame f;
             if (!latest_blocking(f)) break;
@@ -406,23 +504,15 @@ private:
             std::vector<uint8_t> msg(sizeof(FrameHeader) + f.jpeg.size());
             std::memcpy(msg.data(), &h, sizeof(FrameHeader));
             std::memcpy(msg.data() + sizeof(FrameHeader), f.jpeg.data(), f.jpeg.size());
-            ws.write(net::buffer(msg));
-            beast::flat_buffer rb; ws.read(rb);
-            std::string raw = beast::buffers_to_string(rb.data());
-            // strip VRES header -> opaque provider body bytes
-            std::vector<uint8_t> body;
-            uint64_t result_fid = f.frame_id;
-            if (raw.size() >= sizeof(VresHeader) && std::memcmp(raw.data(), "VRES", 4) == 0) {
-                VresHeader vh; std::memcpy(&vh, raw.data(), sizeof(VresHeader));
-                result_fid = vh.frame_id;
-                size_t off = vh.header_size ? vh.header_size : sizeof(VresHeader);
-                if (off <= raw.size()) body.assign(raw.begin() + off, raw.end());
-            } else {
-                body.assign(raw.begin(), raw.end());
+            // fan out to all providers; collect each one's body (best-effort: a down tier is skipped)
+            std::vector<std::vector<uint8_t>> bodies;
+            for (auto& c : conns) {
+                std::vector<uint8_t> body;
+                if (c->query(msg, body)) bodies.push_back(std::move(body));
             }
-            // relay to fuser, get tracked flat-json
+            if (bodies.empty()) { ros::Duration(0.05).sleep(); continue; }   // no provider answered
             std::string reply;
-            if (!fuser_roundtrip(f, body, reply)) {
+            if (!fuser_roundtrip(f, bodies, reply)) {
                 ROS_WARN_STREAM_THROTTLE(2.0, "fuser roundtrip failed (frame " << f.frame_id << ")");
                 continue;
             }
@@ -430,11 +520,8 @@ private:
             std::vector<TrackedDet> dets;
             parse_reply(reply, dets);
             std_msgs::Header hdr; hdr.stamp = ros::Time().fromNSec(f.capture_ts_ns); hdr.frame_id = image_frame_id_;
-            // draw on the ring frame matched by frame_id (async-tolerant)
-            Frame draw_frame = f;
-            if (result_fid != f.frame_id) ring_get(result_fid, draw_frame);
-            cv::Mat raw_img = cv::imdecode(cv::Mat(1, static_cast<int>(draw_frame.jpeg.size()), CV_8UC1,
-                                                   draw_frame.jpeg.data()), cv::IMREAD_COLOR);
+            cv::Mat raw_img = cv::imdecode(cv::Mat(1, static_cast<int>(f.jpeg.size()), CV_8UC1, f.jpeg.data()),
+                                           cv::IMREAD_COLOR);
             if (!raw_img.empty()) {
                 cv::Mat img = raw_img.clone();
                 draw(img, dets);
@@ -443,13 +530,14 @@ private:
             publish_detections(dets, hdr);
             publish_skeletons(dets, hdr);
         }
-        beast::error_code ec; ws.close(websocket::close_code::normal, ec);
     }
 
     ros::NodeHandle nh_, pnh_;
     ros::Publisher result_pub_, image_pub_, det_pub_, skel_pub_;
-    std::string pipeline_, prov_host_, prov_target_, fuser_host_, image_topic_, image_frame_id_, det_topic_, skel_topic_;
-    int prov_port_ = 8080, fuser_port_ = 9100, ring_size_ = 60, rot_deg_ = 0;
+    std::string pipeline_, prov_host_, prov_target_, remote_host_, remote_target_, remote_token_,
+                fuser_host_, image_topic_, image_frame_id_, det_topic_, skel_topic_;
+    int prov_port_ = 8080, remote_port_ = 8443, fuser_port_ = 9100, ring_size_ = 60, rot_deg_ = 0;
+    bool remote_insecure_ = true;
     GstElement* pipeline_p_ = nullptr; GstAppSink* appsink_ = nullptr;
     std::atomic<bool> running_{false};
     std::thread worker_;

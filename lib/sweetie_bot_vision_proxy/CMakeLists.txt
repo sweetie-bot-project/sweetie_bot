@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_package(OpenCV REQUIRED)
+find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GST REQUIRED gstreamer-1.0 gstreamer-app-1.0)
@@ -44,6 +45,8 @@ target_link_libraries(vision_proxy_node
   ${OpenCV_LIBRARIES}
   ${GST_LIBRARIES}
   ${JSONCPP_LIBRARIES}
+  OpenSSL::SSL
+  OpenSSL::Crypto
   Threads::Threads
 )
 
