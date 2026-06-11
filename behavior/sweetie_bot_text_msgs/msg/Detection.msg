@@ -23,3 +23,9 @@ float32 score
 
 geometry_msgs/Pose pose
 geometry_msgs/Vector3 box
+
+#  * keypoints_3d --- per-keypoint metric 3D positions in header.frame_id (e.g. a COCO-17 body skeleton);
+#    a non-finite (NaN) point marks an absent/low-confidence joint. Empty if the object has no skeleton.
+#  * keypoint_layout --- names the keypoint ordering, e.g. "coco17".
+geometry_msgs/Point[] keypoints_3d
+string keypoint_layout
