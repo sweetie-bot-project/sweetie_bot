@@ -204,10 +204,14 @@ class SpatialObjectMarker:
                 'pony': MarkerProps(Marker.CUBE, Vector3(0.20, 0.20, 0.20), Vector3(0.0, 0.0, 0.0), ColorRGBA(1.0, 1.0, 0.0, 1.0)),
             }
     _marker_type_default = MarkerProps(Marker.SPHERE, Vector3(0.2, 0.2, 0.2), Vector3(0.0, 0.0, 0.0), ColorRGBA(1.0, 0.0, 0.0, 1.0))
+    # Types already drawn by the vision skeleton (/hmi/vision_skeletons): suppress their SWM object
+    # marker (the red sphere) so it doesn't duplicate the skeleton; keep the text label.
+    _skeleton_rendered_types = frozenset({'body'})
 
     def __init__(self, spatial_object, lifetime = 1.0):
         # get obect properties
         self._marker_props = self._marker_type_map.get(spatial_object.type, self._marker_type_default)
+        self._draw_object = spatial_object.type not in self._skeleton_rendered_types
         # object marker
         header = Header(frame_id = spatial_object.frame_id)
         self._object_marker = Marker(header = header, ns = 'swm', id = self._marker_id, action = Marker.ADD, lifetime = rospy.Duration(lifetime),
@@ -255,6 +259,9 @@ class SpatialObjectMarker:
         self._text_marker.text = f'({label}, {obj_type}) [{depth_src}]\ncreation: {creation:.1f}, update: {update:.1f}\n{visibility}'
 
     def getMarkers(self):
+        # body is drawn as a skeleton elsewhere -> emit only its text label, not the red sphere
+        if not self._draw_object:
+            return (self._text_marker,)
         return (self._object_marker, self._text_marker)
 
 class SpatialObjectSoarView:
