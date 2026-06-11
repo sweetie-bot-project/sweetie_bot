@@ -593,6 +593,22 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
+      Marker Topic: /hmi/vision_skeletons
+      Name: Vision Skeletons
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /hmi/vision_gaze
+      Name: Vision Gaze
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
       Marker Topic: /hmi/swm_markers
       Name: MarkerArray
       Namespaces:
