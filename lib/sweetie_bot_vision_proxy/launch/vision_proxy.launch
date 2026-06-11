@@ -21,7 +21,10 @@
   <arg name="image_frame_id"     default="camera_link_optical" />
   <arg name="detections_topic"   default="detections" />
   <arg name="skeleton_topic"     default="/hmi/vision_skeletons" />
+  <arg name="gaze_topic"         default="/hmi/vision_gaze" />
   <arg name="camera_rotation_deg" default="0" />
+  <!-- proto3 camera_link_optical is non-standard (x-left,y-up): negate x,y of published 3D positions -->
+  <arg name="flip_optical_xy"    default="true" />
   <arg name="tracker"            default="human" />
 
   <!-- py3.10 tracker-fuser SERVICE (ROS-free; bash wrapper execs the sbcore-venv). From sweetie_bot_vision. -->
@@ -47,7 +50,14 @@
     <param name="image_topic"         value="$(arg image_topic)" />
     <param name="image_frame_id"      value="$(arg image_frame_id)" />
     <param name="detections_topic"    value="$(arg detections_topic)" />
-    <param name="skeleton_topic"      value="$(arg skeleton_topic)" />
     <param name="camera_rotation_deg" value="$(arg camera_rotation_deg)" />
+    <param name="flip_optical_xy"     value="$(arg flip_optical_xy)" />
+  </node>
+
+  <!-- hmi marker viz: /detections -> rviz skeleton + gaze MarkerArrays (moved out of the proxy). -->
+  <node pkg="sweetie_bot_vision_hmi" type="vision_marker_node" name="vision_marker_node" output="screen" respawn="true">
+    <param name="detections_topic" value="$(arg detections_topic)" />
+    <param name="skeleton_topic"   value="$(arg skeleton_topic)" />
+    <param name="gaze_topic"       value="$(arg gaze_topic)" />
   </node>
 </launch>
