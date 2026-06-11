@@ -4,7 +4,8 @@
 // container(s) (FrameHeader+JPEG up, VRES+bytes down) -> relay the provider bytes opaquely to the
 // py3.10 tracker-fuser over a TCP socket (msgpack envelope) -> parse the fuser's flat-JSON tracked
 // reply -> draw boxes+keypoints on the ring frame and publish /image_raw, plus /detections
-// (DetectionArray) + /hmi/vision_skeletons (MarkerArray) + /vision_proxy/result_json. Single ROS face.
+// (DetectionArray, now carrying keypoints_3d) + /vision_proxy/result_json. PURE DATA bridge: rviz
+// MarkerArray viz (skeleton/gaze) lives in the hmi package (sweetie_bot_rviz_interactions). Single ROS face.
 //
 // PHASE 2: MULTI-container WS client — `ws` to the LOCAL container (loopback) + `wss` (TLS) to an
 // optional REMOTE container; each frame is fanned to all enabled providers and their result bodies are
@@ -18,7 +19,6 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Vector3.h>
 #include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
 #include <sweetie_bot_text_msgs/Detection.h>
 #include <sweetie_bot_text_msgs/DetectionArray.h>
 #include <cv_bridge/cv_bridge.h>
@@ -313,13 +313,14 @@ public:
         pnh_.param<std::string>("image_topic", image_topic_, "/image_raw");
         pnh_.param<std::string>("image_frame_id", image_frame_id_, "camera_link_optical");
         pnh_.param<std::string>("detections_topic", det_topic_, "detections");
-        pnh_.param<std::string>("skeleton_topic", skel_topic_, "/hmi/vision_skeletons");
         pnh_.param<int>("camera_rotation_deg", rot_deg_, 0);
+        // The proto3 robot's camera_link_optical TF is non-standard (x-left, y-up vs REP-103
+        // x-right, y-down), so the core's clean REP-103 output renders upside-down + mirrored. Negate
+        // x,y of every published 3D position to match the robot frame (the old gasket did the same).
+        pnh_.param<bool>("flip_optical_xy", flip_optical_xy_, true);
         result_pub_ = nh_.advertise<std_msgs::String>("/vision_proxy/result_json", 10);
         image_pub_ = nh_.advertise<sensor_msgs::Image>(image_topic_, 1);
         det_pub_ = nh_.advertise<sweetie_bot_text_msgs::DetectionArray>(det_topic_, 5);
-        if (!skel_topic_.empty())
-            skel_pub_ = nh_.advertise<visualization_msgs::MarkerArray>(skel_topic_, 5);
     }
     ~VisionProxyNode() { stop(); }
 
@@ -508,6 +509,12 @@ private:
         }
     }
 
+    // REP-103 core position -> robot camera_link_optical convention (negate x,y if the frame is the
+    // non-standard proto3 one). Applied to every published 3D position so /detections (-> SWM) and the
+    // hmi marker node (skeleton/gaze) are all consistent and render right-side-up.
+    inline double fx_(double x) const { return flip_optical_xy_ ? -x : x; }
+    inline double fy_(double y) const { return flip_optical_xy_ ? -y : y; }
+
     void publish_detections(const std::vector<TrackedDet>& dets, const std_msgs::Header& hdr) {
         sweetie_bot_text_msgs::DetectionArray arr;   // DetectionArray has no header; each Detection carries one
         for (const auto& d : dets) {
@@ -519,33 +526,20 @@ private:
             m.score = static_cast<float>(d.score);
             for (const auto& kv : d.attrs) { m.attribute.push_back(kv.first); m.value.push_back(kv.second); }
             m.pose.orientation.w = 1.0;
-            if (d.has_pos) { m.pose.position.x = d.pos[0]; m.pose.position.y = d.pos[1]; m.pose.position.z = d.pos[2]; }
-            if (d.has_box) { m.box.x = d.box[0]; m.box.y = d.box[1]; m.box.z = d.box[2]; }
+            if (d.has_pos) { m.pose.position.x = fx_(d.pos[0]); m.pose.position.y = fy_(d.pos[1]); m.pose.position.z = d.pos[2]; }
+            if (d.has_box) { m.box.x = d.box[0]; m.box.y = d.box[1]; m.box.z = d.box[2]; }   // extent, not a position
+            // skeleton keypoints travel typed on the Detection now; the hmi marker node draws them.
+            if (!d.kpts3d.empty()) {
+                m.keypoint_layout = "coco17";
+                for (const auto& k : d.kpts3d) {
+                    geometry_msgs::Point p;
+                    p.x = fx_(k[0]); p.y = fy_(k[1]); p.z = k[2];
+                    m.keypoints_3d.push_back(p);
+                }
+            }
             arr.detections.push_back(m);
         }
         det_pub_.publish(arr);
-    }
-
-    void publish_skeletons(const std::vector<TrackedDet>& dets, const std_msgs::Header& hdr) {
-        if (!skel_pub_) return;
-        visualization_msgs::MarkerArray arr;
-        int id = 0;
-        for (const auto& d : dets) {
-            if (d.kpts3d.size() < 17) continue;
-            std_msgs::ColorRGBA col; col.r = 0.2f; col.g = 0.9f; col.b = 0.3f; col.a = 1.0f;
-            visualization_msgs::Marker bones;
-            bones.header = hdr; bones.ns = "vision_skeleton"; bones.id = id++;
-            bones.type = visualization_msgs::Marker::LINE_LIST; bones.action = visualization_msgs::Marker::ADD;
-            bones.scale.x = 0.02; bones.color = col; bones.lifetime = ros::Duration(0.5);
-            for (const auto& bn : COCO_BONES) {
-                geometry_msgs::Point pa, pb;
-                pa.x = d.kpts3d[bn[0]][0]; pa.y = d.kpts3d[bn[0]][1]; pa.z = d.kpts3d[bn[0]][2];
-                pb.x = d.kpts3d[bn[1]][0]; pb.y = d.kpts3d[bn[1]][1]; pb.z = d.kpts3d[bn[1]][2];
-                bones.points.push_back(pa); bones.points.push_back(pb);
-            }
-            arr.markers.push_back(bones);
-        }
-        skel_pub_.publish(arr);
     }
 
     void worker_loop() {
@@ -593,17 +587,17 @@ private:
                 image_pub_.publish(cv_bridge::CvImage(hdr, "bgr8", img).toImageMsg());
             }
             publish_detections(dets, hdr);
-            publish_skeletons(dets, hdr);
         }
         for (auto& r : remotes) r->stop();
     }
 
     ros::NodeHandle nh_, pnh_;
-    ros::Publisher result_pub_, image_pub_, det_pub_, skel_pub_;
+    ros::Publisher result_pub_, image_pub_, det_pub_;
     std::string pipeline_, prov_host_, prov_target_, remote_host_, remote_target_, remote_token_,
-                fuser_host_, image_topic_, image_frame_id_, det_topic_, skel_topic_;
+                fuser_host_, image_topic_, image_frame_id_, det_topic_;
     int prov_port_ = 8080, remote_port_ = 8443, fuser_port_ = 9100, ring_size_ = 60, rot_deg_ = 0;
     bool remote_insecure_ = true;
+    bool flip_optical_xy_ = true;
     double remote_max_staleness_ms_ = 1500.0;
     GstElement* pipeline_p_ = nullptr; GstAppSink* appsink_ = nullptr;
     std::atomic<bool> running_{false};
