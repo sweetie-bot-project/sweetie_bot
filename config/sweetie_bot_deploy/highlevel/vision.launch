@@ -9,8 +9,8 @@
 	<arg name="record_video" default="false" doc="Record the camera video stream (real only)."/>
 	<arg name="frame_id" default="$(eval 'camera_link_optical' if arg('run_real') else 'camera_link_simulation')"/>
 	<arg name="remote_host" default="" doc="remote (server) provider over wss; empty=local-only."/>
-	<arg name="remote_port" default="8443"/>
-	<arg name="remote_insecure" default="true"/>
+	<arg name="remote_port" default=""/>
+	<arg name="remote_insecure" default=""/>
 	<arg name="remote_token" default=""/>
 
 	<group ns="$(arg robot_ns)">

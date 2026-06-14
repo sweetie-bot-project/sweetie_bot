@@ -11,7 +11,7 @@
 	<arg name="robot_ns" default="/" doc="Namespace where to run robot components "/>
 
 	<arg name="run_moveit" default="false" doc="Run move_group associated with robot."/>
-	<arg name="run_vision" default="false" doc="Run vision node."/>
+	<arg name="run_vision" default="true" doc="Run vision node."/>
 	<arg name="run_nlp" default="true" doc="Run natural language processing nodes: speech to text, language model."/>
 	<arg name="run_flexbe" default="true" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 	<arg name="run_flexbe_gui" default="false" doc="Start flexbe gui."/>

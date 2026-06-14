@@ -4,3 +4,12 @@ vision:
                          0,       0,    1, ]
     apply_undistortion: true
     distortion_coefficients: [ 0.501383, 0.0370812, -7.27019e-05, -0.000171416, -4.35192e-06, 0.852262, 0.137816, 0.00259195, 0, 0, 0, 0, 0, 0, ]
+
+# vision_proxy (C++ federation proxy): remote heavy/depth provider tier over wss.
+# Loaded by proto32/load_param.launch (which already loads this vision.yaml) into the
+# /vision_proxy node's private params. Empty remote_host => local-only.
+vision_proxy:
+    remote_host: "192.168.3.147"
+    remote_port: 8443
+    remote_insecure: true
+    remote_token: ""

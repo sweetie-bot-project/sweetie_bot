@@ -9,8 +9,8 @@
   <arg name="provider_port"      default="8080" />
   <!-- optional REMOTE provider over wss (empty remote_host = local-only) -->
   <arg name="remote_host"        default="" />
-  <arg name="remote_port"        default="8443" />
-  <arg name="remote_insecure"    default="true" />
+  <arg name="remote_port"        default="" />
+  <arg name="remote_insecure"    default="" />
   <arg name="remote_token"       default="" />
   <arg name="remote_max_staleness_ms" default="1500" />
   <arg name="fuser_host"         default="127.0.0.1" />
@@ -39,10 +39,10 @@
     <param name="pipeline" value="udpsrc port=$(arg gst_port) ! application/x-rtp,encoding-name=JPEG,payload=26 ! rtpjpegdepay ! jpegparse ! appsink name=sink emit-signals=true sync=false drop=true max-buffers=1" />
     <param name="provider_host"       value="$(arg provider_host)" />
     <param name="provider_port"       value="$(arg provider_port)" />
-    <param name="remote_host"         value="$(arg remote_host)" />
-    <param name="remote_port"         value="$(arg remote_port)" />
-    <param name="remote_insecure"     value="$(arg remote_insecure)" />
-    <param name="remote_token"        value="$(arg remote_token)" />
+    <param name="remote_host"         value="$(arg remote_host)" if="$(eval remote_host != '')" />
+    <param name="remote_port"         value="$(arg remote_port)" if="$(eval remote_port != '')" />
+    <param name="remote_insecure"     value="$(arg remote_insecure)" if="$(eval remote_insecure != '')" />
+    <param name="remote_token"        value="$(arg remote_token)" if="$(eval remote_token != '')" />
     <param name="remote_max_staleness_ms" value="$(arg remote_max_staleness_ms)" />
     <param name="fuser_host"          value="$(arg fuser_host)" />
     <param name="fuser_port"          value="$(arg fuser_port)" />
