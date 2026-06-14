@@ -36,6 +36,8 @@
 #include <openssl/err.h>
 #include <cstdlib>
 #include <cstdio>
+#include <cmath>
+#include <algorithm>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -528,10 +530,12 @@ private:
             hud_last_update_ns_ = now_wall;
         }
         if (!hud_text_.empty()) {
+            const int fh = 20;                 // font height (px)
+            const int xoff = 5, yoff = 5;
             int hb = 0;
-            cv::Size hs = ft_ready_ ? ft2_->getTextSize(hud_text_, 18, -1, &hb)
+            cv::Size hs = ft_ready_ ? ft2_->getTextSize(hud_text_, fh, -1, &hb)
                                     : cv::getTextSize(hud_text_, cv::FONT_HERSHEY_SIMPLEX, 0.6, 2, &hb);
-            cv::Rect hud_rect(4, 4, hs.width + 14, hs.height + hb + 12);
+            cv::Rect hud_rect(4, 4, hs.width + 2 * xoff + 4, hs.height + hb + 2 * yoff + 4);
             hud_rect &= cv::Rect(0, 0, img.cols, img.rows);
             if (hud_rect.width > 0 && hud_rect.height > 0) {
                 cv::Mat roi = img(hud_rect);
@@ -539,23 +543,33 @@ private:
                 cv::Mat mask;
                 if (ft_ready_) {
                     cv::Mat m3 = cv::Mat::zeros(roi.size(), CV_8UC3);
-                    ft2_->putText(m3, hud_text_, cv::Point(5, 5), 18, cv::Scalar(255, 255, 255), -1, cv::LINE_AA, false);
+                    ft2_->putText(m3, hud_text_, cv::Point(xoff, yoff), fh, cv::Scalar(255, 255, 255), -1, cv::LINE_AA, false);
                     cv::cvtColor(m3, mask, cv::COLOR_BGR2GRAY);
                 } else {
                     mask = cv::Mat::zeros(roi.size(), CV_8UC1);
-                    cv::putText(mask, hud_text_, cv::Point(5, hs.height + 2), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                    cv::putText(mask, hud_text_, cv::Point(xoff, hs.height + yoff), cv::FONT_HERSHEY_SIMPLEX, 0.6,
                                 cv::Scalar(255), 2, cv::LINE_8);
                 }
                 cv::threshold(mask, mask, 127, 255, cv::THRESH_BINARY);
-                // each glyph pixel -> PURE black or PURE white, chosen by background brightness
-                cv::Mat gray, bright, dark, wm, bm;
-                cv::cvtColor(roi, gray, cv::COLOR_BGR2GRAY);
-                cv::threshold(gray, bright, 127, 255, cv::THRESH_BINARY);   // 255 where bg is light
-                cv::bitwise_not(bright, dark);
-                cv::bitwise_and(mask, dark, wm);                            // white ink over dark bg
-                cv::bitwise_and(mask, bright, bm);                          // black ink over light bg
-                roi.setTo(cv::Scalar(255, 255, 255), wm);
-                roi.setTo(cv::Scalar(0, 0, 0), bm);
+                // EMBOLDEN: the TTF has no bold weight, so thicken the strokes by dilating the mask.
+                cv::dilate(mask, mask, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3)));
+                // PER-CHARACTER color (not per-pixel): each glyph is uniformly black or white, picked
+                // by the mean background brightness under that character's ink (monospace -> equal cells).
+                cv::Mat gray; cv::cvtColor(roi, gray, cv::COLOR_BGR2GRAY);
+                int n = static_cast<int>(hud_text_.size());
+                double cellw = static_cast<double>(hs.width) / std::max(1, n);
+                for (int i = 0; i < n; ++i) {
+                    int cx0 = xoff + static_cast<int>(std::lround(i * cellw));
+                    int cx1 = xoff + static_cast<int>(std::lround((i + 1) * cellw));
+                    cx0 = std::max(0, std::min(cx0, roi.cols));
+                    cx1 = std::max(0, std::min(cx1, roi.cols));
+                    if (cx1 <= cx0) continue;
+                    cv::Rect cell(cx0, 0, cx1 - cx0, roi.rows);
+                    cv::Mat cm = mask(cell);
+                    if (cv::countNonZero(cm) == 0) continue;        // space / empty cell
+                    double bg = cv::mean(gray(cell), cm)[0];        // bg brightness under this glyph
+                    roi(cell).setTo(bg > 127 ? cv::Scalar(0, 0, 0) : cv::Scalar(255, 255, 255), cm);
+                }
             }
         }
         for (const auto& d : dets) {
