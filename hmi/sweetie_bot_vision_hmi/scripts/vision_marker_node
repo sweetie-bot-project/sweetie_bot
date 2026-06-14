@@ -78,9 +78,11 @@ def to_skeleton_markers(msg):
 
 
 def _gaze_dir(pitch_deg, yaw_deg):
-    """Unit gaze vector (optical convention) from (pitch, yaw) degrees: looking at the camera = -Z;
-    yaw>0 -> image-right (+X), pitch>0 -> up (-Y). Mirrors providers.gaze_openvino.gaze_to_angles."""
-    p, y = math.radians(pitch_deg), math.radians(yaw_deg)
+    """Unit gaze vector from (pitch, yaw) degrees, in the robot frame the markers live in.
+    NOTE: the OMZ gaze net's pitch sign is INVERTED vs the REP-103 convention here — on-robot, looking
+    up rendered the arrow down and vice-versa — so we negate pitch (vertical only; yaw/horizontal was
+    already correct). looking at the camera = -Z; yaw>0 -> image-right."""
+    p, y = math.radians(-pitch_deg), math.radians(yaw_deg)
     g = [math.sin(y) * math.cos(p), -math.sin(p), -math.cos(y) * math.cos(p)]
     if _FLIP_GAZE_DIR:
         g[0], g[1] = -g[0], -g[1]
