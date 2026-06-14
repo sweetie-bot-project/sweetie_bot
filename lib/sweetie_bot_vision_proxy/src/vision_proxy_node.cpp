@@ -506,12 +506,28 @@ private:
         last_draw_ns_ = now_wall;
         double lat_ms = (static_cast<double>(ros::Time::now().toNSec())
                          - static_cast<double>(cap_ts_ns)) * 1e-6;
-        char hud[64];
-        std::snprintf(hud, sizeof(hud), "%.1f fps  %.0f ms", hud_fps_, lat_ms);
-        int hb = 0; cv::Size hs = cv::getTextSize(hud, cv::FONT_HERSHEY_SIMPLEX, 0.6, 2, &hb);
-        cv::rectangle(img, cv::Rect(4, 4, hs.width + 10, hs.height + hb + 8), cv::Scalar(0, 0, 0), cv::FILLED);
-        cv::putText(img, hud, cv::Point(9, 4 + hs.height + 3), cv::FONT_HERSHEY_SIMPLEX, 0.6,
-                    cv::Scalar(0, 255, 0), 2, cv::LINE_AA);
+        // refresh the displayed numbers at most ~2 Hz (every 500 ms) to reduce flicker
+        if (hud_last_update_ns_ == 0 || (now_wall - hud_last_update_ns_) >= 500000000ULL) {
+            char buf[64];
+            std::snprintf(buf, sizeof(buf), "%.1f fps  %.0f ms", hud_fps_, lat_ms);
+            hud_text_ = buf;
+            hud_last_update_ns_ = now_wall;
+        }
+        if (!hud_text_.empty()) {
+            int hb = 0; cv::Size hs = cv::getTextSize(hud_text_, cv::FONT_HERSHEY_SIMPLEX, 0.6, 2, &hb);
+            cv::Rect hud_rect(4, 4, hs.width + 10, hs.height + hb + 6);
+            hud_rect &= cv::Rect(0, 0, img.cols, img.rows);
+            if (hud_rect.width > 0 && hud_rect.height > 0) {
+                // B/W per-pixel: invert the background under each glyph (255 - bg), so the text is
+                // readable on any color (dark text on light areas, light text on dark areas).
+                cv::Mat roi = img(hud_rect);
+                cv::Mat mask = cv::Mat::zeros(roi.size(), CV_8UC1);
+                cv::putText(mask, hud_text_, cv::Point(5, hs.height + 2), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                            cv::Scalar(255), 2, cv::LINE_AA);
+                cv::Mat inv; cv::bitwise_not(roi, inv);
+                inv.copyTo(roi, mask);
+            }
+        }
         for (const auto& d : dets) {
             cv::Scalar c = color_for(d.type);
             cv::Rect r(cv::Point(static_cast<int>(d.bbox[0]), static_cast<int>(d.bbox[1])),
@@ -627,6 +643,8 @@ private:
     bool flip_optical_xy_ = true;
     double hud_fps_ = 0.0;
     uint64_t last_draw_ns_ = 0;
+    std::string hud_text_;
+    uint64_t hud_last_update_ns_ = 0;
     double remote_max_staleness_ms_ = 1500.0;
     GstElement* pipeline_p_ = nullptr; GstAppSink* appsink_ = nullptr;
     std::atomic<bool> running_{false};
