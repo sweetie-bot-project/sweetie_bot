@@ -40,6 +40,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/freetype.hpp>
 #include <json/json.h>
 
 #include <arpa/inet.h>
@@ -322,6 +323,19 @@ public:
         pnh_.param<std::string>("image_topic", image_topic_, "/image_raw");
         pnh_.param<std::string>("image_frame_id", image_frame_id_, "camera_link_optical");
         pnh_.param<std::string>("detections_topic", det_topic_, "detections");
+        // cyber HUD font via opencv_freetype; empty/missing path -> Hershey fallback
+        std::string hud_font;
+        pnh_.param<std::string>("hud_font", hud_font, "");
+        if (!hud_font.empty()) {
+            try {
+                ft2_ = cv::freetype::createFreeType2();
+                ft2_->loadFontData(hud_font, 0);
+                ft_ready_ = true;
+                ROS_INFO_STREAM("HUD font: " << hud_font);
+            } catch (const std::exception& e) {
+                ROS_WARN_STREAM("HUD font load failed (" << hud_font << "): " << e.what() << " -> Hershey");
+            }
+        }
         pnh_.param<int>("camera_rotation_deg", rot_deg_, 0);
         // The proto3 robot's camera_link_optical TF is non-standard (x-left, y-up vs REP-103
         // x-right, y-down), so the core's clean REP-103 output renders upside-down + mirrored. Negate
@@ -514,18 +528,34 @@ private:
             hud_last_update_ns_ = now_wall;
         }
         if (!hud_text_.empty()) {
-            int hb = 0; cv::Size hs = cv::getTextSize(hud_text_, cv::FONT_HERSHEY_SIMPLEX, 0.6, 2, &hb);
-            cv::Rect hud_rect(4, 4, hs.width + 10, hs.height + hb + 6);
+            int hb = 0;
+            cv::Size hs = ft_ready_ ? ft2_->getTextSize(hud_text_, 18, -1, &hb)
+                                    : cv::getTextSize(hud_text_, cv::FONT_HERSHEY_SIMPLEX, 0.6, 2, &hb);
+            cv::Rect hud_rect(4, 4, hs.width + 14, hs.height + hb + 12);
             hud_rect &= cv::Rect(0, 0, img.cols, img.rows);
             if (hud_rect.width > 0 && hud_rect.height > 0) {
-                // B/W per-pixel: invert the background under each glyph (255 - bg), so the text is
-                // readable on any color (dark text on light areas, light text on dark areas).
                 cv::Mat roi = img(hud_rect);
-                cv::Mat mask = cv::Mat::zeros(roi.size(), CV_8UC1);
-                cv::putText(mask, hud_text_, cv::Point(5, hs.height + 2), cv::FONT_HERSHEY_SIMPLEX, 0.6,
-                            cv::Scalar(255), 2, cv::LINE_AA);
-                cv::Mat inv; cv::bitwise_not(roi, inv);
-                inv.copyTo(roi, mask);
+                // glyph mask in the cyber font (Hershey fallback). BINARY: threshold away any AA gray.
+                cv::Mat mask;
+                if (ft_ready_) {
+                    cv::Mat m3 = cv::Mat::zeros(roi.size(), CV_8UC3);
+                    ft2_->putText(m3, hud_text_, cv::Point(5, 5), 18, cv::Scalar(255, 255, 255), -1, cv::LINE_AA, false);
+                    cv::cvtColor(m3, mask, cv::COLOR_BGR2GRAY);
+                } else {
+                    mask = cv::Mat::zeros(roi.size(), CV_8UC1);
+                    cv::putText(mask, hud_text_, cv::Point(5, hs.height + 2), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                                cv::Scalar(255), 2, cv::LINE_8);
+                }
+                cv::threshold(mask, mask, 127, 255, cv::THRESH_BINARY);
+                // each glyph pixel -> PURE black or PURE white, chosen by background brightness
+                cv::Mat gray, bright, dark, wm, bm;
+                cv::cvtColor(roi, gray, cv::COLOR_BGR2GRAY);
+                cv::threshold(gray, bright, 127, 255, cv::THRESH_BINARY);   // 255 where bg is light
+                cv::bitwise_not(bright, dark);
+                cv::bitwise_and(mask, dark, wm);                            // white ink over dark bg
+                cv::bitwise_and(mask, bright, bm);                          // black ink over light bg
+                roi.setTo(cv::Scalar(255, 255, 255), wm);
+                roi.setTo(cv::Scalar(0, 0, 0), bm);
             }
         }
         for (const auto& d : dets) {
@@ -645,6 +675,8 @@ private:
     uint64_t last_draw_ns_ = 0;
     std::string hud_text_;
     uint64_t hud_last_update_ns_ = 0;
+    cv::Ptr<cv::freetype::FreeType2> ft2_;
+    bool ft_ready_ = false;
     double remote_max_staleness_ms_ = 1500.0;
     GstElement* pipeline_p_ = nullptr; GstAppSink* appsink_ = nullptr;
     std::atomic<bool> running_{false};

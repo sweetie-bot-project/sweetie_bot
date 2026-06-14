@@ -52,6 +52,7 @@
     <param name="detections_topic"    value="$(arg detections_topic)" />
     <param name="camera_rotation_deg" value="$(arg camera_rotation_deg)" />
     <param name="flip_optical_xy"     value="$(arg flip_optical_xy)" />
+    <param name="hud_font"            value="$(find sweetie_bot_vision_proxy)/fonts/ShareTechMono-Regular.ttf" />
   </node>
 
   <!-- hmi marker viz: /detections -> rviz skeleton + gaze MarkerArrays (moved out of the proxy). -->

@@ -43,6 +43,7 @@ target_link_libraries(vision_proxy_node
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
   ${OpenCV_LIBRARIES}
+  opencv_freetype
   ${GST_LIBRARIES}
   ${JSONCPP_LIBRARIES}
   OpenSSL::SSL
@@ -54,3 +55,5 @@ install(TARGETS vision_proxy_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
+install(DIRECTORY fonts/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/fonts)
