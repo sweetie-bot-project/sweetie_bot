@@ -31,8 +31,10 @@
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
+#include <boost/asio/ssl/rfc2818_verification.hpp>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <cstdlib>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -210,6 +212,7 @@ private:
         ctx_ = std::make_unique<ssl::context>(ssl::context::tlsv12_client);
         ctx_->set_default_verify_paths();
         ctx_->set_verify_mode(insecure_ ? ssl::verify_none : ssl::verify_peer);
+        if (!insecure_) ctx_->set_verify_callback(ssl::rfc2818_verification(host_));
         tcp::resolver res(*ioc_);
         ws_ = std::make_unique<websocket::stream<beast::ssl_stream<tcp::socket>>>(*ioc_, *ctx_);
         if (!SSL_set_tlsext_host_name(ws_->next_layer().native_handle(), host_.c_str()))
@@ -306,6 +309,11 @@ public:
         pnh_.param<std::string>("remote_target", remote_target_, "/");
         pnh_.param<bool>("remote_insecure", remote_insecure_, true);
         pnh_.param<std::string>("remote_token", remote_token_, "");
+        // The Bearer token is a SECRET: never stored in config. If the rosparam is empty, draw
+        // it from $VISION_API_KEY in the environment (the same key the server validates against).
+        if (remote_token_.empty()) {
+            if (const char* k = std::getenv("VISION_API_KEY")) remote_token_ = k;
+        }
         pnh_.param<double>("remote_max_staleness_ms", remote_max_staleness_ms_, 1500.0);
         pnh_.param<std::string>("fuser_host", fuser_host_, "127.0.0.1");
         pnh_.param<int>("fuser_port", fuser_port_, 9100);

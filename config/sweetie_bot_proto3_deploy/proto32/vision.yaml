@@ -9,7 +9,9 @@ vision:
 # Loaded by proto32/load_param.launch (which already loads this vision.yaml) into the
 # /vision_proxy node's private params. Empty remote_host => local-only.
 vision_proxy:
-    remote_host: "192.168.3.147"
-    remote_port: 8443
-    remote_insecure: true
-    remote_token: ""
+    # Reached over wss at the public domain (valid cert => verify_peer + hostname check succeed).
+    # The edge terminates TLS and routes to the swai VM :8080. remote_token is NOT stored here:
+    # it is a SECRET drawn from $VISION_API_KEY in the node's environment (never committed).
+    remote_host: "ws.sweetie.bot"
+    remote_port: 443
+    remote_insecure: false
