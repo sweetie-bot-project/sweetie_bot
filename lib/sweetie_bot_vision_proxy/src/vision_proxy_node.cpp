@@ -35,6 +35,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <cstdlib>
+#include <cstdio>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -492,7 +493,25 @@ private:
         if (type == "hand") return cv::Scalar(0, 200, 255);
         return cv::Scalar(200, 200, 200);
     }
-    void draw(cv::Mat& img, const std::vector<TrackedDet>& dets) {
+    void draw(cv::Mat& img, const std::vector<TrackedDet>& dets, uint64_t cap_ts_ns) {
+        // TOP-LEFT HUD: rolling FPS (publish cadence) + pipeline latency (ingest -> draw).
+        uint64_t now_wall = ros::WallTime::now().toNSec();
+        if (last_draw_ns_ != 0) {
+            double dt = (now_wall - last_draw_ns_) * 1e-9;
+            if (dt > 1e-6) {
+                double inst = 1.0 / dt;
+                hud_fps_ = (hud_fps_ > 0.0) ? (0.9 * hud_fps_ + 0.1 * inst) : inst;
+            }
+        }
+        last_draw_ns_ = now_wall;
+        double lat_ms = (static_cast<double>(ros::Time::now().toNSec())
+                         - static_cast<double>(cap_ts_ns)) * 1e-6;
+        char hud[64];
+        std::snprintf(hud, sizeof(hud), "%.1f fps  %.0f ms", hud_fps_, lat_ms);
+        int hb = 0; cv::Size hs = cv::getTextSize(hud, cv::FONT_HERSHEY_SIMPLEX, 0.6, 2, &hb);
+        cv::rectangle(img, cv::Rect(4, 4, hs.width + 10, hs.height + hb + 8), cv::Scalar(0, 0, 0), cv::FILLED);
+        cv::putText(img, hud, cv::Point(9, 4 + hs.height + 3), cv::FONT_HERSHEY_SIMPLEX, 0.6,
+                    cv::Scalar(0, 255, 0), 2, cv::LINE_AA);
         for (const auto& d : dets) {
             cv::Scalar c = color_for(d.type);
             cv::Rect r(cv::Point(static_cast<int>(d.bbox[0]), static_cast<int>(d.bbox[1])),
@@ -591,7 +610,7 @@ private:
                                            cv::IMREAD_COLOR);
             if (!raw_img.empty()) {
                 cv::Mat img = raw_img.clone();
-                draw(img, dets);
+                draw(img, dets, f.capture_ts_ns);
                 image_pub_.publish(cv_bridge::CvImage(hdr, "bgr8", img).toImageMsg());
             }
             publish_detections(dets, hdr);
@@ -606,6 +625,8 @@ private:
     int prov_port_ = 8080, remote_port_ = 8443, fuser_port_ = 9100, ring_size_ = 60, rot_deg_ = 0;
     bool remote_insecure_ = true;
     bool flip_optical_xy_ = true;
+    double hud_fps_ = 0.0;
+    uint64_t last_draw_ns_ = 0;
     double remote_max_staleness_ms_ = 1500.0;
     GstElement* pipeline_p_ = nullptr; GstAppSink* appsink_ = nullptr;
     std::atomic<bool> running_{false};
