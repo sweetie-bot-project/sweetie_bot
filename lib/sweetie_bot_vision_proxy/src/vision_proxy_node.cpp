@@ -160,7 +160,8 @@ struct ProviderConn {
 
 class WsProvider : public ProviderConn {
 public:
-    WsProvider(std::string h, int p, std::string t) : host_(std::move(h)), target_(std::move(t)), port_(p) {}
+    WsProvider(std::string h, int p, std::string t, std::string tok = "")
+        : host_(std::move(h)), target_(std::move(t)), token_(std::move(tok)), port_(p) {}
     std::string name() const override { return "ws://" + host_ + ":" + std::to_string(port_); }
     bool query(const std::vector<uint8_t>& msg, std::vector<uint8_t>& body) override {
         try {
@@ -183,11 +184,16 @@ private:
         auto r = res.resolve(host_, std::to_string(port_));
         net::connect(ws_->next_layer(), r.begin(), r.end());
         ws_->set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
+        std::string tok = token_;
+        ws_->set_option(websocket::stream_base::decorator([tok](websocket::request_type& req) {
+            req.set(beast::http::field::user_agent, "vision_proxy_node");
+            if (!tok.empty()) req.set(beast::http::field::authorization, "Bearer " + tok);
+        }));
         ws_->handshake(host_, target_);
         ws_->binary(true);
-        ROS_INFO_STREAM("connected " << name());
+        ROS_INFO_STREAM("connected " << name() << (token_.empty() ? "" : " (auth)"));
     }
-    std::string host_, target_; int port_;
+    std::string host_, target_, token_; int port_;
     std::unique_ptr<net::io_context> ioc_;
     std::unique_ptr<websocket::stream<tcp::socket>> ws_;
 };
@@ -318,6 +324,33 @@ public:
         if (remote_token_.empty()) {
             if (const char* k = std::getenv("VISION_API_KEY")) remote_token_ = k;
         }
+        // VARIABLE NUMBER of remote provider containers: a `remotes` list param (XmlRpc array of
+        // {host, port, tls, insecure, target, token_env}). Each becomes its own async RemoteWorker, so
+        // the system scales to N containers (local + second laptop + server + ...) with no code change.
+        XmlRpc::XmlRpcValue rlist;
+        if (pnh_.getParam("remotes", rlist) && rlist.getType() == XmlRpc::XmlRpcValue::TypeArray) {
+            for (int i = 0; i < rlist.size(); ++i) {
+                XmlRpc::XmlRpcValue& e = rlist[i];
+                if (!e.hasMember("host")) continue;
+                RemoteSpec rs;
+                rs.host = static_cast<std::string>(e["host"]);
+                if (rs.host.empty()) continue;
+                rs.port = e.hasMember("port") ? static_cast<int>(e["port"]) : 443;
+                rs.target = e.hasMember("target") ? static_cast<std::string>(e["target"]) : std::string("/");
+                rs.tls = e.hasMember("tls") ? static_cast<bool>(e["tls"]) : true;
+                rs.insecure = e.hasMember("insecure") ? static_cast<bool>(e["insecure"]) : false;
+                std::string tenv = e.hasMember("token_env") ? static_cast<std::string>(e["token_env"])
+                                                            : std::string("VISION_API_KEY");
+                const char* tv = std::getenv(tenv.c_str());
+                rs.token = tv ? std::string(tv) : std::string();
+                remote_specs_.push_back(rs);
+            }
+        }
+        // Back-compat: the legacy single remote_host param becomes one (wss) remote if no list is given.
+        if (remote_specs_.empty() && !remote_host_.empty())
+            remote_specs_.push_back(RemoteSpec{remote_host_, remote_target_, remote_token_,
+                                               remote_port_, true, remote_insecure_});
+        ROS_INFO_STREAM("vision_proxy: " << remote_specs_.size() << " remote container(s)");
         pnh_.param<double>("remote_max_staleness_ms", remote_max_staleness_ms_, 1500.0);
         pnh_.param<std::string>("fuser_host", fuser_host_, "127.0.0.1");
         pnh_.param<int>("fuser_port", fuser_port_, 9100);
@@ -632,11 +665,14 @@ private:
     void worker_loop() {
         WsProvider local(prov_host_, prov_port_, prov_target_);     // local = synchronous FAST path
         std::vector<std::unique_ptr<RemoteWorker>> remotes;          // remotes = async best-effort, off the loop
-        if (!remote_host_.empty())
-            remotes.push_back(std::make_unique<RemoteWorker>(
-                std::make_unique<WssProvider>(remote_host_, remote_port_, remote_target_,
-                                              remote_insecure_, remote_token_),
-                remote_max_staleness_ms_));
+        for (const auto& rs : remote_specs_) {                       // one async worker per remote container
+            std::unique_ptr<ProviderConn> conn;
+            if (rs.tls)
+                conn = std::make_unique<WssProvider>(rs.host, rs.port, rs.target, rs.insecure, rs.token);
+            else
+                conn = std::make_unique<WsProvider>(rs.host, rs.port, rs.target, rs.token);
+            remotes.push_back(std::make_unique<RemoteWorker>(std::move(conn), remote_max_staleness_ms_));
+        }
         while (running_.load() && ros::ok()) {
             Frame f;
             if (!latest_blocking(f)) break;
@@ -680,6 +716,8 @@ private:
 
     ros::NodeHandle nh_, pnh_;
     ros::Publisher result_pub_, image_pub_, det_pub_;
+    struct RemoteSpec { std::string host, target, token; int port = 443; bool tls = true; bool insecure = false; };
+    std::vector<RemoteSpec> remote_specs_;
     std::string pipeline_, prov_host_, prov_target_, remote_host_, remote_target_, remote_token_,
                 fuser_host_, image_topic_, image_frame_id_, det_topic_;
     int prov_port_ = 8080, remote_port_ = 8443, fuser_port_ = 9100, ring_size_ = 60, rot_deg_ = 0;

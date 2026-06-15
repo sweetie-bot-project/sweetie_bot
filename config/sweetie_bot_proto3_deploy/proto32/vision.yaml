@@ -9,9 +9,20 @@ vision:
 # Loaded by proto32/load_param.launch (which already loads this vision.yaml) into the
 # /vision_proxy node's private params. Empty remote_host => local-only.
 vision_proxy:
-    # Reached over wss at the public domain (valid cert => verify_peer + hostname check succeed).
-    # The edge terminates TLS and routes to the swai VM :8080. remote_token is NOT stored here:
-    # it is a SECRET drawn from $VISION_API_KEY in the node's environment (never committed).
-    remote_host: "ws.sweetie.bot"
-    remote_port: 443
-    remote_insecure: false
+    # VARIABLE number of remote provider containers — the system distributes over all of them (server,
+    # a second laptop, ...). The local loopback container is separate (provider_host/port). Each remote
+    # is an independent async tier; add/remove entries freely (no code change). Tokens are SECRETS read
+    # at runtime from the env var named by `token_env` (never committed) — each container generates and
+    # prints its own token on first start (run_provider). tls:true => wss (verify cert unless insecure).
+    remotes:
+      - host: "ws.sweetie.bot"      # heavy/server tier: edge terminates TLS, routes to the swai VM :8080
+        port: 443
+        tls: true
+        insecure: false
+        token_env: "VISION_API_KEY"
+      # Example — a second laptop on the LAN (self-signed wss, its own token). Uncomment + adjust:
+      # - host: "192.168.3.50"
+      #   port: 8443
+      #   tls: true
+      #   insecure: true
+      #   token_env: "VISION_API_KEY_LAPTOP2"
