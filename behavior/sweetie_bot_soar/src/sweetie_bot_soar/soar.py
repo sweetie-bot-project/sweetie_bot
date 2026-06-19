@@ -70,11 +70,13 @@ class Soar:
         rospy.loginfo("SOAR log: " + message.strip())
 
     def beforeReinitCallback(event_id, self, agent):
+        # called in SOAR thread before agent reinit
         with self._lock_cond: 
             # destroy input modules, stop and destroy outptut
             self._unload_io_modules()
          
     def afterReinitCallback(event_id, self, agent):
+        # called in SOAR thread after agent reinit
         with self._lock_cond:
             # STOPPED: soar-init event in configured state -> restore modules
             # UNCONFIGURED: soar-init event in unconfigured state -> do not restore modules
@@ -85,6 +87,14 @@ class Soar:
     def startCallback(event_id, self, kernel):
         # called in SOAR stream when kernel is started
         with self._lock_cond:
+            # check if we are in not in UNCONFIGURED state
+            if self._state == SoarState.UNCONFIGURED:
+                # we are starting in unconfigured state. 
+                # attempt to configure system
+                if not self.configure():
+                    rospy.logerr("SOAR configuration failed.")
+                    self._stop_request = True
+            # notify that kernal is running
             self._state = SoarState.RUNNING
             self._lock_cond.notify()
         # log status
@@ -100,6 +110,7 @@ class Soar:
             rospy.loginfo("SOAR kernel is stopped.")
 
     def updateCallback(event_id, self, kernel, run_flags):
+        # called in SOAR thread after output phases
         with self._lock_cond:
             # check if SOAR kernel is running
             if self._state not in [ SoarState.RUNNING, SoarState.STOPPED ]:
@@ -129,7 +140,11 @@ class Soar:
 
     def start(self):
         with self._lock_cond:
-            # check if kernel is configured
+            # check if kernel is unconfigured and configure it
+            if self._state == SoarState.UNCONFIGURED:
+                if not self.configure():
+                    return False
+            # check that state is correct
             if self._state != SoarState.STOPPED:
                 return False
             # start all agents: RunAllAgentsForever() blocks until kernel is stopped so run in new thread
@@ -232,6 +247,7 @@ class Soar:
                 return False
 
             self._state = SoarState.STOPPED
+            rospy.loginfo("SOAR is configurured.")
             return True
 
     def getState(self):

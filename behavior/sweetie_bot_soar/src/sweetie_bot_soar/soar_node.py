@@ -51,12 +51,6 @@ class SoarNode:
         return TriggerResponse(success = False, message = 'Service is not implemented.')
 
     def setOperationalCallback(self, req):
-        state = self.soar.getState()
-        if state == SoarState.UNCONFIGURED:
-            if not self.soar.configure():
-                rospy.logerr("SOAR configuration failed.")
-                return SetBoolResponse(success = False, message = 'SOAR configuration falied.')
-
         if req.data:
             result = self.soar.start()
         else:
@@ -66,12 +60,7 @@ class SoarNode:
 
     def triggerOperationalCallback(self, req):
         state = self.soar.getState()
-        if state == SoarState.UNCONFIGURED:
-            if not self.soar.configure():
-                rospy.logerr("SOAR configuration failed.")
-                return TriggerResponse(success = False, message = 'SOAR configuration falied.')
-
-        if state == SoarState.STOPPED:
+        if state in (SoarState.STOPPED, SoarState.UNCONFIGURED):
             result = self.soar.start()
         else:
             result = self.soar.stop()
@@ -80,8 +69,9 @@ class SoarNode:
 
     def stepCallback(self, req):
         state = self.soar.getState()
-        if state == SoarState.UNCONFIGURED:
-            return SetBoolResponse(success = False, message = 'Node is not configured.')
+        if state != SoarState.STOPPED:
+            return SetBoolResponse(success = False, message = 'SOAR must be in STOPPED state.')
+
         # invoke step
         result = self.soar.step()
  
