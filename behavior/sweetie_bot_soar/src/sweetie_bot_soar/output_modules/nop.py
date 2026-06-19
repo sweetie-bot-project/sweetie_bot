@@ -6,9 +6,7 @@ class NOp(OutputModule):
 
     def _init(self, name, config):
         # configuration
-        self._delay = config.get("delay")
-        if not isinstance(self._delay, (int, float)) or self._delay < 0:
-            raise RuntimeError("NOp output module: 'delay' must be provided and be a positive number.")
+        self._delay = self.getConfigParameter(config, 'delay', allowed_types=(float, int), check_func=lambda d: d > 0.0, error_desc='must be positive')
 
     def startHook(self, cmd_id):
         rospy.sleep(self._delay)

@@ -1,3 +1,4 @@
+import rospy
 
 class ModulesLoader:
     _loader_name = 'module loader'
@@ -34,11 +35,15 @@ class ModulesLoader:
             raise
         return modules
 
+
 class UnlodableModule:
+
     # constructor
     def __init__(self, name, config, *args, **kwargs):
         self._name = name
         self._destroyed = False
+        self._subscribers = []
+        self._timers = []
         # call internal init
         try: 
             self._init(name, config, *args, **kwargs)
@@ -46,25 +51,47 @@ class UnlodableModule:
             self.deinit()
             raise
 
-    # explicit destructor
-    def deinit(self):
-        if self._destroyed:
-            return
-        # call parent internal deinit method
-        try:
-            self._deinit()
-        except Exception as e:
-            rospy.logerr(f"module '%s': deinitialization falied: %s", self._name, ': '.join(e.args))
+    # properties
 
-    # module interface
-    def _init(self, name, config, *args, **kwargs):
-        raise NotImplementedError
-
-    def _deinit(self):
-        pass
-
-    # methods
     @property
     def name(self):
         return self._name
+
+    @property
+    def is_destroyed(self):
+        return self._destroyed
+
+    # resource managment methods
+
+    def createSubscriber(self, *args, **kwargs):
+        sub = rospy.Subscriber(*args, **kwargs)
+        self._subscribers.append(sub)
+        return sub
+
+    def removeSubscriber(self, sub):
+        self._subscribers.remove(sub)
+        sub.unregister()
+
+    def createTimer(self, *args, **kwargs):
+        timer = rospy.Timer(*args, **kwargs)
+        self._timers.append(timer)
+        return timer
+
+    def removeTimer(self, timer):
+        self._timers.remove(timer)
+        timer.shutdown()
+
+    # explicit destructor
+
+    def deinit(self):
+        for sub in self._subscribers:
+            sub.unregister()
+        for timer in self._timers:
+            timer.shutdown()
+        self._destroyed = True
+
+    # module interface
+
+    def _init(self, name, config, *args, **kwargs):
+        raise NotImplementedError
 

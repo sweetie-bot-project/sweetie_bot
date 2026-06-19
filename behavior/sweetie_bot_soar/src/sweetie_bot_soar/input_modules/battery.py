@@ -10,9 +10,6 @@ from .bins import BinsMap
 
 class Battery(InputModule):
     def _init(self, name, config, agent):
-        
-        # preinit
-        self._battery_state_sub = None
 
         # get configuration from parameters
         battery_state_topic = self.getConfigParameter(config, "topic", allowed_types = str)
@@ -29,7 +26,7 @@ class Battery(InputModule):
         self._level_wme_id = self._sensor_id.CreateStringWME("level", self._battery_levels_bins_map(100))
 
         # subscriber    
-        self._battery_state_sub = rospy.Subscriber(battery_state_topic, BatteryState, self.newBatteryStateCallback)
+        self._battery_state_sub = self.createSubscriber(battery_state_topic, BatteryState, self.newBatteryStateCallback)
 
     def newBatteryStateCallback(self, msg):
         # buffer msg
@@ -46,10 +43,5 @@ class Battery(InputModule):
 
         if level != self._level_wme_id.GetValue():
             self._level_wme_id.Update(level)
-
-    def _deinit(self):
-        # remove sensor wme and ROS subscriber
-        if self._battery_state_sub:
-            self._battery_state_sub.unregister()
 
 InputModulesLoader.register("battery", Battery)

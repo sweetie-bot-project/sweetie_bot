@@ -52,9 +52,9 @@ class LookAt(OutputModule):
         # start publication
         self._object_key = object_key
         self._object_not_found = False
-        self._timer = rospy.Timer(self._period, self._publishCallback)
+        self._timer = self.createTimer(self._period, self._publishCallback)
         # log
-        rospy.loginfo('lookat output module: set opertional')
+        rospy.loginfo('lookat output module: set opertional (obect: %s, resources: %s)', object_key, resources)
         # start 
         return None
 
@@ -74,8 +74,7 @@ class LookAt(OutputModule):
 
     def _cancel_goal(self, reason):
         self._set_operational_aclient.cancel_goal()
-        self._timer.shutdown()
-        self._timer = None
+        self.removeTimer(self._timer)
         rospy.loginfo(f"output module '%s': %s", self._name, reason)
 
     def updateHook(self, cmd_id, external_abort_request):
@@ -116,25 +115,18 @@ class LookAt(OutputModule):
 
         # Controller is stopped.
         if status in (GoalStatus.REJECTED, GoalStatus.ABORTED):
-            self._timer.shutdown()
+            self.removeTimer(self._timer)
             rospy.logerr("lookat output module: activation LookAt controller failed.")
             return "failed"
         elif status in (GoalStatus.SUCCEEDED, GoalStatus.PREEMPTED, GoalStatus.RECALLED):
-            self._timer.shutdown()
+            self.removeTimer(self._timer)
             rospy.loginfo("flexbe output module: stopped by external reason: %s.", status)
             return "succeed"
 
         # continue exection (RECALLING, PREEMPTING)
         return None
 
-    def __deinit(self):
-        # stop timer
-        if self._timer is not None:
-            self._timer.shutdown()
-        # deactivate controller
-        if self._set_operational_aclient.get_state() in (GoalStatus.ACTIVE, GoalStatus.PENDING):
-            self._set_operational_aclient.cancel_goal()
-        
+
 OutputModulesLoader.register("look-at", LookAt)
 
 

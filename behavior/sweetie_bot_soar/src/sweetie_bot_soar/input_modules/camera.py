@@ -10,8 +10,6 @@ from sweetie_bot_text_msgs.msg import DetectionArray as DetectionArrayMsg, Detec
 
 class Camera(InputModule):
     def _init(self, name, config, agent):
-        # preinit
-        self._detections_sub = None
 
         # configuration
         detection_topic = self.getConfigParameter('topic', allowed_types=str)
@@ -23,7 +21,7 @@ class Camera(InputModule):
         self._detections_wme_map = {}
 
         # add topic subscriber
-        self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
+        self._detections_sub = self.createSubscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
 
     def detectionCallback(self, msg):
         # buffer msg
@@ -74,10 +72,5 @@ class Camera(InputModule):
         for (key_tuple, wme_id) in remove_list:
             del self._detections_wme_map[key_tuple]
             wme_id.DestroyWME()
-
-    def _deinit(self):
-        # remove ROS subscriber
-        if self._detections_sub:
-            self._detections_sub.unregister()
 
 InputModulesLoader.register("camera", Camera)

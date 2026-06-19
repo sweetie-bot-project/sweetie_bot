@@ -94,7 +94,7 @@ class PoseFilter:
     _filter_name = 'base'
     _subclass_map = {}
 
-    def __new__(cls, config):
+    def __new__(cls, config, parent_module):
         # get type name
         type_name = PoseFilter.getConfigParameter(config, 'type', allowed_types=str)
         # factory implementatipacy
@@ -127,7 +127,7 @@ class PoseFilterNone(PoseFilter, name = 'none'):
         return detection_pose_trasformed
 
 class PoseFilterMaxvel(PoseFilter, name = 'maxvel'):
-    def __init__(self, config):
+    def __init__(self, config, parent_module):
         super(PoseFilterMaxvel, self).__init__()
         # get paramters
         self._difftime = rospy.Duration(self.getConfigParameter(config, 'velocity_estimator_difftime', default_value=0.2, check_func=lambda v: v > 0.0))
@@ -137,8 +137,8 @@ class PoseFilterMaxvel(PoseFilter, name = 'maxvel'):
         self._sensor_kinematic_chain = self.getConfigParameter(config, 'sensor_kinematic_chain', allowed_types=str)
 
         # create susbscribers for speed monitoring
-        self._limbs_sub = rospy.Subscriber(motion_ns + '/kinematics_fwd/out_limbs_fixed', RigidBodyState, self.rbsCallback)
-        self._base_sub = rospy.Subscriber(motion_ns + '/odometry_ref/out_base', RigidBodyState, self.rbsCallback)
+        self._limbs_sub = parent_module.createSubscriber(motion_ns + '/kinematics_fwd/out_limbs_fixed', RigidBodyState, self.rbsCallback)
+        self._base_sub = parent_module.createSubscriber(motion_ns + '/odometry_ref/out_base', RigidBodyState, self.rbsCallback)
 
         # cache
         self._lock = Lock()
@@ -146,10 +146,6 @@ class PoseFilterMaxvel(PoseFilter, name = 'maxvel'):
         self._w_t_b = kdl.Twist()
         self._b_T_h = kdl.Frame()
         self._b_t_h = kdl.Twist()
-
-    def deinit(self):
-        self._limbs_sub.unregister()
-        self._base_sub.unregister()
 
     @staticmethod
     def frameFromMsg(msg):
@@ -220,7 +216,6 @@ class SpatialObjectMarker:
     def update(self, spatial_object, stamp):
         # object marker
         self._object_marker.header.stamp = stamp
-        self._object_marker.color.a = 1.0 if spatial_object.isVisible() else 0.3
         self._object_marker.pose = copy.deepcopy(spatial_object.pose)
         position = self._object_marker.pose.position
         position.x += self._marker_props.shift.x
@@ -236,8 +231,10 @@ class SpatialObjectMarker:
         obj_type = spatial_object.type
         creation = spatial_object.creation_time - now
         update = spatial_object.update_time - now
+        # visibility dependent parameters
         if spatial_object.isVisible():
             visibility = f'VISIBLE, perceive_begin: {spatial_object.perceive_begin_time - now:.1f}'
+            self._object_marker.color.a = 1.0
         else:
             if spatial_object.isPoseReliable():
                 visibility = f'INVISIBL, perceive_end: {spatial_object.perceive_end_time - now:.1f}'
@@ -325,11 +322,6 @@ class SpatialWorldModel(InputModule):
             self.marker = marker
 
     def _init(self, name, config, agent):
-        # add fileds to prevent AttributeError during destruction
-        self._detections_sub = None
-        self._markers_timer = None
-        self._pose_filter = None
-
 
         # check if SWM exists
         if SpatialWorldModel._swm_instance_ref is not None:
@@ -357,7 +349,7 @@ class SpatialWorldModel(InputModule):
         markers_topic = self.getConfigParameter(config, 'markers_topic', allowed_types=str)
 
         # pose filter
-        self._pose_filter = PoseFilter(filter_config)
+        self._pose_filter = PoseFilter(filter_config, self)
 
         # map with memorized objects
         self._memory_lock = Lock()
@@ -370,11 +362,11 @@ class SpatialWorldModel(InputModule):
 
         # add topic subscriber and tf buffer
         self._tf_listener = ProxyTransformListener().listener()
-        self._detections_sub = rospy.Subscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
+        self._detections_sub = self.createSubscriber(detection_topic, DetectionArrayMsg, self.detectionCallback)
         # marker publications timer
         self._markers_pub = rospy.Publisher(markers_topic, MarkerArray, queue_size=5)
         if self._markers_period > 0.0:
-            self._markers_timer = rospy.Timer(rospy.Duration(self._markers_period), lambda event: self._publishMarkers())
+            self._markers_timer = self.createTimer(rospy.Duration(self._markers_period), lambda event: self._publishMarkers())
         else:
             self._markers_timer = None
 
@@ -545,15 +537,9 @@ class SpatialWorldModel(InputModule):
                     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
                         rospy.logwarn_throttle(2.0, 'SWM input module: unable to transform object (%s, %s) from %s to %s: %s', spatial_object.label, spatial_object.type, spatial_object.frame_id, frame_id, e)
 
-    def _deinit(self):
+    def deinit(self):
         # release ROS resources
-        if self._detections_sub:
-            self._detections_sub.unregister()
-        if self._markers_timer:
-            self._markers_timer.shutdown()
-            self._markers_timer = None
-        if self._pose_filter:
-            self._pose_filter.deinit()
+        super(SpatialWorldModel, self).deinit()
         # unregister SWM
         SpatialWorldModel._swm_instance_ref = None
 

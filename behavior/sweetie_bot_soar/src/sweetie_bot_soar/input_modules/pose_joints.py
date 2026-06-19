@@ -11,8 +11,6 @@ from .bins import BinsMap
 
 class PoseJoints(InputModule):
     def _init(self, name, config, agent):
-        # preinit
-        self._joint_state_sub = None
 
         # get configuration from parameters
         joint_state_topic = self.getConfigParameter(config, 'topic', allowed_types=str)
@@ -54,7 +52,7 @@ class PoseJoints(InputModule):
         self._last_pose_change_time = rospy.Time.now()
        
         # subscriber    
-        self._joint_state_sub = rospy.Subscriber(joint_state_topic, JointState, self.newJointStateCallback)
+        self._joint_state_sub = self.createSubscriber(joint_state_topic, JointState, self.newJointStateCallback)
 
     def newJointStateCallback(self, msg):
         # buffer msg
@@ -125,9 +123,5 @@ class PoseJoints(InputModule):
                 self._time_wme_id.Update(time_value)
             return
 
-    def _deinit(self):
-        # remove ROS subscriber
-        if self._joint_state_sub:
-            self._joint_state_sub.unregister()
 
 InputModulesLoader.register("pose_joints", PoseJoints)

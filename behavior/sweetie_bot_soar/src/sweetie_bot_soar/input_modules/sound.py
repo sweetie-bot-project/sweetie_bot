@@ -119,8 +119,6 @@ class SoundSpeech(InputModule):
     DISPLAYING = 2
 
     def _init(self, name, config, agent):
-        # preinit
-        self._sound_event_sub = None
 
         # get configuration from parameters
         sound_event_topic = self.getConfigParameter(config, 'topic', allowed_types = (str,))
@@ -170,7 +168,7 @@ class SoundSpeech(InputModule):
         self._lang_wme = None
 
         # subscriber    
-        self._sound_event_sub = rospy.Subscriber(sound_event_topic, SoundEvent, self.newSoundEventCallback, queue_size = 10)
+        self._sound_event_sub = self.createSubscriber(sound_event_topic, SoundEvent, self.newSoundEventCallback, queue_size = 10)
         self._tf_listener = ProxyTransformListener().listener()
 
 
@@ -384,9 +382,5 @@ class SoundSpeech(InputModule):
                     self.remove_all_wme_by_attr('speech-source')
                     self.remove_all_wme_by_attr('best-speech-source')
 
-    def _deinit(self):
-        # remove sensor wme and ROS subscriber
-        if self._sound_event_sub:
-            self._sound_event_sub.unregister()
 
 InputModulesLoader.register("sound_speech", SoundSpeech)

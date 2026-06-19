@@ -9,9 +9,7 @@ from sweetie_bot_herkulex_msgs.msg import HerkulexState
 
 class HerkulexServos(InputModule):
     def _init(self, name, config, agent):
-        # preinit 
-        self._servo_state_sub = None
-
+        
         # get configuration from parameters
         servo_state_topic = self.getConfigParameter(config, 'topic', allowed_types = str)
         self._overheat_temperature = self.getConfigParameter(config, "overheat_temperature", allowed_types = (float, int))
@@ -39,7 +37,7 @@ class HerkulexServos(InputModule):
         self._groups_status_wmes = { group: SetWMEProxy(self._sensor_id, group) for group in self._groups.keys() }
 
         # subscriber    
-        self._servo_state_sub = rospy.Subscriber(servo_state_topic, HerkulexState, self.newServoStateCallback)
+        self._servo_state_sub = self.createSubscriber(servo_state_topic, HerkulexState, self.newServoStateCallback)
 
     def newServoStateCallback(self, msg):
         # check ignore list
@@ -92,9 +90,5 @@ class HerkulexServos(InputModule):
                     status.add('normal')
                 self._groups_status_wmes[group].assign(status)
 
-    def _deinit(self):
-        # remove ROS subscriber
-        if self._servo_state_sub:
-            self._servo_state_sub.unregister()
 
 InputModulesLoader.register("herkulex_servos", HerkulexServos)

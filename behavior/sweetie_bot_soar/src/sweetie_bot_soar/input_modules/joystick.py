@@ -12,9 +12,7 @@ from .bins import BinsMap
 
 class Joystick(InputModule):
     def _init(self, name, config, agent):
-        #preinit
-        self._joy_sub = None
-
+        
         # configuration
         joy_topic = self.getConfigParameter(config, "topic", allowed_types=str)
         try:
@@ -34,7 +32,7 @@ class Joystick(InputModule):
         self._pressed_wmes = SetWMEProxy(self._sensor_id, 'pressed')
 
         # add joystick subscriber
-        self._joy_sub = rospy.Subscriber(joy_topic, KeyPressed, self.joyCallback)
+        self._joy_sub = self.createSubscriber(joy_topic, KeyPressed, self.joyCallback)
 
     def joyCallback(self, msg):
         with self._lock:
@@ -64,9 +62,5 @@ class Joystick(InputModule):
         if self._last_activity_wme.GetValue() != value:
             self._last_activity_wme.Update(value)
 
-    def _deinit(self):
-        # remove ROS subscriber
-        if self._joy_sub != None:
-            self._joy_sub.unregister()
 
 InputModulesLoader.register("joystick", Joystick)
