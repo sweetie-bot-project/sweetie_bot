@@ -122,6 +122,20 @@ sp {talk-llm*elborate*visible-interlocutor
    (<s> ^visible-interlocutor <obj>)
 }
 
+sp {talk-llm*elborate*interlocutor-candidate
+	(state <s> ^substate talk-llm ^beliefs <b>)
+	(<b> ^object <obj>)
+	(<obj> ^type human -^is-greeted)
+	-{(<b> ^predicate <pred>)
+	  (<pred> ^name expecting-to-leave ^object <obj>)
+	}
+	-{(<b> ^predicate <pred>)
+	  (<pred> ^name ignors-me ^actor <obj>)
+	}
+-->
+   (<s> ^interlocutor-candidate <obj>)
+}
+
 # PAUSE
 	
 sp {talk-llm*elaborate*pause-after-event
@@ -246,14 +260,13 @@ sp {talk-llm*prefer*specific-over-general
 
 # Perform greeting if human robot looking at is not greeted.
 sp {talk-llm*propose*greeting
-	(state <s> ^substate talk-llm -^talking ^pause ^lang <lang> ^beliefs.object <obj>)
-	(<obj> ^type human -^is-greeted ^being-looking-at)
+	(state <s> ^substate talk-llm -^talking ^pause ^lang <lang> ^interlocutor-candidate <obj>)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name rule-asking ^substate verbolize ^process-args <proc>)
 	(<proc> ^object <obj> ^topic greet ^result <res-succeed>)
 	(<proc> ^text |Hello! I am Sweetie Bot! Speak while the button is pressed.| ^animation-tag greeting ^lang <lang> ^emotion neutral ^type statement)
-	(<res-succeed> ^sataus succeed ^add-predicate <pred>)
+	(<res-succeed> ^status succeed ^add-predicate <pred>)
 	(<pred> ^name greeted ^object <obj>)
 	(<res-succeed> ^print (concat |SPECIFIC: GREETING| (crlf)))
 }

@@ -113,7 +113,7 @@ sp {verbolize*propose*text-action-text
 	(<proc> -^text-action-status)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name saying-text-action ^substate text-action ^process-args <a> ^priority 25)
+	(<op> ^name saying-text-action ^substate text-action ^process-args <a> ^priority 45)
     (<a> ^type (concat |voice/say/| <lang>) ^command <text> ^result <r>)
 	(<r> ^status succeed ^parent <proc> ^attribute text-action-status ^link-value succeed ^add-event <ev-new>)
 	(<ev-new> ^name talk-said ^text <text> ^lang <lang> ^memorization-time 3600.0)
@@ -246,7 +246,7 @@ sp {verbolize*propose*looking-at-speaker
 # focus on speaker --- 50
 # ditch aniamtion --- 40
 # perform aniamtion -- 30
-# perform text action --- 25
+# perform text action --- 45
 # looking at speaker --- 20
 # waiting --- worst
 #
