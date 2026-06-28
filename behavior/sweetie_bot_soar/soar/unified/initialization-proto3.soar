@@ -80,14 +80,15 @@ sp {initialization*apply*joint-state
 	(state <s> ^name initialization ^operator <op> ^mem <m>)
 	(<op> ^name initialization ^stage 2)
 -->
-	(<m> ^joint-state <c1> <c2> <c3> <c4> <c5> <c6> <c7>)
+	(<m> ^joint-state <c1> <c2> <c3> <c4> <c5> <c6> <c7> <c8>)
 	(<c1> ^name body_zero ^resource body)
 	(<c2> ^name body_nominal ^resource body)
 	(<c3> ^name body_walk ^resource body)
 	(<c4> ^name body_zero_crouched ^resource body)
 	(<c5> ^name body_crouched ^resource body)
 	(<c6> ^name head_nominal ^resource head)
-	(<c7> ^name nomianal ^resource body head)
+	(<c7> ^name head_zero ^resource head)
+	(<c8> ^name nomianal ^resource body head)
 }
 
 sp {initialization*apply*joint-trajectory
