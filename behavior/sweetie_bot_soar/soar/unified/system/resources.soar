@@ -51,7 +51,7 @@ sp {process*elaborate*blocked-resource-common
 # in this case resource would not be reserved in state of process parent
 sp {process*elaborate*reserved-resource-outside-subtree
 	(state <s> ^substate ^superstate <ss>)
-	(<ss> ^sustate scheduling ^reserved-resource <res> ^operator.parent-substate <ps>)
+	(<ss> ^substate scheduling ^reserved-resource <res> ^operator.parent-substate <ps>)
 	(<ps> -^reserved-resource <res>)
 -->
 	(<s> ^blocked-resource <res>)
@@ -60,7 +60,7 @@ sp {process*elaborate*reserved-resource-outside-subtree
 # propagate reserved resources is inside reserved resource subtree
 sp {process*elaborate*reserved-resource-is-subtree
 	(state <s> ^substate ^superstate <ss>)
-	(<ss> ^sustate scheduling ^reserved-resource <res> ^operator.parent-substate <ps>)
+	(<ss> ^substate scheduling ^reserved-resource <res> ^operator.parent-substate <ps>)
 	(<ps> ^reserved-resource <res>)
 -->
 	(<s> ^reserved-resource <res>)

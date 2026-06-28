@@ -262,15 +262,15 @@ sp {verbolize*prefer*priority
 
 sp {verbolize*prefer*continue-indifference
 	(state <s> ^substate {<<|verbolize| |scheduling|>>} ^operator <op> +)
-	(<op> ^type continue-subprocess ^parent.substate verbolize)
+	(<op> ^type continue-subprocess ^parent-substate.substate verbolize)
 -->
 	(<s> ^operator <op> =)
 }
 
 sp {verbolize*prefer*continue-look-at-worse
 	(state <s> ^substate {<<|verbolize| |scheduling|>>}  ^operator <op1> + ^operator {<> <op1> <op2>} +)
-	(<op1> ^type continue-subprocess ^subprocess.substate look-at ^parent.substate verbolize)
-	(<op2> ^type continue-subprocess ^subprocess.substate {<> look-at} ^parent.substate verbolize)
+	(<op1> ^type continue-subprocess ^subprocess.substate look-at ^parent-substate.substate verbolize)
+	(<op2> ^type continue-subprocess ^subprocess.substate {<> look-at} ^parent-substate.substate verbolize)
 -->
 	(<s> ^operator <op1> < <op2>)
 }

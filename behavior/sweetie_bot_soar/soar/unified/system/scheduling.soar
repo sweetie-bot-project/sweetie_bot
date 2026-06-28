@@ -68,7 +68,7 @@ sp {scheduling*propose*direct-subprocess
 -->
 	(<s> ^operator <op> +)
 	(<op> ^name <name> ^type scheduling decision-exit continue-subprocess ^process-link <proc>)
-	(<op> ^subprocess <proc> ^parent <s> ^level <level>)
+	(<op> ^subprocess <proc> ^parent-substate <s> ^level <level>)
 }
 
 # create scheduling state if no direct subprocesses to execute
@@ -87,7 +87,7 @@ sp {scheduling*propose*subprocess
 -->
 	(<s> ^operator <op> +)
 	(<op> ^name <name> ^type scheduling continue-subprocess ^process-link <proc>)
-	(<op> ^subprocess <proc> ^level <level> ^parent <ps>)
+	(<op> ^subprocess <proc> ^level <level> ^parent-substate <ps>)
 }
 
 # prefer subprocess with higher level
