@@ -138,7 +138,7 @@ class SoundSpeech(InputModule):
         try:
             self._intensity_bins_map = BinsMap( config['intensity_bins_map'] )
         except KeyError:
-            raise RuntimeError('sound_speech input module: "intensity_bins_map" parameter must present.')
+            raise ValueError('sound_speech input module: "intensity_bins_map" parameter must present.')
         self._object_evaluation_alpha = self.getConfigParameter(config, 'object_evaluation_alpha', default_value = 0.85, 
             allowed_types = (float,), check_func = lambda v: v >= 0.0 and v <= 1.0 )
         # NLP analisys

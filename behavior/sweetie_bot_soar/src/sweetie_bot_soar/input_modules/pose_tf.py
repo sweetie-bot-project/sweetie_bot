@@ -25,7 +25,7 @@ class PoseTF(InputModule):
             self._heading_bins_map = BinsMap( config['heading_bins_map'] )
             self._time_bins_map = BinsMap( config['time_bins_map'] )
         except KeyError as e:
-            raise RuntimeError('PoseTF input module: "inclination_bins_map" and "heading_bins_map" parameters must present.') from e
+            raise ValueError('PoseTF input module: "inclination_bins_map" and "heading_bins_map" parameters must present.') from e
 
         # transform listener
         self._listener = tf.TransformListener();

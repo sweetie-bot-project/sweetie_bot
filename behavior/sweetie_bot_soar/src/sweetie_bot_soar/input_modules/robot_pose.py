@@ -52,7 +52,7 @@ def load_joint_state_param(pose_param):
     # get parameter
     pose_raw = rospy.get_param(pose_param)
     if not isinstance(pose_raw, Binary):
-        raise RuntimeError("Robot pose: ROS parameter '%s' is not binary data." % pose_param)
+        raise ValueError("Robot pose: ROS parameter '%s' is not binary data." % pose_param)
     # deserialize
     msg = JointState()
     try:
@@ -60,5 +60,5 @@ def load_joint_state_param(pose_param):
         if len(msg.name) != len(msg.position):
             raise TypeError
     except:
-        raise RuntimeError("Robot_pose: ROS parameter '%s' contains ivalid JointState message." % pose_param)
+        raise ValueError("Robot_pose: ROS parameter '%s' contains ivalid JointState message." % pose_param)
     return msg

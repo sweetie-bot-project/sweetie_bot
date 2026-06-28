@@ -17,8 +17,8 @@ class Joystick(InputModule):
         joy_topic = self.getConfigParameter(config, "topic", allowed_types=str)
         try:
             self._last_activity_bins_map = BinsMap( config['last_activity_bins_map'] )
-        except KeyError:
-            raise RuntimeError('Joystick input module: "last_activity_bins_map" parameters must present.')
+        except KeyError as e:
+            raise ValueError('Joystick input module: "last_activity_bins_map" parameters must present.') from e
 
         # buffers
         self._lock = Lock()

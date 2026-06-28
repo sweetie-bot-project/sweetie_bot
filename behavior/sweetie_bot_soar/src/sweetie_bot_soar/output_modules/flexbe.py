@@ -15,7 +15,7 @@ class FlexBe(OutputModule):
         # module initialization
         action_ns = config.get("action_ns")
         if not action_ns:
-            raise RuntimeError("FlexBe output module: 'action_ns' parameter is not defined.")
+            raise KeyError("FlexBe output module: 'action_ns' parameter is not defined.")
         # create actionlib client
         self._action_client = actionlib.SimpleActionClient(action_ns, BehaviorExecutionAction)
         self._interruptable = False

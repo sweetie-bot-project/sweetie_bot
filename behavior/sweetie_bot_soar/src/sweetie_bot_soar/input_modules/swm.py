@@ -343,7 +343,7 @@ class SpatialWorldModel(InputModule):
             self._yaw_bins_map = BinsMap( config['yaw_bins_map'] )
             self._time_bins_map = BinsMap( config['time_bins_map'] )
         except KeyError:
-            raise RuntimeError('SWM input module: "distance_bins_map" , "yaw_bins_map", "time_bins_map" parameters must present.')
+            raise ValueError('SWM input module: "distance_bins_map" , "yaw_bins_map", "time_bins_map" parameters must present.') from e
         filter_config = self.getConfigParameter(config, 'pose_filter', allowed_types=dict, error_desc=f'input module {self._name}: "pose_filter" configuration parameter must present and be a dict with filter declaration.')
         self._markers_period = self.getConfigParameter(config, 'markers_publication_period', 0.0, allowed_types=(int,float), check_func=lambda v: v >= 0.0)
         markers_topic = self.getConfigParameter(config, 'markers_topic', allowed_types=str)
