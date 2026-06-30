@@ -1,0 +1,23 @@
+# Sweetie Bot LLM agent request. Replaces the raw CompleteRaw round-trip for the conversational
+# path. An ACTION (not a service) so generation can be cancelled (barge-in groundwork) and later
+# stream partial text via feedback. History/labels are passed as JSON to keep the message stable
+# and avoid coupling to per-turn message types.
+string request_type        # 'reply' (now) | 'classify' | 'assess_scene' (reserved)
+string profile             # 'complex-en' | 'simple-en' | 'failsafe-en'
+string text                # current human input
+string history_json        # JSON array of {speaker, text, emotion?}
+string context_json        # JSON array of strings: SOAR predicates / remembered facts
+string text_language       # language the text/history are in (STT may have translated)
+string reply_language      # desired reply language (TTS localizes; agent canonical = en)
+string persona             # active persona name; empty -> registry default
+string labels_json         # JSON array of labels, for request_type=classify
+string image_b64           # optional image, for request_type=assess_scene (future VLM)
+---
+string response_text
+string emotion             # one of: love joy surprise neutral sadness fear anger
+string sentence_type       # question | statement
+string tool_calls_json     # JSON array of {name, arguments} proposed tool calls
+uint8 error_code           # 0=SUCCESS 1=UNKNOWN_PROFILE 2=SERVER_UNREACHABLE 3=PARSE 4=INTERNAL
+string error_desc
+---
+string partial_text        # reserved for future streaming feedback

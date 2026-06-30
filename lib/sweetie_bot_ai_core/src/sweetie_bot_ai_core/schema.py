@@ -1,0 +1,227 @@
+"""Pydantic-v2 data model for the Sweetie Bot LLM agent.
+
+This module is the single source of truth for the agent's wire/validation/structured-output
+schema. It is **ROS-free** so the same agent can run headless (sim, TUI, messenger).
+
+The emotion vocabulary is fixed by the downstream SOAR/animation system: SOAR reuses the
+returned ``emotion`` as an ``animation-tag``, so the enum must stay exactly these seven values.
+"""
+from __future__ import annotations
+
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
+
+
+# --- fixed vocabularies (must match the SOAR/animation contract) -----------------------------
+
+class Emotion(str, Enum):
+    love = "love"
+    joy = "joy"
+    surprise = "surprise"
+    neutral = "neutral"
+    sadness = "sadness"
+    fear = "fear"
+    anger = "anger"
+
+
+class SentenceType(str, Enum):
+    question = "question"
+    statement = "statement"
+
+
+class RequestType(str, Enum):
+    reply = "reply"            # conversational reply (implemented now)
+    classify = "classify"      # reserved: classify text into provided labels
+    assess_scene = "assess_scene"  # reserved: describe/assess an image (future VLM)
+
+
+# --- conversation + state --------------------------------------------------------------------
+
+class TalkTurn(BaseModel):
+    """One dialogue turn. ``speaker`` is 'human' or 'sweetie'."""
+    speaker: str
+    text: str
+    emotion: Optional[Emotion] = None
+
+
+class RobotState(BaseModel):
+    """Live robot state used to build the dynamic system-prompt block and answer state tools.
+
+    All fields optional so a stub provider (sim/TUI) can omit what it does not know.
+    """
+    datetime_iso: Optional[str] = None     # current local date/time, ISO-8601
+    weekday: Optional[str] = None
+    battery_percent: Optional[float] = None
+    battery_status: Optional[str] = None   # charging|discharging|full|unknown
+    servo_faults: List[str] = Field(default_factory=list)   # names of failed/overheated servos
+    overheated_servos: List[str] = Field(default_factory=list)
+    pose: Optional[str] = None             # named body pose, e.g. body_nominal
+    moving: Optional[bool] = None
+    mood: Optional[str] = None             # current robot mood if known
+    extra: Dict[str, Any] = Field(default_factory=dict)
+
+    def human_summary(self) -> str:
+        """Compact one-block rendering for the system prompt."""
+        parts: List[str] = []
+        if self.datetime_iso:
+            wd = f" ({self.weekday})" if self.weekday else ""
+            parts.append(f"Current time: {self.datetime_iso}{wd}.")
+        if self.battery_percent is not None:
+            st = f", {self.battery_status}" if self.battery_status else ""
+            parts.append(f"Battery: {self.battery_percent:.0f}%{st}.")
+        if self.pose:
+            mv = " (moving)" if self.moving else ""
+            parts.append(f"Body pose: {self.pose}{mv}.")
+        if self.servo_faults:
+            parts.append(f"Servo faults: {', '.join(self.servo_faults)}.")
+        if self.overheated_servos:
+            parts.append(f"Overheated servos: {', '.join(self.overheated_servos)}.")
+        if self.mood:
+            parts.append(f"Mood: {self.mood}.")
+        return " ".join(parts)
+
+
+# --- tool calling ----------------------------------------------------------------------------
+
+class ToolCall(BaseModel):
+    name: str
+    arguments: Dict[str, Any] = Field(default_factory=dict)
+    id: Optional[str] = None
+
+
+class ToolResult(BaseModel):
+    name: str
+    content: str
+    ok: bool = True
+    id: Optional[str] = None
+
+
+# --- request / reply -------------------------------------------------------------------------
+
+class AgentRequest(BaseModel):
+    """Everything the agent needs to produce one reply. Plain data — no ROS types.
+
+    ``text_language`` is the language the ``text``/``history`` are actually in (STT may already
+    have translated to English). ``reply_language`` is the language SOAR/TTS wants back. The
+    agent's *canonical* output language is English; TTS does final localization (see translation).
+    """
+    request_type: RequestType = RequestType.reply
+    profile: str = "complex-en"            # maps to an agent profile (complex/simple/failsafe)
+    text: str = ""                         # current human input
+    history: List[TalkTurn] = Field(default_factory=list)
+    context_facts: List[str] = Field(default_factory=list)  # SOAR predicates / remembered facts
+    text_language: str = "en"
+    reply_language: str = "en"
+    persona: Optional[str] = None          # active persona name; None -> registry default
+    labels: List[str] = Field(default_factory=list)   # for request_type=classify
+    image_b64: Optional[str] = None        # for request_type=assess_scene (future VLM)
+
+
+class ReplyContent(BaseModel):
+    """The structured-output target for a conversational reply (constrained-decoded as JSON).
+
+    Field order matters: ``response_text`` is first so future streaming can forward spoken text
+    while the trailing metadata resolves at completion.
+    """
+    response_text: str
+    emotion: Emotion = Emotion.neutral
+    sentence_type: SentenceType = SentenceType.statement
+
+
+class ErrorCode(int, Enum):
+    SUCCESS = 0
+    UNKNOWN_PROFILE = 1
+    SERVER_UNREACHABLE = 2
+    PARSE_ERROR = 3
+    INTERNAL = 4
+
+
+class AgentReply(BaseModel):
+    response_text: str = ""
+    emotion: Emotion = Emotion.neutral
+    sentence_type: SentenceType = SentenceType.statement
+    tool_calls: List[ToolCall] = Field(default_factory=list)
+    language: str = "en"                   # language of response_text as returned
+    error_code: ErrorCode = ErrorCode.SUCCESS
+    error_desc: str = ""
+    raw: Optional[str] = None              # raw model content, for observability
+
+
+# --- structured-output JSON schema helpers ---------------------------------------------------
+
+def _deref(schema: Dict[str, Any]) -> Dict[str, Any]:
+    """Inline all ``$ref`` against ``$defs`` and drop ``$defs``.
+
+    Grammar backends (llama.cpp/ollama json-schema-to-grammar) are happiest with a fully
+    inlined, self-contained schema. Pydantic v2 emits enums as ``$ref`` into ``$defs``; we
+    resolve those (and flatten single-entry ``allOf`` wrappers Pydantic adds for defaults).
+    """
+    import copy
+    defs = schema.get("$defs", {})
+
+    def resolve(node: Any) -> Any:
+        if isinstance(node, dict):
+            if "$ref" in node:
+                name = node["$ref"].split("/")[-1]
+                target = resolve(copy.deepcopy(defs.get(name, {})))
+                # merge sibling keys (e.g. default/description) onto the resolved target
+                for k, v in node.items():
+                    if k != "$ref":
+                        target[k] = v
+                return target
+            if "allOf" in node and len(node["allOf"]) == 1 and "type" not in node:
+                merged = resolve(copy.deepcopy(node["allOf"][0]))
+                for k, v in node.items():
+                    if k != "allOf":
+                        merged[k] = v
+                return merged
+            return {k: resolve(v) for k, v in node.items() if k != "$defs"}
+        if isinstance(node, list):
+            return [resolve(v) for v in node]
+        return node
+
+    out = resolve(schema)
+    out.pop("$defs", None)
+    return out
+
+
+def _strict(schema: Dict[str, Any]) -> Dict[str, Any]:
+    """Recursively force additionalProperties=false and required=all-keys on object schemas.
+
+    Makes the schema strict enough for grammar-constrained decoding (llama.cpp / ollama).
+    """
+    if schema.get("type") == "object" and "properties" in schema:
+        schema["additionalProperties"] = False
+        schema["required"] = list(schema["properties"].keys())
+        for sub in schema["properties"].values():
+            _strict(sub)
+    for key in ("items", "$defs", "definitions"):
+        node = schema.get(key)
+        if isinstance(node, dict):
+            if key in ("$defs", "definitions"):
+                for v in node.values():
+                    _strict(v)
+            else:
+                _strict(node)
+    for comb in ("anyOf", "oneOf", "allOf"):
+        if comb in schema:
+            for v in schema[comb]:
+                _strict(v)
+    return schema
+
+
+def reply_json_schema() -> Dict[str, Any]:
+    """JSON schema for ReplyContent, inlined + strict, ready for response_format=json_schema."""
+    return _strict(_deref(ReplyContent.model_json_schema()))
+
+
+def classify_json_schema(labels: List[str]) -> Dict[str, Any]:
+    """Strict schema for a classification reply: a single label from the allowed set."""
+    return {
+        "type": "object",
+        "properties": {"label": {"type": "string", "enum": list(labels)}},
+        "required": ["label"],
+        "additionalProperties": False,
+    }

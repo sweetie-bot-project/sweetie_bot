@@ -1,0 +1,13 @@
+# Per-language routing policy (sweetie_bot_ai_core.LanguagePolicy).
+# Languages the chosen model handles natively are fed straight to the model; everything else is
+# translated to the pivot first. The agent's canonical output language is the pivot (en); TTS
+# does the final user-facing localization (prevents double-translation with STT/TTS).
+language_policy:
+  pivot: en
+  native_languages:    # Qwen2.5 handles these well enough to consume directly
+    - en
+    - ru
+    - zh
+    - ja
+  # translate provider (LibreTranslate); reuse the existing translate service endpoint
+  translate_url: 'http://localhost:5002/translate'

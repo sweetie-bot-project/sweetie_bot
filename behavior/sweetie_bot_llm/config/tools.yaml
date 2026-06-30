@@ -1,0 +1,13 @@
+# Tool dispatch policy (sweetie_bot_ai_core.ToolRegistry.from_config).
+# dispatch_mode: execute | propose | disabled
+#
+# IMPORTANT (arbitration): SOAR is the sole arbiter of shared actuators (eyes/animations/gaze)
+# and already drives expression from the returned `emotion`. The LLM must NOT race it, so
+# actuator tools stay 'disabled'/'propose'. Only side-effect-free info tools are 'execute'.
+tools:
+  get_robot_state:
+    dispatch_mode: execute      # read-only: time, battery, pose, servo faults
+  look_at:
+    dispatch_mode: disabled     # actuator -> SOAR-arbitrated (enable as 'propose' only once
+  play_animation:               #            SOAR rules opt in to consuming tool proposals)
+    dispatch_mode: disabled

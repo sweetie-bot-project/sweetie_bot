@@ -1,0 +1,69 @@
+"""Per-language translation routing.
+
+Policy: some languages are fed to the model natively; others are translated to a pivot (English)
+on the way in. The agent's *canonical* output language is English; user-facing localization is
+done by TTS (not here), which prevents double-translation with STT/TTS that already translate.
+
+Execution is behind a ``TranslationProvider`` interface (default: a LibreTranslate HTTP client),
+so translation is itself a swappable provider (a second 'AI provider container').
+"""
+from __future__ import annotations
+
+from typing import List, Optional, Protocol
+
+import requests
+
+
+class TranslationProvider(Protocol):
+    def translate(self, text: str, source: str, target: str) -> str: ...
+
+
+class NullTranslationProvider:
+    """No-op provider (used when translation is disabled or for tests)."""
+    def translate(self, text: str, source: str, target: str) -> str:
+        return text
+
+
+class LibreTranslateProvider:
+    def __init__(self, url: str, timeout: float = 15.0, api_key: Optional[str] = None):
+        self.url = url.rstrip("/")
+        self.timeout = timeout
+        self.api_key = api_key
+
+    def translate(self, text: str, source: str, target: str) -> str:
+        if not text or source == target:
+            return text
+        payload = {"q": text, "source": source, "target": target, "format": "text"}
+        if self.api_key:
+            payload["api_key"] = self.api_key
+        r = requests.post(self.url, json=payload, timeout=self.timeout)
+        r.raise_for_status()
+        return r.json().get("translatedText", text)
+
+
+class LanguagePolicy:
+    """Decide whether input needs translating to the pivot before the model.
+
+    ``native_languages`` are languages the chosen model handles well enough to consume directly.
+    Everything else is translated to ``pivot``.
+    """
+
+    def __init__(self, native_languages: Optional[List[str]] = None, pivot: str = "en",
+                 provider: Optional[TranslationProvider] = None):
+        self.native = {l.lower() for l in (native_languages or ["en", "ru"])}
+        self.pivot = pivot.lower()
+        self.provider = provider or NullTranslationProvider()
+
+    def needs_input_translation(self, text_language: str) -> bool:
+        lang = (text_language or self.pivot).lower()
+        return lang not in self.native and lang != self.pivot
+
+    def to_model_language(self, text: str, text_language: str) -> str:
+        """Translate input to the pivot if the model can't consume it natively."""
+        if not text or not self.needs_input_translation(text_language):
+            return text
+        try:
+            return self.provider.translate(text, source=text_language, target=self.pivot)
+        except Exception:
+            # degrade gracefully: feed the original text rather than failing the turn
+            return text

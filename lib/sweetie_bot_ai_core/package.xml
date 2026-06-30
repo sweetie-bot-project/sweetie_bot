@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sweetie_bot_ai_core</name>
+  <version>0.0.0</version>
+  <description>ROS-free core for the Sweetie Bot LLM agent: schema, OpenAI client, provider
+    registry, persona, prompt, tools, translation routing, history and the agent orchestrator.
+    Reusable headless; the ROS node lives in sweetie_bot_llm.</description>
+  <maintainer email="mutr@todo.todo">mutr</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <!-- Pure-python module: no ROS message deps. Python deps (pydantic>=2, requests, pyyaml)
+       are installed into the runtime environment, not via rosdep here. -->
+  <exec_depend>python3-requests</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+
+  <export>
+  </export>
+</package>

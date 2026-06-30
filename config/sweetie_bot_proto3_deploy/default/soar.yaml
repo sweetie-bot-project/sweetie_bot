@@ -158,6 +158,7 @@ soar:
             period: 0.1
         lang-model:
             type: 'lang-model'
+            backend: agent
             service_ns: "llm_request"
             requests:
                 'complex-en':

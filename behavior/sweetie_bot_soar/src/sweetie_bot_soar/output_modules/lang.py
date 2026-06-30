@@ -1,553 +1,171 @@
-import traceback
+"""SOAR 'lang-model' output module.
+
+Thin adapter between SOAR and the LLM agent. The heavy LLM logic that used to live here (prompt
+building, regex/keyword/BERT parsing, multi-call attribute extraction) now lives in the
+``sweetie_bot_ai_core`` agent behind the GenerateReply action; this module only translates the
+SOAR command into a goal and writes the contract WMEs (status/result/emotion/sentence-type) back.
+
+The SOAR production rules are UNCHANGED: they emit ``(^request <name> ^event ... ^predicate ...
+^text ...)`` and wait for ``^status succeed ^result ^emotion ^sentence-type`` — exactly what this
+module produces, for request names simple-en/failsafe-en/complex-en.
+
+Two backends, selected by the ``backend`` config flag (parallel-run / rollback):
+  * 'agent'  -> AgentLangModel: non-blocking GenerateReply action client (new structured path).
+  * 'legacy' -> LegacyLangModel: the original CompleteRaw + regex/BERT path (preserved verbatim
+                in lang_legacy.py). Default, so an unconfigured deploy keeps today's behaviour.
+"""
+import json
 
 import rospy
 import actionlib
-from  actionlib import GoalStatus
+from actionlib_msgs.msg import GoalStatus
 
-from random import choice
-import re
-from string import Formatter
-
-from ..nlp import SpacyInstance
 from .output_module import OutputModule, OutputModulesLoader
+from .lang_legacy import LegacyLangModel, TalkEvent, Predicate, WMEParseError
 
-from sweetie_bot_text_msgs.srv import CompleteRaw, CompleteRawRequest, CompleteRawResponse
-from sweetie_bot_text_msgs.srv import Classification, ClassificationRequest, ClassificationResponse
-
-#
-# WME helpers
-#
-
-class WMEParseError(RuntimeError):
-    def __init__(self, *args, **kwargs):
-        super(WMEParseError, self).__init__(*args, **kwargs)
+from sweetie_bot_text_msgs.msg import GenerateReplyAction, GenerateReplyGoal
 
 
-def GetChildValueAsType(parent_id, attrib, expected_type):
-    # get child WME
-    wme_id = parent_id.FindByAttribute(attrib, 0)
-    if wme_id is None:
-        raise WMEParseError('missing %s attribute' % attrib)
-    # convert type
-    if expected_type is str:
-        wme_id = wme_id.ConvertToStringElement()
-    elif expected_type is float:
-        wme_id = wme_id.ConvertToFloatElement()
-    elif expected_type is int:
-        wme_id = wme_id.ConvertToIntElement()
-    else:
-        raise TypeError('GetChildValueAsType: incompatible type %s' % expected_type)
-    if wme_id is None:
-        raise WMEParseError('incorrect %s attribute: expected is type %s' % (attrib, expected_type))
-    # get value
-    return wme_id.GetValue()
-
-
-#
-# Ouput link items parsing
-#
-
-class TalkEvent():
-    formatter = Formatter()
-
-    def __init__(self, item_id):
-        # get event type
-        idx = 0
-        event_type = None
-        while True:
-            # get name attr
-            name_id = item_id.FindByAttribute('name', idx)
-            if name_id is None:
-                raise WMEParseError('unknown event type (missing or unknown ^name attribute)')
-            # check it
-            name_str = name_id.GetValueAsString()
-            if name_str in ['talk-heard', 'talk-said', 'talk-ignored', 'talk-no-answer', 'talk-illegible']:
-                event_type = name_str
-                break
-            # next attr
-            idx += 1
-        self.type = event_type
-        # get timestamp
-        self.stamp = GetChildValueAsType(item_id, 'initiated-at', float)
-        # get text
-        if event_type == 'talk-heard':
-            self.text = GetChildValueAsType(item_id, 'text', str)
-        elif event_type == 'talk-said':
-            self.text = GetChildValueAsType(item_id, 'text', str)
-            emotion_id = item_id.FindByAttribute('emotion', 0)
-            if emotion_id is not None:
-                self.emotion = emotion_id.GetValueAsString()
-            else:
-                self.emotion = 'neutral'
-                rospy.logwarn('lang output module: emotion WME is not provided.')
-        else:
-            self.text = None
-
-    def verbolize(self, templates):
-        # get template
-        template = templates.get(self.type)
-        if template is None:
-            raise KeyError('Unknown talk event type: %s (%s)' % (self.type, self.text))
-        # get random template
-        if isinstance(template, list):
-            template = choice(template)
-        # use template to generate verbolization
-        result = ''
-        fmts = TalkEvent.formatter.parse(template)
-        for fmt in fmts:
-            literal_text, field_name, _, _ = fmt
-            result += literal_text
-            if field_name is None:
-                break
-            if field_name == 'text':
-                result += self.text
-            elif field_name == 'emotion':
-                result += self.emotion
-        return result
-
-class Predicate():
-    def __init__(self, item_id):
-        # get timestamp
-        self.stamp = GetChildValueAsType(item_id, 'initiated-at', float)
-        # get text
-        self.text = GetChildValueAsType(item_id, 'text', str)
-
-    def verbolize(self, templates):
-        return self.text
-
-#
-# Requests to lang model
-#
-
-def assert_param(value, error_desc, allowed_types = None, check_func = None):
-    # check if parameter type correct
-    if allowed_types is not None and not isinstance(value, allowed_types):
-        raise TypeError(error_desc)
-    # check if parameter value correct
-    if check_func is not None and not check_func(value):
-        raise ValueError(error_desc)
-
-class AttribRequest:
-    subclass_map = {}
-
-    def __new__(cls, type, **kwargs):
-        # factory implementatipacy
-        cls = AttribRequest.subclass_map[type]
-        return super(AttribRequest, cls).__new__(cls)
-
-    def __init__(self, type, prompt = None, stop_list = []):
-        if prompt is not None:
-            assert_param(prompt, 'prompt: must be str or None', allowed_types=(str,))
-        self.prompt = prompt
-        assert_param(stop_list, 'stop_list: must be list of strings', allowed_types=list, check_func=lambda v: all( isinstance(e, str) for e in v ))
-        self.stop_list = stop_list
-
-class AttribRequestRegex(AttribRequest):
-
-    def __init__(self, regex, **kwargs):
-        super(AttribRequestRegex, self).__init__(**kwargs)
-        # compile and check regexp
-        self._regex = re.compile(regex)
-        if self._regex.groups != len(self._regex.groupindex) or self._regex.groups == 0:
-            raise ValueError('regexp (%s): must be at least one match group, all groups must be named.' % regex)
-
-    def __repr__(self):
-        return f'AttribRequestRegex({self._regex})'
-
-    def parse(self, text, **kwargs):
-        m = self._regex.match(text)
-        # check if match is succesfull
-        if m is None:
-            return None
-        # parse groups and return (attr, value) pairs
-        # TODO: why group can be None?
-        result = {}
-        for attr in self._regex.groupindex:
-            val = m.group(attr)
-            #print('attr: ', attr, ' vaule: ', val)
-            if m.group(attr) is not None:
-                result[attr] = val
-            else:
-                return None
-        return result
-        #return { attr: m.group(attr) for attr in self._regex.groupindex }
-
-AttribRequest.subclass_map.update({'regex': AttribRequestRegex})
-
-class AttribRequestRegexTest(AttribRequest):
-
-    def __init__(self, regex, attrib, value_match = None, value_nomatch = None, **kwargs):
-        super(AttribRequestRegexTest, self).__init__(**kwargs)
-        # compile and check regexp
-        self._regex = re.compile(regex)
-        # check other attribs
-        assert_param(attrib, 'attrib: must be string', allowed_types=str)
-        self._attrib = attrib
-        if value_match is not None:
-            assert_param(value_match, 'value_match: must be string or none', allowed_types=(str,))
-        self._value_match = value_match
-        if value_nomatch is not None:
-            assert_param(value_match, 'value_nomatch: must be string or none', allowed_types=(str,))
-        self._value_nomatch = value_nomatch
-        if value_nomatch is None and value_nomatch is None:
-            raise TypeError('value_match or value_nomatch cannot be both None')
-
-    def __repr__(self):
-        return f'AttribRequestRegexTest({self._regex}, attrib={self._attrib}, value_match={self._value_match}, value_nomatch={self._value_nomatch})'
-
-    def parse(self, text, **kwargs):
-        m = self._regex.match(text)
-        # check if match is succesfull
-        if m is None:
-            return { self._attrib: self._value_nomatch }
-        else:
-            return { self._attrib: self._value_match }
-
-AttribRequest.subclass_map.update({'regex-test': AttribRequestRegexTest})
-
-class AttribRequestMap(AttribRequest):
-
-    def __init__(self, map, attrib, leading_text = '', fallback_value = None, nlp_model='en_core_web_sm', **kwargs):
-        super(AttribRequestMap, self).__init__(**kwargs)
-        # load spacy
-        self._nlp = SpacyInstance(nlp_model)
-        # process map: construct key to words map
-        try:
-            self._map = {}
-            for key, words in map.items():
-                for word in words:
-                    self._map[word.lower()] = key
-        except (TypeError, AttributeError):
-            raise TypeError('map: must be dict which maps strings to list of strings')
-        # save attrib name
-        assert_param(attrib, 'attrib: must be string', allowed_types=str)
-        self._attrib = attrib
-        assert_param(leading_text, 'leading_text: must be string', allowed_types=str)
-        self._leading_text = leading_text
-        if fallback_value is not None:
-            assert_param(fallback_value, 'fallback_value: must be string', allowed_types=str)
-        self._fallback_value = fallback_value
-
-    def __repr__(self):
-        return f'AttribRequestMap({self._map}, fallback_value={self._fallback_value}, attrib={self._attrib})'
-
-    def parse(self, text, **kwargs):
-        tokens = self._nlp(self._leading_text + ' ' + text)
-        # process parsed tokens and find key
-        for idx in range(len(tokens)):
-            token = tokens[idx]
-            key = self._map.get(token.lemma_)
-            if key is not None:
-                # check negation
-                # TODO: proper token tree processing
-                if idx > 0 and tokens[idx].lemma_ == 'not':
-                    continue
-                # succesfull parsing
-                return { self._attrib: key }
-        # failure
-        if self._fallback_value is None:
-            return None
-        else:
-            return { self._attrib: self._fallback_value }
-
-AttribRequest.subclass_map.update({'map': AttribRequestMap})
-
-class AttribRequestClassification(AttribRequest):
-
-    def __init__(self, merge_map, attrib, override_attrib = None, leading_text = '', fallback_value = None, classification_model='bert_sentiment', **kwargs):
-        super(AttribRequestClassification, self).__init__(**kwargs)
-        # connect classification service
-        # TODO: Add model selection
-        self._classificaion_client = rospy.ServiceProxy("/classification", Classification)
-        # process map: construct key to words map
-        try:
-            self._merge_map = merge_map
-        except (TypeError, AttributeError):
-            raise TypeError('merge_map: must be dict which maps strings to list of strings')
-        # save attrib name
-        assert_param(attrib, 'attrib: must be string', allowed_types=str)
-        self._attrib = attrib
-        assert_param(override_attrib, 'override_attrib: must be string or none', allowed_types=(str, None))
-        self._override_attrib = override_attrib
-        assert_param(leading_text, 'leading_text: must be string', allowed_types=str)
-        self._leading_text = leading_text
-        if fallback_value is not None:
-            assert_param(fallback_value, 'fallback_value: must be string', allowed_types=str)
-        self._fallback_value = fallback_value
-        self._classification_noise_threshold = 0.1
-
-    def __repr__(self):
-        return f'AttribRequestClassification({self._merge_map}, attrib={self._attrib})'
-
-    def merge_emotions(self, llm_emotion, classificator_emotion):
-        consistent_emotions = self._merge_map[llm_emotion]
-        if classificator_emotion in consistent_emotions:
-            selected_emotion = classificator_emotion
-        else:
-            selected_emotion = llm_emotion
-
-        return selected_emotion
-
-    def parse(self, text, **kwargs):
-        llm_emotion = kwargs.get('llm_emotion', self._fallback_value)
-        last_heard_phrase = kwargs.get('last_heard_phrase', None)
-        llm_response = kwargs.get('llm_response', None)
-
-        # classify phrase with additional sentiment analyzer
-        most_probable_emotion = self._fallback_value
-        if last_heard_phrase is not None and llm_response is not None:
-            phrase_with_response = f'{last_heard_phrase} \nMy response: {llm_response}'
-            req = ClassificationRequest(text = phrase_with_response)
-            emotion_resp = self._classificaion_client(req)
-            rospy.loginfo(f'Clasificator response: {type(emotion_resp)}' + repr(emotion_resp))
-            if emotion_resp.probabilities[0] > self._classification_noise_threshold:
-                most_probable_emotion = emotion_resp.classes[0].lower()
-
-            merged_emotion = self.merge_emotions(llm_emotion, most_probable_emotion)
-            #print('emotion classification: ', dict(zip(emotion_resp.classes, emotion_resp.probabilities)))
-            merged_emotion = llm_emotion
-
-            if self._override_attrib is not None:
-                return { self._override_attrib: merged_emotion, self._attrib: most_probable_emotion }
-            else:
-                return { self._attrib: merged_emotion }
-
-        # failure
-        if self._fallback_value is None:
-            rospy.logwarn('lang output module: AttribRequestClassification: request to classifaction model has failed: %s" ' % llm_response)
-            return None
-        else:
-            return { self._attrib: self._fallback_value }
-
-AttribRequest.subclass_map.update({'classification': AttribRequestClassification})
-
-#
-# Request to Lang model
-#
-
-class LangRequest:
-
-    def __init__(self, prompt_header_name, prompt_fact_templates, attrib_requests, max_events, max_predicates, llm_profile_name, start_event_history_with_heard = False):
-        # get parameters: header
-        assert_param(prompt_header_name, 'prompt_header_name: must be string', allowed_types=str)
-        self._header_name = prompt_header_name
-
-        prompt_parameter = f'/lang_model/prompts/{self._header_name}'
-        try:
-            self._header = rospy.get_param(prompt_parameter)
-        except KeyError:
-            raise KeyError(f'prompt_header_name: requested prompt {self._header_name} is missing from parameter server. Load it into {self._header_name}.txt file from the prompt directory.')
-
-        # get parameters: profile
-        assert_param(llm_profile_name, 'profile name: must be string', allowed_types=str)
-        self._llm_profile_name = llm_profile_name
-        # get parameters: fact templates
-        assert_param(prompt_fact_templates, 'prompt_fact_templates: must be dictionary', allowed_types=dict)
-        for k, v in prompt_fact_templates.items():
-            if not isinstance(k, str) or not (isinstance(v, str) or (isinstance(v, list) and all(isinstance(e, str) for e in v))):
-                raise ValueError('prompt_fact_templates: keys must be strings, their values must be strings or lists of strings.')
-        self._fact_templates = prompt_fact_templates
-        # get number of facts
-        assert_param(max_events, 'max_events: must be nonegative integer', allowed_types=int, check_func=lambda v: v >= 0)
-        self._max_events = max_events
-        assert_param(max_predicates, 'max_events: must be nonegative integer', allowed_types=int, check_func=lambda v: v >= 0)
-        self._max_predicates = max_predicates
-        assert_param(start_event_history_with_heard, 'start_event_histiry_with_heard: must be bool', allowed_types=bool)
-        self._start_event_history_with_heard = start_event_history_with_heard
-        # get Attrib requests
-        assert_param(attrib_requests, 'attrib_requests: must be list of dictionaries with requests description', allowed_types=list, check_func=lambda v: all(isinstance(e, dict) for e in v))
-        self._requests = []
-        try:
-            for request in attrib_requests:
-                self._requests.append( AttribRequest(**request) )
-        except TypeError as e:
-            # raise KeyError('incorrect attrib_request declaraition: wissing or superfluous parameters (%s): error %s' % ([request.keys()], e))
-            raise e
-        # check attrib requests
-        if len(self._requests) == 0 or self._requests[0].prompt is None:
-            raise ValueError('incorrect attrib_request declaraition: at leat one request should present, first request should contain prompt field.')
-
-    def perform_request(self, llm_caller, text = None, events=[], predicates=[]):
-        #
-        # form prompt
-        #
-        prompt = self._header
-        # verbolize predicates
-        if self._max_predicates > 0:
-            # sort by timestamp
-            predicates.sort(key = lambda ev: ev.stamp)
-            # verbolize last max_predicates
-            for pred in predicates[-self._max_predicates:]:
-                prompt += pred.verbolize(self._fact_templates)
-        # verbolize events
-        if self._max_events > 0:
-            # sort by timestamp
-            events.sort(key = lambda ev: ev.stamp)
-            # verbolize last max_events
-        last_events = events[-self._max_events:]
-        if self._start_event_history_with_heard:
-            while len(last_events) >= 1 and last_events[0].type == 'talk-said':
-                last_events.pop(0)
-
-        for ev in last_events:
-            prompt += ev.verbolize(self._fact_templates)
-
-        # Save last human phrase for later processing
-        last_heard_phrase = None
-        if len(last_events) > 0:
-            last_heard_phrase = ev.text
-
-        # add text
-        if text is not None:
-            template = self._fact_templates['text']
-            if template is None:
-                prompt += text
-            else:
-                # get random template
-                if isinstance(template, list):
-                    template = choice(template)
-                # use template
-                prompt += template % text
-        #
-        # perform requests
-        #
-        result = {}
-        success = True
-        kwargs = {}
-        try:
-            for request in self._requests:
-                # request lang model if prompt is present
-                if request.prompt is not None:
-                    # update prompt
-                    prompt += request.prompt
-                    # fix new lines: must be \r\n
-                    prompt = prompt.replace('\n', '\r\n')
-                    # send request
-                    req = CompleteRawRequest(prompt = prompt, profile_name = self._llm_profile_name, stop_list = request.stop_list)
-                    resp = llm_caller(req)
-                    # check result
-                    if resp.error_code != 0:
-                        breakpoint()
-                        success = False
-                        result['error_desc'] = 'LLM request has failed.'
-                        return success, result, prompt
-                    # add result to prompt
-                    prompt += resp.result
-
-                # Provide simple emotion assesment from llm
-                if isinstance(request, AttribRequestClassification):
-                    kwargs = dict(
-                        llm_emotion=result.get('emotion', None),
-                        last_heard_phrase=last_heard_phrase,
-                        llm_response=result.get('result', None),
-                    )
-
-                # parse result (current or prevoius)
-                parse_result = request.parse(resp.result, **kwargs)
-                if parse_result is None:
-                    # TODO: Better handle wrong emotion responses as '1'
-                    # TODO: And figure out why is there two emotion requests happening
-                    # NOTE: Maybe better instruction following models would give more stable outputs? -Mike
-                    success = False
-                    result['error_desc'] = f'LLM response parse error: parser {request}, llm result {resp.result}'
-                else:
-                    rospy.loginfo('parse result: %s' % parse_result)
-                    result.update( parse_result )
-        except rospy.ServiceException as e:
-            success = False
-            result['error_desc'] = f'LLM service error: {e}.'
-        except Exception as e:
-            success = False
-            result['error_desc'] = f'Unknown LLM error during request {request}: {repr(e)}:' + str(traceback.format_exc())
-
-        #
-        # return result
-        #
-        return success, result, prompt
-
-
-class LangModel(OutputModule):
+class AgentLangModel(OutputModule):
+    """New LLM backend: non-blocking GenerateReply action client."""
 
     def _init(self, name, config):
-        # get configuration
-        service_ns = self.getConfigParameter(config, "service_ns", allowed_types=str)
-        # create Service client
-        rospy.wait_for_service(service_ns, timeout=5.0)
-        self._llm_client = rospy.ServiceProxy(service_ns, CompleteRaw)
-        # configuration
-        requests = self.getConfigParameter(config, "requests", allowed_types=dict)
-        self._requests = {}
-        try:
-            for req_name, req_conf in requests.items():
-                self._requests[req_name] = LangRequest(**req_conf)
-        except TypeError as e:
-            # raise KeyError('incorrect request declaraition (%s): missing or superfluous parameters: %s' % (req_name, e))
-            raise e
+        action_ns = self.getConfigParameter(config, "action_ns",
+                                             default_value="generate_reply", allowed_types=str)
+        self._requests = self.getConfigParameter(config, "requests",
+                                                 default_value={}, allowed_types=dict)
+        self._default_persona = config.get("persona") or ""
+        self._default_language = config.get("text_language", "en")
+        self._timeout = float(config.get("timeout", 30.0))
+        self._client = actionlib.SimpleActionClient(action_ns, GenerateReplyAction)
+        if not self._client.wait_for_server(rospy.Duration(5.0)):
+            rospy.logwarn("lang-model(agent): action server '%s' not available yet", action_ns)
+        self._deadline = None
+
+    # -- helpers ------------------------------------------------------------------------------
+
+    @staticmethod
+    def _build_history(events):
+        turns = []
+        for ev in sorted(events, key=lambda e: e.stamp):
+            if ev.type == 'talk-heard':
+                turns.append({"speaker": "human", "text": ev.text})
+            elif ev.type == 'talk-said':
+                turns.append({"speaker": "sweetie", "text": ev.text,
+                              "emotion": getattr(ev, 'emotion', None)})
+            elif ev.type in ('talk-ignored', 'talk-no-answer'):
+                turns.append({"speaker": "human", "text": "(stays silent)"})
+            elif ev.type == 'talk-illegible':
+                turns.append({"speaker": "human", "text": "(says something unclear)"})
+        return turns
+
+    # -- OutputModule hooks -------------------------------------------------------------------
 
     def startHook(self, cmd_id):
-        #
-        # parse command structure:
-        # ( ^preicate <P1> ... ^event <E1> ... ^request "<request>" )
-        #
         request_name = None
-        events = []
-        predicates = []
+        events, predicates = [], []
         text = None
-        for idx in range(0, cmd_id.GetNumberChildren()):
+        for idx in range(cmd_id.GetNumberChildren()):
             item_id = cmd_id.GetChild(idx)
-            item_attr = item_id.GetAttribute()
-            rospy.logdebug('lang_model output module: process cmd child %d: ^%s %s' % (idx, item_attr, item_id.GetValueAsString()))
-
-            # get facts
+            attr = item_id.GetAttribute()
             if item_id.IsIdentifier():
                 try:
-                    # classufy attribute
-                    if item_attr == 'event':
-                        events.append( TalkEvent(item_id.ConvertToIdentifier()) )
-                    elif item_attr == 'predicate':
-                        predicates.append( Predicate(item_id.ConvertToIdentifier()) )
+                    if attr == 'event':
+                        events.append(TalkEvent(item_id.ConvertToIdentifier()))
+                    elif attr == 'predicate':
+                        predicates.append(Predicate(item_id.ConvertToIdentifier()))
                 except WMEParseError as e:
-                    rospy.logwarn('^%s %s parse error: %s' % (item_attr, item_id.GetValueAsString(), e))
-
-            # get request
-            if item_attr == 'request':
+                    rospy.logwarn("lang-model(agent): ^%s parse error: %s", attr, e)
+            if attr == 'request':
                 request_name = item_id.GetValueAsString()
-            elif item_attr == 'text':
+            elif attr == 'text':
                 text = item_id.GetValueAsString()
 
-
-        # get LangRequest
         if request_name is None:
-            rospy.logerr("lang_model output module: no ^request is supplied.")
+            rospy.logerr("lang-model(agent): no ^request supplied")
             return "error"
 
-        request = self._requests.get(request_name)
-        if request is None:
-            rospy.logerr("lang_model output module: unknown request %s." % request_name)
+        req_cfg = self._requests.get(request_name, {}) if isinstance(self._requests, dict) else {}
+        if not isinstance(req_cfg, dict):
+            req_cfg = {}
+        profile = req_cfg.get("profile", request_name)        # default profile == request name
+        persona = req_cfg.get("persona", self._default_persona)
+        language = req_cfg.get("text_language", self._default_language)
+
+        history = self._build_history(events)
+        if text is None:
+            for ev in sorted(events, key=lambda e: e.stamp, reverse=True):
+                if ev.type == 'talk-heard':
+                    text = ev.text
+                    break
+        # avoid duplicating the current utterance both as history tail and as `text`
+        if text is not None and history and history[-1].get("text") == text:
+            history = history[:-1]
+
+        goal = GenerateReplyGoal()
+        goal.request_type = "reply"
+        goal.profile = profile
+        goal.text = text or ""
+        goal.history_json = json.dumps(history)
+        goal.context_json = json.dumps([p.text for p in predicates])
+        goal.text_language = language
+        goal.reply_language = language
+        goal.persona = persona
+
+        self._client.send_goal(goal)
+        self._deadline = rospy.Time.now() + rospy.Duration(self._timeout)
+        rospy.logdebug("lang-model(agent): sent goal profile=%s text=%r", profile, text)
+        return None   # keep running; poll in updateHook (non-blocking)
+
+    def updateHook(self, cmd_id, request_abort=False):
+        # new module framework: cmd_id is None if the command WME vanished from the output link
+        if cmd_id is None or request_abort:
+            self._client.cancel_goal()
+            rospy.loginfo("lang-model(agent): aborted (%s)",
+                          "command removed" if cmd_id is None else "by SOAR")
             return "error"
 
-        # perform request
-        # TODO use future
-        rospy.logdebug('lang_model output module: LLM request: predicates %s, events %s, text %s' % (len(predicates), len(events), text))
-        try:
-            success, result, prompt = request.perform_request(self._llm_client, events = events, predicates = predicates, text = text)
-        except rospy.ServiceException as e:
-            rospy.logerr("lang_model output module: request to llm service failed: %s" % e)
+        state = self._client.get_state()
+        if state in (GoalStatus.PENDING, GoalStatus.ACTIVE):
+            if self._deadline is not None and rospy.Time.now() > self._deadline:
+                self._client.cancel_goal()
+                rospy.logerr("lang-model(agent): timed out")
+                return "error"
+            return None
+
+        if state != GoalStatus.SUCCEEDED:
+            rospy.logerr("lang-model(agent): action terminal state %s", state)
             return "error"
 
-        rospy.logdebug('lang_model output module: LLM prompt: \n %s' % repr(prompt))
-        rospy.logdebug('lang_model output module: LLM result: \n %s' % result)
+        result = self._client.get_result()
+        if result is None or result.error_code != 0:
+            desc = getattr(result, 'error_desc', 'unknown') if result is not None else 'no result'
+            rospy.logerr("lang-model(agent): agent error: %s", desc)
+            return "error"
 
-        # add WMEs
-        for attr, value in result.items():
-            cmd_id.CreateStringWME(attr, value)
+        # contract WMEs consumed by the (unchanged) SOAR rules
+        cmd_id.CreateStringWME('result', result.response_text)
+        cmd_id.CreateStringWME('emotion', result.emotion)
+        cmd_id.CreateStringWME('sentence-type', result.sentence_type)
+        rospy.loginfo("lang-model(agent): succeed [%s] %r",
+                      result.emotion, result.response_text[:80])
+        return "succeed"
 
-        # check result
-        if success:
-            rospy.loginfo('lang_model output module: succeed: %s' % result)
-            return 'succeed'
-        else:
-            rospy.logerr('lang_model output module: failed: %s' % result['error_desc'])
-            return 'error'
+
+class LangModel(object):
+    """Dispatcher registered as 'lang-model'; picks a backend by config (default 'legacy').
+
+    The new ModulesLoader instantiates ``module_cls(module_name, module_config)``; ``__new__``
+    returns a fully-constructed backend instance (not a LangModel), so no further init happens.
+    """
+
+    def __new__(cls, name, config):
+        backend = (config or {}).get("backend", "legacy")
+        if backend == "agent":
+            rospy.loginfo("lang-model: using AGENT backend")
+            return AgentLangModel(name, config)
+        rospy.loginfo("lang-model: using LEGACY backend")
+        return LegacyLangModel(name, config)
+
 
 OutputModulesLoader.register("lang-model", LangModel)

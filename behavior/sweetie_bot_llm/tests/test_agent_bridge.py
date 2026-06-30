@@ -1,0 +1,73 @@
+"""Tests for the ROS-free action<->agent bridge (no rospy needed)."""
+import json
+import os
+import sys
+from types import SimpleNamespace
+
+# make both the ai_core lib and this package importable from source
+HERE = os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(HERE, "..", "src"))
+sys.path.insert(0, os.path.abspath(os.path.join(
+    HERE, "..", "..", "..", "lib", "sweetie_bot_ai_core", "src")))
+
+from sweetie_bot_llm.agent_bridge import (fill_result, goal_to_request,  # noqa: E402
+                                          parse_history, reply_to_result_dict)
+from sweetie_bot_ai_core.schema import (AgentReply, Emotion, RequestType,  # noqa: E402
+                                        SentenceType, ToolCall)
+
+
+def test_parse_history_roundtrip():
+    hj = json.dumps([{"speaker": "human", "text": "hi"},
+                     {"speaker": "sweetie", "text": "hello!", "emotion": "joy"}])
+    turns = parse_history(hj)
+    assert len(turns) == 2
+    assert turns[0].speaker == "human"
+    assert turns[1].emotion == Emotion.joy
+
+
+def test_parse_history_bad_json_safe():
+    assert parse_history("not json") == []
+    assert parse_history("") == []
+
+
+def test_goal_to_request_full():
+    goal = SimpleNamespace(
+        request_type="reply", profile="complex-en", text="battery?",
+        history_json=json.dumps([{"speaker": "human", "text": "earlier"}]),
+        text_language="ru", reply_language="ru", persona="sweetie",
+        labels_json="", image_b64="")
+    req = goal_to_request(goal)
+    assert req.request_type == RequestType.reply
+    assert req.text == "battery?"
+    assert req.text_language == "ru"
+    assert req.persona == "sweetie"
+    assert len(req.history) == 1
+
+
+def test_goal_to_request_defaults_and_bad_enum():
+    goal = SimpleNamespace(request_type="bogus", text="hi")  # missing most fields
+    req = goal_to_request(goal)
+    assert req.request_type == RequestType.reply       # bad enum -> reply
+    assert req.profile == "complex-en"                 # default
+    assert req.persona is None
+    assert req.history == []
+
+
+def test_reply_to_result_dict():
+    reply = AgentReply(response_text="Hi!", emotion=Emotion.joy,
+                       sentence_type=SentenceType.statement,
+                       tool_calls=[ToolCall(name="look_at", arguments={"target": "left"})])
+    d = reply_to_result_dict(reply)
+    assert d["emotion"] == "joy"
+    assert d["sentence_type"] == "statement"
+    assert json.loads(d["tool_calls_json"])[0]["name"] == "look_at"
+    assert d["error_code"] == 0
+
+
+def test_fill_result_inplace():
+    res = SimpleNamespace(response_text="", emotion="", sentence_type="",
+                          tool_calls_json="", error_code=0, error_desc="")
+    reply = AgentReply(response_text="Yo", emotion=Emotion.surprise)
+    fill_result(res, reply)
+    assert res.response_text == "Yo"
+    assert res.emotion == "surprise"

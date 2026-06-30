@@ -1,0 +1,111 @@
+"""ROS1 node: the Sweetie Bot LLM agent, exposed as a GenerateReply action server.
+
+Thin ROS glue around sweetie_bot_ai_core.Agent. Keeps the old CompleteRaw service (completion.py)
+untouched and running in parallel — this node is additive and selected via the SOAR backend flag.
+
+Concurrency: SimpleActionServer serialises goals (single-flight, matching one shared GPU). Preempt
+is honoured so a new goal / cancel can abort an in-flight reply (barge-in groundwork). Generation
+itself is blocking (requests-based client); a future async upgrade can add token-streaming feedback.
+"""
+from __future__ import annotations
+
+import os
+
+import rospy
+import actionlib
+from std_msgs.msg import String
+
+from sweetie_bot_ai_core import (Agent, LanguagePolicy, PersonaRegistry, ToolRegistry,
+                                 build_llm_registry)
+from sweetie_bot_ai_core.translation import LibreTranslateProvider
+
+from sweetie_bot_text_msgs.msg import (GenerateReplyAction, GenerateReplyFeedback,
+                                       GenerateReplyResult)
+
+from .agent_bridge import goal_to_request, fill_result
+from .state_collector import StateCollector
+from .tool_adapters import ToolAdapters
+
+
+class LLMAgentNode:
+    def __init__(self):
+        rospy.init_node("llm_agent")
+
+        # --- config (rosparam with safe defaults) -------------------------------------------
+        providers_cfg = rospy.get_param("~llm", {
+            "providers": {"local": {"url": "http://localhost:11434/v1",
+                                    "model": "qwen2.5:14b", "priority": 10}}})
+        default_options = rospy.get_param("~default_options", {"temperature": 0.8})
+        tools_cfg = rospy.get_param("~tools", None)
+        persona_dir = rospy.get_param("~persona_dir", "")
+        default_persona = rospy.get_param("~default_persona", "sweetie")
+        lp_cfg = rospy.get_param("~language_policy", {})
+
+        # --- build core ----------------------------------------------------------------------
+        registry = build_llm_registry(providers_cfg, logger=rospy.logwarn,
+                                      default_options=default_options)
+        personas = (PersonaRegistry.from_dir(persona_dir, default_name=default_persona)
+                    if persona_dir and os.path.isdir(persona_dir)
+                    else PersonaRegistry(default_name=default_persona))
+        tools = ToolRegistry.from_config(tools_cfg) if tools_cfg else ToolRegistry()
+
+        translate = None
+        if lp_cfg.get("translate_url"):
+            translate = LibreTranslateProvider(lp_cfg["translate_url"])
+        policy = LanguagePolicy(native_languages=lp_cfg.get("native_languages", ["en", "ru"]),
+                                pivot=lp_cfg.get("pivot", "en"), provider=translate)
+
+        self._state = StateCollector()
+        self._effector = ToolAdapters(self._state)
+        self._agent = Agent(registry, personas=personas, tools=tools,
+                            state_provider=self._state, effector=self._effector,
+                            language_policy=policy, logger=rospy.logwarn)
+
+        # --- persona switching (clean runtime switch) ---------------------------------------
+        rospy.Subscriber("~set_persona", String, self._on_set_persona, queue_size=1)
+
+        # --- action server -------------------------------------------------------------------
+        self._server = actionlib.SimpleActionServer(
+            "generate_reply", GenerateReplyAction, execute_cb=self._execute, auto_start=False)
+        self._server.start()
+        rospy.loginfo("llm_agent: ready (personas=%s, providers=%s)",
+                      personas.names(), list(registry.health().keys()))
+
+    # -- callbacks --------------------------------------------------------------------------------
+
+    def _on_set_persona(self, msg: String):
+        if self._agent.personas.set_active(msg.data.strip()):
+            rospy.loginfo("llm_agent: active persona -> %s", msg.data.strip())
+        else:
+            rospy.logwarn("llm_agent: unknown persona '%s'", msg.data)
+
+    def _execute(self, goal):
+        if self._server.is_preempt_requested():
+            self._server.set_preempted()
+            return
+        request = goal_to_request(goal)
+        rospy.loginfo("llm_agent: request profile=%s lang=%s text=%r",
+                      request.profile, request.text_language, request.text[:80])
+        reply = self._agent.handle(request)
+
+        if self._server.is_preempt_requested():
+            self._server.set_preempted()
+            return
+
+        result = GenerateReplyResult()
+        fill_result(result, reply)
+        if reply.error_code.value == 0:
+            rospy.loginfo("llm_agent: reply [%s] %r", result.emotion, result.response_text[:80])
+            self._server.set_succeeded(result)
+        else:
+            rospy.logwarn("llm_agent: error %s: %s", reply.error_code.name, reply.error_desc)
+            self._server.set_succeeded(result)   # report error via result.error_code, not abort
+
+
+def main():
+    LLMAgentNode()
+    rospy.spin()
+
+
+if __name__ == "__main__":
+    main()

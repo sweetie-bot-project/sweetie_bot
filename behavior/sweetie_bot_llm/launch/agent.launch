@@ -1,0 +1,19 @@
+<launch>
+  <!-- Sweetie Bot LLM agent node (new structured/tool-calling backend).
+       Additive: runs alongside the legacy completion node. SOAR selects this path via the
+       lang-model `backend: agent` flag in soar.yaml. Requires the LLM provider container
+       (behavior/sweetie_bot_llm/docker/run_llm_provider.sh). -->
+  <arg name="persona_dir" default="$(find sweetie_bot_ai_core)/config/persona"/>
+  <arg name="default_persona" default="sweetie"/>
+
+  <node pkg="sweetie_bot_llm" type="llm_agent_node" name="llm_agent" output="screen">
+    <!-- ~llm (registry), ~default_options -->
+    <rosparam command="load" file="$(find sweetie_bot_llm)/config/providers.yaml"/>
+    <!-- ~language_policy -->
+    <rosparam command="load" file="$(find sweetie_bot_llm)/config/languages.yaml"/>
+    <!-- ~tools (dispatch modes) -->
+    <rosparam command="load" file="$(find sweetie_bot_llm)/config/tools.yaml"/>
+    <param name="persona_dir" value="$(arg persona_dir)"/>
+    <param name="default_persona" value="$(arg default_persona)"/>
+  </node>
+</launch>

@@ -1,0 +1,23 @@
+# LLM provider registry config (consumed by sweetie_bot_ai_core.build_llm_registry).
+# Priority: lower = tried first. Local containerized model first, cloud fallback second.
+llm:
+  fail_threshold: 2
+  cooldown_s: 30
+  providers:
+    local:
+      url: 'http://localhost:11434/v1'
+      model: "qwen2.5:7b"        # 7b fallback if VRAM is contested: qwen2.5:7b
+      priority: 10
+      timeout: 120.0
+    remote:
+      url: 'https://ai.sweetie.bot/llm/v1'
+      model: 'qwen2.5:14b'
+      priority: 20
+      timeout: 120.0
+      api_key_env: 'SWEETIE_LLM_KEY'   # secret, never committed
+
+# Default sampling options applied to every request (per-profile options override these).
+default_options:
+  temperature: 0.8
+  top_p: 0.9
+  # NOTE: no "\n" stop list — generation stops on the model end token / schema completion.
