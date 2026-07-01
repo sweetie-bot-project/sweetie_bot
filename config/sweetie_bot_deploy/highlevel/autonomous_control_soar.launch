@@ -14,6 +14,7 @@
 	<arg name="soar_agent" default="" doc="Soar agent to start"/>
 	<arg name="soar_agent_package" default="sweetie_bot_soar" doc="Package where agent defenition is lokated."/>
 	<arg name="soar_start_delay" default="20" doc="Delay before Soar agent is started."/>
+	<arg name="run_llm_agent" default="true" doc="Run the LLM agent node (structured/tool-calling backend; SOAR uses it via lang-model backend: agent)."/>
 
 	<machine name="localhost" address="localhost" user="$(env USER)" default="true"/>
 	<machine name="sweetiebot" address="localhost" user="$(env USER)" default="true"/>
@@ -45,7 +46,6 @@
 		<node pkg="sweetie_bot_voice" type="voice" name="voice">
 			<remap from="control" to="$(arg robot_ns)/control" />
 		</node>
-		</group>
 		<!-- joystick -->
 		<group if="$(eval not host and robot)">
 			<include file="$(find sweetie_bot_deploy)/highlevel/joy_embeded.launch" >
@@ -66,6 +66,10 @@
 				<param name="agent_file" value="$(arg soar_agent)" />
 				<param name="agent_packege" value="$(arg soar_agent_package)" />
 			</node>
+		</group>
+		<!-- LLM agent (structured/tool-calling backend; SOAR calls it via the generate_reply action) -->
+		<group if="$(arg run_llm_agent)">
+			<include file="$(find sweetie_bot_llm)/launch/agent.launch"/>
 		</group>
 	</group>
 

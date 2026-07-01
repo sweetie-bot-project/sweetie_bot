@@ -5,8 +5,13 @@
        (behavior/sweetie_bot_llm/docker/run_llm_provider.sh). -->
   <arg name="persona_dir" default="$(find sweetie_bot_ai_core)/config/persona"/>
   <arg name="default_persona" default="sweetie"/>
+  <!-- The agent node needs pydantic v2 (the rest of the ROS stack is pydantic v1 + spaCy).
+       Run it in its own venv (py3.8 system-site-packages venv + pydantic 2.x) via launch-prefix,
+       so it coexists with the system-python SOAR/vision nodes. Override to change interpreter. -->
+  <arg name="agent_python" default="$(env HOME)/sbllm-venv/bin/python"/>
 
-  <node pkg="sweetie_bot_llm" type="llm_agent_node" name="llm_agent" output="screen">
+  <node pkg="sweetie_bot_llm" type="llm_agent_node" name="llm_agent" output="screen"
+        launch-prefix="$(arg agent_python)">
     <!-- ~llm (registry), ~default_options -->
     <rosparam command="load" file="$(find sweetie_bot_llm)/config/providers.yaml"/>
     <!-- ~language_policy -->
