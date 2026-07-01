@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+"""QUICK-FIX relay: republish /detections with type 'face' -> 'human' so SOAR recognises a person.
+
+TEMPORARY HACK. The new vision federation publishes a person's parts as type 'body'/'face', but
+SOAR's rules (vision.soar, attention.soar) key "person" on type 'human'. Proper fix is vision-side:
+emit entity_type 'human' for the fused person entity. See doc note. This relay just unblocks testing.
+"""
+import rospy
+from sweetie_bot_text_msgs.msg import DetectionArray
+
+TYPE_MAP = {"face": "human"}   # the face carries gaze + head position -> good person proxy
+
+rospy.init_node("detections_face2human_relay")
+pub = rospy.Publisher("detections_human", DetectionArray, queue_size=5)
+
+
+def cb(msg):
+    for d in msg.detections:
+        if d.type in TYPE_MAP:
+            d.type = TYPE_MAP[d.type]
+            if not d.label:                 # SOAR wants a non-None label; use the track id
+                d.label = "person_%d" % d.id
+    pub.publish(msg)
+
+
+rospy.Subscriber("detections", DetectionArray, cb, queue_size=5)
+rospy.loginfo("detections_face2human_relay: /detections -> /detections_human (face->human)")
+rospy.spin()
