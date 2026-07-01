@@ -22,9 +22,10 @@ from .history import ConversationHistory
 from .persona import PersonaRegistry
 from .prompt import build_system_prompt
 from .registry import ProviderRegistry, RegistryError
+from .scene import SceneConfig, diff as scene_diff, render_scene, select_salient
 from .schema import (AgentReply, AgentRequest, ErrorCode, Emotion, ReplyContent, RequestType,
-                     RobotState, SentenceType, ToolCall, ToolResult, classify_json_schema,
-                     reply_json_schema)
+                     RobotState, SceneState, SentenceType, ToolCall, ToolResult,
+                     classify_json_schema, reply_json_schema)
 from .tools import DispatchMode, ToolRegistry
 
 
@@ -36,9 +37,18 @@ class EffectorPort(Protocol):
     def dispatch(self, tool_call: ToolCall) -> ToolResult: ...
 
 
+class SceneProvider(Protocol):
+    def snapshot(self, include_remembered: bool = False) -> SceneState: ...
+
+
 class NullStateProvider:
     def snapshot(self) -> RobotState:
         return RobotState()
+
+
+class NullSceneProvider:
+    def snapshot(self, include_remembered: bool = False) -> SceneState:
+        return SceneState()
 
 
 class NullEffector:
@@ -73,17 +83,22 @@ class Agent:
                  personas: Optional[PersonaRegistry] = None,
                  tools: Optional[ToolRegistry] = None,
                  state_provider: Optional[RobotStateProvider] = None,
+                 scene_provider: Optional[SceneProvider] = None,
                  effector: Optional[EffectorPort] = None,
                  language_policy=None,
                  profiles: Optional[Dict[str, ProfileConfig]] = None,
+                 scene_config: Optional[SceneConfig] = None,
                  logger: Optional[Callable[[str], None]] = None):
         self.registry = registry
         self.personas = personas or PersonaRegistry()
         self.tools = tools or ToolRegistry()
         self.state_provider = state_provider or NullStateProvider()
+        self.scene_provider = scene_provider or NullSceneProvider()
         self.effector = effector or NullEffector()
         self.policy = language_policy
         self.profiles = profiles or DEFAULT_PROFILES
+        self.scene_config = scene_config or SceneConfig()
+        self._prev_scene = SceneState()
         self.log = logger or (lambda m: None)
 
     # -- public entry -------------------------------------------------------------------------
@@ -114,7 +129,14 @@ class Agent:
         tools_offered = (persona.allow_tools and profile.allow_tools
                          and len(self.tools.offered()) > 0)
 
-        system_prompt = build_system_prompt(persona, state, tools_offered=tools_offered)
+        # ambient environmental awareness: front-weighted scene + inter-turn delta
+        scene = select_salient(self.scene_provider.snapshot(), self.scene_config)
+        events = scene_diff(self._prev_scene, scene, self.scene_config)
+        self._prev_scene = scene
+        scene_block = render_scene(scene, events, self.scene_config)
+
+        system_prompt = build_system_prompt(persona, state, tools_offered=tools_offered,
+                                            scene_block=scene_block)
         if request.context_facts:
             system_prompt += ("\n\nRelevant things you remember right now:\n"
                               + "\n".join(f"- {f}" for f in request.context_facts))

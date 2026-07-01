@@ -13,6 +13,7 @@
     <rosparam command="load" file="$(find sweetie_bot_llm)/config/languages.yaml"/>
     <!-- ~tools (dispatch modes) -->
     <rosparam command="load" file="$(find sweetie_bot_llm)/config/tools.yaml"/>
+    <rosparam command="load" file="$(find sweetie_bot_llm)/config/scene.yaml"/>
     <param name="persona_dir" value="$(arg persona_dir)"/>
     <param name="default_persona" value="$(arg default_persona)"/>
   </node>

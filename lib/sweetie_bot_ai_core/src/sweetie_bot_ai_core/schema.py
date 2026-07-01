@@ -83,6 +83,49 @@ class RobotState(BaseModel):
         return " ".join(parts)
 
 
+# --- scene / environmental awareness ---------------------------------------------------------
+
+class Zone(str, Enum):
+    front = "front"
+    side = "side"
+    rear = "rear"
+
+
+class SceneEntity(BaseModel):
+    """One perceived thing around the robot. People are described by ``id`` only (no names /
+    gallery / persistence). Geometry is coarse and word-friendly for the LLM."""
+    id: int
+    type: str = "person"                   # detector/object type, e.g. person, pony_face
+    zone: Zone = Zone.front
+    bearing_deg: float = 0.0               # +/- azimuth vs her current forward (right = +)
+    distance: Optional[str] = None         # coarse: near|mid|far
+    attributes: Dict[str, str] = Field(default_factory=dict)  # generic, from vision attribute[]/value[]
+    is_speaking: bool = False
+    is_interlocutor: bool = False
+    in_frame: bool = True                  # False -> remembered (out of frame, from retention buffer)
+    last_seen_s: float = 0.0               # seconds since last seen (0 while visible)
+
+
+class SoundCue(BaseModel):
+    zone: Zone = Zone.front
+    bearing_deg: float = 0.0
+    kind: str = "sound"                    # speech|sound
+    intensity: Optional[str] = None        # coarse: quiet|normal|loud
+
+
+class SceneState(BaseModel):
+    """A snapshot of what's around her. Rendering + salience live in scene.py (kept ROS-free)."""
+    entities: List[SceneEntity] = Field(default_factory=list)
+    sounds: List[SoundCue] = Field(default_factory=list)
+
+
+class SceneEvent(BaseModel):
+    """An inter-turn change, computed by diffing consecutive SceneStates."""
+    kind: str                              # arrived|left|changed
+    entity_id: int
+    detail: str = ""
+
+
 # --- tool calling ----------------------------------------------------------------------------
 
 class ToolCall(BaseModel):

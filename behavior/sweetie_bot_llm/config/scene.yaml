@@ -1,0 +1,28 @@
+# SceneProvider config (loaded into the llm_agent node's ~scene namespace).
+# Environmental awareness for the dynamic prompt: front-weighted, id-only, ephemeral retention.
+scene:
+  # --- topics (sniff live and set to what the deployed vision publishes) ---
+  detections_topic: "detections"          # sweetie_bot_text_msgs/DetectionArray (same as SWM input)
+  sound_topic: "sound_event"              # sweetie_bot_text_msgs/SoundEvent
+
+  # --- frames (LIVE-CALIBRATE) ---
+  forward_frame: "base_link"              # her forward reference (REP-103 x-forward) for bearing
+  stable_frame: "odom"                    # world-ish frame for retention so bearing survives turning
+
+  # --- front-180 salience zones ---
+  front_deg: 60.0                         # |bearing| <= front_deg -> front (full salience)
+  side_deg: 120.0                         # front..side -> side (fill spare only); beyond -> rear (dropped)
+
+  # --- retention (ephemeral, NOT persistent memory) ---
+  retention_ttl_s: 20.0                   # keep out-of-frame objects this long, then forget
+
+  # --- distance bins (metres, horizontal) ---
+  near_m: 1.0
+  mid_m: 2.5
+
+  # --- conventions (LIVE-CALIBRATE against the real frames/mic) ---
+  bearing_sign: 1.0                       # flip to -1.0 if left/right come out mirrored
+  sound_bearing_sign: 1.0                 # DOA azimuth sign to match bearing convention
+  sound_bearing_offset_deg: 0.0           # mic-array zero offset vs forward
+
+  min_score: 0.3                          # ignore detections below this confidence

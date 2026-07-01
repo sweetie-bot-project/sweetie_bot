@@ -12,10 +12,11 @@ from .schema import RobotState
 
 def build_system_prompt(persona: Persona, state: Optional[RobotState] = None, *,
                         tools_offered: bool = False,
+                        scene_block: Optional[str] = None,
                         language_note: Optional[str] = None) -> str:
     parts: List[str] = []
 
-    # --- static persona ---------------------------------------------------------------------
+    # --- static persona (keep first so the prefix stays KV-cacheable) ------------------------
     parts.append(persona.description.strip())
     if persona.guidelines:
         parts.append("Guidelines:\n" + "\n".join(f"- {g}" for g in persona.guidelines))
@@ -29,6 +30,10 @@ def build_system_prompt(persona: Persona, state: Optional[RobotState] = None, *,
             "You have tools available. If you need live information (such as your battery, the "
             "time, or your physical status) to answer truthfully, call the appropriate tool "
             "first; otherwise just answer.")
+
+    # --- dynamic scene block (what she perceives around her) --------------------------------
+    if scene_block:
+        parts.append(scene_block)
 
     # --- dynamic state block ----------------------------------------------------------------
     if state is not None:

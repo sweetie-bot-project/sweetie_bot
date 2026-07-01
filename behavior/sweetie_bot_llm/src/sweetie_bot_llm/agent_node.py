@@ -15,7 +15,7 @@ import rospy
 import actionlib
 from std_msgs.msg import String
 
-from sweetie_bot_ai_core import (Agent, LanguagePolicy, PersonaRegistry, ToolRegistry,
+from sweetie_bot_ai_core import (Agent, LanguagePolicy, PersonaRegistry, SceneConfig, ToolRegistry,
                                  build_llm_registry)
 from sweetie_bot_ai_core.translation import LibreTranslateProvider
 
@@ -24,6 +24,7 @@ from sweetie_bot_text_msgs.msg import (GenerateReplyAction, GenerateReplyFeedbac
 
 from .agent_bridge import goal_to_request, fill_result
 from .state_collector import StateCollector
+from .scene_collector import SceneCollector
 from .tool_adapters import ToolAdapters
 
 
@@ -40,6 +41,7 @@ class LLMAgentNode:
         persona_dir = rospy.get_param("~persona_dir", "")
         default_persona = rospy.get_param("~default_persona", "sweetie")
         lp_cfg = rospy.get_param("~language_policy", {})
+        scene_cfg = rospy.get_param("~scene", {}) or {}
 
         # --- build core ----------------------------------------------------------------------
         registry = build_llm_registry(providers_cfg, logger=rospy.logwarn,
@@ -56,10 +58,23 @@ class LLMAgentNode:
                                 pivot=lp_cfg.get("pivot", "en"), provider=translate)
 
         self._state = StateCollector()
-        self._effector = ToolAdapters(self._state)
+        # scene provider (environmental awareness); tolerate a missing vision stack gracefully
+        scene_kwargs = {k: scene_cfg[k] for k in (
+            "detections_topic", "sound_topic", "forward_frame", "stable_frame", "front_deg",
+            "side_deg", "retention_ttl_s", "near_m", "mid_m", "bearing_sign",
+            "sound_bearing_sign", "sound_bearing_offset_deg", "min_score") if k in scene_cfg}
+        try:
+            self._scene = SceneCollector(**scene_kwargs)
+        except Exception as e:  # noqa: BLE001 - never block the node on scene setup
+            rospy.logwarn("llm_agent: scene provider unavailable (%r); running without it", e)
+            self._scene = None
+        self._effector = ToolAdapters(self._state, scene_collector=self._scene)
         self._agent = Agent(registry, personas=personas, tools=tools,
-                            state_provider=self._state, effector=self._effector,
-                            language_policy=policy, logger=rospy.logwarn)
+                            state_provider=self._state, scene_provider=self._scene,
+                            effector=self._effector, language_policy=policy,
+                            scene_config=SceneConfig(front_deg=scene_cfg.get("front_deg", 60.0),
+                                                     side_deg=scene_cfg.get("side_deg", 120.0)),
+                            logger=rospy.logwarn)
 
         # --- persona switching (clean runtime switch) ---------------------------------------
         rospy.Subscriber("~set_persona", String, self._on_set_persona, queue_size=1)

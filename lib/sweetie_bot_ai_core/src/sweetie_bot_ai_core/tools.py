@@ -89,6 +89,18 @@ DEFAULT_TOOLS: List[ToolSpec] = [
         dispatch_mode=DispatchMode.execute,
     ),
     ToolSpec(
+        name="get_scene",
+        description=("Look at what's around you in more detail: the people and objects you can see, "
+                     "where they are, and what they're doing. Set include_remembered=true to also "
+                     "recall things that recently went out of your view and where they were, so you "
+                     "can decide to turn toward them."),
+        parameters={"type": "object", "properties": {
+            "include_remembered": {"type": "boolean",
+                                   "description": "Also return recently-seen things now out of view."}},
+            "required": []},
+        dispatch_mode=DispatchMode.execute,   # read-only perception
+    ),
+    ToolSpec(
         name="look_at",
         description="Turn Sweetie's head and gaze toward a named direction or object.",
         parameters={"type": "object", "properties": {
