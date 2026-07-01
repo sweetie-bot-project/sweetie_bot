@@ -102,6 +102,17 @@ class AgentLangModel(OutputModule):
         if text is not None and history and history[-1].get("text") == text:
             history = history[:-1]
 
+        # Silence turns: if the newest talk event is a no-answer / ignored / illegible marker
+        # (the human said nothing), stay quiet instead of generating a fresh — often
+        # question-shaped — reply. Producing a reply here re-arms SOAR's waiting-answer loop and
+        # makes her monologue. The legacy adapter effectively did this (its regex parse failed on
+        # these prompts). A real utterance arrives as a talk-heard event and is handled normally.
+        if events:
+            latest = max(events, key=lambda e: e.stamp)
+            if latest.type in ('talk-no-answer', 'talk-ignored', 'talk-illegible'):
+                rospy.loginfo("lang-model(agent): silence turn (%s) -> staying quiet", latest.type)
+                return "error"
+
         goal = GenerateReplyGoal()
         goal.request_type = "reply"
         goal.profile = profile
