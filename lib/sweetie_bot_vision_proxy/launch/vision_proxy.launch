@@ -2,6 +2,15 @@
   <!--
     Vision federation front + visualizer (the new C++ proxy) + the py3.10 tracker-fuser.
     Replaces the old gasket+core. The provider container(s) are started MANUALLY (run_provider.py).
+    Canonical LOCAL provider set (proto3 laptop) — include object_openvino so the native
+    person<->object HOLDING attribute is emitted (validated on proto3 req/foe footage, 2026-07-01):
+      run_provider.py --name sbprov --port 8080 \
+        --providers face_openvino,pose_alphapose,gaze_openvino,hands_mediapipe,object_openvino
+    object_openvino = CPU YOLOv4-tiny (pony_face/pony_body); the fuser's bind_objects_to_people then
+    stamps attributes['holding']='pony' on the holder + held_by on the object (tune via
+    SBVISION_HOLD_{TOUCH_IOU,WRIST_REACH,KP_THR}; drop the provider to disable holding). NOTE the
+    shipped sweetie-vision image predates object_openvino -> rebuild it from current src (provider
+    baked in) before enabling in production.
     Included by the deploy sweetie_bot_deploy/highlevel/vision.launch under the run_vision gate, so it
     comes up with flexbe_control.launch run_vision:=true.
   -->
