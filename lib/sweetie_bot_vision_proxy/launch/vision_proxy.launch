@@ -4,8 +4,8 @@
     Replaces the old gasket+core. The provider container(s) are started MANUALLY (run_provider.py).
     Canonical LOCAL provider set (proto3 laptop) — includes object_openvino (person<->object HOLDING)
     and emotion_openvino (per-person emotion), both validated on proto3 req/foe footage 2026-07-01:
-      run_provider.py --name sbprov --port 8080 \
-        --providers face_openvino,pose_alphapose,gaze_openvino,hands_mediapipe,object_openvino,emotion_openvino
+      run_provider.py -name sbprov -port 8080 \
+        -providers face_openvino,pose_alphapose,gaze_openvino,hands_mediapipe,object_openvino,emotion_openvino
     object_openvino = CPU YOLOv4-tiny (pony_face/pony_body) -> the fuser's bind_objects_to_people stamps
     attributes['holding']='pony' on the holder + held_by on the object (tune SBVISION_HOLD_{TOUCH_IOU,
     WRIST_REACH,KP_THR}). emotion_openvino = OMZ emotions-recognition-retail-0003 -> attributes['emotion']
