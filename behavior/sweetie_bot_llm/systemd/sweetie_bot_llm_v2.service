@@ -1,0 +1,27 @@
+[Unit]
+Description=Sweetie Bot LLM v2 (ollama provider, replaces the old text-generation-webui LLM)
+After=network-online.target docker.service
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mutr
+# Owns the ollama container lifecycle. Runs in the foreground so systemd tracks it.
+ExecStartPre=-/usr/bin/docker rm -f sbllm
+ExecStart=/usr/bin/docker run --rm --name sbllm --gpus all \
+    -v sbllm-models:/root/.ollama \
+    -p 11434:11434 \
+    -e OLLAMA_CONTEXT_LENGTH=8192 \
+    -e OLLAMA_KEEP_ALIVE=-1 \
+    ollama/ollama
+# Once the API is up, ensure the model is present (idempotent) and warm it.
+ExecStartPost=/bin/bash -c 'for i in $(seq 1 90); do curl -sf http://localhost:11434/api/version >/dev/null 2>&1 && break; sleep 1; done; docker exec sbllm ollama pull qwen2.5:7b; curl -s http://localhost:11434/v1/chat/completions -H "Content-Type: application/json" -d "{\"model\":\"qwen2.5:7b\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}],\"max_tokens\":1}" >/dev/null 2>&1 || true'
+ExecStop=/usr/bin/docker stop sbllm
+Restart=on-failure
+RestartSec=5
+# generous, first start may pull the ~4.7GB model
+TimeoutStartSec=1200
+
+[Install]
+WantedBy=multi-user.target
