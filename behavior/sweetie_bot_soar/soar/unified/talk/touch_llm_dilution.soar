@@ -45,3 +45,14 @@ sp {talk-llm*propose*touch-cheek-or-temple-llm
 	(<args> ^result <res>)
 	(<res> ^status succeed ^print (concat |SPECIFIC: TOUCH LLM.| (crlf)))
 }
+
+# Touch is an interaction: it must satisfy the waiting-for-answer state so the ignored/pause
+# flow ("you are ignoring me") cannot fire when the human touches her instead of speaking.
+# (User feedback 2026-07-02: she ran the ignored reaction while being touched.)
+sp {talk-llm*propose*touch-satisfies-waiting-answer
+	(state <s> ^top-state 1 ^io.input-link.touch.pressed <spot> ^beliefs.predicate <pred>)
+	(<pred> ^name talk-waiting-answer)
+-->
+	(<s> ^operator <op> +, >)
+	(<op> ^name touch-satisfies-waiting-answer ^type cognition automatic ^remove-predicate <pred>)
+}
