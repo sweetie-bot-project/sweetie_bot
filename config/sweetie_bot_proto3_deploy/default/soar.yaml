@@ -156,6 +156,18 @@ soar:
             type: 'look-at'
             controller: "motion/controller/look_at"
             period: 0.1
+            # safety gate (output-module level; live incident 2026-07-02: unreachable off-axis
+            # target with neck yaw disabled ground the head pitch into its joint limits)
+            safe_cone:
+                reference_frame: "base_link"
+                max_yaw: 1.0            # rad: keep gaze targets frontal (esp. with yaw servo off)
+                min_distance: 0.35      # m: closer targets fold the head down into the body
+                low_z: -0.05            # m: targets below this AND closer than low_z_distance
+                low_z_distance: 0.7     #    are head-into-body poses - rejected
+            start_rate_limit:           # anti-churn: 156 goals/18min observed live
+                max_starts: 5
+                window_s: 30.0
+                cooldown_s: 20.0
         lang-model:
             type: 'lang-model'
             backend: agent
