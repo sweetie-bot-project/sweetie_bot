@@ -162,9 +162,14 @@ _ID_NOTE = ("(Refer to people naturally by where they are or what they look like
 def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) -> str:
     """The always-on ambient block: 'Around you right now' + 'Since you last replied'."""
     lines: List[str] = []
-    if state.entities:
+    occluded = [e for e in state.entities if e.type == "camera_occluded" and e.in_frame]
+    normal = [e for e in state.entities if e.type != "camera_occluded"]
+    if occluded:
+        lines.append("WARNING: something is pressed right against your camera - your view is "
+                     "blocked and you can barely see anything right now.")
+    if normal:
         lines.append("Around you right now:")
-        for e in state.entities:
+        for e in normal:
             lines.append(f"- {_describe(e, cfg)}")
     for s in state.sounds:
         kind = "a voice" if s.kind == "speech" else "a sound"
@@ -173,6 +178,15 @@ def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) 
         lines.append("Since you last replied:")
         for ev in events:
             lines.append(f"- {ev.detail}.")
+    # recently-departed objects: keep them in her ambient awareness for the retention window so
+    # "where did the X go" works without requiring a tool call (7b models are tool-shy)
+    remembered = [e for e in state.entities
+                  if not e.in_frame and e.type != "camera_occluded"]
+    if remembered:
+        lines.append("Recently seen (now out of view - you remember where):")
+        for e in sorted(remembered, key=lambda e: e.last_seen_s):
+            ago = int(round(e.last_seen_s))
+            lines.append(f"- {_describe(e, cfg)} (last seen ~{ago}s ago)")
     if not lines:
         return ""
     return "\n".join(lines) + "\n" + _ID_NOTE

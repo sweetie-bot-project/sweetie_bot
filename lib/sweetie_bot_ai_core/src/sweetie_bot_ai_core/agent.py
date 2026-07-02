@@ -133,8 +133,14 @@ class Agent:
         tools_offered = (persona.allow_tools and profile.allow_tools
                          and len(self.tools.offered()) > 0)
 
-        # ambient environmental awareness: front-weighted scene + inter-turn delta
-        scene = select_salient(self.scene_provider.snapshot(), self.scene_config)
+        # ambient environmental awareness: front-weighted scene + inter-turn delta.
+        # include the short-term retention buffer so recently-departed objects stay in her
+        # ambient awareness ("where did the pony go") without requiring a tool call.
+        try:
+            raw_scene = self.scene_provider.snapshot(include_remembered=True)
+        except TypeError:   # provider without retention support (e.g. NullSceneProvider)
+            raw_scene = self.scene_provider.snapshot()
+        scene = select_salient(raw_scene, self.scene_config)
         events = scene_diff(self._prev_scene, scene, self.scene_config)
         self._prev_scene = scene
         scene_block = render_scene(scene, events, self.scene_config)
