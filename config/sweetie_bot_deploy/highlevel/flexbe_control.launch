@@ -137,7 +137,10 @@
 			</group>
 			<!-- SOAR cognition system -->
 			<group if="$(arg run_flexbe)">
-				<node pkg="sweetie_bot_soar" type="soar" name="soar" />
+				<!-- respawn: soar exits if it configures before load_param has published the
+				     saved poses (exit_on_configuration_failed) - a fresh process then wins the race
+				     (SWM singleton guard is per-process, so in-process reconfigure cannot recover) -->
+				<node pkg="sweetie_bot_soar" type="soar" name="soar" respawn="true" respawn_delay="5" />
 			</group>
 			<!-- vision subsystem -->
 			<group if="$(arg run_vision)">
