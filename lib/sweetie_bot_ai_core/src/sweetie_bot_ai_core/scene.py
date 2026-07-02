@@ -23,6 +23,7 @@ class SceneConfig:
     front_deg: float = 60.0        # |bearing| <= front_deg  -> front
     side_deg: float = 120.0        # front_deg < |bearing| <= side_deg -> side; else rear
     max_entities: int = 6          # cap on entities in the ambient block
+    max_remembered: int = 4
     max_sounds: int = 2
     # pretty rendering for known attribute keys; value is a format string using {v}
     attr_pretty: Dict[str, str] = field(default_factory=lambda: {
@@ -68,6 +69,12 @@ def select_salient(state: SceneState, cfg: SceneConfig) -> SceneState:
     if len(chosen) < cfg.max_entities:
         chosen += side[: cfg.max_entities - len(chosen)]
     chosen.sort(key=_entity_sort_key)
+    # remembered (out-of-frame) entities pass through regardless of zone - their bearing is
+    # recomputed against her CURRENT forward, so "it was to your right" stays true after she
+    # turns; render_scene shows them in the "Recently seen" section
+    remembered = [e for e in state.entities if not e.in_frame]
+    remembered.sort(key=lambda e: e.last_seen_s)
+    chosen += remembered[: cfg.max_remembered]
 
     sounds = [s for s in state.sounds if s.zone != Zone.rear]
     sounds.sort(key=lambda s: (0 if s.zone == Zone.front else 1, abs(s.bearing_deg)))
@@ -183,7 +190,8 @@ def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) 
     remembered = [e for e in state.entities
                   if not e.in_frame and e.type != "camera_occluded"]
     if remembered:
-        lines.append("Recently seen (now out of view - you remember where):")
+        lines.append("Recently seen (now OUT of view - when asked where one of these went, "
+                     "tell the remembered direction and how long ago):")
         for e in sorted(remembered, key=lambda e: e.last_seen_s):
             ago = int(round(e.last_seen_s))
             lines.append(f"- {_describe(e, cfg)} (last seen ~{ago}s ago)")

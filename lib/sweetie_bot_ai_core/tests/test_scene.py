@@ -128,3 +128,18 @@ def test_agent_injects_scene_block_into_prompt():
     agent.handle(AgentRequest(text="hello", profile="simple-en"))
     assert "Around you right now:" in reg.system
     assert "(id 3)" in reg.system
+
+
+def test_select_salient_passes_remembered_through():
+    """Out-of-frame remembered entities must reach the render (live bug: in_frame filter ate them)."""
+    from sweetie_bot_ai_core.schema import SceneEntity, SceneState, Zone
+    from sweetie_bot_ai_core.scene import SceneConfig, render_scene, select_salient
+    cfg = SceneConfig()
+    ent = [SceneEntity(id=1, type="human", zone=Zone.front, bearing_deg=0.0, in_frame=True,
+                       last_seen_s=0.0),
+           SceneEntity(id=2, type="pony", zone=Zone.front, bearing_deg=35.0, in_frame=False,
+                       last_seen_s=6.0)]
+    sel = select_salient(SceneState(entities=ent), cfg)
+    assert any(e.id == 2 for e in sel.entities), "remembered pony dropped by salience filter"
+    text = render_scene(sel, [], cfg)
+    assert "Recently seen" in text and "pony" in text and "right" in text
