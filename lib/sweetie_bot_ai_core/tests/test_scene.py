@@ -156,3 +156,20 @@ def test_elevation_words_render():
                        in_frame=True, last_seen_s=0.0)]
     text = render_scene(select_salient(SceneState(entities=ent), cfg), [], cfg)
     assert "below you" in text
+
+
+def test_occluded_by_inference():
+    from sweetie_bot_ai_core.schema import SceneEntity, SceneState, Zone
+    from sweetie_bot_ai_core.scene import SceneConfig, render_scene, select_salient
+    cfg = SceneConfig()
+    ent = [SceneEntity(id=1, type="human", zone=Zone.front, bearing_deg=10.0, distance="near",
+                       in_frame=True, last_seen_s=0.0),
+           SceneEntity(id=2, type="pony", zone=Zone.front, bearing_deg=14.0, distance="mid",
+                       in_frame=False, last_seen_s=4.0),
+           SceneEntity(id=3, type="pony", zone=Zone.side, bearing_deg=80.0, distance="mid",
+                       in_frame=False, last_seen_s=4.0)]
+    sel = select_salient(SceneState(entities=ent), cfg)
+    text = render_scene(sel, [], cfg)
+    assert "probably hidden behind the person (id 1)" in text   # aligned bearings -> inferred
+    p3 = [e for e in sel.entities if e.id == 3][0]
+    assert "probably_hidden_behind" not in p3.attributes        # far bearing -> no inference

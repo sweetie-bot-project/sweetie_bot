@@ -75,6 +75,7 @@ def select_salient(state: SceneState, cfg: SceneConfig) -> SceneState:
     remembered = [e for e in state.entities if not e.in_frame]
     remembered.sort(key=lambda e: e.last_seen_s)
     chosen += remembered[: cfg.max_remembered]
+    annotate_occluded_by(chosen)
 
     sounds = [s for s in state.sounds if s.zone != Zone.rear]
     sounds.sort(key=lambda s: (0 if s.zone == Zone.front else 1, abs(s.bearing_deg)))
@@ -122,7 +123,38 @@ def bearing_words(bearing_deg: float, cfg: SceneConfig) -> str:
     return f"to your {side}"
 
 
+_DIST_ORDER = {"near": 0, "mid": 1, "far": 2}
+
+
+def annotate_occluded_by(entities: List[SceneEntity], max_bearing_delta: float = 18.0) -> None:
+    """Mark remembered entities probably hidden behind a visible one (in place).
+
+    Heuristic: the occluder is a still-visible entity at roughly the SAME bearing that is at
+    least as close to her as the vanished object's last position — i.e. it stands between her
+    and where the object was ("you are hiding the pony behind you").
+    """
+    visible = [e for e in entities if e.in_frame and e.type != "camera_occluded"]
+    for r in entities:
+        if r.in_frame:
+            continue
+        best = None
+        for v in visible:
+            db = abs(v.bearing_deg - r.bearing_deg)
+            if db > max_bearing_delta:
+                continue
+            if _DIST_ORDER.get(v.distance or "mid", 1) > _DIST_ORDER.get(r.distance or "mid", 1):
+                continue  # the candidate is farther than the vanished object was - cannot occlude
+            if best is None or db < best[0]:
+                best = (db, v)
+        if best is not None:
+            v = best[1]
+            who = "the person" if v.type in ("person", "human", "face") else f"the {v.type.replace('_', ' ')}"
+            r.attributes["probably_hidden_behind"] = f"{who} (id {v.id})"
+
+
 def render_attr(key: str, value: str, cfg: SceneConfig) -> str:
+    if key == "probably_hidden_behind":
+        return f"probably hidden behind {value}"
     fmt = cfg.attr_pretty.get(key)
     if fmt is None:
         return f"{key}: {value}" if value not in ("", "1", "true", "True") else key
