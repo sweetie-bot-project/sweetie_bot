@@ -138,12 +138,29 @@ def _who(e: SceneEntity) -> str:
     return f"a {e.type.replace('_', ' ')}"
 
 
+def elevation_words(elevation_deg: float) -> str:
+    """Vertical placement vs her horizon; empty when roughly level."""
+    if elevation_deg >= 45:
+        return "well above you"
+    if elevation_deg >= 15:
+        return "above you"
+    if elevation_deg <= -45:
+        return "far below you"
+    if elevation_deg <= -15:
+        return "below you"
+    return ""
+
+
 def _describe(e: SceneEntity, cfg: SceneConfig) -> str:
     if e.type in ("person", "human", "face"):
         subj = f"a person (id {e.id})"
     else:
         subj = f"a {e.type.replace('_', ' ')} (id {e.id})"
-    parts = [subj, bearing_words(e.bearing_deg, cfg)]
+    where = bearing_words(e.bearing_deg, cfg)
+    vert = elevation_words(e.elevation_deg)
+    if vert:
+        where = f"{where}, {vert}"
+    parts = [subj, where]
     tags = []
     if e.is_interlocutor:
         tags.append("the one talking with you")

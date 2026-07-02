@@ -98,6 +98,7 @@ class SceneEntity(BaseModel):
     type: str = "person"                   # detector/object type, e.g. person, pony_face
     zone: Zone = Zone.front
     bearing_deg: float = 0.0               # +/- azimuth vs her current forward (right = +)
+    elevation_deg: float = 0.0             # +/- pitch vs her horizon (up = +)
     distance: Optional[str] = None         # coarse: near|mid|far
     attributes: Dict[str, str] = Field(default_factory=dict)  # generic, from vision attribute[]/value[]
     is_speaking: bool = False

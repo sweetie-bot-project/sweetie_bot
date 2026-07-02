@@ -105,12 +105,14 @@ class SceneCollector:
             return None
 
     def _bearing_dist(self, point):
-        """point in forward_frame (REP-103 x-forward, y-left) → (bearing_deg, distance_word)."""
-        x, y, _ = point
+        """point in forward_frame (REP-103 x-forward, y-left) → (bearing_deg, elevation_deg,
+        distance_word)."""
+        x, y, z = point
         bearing = self._bearing_sign * math.degrees(math.atan2(-y, x))  # +right by convention
         d = math.hypot(x, y)
+        elevation = math.degrees(math.atan2(z, d)) if d > 1e-6 else 0.0  # +up vs her horizon
         dist = "near" if d < self._near_m else ("mid" if d < self._mid_m else "far")
-        return bearing, dist
+        return bearing, elevation, dist
 
     @staticmethod
     def _attrs(det) -> Dict[str, str]:
@@ -133,10 +135,11 @@ class SceneCollector:
                 pf = self._to_frame(det, self._forward_frame)
                 if pf is None:
                     continue
-                bearing, dist = self._bearing_dist(pf)
+                bearing, elevation, dist = self._bearing_dist(pf)
                 seen_now.add(det.id)
                 entities.append(SceneEntity(
                     id=det.id, type=det.type or "person", bearing_deg=bearing,
+                    elevation_deg=elevation,
                     zone=classify_zone(bearing, self._cfg), distance=dist,
                     attributes=self._attrs(det), in_frame=True, last_seen_s=0.0))
 
@@ -150,9 +153,10 @@ class SceneCollector:
                 pf = self._stable_point_in_forward(r.point_stable)
                 if pf is None:
                     continue
-                bearing, dist = self._bearing_dist(pf)
+                bearing, elevation, dist = self._bearing_dist(pf)
                 entities.append(SceneEntity(
                     id=eid, type=r.type, bearing_deg=bearing,
+                    elevation_deg=elevation,
                     zone=classify_zone(bearing, self._cfg), distance=dist,
                     attributes=r.attributes, in_frame=False,
                     last_seen_s=max(0.0, now - r.last_t)))

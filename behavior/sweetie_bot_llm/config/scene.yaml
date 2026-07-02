@@ -21,7 +21,7 @@ scene:
   mid_m: 2.5
 
   # --- conventions (LIVE-CALIBRATE against the real frames/mic) ---
-  bearing_sign: 1.0                       # flip to -1.0 if left/right come out mirrored
+  bearing_sign: -1.0                      # CALIBRATED LIVE 2026-07-03: 1.0 gave mirrored left/right
   sound_bearing_sign: 1.0                 # DOA azimuth sign to match bearing convention
   sound_bearing_offset_deg: 0.0           # mic-array zero offset vs forward
 

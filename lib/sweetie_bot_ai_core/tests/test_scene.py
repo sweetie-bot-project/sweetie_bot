@@ -143,3 +143,16 @@ def test_select_salient_passes_remembered_through():
     assert any(e.id == 2 for e in sel.entities), "remembered pony dropped by salience filter"
     text = render_scene(sel, [], cfg)
     assert "Recently seen" in text and "pony" in text and "right" in text
+
+
+def test_elevation_words_render():
+    from sweetie_bot_ai_core.schema import SceneEntity, SceneState, Zone
+    from sweetie_bot_ai_core.scene import SceneConfig, elevation_words, render_scene, select_salient
+    assert elevation_words(30.0) == "above you"
+    assert elevation_words(-30.0) == "below you"
+    assert elevation_words(5.0) == ""
+    cfg = SceneConfig()
+    ent = [SceneEntity(id=3, type="pony", zone=Zone.front, bearing_deg=0.0, elevation_deg=-30.0,
+                       in_frame=True, last_seen_s=0.0)]
+    text = render_scene(select_salient(SceneState(entities=ent), cfg), [], cfg)
+    assert "below you" in text
