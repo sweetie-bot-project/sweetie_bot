@@ -20,6 +20,7 @@ class ToolAdapters:
 
     def dispatch(self, tool_call: ToolCall) -> ToolResult:
         name = tool_call.name
+        rospy.loginfo("llm_agent: tool call %s(%s)", name, tool_call.arguments)
         try:
             if name == "get_robot_state":
                 state = self._state.snapshot()
