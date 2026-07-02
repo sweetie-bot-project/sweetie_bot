@@ -8,7 +8,10 @@ emit entity_type 'human' for the fused person entity. See doc note. This relay j
 import rospy
 from sweetie_bot_text_msgs.msg import DetectionArray
 
-TYPE_MAP = {"face": "human"}   # the face carries gaze + head position -> good person proxy
+TYPE_MAP = {
+    "face": "human",        # the face carries gaze + head position -> good person proxy
+    "pony_body": "pony",    # vision.soar's type enum has pony/pony_face but no pony_body
+}
 
 rospy.init_node("detections_face2human_relay")
 pub = rospy.Publisher("detections_human", DetectionArray, queue_size=5)
@@ -19,7 +22,7 @@ def cb(msg):
         if d.type in TYPE_MAP:
             d.type = TYPE_MAP[d.type]
             if not d.label:                 # SOAR wants a non-None label; use the track id
-                d.label = "person_%d" % d.id
+                d.label = "%s_%d" % (d.type, d.id)
     pub.publish(msg)
 
 

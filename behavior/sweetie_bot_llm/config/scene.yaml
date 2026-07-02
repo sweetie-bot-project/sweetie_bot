@@ -26,3 +26,8 @@ scene:
   sound_bearing_offset_deg: 0.0           # mic-array zero offset vs forward
 
   min_score: 0.3                          # ignore detections below this confidence
+
+  # detection types that are NOT scene objects: sound/speech arrive as detections from the
+  # microphone on the same topic but are already covered by the sound cues (double-count);
+  # hand is a body part of an already-listed person.
+  exclude_types: ["sound", "speech", "hand"]

@@ -62,7 +62,8 @@ class LLMAgentNode:
         scene_kwargs = {k: scene_cfg[k] for k in (
             "detections_topic", "sound_topic", "forward_frame", "stable_frame", "front_deg",
             "side_deg", "retention_ttl_s", "near_m", "mid_m", "bearing_sign",
-            "sound_bearing_sign", "sound_bearing_offset_deg", "min_score") if k in scene_cfg}
+            "sound_bearing_sign", "sound_bearing_offset_deg", "min_score",
+                        "exclude_types") if k in scene_cfg}
         try:
             self._scene = SceneCollector(**scene_kwargs)
         except Exception as e:  # noqa: BLE001 - never block the node on scene setup

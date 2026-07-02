@@ -42,7 +42,8 @@ class SceneCollector:
                  front_deg=60.0, side_deg=120.0, retention_ttl_s=20.0,
                  near_m=1.0, mid_m=2.5, bearing_sign=1.0,
                  sound_bearing_sign=1.0, sound_bearing_offset_deg=0.0,
-                 min_score=0.3, clock=time.monotonic):
+                 min_score=0.3, exclude_types=("sound", "speech", "hand"),
+                 clock=time.monotonic):
         self._forward_frame = forward_frame
         self._stable_frame = stable_frame
         self._cfg = SceneConfig(front_deg=front_deg, side_deg=side_deg)
@@ -52,6 +53,10 @@ class SceneCollector:
         self._sound_sign = sound_bearing_sign
         self._sound_offset = sound_bearing_offset_deg
         self._min_score = min_score
+        # detection types that are NOT scene objects for the prompt: 'sound'/'speech' come from
+        # the microphone on the same topic and are already covered by SoundCue (double-count),
+        # 'hand' is a body part of an already-listed person, not a separate entity.
+        self._exclude_types = set(exclude_types or ())
         self._clock = clock
 
         self._tf = tf2_ros.Buffer()
@@ -69,6 +74,8 @@ class SceneCollector:
         self._latest = msg
         now = self._clock()
         for det in msg.detections:
+            if det.type in self._exclude_types:
+                continue
             if det.score and det.score < self._min_score:
                 continue
             p_stable = self._to_frame(det, self._stable_frame)
@@ -119,6 +126,8 @@ class SceneCollector:
         # in-frame entities from the latest detection message
         if self._latest is not None:
             for det in self._latest.detections:
+                if det.type in self._exclude_types:
+                    continue
                 if det.score and det.score < self._min_score:
                     continue
                 pf = self._to_frame(det, self._forward_frame)
