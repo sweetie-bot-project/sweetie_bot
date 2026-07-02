@@ -13,6 +13,7 @@
 	<arg name="run_moveit" default="false" doc="Run move_group associated with robot."/>
 	<arg name="run_vision" default="true" doc="Run vision node."/>
 	<arg name="run_nlp" default="true" doc="Run natural language processing nodes: speech to text, language model."/>
+	<arg name="run_llm_agent" default="true" doc="Run the LLM agent node (structured/tool-calling backend; used when SOAR lang-model config has backend: agent)."/>
 	<arg name="run_flexbe" default="true" doc="Run flexbe behaviour engine. For debug purpose it can start separately."/>
 	<arg name="run_flexbe_gui" default="false" doc="Start flexbe gui."/>
 
@@ -121,6 +122,10 @@
 				<node pkg="sweetie_bot_llm" type="llm_classification_node" name="classification_model" output="screen">
 					<remap from="classification" to="$(arg robot_ns)/classification" />
 				</node>
+				<!-- LLM agent (structured/tool-calling backend; SOAR calls it via the generate_reply action) -->
+				<group if="$(arg run_llm_agent)">
+					<include file="$(find sweetie_bot_llm)/launch/agent.launch"/>
+				</group>
 			</group>
 			<!-- FLEXBE: control node and action server -->
 			<group if="$(arg run_flexbe)">
@@ -133,6 +138,10 @@
 			<!-- SOAR cognition system -->
 			<group if="$(arg run_flexbe)">
 				<node pkg="sweetie_bot_soar" type="soar" name="soar" />
+				<!-- QUICK-FIX relay (see sweetie_bot_llm): vision publishes face/pony_body types,
+				     vision.soar keys on human/pony; SWM subscribes detections_human (soar.yaml).
+				     Remove once vision emits a fused human entity itself. -->
+				<node pkg="sweetie_bot_llm" type="detections_face2human_relay" name="detections_face2human_relay" output="screen"/>
 			</group>
 			<!-- vision subsystem -->
 			<group if="$(arg run_vision)">
