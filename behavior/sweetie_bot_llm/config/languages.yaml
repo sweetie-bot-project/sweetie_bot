@@ -6,7 +6,7 @@ language_policy:
   pivot: en
   native_languages:    # Qwen2.5 handles these well enough to consume directly
     - en
-    - ru
+    # ru removed (P11): qwen2.5:7b RU output is poor - translate RU both ways via the pivot
     - zh
     - ja
   # translate provider (LibreTranslate); reuse the existing translate service endpoint

@@ -54,7 +54,7 @@ class LLMAgentNode:
         translate = None
         if lp_cfg.get("translate_url"):
             translate = LibreTranslateProvider(lp_cfg["translate_url"])
-        policy = LanguagePolicy(native_languages=lp_cfg.get("native_languages", ["en", "ru"]),
+        policy = LanguagePolicy(native_languages=lp_cfg.get("native_languages", ["en"]),
                                 pivot=lp_cfg.get("pivot", "en"), provider=translate)
 
         self._state = StateCollector()

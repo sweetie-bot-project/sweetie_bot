@@ -27,6 +27,7 @@ from .schema import (AgentReply, AgentRequest, ErrorCode, Emotion, ReplyContent,
                      RobotState, SceneState, SentenceType, ToolCall, ToolResult,
                      classify_json_schema, reply_json_schema)
 from .tools import DispatchMode, ToolRegistry
+from .translation import detect_language
 
 
 class RobotStateProvider(Protocol):
@@ -122,9 +123,12 @@ class Agent:
         profile = self.profiles.get(request.profile) or DEFAULT_PROFILES["complex-en"]
         state = self.state_provider.snapshot()
 
+        # detect the actual input language (the adapter's text_language is a static config
+        # value); non-native input is translated to the pivot, and the reply back (see below)
+        user_lang = detect_language(request.text, request.text_language)
         user_text = request.text
         if self.policy is not None:
-            user_text = self.policy.to_model_language(request.text, request.text_language)
+            user_text = self.policy.to_model_language(user_text, user_lang)
 
         tools_offered = (persona.allow_tools and profile.allow_tools
                          and len(self.tools.offered()) > 0)
@@ -135,8 +139,13 @@ class Agent:
         self._prev_scene = scene
         scene_block = render_scene(scene, events, self.scene_config)
 
+        language_note = None
+        if self.policy is not None and self.policy.needs_input_translation(user_lang):
+            # earlier turns in `history` may still be in the user's language — anchor the model
+            language_note = ("Always answer in English regardless of the language of the "
+                             "conversation; your reply is translated for the user downstream.")
         system_prompt = build_system_prompt(persona, state, tools_offered=tools_offered,
-                                            scene_block=scene_block)
+                                            scene_block=scene_block, language_note=language_note)
         if request.context_facts:
             system_prompt += ("\n\nRelevant things you remember right now:\n"
                               + "\n".join(f"- {f}" for f in request.context_facts))
@@ -151,12 +160,15 @@ class Agent:
         result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
                                         **profile.options)
         content = ReplyContent.model_validate(self._safe_json(result.content))
+        response_text = content.response_text
+        if self.policy is not None:
+            response_text = self.policy.to_user_language(response_text, user_lang)
         return AgentReply(
-            response_text=content.response_text,
+            response_text=response_text,
             emotion=content.emotion,
             sentence_type=content.sentence_type,
             tool_calls=proposed,
-            language="en",                 # canonical; TTS localizes
+            language=user_lang,            # mirror the speaker (en stays en)
             error_code=ErrorCode.SUCCESS,
             raw=result.content,
         )
