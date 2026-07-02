@@ -69,7 +69,7 @@ class ProfileConfig:
 DEFAULT_PROFILES: Dict[str, ProfileConfig] = {
     # primary path: full context + dynamic state + tools
     "complex-en": ProfileConfig(allow_tools=True, max_verbatim_turns=8, max_tool_iters=3,
-                                options={"temperature": 0.8}),
+                                options={"temperature": 0.8, "max_tokens": 512}),
     # fast lightweight path: reduced context, no tools
     "simple-en": ProfileConfig(allow_tools=False, max_verbatim_turns=4, max_tool_iters=0,
                                options={"temperature": 0.7, "max_tokens": 160}),
