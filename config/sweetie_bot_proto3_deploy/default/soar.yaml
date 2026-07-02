@@ -25,7 +25,7 @@ soar:
             last_activity_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 3.0, 30.0 ] }
         swm:
             type: "swm"
-            topic: "detections_human"
+            topic: "detections"
             visibility_timeout: 2
             memorize_time: 600
             world_frame: "odom_combined"

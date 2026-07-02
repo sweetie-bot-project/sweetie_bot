@@ -376,6 +376,17 @@ public:
         // x-right, y-down), so the core's clean REP-103 output renders upside-down + mirrored. Negate
         // x,y of every published 3D position to match the robot frame (the old gasket did the same).
         pnh_.param<bool>("flip_optical_xy", flip_optical_xy_, true);
+        // Map core entity types to the SOAR taxonomy at the ROS boundary (vision.soar keys a
+        // person on 'human' and the plushie on 'pony'; the core/wire keep their raw types so the
+        // dataset rig & caches are unaffected). Overridable via the ~type_map rosparam.
+        type_map_ = {{"face", "human"}, {"pony_body", "pony"}};
+        XmlRpc::XmlRpcValue tmap;
+        if (pnh_.getParam("type_map", tmap) && tmap.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+            type_map_.clear();
+            for (auto it = tmap.begin(); it != tmap.end(); ++it)
+                if (it->second.getType() == XmlRpc::XmlRpcValue::TypeString)
+                    type_map_[it->first] = static_cast<std::string>(it->second);
+        }
         result_pub_ = nh_.advertise<std_msgs::String>("/vision_proxy/result_json", 10);
         image_pub_ = nh_.advertise<sensor_msgs::Image>(image_topic_, 1);
         det_pub_ = nh_.advertise<sweetie_bot_text_msgs::DetectionArray>(det_topic_, 5);
@@ -641,8 +652,10 @@ private:
             sweetie_bot_text_msgs::Detection m;
             m.header = hdr;
             m.id = d.track_id >= 0 ? d.track_id : 0;
-            m.label = d.label;
-            m.type = d.type;
+            auto tm = type_map_.find(d.type);
+            m.type = (tm != type_map_.end()) ? tm->second : d.type;
+            // SOAR's vision rules require a non-None label; synthesize one from type + track id
+            m.label = !d.label.empty() ? d.label : (m.type + "_" + std::to_string(m.id));
             m.score = static_cast<float>(d.score);
             for (const auto& kv : d.attrs) { m.attribute.push_back(kv.first); m.value.push_back(kv.second); }
             m.pose.orientation.w = 1.0;
@@ -720,6 +733,7 @@ private:
     std::vector<RemoteSpec> remote_specs_;
     std::string pipeline_, prov_host_, prov_target_, remote_host_, remote_target_, remote_token_,
                 fuser_host_, image_topic_, image_frame_id_, det_topic_;
+    std::map<std::string, std::string> type_map_;
     int prov_port_ = 8080, remote_port_ = 8443, fuser_port_ = 9100, ring_size_ = 60, rot_deg_ = 0;
     bool remote_insecure_ = true;
     bool flip_optical_xy_ = true;

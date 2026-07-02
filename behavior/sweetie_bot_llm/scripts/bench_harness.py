@@ -39,15 +39,15 @@ def det(id_, type_, x, y, label="", attrs=None):
 
 
 SCENARIOS = {
-    "person":      lambda t: [det(101, "face", 1.5, 0.2, attrs={"emotion": "happy"})],
-    "person_pony": lambda t: [det(101, "face", 1.5, 0.2, attrs={"emotion": "happy"}),
-                              det(201, "pony_body", 1.2, -0.5)],
-    "pony":        lambda t: [det(201, "pony_body", 1.2, -0.5)],
+    "person":      lambda t: [det(101, "human", 1.5, 0.2, attrs={"emotion": "happy"})],
+    "person_pony": lambda t: [det(101, "human", 1.5, 0.2, attrs={"emotion": "happy"}),
+                              det(201, "pony", 1.2, -0.5)],
+    "pony":        lambda t: [det(201, "pony", 1.2, -0.5)],
     "empty":       lambda t: [],
     # P12 leave/re-enter: person, gone, back with a NEW track id
-    "reenter":     lambda t: ([det(101, "face", 1.5, 0.2)] if t % 20 < 8 else
+    "reenter":     lambda t: ([det(101, "human", 1.5, 0.2)] if t % 20 < 8 else
                               [] if t % 20 < 14 else
-                              [det(105, "face", 1.4, -0.3)]),
+                              [det(105, "human", 1.4, -0.3)]),
 }
 
 

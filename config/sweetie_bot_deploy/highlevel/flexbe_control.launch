@@ -138,10 +138,6 @@
 			<!-- SOAR cognition system -->
 			<group if="$(arg run_flexbe)">
 				<node pkg="sweetie_bot_soar" type="soar" name="soar" />
-				<!-- QUICK-FIX relay (see sweetie_bot_llm): vision publishes face/pony_body types,
-				     vision.soar keys on human/pony; SWM subscribes detections_human (soar.yaml).
-				     Remove once vision emits a fused human entity itself. -->
-				<node pkg="sweetie_bot_llm" type="detections_face2human_relay" name="detections_face2human_relay" output="screen"/>
 			</group>
 			<!-- vision subsystem -->
 			<group if="$(arg run_vision)">

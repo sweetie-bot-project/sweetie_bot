@@ -26,3 +26,9 @@ vision_proxy:
       #   tls: true
       #   insecure: true
       #   token_env: "VISION_API_KEY_LAPTOP2"
+
+    # entity-type mapping applied at the ROS boundary (SOAR taxonomy; vision.soar keys a person
+    # on 'human', the plushie on 'pony'). Core/wire types stay raw (dataset rig unaffected).
+    type_map:
+        face: human
+        pony_body: pony
