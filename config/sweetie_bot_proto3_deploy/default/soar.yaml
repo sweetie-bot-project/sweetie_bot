@@ -213,6 +213,12 @@ soar:
                           value_nomatch: 'statement'
                           stop_list: ["\n"]
                 'simple-en':
+                    # P1 fix: SOAR tries simple-en FIRST for every verbolization (priority 3)
+                    # and the structured agent never fails to parse, so - unlike the legacy
+                    # regex path, whose parse failures escalated conversation to complex-en -
+                    # every turn would stay on the constrained simple profile. Map it to the
+                    # rich conversational profile instead (tools on, no tight token cap).
+                    profile: 'complex-en'
                     prompt_header_name: "simple-en"
                     prompt_fact_templates:
                         'talk-heard': [ "Human: {text}\n\r"  ]
