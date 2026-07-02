@@ -160,7 +160,7 @@ soar:
             # target with neck yaw disabled ground the head pitch into its joint limits)
             safe_cone:
                 reference_frame: "base_link"
-                max_yaw: 1.0            # rad: keep gaze targets frontal (esp. with yaw servo off)
+                max_yaw: 0.12           # rad: NEAR-CENTER ONLY - with a dead neck joint the controller grinds reachable axes chasing any lateral offset (live incidents x2)
                 min_distance: 0.35      # m: closer targets fold the head down into the body
                 low_z: -0.05            # m: targets below this AND closer than low_z_distance
                 low_z_distance: 0.7     #    are head-into-body poses - rejected
