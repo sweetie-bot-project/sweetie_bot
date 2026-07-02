@@ -164,10 +164,6 @@ soar:
                 min_distance: 0.35      # m: closer targets fold the head down into the body
                 low_z: -0.05            # m: targets below this AND closer than low_z_distance
                 low_z_distance: 0.7     #    are head-into-body poses - rejected
-            start_rate_limit:           # anti-churn: 156 goals/18min observed live
-                max_starts: 5
-                window_s: 30.0
-                cooldown_s: 20.0
         lang-model:
             type: 'lang-model'
             backend: agent
