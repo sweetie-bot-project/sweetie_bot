@@ -76,7 +76,7 @@ class LLMAgentNode:
                             effector=self._effector, language_policy=policy,
                             scene_config=SceneConfig(front_deg=scene_cfg.get("front_deg", 60.0),
                                                      side_deg=scene_cfg.get("side_deg", 120.0)),
-                            logger=rospy.logwarn)
+                            logger=rospy.loginfo)
 
         # --- persona switching (clean runtime switch) ---------------------------------------
         rospy.Subscriber("~set_persona", String, self._on_set_persona, queue_size=1)
@@ -127,7 +127,7 @@ class LLMAgentNode:
         result = GenerateReplyResult()
         fill_result(result, reply)
         if reply.error_code.value == 0:
-            rospy.loginfo("llm_agent: reply [%s] %r", result.emotion, result.response_text[:80])
+            rospy.loginfo("llm_agent: reply [%s] %r", result.emotion, result.response_text[:600])
             self._server.set_succeeded(result)
         else:
             rospy.logwarn("llm_agent: error %s: %s", reply.error_code.name, reply.error_desc)

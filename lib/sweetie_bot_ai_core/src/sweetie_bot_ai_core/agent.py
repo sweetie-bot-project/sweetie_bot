@@ -148,6 +148,10 @@ class Agent:
         events = scene_diff(self._prev_scene, scene, self.scene_config)
         self._prev_scene = scene
         scene_block = render_scene(scene, events, self.scene_config)
+        if scene_block:
+            # single-line observability: the behavior-synth harness (and live debugging) asserts
+            # on what perception actually reached the prompt
+            self.log("scene_block: " + scene_block.replace(chr(10), " | ")[:600])
 
         language_note = None
         if self.policy is not None and self.policy.needs_input_translation(user_lang):

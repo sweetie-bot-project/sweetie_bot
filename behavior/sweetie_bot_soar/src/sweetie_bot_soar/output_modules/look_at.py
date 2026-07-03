@@ -32,6 +32,9 @@ class LookAt(OutputModule):
         self._cone_min_dist = float(cone.get("min_distance", 0.35))
         self._cone_low_z = float(cone.get("low_z", -0.05))
         self._cone_low_z_dist = float(cone.get("low_z_distance", 0.7))
+        # how long a goal may sit with an out-of-cone target before failing (releases the
+        # head/eyes resources; holding them silently starves focusing-on-interlocutor - P19)
+        self._unsafe_fail_s = float(cone.get("unsafe_fail_s", 1.5))
         self._tf_listener = tf.TransformListener()
         # object to monitor
         self._object_key = None
@@ -91,6 +94,7 @@ class LookAt(OutputModule):
         # start publication
         self._object_key = object_key
         self._object_not_found = False
+        self._unsafe_since = None
         self._timer = self.createTimer(self._period, self._publishCallback)
         # log
         rospy.loginfo('lookat output module: set opertional (obect: %s, resources: %s)', object_key, resources)
@@ -107,12 +111,15 @@ class LookAt(OutputModule):
         if obj is None:
             self._object_not_found = True
             return
-        # safe-cone gate every tick: the module never streams references toward an unsafe target
-        # (outside the frontal cone / too close / low-and-close). The head simply HOLDS instead;
-        # the goal lifecycle stays SOAR-paced exactly as before (no instant errors - SOAR retries
-        # errors at millisecond rate and that wedged the controller in RECALLING live).
+        # safe-cone gate every tick: never stream references toward an unsafe target (outside
+        # the frontal cone / too close / low-and-close). Track the streak: updateHook fails the
+        # goal after a short grace so the head/eyes resources are RELEASED (a silently-held goal
+        # starves focusing-on-interlocutor and mutes the talk pipeline - P19).
         if not self._target_in_safe_cone(obj, swm):
+            if self._unsafe_since is None:
+                self._unsafe_since = rospy.Time.now()
             return
+        self._unsafe_since = None
         # publish pose
         pose_stamped = PoseStamped(pose = obj.pose, header = Header(frame_id = swm.world_frame, stamp = rospy.Time.now()))
         self._pose_pub.publish(pose_stamped)
@@ -153,6 +160,12 @@ class LookAt(OutputModule):
             # check if object is missing
             if self._object_not_found:
                 self._cancel_goal(reason="SWM object is missing")
+                return "failed"
+
+            # target persistently outside the safe cone: fail (releases head/eyes for others)
+            if self._unsafe_since is not None and \
+                    (rospy.Time.now() - self._unsafe_since).to_sec() > self._unsafe_fail_s:
+                self._cancel_goal(reason="target outside the safe gaze cone")
                 return "failed"
 
             # continue exection (ACTIVE, PENDING)

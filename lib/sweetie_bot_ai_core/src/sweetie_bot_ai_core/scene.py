@@ -154,7 +154,8 @@ def annotate_occluded_by(entities: List[SceneEntity], max_bearing_delta: float =
 
 def render_attr(key: str, value: str, cfg: SceneConfig) -> str:
     if key == "probably_hidden_behind":
-        return f"probably hidden behind {value}"
+        return (f"very likely hiding behind {value} right now — if asked where she is, "
+                f"say she is hiding behind them")
     fmt = cfg.attr_pretty.get(key)
     if fmt is None:
         return f"{key}: {value}" if value not in ("", "1", "true", "True") else key
@@ -219,7 +220,8 @@ def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) 
     """The always-on ambient block: 'Around you right now' + 'Since you last replied'."""
     lines: List[str] = []
     occluded = [e for e in state.entities if e.type == "camera_occluded" and e.in_frame]
-    normal = [e for e in state.entities if e.type != "camera_occluded"]
+    # in-frame only: remembered (out-of-view) entities have their own "Recently seen" section
+    normal = [e for e in state.entities if e.type != "camera_occluded" and e.in_frame]
     if occluded:
         lines.append("WARNING: something is pressed right against your camera - your view is "
                      "blocked and you can barely see anything right now.")

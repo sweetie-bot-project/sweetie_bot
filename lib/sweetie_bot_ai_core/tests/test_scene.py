@@ -170,6 +170,6 @@ def test_occluded_by_inference():
                        in_frame=False, last_seen_s=4.0)]
     sel = select_salient(SceneState(entities=ent), cfg)
     text = render_scene(sel, [], cfg)
-    assert "probably hidden behind the person (id 1)" in text   # aligned bearings -> inferred
+    assert "hiding behind the person (id 1)" in text   # aligned bearings -> inferred
     p3 = [e for e in sel.entities if e.id == 3][0]
     assert "probably_hidden_behind" not in p3.attributes        # far bearing -> no inference

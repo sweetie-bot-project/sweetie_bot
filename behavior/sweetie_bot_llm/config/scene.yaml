@@ -7,7 +7,7 @@ scene:
 
   # --- frames (LIVE-CALIBRATE) ---
   forward_frame: "base_link"              # her forward reference (REP-103 x-forward) for bearing
-  stable_frame: "odom"                    # world-ish frame for retention so bearing survives turning
+  stable_frame: "odom_combined"   # THIS robot has odom_combined, not odom (silent retention failure; found by behavior-synth)                    # world-ish frame for retention so bearing survives turning
 
   # --- front-180 salience zones ---
   front_deg: 60.0                         # |bearing| <= front_deg -> front (full salience)

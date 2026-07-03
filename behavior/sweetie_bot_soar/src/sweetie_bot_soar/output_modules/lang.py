@@ -75,7 +75,8 @@ class AgentLangModel(OutputModule):
                     elif attr == 'predicate':
                         predicates.append(Predicate(item_id.ConvertToIdentifier()))
                 except WMEParseError as e:
-                    rospy.logwarn("lang-model(agent): ^%s parse error: %s", attr, e)
+                    # bookkeeping events (talk-waiting-answer etc.) legitimately have no text
+                    rospy.logdebug("lang-model(agent): ^%s parse skip: %s", attr, e)
             if attr == 'request':
                 request_name = item_id.GetValueAsString()
             elif attr == 'text':
@@ -102,17 +103,12 @@ class AgentLangModel(OutputModule):
         if text is not None and history and history[-1].get("text") == text:
             history = history[:-1]
 
-        # Silence turns: if the newest talk event is a no-answer / ignored / illegible marker
-        # (the human said nothing), stay quiet instead of generating a fresh — often
-        # question-shaped — reply. Producing a reply here re-arms SOAR's waiting-answer loop and
-        # makes her monologue. The legacy adapter effectively did this (its regex parse failed on
-        # these prompts). A real utterance arrives as a talk-heard event and is handled normally.
-        if events:
-            latest = max(events, key=lambda e: e.stamp)
-            if latest.type in ('talk-no-answer', 'talk-ignored', 'talk-illegible'):
-                rospy.loginfo("lang-model(agent): silence turn (%s) -> staying quiet", latest.type)
-                return "error"
-
+        # Silence turns (talk-no-answer / ignored / illegible) are handled by SOAR's OWN talk
+        # rules (pause/ignored follow-ups are deliberate behaviors) - the agent answers whatever
+        # SOAR asks it to verbalize. Monologue cannot chain: add-talk-ignored re-arms only on a
+        # QUESTION reply, and the persona ends non-questions with statements. (An adapter-level
+        # silence guard was tried and disproven by the behavior-synth harness: error-returns
+        # churned at ms rate and starved real turns; empty results wedged the say pipeline.)
         goal = GenerateReplyGoal()
         goal.request_type = "reply"
         goal.profile = profile

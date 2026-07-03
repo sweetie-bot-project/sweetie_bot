@@ -61,6 +61,11 @@ class SceneCollector:
 
         self._tf = tf2_ros.Buffer()
         self._tf_listener = tf2_ros.TransformListener(self._tf)
+        # /detections has MULTIPLE publishers (vision proxy + microphone + test injectors);
+        # keeping only the single latest frame made the scene flicker per-publisher (P27) -
+        # merge everything received within a short window instead, newest-per-id wins
+        self._recent = []                 # [(monotonic_t, DetectionArray)]
+        self._merge_window_s = 0.6
         self._latest: Optional[DetectionArray] = None
         self._sound: Optional[SoundEvent] = None
         self._remembered: Dict[int, _Remembered] = {}
@@ -71,6 +76,7 @@ class SceneCollector:
     def reset(self) -> None:
         """Drop all perceived/remembered state (latest frame, sound, retention). Test/reset seam."""
         self._latest = None
+        self._recent = []
         self._sound = None
         self._remembered.clear()
 
@@ -79,6 +85,10 @@ class SceneCollector:
     def _on_detections(self, msg: DetectionArray):
         self._latest = msg
         now = self._clock()
+        self._recent.append((now, msg))
+        cut = now - self._merge_window_s
+        while self._recent and self._recent[0][0] < cut:
+            self._recent.pop(0)
         for det in msg.detections:
             if det.type in self._exclude_types:
                 continue
@@ -131,9 +141,17 @@ class SceneCollector:
         seen_now = set()
         now = self._clock()
 
-        # in-frame entities from the latest detection message
-        if self._latest is not None:
-            for det in self._latest.detections:
+        # in-frame entities merged from ALL frames in the window (multi-publisher topic, P27);
+        # newest frame first so the freshest observation of an id wins the dedup
+        merged = []
+        cut = now - self._merge_window_s
+        for t, msg in reversed(self._recent):
+            if t >= cut:
+                merged.extend(msg.detections)
+        if merged:
+            for det in merged:
+                if det.id in seen_now:
+                    continue
                 if det.type in self._exclude_types:
                     continue
                 if det.score and det.score < self._min_score:
