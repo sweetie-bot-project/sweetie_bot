@@ -328,6 +328,11 @@ class VoiceNode():
             success = self._player.play(cmd.command)
             self._publish_voice_status(is_speaking = False)
         elif cmd.type.startswith('voice/say'):
+            # P24 guard: an empty-text say wedged the synthesis PERMANENTLY (goal stuck ACTIVE,
+            # cancel could not preempt; every later say queued behind it) - complete it as a no-op
+            if not (cmd.command or '').strip():
+                rospy.logwarn('voice: empty say command - completing as no-op (P24)')
+                return True
             # get lang code
             if len(cmd.type) >= 12:
                 lang = cmd.type.rsplit('/',1)[-1]
