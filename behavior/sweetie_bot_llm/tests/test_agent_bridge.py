@@ -75,6 +75,8 @@ def test_fill_result_inplace():
 
 def test_servo_fault_filter_debounces_comm_noise():
     """Bus comm errors are normal noise; only persistent error states are faults."""
+    import pytest
+    pytest.importorskip("rospy")   # state_collector imports rospy; runs under the ROS env
     from sweetie_bot_llm.state_collector import ServoFaultFilter
     t = [0.0]
     f = ServoFaultFilter(min_reports=4, min_span_s=3.0, clock=lambda: t[0])
