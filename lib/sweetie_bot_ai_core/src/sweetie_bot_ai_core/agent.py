@@ -154,8 +154,11 @@ class Agent:
             self.log("scene_block: " + scene_block.replace(chr(10), " | ")[:600])
 
         language_note = None
-        if self.policy is not None and self.policy.needs_input_translation(user_lang):
-            # earlier turns in `history` may still be in the user's language — anchor the model
+        if user_lang != "en":
+            # canonical-EN output contract: the VOICE node localizes every non-EN say
+            # (translate en->lang with gender hints). The model must answer EN even when it
+            # consumed the input natively (zh/ja) or its mirrored reply would be translated
+            # AGAIN from source='en' and mangled (P25).
             language_note = ("Always answer in English regardless of the language of the "
                              "conversation; your reply is translated for the user downstream.")
         system_prompt = build_system_prompt(persona, state, tools_offered=tools_offered,
@@ -174,15 +177,15 @@ class Agent:
         result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
                                         **profile.options)
         content = ReplyContent.model_validate(self._safe_json(result.content))
-        response_text = content.response_text
-        if self.policy is not None:
-            response_text = self.policy.to_user_language(response_text, user_lang)
+        # canonical-EN output: NO agent-side back-translation - the voice node owns
+        # localization (it translates every non-EN say from en; agent-side RU output was
+        # double-translated and mangled, P25)
         return AgentReply(
-            response_text=response_text,
+            response_text=content.response_text,
             emotion=content.emotion,
             sentence_type=content.sentence_type,
             tool_calls=proposed,
-            language=user_lang,            # mirror the speaker (en stays en)
+            language="en",                 # canonical; voice/say/<lang> localizes downstream
             error_code=ErrorCode.SUCCESS,
             raw=result.content,
         )

@@ -38,8 +38,9 @@ def test_no_monologue_after_reply(world):
 @behavior_test
 @scene(person(id=101, bearing=0.0, dist=1.5))
 def test_russian_turn_answered_in_russian(world):
-    """RU in -> RU out (two-way translation, P11 fix); voice gets the ru channel."""
+    """RU in -> canonical-EN reply + the VOICE localizes on the ru channel (P25: exactly one
+    translation hop, owned by the voice node)."""
     t = world.say_and_wait("Привет, Свити! Расскажи, кто ты такая?", lang="ru")
-    check.is_cyrillic(t.text)
     assert t.said is not None, "reply was never handed to the voice"
     assert t.said.lang == "ru", f"voice channel {t.said.lang!r}, expected ru"
+    check.is_cyrillic(t.said.text)      # the VOICED text is Russian (single voice-side hop)
