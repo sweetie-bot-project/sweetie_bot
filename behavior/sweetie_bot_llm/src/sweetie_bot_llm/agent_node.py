@@ -14,6 +14,7 @@ import os
 import rospy
 import actionlib
 from std_msgs.msg import String
+from std_srvs.srv import Trigger, TriggerResponse
 
 from sweetie_bot_ai_core import (Agent, LanguagePolicy, PersonaRegistry, SceneConfig, ToolRegistry,
                                  build_llm_registry)
@@ -79,6 +80,8 @@ class LLMAgentNode:
 
         # --- persona switching (clean runtime switch) ---------------------------------------
         rospy.Subscriber("~set_persona", String, self._on_set_persona, queue_size=1)
+        # reset seam for the behavior-synth harness: clears everything that persists between goals
+        rospy.Service("~reset", Trigger, self._on_reset)
 
         # --- action server -------------------------------------------------------------------
         self._server = actionlib.SimpleActionServer(
@@ -88,6 +91,19 @@ class LLMAgentNode:
                       personas.names(), list(registry.health().keys()))
 
     # -- callbacks --------------------------------------------------------------------------------
+
+    def _on_reset(self, _req):
+        try:
+            self._agent.reset_ambient()
+            if self._scene is not None:
+                self._scene.reset()
+            self._agent.registry.reset_breakers()
+            self._agent.personas.reset_active()
+            rospy.loginfo("llm_agent: state reset (ambient scene, retention, breakers, persona)")
+            return TriggerResponse(success=True, message="reset")
+        except Exception as e:  # noqa: BLE001
+            rospy.logerr("llm_agent: reset failed: %r", e)
+            return TriggerResponse(success=False, message=repr(e))
 
     def _on_set_persona(self, msg: String):
         if self._agent.personas.set_active(msg.data.strip()):

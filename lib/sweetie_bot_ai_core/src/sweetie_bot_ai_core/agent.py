@@ -104,6 +104,10 @@ class Agent:
 
     # -- public entry -------------------------------------------------------------------------
 
+    def reset_ambient(self) -> None:
+        """Forget the inter-turn ambient state (scene diff memory). Test/reset seam."""
+        self._prev_scene = SceneState()
+
     def handle(self, request: AgentRequest) -> AgentReply:
         try:
             if request.request_type == RequestType.classify:

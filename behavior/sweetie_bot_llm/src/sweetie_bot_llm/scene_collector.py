@@ -68,6 +68,12 @@ class SceneCollector:
         rospy.Subscriber(detections_topic, DetectionArray, self._on_detections, queue_size=1)
         rospy.Subscriber(sound_topic, SoundEvent, self._on_sound, queue_size=1)
 
+    def reset(self) -> None:
+        """Drop all perceived/remembered state (latest frame, sound, retention). Test/reset seam."""
+        self._latest = None
+        self._sound = None
+        self._remembered.clear()
+
     # -- subscribers --------------------------------------------------------------------------
 
     def _on_detections(self, msg: DetectionArray):

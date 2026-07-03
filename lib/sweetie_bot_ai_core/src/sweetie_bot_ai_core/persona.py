@@ -118,6 +118,10 @@ class PersonaRegistry:
     def active(self) -> Persona:
         return self._personas[self._active]
 
+    def reset_active(self) -> None:
+        """Restore the default persona. Test/reset seam."""
+        self._active = self._default
+
     def set_active(self, name: str) -> bool:
         if name in self._personas:
             self._active = name

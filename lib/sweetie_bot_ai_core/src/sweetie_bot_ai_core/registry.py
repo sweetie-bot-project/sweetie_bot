@@ -90,6 +90,12 @@ class ProviderRegistry:
     def chat(self, messages, **kwargs):
         return self.execute(lambda c: c.chat(messages, **kwargs))
 
+    def reset_breakers(self) -> None:
+        """Clear circuit-breaker state on every endpoint. Test/reset seam."""
+        for ep in self.endpoints:
+            ep.fail_count = 0
+            ep.open_until = 0.0
+
     def health(self) -> dict:
         return {ep.name: (ep.enabled and not ep.is_open(self.clock())) for ep in self.endpoints}
 

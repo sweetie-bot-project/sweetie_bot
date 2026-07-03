@@ -184,3 +184,28 @@ def test_persona_registry_default_and_switch():
     assert pr.active.name == "sweetie"
     assert not pr.set_active("nonexistent")
     assert pr.get(None).display_name == "Sweetie Bot"
+
+
+def test_reset_seams():
+    """P0: in-process reset of inter-goal state (behavior-synth harness seam)."""
+    from sweetie_bot_ai_core.agent import Agent
+    from sweetie_bot_ai_core.registry import ProviderRegistry, Endpoint
+    from sweetie_bot_ai_core.persona import PersonaRegistry
+    from sweetie_bot_ai_core.schema import SceneState, SceneEntity, Zone
+
+    reg = ProviderRegistry([Endpoint(name="x", client=object(), priority=1)])
+    reg.endpoints[0].fail_count = 5
+    reg.endpoints[0].open_until = 1e12
+    reg.reset_breakers()
+    assert reg.endpoints[0].fail_count == 0 and reg.endpoints[0].open_until == 0.0
+
+    a = Agent(reg)
+    a._prev_scene = SceneState(entities=[SceneEntity(id=1, type="pony", zone=Zone.front)])
+    a.reset_ambient()
+    assert a._prev_scene.entities == []
+
+    p = PersonaRegistry()
+    default = p.active_name if hasattr(p, "active_name") else p._active
+    p._active = "something_else"
+    p.reset_active()
+    assert p._active == default or p._active == p._default
