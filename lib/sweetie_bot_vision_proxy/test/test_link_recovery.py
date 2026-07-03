@@ -40,8 +40,9 @@ pytestmark = pytest.mark.skipif(
 class LinkCluster:
     """Private-master vision chain owning its Popens, so tests can kill/wedge/respawn members."""
 
-    def __init__(self, tmp):
+    def __init__(self, tmp, provider_params=CONST_PONY):
         self.tmp = tmp
+        self.provider_params = provider_params
         self.env = dict(os.environ, ROS_MASTER_URI=f"http://127.0.0.1:{MASTER_PORT}")
         self._procs = []
         self._specs = {}
@@ -99,7 +100,7 @@ class LinkCluster:
         py_env = {"PYTHONPATH": os.path.join(VISION_REPO, "src")}
         self.spawn("stub_provider", [SBCORE_PY, "-m", "perfusion.transport.server",
                                      "--providers-only", "--providers", "object_stub",
-                                     "--provider-params", CONST_PONY,
+                                     "--provider-params", self.provider_params,
                                      "--host", "127.0.0.1", "--port", str(STUB_PORT), "--no-auth"],
                    py_env)
         self.spawn("fuser", [SBCORE_PY, os.path.join(VISION_REPO, "scripts", "vision_proxy_fuser"),
