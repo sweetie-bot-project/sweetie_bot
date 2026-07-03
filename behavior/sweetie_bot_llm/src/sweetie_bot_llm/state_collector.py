@@ -30,6 +30,30 @@ _BATTERY_STATUS = {
 }
 
 
+class ServoFaultFilter:
+    """Debounce transient servo bus errors (normal noise on this robot): a servo is FAULTED
+    only when errors persist (>= min_reports reports spanning >= min_span_s); one clean report
+    clears it. Pure (clock injected) - unit-testable."""
+
+    def __init__(self, min_reports: int = 4, min_span_s: float = 3.0, clock=None):
+        import time as _time
+        self._clock = clock or _time.monotonic
+        self.min_reports = min_reports
+        self.min_span_s = min_span_s
+        self._err = {}     # name -> (first_t, count)
+
+    def observe(self, name: str, has_error: bool) -> bool:
+        """Feed one report; returns True while the servo counts as (persistently) faulted."""
+        now = self._clock()
+        if not has_error:
+            self._err.pop(name, None)
+            return False
+        first_t, count = self._err.get(name, (now, 0))
+        count += 1
+        self._err[name] = (first_t, count)
+        return count >= self.min_reports and (now - first_t) >= self.min_span_s
+
+
 class StateCollector:
     """Caches the latest state messages; ``snapshot()`` renders a RobotState. Thread-safe."""
 
@@ -39,6 +63,7 @@ class StateCollector:
         self._lock = threading.Lock()
         self._battery: Optional[BatteryState] = None
         self._servo_faults: List[str] = []
+        self._fault_filter = ServoFaultFilter()
         self._overheated: List[str] = []
         self._overheat_temp = overheat_temp
 
@@ -67,7 +92,9 @@ class StateCollector:
         faults, overheated = [], []
         try:
             name = getattr(msg, "name", None)
-            if getattr(msg, "status_error", 0):
+            # transient bus comm errors are NORMAL on this robot - only persistent error
+            # states reach the LLM (she must not narrate routine comm retries as faults)
+            if self._fault_filter.observe(name or "unknown", bool(getattr(msg, "status_error", 0))):
                 faults.append(name or "unknown")
             temp = getattr(msg, "temperature", None)
             if temp is not None and temp > self._overheat_temp:

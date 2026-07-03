@@ -71,3 +71,23 @@ def test_fill_result_inplace():
     fill_result(res, reply)
     assert res.response_text == "Yo"
     assert res.emotion == "surprise"
+
+
+def test_servo_fault_filter_debounces_comm_noise():
+    """Bus comm errors are normal noise; only persistent error states are faults."""
+    from sweetie_bot_llm.state_collector import ServoFaultFilter
+    t = [0.0]
+    f = ServoFaultFilter(min_reports=4, min_span_s=3.0, clock=lambda: t[0])
+    # transient blip: two errors then clean -> never faulted
+    assert f.observe("leg1", True) is False
+    t[0] = 1.0
+    assert f.observe("leg1", True) is False
+    t[0] = 1.5
+    assert f.observe("leg1", False) is False
+    # persistent: 4 reports over >=3s -> faulted; clean report clears
+    for i, ts in enumerate([2.0, 3.0, 4.0, 5.5]):
+        t[0] = ts
+        r = f.observe("head2", True)
+    assert r is True
+    t[0] = 6.0
+    assert f.observe("head2", False) is False
