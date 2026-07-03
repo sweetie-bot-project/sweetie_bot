@@ -1,0 +1,5 @@
+Metadata-Version: 2.1
+Name: sweetie-bot-behavior-synth
+Version: 0.1.0
+Summary: Synthetic behavioral test harness: synth scenarios on the real ROS system in sim
+Requires-Python: >=3.8
