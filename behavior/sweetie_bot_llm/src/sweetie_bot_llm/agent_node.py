@@ -58,7 +58,8 @@ class LLMAgentNode:
         policy = LanguagePolicy(native_languages=lp_cfg.get("native_languages", ["en"]),
                                 pivot=lp_cfg.get("pivot", "en"), provider=translate)
 
-        self._state = StateCollector()
+        self._state = StateCollector(
+            ignored_servos=set(rospy.get_param("/disabled_servos", {}).keys()))
         # scene provider (environmental awareness); tolerate a missing vision stack gracefully
         scene_kwargs = {k: scene_cfg[k] for k in (
             "detections_topic", "sound_topic", "forward_frame", "stable_frame", "front_deg",

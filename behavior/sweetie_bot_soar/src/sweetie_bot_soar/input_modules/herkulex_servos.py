@@ -14,6 +14,12 @@ class HerkulexServos(InputModule):
         servo_state_topic = self.getConfigParameter(config, 'topic', allowed_types = str)
         self._overheat_temperature = self.getConfigParameter(config, "overheat_temperature", allowed_types = (float, int))
         self._ignore_joints = self.getConfigParameter(config, "ignore_joints", default_value = [], check_func = lambda jnts: all(isinstance(v, str) for v in jnts))
+        # hardware-disabled servos (single source of truth: /disabled_servos, hardware.yaml)
+        # are unioned in: a known-dead servo must never surface as failed/off/overheat to SOAR
+        disabled = list(rospy.get_param("/disabled_servos", {}).keys())
+        if disabled:
+            self._ignore_joints = list(set(self._ignore_joints) | set(disabled))
+            rospy.loginfo(f"input module {name}: ignoring hardware-disabled servos {sorted(disabled)}")
         joint_groups = self.getConfigParameter(config, "groups", default_value = {}, 
                                                          check_func = lambda grps: all(isinstance(k, str) and isinstance(v, list) for k, v in grps.items()),
                                                          error_desc= f"input module {name}: groups dict must contain (str, list) pairs where key represents group name and list elements are servo names in group.")

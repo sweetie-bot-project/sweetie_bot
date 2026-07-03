@@ -59,18 +59,23 @@ class StateCollector:
 
     def __init__(self, *, battery_topic="battery_state",
                  servo_topic="motion/herkulex/servo_states",
-                 joint_topic="joint_states", overheat_temp=80.0):
+                 joint_topic="joint_states", overheat_temp=80.0,
+                 ignored_servos=None, subscribe=True):
         self._lock = threading.Lock()
         self._battery: Optional[BatteryState] = None
         self._servo_faults: List[str] = []
         self._fault_filter = ServoFaultFilter()
         self._overheated: List[str] = []
         self._overheat_temp = overheat_temp
+        # hardware-disabled servos (single source of truth: /disabled_servos, hardware.yaml):
+        # entirely invisible to the LLM state view - a known-dead servo is not news
+        self._ignored_servos = set(ignored_servos or ())
 
-        rospy.Subscriber(battery_topic, BatteryState, self._on_battery, queue_size=1)
-        rospy.Subscriber(joint_topic, JointState, self._on_joint, queue_size=1)
-        if _HAS_HERKULEX:
-            rospy.Subscriber(servo_topic, HerkulexState, self._on_servo, queue_size=10)
+        if subscribe:
+            rospy.Subscriber(battery_topic, BatteryState, self._on_battery, queue_size=1)
+            rospy.Subscriber(joint_topic, JointState, self._on_joint, queue_size=1)
+            if _HAS_HERKULEX:
+                rospy.Subscriber(servo_topic, HerkulexState, self._on_servo, queue_size=10)
         self._moving = None
 
     # -- subscribers --------------------------------------------------------------------------
@@ -89,6 +94,8 @@ class StateCollector:
             self._moving = moving
 
     def _on_servo(self, msg):
+        if getattr(msg, "name", None) in self._ignored_servos:
+            return
         faults, overheated = [], []
         try:
             name = getattr(msg, "name", None)

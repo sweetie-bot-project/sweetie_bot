@@ -101,6 +101,41 @@ depl:loadComponent("kinematics_inv", "sweetie_bot::motion::" .. component_type)
 kinematics_inv = depl:getPeer("kinematics_inv")
 -- get ROS parameteres and services
 config.get_peer_rosparams(kinematics_inv)
+-- disabled servos (single source of truth: /disabled_servos in hardware.yaml, a dict
+-- { joint_name: resting_angle_rad }): pin each listed joint in the IK bounds at its resting
+-- angle, so solutions never rely on hardware that cannot move. A dead joint left free in the
+-- bounds makes the solver put motion into it and the filters grind the live joints chasing
+-- the never-closing error (the head-dive incidents).
+do
+	local robot_model = aggregator_ref:provides("robot_model")
+	robot_model:getOperation("configure")()   -- idempotent; ensure chains are parsed
+	local chains = robot_model:getOperation("listChains")():totab()
+	local getChainJoints = robot_model:getOperation("getChainJoints")
+	for _, chain in ipairs(chains) do
+		local joints = getChainJoints(chain):totab()
+		for k, jname in ipairs(joints) do
+			local pos = config.get_rosparam("/disabled_servos/" .. jname, "float")
+			if pos ~= nil then
+				local q_min = config.get_property(kinematics_inv, chain .. "_q_min")
+				local q_max = config.get_property(kinematics_inv, chain .. "_q_max")
+				if q_min and q_max then
+					local mins = q_min:get():totab()
+					local maxs = q_max:get():totab()
+					mins[k] = pos - 0.005
+					maxs[k] = pos + 0.005
+					local vmin = q_min:get(); vmin:fromtab(mins)
+					local vmax = q_max:get(); vmax:fromtab(maxs)
+					q_min:set(vmin); q_max:set(vmax)
+					print("kinematics_inv: PINNED disabled joint " .. jname .. " (chain '" ..
+					      chain .. "' index " .. (k-1) .. ") at " .. pos .. " rad")
+				else
+					print("WARNING: kinematics_inv: chain '" .. chain .. "' has no explicit " ..
+					      "q_min/q_max limits (cpf) - cannot pin disabled joint " .. jname .. " there.")
+				end
+			end
+		end
+	end
+end
 -- data flow: controller <-> aggregator_ref
 depl:connect("kinematics_inv.in_joints_sorted", "aggregator_ref.out_joints_sorted", rtt.Variable("ConnPolicy"))
 depl:connect("kinematics_inv.out_joints", "aggregator_ref.in_joints", rtt.Variable("ConnPolicy"))

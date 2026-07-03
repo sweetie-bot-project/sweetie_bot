@@ -93,3 +93,26 @@ def test_servo_fault_filter_debounces_comm_noise():
     assert r is True
     t[0] = 6.0
     assert f.observe("head2", False) is False
+
+
+def test_state_collector_ignores_disabled_servos():
+    """Servos listed in /disabled_servos are invisible to the LLM state view - no fault,
+    no overheat - while other servos still report (the ignore must not mask real faults)."""
+    import pytest
+    pytest.importorskip("rospy")
+    from types import SimpleNamespace
+
+    from sweetie_bot_llm.state_collector import ServoFaultFilter, StateCollector
+
+    c = StateCollector(subscribe=False, ignored_servos={"head_joint1"})
+    t = [0.0]
+    c._fault_filter = ServoFaultFilter(min_reports=4, min_span_s=3.0, clock=lambda: t[0])
+    for ts in (0.0, 1.5, 3.0, 4.5):
+        t[0] = ts
+        for name in ("head_joint1", "leg1_joint2"):
+            c._on_servo(SimpleNamespace(name=name, status_error=1, temperature=95.0))
+    s = c.snapshot()
+    assert "head_joint1" not in s.servo_faults
+    assert "head_joint1" not in s.overheated_servos
+    assert "leg1_joint2" in s.servo_faults
+    assert "leg1_joint2" in s.overheated_servos
