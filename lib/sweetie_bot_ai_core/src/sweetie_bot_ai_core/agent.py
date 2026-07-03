@@ -76,6 +76,9 @@ DEFAULT_PROFILES: Dict[str, ProfileConfig] = {
     # minimal degraded path
     "failsafe-en": ProfileConfig(allow_tools=False, max_verbatim_turns=2, max_tool_iters=0,
                                  options={"temperature": 0.6, "max_tokens": 120}),
+    # canned-speech rephrase hop (text-action interceptor): fast, tool-free, high variety
+    "rephrase-en": ProfileConfig(allow_tools=False, max_verbatim_turns=0, max_tool_iters=0,
+                                 options={"temperature": 1.0, "max_tokens": 80}),
 }
 
 

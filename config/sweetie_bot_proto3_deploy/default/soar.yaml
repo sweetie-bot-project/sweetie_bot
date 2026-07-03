@@ -149,6 +149,13 @@ soar:
         text-action:
             type: 'text-action'
             action_ns: "voice/syn"
+            # LLM rephrase interceptor: canned rule phrases are occasionally rephrased in
+            # character (generic dilution, all say paths; LLM replies always pass verbatim)
+            llm_rephrase:
+                probability: 0.4
+                timeout: 3.0
+                action_ns: "generate_reply"
+                profile: "rephrase-en"
         speech-visualization:
             type: 'speech-visualization'
             topic: "hmi/speech_visualization"
