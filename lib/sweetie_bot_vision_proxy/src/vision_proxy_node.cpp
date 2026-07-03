@@ -34,6 +34,7 @@
 #include <boost/asio/ssl/rfc2818_verification.hpp>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <cstddef>
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
@@ -151,72 +152,181 @@ static uint64_t strip_vres(const std::string& raw, std::vector<uint8_t>& body) {
     return 0;
 }
 
-// ---- provider connections: ws (local) and wss (remote). Lazy (re)connect; query = write+read+strip. ----
+// ---- provider connections: ws (local) and wss (remote). Lazy (re)connect; query = write+read+strip.
+//
+// P21 hardening. Beast's websocket stream timeout option applies to ASYNC operations only, and
+// asio's synchronous recv retries EAGAIN on a blocking socket with an unbounded poll — so plain
+// sync write/read can wedge FOREVER on a half-open link (server thread died without FIN,
+// container pause, conntrack drop) with no exception, no log, no reconnect: the exact live
+// incident (perception blind, /detections empty, not one error line). Therefore every I/O op
+// runs ASYNC with a wall-clock bound (run_for + hard-close on overrun), failures are LOUD
+// (unthrottled DOWN/RECOVERED transitions, throttled repeats), reconnects use a bounded
+// 0.5->3 s backoff, and a reply whose echoed frame_id mismatches the uplink counts as a dead
+// (desynced) link. A wedged-but-open socket is torn down, never reused. ----
+
+// Run one async op to completion within timeout_s. start(fin) must begin the op and arrange for
+// fin(ec) from its completion handler; on deadline overrun abort() must hard-close the transport
+// (which completes the pending op with operation_aborted), after which the io_context is drained.
+// Throws on timeout or op error.
+template <class Start, class Abort>
+static void run_bounded(net::io_context& ioc, double timeout_s, const char* what,
+                        Start&& start, Abort&& abort) {
+    bool done = false; beast::error_code ec;
+    auto fin = [&done, &ec](beast::error_code e) { done = true; ec = e; };
+    start(fin);
+    ioc.restart();
+    ioc.run_for(std::chrono::milliseconds(static_cast<long>(timeout_s * 1000)));
+    if (!done) {
+        abort();
+        ioc.restart();
+        ioc.run();
+        char b[96];
+        std::snprintf(b, sizeof(b), "%s timed out (%.1fs)", what, timeout_s);
+        throw std::runtime_error(b);
+    }
+    if (ec) throw std::runtime_error(std::string(what) + ": " + ec.message());
+}
+
+// uplink frame_id straight off the wire message (the provider server echoes it in the VRES reply).
+static uint64_t frame_id_of(const std::vector<uint8_t>& msg) {
+    uint64_t fid = 0;
+    if (msg.size() >= sizeof(FrameHeader) && std::memcmp(msg.data(), "MJPG", 4) == 0)
+        std::memcpy(&fid, msg.data() + offsetof(FrameHeader, frame_id), sizeof(fid));
+    return fid;
+}
+
 struct ProviderConn {
     virtual ~ProviderConn() {}
     virtual std::string name() const = 0;
     virtual bool query(const std::vector<uint8_t>& frame_msg, std::vector<uint8_t>& body) = 0;
+    bool healthy() const { return healthy_; }
+    // watchdog escalation: tear down even an apparently-open link and retry NOW (skip backoff).
+    void force_reset() { teardown(); next_attempt_ = std::chrono::steady_clock::time_point{}; }
+protected:
+    virtual void teardown() = 0;
+    // fail-fast gate: while in post-failure backoff, don't touch the network at all.
+    bool in_backoff() const { return std::chrono::steady_clock::now() < next_attempt_; }
+    void note_ok() {
+        if (!healthy_ && fails_ > 0) {
+            double down = std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - down_since_).count();
+            char b[64];
+            std::snprintf(b, sizeof(b), "RECOVERED after %.1fs (%d failures)", down, fails_);
+            ROS_WARN_STREAM(name() << " provider link " << b);
+        }
+        healthy_ = true; fails_ = 0; backoff_s_ = 0.5;
+    }
+    void note_fail(const std::string& what) {
+        teardown();
+        auto now = std::chrono::steady_clock::now();
+        if (fails_ == 0) {                       // healthy -> dead transition: unthrottled, loud
+            down_since_ = now;
+            ROS_WARN_STREAM(name() << " provider link DOWN: " << what);
+        } else {
+            ROS_WARN_STREAM_THROTTLE(3.0, name() << " query failed (retry in " << backoff_s_
+                                     << "s): " << what);
+        }
+        healthy_ = false; ++fails_;
+        next_attempt_ = now + std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+            std::chrono::duration<double>(backoff_s_));
+        backoff_s_ = std::min(backoff_s_ * 2.0, 3.0);
+    }
+    bool healthy_ = false; int fails_ = 0;
+    double backoff_s_ = 0.5;
+    std::chrono::steady_clock::time_point down_since_{}, next_attempt_{};
 };
 
 class WsProvider : public ProviderConn {
 public:
-    WsProvider(std::string h, int p, std::string t, std::string tok = "")
-        : host_(std::move(h)), target_(std::move(t)), token_(std::move(tok)), port_(p) {}
+    WsProvider(std::string h, int p, std::string t, std::string tok = "", double io_timeout_s = 5.0)
+        : host_(std::move(h)), target_(std::move(t)), token_(std::move(tok)), port_(p),
+          io_timeout_s_(io_timeout_s) {}
     std::string name() const override { return "ws://" + host_ + ":" + std::to_string(port_); }
     bool query(const std::vector<uint8_t>& msg, std::vector<uint8_t>& body) override {
+        if (!ws_ && in_backoff()) return false;            // fail fast between reconnect attempts
         try {
             if (!ws_) connect();
-            ws_->write(net::buffer(msg));
-            beast::flat_buffer rb; ws_->read(rb);
-            strip_vres(beast::buffers_to_string(rb.data()), body);
+            auto abort = [&] { beast::error_code ig; ws_->next_layer().close(ig); };
+            run_bounded(*ioc_, io_timeout_s_, "write", [&](auto fin) {
+                ws_->async_write(net::buffer(msg),
+                                 [fin](beast::error_code ec, std::size_t) { fin(ec); }); }, abort);
+            beast::flat_buffer rb;
+            run_bounded(*ioc_, io_timeout_s_, "read", [&](auto fin) {
+                ws_->async_read(rb,
+                                [fin](beast::error_code ec, std::size_t) { fin(ec); }); }, abort);
+            uint64_t got = strip_vres(beast::buffers_to_string(rb.data()), body);
+            uint64_t sent = frame_id_of(msg);
+            if (got && sent && got != sent)    // stale echo = desynced link: dead despite "working"
+                throw std::runtime_error("desynced reply (sent frame " + std::to_string(sent) +
+                                         ", got " + std::to_string(got) + ")");
+            note_ok();
             return true;
         } catch (const std::exception& e) {
-            ROS_WARN_STREAM_THROTTLE(3.0, name() << " query failed (reconnect next): " << e.what());
-            ws_.reset(); ioc_.reset();
+            note_fail(e.what());
             return false;
         }
     }
 private:
+    void teardown() override { ws_.reset(); ioc_.reset(); }
     void connect() {
         ioc_ = std::make_unique<net::io_context>();
         tcp::resolver res(*ioc_);
+        auto r = res.resolve(host_, std::to_string(port_));   // sync: loopback/LAN, effectively instant
         ws_ = std::make_unique<websocket::stream<tcp::socket>>(*ioc_);
-        auto r = res.resolve(host_, std::to_string(port_));
-        net::connect(ws_->next_layer(), r.begin(), r.end());
-        ws_->set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
+        auto abort = [&] { beast::error_code ig; ws_->next_layer().close(ig); };
+        run_bounded(*ioc_, io_timeout_s_, "connect", [&](auto fin) {
+            net::async_connect(ws_->next_layer(), r.begin(), r.end(),
+                               [fin](beast::error_code ec, tcp::resolver::iterator) { fin(ec); }); },
+            abort);
         std::string tok = token_;
         ws_->set_option(websocket::stream_base::decorator([tok](websocket::request_type& req) {
             req.set(beast::http::field::user_agent, "vision_proxy_node");
             if (!tok.empty()) req.set(beast::http::field::authorization, "Bearer " + tok);
         }));
-        ws_->handshake(host_, target_);
+        run_bounded(*ioc_, io_timeout_s_, "ws handshake", [&](auto fin) {
+            ws_->async_handshake(host_, target_, [fin](beast::error_code ec) { fin(ec); }); }, abort);
         ws_->binary(true);
         ROS_INFO_STREAM("connected " << name() << (token_.empty() ? "" : " (auth)"));
     }
     std::string host_, target_, token_; int port_;
+    double io_timeout_s_;
     std::unique_ptr<net::io_context> ioc_;
     std::unique_ptr<websocket::stream<tcp::socket>> ws_;
 };
 
 class WssProvider : public ProviderConn {
 public:
-    WssProvider(std::string h, int p, std::string t, bool insec, std::string tok)
-        : host_(std::move(h)), target_(std::move(t)), token_(std::move(tok)), port_(p), insecure_(insec) {}
+    WssProvider(std::string h, int p, std::string t, bool insec, std::string tok,
+                double io_timeout_s = 30.0)
+        : host_(std::move(h)), target_(std::move(t)), token_(std::move(tok)), port_(p),
+          insecure_(insec), io_timeout_s_(io_timeout_s) {}
     std::string name() const override { return "wss://" + host_ + ":" + std::to_string(port_); }
     bool query(const std::vector<uint8_t>& msg, std::vector<uint8_t>& body) override {
+        if (!ws_ && in_backoff()) return false;            // fail fast between reconnect attempts
         try {
             if (!ws_) connect();
-            ws_->write(net::buffer(msg));
-            beast::flat_buffer rb; ws_->read(rb);
-            strip_vres(beast::buffers_to_string(rb.data()), body);
+            auto abort = [&] { beast::error_code ig; beast::get_lowest_layer(*ws_).close(ig); };
+            run_bounded(*ioc_, io_timeout_s_, "write", [&](auto fin) {
+                ws_->async_write(net::buffer(msg),
+                                 [fin](beast::error_code ec, std::size_t) { fin(ec); }); }, abort);
+            beast::flat_buffer rb;
+            run_bounded(*ioc_, io_timeout_s_, "read", [&](auto fin) {
+                ws_->async_read(rb,
+                                [fin](beast::error_code ec, std::size_t) { fin(ec); }); }, abort);
+            uint64_t got = strip_vres(beast::buffers_to_string(rb.data()), body);
+            uint64_t sent = frame_id_of(msg);
+            if (got && sent && got != sent)    // stale echo = desynced link: dead despite "working"
+                throw std::runtime_error("desynced reply (sent frame " + std::to_string(sent) +
+                                         ", got " + std::to_string(got) + ")");
+            note_ok();
             return true;
         } catch (const std::exception& e) {
-            ROS_WARN_STREAM_THROTTLE(3.0, name() << " query failed (reconnect next): " << e.what());
-            ws_.reset(); ctx_.reset(); ioc_.reset();
+            note_fail(e.what());
             return false;
         }
     }
 private:
+    void teardown() override { ws_.reset(); ctx_.reset(); ioc_.reset(); }
     void connect() {
         ioc_ = std::make_unique<net::io_context>();
         ctx_ = std::make_unique<ssl::context>(ssl::context::tlsv12_client);
@@ -229,19 +339,26 @@ private:
             throw beast::system_error(beast::error_code(
                 static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()));
         auto r = res.resolve(host_, std::to_string(port_));
-        net::connect(beast::get_lowest_layer(*ws_), r.begin(), r.end());
-        ws_->next_layer().handshake(ssl::stream_base::client);
-        ws_->set_option(websocket::stream_base::timeout::suggested(beast::role_type::client));
+        auto abort = [&] { beast::error_code ig; beast::get_lowest_layer(*ws_).close(ig); };
+        run_bounded(*ioc_, io_timeout_s_, "connect", [&](auto fin) {
+            net::async_connect(beast::get_lowest_layer(*ws_), r.begin(), r.end(),
+                               [fin](beast::error_code ec, tcp::resolver::iterator) { fin(ec); }); },
+            abort);
+        run_bounded(*ioc_, io_timeout_s_, "tls handshake", [&](auto fin) {
+            ws_->next_layer().async_handshake(ssl::stream_base::client,
+                                              [fin](beast::error_code ec) { fin(ec); }); }, abort);
         std::string tok = token_;
         ws_->set_option(websocket::stream_base::decorator([tok](websocket::request_type& req) {
             req.set(beast::http::field::user_agent, "vision_proxy_node");
             if (!tok.empty()) req.set(beast::http::field::authorization, "Bearer " + tok);
         }));
-        ws_->handshake(host_, target_);
+        run_bounded(*ioc_, io_timeout_s_, "ws handshake", [&](auto fin) {
+            ws_->async_handshake(host_, target_, [fin](beast::error_code ec) { fin(ec); }); }, abort);
         ws_->binary(true);
         ROS_INFO_STREAM("connected " << name() << (insecure_ ? " (insecure)" : ""));
     }
     std::string host_, target_, token_; int port_; bool insecure_;
+    double io_timeout_s_;
     std::unique_ptr<net::io_context> ioc_;
     std::unique_ptr<ssl::context> ctx_;
     std::unique_ptr<websocket::stream<beast::ssl_stream<tcp::socket>>> ws_;
@@ -352,6 +469,10 @@ public:
                                                remote_port_, true, remote_insecure_});
         ROS_INFO_STREAM("vision_proxy: " << remote_specs_.size() << " remote container(s)");
         pnh_.param<double>("remote_max_staleness_ms", remote_max_staleness_ms_, 1500.0);
+        // P21 local-link hardening: every local I/O op is wall-clock-bounded; the watchdog forces
+        // a reconnect cycle (and an ERROR log) when nothing succeeds for too long.
+        pnh_.param<double>("provider_io_timeout", provider_io_timeout_, 2.0);
+        pnh_.param<double>("provider_watchdog", provider_watchdog_, 10.0);
         pnh_.param<std::string>("fuser_host", fuser_host_, "127.0.0.1");
         pnh_.param<int>("fuser_port", fuser_port_, 9100);
         pnh_.param<int>("ring_size", ring_size_, 60);
@@ -568,9 +689,14 @@ private:
                          - static_cast<double>(cap_ts_ns)) * 1e-6;
         // refresh the displayed numbers at most ~2 Hz (every 500 ms) to reduce flicker
         if (hud_last_update_ns_ == 0 || (now_wall - hud_last_update_ns_) >= 500000000ULL) {
-            char buf[64];
+            char buf[96];
             std::snprintf(buf, sizeof(buf), "%.1f fps  %.0f ms", hud_fps_, lat_ms);
             hud_text_ = buf;
+            if (local_down_secs_ > 0.5) {   // P21: the stream must not look fine while blind
+                char lbuf[32];
+                std::snprintf(lbuf, sizeof(lbuf), "  NO LOCAL %.0fs", local_down_secs_);
+                hud_text_ += lbuf;
+            }
             hud_last_update_ns_ = now_wall;
         }
         if (!hud_text_.empty()) {
@@ -676,16 +802,21 @@ private:
     }
 
     void worker_loop() {
-        WsProvider local(prov_host_, prov_port_, prov_target_);     // local = synchronous FAST path
+        WsProvider local(prov_host_, prov_port_, prov_target_, "",  // local = synchronous FAST path;
+                         provider_io_timeout_);                       // every op wall-clock-bounded
         std::vector<std::unique_ptr<RemoteWorker>> remotes;          // remotes = async best-effort, off the loop
         for (const auto& rs : remote_specs_) {                       // one async worker per remote container
             std::unique_ptr<ProviderConn> conn;
+            // Remotes get a generous bound (heavy nets + WAN): still finite, so a wedged remote
+            // worker thread also self-heals instead of blocking forever.
             if (rs.tls)
-                conn = std::make_unique<WssProvider>(rs.host, rs.port, rs.target, rs.insecure, rs.token);
+                conn = std::make_unique<WssProvider>(rs.host, rs.port, rs.target, rs.insecure,
+                                                     rs.token, 30.0);
             else
-                conn = std::make_unique<WsProvider>(rs.host, rs.port, rs.target, rs.token);
+                conn = std::make_unique<WsProvider>(rs.host, rs.port, rs.target, rs.token, 30.0);
             remotes.push_back(std::make_unique<RemoteWorker>(std::move(conn), remote_max_staleness_ms_));
         }
+        auto last_local_ok = std::chrono::steady_clock::now();
         while (running_.load() && ros::ok()) {
             Frame f;
             if (!latest_blocking(f)) break;
@@ -699,13 +830,43 @@ private:
             // worker threads and attach whatever fresh result they already have — NEVER blocking here.
             std::vector<std::vector<uint8_t>> bodies;
             std::vector<uint8_t> lb;
-            if (local.query(msg, lb)) bodies.push_back(std::move(lb));
+            bool local_ok = local.query(msg, lb);
+            if (local_ok) {
+                bodies.push_back(std::move(lb));
+                last_local_ok = std::chrono::steady_clock::now();
+            }
+            local_down_secs_ = local_ok ? 0.0 : std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - last_local_ok).count();
+            // liveness watchdog: no successful LOCAL reply for provider_watchdog_ seconds while
+            // frames flow -> force a full teardown (covers any residual wedged-but-open mode) and
+            // escalate to ERROR so the outage can't be missed.
+            if (!local_ok && local_down_secs_ > provider_watchdog_) {
+                ROS_ERROR_STREAM_THROTTLE(10.0, "local provider " << local.name()
+                    << ": no successful reply for " << static_cast<int>(local_down_secs_)
+                    << "s while frames flow; forcing reconnect");
+                local.force_reset();
+            }
             for (auto& r : remotes) {
                 r->submit(msg);
                 std::vector<uint8_t> rb;
                 if (r->latest(rb)) bodies.push_back(std::move(rb));
             }
-            if (bodies.empty()) { ros::Duration(0.05).sleep(); continue; }   // no provider answered
+            if (bodies.empty()) {
+                // No provider answered. Keep the operator-facing stream alive AND SAYING SO —
+                // during the P21 incident the demo stream looked healthy while perception was
+                // blind. The HUD renders the dead-link state onto the raw camera frame.
+                cv::Mat raw = cv::imdecode(cv::Mat(1, static_cast<int>(f.jpeg.size()), CV_8UC1,
+                                                   f.jpeg.data()), cv::IMREAD_COLOR);
+                if (!raw.empty()) {
+                    std_msgs::Header hdr;
+                    hdr.stamp = ros::Time().fromNSec(f.capture_ts_ns);
+                    hdr.frame_id = image_frame_id_;
+                    draw(raw, std::vector<TrackedDet>(), f.capture_ts_ns);
+                    image_pub_.publish(cv_bridge::CvImage(hdr, "bgr8", raw).toImageMsg());
+                }
+                ros::Duration(0.05).sleep();
+                continue;
+            }
             std::string reply;
             if (!fuser_roundtrip(f, bodies, reply)) {
                 ROS_WARN_STREAM_THROTTLE(2.0, "fuser roundtrip failed (frame " << f.frame_id << ")");
@@ -744,6 +905,9 @@ private:
     cv::Ptr<cv::freetype::FreeType2> ft2_;
     bool ft_ready_ = false;
     double remote_max_staleness_ms_ = 1500.0;
+    double provider_io_timeout_ = 2.0;   // per-op wall-clock bound on the local provider link (s)
+    double provider_watchdog_ = 10.0;    // no-local-success escalation threshold (s)
+    double local_down_secs_ = 0.0;       // seconds since last successful local reply (worker thread)
     GstElement* pipeline_p_ = nullptr; GstAppSink* appsink_ = nullptr;
     std::atomic<bool> running_{false};
     std::thread worker_;
