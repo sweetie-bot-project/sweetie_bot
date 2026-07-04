@@ -15,4 +15,4 @@ hardware:
 # `positions` = the joint's REAL resting angle in rad (read /joint_states on the robot; for a
 # torque-off/free servo use the settled angle - see llm_session_consolidated_2026-07-03.md).
 disabled_servos:
-    head_joint1: 0.0
+    head_joint1: -0.2816
