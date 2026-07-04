@@ -23,13 +23,5 @@
 	<!-- override configuration for start oun real hardware-->
 	<group if="$(arg run_real)">
 		<rosparam command="load" ns="motion" file="$(find sweetie_bot_proto3_deploy)/torque_control/run_real_override.yaml" ></rosparam> 
-		<!-- SWM perception frames must follow the PHYSICAL head pose (real/ tree from
-		     /joint_states_real), not the reference tree: the reference head leads the sagging
-		     neck, which biased viewfield checks and head/eyes-relative object positions upward
-		     (part of the look-at head-up runaway, 2026-07-04). Detections themselves are fixed
-		     in highlevel/vision.launch (frame_id real/camera_link_optical). -->
-		<param name="soar/input/swm/camera_frame" value="real/camera_link_optical" />
-		<param name="soar/input/swm/head_frame"   value="real/head_link4" />
-		<param name="soar/input/swm/eyes_frame"   value="real/eyes_link_yaw" />
 	</group>
 </launch>
