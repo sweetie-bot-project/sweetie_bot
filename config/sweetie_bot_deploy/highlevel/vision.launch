@@ -7,7 +7,11 @@
 	<arg name="run_real" default="false" doc="Run on real robot (else simulation)."/>
 	<arg name="robot_ns" default="/" doc="Namespace where to run robot components."/>
 	<arg name="record_video" default="false" doc="Record the camera video stream (real only)."/>
-	<arg name="frame_id" default="$(eval 'camera_link_optical' if arg('run_real') else 'camera_link_simulation')"/>
+	<!-- On the real robot detections must be anchored to the PHYSICAL camera pose: the real/ TF tree
+	     (from /joint_states_real). The unprefixed tree follows /joint_states = the REFERENCE pose, which
+	     leads the sagging/lagging head, so every detection landed too high and look-at chased its own
+	     error upward (head-up runaway, 2026-07-04). -->
+	<arg name="frame_id" default="$(eval 'real/camera_link_optical' if arg('run_real') else 'camera_link_simulation')"/>
 	<arg name="remote_host" default="" doc="remote (server) provider over wss; empty=local-only."/>
 	<arg name="remote_port" default=""/>
 	<arg name="remote_insecure" default=""/>
