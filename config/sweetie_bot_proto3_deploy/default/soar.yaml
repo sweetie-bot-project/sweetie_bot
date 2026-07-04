@@ -166,11 +166,16 @@ soar:
             # safety gate (output-module level; live incident 2026-07-02: unreachable off-axis
             # target with neck yaw disabled ground the head pitch into its joint limits)
             safe_cone:
+                # DISABLED (2026-07-04, user decision): the cone was a band-aid for the head
+                # runaway, whose real cause (detections backprojected through the lying
+                # reference TF tree while head_joint1 is disabled) is fixed by anchoring
+                # perception to the real/ tree. Values below make every gate always pass;
+                # restore sane bounds here if a regression ever needs the guard again.
                 reference_frame: "base_link"
-                max_yaw: 0.5            # rad: relaxed after the never-activate-without-target fix (was 0.12 guarding the LookAtJoints target=(0,0,0) origin-chase grind, root-caused 2026-07-04)
-                min_distance: 0.35      # m: closer targets fold the head down into the body
-                low_z: -0.05            # m: targets below this AND closer than low_z_distance
-                low_z_distance: 0.7     #    are head-into-body poses - rejected
+                max_yaw: 3.1415         # rad: > pi = never rejects
+                min_distance: 0.0       # m: never rejects
+                low_z: -100.0           # m: never rejects
+                low_z_distance: 0.7
         lang-model:
             type: 'lang-model'
             backend: agent
