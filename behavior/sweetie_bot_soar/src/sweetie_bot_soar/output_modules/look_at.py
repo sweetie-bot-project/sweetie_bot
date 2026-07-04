@@ -199,9 +199,12 @@ class LookAt(OutputModule):
             return None
 
         # Controller is stopped.
-        if status in (GoalStatus.REJECTED, GoalStatus.ABORTED):
+        if status in (GoalStatus.REJECTED, GoalStatus.ABORTED, GoalStatus.LOST):
+            # LOST: the action server vanished under our active goal (e.g. the robot-side
+            # deployer restarted). Without this branch the module ticked forever with a stale
+            # goal, holding head/eyes and blocking all further look-at (live wedge 2026-07-04).
             self.removeTimer(self._timer)
-            rospy.logerr("lookat output module: activation LookAt controller failed.")
+            rospy.logerr("lookat output module: LookAt controller failed or vanished (status: %d)." % status)
             return "failed"
         elif status in (GoalStatus.SUCCEEDED, GoalStatus.PREEMPTED, GoalStatus.RECALLED):
             self.removeTimer(self._timer)
