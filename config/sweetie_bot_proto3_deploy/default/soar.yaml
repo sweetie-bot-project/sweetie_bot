@@ -167,7 +167,7 @@ soar:
             # target with neck yaw disabled ground the head pitch into its joint limits)
             safe_cone:
                 reference_frame: "base_link"
-                max_yaw: 0.12           # rad: NEAR-CENTER ONLY - with a dead neck joint the controller grinds reachable axes chasing any lateral offset (live incidents x2)
+                max_yaw: 0.5            # rad: relaxed after the never-activate-without-target fix (was 0.12 guarding the LookAtJoints target=(0,0,0) origin-chase grind, root-caused 2026-07-04)
                 min_distance: 0.35      # m: closer targets fold the head down into the body
                 low_z: -0.05            # m: targets below this AND closer than low_z_distance
                 low_z_distance: 0.7     #    are head-into-body poses - rejected

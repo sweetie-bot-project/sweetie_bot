@@ -84,21 +84,20 @@ class LookAt(OutputModule):
                 resources.append(resource_id.GetValueAsString())
             else:
                 break
-        # start controller
-        try:
-            goal = SetOperationalGoal(operational = True, resources = resources)
-            self._set_operational_aclient.send_goal(goal)
-        except Exception as e:
-            rospy.logwarn('lookat output module: Failed to send the SetOperational command:\n%s' % str(e))
-            return 'error'
-        # start publication
+        # DO NOT activate the controller yet. LookAtJoints solves IK toward its stored
+        # target_point EVERY tick while operational; before the first in_pose_ref arrives
+        # that member is (0,0,0) = the world origin at the robot's feet. Activating while
+        # the safe-cone gate blocks publication therefore ground the head toward its own
+        # feet / wrapped it up-backwards (the head-dive AND head-up live runaways).
+        # Activate only when the first safe pose is ready: publish pose FIRST (the RTT
+        # port keeps the last sample), SetOperational SECOND (_publishCallback).
         self._object_key = object_key
+        self._resources = resources
+        self._goal_sent = False
         self._object_not_found = False
         self._unsafe_since = None
         self._timer = self.createTimer(self._period, self._publishCallback)
-        # log
-        rospy.loginfo('lookat output module: set opertional (obect: %s, resources: %s)', object_key, resources)
-        # start 
+        rospy.loginfo('lookat output module: waiting for a safe target to activate (object: %s, resources: %s)', object_key, resources)
         return None
 
     def _publishCallback(self, event):
@@ -123,13 +122,41 @@ class LookAt(OutputModule):
         # publish pose
         pose_stamped = PoseStamped(pose = obj.pose, header = Header(frame_id = swm.world_frame, stamp = rospy.Time.now()))
         self._pose_pub.publish(pose_stamped)
+        # first safe pose is on the wire: NOW it is safe to activate the controller
+        if not self._goal_sent:
+            try:
+                goal = SetOperationalGoal(operational = True, resources = self._resources)
+                self._set_operational_aclient.send_goal(goal)
+                self._goal_sent = True
+                rospy.loginfo('lookat output module: set operational (object: %s, resources: %s)', self._object_key, self._resources)
+            except Exception as e:
+                rospy.logwarn('lookat output module: Failed to send the SetOperational command:\n%s' % str(e))
+                self._object_not_found = True  # let updateHook fail the command
 
     def _cancel_goal(self, reason):
-        self._set_operational_aclient.cancel_goal()
+        if self._goal_sent:
+            self._set_operational_aclient.cancel_goal()
         self.removeTimer(self._timer)
         rospy.loginfo(f"output module '%s': %s", self._name, reason)
 
     def updateHook(self, cmd_id, external_abort_request):
+        # PRE-ACTIVATION state: controller not started yet (no safe target seen so far).
+        # Honor aborts, fail on missing object or a persistent out-of-cone target.
+        if not self._goal_sent:
+            agent_abort = external_abort_request
+            if cmd_id is None or (cmd_id is not None and cmd_id.FindByAttribute("abort", 0) is not None):
+                agent_abort = True
+            if agent_abort:
+                self._cancel_goal(reason="behavior aborted before activation")
+                return "succeed"
+            if self._object_not_found:
+                self._cancel_goal(reason="SWM object is missing (not activated)")
+                return "failed"
+            if self._unsafe_since is not None and \
+                    (rospy.Time.now() - self._unsafe_since).to_sec() > self._unsafe_fail_s:
+                self._cancel_goal(reason="target outside the safe gaze cone (never activated)")
+                return "failed"
+            return None
         # get goal state
         status = self._set_operational_aclient.get_state()
 
