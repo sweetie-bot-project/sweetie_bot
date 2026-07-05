@@ -22,7 +22,7 @@ from .history import ConversationHistory
 from .persona import PersonaRegistry
 from .prompt import build_system_prompt
 from .registry import ProviderRegistry, RegistryError
-from .scene import SceneConfig, diff as scene_diff, render_scene, select_salient
+from .scene import SceneConfig, diff as scene_diff, is_occluded, render_scene, select_salient
 from .schema import (AgentReply, AgentRequest, ErrorCode, Emotion, ReplyContent, RequestType,
                      RobotState, SceneState, SentenceType, ToolCall, ToolResult,
                      classify_json_schema, reply_json_schema)
@@ -151,6 +151,10 @@ class Agent:
         events = scene_diff(self._prev_scene, scene, self.scene_config)
         self._prev_scene = scene
         scene_block = render_scene(scene, events, self.scene_config)
+        # a blocked camera is an unambiguous, non-conversational irritation: force the angry
+        # animation deterministically rather than trusting the LLM to pick it (the WARNING banner
+        # in the prompt drives the verbal complaint; SOAR maps emotion=anger -> evil_look eyes).
+        occluded = is_occluded(scene)
         if scene_block:
             # single-line observability: the behavior-synth harness (and live debugging) asserts
             # on what perception actually reached the prompt
@@ -183,9 +187,10 @@ class Agent:
         # canonical-EN output: NO agent-side back-translation - the voice node owns
         # localization (it translates every non-EN say from en; agent-side RU output was
         # double-translated and mangled, P25)
+        emotion = Emotion.anger if occluded else content.emotion
         return AgentReply(
             response_text=content.response_text,
-            emotion=content.emotion,
+            emotion=emotion,
             sentence_type=content.sentence_type,
             tool_calls=proposed,
             language="en",                 # canonical; voice/say/<lang> localizes downstream

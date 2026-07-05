@@ -158,6 +158,41 @@ def test_elevation_words_render():
     assert "below you" in text
 
 
+def test_camera_occluded_warning_banner_and_helper():
+    from sweetie_bot_ai_core.schema import SceneEntity, SceneState, Zone
+    from sweetie_bot_ai_core.scene import SceneConfig, is_occluded, render_scene, select_salient
+    cfg = SceneConfig()
+    ent = [SceneEntity(id=99, type="camera_occluded", zone=Zone.front, bearing_deg=0.0,
+                       distance="near", in_frame=True, last_seen_s=0.0)]
+    sel = select_salient(SceneState(entities=ent), cfg)
+    assert is_occluded(sel)
+    text = render_scene(sel, [], cfg)
+    assert "WARNING" in text and "camera" in text
+    assert "Around you right now" not in text          # the occluder is not listed as an object
+    # not occluded when there's no such entity
+    assert not is_occluded(SceneState(entities=[person(1, 0)]))
+
+
+def test_agent_forces_anger_when_camera_occluded():
+    """A blocked camera must deterministically drive the angry animation, overriding the LLM."""
+    from sweetie_bot_ai_core.schema import Emotion, SceneEntity, SceneState, Zone
+    occ = SceneState(entities=[SceneEntity(id=99, type="camera_occluded", zone=Zone.front,
+                                           bearing_deg=0.0, in_frame=True)])
+    # the model returns joy; the override must win
+    reg = CapturingRegistry('{"response_text":"hey!","emotion":"joy","sentence_type":"statement"}')
+    agent = Agent(reg, scene_provider=SceneStub(occ), scene_config=CFG)
+    reply = agent.handle(AgentRequest(text="what do you see?", profile="simple-en"))
+    assert reply.emotion == Emotion.anger
+    assert "WARNING" in reg.system                      # the complaint banner reached the prompt
+
+    # without occlusion the LLM's own emotion is kept
+    clear = SceneState(entities=[person(3, -15, is_interlocutor=True)])
+    reg2 = CapturingRegistry('{"response_text":"hi!","emotion":"joy","sentence_type":"statement"}')
+    agent2 = Agent(reg2, scene_provider=SceneStub(clear), scene_config=CFG)
+    reply2 = agent2.handle(AgentRequest(text="hello", profile="simple-en"))
+    assert reply2.emotion == Emotion.joy
+
+
 def test_occluded_by_inference():
     from sweetie_bot_ai_core.schema import SceneEntity, SceneState, Zone
     from sweetie_bot_ai_core.scene import SceneConfig, render_scene, select_salient

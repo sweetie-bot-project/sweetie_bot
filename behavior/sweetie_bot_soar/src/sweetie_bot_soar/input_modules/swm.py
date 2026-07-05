@@ -409,6 +409,12 @@ class SpatialWorldModel(InputModule):
         with self._memory_lock:
             # iterate over detected objects 
             for detection_msg in msg.detections:
+                # camera_occluded is a whole-frame status flag from the vision fuser (something is
+                # pressed against the lens), NOT a thing located in space. Skip it here so it does
+                # not become a phantom SpatialObject ~5 cm in front of the camera. The LLM agent
+                # consumes it separately (scene block WARNING + forced anger).
+                if detection_msg.type == 'camera_occluded':
+                    continue
                 # quick fix for id change
                 detection_msg.id = 0
                 # extract timestamp

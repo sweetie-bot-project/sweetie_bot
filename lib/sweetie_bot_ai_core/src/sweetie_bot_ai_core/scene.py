@@ -17,6 +17,16 @@ from typing import Dict, List
 
 from .schema import SceneEntity, SceneEvent, SceneState, SoundCue, Zone
 
+# synthetic detection type emitted by the vision fuser's OcclusionMonitor when something is
+# pressed against the camera lens (see perfusion.runtime.occlusion). Kept as a literal here so
+# the agent core stays ROS-free / perfusion-free.
+CAMERA_OCCLUDED = "camera_occluded"
+
+
+def is_occluded(state: SceneState) -> bool:
+    """True while the camera is reported blocked (an in-frame camera_occluded entity)."""
+    return any(e.type == CAMERA_OCCLUDED and e.in_frame for e in state.entities)
+
 
 @dataclass
 class SceneConfig:
@@ -133,7 +143,7 @@ def annotate_occluded_by(entities: List[SceneEntity], max_bearing_delta: float =
     least as close to her as the vanished object's last position — i.e. it stands between her
     and where the object was ("you are hiding the pony behind you").
     """
-    visible = [e for e in entities if e.in_frame and e.type != "camera_occluded"]
+    visible = [e for e in entities if e.in_frame and e.type != CAMERA_OCCLUDED]
     for r in entities:
         if r.in_frame:
             continue
@@ -219,12 +229,14 @@ _ID_NOTE = ("(Refer to people naturally by where they are or what they look like
 def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) -> str:
     """The always-on ambient block: 'Around you right now' + 'Since you last replied'."""
     lines: List[str] = []
-    occluded = [e for e in state.entities if e.type == "camera_occluded" and e.in_frame]
+    occluded = [e for e in state.entities if e.type == CAMERA_OCCLUDED and e.in_frame]
     # in-frame only: remembered (out-of-view) entities have their own "Recently seen" section
-    normal = [e for e in state.entities if e.type != "camera_occluded" and e.in_frame]
+    normal = [e for e in state.entities if e.type != CAMERA_OCCLUDED and e.in_frame]
     if occluded:
         lines.append("WARNING: something is pressed right against your camera - your view is "
-                     "blocked and you can barely see anything right now.")
+                     "blocked and you can barely see anything right now. This is annoying and "
+                     "rude. React with irritation: complain out loud that your camera/view is "
+                     "covered and ask them to get their hand (or whatever it is) off your face.")
     if normal:
         lines.append("Around you right now:")
         for e in normal:
@@ -239,7 +251,7 @@ def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) 
     # recently-departed objects: keep them in her ambient awareness for the retention window so
     # "where did the X go" works without requiring a tool call (7b models are tool-shy)
     remembered = [e for e in state.entities
-                  if not e.in_frame and e.type != "camera_occluded"]
+                  if not e.in_frame and e.type != CAMERA_OCCLUDED]
     if remembered:
         lines.append("Recently seen (now OUT of view - when asked where one of these went, "
                      "tell the remembered direction and how long ago):")

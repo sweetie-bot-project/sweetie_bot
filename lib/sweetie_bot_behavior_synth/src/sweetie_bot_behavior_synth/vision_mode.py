@@ -3,8 +3,11 @@
     gst videotestsrc (synthetic camera) -> dedicated vision_proxy instance -> fresh fuser
     -> stub provider server (perfusion depth_stub / stub_detector)
 
-Injects at the depth provider's OWN seam (user decision): a very-close constant depth map from
-`depth_stub` drives the fuser's OcclusionMonitor exactly like a real covered lens would.
+For camera-occlusion scenarios use ``covered=True``: the synthetic camera emits a flat, uniform
+gray frame, which the fuser's OcclusionMonitor detects the SAME way a real covered lens is
+detected — the raw-frame sharpness (Laplacian variance) and luminance spread both collapse. This
+exercises the REAL image trigger end-to-end (NOT an injected depth seam: monocular depth predicts
+far, not near, on a covered lens, so the old depth_stub:value=0.08 injection no longer fires).
 All processes are test-scoped subprocesses (torn down with the context), on dedicated ports so
 the ambient sim stack is untouched — EXCEPT the detections topic, which is remapped to the
 standard /detections so SOAR + the agent consume the fused output.
@@ -20,18 +23,28 @@ SBCORE_PY = os.path.expanduser("~/sbcore-venv/bin/python")
 STUB_PORT = 8091
 FUSER_PORT = 9101
 
-SYNTH_PIPELINE = ("videotestsrc is-live=true pattern=smpte ! "
-                  "video/x-raw,width=800,height=600,framerate=10/1 ! jpegenc ! jpegparse ! "
-                  "appsink name=sink emit-signals=true sync=false drop=true max-buffers=1")
+# a covered lens = a flat, featureless field of view. Mid-gray solid so the fuser's image trigger
+# (low Laplacian variance AND low luminance std) fires exactly as it does on a real covered frame.
+COVERED_PATTERN = "pattern=solid-color foreground-color=0xFF808080"
+SCENE_PATTERN = "pattern=smpte"
+
+
+def _pipeline(pattern: str) -> str:
+    return ("videotestsrc is-live=true " + pattern + " ! "
+            "video/x-raw,width=800,height=600,framerate=10/1 ! jpegenc ! jpegparse ! "
+            "appsink name=sink emit-signals=true sync=false drop=true max-buffers=1")
 
 
 class VisionCluster:
     """Context manager owning the three test-scoped processes."""
 
     def __init__(self, providers: str = "depth_stub",
-                 provider_params: str = f"depth_stub:value=0.08"):
+                 provider_params: str = "depth_stub:value=0.08",
+                 covered: bool = False):
         self.providers = providers
         self.provider_params = provider_params
+        # covered -> flat gray camera that drives the real image-based occlusion trigger
+        self.pattern = COVERED_PATTERN if covered else SCENE_PATTERN
         self._procs = []
 
     def _spawn(self, cmd, env_extra=None, name=""):
@@ -61,7 +74,7 @@ class VisionCluster:
         # 3) dedicated C++ proxy with the synthetic camera, wired to the test cluster
         self._spawn(["rosrun", "sweetie_bot_vision_proxy", "vision_proxy_node",
                      "__name:=vision_proxy_synth",
-                     f"_pipeline:={SYNTH_PIPELINE}",
+                     f"_pipeline:={_pipeline(self.pattern)}",
                      f"_provider_port:={STUB_PORT}", "_provider_target:=/ws",
                      f"_fuser_port:={FUSER_PORT}",
                      "_detections_topic:=detections",
