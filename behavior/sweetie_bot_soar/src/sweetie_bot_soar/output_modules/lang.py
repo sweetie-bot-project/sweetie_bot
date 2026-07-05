@@ -54,7 +54,7 @@ class AgentLangModel(OutputModule):
                 turns.append({"speaker": "sweetie", "text": ev.text,
                               "emotion": getattr(ev, 'emotion', None)})
             elif ev.type in ('talk-ignored', 'talk-no-answer'):
-                turns.append({"speaker": "human", "text": "(stays silent)"})
+                pass  # silence is NOT human speech: conveyed as system context, not a turn
             elif ev.type == 'talk-illegible':
                 turns.append({"speaker": "human", "text": "(says something unclear)"})
         return turns
@@ -114,7 +114,12 @@ class AgentLangModel(OutputModule):
         goal.profile = profile
         goal.text = text or ""
         goal.history_json = json.dumps(history)
-        goal.context_json = json.dumps([p.text for p in predicates])
+        context = [p.text for p in predicates]
+        if any(ev.type in ('talk-ignored', 'talk-no-answer') for ev in events):
+            # silence framed as the interlocutor's current state (an attribute of the human),
+            # not as something the human said - the weaving directive keeps her from reciting it
+            context.append("The person you are talking with has gone quiet and is not answering right now.")
+        goal.context_json = json.dumps(context)
         goal.text_language = language
         goal.reply_language = language
         goal.persona = persona
