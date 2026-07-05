@@ -112,6 +112,18 @@ class World:
         hits = self.col["soar_log"].wait_grep(rf"(?:REGISTER|look-at cmd on).*{type_}", timeout)
         return bool(hits)
 
+    def say_and_get_turn(self, text: str, lang: Optional[str] = None,
+                         timeout: float = 35.0) -> TurnRecord:
+        """Input speech seam -> wait for the LLM turn only (text + emotion from the agent log),
+        with NO voice/TTS dependency. Use this when the assertion is on the model's reply itself
+        (the agreed seam after the LLM), not the voiced output — it skips the TTS pipeline
+        entirely (and does not depend on SOAR's emotion->animation mapping)."""
+        lang = lang or self.spec.lang
+        self.speech.say(text, lang=lang)
+        turn = self.col["turns"].wait_turn_for(text, timeout=timeout)
+        assert turn is not None, f"no LLM turn within {timeout}s after saying {text!r}"
+        return turn
+
     def say_and_wait(self, text: str, lang: Optional[str] = None,
                      timeout: float = 35.0) -> TurnRecord:
         """Speak (text seam) and wait for the full turn (agent-log scrape) + the voiced say

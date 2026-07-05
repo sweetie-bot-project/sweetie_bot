@@ -6,24 +6,20 @@ covered lens), so that test proved nothing about the live path. It now drives a 
 (flat gray frame via VisionCluster(covered=True)) so the fuser's image-based OcclusionMonitor
 fires exactly as it does on a real covered lens.
 
-Chain under test:
+Chain under test (seam after the LLM — text output, NO voice/TTS):
   covered frame -> fuser OcclusionMonitor (image trigger) -> camera_occluded on /detections
   -> scene WARNING banner in the LLM prompt (agent scene_block log)
-  -> she complains about the covered camera AND the reply emotion is forced to anger
-     (SOAR maps emotion=anger -> evil_look eyes).
+  -> she complains about the covered camera AND the reply emotion is anger (agent-log reply seam;
+     SOAR later maps emotion=anger -> evil_look eyes, not exercised here).
 
-Still @unknown until run green on the full sim: the fuser/agent halves are unit-tested (vision
-tests/test_occlusion.py; ai_core test_scene.py), but the LLM complaint wording + SOAR emotion
-mapping need the live model + SOAR stack.
+Assertions read the LLM turn (text + emotion) directly via say_and_get_turn, so the test does not
+depend on the voice synthesis pipeline. Verified live on the noreal sim stack (2026-07-05).
 """
-import pytest
-
 from sweetie_bot_behavior_synth import behavior_test, check, person, scene
 
 
 @behavior_test
 @scene(person(id=101, bearing=0.0, dist=1.5))
-@pytest.mark.unknown
 def test_occlusion_chain_from_covered_camera(world):
     from sweetie_bot_behavior_synth.vision_mode import VisionCluster
 
@@ -35,8 +31,8 @@ def test_occlusion_chain_from_covered_camera(world):
 
         # 2) the scene block must carry the WARNING banner (agent observability line)
         # 3) she must complain about the covered camera when spoken to
-        # 4) and the reply emotion must be anger (drives the evil_look eyes via SOAR)
-        t = world.say_and_wait("Hey Sweetie, what do you see?")
+        # 4) and the reply emotion must be anger (LLM-seam: read from the agent reply log)
+        t = world.say_and_get_turn("Hey Sweetie, what do you see?")
         assert world.col["agent_log"].wait_grep("scene_block: WARNING", timeout=10.0), \
             "camera_occluded never rendered as the scene WARNING banner"
         check.mentions(t.text, ["camera", "blocked", "cover", "lens", "see", "face", "hand"])
