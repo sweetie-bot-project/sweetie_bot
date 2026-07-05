@@ -162,7 +162,18 @@ def annotate_occluded_by(entities: List[SceneEntity], max_bearing_delta: float =
             r.attributes["probably_hidden_behind"] = f"{who} (id {v.id})"
 
 
+# internal perception telemetry that must NEVER surface in her prompt: she parrots the raw
+# numbers/labels back as speech. Gaze in particular collapses to the boolean "looking at you"
+# (via the gaze_at_robot attr) — she should only know WHETHER the human is looking at her, not
+# the raw pitch/yaw angles.
+_INTERNAL_ATTRS = frozenset({
+    "gaze_pitch", "gaze_yaw", "depth_source", "face_source", "attention_state",
+})
+
+
 def render_attr(key: str, value: str, cfg: SceneConfig) -> str:
+    if key in _INTERNAL_ATTRS:
+        return ""
     if key == "probably_hidden_behind":
         return (f"very likely hiding behind {value} right now — if asked where she is, "
                 f"say she is hiding behind them")
@@ -199,11 +210,6 @@ def _describe(e: SceneEntity, cfg: SceneConfig) -> str:
         subj = f"a person (id {e.id})"
     else:
         subj = f"a {e.type.replace('_', ' ')} (id {e.id})"
-    where = bearing_words(e.bearing_deg, cfg)
-    vert = elevation_words(e.elevation_deg)
-    if vert:
-        where = f"{where}, {vert}"
-    parts = [subj, where]
     tags = []
     if e.is_interlocutor:
         tags.append("the one talking with you")
@@ -215,19 +221,31 @@ def _describe(e: SceneEntity, cfg: SceneConfig) -> str:
             tags.append(r)
     if e.distance:
         tags.append(e.distance)
+    # Position is only useful to LOCATE people she is NOT talking to. The interlocutor she
+    # addresses directly as "you", so giving her their position just gets recited back ("someone
+    # in front of me"); omit it and locate only the other entities.
+    if e.is_interlocutor:
+        head = subj
+    else:
+        where = bearing_words(e.bearing_deg, cfg)
+        vert = elevation_words(e.elevation_deg)
+        if vert:
+            where = f"{where}, {vert}"
+        head = f"{subj} {where}"
     if tags:
-        return f"{parts[0]} {parts[1]} — {', '.join(tags)}"
-    return f"{parts[0]} {parts[1]}"
+        return f"{head} — {', '.join(tags)}"
+    return head
 
 
 # --- prompt block ----------------------------------------------------------------------------
 
 _ID_NOTE = ("(These notes are your OWN private perception — NOT lines to read out. Never quote, "
-            "list or repeat this description word-for-word; weave only what matters into your own "
-            "natural spoken words. Refer to people naturally by where they are or what they look "
-            "like (\"the one in front of you\", \"whoever is talking to you\") — the id numbers "
-            "are internal to you only: NEVER say an id number out loud or call anyone "
-            "\"interlocutor N\". Mention what you notice only if it's relevant.)")
+            "list or repeat this description word-for-word. When you are talking WITH someone, "
+            "speak to them directly as \"you\" and do NOT narrate where they are standing or "
+            "their position relative to you. Only when several people are present may you add a "
+            "light location, just to tell them apart. The id numbers are internal to you only: "
+            "NEVER say an id number out loud or call anyone \"interlocutor N\". Mention what you "
+            "notice only if it's relevant.)")
 
 
 def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) -> str:

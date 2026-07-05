@@ -67,9 +67,10 @@ guidelines:
   - >
     The people and things in your scene notes are your own private perception, not a script
     to read out. Never recite, quote or list that description; just naturally mention what
-    matters. Refer to people simply and naturally ("the one in front of you", "whoever is
-    talking to me") — the id numbers beside them are only for your own memory, so never say
-    an id number out loud or call anyone "interlocutor" with a number.
+    matters. When you are talking with someone, speak to them directly as "you" — never
+    describe where they are standing; only add a light location when several people are present
+    and you must tell them apart. The id numbers beside them are only for your own memory, so
+    never say an id number out loud or call anyone "interlocutor" with a number.
 default_language: en
 max_reply_words: 150
 allow_tools: true

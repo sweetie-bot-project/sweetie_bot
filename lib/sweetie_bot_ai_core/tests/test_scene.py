@@ -208,3 +208,62 @@ def test_occluded_by_inference():
     assert "hiding behind the person (id 1)" in text   # aligned bearings -> inferred
     p3 = [e for e in sel.entities if e.id == 3][0]
     assert "probably_hidden_behind" not in p3.attributes        # far bearing -> no inference
+
+
+# --- gaze collapses to a boolean; raw perception telemetry never leaks (user: she should only
+#     know WHETHER the human is looking at her, not the raw angles) ---------------------------
+
+def test_render_attr_drops_internal_telemetry():
+    from sweetie_bot_ai_core.scene import render_attr
+    for k in ("gaze_pitch", "gaze_yaw", "depth_source", "face_source", "attention_state"):
+        assert render_attr(k, "3.5", CFG) == "", f"{k} leaked"
+    assert render_attr("gaze_at_robot", "yes", CFG) == "looking at you"   # boolean kept
+
+
+def test_scene_block_has_no_raw_gaze_numbers():
+    st = select_salient(SceneState(entities=[person(
+        3, -10, is_interlocutor=True,
+        attributes={"gaze_at_robot": "yes", "gaze_pitch": "3.5", "gaze_yaw": "6.8",
+                    "depth_source": "estimated", "attention_state": "DRAWN"})]), CFG)
+    txt = render_scene(st, [], CFG)
+    assert "looking at you" in txt
+    for leak in ("gaze_pitch", "gaze_yaw", "3.5", "6.8", "depth_source", "attention_state", "DRAWN"):
+        assert leak not in txt, f"leaked internal telemetry {leak!r}: {txt!r}"
+
+
+def test_scene_diff_ignores_pure_gaze_number_change():
+    # a change in ONLY the raw gaze angles must not produce a 'someone is now ...' event
+    prev = SceneState(entities=[person(2, -10, attributes={"gaze_yaw": "1.0"})])
+    curr = SceneState(entities=[person(2, -10, attributes={"gaze_yaw": "9.0"})])
+    assert diff(prev, curr, CFG) == []
+
+
+# --- recitation: no parroted position example; talk to the person directly as 'you' ----------
+
+def test_interlocutor_position_is_suppressed():
+    """The person she is talking WITH is addressed as 'you' — her position must not be rendered
+    (she recited it: 'someone in front of me'). Other entities are still located."""
+    from sweetie_bot_ai_core.scene import _describe
+    inter = _describe(person(5, 0, is_interlocutor=True), CFG)   # bearing 0 => would be "in front"
+    assert "in front" not in inter.lower() and "front of you" not in inter.lower()
+    assert "the one talking with you" in inter                    # still identified as the partner
+    assert "right" in _describe(person(6, 90), CFG).lower()       # a non-interlocutor is located
+
+
+def test_id_note_has_no_parroted_position_example():
+    from sweetie_bot_ai_core.scene import _ID_NOTE
+    low = _ID_NOTE.lower()
+    assert "the one in front of" not in low          # the phrase she parroted is gone
+    assert "speak to them directly" in low            # replaced by the real rule
+    assert "say an id number" in low                  # id/interlocutor prohibition stays
+
+
+# --- servo faults name the leg location explicitly (front vs hind) ---------------------------
+
+def test_servo_faults_get_leg_location():
+    from sweetie_bot_ai_core.schema import RobotState
+    summary = RobotState(servo_faults=["leg3_joint2"],
+                         overheated_servos=["leg1_hip"]).human_summary()
+    assert "hind-left leg" in summary        # leg3
+    assert "front-left leg" in summary       # leg1
+    assert "leg3_joint2" in summary          # raw name preserved alongside the location

@@ -39,6 +39,30 @@ class RequestType(str, Enum):
     assess_scene = "assess_scene"  # reserved: describe/assess an image (future VLM)
 
 
+# --- servo/body naming -----------------------------------------------------------------------
+
+# Her four legs are named leg1..leg4 in hardware. She cannot map those tokens to a body location
+# on her own and confuses front vs hind (observed live: same fault voiced as "front" then "hind"),
+# so we annotate any servo/joint fault name with an explicit location. Layout (user-specified):
+#   leg1 = front-left   leg2 = front-right   leg3 = hind-left   leg4 = hind-right
+_LEG_LOCATION = {
+    "leg1": "front-left leg",
+    "leg2": "front-right leg",
+    "leg3": "hind-left leg",
+    "leg4": "hind-right leg",
+}
+
+
+def friendly_servo(name: str) -> str:
+    """Annotate a raw servo/joint name with its body location so she never guesses front vs hind.
+    Names containing leg1..leg4 get the mapped location appended; anything else passes through."""
+    low = name.lower()
+    for tok, loc in _LEG_LOCATION.items():
+        if tok in low:
+            return f"{name} ({loc})"
+    return name
+
+
 # --- conversation + state --------------------------------------------------------------------
 
 class TalkTurn(BaseModel):
@@ -77,9 +101,10 @@ class RobotState(BaseModel):
             mv = " (moving)" if self.moving else ""
             parts.append(f"Body pose: {self.pose}{mv}.")
         if self.servo_faults:
-            parts.append(f"Servo faults: {', '.join(self.servo_faults)}.")
+            parts.append(f"Servo faults: {', '.join(friendly_servo(s) for s in self.servo_faults)}.")
         if self.overheated_servos:
-            parts.append(f"Overheated servos: {', '.join(self.overheated_servos)}.")
+            parts.append("Overheated servos: "
+                         f"{', '.join(friendly_servo(s) for s in self.overheated_servos)}.")
         if self.mood:
             parts.append(f"Mood: {self.mood}.")
         return " ".join(parts)
