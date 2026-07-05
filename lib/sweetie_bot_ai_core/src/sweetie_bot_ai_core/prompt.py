@@ -23,6 +23,17 @@ def build_system_prompt(persona: Persona, state: Optional[RobotState] = None, *,
     if persona.emotion_guidance:
         parts.append(persona.emotion_guidance.strip())
     parts.append(f"Keep your reply to at most {persona.max_reply_words} words.")
+    parts.append(
+        "Using your live awareness: everything the system tells you about your situation — "
+        "what you see around you, how your body feels, and whether the human has gone quiet, "
+        "is not answering or has stepped away — is your OWN private awareness, never text to "
+        "read back. Do NOT quote, list, restate or directly answer these notes; let them "
+        "naturally shape what you say, the way you would simply mention your leg feeling hot "
+        "rather than reading out a fault line. In particular, if you are told the human is "
+        "silent or has not answered, never reply to that literally or announce it — just stay "
+        "warm and natural, make a light passing remark or gently carry on, and never nag them "
+        "to respond."
+    )
 
     # --- tool guidance ----------------------------------------------------------------------
     if tools_offered:

@@ -222,8 +222,12 @@ def _describe(e: SceneEntity, cfg: SceneConfig) -> str:
 
 # --- prompt block ----------------------------------------------------------------------------
 
-_ID_NOTE = ("(Refer to people naturally by where they are or what they look like — never say the id "
-            "number out loud. Mention what you notice only if it's relevant.)")
+_ID_NOTE = ("(These notes are your OWN private perception — NOT lines to read out. Never quote, "
+            "list or repeat this description word-for-word; weave only what matters into your own "
+            "natural spoken words. Refer to people naturally by where they are or what they look "
+            "like (\"the one in front of you\", \"whoever is talking to you\") — the id numbers "
+            "are internal to you only: NEVER say an id number out loud or call anyone "
+            "\"interlocutor N\". Mention what you notice only if it's relevant.)")
 
 
 def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) -> str:

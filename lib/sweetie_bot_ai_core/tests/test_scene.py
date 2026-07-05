@@ -81,7 +81,7 @@ def test_render_scene_id_only_no_names_and_note():
     assert "(id 3)" in txt and "(id 7)" in txt          # id used as handle
     assert "looking at you" in txt                       # attr pretty-rendered
     assert "holding pony" in txt
-    assert "never say the id number" in txt              # no-speak-id instruction present
+    assert "say an id number" in txt.lower()              # no-speak-id instruction present
 
 
 def test_render_scene_empty_is_blank():
