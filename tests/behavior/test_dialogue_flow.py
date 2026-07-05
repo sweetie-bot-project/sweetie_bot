@@ -91,18 +91,37 @@ def test_standard_dialogue_flow(world):
 
 
 # ---------------------------------------------------------------------------------------------
-# Fix 3: the same question repeated must not loop into one identical stuck phrase.
+# Re-answer loop (live-reported): after the human STOPS talking, SOAR re-emits the last speech
+# event on the lull and — without the guard — she answers the SAME question again and again
+# (live: "What's wrong with your feet now?" answered 3x, ~25s apart). History is context only:
+# an already-answered turn re-poked on a pause must NOT be answered a second time. The agent logs
+# a 're-poke' marker when the guard catches the duplicate.
+# Proactive self-talk is disabled so the ONLY thing that could re-voice the answer is the SOAR
+# re-poke path we are guarding.
 # ---------------------------------------------------------------------------------------------
 @behavior_test
+@agent_params(**{"proactive/enabled": False})
 @scene(person(id=101, bearing=0.0, dist=1.5))
-def test_dialogue_does_not_loop_on_repeat(world):
-    q = "Say one short cheerful thing to me."
-    replies = []
-    for _ in range(3):
-        t = world.say_and_wait(q)
-        assert t.text.strip(), "empty reply during repeat probe"
-        replies.append(" ".join(t.text.lower().split()))
-    assert len(set(replies)) >= 2, f"looped the same stuck phrase every time: {replies}"
+def test_does_not_reanswer_after_you_stop(world):
+    # ask a distinctive question and let her answer it once
+    t = world.say_and_wait("What's wrong with your feet now?")
+    assert t.said is not None and t.text.strip(), "no first answer"
+    n0 = len(world.col["say"].says())
+    # now STOP. Over the lull SOAR re-poses the same turn; the guard must fire (marker) and she
+    # must not re-answer the feet question. Give it long enough for a re-poke (~25-30s live).
+    got_repoke = world.col["agent_log"].wait_grep(r"re-poke", timeout=75.0)
+    followups = world.col["say"].says()[n0:]
+    # she must never re-answer the feet question after you went quiet
+    for s in followups:
+        low = s.text.lower()
+        reanswer = ("stiff" in low or "hoof" in low or "hooves" in low) and \
+                   ("leg" in low or "feet" in low or "foot" in low or "joint" in low)
+        assert not reanswer, f"re-answered the feet question after you stopped: {s.text!r}"
+    # mechanism-first: if SOAR re-poked at all, the guard must have caught it (proves the wiring;
+    # if SOAR never re-poked in this window there is nothing to guard and the behavioural check
+    # above already held).
+    assert got_repoke or not followups, \
+        "SOAR re-poked but the re-answer guard never fired"
 
 
 # ---------------------------------------------------------------------------------------------
@@ -136,9 +155,37 @@ def test_does_not_recite_system_state(world):
     n0 = len(world.col["say"].says())
     rospy.sleep(28.0)
     followups = world.col["say"].says()[n0:]
+    # banned = the internal cue phrasings she was caught reciting/commenting on live. The live
+    # silence cue is "The person in front of you has gone quiet ... just standing there without
+    # saying anything." — she must WEAVE, never echo it or narrate the person's position.
     banned = ["stays silent", "didn't answer", "says nothing", "human is silent", "no-answer",
-              "interlocutor", "(id", "around you right now"]
+              "interlocutor", "(id", "around you right now",
+              "gone quiet", "standing there", "without saying", "what to say next",
+              "thinking about what to say", "the person in front", "the one in front",
+              "in front of me", "gaze_pitch", "gaze_yaw"]
     for s in followups:
         low = s.text.lower()
         for b in banned:
             assert b not in low, f"recited a system-state phrase {b!r} verbatim: {s.text!r}"
+
+
+# ---------------------------------------------------------------------------------------------
+# Recitation (live-reported: "she talks about the human like 'the one in front of you'"): when
+# talking WITH one person she must address them directly and must NOT narrate their scene
+# position. The virtual human speaks to her; her spoken reply is what we check.
+# ---------------------------------------------------------------------------------------------
+@behavior_test
+@agent_params(**{"proactive/enabled": False})
+@scene(person(id=101, bearing=0.0, dist=1.5))
+def test_does_not_narrate_human_position(world):
+    world.wait_seen("human")
+    # she is invited to refer to the person she is looking at; a natural answer is "you", a
+    # reciting answer parrots the scene block's spatial data about the person.
+    t = world.say_and_wait("Hi Sweetie! I'm so happy to see you. Who are you looking at right now?")
+    assert t.said is not None and t.text.strip(), "no voiced reply"
+    low = t.text.lower()
+    banned = ["in front of", "the one in front", "someone in front", "a person in front",
+              "to my left", "to my right", "to your left", "to your right",
+              "interlocutor", "(id"]
+    for b in banned:
+        assert b not in low, f"narrated the human's scene position ({b!r}): {t.text!r}"
