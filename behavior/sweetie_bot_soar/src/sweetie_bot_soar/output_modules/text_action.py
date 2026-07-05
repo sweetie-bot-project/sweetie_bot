@@ -79,10 +79,10 @@ class TextAction(OutputModule):
             self._pending_goal = goal
             self._phase = 'rephrase'
             self._reph_deadline = rospy.Time.now() + rospy.Duration(self._reph_timeout)
-            instruction = ('Rephrase this scripted reaction in your own words - same meaning, '
-                           'same feeling, ONE short spoken sentence: "%s"' % goal.command.command)
+            # dedicated 'rephrase' request_type: the agent runs a constrained rewording path
+            # (no scene/ambient/conversation latitude) so the line is restated, not answered.
             self._reph_client.send_goal(GenerateReplyGoal(
-                request_type='reply', profile=self._reph_profile, text=instruction,
+                request_type='rephrase', profile=self._reph_profile, text=goal.command.command,
                 history_json='[]', context_json='[]', text_language='en', reply_language='en'))
             rospy.loginfo("TextAction output module: rephrasing canned line %r", goal.command.command)
             return None

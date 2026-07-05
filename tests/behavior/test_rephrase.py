@@ -78,6 +78,13 @@ def test_canned_rephrased_at_p1(sim, voice_says):
         assert said is not None, "nothing reached the voice"
         assert said.text.strip() != CANNED_LINE, "canned line voiced VERBATIM despite p=1.0"
         assert len(said.text.split()) >= 2, f"degenerate rephrase: {said.text!r}"
+        # strictly in-context: the rephrase must still be ABOUT the original line ("touch this
+        # spot"), not drift onto unrelated things. The constrained rephrase path forbids adding
+        # new topics, so an on-topic content anchor must survive the rewording.
+        anchors = ("touch", "spot", "here", "pet", "scratch", "place", "this")
+        low = said.text.lower()
+        assert any(a in low for a in anchors), \
+            f"rephrase drifted off the original line (no on-topic anchor): {said.text!r}"
     finally:
         kernel.Shutdown()
 

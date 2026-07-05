@@ -76,9 +76,10 @@ DEFAULT_PROFILES: Dict[str, ProfileConfig] = {
     # minimal degraded path
     "failsafe-en": ProfileConfig(allow_tools=False, max_verbatim_turns=2, max_tool_iters=0,
                                  options={"temperature": 0.6, "max_tokens": 120}),
-    # canned-speech rephrase hop (text-action interceptor): fast, tool-free, high variety
+    # canned-speech rephrase hop (text-action interceptor): fast, tool-free, constrained
+    # rewording (temp trimmed from 1.0 -> 0.8: raw variety was pulling rephrases off-topic)
     "rephrase-en": ProfileConfig(allow_tools=False, max_verbatim_turns=0, max_tool_iters=0,
-                                 options={"temperature": 1.0, "max_tokens": 80}),
+                                 options={"temperature": 0.8, "max_tokens": 80}),
 }
 
 
@@ -115,6 +116,8 @@ class Agent:
         try:
             if request.request_type == RequestType.classify:
                 return self._handle_classify(request)
+            if request.request_type == RequestType.rephrase:
+                return self._handle_rephrase(request)
             return self._handle_reply(request)
         except RegistryError as e:
             self.log(f"registry error: {e}")
@@ -194,6 +197,58 @@ class Agent:
             sentence_type=content.sentence_type,
             tool_calls=proposed,
             language="en",                 # canonical; voice/say/<lang> localizes downstream
+            error_code=ErrorCode.SUCCESS,
+            raw=result.content,
+        )
+
+    # -- rephrase path (constrained rewording of a scripted line) -----------------------------
+
+    def _handle_rephrase(self, request: AgentRequest) -> AgentReply:
+        """Reword ONE scripted line in Sweetie's voice - and nothing more.
+
+        Unlike the reply path this deliberately does NOT inject the ambient scene, live state or
+        conversational latitude: those were what pulled rephrases off-topic ("she talks about
+        unrelated things when scratched"). It also leaves ``self._prev_scene`` untouched, so a
+        rephrase never consumes the scene-diff owed to the next real conversational turn.
+        """
+        line = (request.text or "").strip()
+        if not line:
+            return AgentReply(response_text="", language="en", error_code=ErrorCode.SUCCESS)
+        persona = self.personas.get(request.persona)
+        profile = self.profiles.get(request.profile) or DEFAULT_PROFILES["rephrase-en"]
+        name = persona.display_name if persona else "Sweetie Bot"
+        system_prompt = (
+            f"You are {name}. You are given ONE line that you are about to say out loud. Rewrite "
+            "it in fresh words, in your own voice.\n"
+            "Strict rules:\n"
+            "- Say the SAME thing as the given line: keep its exact meaning, intent and subject.\n"
+            "- Do NOT add new topics, facts, questions or greetings, and do NOT react to your "
+            "surroundings - the rewrite must be about the same thing and nothing else.\n"
+            "- Do NOT answer or continue a conversation; only restate the given line.\n"
+            "- Sweetie's only touch sensors are on her face (nose, forehead, cheeks, temples); "
+            "never mention being touched, scratched or petted anywhere else - no ears, horn, "
+            "back or body - keep the spot vague like 'right here' if the line is not about a "
+            "face spot.\n"
+            "- Keep it to one short, natural spoken sentence in the same language as the line."
+        )
+        user_text = 'Rewrite this line, keeping exactly the same meaning:\n"%s"' % line
+        hist = ConversationHistory(max_verbatim_turns=0)
+        messages = hist.build_messages(system_prompt, [], user_text)
+        result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
+                                        **profile.options)
+        try:
+            content = ReplyContent.model_validate(self._safe_json(result.content))
+            text = (content.response_text or "").strip()
+            emotion, sentence_type = content.emotion, content.sentence_type
+        except Exception:  # noqa: BLE001 - bad structured decode: fall back to the canned line
+            text, emotion, sentence_type = "", Emotion.neutral, SentenceType.statement
+        if not text:
+            text = line                        # degrade to the canned line, never to silence
+        return AgentReply(
+            response_text=text,
+            emotion=emotion,
+            sentence_type=sentence_type,
+            language="en",
             error_code=ErrorCode.SUCCESS,
             raw=result.content,
         )

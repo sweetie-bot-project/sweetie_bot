@@ -179,6 +179,74 @@ def test_agent_bad_json_degrades_to_defaults():
 
 # --- persona ---------------------------------------------------------------------------------
 
+# --- rephrase path (constrained rewording of a scripted line) ---------------------------------
+
+class CapturingRegistry:
+    """Records the messages of the final structured call and replays a scripted reply."""
+    def __init__(self, structured_content):
+        self.structured_content = structured_content
+        self.last_messages = None
+
+    def chat(self, messages, *, tools=None, response_schema=None, **kw):
+        self.last_messages = messages
+        return ChatResult(content=self.structured_content), "scripted"
+
+
+class CountingSceneProvider:
+    """A scene provider that records whether the rephrase path ever queried the scene."""
+    def __init__(self, scene):
+        self.scene = scene
+        self.calls = 0
+
+    def snapshot(self, include_remembered=False):
+        self.calls += 1
+        return self.scene
+
+
+def _rephrase_agent(structured, scene=None):
+    from sweetie_bot_ai_core.agent import Agent
+    reg = CapturingRegistry(structured)
+    sp = CountingSceneProvider(scene) if scene is not None else None
+    return reg, sp, Agent(reg, scene_provider=sp)
+
+
+def test_rephrase_stays_in_context_of_the_original_line():
+    from sweetie_bot_ai_core.schema import RequestType, SceneState, SceneEntity, Zone
+    line = "Yes. Please touch this spot."
+    scene = SceneState(entities=[SceneEntity(id=1, type="pony", zone=Zone.front)])
+    reg, sp, agent = _rephrase_agent(
+        '{"response_text":"Sure, go ahead and pet me right here!",'
+        '"emotion":"joy","sentence_type":"statement"}', scene=scene)
+    sentinel = SceneState(entities=[SceneEntity(id=9, type="human", zone=Zone.front)])
+    agent._prev_scene = sentinel
+
+    reply = agent.handle(AgentRequest(request_type=RequestType.rephrase, profile="rephrase-en",
+                                      text=line))
+
+    assert reply.response_text == "Sure, go ahead and pet me right here!"
+    # the model was actually told to reword the given line...
+    user_msgs = [m["content"] for m in reg.last_messages if m["role"] == "user"]
+    assert any(line in c for c in user_msgs), "the original line was not handed to the model"
+    # ...under a constraint prompt that forbids drifting off-topic...
+    sys_msg = next(m["content"] for m in reg.last_messages if m["role"] == "system")
+    assert "exact meaning" in sys_msg.lower() and "do not add new topics" in sys_msg.lower()
+    # ...and the scene / ambient state was NEVER consulted (that was the off-topic leak) ...
+    assert sp.calls == 0, "rephrase path queried the live scene"
+    assert not any("pony" in m["content"] for m in reg.last_messages), "scene leaked into rephrase"
+    # ...nor did it consume the scene-diff owed to the next real conversational turn.
+    assert agent._prev_scene is sentinel
+
+
+def test_rephrase_degrades_to_canned_line_on_bad_decode():
+    from sweetie_bot_ai_core.schema import RequestType
+    line = "Yes. Please touch this spot."
+    reg, sp, agent = _rephrase_agent("not valid json")
+    reply = agent.handle(AgentRequest(request_type=RequestType.rephrase, profile="rephrase-en",
+                                      text=line))
+    assert reply.response_text == line          # never silence, never garbage
+    assert reply.error_code == 0
+
+
 def test_persona_registry_default_and_switch():
     pr = PersonaRegistry()
     assert pr.active.name == "sweetie"
