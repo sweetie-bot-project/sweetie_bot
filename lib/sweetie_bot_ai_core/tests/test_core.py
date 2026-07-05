@@ -229,7 +229,7 @@ def test_rephrase_stays_in_context_of_the_original_line():
     assert any(line in c for c in user_msgs), "the original line was not handed to the model"
     # ...under a constraint prompt that forbids drifting off-topic...
     sys_msg = next(m["content"] for m in reg.last_messages if m["role"] == "system")
-    assert "exact meaning" in sys_msg.lower() and "do not add new topics" in sys_msg.lower()
+    assert "same subject" in sys_msg.lower() and "do not wander onto new topics" in sys_msg.lower()
     # ...and the scene / ambient state was NEVER consulted (that was the off-topic leak) ...
     assert sp.calls == 0, "rephrase path queried the live scene"
     assert not any("pony" in m["content"] for m in reg.last_messages), "scene leaked into rephrase"
