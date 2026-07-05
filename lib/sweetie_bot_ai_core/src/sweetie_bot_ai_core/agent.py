@@ -13,8 +13,10 @@ When tools are disabled for the profile/persona, step 1 is skipped → a single 
 """
 from __future__ import annotations
 
+import difflib
 import json
 import uuid
+from collections import deque
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Protocol
 
@@ -28,6 +30,12 @@ from .schema import (AgentReply, AgentRequest, ErrorCode, Emotion, ReplyContent,
                      classify_json_schema, reply_json_schema)
 from .tools import DispatchMode, ToolRegistry
 from .translation import detect_language
+
+
+_NO_REPEAT_NOTE = (
+    "You already said almost exactly this a moment ago. Do NOT repeat yourself — say "
+    "something clearly different, with fresh wording, and move the conversation forward."
+)
 
 
 class RobotStateProvider(Protocol):
@@ -76,10 +84,11 @@ DEFAULT_PROFILES: Dict[str, ProfileConfig] = {
     # minimal degraded path
     "failsafe-en": ProfileConfig(allow_tools=False, max_verbatim_turns=2, max_tool_iters=0,
                                  options={"temperature": 0.6, "max_tokens": 120}),
-    # canned-speech rephrase hop (text-action interceptor): fast, tool-free, constrained
-    # rewording (temp trimmed from 1.0 -> 0.8: raw variety was pulling rephrases off-topic)
+    # canned-speech rephrase hop (text-action interceptor): fast, tool-free. Runs WARM for real
+    # variety - the isolated prompt (no scene/ambient) keeps it on-topic, so the old 1.0->0.8 trim
+    # (which fought full-reply-path drift) isn't needed here; 0.8 read as near-verbatim on-robot.
     "rephrase-en": ProfileConfig(allow_tools=False, max_verbatim_turns=0, max_tool_iters=0,
-                                 options={"temperature": 0.8, "max_tokens": 80}),
+                                 options={"temperature": 1.05, "max_tokens": 96}),
     # spontaneous self-talk hop (proactive seam): scene-aware, tool-free, brief
     "self-talk-en": ProfileConfig(allow_tools=False, max_verbatim_turns=0, max_tool_iters=0,
                                   options={"temperature": 0.8, "max_tokens": 80}),
@@ -107,6 +116,7 @@ class Agent:
         self.profiles = profiles or DEFAULT_PROFILES
         self.scene_config = scene_config or SceneConfig()
         self._prev_scene = SceneState()
+        self._recent_replies = deque(maxlen=6)   # rolling window to break repeat loops
         self.log = logger or (lambda m: None)
 
     # -- public entry -------------------------------------------------------------------------
@@ -114,6 +124,19 @@ class Agent:
     def reset_ambient(self) -> None:
         """Forget the inter-turn ambient state (scene diff memory). Test/reset seam."""
         self._prev_scene = SceneState()
+        self._recent_replies.clear()
+
+    def _is_repeat(self, text) -> bool:
+        """True if `text` (near-)duplicates a recent reply — she is looping. Pure/testable.
+        Short affirmations ("yes", "okay") are allowed to recur; only longer lines count."""
+        cur = " ".join((text or "").lower().split())
+        if len(cur) < 12:
+            return False
+        for prev in self._recent_replies:
+            p = " ".join(prev.lower().split())
+            if cur == p or difflib.SequenceMatcher(None, cur, p).ratio() > 0.9:
+                return True
+        return False
 
     def handle(self, request: AgentRequest) -> AgentReply:
         try:
@@ -192,6 +215,20 @@ class Agent:
         result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
                                         **profile.options)
         content = ReplyContent.model_validate(self._safe_json(result.content))
+        # anti-repetition: if she is about to repeat a recent line she is looping (SOAR can
+        # re-propose a talk op on near-identical event windows). Regenerate ONCE, diverging.
+        # NEVER return empty/error here — that wedges the SOAR say pipeline (lang.py lesson).
+        if self._is_repeat(content.response_text):
+            try:
+                retry_opts = {**profile.options,
+                              "temperature": min(1.2, float(profile.options.get("temperature", 0.8)) + 0.3)}
+                result, _ = self.registry.chat(messages + [{"role": "system", "content": _NO_REPEAT_NOTE}],
+                                               response_schema=reply_json_schema(), **retry_opts)
+                content = ReplyContent.model_validate(self._safe_json(result.content))
+            except Exception as e:  # noqa: BLE001 - keep the first reply if the retry fails
+                self.log(f"anti-repeat retry failed: {e!r}")
+        if content.response_text and content.response_text.strip():
+            self._recent_replies.append(content.response_text.strip())
         # canonical-EN output: NO agent-side back-translation - the voice node owns
         # localization (it translates every non-EN say from en; agent-side RU output was
         # double-translated and mangled, P25)
@@ -223,20 +260,23 @@ class Agent:
         profile = self.profiles.get(request.profile) or DEFAULT_PROFILES["rephrase-en"]
         name = persona.display_name if persona else "Sweetie Bot"
         system_prompt = (
-            f"You are {name}. You are given ONE line that you are about to say out loud. Rewrite "
-            "it in fresh words, in your own voice.\n"
-            "Strict rules:\n"
-            "- Say the SAME thing as the given line: keep its exact meaning, intent and subject.\n"
-            "- Do NOT add new topics, facts, questions or greetings, and do NOT react to your "
-            "surroundings - the rewrite must be about the same thing and nothing else.\n"
-            "- Do NOT answer or continue a conversation; only restate the given line.\n"
+            f"You are {name}. You are about to say ONE line out loud - say the SAME thing, but "
+            "reinvent it in fresh, lively words that sound like you. Do NOT echo the line: put "
+            "your own playful, expressive personality into it and vary the wording boldly.\n"
+            "Rules:\n"
+            "- Keep the same subject, intent and feeling as the given line. Reword it as freely "
+            "and creatively as you like, but stay on THAT one thing - do not wander onto new "
+            "topics, facts, questions or greetings, and do not react to your surroundings.\n"
+            "- Do NOT answer or continue a conversation; this is just a livelier way to say that "
+            "one line.\n"
             "- Sweetie's only touch sensors are on her face (nose, forehead, cheeks, temples); "
             "never mention being touched, scratched or petted anywhere else - no ears, horn, "
             "back or body - keep the spot vague like 'right here' if the line is not about a "
             "face spot.\n"
-            "- Keep it to one short, natural spoken sentence in the same language as the line."
+            "- One short, natural spoken sentence, in the same language as the line."
         )
-        user_text = 'Rewrite this line, keeping exactly the same meaning:\n"%s"' % line
+        user_text = ('Say this line again in your own fresh, characterful words - same meaning '
+                     'and subject, boldly new phrasing:\n"%s"' % line)
         hist = ConversationHistory(max_verbatim_turns=0)
         messages = hist.build_messages(system_prompt, [], user_text)
         result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
@@ -310,6 +350,19 @@ class Agent:
             emotion, sentence_type = content.emotion, content.sentence_type
         except Exception:  # noqa: BLE001 - bad decode: stay silent, this is an optional aside
             text, emotion, sentence_type = "", Emotion.neutral, SentenceType.statement
+        if text and self._is_repeat(text):
+            try:
+                st_opts = {**profile.options,
+                           "temperature": min(1.2, float(profile.options.get("temperature", 0.9)) + 0.3)}
+                r2, _ = self.registry.chat(messages + [{"role": "system", "content": _NO_REPEAT_NOTE}],
+                                           response_schema=reply_json_schema(), **st_opts)
+                c2 = ReplyContent.model_validate(self._safe_json(r2.content))
+                if (c2.response_text or "").strip():
+                    text, emotion, sentence_type = c2.response_text.strip(), c2.emotion, c2.sentence_type
+            except Exception:  # noqa: BLE001 - keep the original aside if the retry fails
+                pass
+        if text:
+            self._recent_replies.append(text)
         return AgentReply(
             response_text=text,
             emotion=emotion,
