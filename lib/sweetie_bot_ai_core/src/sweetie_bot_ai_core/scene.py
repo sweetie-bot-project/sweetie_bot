@@ -94,15 +94,28 @@ def select_salient(state: SceneState, cfg: SceneConfig) -> SceneState:
 
 # --- inter-turn diff -------------------------------------------------------------------------
 
+_PERSON_TYPES = ("person", "human", "face")
+
+
+def _is_person(e: SceneEntity) -> bool:
+    return e.type in _PERSON_TYPES
+
+
 def diff(prev: SceneState, curr: SceneState, cfg: SceneConfig) -> List[SceneEvent]:
     """Diff two *salient* SceneStates by id → arrived / left / changed events."""
     prev_map = {e.id: e for e in prev.entities}
     curr_map = {e.id: e for e in curr.entities}
     events: List[SceneEvent] = []
+    # locate PEOPLE only when several are present (to tell them apart); with a single person she
+    # addresses them as "you" and their position is pure recitation fuel. Objects always located.
+    locate_people = sum(1 for e in curr.entities if _is_person(e)) >= 2
     for eid, e in curr_map.items():
         if eid not in prev_map:
-            events.append(SceneEvent(kind="arrived", entity_id=eid,
-                                     detail=f"{_who(e)} appeared {bearing_words(e.bearing_deg, cfg)}"))
+            if _is_person(e) and not locate_people:
+                detail = f"{_who(e)} appeared"
+            else:
+                detail = f"{_who(e)} appeared {bearing_words(e.bearing_deg, cfg)}"
+            events.append(SceneEvent(kind="arrived", entity_id=eid, detail=detail))
         else:
             changed = _attr_changes(prev_map[eid].attributes, e.attributes, cfg)
             if changed:
@@ -205,8 +218,8 @@ def elevation_words(elevation_deg: float) -> str:
     return ""
 
 
-def _describe(e: SceneEntity, cfg: SceneConfig) -> str:
-    if e.type in ("person", "human", "face"):
+def _describe(e: SceneEntity, cfg: SceneConfig, locate: bool = True) -> str:
+    if _is_person(e):
         subj = f"a person (id {e.id})"
     else:
         subj = f"a {e.type.replace('_', ' ')} (id {e.id})"
@@ -219,12 +232,12 @@ def _describe(e: SceneEntity, cfg: SceneConfig) -> str:
         r = render_attr(k, v, cfg)
         if r:
             tags.append(r)
-    if e.distance:
+    if e.distance and e.distance != "mid":     # "mid" is the unremarkable default; near/far only
         tags.append(e.distance)
-    # Position is only useful to LOCATE people she is NOT talking to. The interlocutor she
-    # addresses directly as "you", so giving her their position just gets recited back ("someone
-    # in front of me"); omit it and locate only the other entities.
-    if e.is_interlocutor:
+    # Position is only useful to LOCATE people she is NOT simply talking to. The interlocutor and
+    # a lone person are addressed directly as "you", so their position just gets recited back
+    # ("someone in front of me"); omit it. Objects and people in a crowd keep their position.
+    if _is_person(e) and (e.is_interlocutor or not locate):
         head = subj
     else:
         where = bearing_words(e.bearing_deg, cfg)
@@ -260,9 +273,11 @@ def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) 
                      "rude. React with irritation: complain out loud that your camera/view is "
                      "covered and ask them to get their hand (or whatever it is) off your face.")
     if normal:
+        # locate PEOPLE only in a crowd (2+); a lone person is "you", not a position to recite
+        locate_people = sum(1 for e in normal if _is_person(e)) >= 2
         lines.append("Around you right now:")
         for e in normal:
-            lines.append(f"- {_describe(e, cfg)}")
+            lines.append(f"- {_describe(e, cfg, locate=locate_people or not _is_person(e))}")
     for s in state.sounds:
         kind = "a voice" if s.kind == "speech" else "a sound"
         lines.append(f"- You hear {kind} {bearing_words(s.bearing_deg, cfg)}.")

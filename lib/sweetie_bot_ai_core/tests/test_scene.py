@@ -250,6 +250,31 @@ def test_interlocutor_position_is_suppressed():
     assert "right" in _describe(person(6, 90), CFG).lower()       # a non-interlocutor is located
 
 
+def test_solo_person_no_position_but_crowd_located():
+    # ONE person -> no position rendered anywhere (she addresses them as "you")
+    solo = render_scene(select_salient(SceneState(entities=[person(1, 0)]), CFG), [], CFG).lower()
+    assert "in front" not in solo and "to your" not in solo
+    # TWO people -> positions returned so she can tell them apart
+    pair = render_scene(select_salient(SceneState(entities=[person(1, -40), person(2, 40)]),
+                                       CFG), [], CFG).lower()
+    assert "left" in pair and "right" in pair
+
+
+def test_solo_person_arrival_has_no_position():
+    solo = diff(SceneState(), SceneState(entities=[person(1, 0)]), CFG)
+    assert len(solo) == 1 and "in front" not in solo[0].detail.lower()
+    crowd = diff(SceneState(entities=[person(1, -40)]),
+                 SceneState(entities=[person(1, -40), person(2, 40)]), CFG)
+    arr = [e for e in crowd if e.kind == "arrived"][0]
+    assert "right" in arr.detail.lower()
+
+
+def test_no_mid_distance_leak():
+    from sweetie_bot_ai_core.scene import _describe
+    assert "mid" not in _describe(person(1, 40, distance="mid"), CFG).lower()
+    assert "near" in _describe(person(2, 40, distance="near"), CFG).lower()
+
+
 def test_id_note_has_no_parroted_position_example():
     from sweetie_bot_ai_core.scene import _ID_NOTE
     low = _ID_NOTE.lower()
