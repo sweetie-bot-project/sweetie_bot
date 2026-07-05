@@ -129,7 +129,7 @@ class LLMAgentNode:
         d = ProactiveConfig()
         p = rospy.get_param("~proactive", {}) or {}
         for f in ("enabled", "period", "min_gap", "alone_after", "alone_gap", "lull_after",
-                  "lull_prob", "profile", "persona", "cue_alone", "cue_lull"):
+                  "lull_prob", "profile", "persona", "cue_alone", "cue_lull", "cue_lull_pool"):
             if f in p:
                 setattr(d, f, p[f])
         return d

@@ -12,7 +12,8 @@ Two triggers (option: driven on the LLM side, bypassing SOAR):
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Tuple
 
 
 @dataclass
@@ -28,8 +29,20 @@ class ProactiveConfig:
     persona: str = ""
     cue_alone: str = ("You look around and realise there is no one here with you right now - "
                       "the space is empty and quiet.")
-    cue_lull: str = ("The person in front of you has gone quiet for a little while now, just "
-                     "standing there without saying anything.")
+    # a lull cue must point her at her OWN inner world, NOT at the person's silence (that made her
+    # narrate them: "they might be thinking a lot about something"). To keep her from repeating one
+    # bland line every pause, draw from a POOL of concrete, in-character musing seeds for variety.
+    # cue_lull is an optional fixed override (rosparam); empty -> pick from the pool by the roll.
+    cue_lull: str = ""
+    cue_lull_pool: Tuple[str, ...] = field(default_factory=lambda: (
+        "a happy little memory from Equestria drifts up",
+        "you feel curious about some small wonder in the world around you",
+        "a cheerful tune starts humming quietly in your head",
+        "you notice how pleasant and calm this quiet moment feels",
+        "a warm, fond thought about one of your pony friends crosses your mind",
+        "a playful little what-if pops into your head",
+        "you feel a small urge to hum, rhyme, or share a tiny cheerful thought",
+    ))
 
 
 def choose_proactive_cue(present, since_activity, since_selftalk, cfg, roll):
@@ -48,5 +61,12 @@ def choose_proactive_cue(present, since_activity, since_selftalk, cfg, roll):
             return cfg.cue_alone
         return None
     if since_activity >= cfg.lull_after and roll < cfg.lull_prob:
-        return cfg.cue_lull
+        if cfg.cue_lull:                       # explicit fixed override
+            return cfg.cue_lull
+        pool = cfg.cue_lull_pool
+        if not pool:
+            return None
+        # spread the (already gated) roll across the pool so successive lulls vary the subject
+        idx = int((roll / cfg.lull_prob) * len(pool)) % len(pool) if cfg.lull_prob > 0 else 0
+        return pool[idx]
     return None
