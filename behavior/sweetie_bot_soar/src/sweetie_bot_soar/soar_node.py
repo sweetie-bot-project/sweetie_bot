@@ -7,6 +7,7 @@ import os, sys
 import rospy
 from std_srvs.srv import Trigger, TriggerResponse
 from std_srvs.srv import SetBool, SetBoolResponse
+from std_msgs.msg import Bool
 
 from .soar import Soar, SoarState
 
@@ -20,6 +21,10 @@ class SoarNode:
         self.set_operational_srv = rospy.Service('~set_operational', SetBool, self.setOperationalCallback)
         self.trigger_operational_srv = rospy.Service('~toggle_operational', Trigger, self.triggerOperationalCallback)
         self.step_srv = rospy.Service('~step', Trigger, self.stepCallback)
+        # expose operational state so out-of-SOAR consumers (llm_agent proactive self-talk)
+        # can gate on it: latched Bool republished on every start/stop.
+        self.operational_pub = rospy.Publisher('~operational', Bool, queue_size=1, latch=True)
+        self._publish_operational(False)
         # create SOAR envelopment
         self.soar = Soar()
         self.timer = None
@@ -50,20 +55,28 @@ class SoarNode:
         rospy.logerr('reload_prod service not implemented yet.')
         return TriggerResponse(success = False, message = 'Service is not implemented.')
 
+    def _publish_operational(self, value):
+        try:
+            self.operational_pub.publish(Bool(bool(value)))
+        except Exception:
+            pass
+
     def setOperationalCallback(self, req):
         if req.data:
             result = self.soar.start()
         else:
             result = self.soar.stop()
-    
+        self._publish_operational(bool(req.data) and bool(result))
         return SetBoolResponse(success = result)
 
     def triggerOperationalCallback(self, req):
         state = self.soar.getState()
         if state in (SoarState.STOPPED, SoarState.UNCONFIGURED):
             result = self.soar.start()
+            self._publish_operational(bool(result))
         else:
             result = self.soar.stop()
+            self._publish_operational(False)
 
         return TriggerResponse(success = result)
 
