@@ -37,6 +37,13 @@ _NO_REPEAT_NOTE = (
     "something clearly different, with fresh wording, and move the conversation forward."
 )
 
+_ALREADY_ANSWERED_NOTE = (
+    "NOTE: You have ALREADY responded to what they last said, and they have not added anything "
+    "new since. Do not answer it again or restate your earlier point. Instead say something "
+    "brief and natural to keep things easy — a light aside, a small follow-up question, or a "
+    "gentle change of subject. Keep it short; never re-explain what you already told them."
+)
+
 
 class RobotStateProvider(Protocol):
     def snapshot(self) -> RobotState: ...
@@ -117,6 +124,7 @@ class Agent:
         self.scene_config = scene_config or SceneConfig()
         self._prev_scene = SceneState()
         self._recent_replies = deque(maxlen=6)   # rolling window to break repeat loops
+        self._answered_turns = deque(maxlen=8)   # human turns already answered (re-poke guard)
         self.log = logger or (lambda m: None)
 
     # -- public entry -------------------------------------------------------------------------
@@ -125,6 +133,23 @@ class Agent:
         """Forget the inter-turn ambient state (scene diff memory). Test/reset seam."""
         self._prev_scene = SceneState()
         self._recent_replies.clear()
+        self._answered_turns.clear()
+
+    @staticmethod
+    def _norm_turn(text) -> str:
+        return " ".join((text or "").lower().split())
+
+    def _already_answered(self, text) -> bool:
+        """True if this human turn was already answered and nothing new was said since — a lull
+        re-poke (SOAR re-emits the last speech event on a pause). History is context only: she
+        must not answer the same turn again. Short turns ('yes','ok') are allowed to recur."""
+        cur = self._norm_turn(text)
+        if len(cur) < 8:
+            return False
+        for prev in self._answered_turns:
+            if cur == prev or difflib.SequenceMatcher(None, cur, prev).ratio() > 0.92:
+                return True
+        return False
 
     def _is_repeat(self, text) -> bool:
         """True if `text` (near-)duplicates a recent reply — she is looping. Pure/testable.
@@ -207,9 +232,17 @@ class Agent:
         hist = ConversationHistory(max_verbatim_turns=profile.max_verbatim_turns)
         messages = hist.build_messages(system_prompt, request.history, user_text)
 
+        # re-poke guard: if this exact human turn was already answered and nothing new was said,
+        # a lull re-emitted it (SOAR re-proposes the last speech event on a pause). Don't answer
+        # it again — steer her to move the conversation along instead. History is context only.
+        re_poke = self._already_answered(user_text)
+
         proposed: List[ToolCall] = []
         if tools_offered:
             messages, proposed = self._tool_loop(messages, profile)
+        if re_poke:
+            self.log("re-poke: already answered this turn — steering to move on")
+            messages = messages + [{"role": "system", "content": _ALREADY_ANSWERED_NOTE}]
 
         # Final constrained structured reply.
         result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
@@ -229,6 +262,11 @@ class Agent:
                 self.log(f"anti-repeat retry failed: {e!r}")
         if content.response_text and content.response_text.strip():
             self._recent_replies.append(content.response_text.strip())
+        # remember we answered this human turn, so a lull re-poke of the same text moves on
+        # rather than answering it a second time.
+        ans = self._norm_turn(user_text)
+        if len(ans) >= 8:
+            self._answered_turns.append(ans)
         # canonical-EN output: NO agent-side back-translation - the voice node owns
         # localization (it translates every non-EN say from en; agent-side RU output was
         # double-translated and mangled, P25)
