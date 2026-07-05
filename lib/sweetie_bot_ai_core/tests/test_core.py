@@ -247,6 +247,41 @@ def test_rephrase_degrades_to_canned_line_on_bad_decode():
     assert reply.error_code == 0
 
 
+def test_self_talk_reacts_to_cue_and_is_scene_aware():
+    from sweetie_bot_ai_core.schema import RequestType, SceneState, SceneEntity, Zone
+    scene = SceneState(entities=[SceneEntity(id=7, type="pony_face", zone=Zone.front)])
+    reg, sp, agent = _rephrase_agent(
+        '{"response_text":"Oh - another pony, right there!",'
+        '"emotion":"joy","sentence_type":"statement"}', scene=scene)
+    sentinel = SceneState(entities=[SceneEntity(id=1, type="human", zone=Zone.front)])
+    agent._prev_scene = sentinel
+
+    reply = agent.handle(AgentRequest(request_type=RequestType.self_talk, profile="self-talk-en",
+                                      text="You notice another pony toy nearby."))
+
+    assert reply.response_text == "Oh - another pony, right there!"
+    # the cue was handed to the model...
+    user_msgs = [m["content"] for m in reg.last_messages if m["role"] == "user"]
+    assert any("pony toy nearby" in c for c in user_msgs), "the cue never reached the model"
+    # ...it is scene-aware (unlike rephrase): the visible pony reached the prompt...
+    assert sp.calls > 0, "self-talk did not consult the live scene"
+    assert any("pony" in m["content"] for m in reg.last_messages), "seen pony never reached prompt"
+    # ...under a spontaneous, non-conversational constraint...
+    sys_msg = next(m["content"] for m in reg.last_messages if m["role"] == "system")
+    assert "spontaneous" in sys_msg.lower()
+    # ...and it does NOT consume the scene-diff owed to the next real conversational turn.
+    assert agent._prev_scene is sentinel
+
+
+def test_self_talk_stays_silent_on_bad_decode():
+    from sweetie_bot_ai_core.schema import RequestType
+    reg, sp, agent = _rephrase_agent("not valid json")
+    reply = agent.handle(AgentRequest(request_type=RequestType.self_talk, profile="self-talk-en",
+                                      text="It has been quiet for a while."))
+    assert reply.response_text == ""        # silence is an acceptable spontaneous "remark"
+    assert reply.error_code == 0
+
+
 def test_persona_registry_default_and_switch():
     pr = PersonaRegistry()
     assert pr.active.name == "sweetie"

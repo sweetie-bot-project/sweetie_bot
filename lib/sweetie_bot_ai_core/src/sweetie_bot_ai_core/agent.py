@@ -80,6 +80,9 @@ DEFAULT_PROFILES: Dict[str, ProfileConfig] = {
     # rewording (temp trimmed from 1.0 -> 0.8: raw variety was pulling rephrases off-topic)
     "rephrase-en": ProfileConfig(allow_tools=False, max_verbatim_turns=0, max_tool_iters=0,
                                  options={"temperature": 0.8, "max_tokens": 80}),
+    # spontaneous self-talk hop (proactive seam): scene-aware, tool-free, brief
+    "self-talk-en": ProfileConfig(allow_tools=False, max_verbatim_turns=0, max_tool_iters=0,
+                                  options={"temperature": 0.8, "max_tokens": 80}),
 }
 
 
@@ -118,6 +121,8 @@ class Agent:
                 return self._handle_classify(request)
             if request.request_type == RequestType.rephrase:
                 return self._handle_rephrase(request)
+            if request.request_type == RequestType.self_talk:
+                return self._handle_self_talk(request)
             return self._handle_reply(request)
         except RegistryError as e:
             self.log(f"registry error: {e}")
@@ -244,6 +249,67 @@ class Agent:
             text, emotion, sentence_type = "", Emotion.neutral, SentenceType.statement
         if not text:
             text = line                        # degrade to the canned line, never to silence
+        return AgentReply(
+            response_text=text,
+            emotion=emotion,
+            sentence_type=sentence_type,
+            language="en",
+            error_code=ErrorCode.SUCCESS,
+            raw=result.content,
+        )
+
+    # -- self-talk path (spontaneous in-character remark from a cue) ---------------------------
+
+    def _handle_self_talk(self, request: AgentRequest) -> AgentReply:
+        """Say ONE brief, spontaneous thought out loud, prompted by a cue - not a conversation.
+
+        This is the seam a future proactive layer drives (a pony noticed, a lull, an event): the
+        caller passes what caught her attention as ``request.text`` and gets back a short remark.
+        Unlike the reply path it demands no answer and continues no dialogue; unlike the rephrase
+        path it IS scene-aware (so she can react to what she sees), but it snapshots the scene
+        READ-ONLY and never touches ``self._prev_scene`` - a spontaneous aside must not consume
+        the scene-diff owed to the next real conversational turn. Producing nothing is fine:
+        silence is a valid spontaneous "remark", so a bad decode degrades to no speech.
+        """
+        cue = (request.text or "").strip()
+        if not cue:
+            return AgentReply(response_text="", language="en", error_code=ErrorCode.SUCCESS)
+        persona = self.personas.get(request.persona)
+        profile = self.profiles.get(request.profile) or DEFAULT_PROFILES["self-talk-en"]
+        name = persona.display_name if persona else "Sweetie Bot"
+        # read-only scene snapshot (no diff, no _prev_scene write): lets her name what she sees
+        try:
+            raw_scene = self.scene_provider.snapshot(include_remembered=True)
+        except TypeError:
+            raw_scene = self.scene_provider.snapshot()
+        scene_block = render_scene(select_salient(raw_scene, self.scene_config), [],
+                                   self.scene_config)
+        system_prompt = (
+            f"You are {name}. Something around you just caught your attention and you feel like "
+            "saying one brief thought out loud - to yourself, not to anyone in particular.\n"
+            "Strict rules:\n"
+            "- React only to what caught your attention (and what you can see); one short, "
+            "natural spoken sentence.\n"
+            "- This is a SPONTANEOUS aside, NOT a conversation: do not ask anyone to do or answer "
+            "anything, do not demand attention, do not greet or start a dialogue.\n"
+            "- If there is nothing worth saying, it is fine to stay quiet.\n"
+            "- You only have touch sensors on your face; never invite or mention being touched, "
+            "scratched or petted anywhere you cannot feel it."
+        )
+        if scene_block:
+            system_prompt += "\n\nRight now you can see:\n" + scene_block
+        user_text = ("Something caught your attention: %s\n"
+                     "Say one brief, spontaneous thought out loud." % cue)
+        hist = ConversationHistory(max_verbatim_turns=0)
+        messages = hist.build_messages(system_prompt, [], user_text)
+        result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
+                                        **profile.options)
+        try:
+            content = ReplyContent.model_validate(self._safe_json(result.content))
+            text = (content.response_text or "").strip()
+            emotion, sentence_type = content.emotion, content.sentence_type
+        except Exception:  # noqa: BLE001 - bad decode: stay silent, this is an optional aside
+            text, emotion, sentence_type = "", Emotion.neutral, SentenceType.statement
         return AgentReply(
             response_text=text,
             emotion=emotion,

@@ -34,6 +34,7 @@ class SentenceType(str, Enum):
 class RequestType(str, Enum):
     reply = "reply"            # conversational reply (implemented now)
     rephrase = "rephrase"      # constrained rewording of a scripted line (text-action hop)
+    self_talk = "self_talk"    # spontaneous in-character remark from a cue (proactive seam)
     classify = "classify"      # reserved: classify text into provided labels
     assess_scene = "assess_scene"  # reserved: describe/assess an image (future VLM)
 
