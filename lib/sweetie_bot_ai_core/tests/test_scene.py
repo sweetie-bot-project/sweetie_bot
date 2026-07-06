@@ -244,6 +244,13 @@ def test_scene_block_has_no_raw_gaze_numbers():
         assert leak not in txt, f"leaked internal telemetry {leak!r}: {txt!r}"
 
 
+def test_scene_diff_ignores_color_flip():
+    # a measured-color flip is noise, not news — no "the pony is now mostly white" events
+    prev = SceneState(entities=[person(9, 10, attributes={"color": "blue"})])
+    curr = SceneState(entities=[person(9, 10, attributes={"color": "white"})])
+    assert diff(prev, curr, CFG) == []
+
+
 def test_scene_diff_ignores_pure_gaze_number_change():
     # a change in ONLY the raw gaze angles must not produce a 'someone is now ...' event
     prev = SceneState(entities=[person(2, -10, attributes={"gaze_yaw": "1.0"})])

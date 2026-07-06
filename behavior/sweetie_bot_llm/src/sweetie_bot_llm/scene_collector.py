@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 import time
+from collections import Counter, deque
 from typing import Dict, Optional
 
 import rospy
@@ -59,6 +60,7 @@ class SceneCollector:
         # the microphone on the same topic and are already covered by SoundCue (double-count),
         # 'hand' is a body part of an already-listed person, not a separate entity.
         self._exclude_types = set(exclude_types or ())
+        self._color_hist: Dict[int, deque] = {}   # per-track-id recent color names (debounce)
         self._clock = clock
 
         self._tf = tf2_ros.Buffer()
@@ -81,6 +83,7 @@ class SceneCollector:
         self._recent = []
         self._sound = None
         self._remembered.clear()
+        self._color_hist.clear()
 
     # -- subscribers --------------------------------------------------------------------------
 
@@ -100,11 +103,12 @@ class SceneCollector:
             if p_stable is None:
                 continue
             self._remembered[det.id] = _Remembered(
-                p_stable, det.type or "person", self._attrs(det), now)
+                p_stable, det.type or "person", self._stable_attrs(det), now)
         # prune expired
         cutoff = now - self._ttl
         for eid in [k for k, v in self._remembered.items() if v.last_t < cutoff]:
             del self._remembered[eid]
+            self._color_hist.pop(eid, None)
 
     def _on_sound(self, msg: SoundEvent):
         self._sound = msg
@@ -135,6 +139,18 @@ class SceneCollector:
     @staticmethod
     def _attrs(det) -> Dict[str, str]:
         return {k: v for k, v in zip(det.attribute or [], det.value or [])}
+
+    def _stable_attrs(self, det) -> Dict[str, str]:
+        """Detection attrs with the color DEBOUNCED per track id: the per-frame measurement
+        flips between adjacent names under real lighting; she should perceive (and retention
+        should store) the mode of the recent window, and noise must not become scene events."""
+        attrs = self._attrs(det)
+        c = attrs.get("color")
+        if c:
+            hist = self._color_hist.setdefault(det.id, deque(maxlen=15))
+            hist.append(c)
+            attrs["color"] = Counter(hist).most_common(1)[0][0]
+        return attrs
 
     # -- SceneProvider seam -------------------------------------------------------------------
 
@@ -167,7 +183,7 @@ class SceneCollector:
                     id=det.id, type=det.type or "person", bearing_deg=bearing,
                     elevation_deg=elevation,
                     zone=classify_zone(bearing, self._cfg), distance=dist,
-                    attributes=self._attrs(det), in_frame=True, last_seen_s=0.0))
+                    attributes=self._stable_attrs(det), in_frame=True, last_seen_s=0.0))
 
         sounds = self._sound_cues()
         self._attribute_speaker(entities, sounds)

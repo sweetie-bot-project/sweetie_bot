@@ -133,8 +133,14 @@ def diff(prev: SceneState, curr: SceneState, cfg: SceneConfig) -> List[SceneEven
     return events
 
 
+# attrs that render in the ambient block but must NOT produce "is now ..." change events:
+# a plushie does not change color — a color flip is measurement noise, not news.
+_NO_EVENT_ATTRS = frozenset({"color"})
+
+
 def _attr_changes(old: Dict[str, str], new: Dict[str, str], cfg: SceneConfig) -> str:
-    bits = [render_attr(k, v, cfg) for k, v in new.items() if old.get(k) != v]
+    bits = [render_attr(k, v, cfg) for k, v in new.items()
+            if old.get(k) != v and k not in _NO_EVENT_ATTRS]
     return ", ".join(b for b in bits if b)
 
 
