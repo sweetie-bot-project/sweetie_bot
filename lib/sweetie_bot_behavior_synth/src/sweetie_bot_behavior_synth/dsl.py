@@ -75,7 +75,7 @@ class ScenarioSpec:
     entities: List[SynthEntity] = field(default_factory=list)
     lang: str = "en"
     soar_params: Dict[str, object] = field(default_factory=dict)   # relative to /soar (e.g. "input/swm/visibility_timeout")
-    agent_params: Dict[str, object] = field(default_factory=dict)  # relative to /llm_agent — forces agent restart
+    agent_params: Dict[str, object] = field(default_factory=dict)  # relative to /llm_agent (set on start, undone on stop)
     operational: bool = True            # open the SOAR operational window for the test
     detections_rate: float = 8.0
 
@@ -122,7 +122,10 @@ def soar_params(**params):
 
 
 def agent_params(**params):
-    """Per-test /llm_agent/* overrides — requires an agent node restart (marked + batched)."""
+    """Per-test /llm_agent/* overrides, e.g. agent_params(**{"proactive/enabled": False}).
+    Applied as rosparams by World.start() + restored by stop(); NO node restart — the node
+    live-re-reads ~proactive each tick and ~reply_delay per reply. Params the node reads only
+    at construction (~llm, ~persona_dir, ...) are NOT supported this way."""
     def deco(func):
         _spec(func).agent_params.update(params)
         return func

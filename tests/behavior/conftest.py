@@ -28,12 +28,6 @@ ROS_UP = _ros_available()
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "unknown: behavior with unestablished live status (report-only)")
-    config.addinivalue_line("markers", "agent_restart: test overrides agent params (batched last)")
-
-
-def pytest_collection_modifyitems(config, items):
-    # batch @agent_params tests last (they force an agent restart)
-    items.sort(key=lambda it: 1 if it.get_closest_marker("agent_restart") else 0)
 
 
 @pytest.fixture(scope="session")

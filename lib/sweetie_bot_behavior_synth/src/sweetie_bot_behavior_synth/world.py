@@ -13,7 +13,7 @@ import rospy
 
 from .collectors import SayRecord, TurnRecord, make_collectors
 from .dsl import ScenarioSpec, SynthEntity
-from .resets import agent_reset, set_operational, soar_reconfigure
+from .resets import agent_reset, apply_params, set_operational, soar_reconfigure
 from .streams import SynthDetections, SynthSpeech
 
 
@@ -25,6 +25,7 @@ class World:
         self.col = make_collectors()
         self._t0 = 0.0
         self._undo_params = lambda: None
+        self._undo_agent_params = lambda: None
         self._truth = {e.id: e for e in spec.entities}
 
     # -- lifecycle ---------------------------------------------------------------------------------
@@ -33,6 +34,11 @@ class World:
         # running processes, SWM memory). ~2-4 s per test - the price of determinism.
         ok, self._undo_params = soar_reconfigure(self.spec.soar_params or {})
         assert ok, "soar reconfigure failed"
+        # @agent_params overrides: plain rosparam set suffices — the node re-reads ~proactive
+        # every tick and ~reply_delay per reply (construction-time params would need a process
+        # restart, which no test uses). Applied BEFORE agent_reset so reset-time reads see them.
+        if self.spec.agent_params:
+            self._undo_agent_params = apply_params(self.spec.agent_params, "/llm_agent")
         agent_reset()
         self.detections.start(self.spec.entities)
         rospy.sleep(1.0)                       # let SWM ingest the initial scene
@@ -56,6 +62,7 @@ class World:
                 set_operational(False)
         finally:
             self.detections.stop(flush_empty_s=1.0)
+            self._undo_agent_params()   # restore /llm_agent params before the state reset
             agent_reset()
             if self.spec.soar_params:
                 # restore overridden params now; the next start() reconfigures anyway
