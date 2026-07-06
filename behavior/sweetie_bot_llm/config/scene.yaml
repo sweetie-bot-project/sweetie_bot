@@ -14,7 +14,10 @@ scene:
   side_deg: 120.0                         # front..side -> side (fill spare only); beyond -> rear (dropped)
 
   # --- retention (ephemeral, NOT persistent memory) ---
-  retention_ttl_s: 20.0                   # keep out-of-frame objects this long, then forget
+  # must cover a real hide-and-ask exchange: live 2026-07-02 the "where did the pony go?" asks
+  # trailed the hide by >1 min and she had already forgotten (20 s is vision-scale, not
+  # conversation-scale). Pinned by test_hidden_pony_recalled_after_conversation_pause.
+  retention_ttl_s: 90.0                   # keep out-of-frame objects this long, then forget
 
   # --- distance bins (metres, horizontal) ---
   near_m: 1.0

@@ -3,7 +3,9 @@
 ROS-side glue (the agent core only sees the ROS-free SceneState). Adds a short-term **retention
 buffer** so recently-seen entities that leave the frame are remembered for a TTL (poses stored in a
 stable frame so their bearing stays correct after she turns). No names, no gallery, no persistence
-beyond the TTL — matches the "id drops → forget" rule.
+beyond the TTL — matches the "id drops → forget" rule. The TTL must cover a real hide-and-ask
+exchange (hide the plushie, chat, "where did the pony go?", press again — the 2026-07-02 live
+session ran >1 min), hence 90 s, not a vision-scale few seconds.
 """
 from __future__ import annotations
 
@@ -39,7 +41,7 @@ class _Remembered:
 class SceneCollector:
     def __init__(self, *, detections_topic="detections", sound_topic="sound_event",
                  forward_frame="base_link", stable_frame="odom",
-                 front_deg=60.0, side_deg=120.0, retention_ttl_s=20.0,
+                 front_deg=60.0, side_deg=120.0, retention_ttl_s=90.0,
                  near_m=1.0, mid_m=2.5, bearing_sign=1.0,
                  sound_bearing_sign=1.0, sound_bearing_offset_deg=0.0,
                  min_score=0.3, exclude_types=("sound", "speech", "hand"),
