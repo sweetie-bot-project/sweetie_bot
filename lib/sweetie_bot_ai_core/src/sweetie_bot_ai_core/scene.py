@@ -35,13 +35,19 @@ class SceneConfig:
     max_entities: int = 6          # cap on entities in the ambient block
     max_remembered: int = 4
     max_sounds: int = 2
-    # pretty rendering for known attribute keys; value is a format string using {v}
+    # pretty rendering for known attribute keys; value is a format string using {v}.
+    # This is an ALLOWLIST: attributes without an entry do NOT reach the prompt at all
+    # (see render_attr) — every raw `key: value` that ever leaked (gaze_pitch, held_by: 3)
+    # got parroted back as speech.
     attr_pretty: Dict[str, str] = field(default_factory=lambda: {
         "gaze_at_robot": "looking at you",
         "looking_at_robot": "looking at you",
         "smiling": "smiling",
         "emotion": "looks {v}",
         "holding": "holding {v}",
+        "held_by": "being held by someone",   # value is a tracker id — never surface it
+        "color": "mostly {v}",                # measured dominant color (vision colorname) — the
+                                              # structural fix for her INVENTING object colors
         "waving": "waving",
     })
 
@@ -192,7 +198,11 @@ def render_attr(key: str, value: str, cfg: SceneConfig) -> str:
                 f"say she is hiding behind them")
     fmt = cfg.attr_pretty.get(key)
     if fmt is None:
-        return f"{key}: {value}" if value not in ("", "1", "true", "True") else key
+        # allowlist-only: unknown attrs are perception plumbing until someone phrases them.
+        # The raw `key: value` fallback is how gaze_pitch and held_by leaked into her speech;
+        # structural rule — she can only recite what we render (_INTERNAL_ATTRS stays as
+        # documentation of known-toxic keys, but the default for unknown is silence).
+        return ""
     # boolean-ish attrs: skip when explicitly negative
     if str(value).lower() in ("0", "false", "no", "none"):
         return f"not {fmt}" if "{v}" not in fmt else ""

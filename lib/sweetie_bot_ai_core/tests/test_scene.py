@@ -220,6 +220,19 @@ def test_render_attr_drops_internal_telemetry():
     assert render_attr("gaze_at_robot", "yes", CFG) == "looking at you"   # boolean kept
 
 
+def test_render_attr_is_allowlist_only():
+    # unknown attrs must NOT fall back to raw `key: value` — that is how gaze_pitch and
+    # held_by: 3 leaked into her speech on the live robot (2026-07-04 session logs)
+    from sweetie_bot_ai_core.scene import render_attr
+    assert render_attr("some_future_attr", "42", CFG) == ""
+    assert render_attr("velocity_x", "0.3", CFG) == ""
+    # held_by is phrased, and the tracker-id value never surfaces
+    assert render_attr("held_by", "3", CFG) == "being held by someone"
+    assert "3" not in render_attr("held_by", "3", CFG)
+    # measured color is phrased (anti-confabulation: she speaks the MEASURED color)
+    assert render_attr("color", "blue", CFG) == "mostly blue"
+
+
 def test_scene_block_has_no_raw_gaze_numbers():
     st = select_salient(SceneState(entities=[person(
         3, -10, is_interlocutor=True,

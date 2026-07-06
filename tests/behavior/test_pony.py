@@ -7,7 +7,7 @@ positive emotion), not with a flat inventory of the room.
 """
 import pytest
 
-from sweetie_bot_behavior_synth import behavior_test, check, person, pony, scene
+from sweetie_bot_behavior_synth import behavior_test, check, entity, person, pony, scene
 
 
 @behavior_test
@@ -28,3 +28,22 @@ def test_reacts_to_pony_with_delight(world):
     # ...and reacts to a fellow pony with warmth, not flatly (the delight guideline)
     assert turn.emotion in ("joy", "love", "surprise"), \
         f"seeing a pony did not delight her (emotion={turn.emotion!r}): {turn.text!r}"
+
+
+@behavior_test
+@scene(person(id=101, bearing=0.0, dist=1.5))
+def test_states_measured_pony_color(world):
+    """She must state the MEASURED color, not an imagined one — live she invented a wrong
+    plushie color (user report, 2026-07-06). Structural fix: the vision object provider now
+    measures the crop's dominant color (perfusion colorname) and ships it as a detection
+    attribute; the scene renders it 'mostly blue'; she answers from data."""
+    world.spawn(entity("pony", id=201, bearing=+20.0, dist=1.2, color="blue"))
+    world.wait_seen("pony")
+    t = world.say_and_wait("What color is the pony you see?")
+    # mechanism-first: the measured color must be in the scene she answered from
+    assert world.col["agent_log"].wait_grep(r"scene_block: .*mostly blue", timeout=5.0), \
+        "measured color attribute never rendered into her scene"
+    check.mentions(t.text, ["blue"])
+    low = t.text.lower()
+    for wrong in ("pink", "purple", "green", "red", "yellow", "orange", "gray", "grey"):
+        assert wrong not in low, f"invented color {wrong!r} alongside the data: {t.text!r}"
