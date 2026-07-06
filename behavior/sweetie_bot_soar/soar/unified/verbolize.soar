@@ -85,6 +85,22 @@ sp {verbolize*propose*focusing-on-interlocutor-mssing
     (<op> ^finish-process <proc> ^finish-status missing)
 }
 
+# detect a fast-failing look-at attempt and proceed WITHOUT focus
+# A look-at that terminates with status failed within moments (controller refuses to start,
+# SWM object gone) never reaches the 5s deadline above; the priority-50 focusing operator
+# would be re-proposed with a fresh deadline each time, looping forever and starving the
+# sound/text actions, so the process never terminates and ^talking stays latched, muting
+# every touch and talk reaction (2026-07-06 touch-stress wedge). React head-unturned instead.
+sp {verbolize*propose*focusing-on-interlocutor-failed-attempt
+	(state <s> ^bottom-state 1 ^beliefs.event <ev>)
+	(<ev> ^name focusing-on-interlocutor ^reason terminated ^status failed ^process.subprocess-of <proc>)
+	(<proc> ^substate verbolize -^focusing-on-interlocutor-status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name focusing-on-interlocutor-failed-attempt ^type cognition automatic)
+    (<op> ^parent <proc> ^attribute focusing-on-interlocutor-status ^link-value failed)
+}
+
 # PERFORM TEXT ACTION
 
 # text action: play sound file
@@ -287,11 +303,23 @@ sp {verbolize*propose*terminate-verbolize
 	(<op> ^name terminate-verbolize ^type cognition automatic ^finish-process <proc> ^finish-status succeed)
 }
 
+# a sound-only verbolization whose sound action FAILED can never gain ^text-action-status
+# (there is no ^text fallback to retry with), so terminate-verbolize above would never fire
+# and the process would hold ^talking forever. Finish it as failed instead.
+sp {verbolize*propose*terminate-verbolize-sound-failed
+	(state <s> ^bottom-state 1 ^beliefs <b>)
+	(<b> ^process <proc>)
+	(<proc> ^substate verbolize ^text-action-sound-failed yes -^text -^text-action-status)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name terminate-verbolize-sound-failed ^type cognition automatic ^finish-process <proc> ^finish-status failed)
+}
+
 # terminate emotion if it is displayed
 # TODO: react on event
 sp {verbolize*elaborate*terminate-emotion
 	(state <s> ^bottom-state 1 ^operator <op> +)
-	(<op> ^name terminate-verbolize ^type cognition automatic ^finish-process <proc>)
+	(<op> ^name {<<|terminate-verbolize| |terminate-verbolize-sound-failed|>>} ^type cognition automatic ^finish-process <proc>)
 	(<proc> ^emotion-is-displayed)
 -->
 	(<op> ^add-output-command textcmd ^output-command-args <cmd>)
