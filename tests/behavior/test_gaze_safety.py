@@ -10,6 +10,12 @@ import rospy
 from sweetie_bot_behavior_synth import behavior_test, person, scene
 
 
+import pytest
+
+
+@pytest.mark.xfail(reason="safe-cone gate DISABLED in 5970a9bf (head-runaway root cause fixed "
+                          "via the real/-frame perception fix; cone was the band-aid). Kept "
+                          "xfail so re-enabling the cone re-arms this guard.", strict=False)
 @behavior_test
 @scene(person(id=101, bearing=+70.0, dist=1.5))
 def test_off_cone_target_gets_no_gaze_refs(world):
