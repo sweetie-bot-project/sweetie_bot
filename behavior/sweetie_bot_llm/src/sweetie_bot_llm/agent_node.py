@@ -24,7 +24,7 @@ from std_msgs.msg import String, Bool
 from std_srvs.srv import Trigger, TriggerResponse
 
 from sweetie_bot_ai_core import (Agent, LanguagePolicy, PersonaRegistry, SceneConfig, ToolRegistry,
-                                 build_llm_registry)
+                                 build_llm_registry, load_profiles)
 from sweetie_bot_ai_core.translation import LibreTranslateProvider
 from sweetie_bot_ai_core.schema import AgentRequest, RequestType
 
@@ -55,6 +55,7 @@ class LLMAgentNode:
         default_persona = rospy.get_param("~default_persona", "sweetie")
         lp_cfg = rospy.get_param("~language_policy", {})
         scene_cfg = rospy.get_param("~scene", {}) or {}
+        profiles_cfg = rospy.get_param("~profiles", None)
 
         # --- build core ----------------------------------------------------------------------
         registry = build_llm_registry(providers_cfg, logger=rospy.logwarn,
@@ -84,9 +85,13 @@ class LLMAgentNode:
             rospy.logwarn("llm_agent: scene provider unavailable (%r); running without it", e)
             self._scene = None
         self._effector = ToolAdapters(self._state, scene_collector=self._scene)
+        # ~profiles (profiles.yaml) is the deployed source of truth; missing param -> the
+        # language-neutral code fallback (DEFAULT_PROFILES)
+        profiles = load_profiles({"profiles": profiles_cfg}) if profiles_cfg else None
         self._agent = Agent(registry, personas=personas, tools=tools,
                             state_provider=self._state, scene_provider=self._scene,
                             effector=self._effector, language_policy=policy,
+                            profiles=profiles,
                             scene_config=SceneConfig(front_deg=scene_cfg.get("front_deg", 60.0),
                                                      side_deg=scene_cfg.get("side_deg", 120.0)),
                             logger=rospy.loginfo)

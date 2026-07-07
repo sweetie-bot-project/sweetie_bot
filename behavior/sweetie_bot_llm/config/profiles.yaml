@@ -1,0 +1,38 @@
+# LLM agent profiles (sweetie_bot_ai_core.load_profiles; loaded into ~profiles).
+# SOURCE OF TRUTH for deployed profile tuning — the code DEFAULT_PROFILES is only the fallback
+# when this param is missing, and a unit test pins yaml == fallback at introduction time.
+#
+# Canonical names are LANGUAGE-NEUTRAL (the agent is canonical-EN; the voice node localizes).
+# SOAR request names like 'complex-en' still resolve: the agent strips a trailing -<lang>.
+profiles:
+  # primary path: full context + dynamic state + tools
+  complex:
+    allow_tools: true
+    max_verbatim_turns: 8
+    max_tool_iters: 3
+    options: {temperature: 0.8, max_tokens: 512}
+  # fast lightweight path: reduced context, no tools
+  simple:
+    allow_tools: false
+    max_verbatim_turns: 4
+    max_tool_iters: 0
+    options: {temperature: 0.7, max_tokens: 160}
+  # minimal degraded path
+  failsafe:
+    allow_tools: false
+    max_verbatim_turns: 2
+    max_tool_iters: 0
+    options: {temperature: 0.6, max_tokens: 120}
+  # canned-speech rephrase hop (text-action interceptor): fast, tool-free; runs WARM for real
+  # variety — the isolated prompt (no scene/ambient) keeps it on-topic
+  rephrase:
+    allow_tools: false
+    max_verbatim_turns: 0
+    max_tool_iters: 0
+    options: {temperature: 1.05, max_tokens: 96}
+  # spontaneous self-talk hop (proactive seam): scene-aware, tool-free, brief
+  self-talk:
+    allow_tools: false
+    max_verbatim_turns: 0
+    max_tool_iters: 0
+    options: {temperature: 0.8, max_tokens: 80}
