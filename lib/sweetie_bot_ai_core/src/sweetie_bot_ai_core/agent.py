@@ -373,6 +373,12 @@ class Agent:
             messages, profile, content.response_text, content.emotion, content.sentence_type,
             base_temp_default=REPLY_BASE_TEMP, keep_first_if_empty=False,
             extra_recent=said_before)
+        if text and self._is_repeat(text, extra=said_before):
+            # the regenerate itself re-echoed (a small model latches onto the copy source in
+            # its prompt — the note alone loses 3/5): never voice a verbatim loop
+            self.log(f"retry still a repeat — falling back: {text!r:.60}")
+            text, emotion_c, sentence_type, retry_raw = (
+                _DEGENERATE_FALLBACK, Emotion.neutral, SentenceType.statement, None)
         if _is_degenerate(text or "", lull=lull):
             text, emotion_c, sentence_type, retry_raw = self._retry_degenerate(
                 messages, profile, lull=lull)

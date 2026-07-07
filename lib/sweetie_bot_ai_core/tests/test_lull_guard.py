@@ -104,6 +104,21 @@ def test_echo_of_own_history_line_is_a_repeat_even_after_restart():
     assert reply.response_text == "Shall we make up a new game together?"
 
 
+def test_insistent_echo_never_escapes():
+    # live 02:12 run: the no-repeat retry RE-ECHOED her own line 3/5 times (a small model
+    # latches onto the copy source in the prompt; instruction alone loses). The retry is
+    # verified too — a still-repeating retry falls back rather than voicing a loop.
+    from sweetie_bot_ai_core.schema import TalkTurn
+    echo = "I love tag! Chasing games are my favourite."
+    a = _agent(_c(echo))                        # every call, retry included, echoes
+    reply = a.handle(AgentRequest(
+        text="", profile="complex-en",
+        history=[TalkTurn(speaker="human", text="What games do you like to play?"),
+                 TalkTurn(speaker="sweetie", text=echo, emotion="joy")]))
+    assert reply.response_text == _DEGENERATE_FALLBACK
+    assert reply.error_code.value == 0
+
+
 def test_empty_reply_on_a_real_turn_never_escapes():
     a = _agent(_c(""))                          # model returns empty text on every call
     reply = a.handle(AgentRequest(text="Tell me something nice.", profile="complex-en"))

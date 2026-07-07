@@ -82,7 +82,7 @@ def test_reply_regenerate_temperature_caps_at_1_2():
     assert reg.calls[1]["opts"]["temperature"] == 1.2    # min(1.2, 1.0 + 0.3)
 
 
-def test_reply_keeps_first_answer_when_retry_fails():
+def test_reply_never_voices_the_loop_when_retry_fails():
     class FlakyRegistry(RecordingRegistry):
         def chat(self, messages, **kw):
             if len(self.calls) >= 1:
@@ -90,12 +90,16 @@ def test_reply_keeps_first_answer_when_retry_fails():
                 raise RuntimeError("retry boom")
             return super().chat(messages, **kw)
 
+    from sweetie_bot_ai_core.agent import _DEGENERATE_FALLBACK
     reg = FlakyRegistry([_reply_json(REPEAT_LINE)])
     agent = Agent(reg)
     agent._recent_replies.append(REPEAT_LINE)
     reply = agent.handle(AgentRequest(text="Tell me something nice!", profile="simple-en"))
-    # never empty/error on the reply path — the first (repeated) reply is still returned
-    assert reply.response_text == REPEAT_LINE
+    # never empty/error on the reply path — and since the retry-verify backstop (live
+    # 2026-07-08 02:12: no-repeat retries re-echoed 3/5) a failed retry returns the
+    # fallback line rather than voicing the same reply again
+    assert reply.response_text == _DEGENERATE_FALLBACK
+    assert reply.response_text.strip()
     assert reply.error_code == 0
 
 
