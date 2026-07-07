@@ -5,7 +5,10 @@ voice:
         'male': 'He said'
         'unknown': 'They said'
     sound_packages: [ 'sweetie_bot_sounds' ]
-    lang: 'ru,en'
+    # spoken-language preference order; FIRST entry = default voicing language for
+    # agent-initiated speech (proactive asides). Checklist for adding a language:
+    # behavior/sweetie_bot_llm/config/languages.yaml header.
+    lang: 'zh,en,ru'
     ladspa_path: ~/.ladspa/
     balancer_config:
         # Min priority value = 100
