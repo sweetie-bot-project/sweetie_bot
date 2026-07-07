@@ -8,6 +8,7 @@ classes. That is why it lives in the shared ``sweetie_bot_ai_core`` lib, not in 
 """
 from __future__ import annotations
 
+import os
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, List, Optional
@@ -116,7 +117,6 @@ def build_llm_registry(config: dict, *, logger: Optional[Callable[[str], None]] 
     providers = config.get("providers") or config.get("server_choices") or {}
     eps: List[Endpoint] = []
     for name, desc in providers.items():
-        import os
         url = desc.get("url")
         if not url:
             continue

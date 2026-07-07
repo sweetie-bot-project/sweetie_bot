@@ -15,6 +15,9 @@ from .schema import TalkTurn
 
 SummarizeFn = Callable[[List[TalkTurn]], str]
 
+# heuristic-summary truncation: keeps the "previously..." block prompt-budget friendly
+SUMMARY_MAX_CHARS = 600
+
 
 def _role(turn: TalkTurn) -> str:
     return "assistant" if turn.speaker.lower() in ("sweetie", "assistant", "bot") else "user"
@@ -26,7 +29,7 @@ def _heuristic_summary(turns: List[TalkTurn]) -> str:
         who = "Sweetie" if _role(t) == "assistant" else "Human"
         bits.append(f"{who}: {t.text}")
     text = " ".join(bits)
-    return (text[:600] + "…") if len(text) > 600 else text
+    return (text[:SUMMARY_MAX_CHARS] + "…") if len(text) > SUMMARY_MAX_CHARS else text
 
 
 class ConversationHistory:
