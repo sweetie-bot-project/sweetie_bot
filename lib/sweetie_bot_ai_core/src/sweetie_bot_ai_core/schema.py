@@ -17,6 +17,13 @@ from pydantic import BaseModel, Field
 # --- fixed vocabularies (must match the SOAR/animation contract) -----------------------------
 
 class Emotion(str, Enum):
+    """THE emotion vocabulary — single source of truth (R4).
+
+    Everything else points here: GenerateReply.action's emotion comment, the soar.yaml
+    emotion maps (their keys must be a subset — pinned by test_agent_bridge), and the SOAR
+    rules that reuse the value as an animation-tag. Change it HERE first; the seven values
+    are frozen by the downstream animation set.
+    """
     love = "love"
     joy = "joy"
     surprise = "surprise"

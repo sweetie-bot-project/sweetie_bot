@@ -15,6 +15,7 @@ string image_b64           # optional image, for request_type=assess_scene (futu
 ---
 string response_text
 string emotion             # one of: love joy surprise neutral sadness fear anger
+                           # (source of truth: sweetie_bot_ai_core.schema.Emotion — comment-only pointer)
 string sentence_type       # question | statement
 string tool_calls_json     # JSON array of {name, arguments} proposed tool calls
 uint8 error_code           # 0=SUCCESS 1=UNKNOWN_PROFILE 2=SERVER_UNREACHABLE 3=PARSE 4=INTERNAL
