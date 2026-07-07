@@ -312,3 +312,21 @@ def test_servo_faults_get_leg_location():
     assert "hind-left leg" in summary        # leg3
     assert "front-left leg" in summary       # leg1
     assert "leg3_joint2" in summary          # raw name preserved alongside the location
+
+
+# --- purity: select_salient must not mutate its input (C2) -------------------------------------
+
+def test_select_salient_does_not_mutate_input():
+    """The module docstring claims PURE; annotate_occluded_by used to write into the caller's
+    entities. Pinned: the input SceneState (incl. remembered entities) is byte-identical after."""
+    visible = person(1, 0, distance="near")
+    hidden = SceneEntity(id=9, type="pony", bearing_deg=5.0, zone=Zone.front,
+                         distance="far", in_frame=False, last_seen_s=10.0)
+    st = SceneState(entities=[visible, hidden])
+    before = st.model_dump()
+    sel = select_salient(st, CFG)
+    assert st.model_dump() == before, "select_salient mutated its input"
+    # the occlusion annotation still happens - on the returned copies
+    out_hidden = next(e for e in sel.entities if e.id == 9)
+    assert "probably_hidden_behind" in out_hidden.attributes
+    assert "probably_hidden_behind" not in hidden.attributes

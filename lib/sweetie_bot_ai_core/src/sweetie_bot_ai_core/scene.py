@@ -22,6 +22,13 @@ from .schema import SceneEntity, SceneEvent, SceneState, SoundCue, Zone
 # the agent core stays ROS-free / perfusion-free.
 CAMERA_OCCLUDED = "camera_occluded"
 
+# phrasing geometry (degrees)
+DIRECTLY_AHEAD_DEG = 15.0          # |bearing| <= this -> "directly in front of you"
+ELEVATION_NOTABLE_DEG = 15.0       # |elevation| above this -> "above/below you"
+ELEVATION_EXTREME_DEG = 45.0       # ... -> "well above / far below you"
+# occlusion inference: max bearing gap between a vanished object and its likely occluder
+OCCLUDER_BEARING_DELTA_DEG = 18.0
+
 
 def is_occluded(state: SceneState) -> bool:
     """True while the camera is reported blocked (an in-frame camera_occluded entity)."""
@@ -91,6 +98,10 @@ def select_salient(state: SceneState, cfg: SceneConfig) -> SceneState:
     remembered = [e for e in state.entities if not e.in_frame]
     remembered.sort(key=lambda e: e.last_seen_s)
     chosen += remembered[: cfg.max_remembered]
+    # purity contract (module docstring): never mutate the caller's entities —
+    # annotate_occluded_by writes an attribute, so it gets copies. scene_diff compares
+    # by id (not object identity), so downstream diffing is unaffected.
+    chosen = [e.model_copy(deep=True) for e in chosen]
     annotate_occluded_by(chosen)
 
     sounds = [s for s in state.sounds if s.zone != Zone.rear]
@@ -151,7 +162,7 @@ def bearing_words(bearing_deg: float, cfg: SceneConfig) -> str:
     b = bearing_deg
     side = "right" if b > 0 else "left"
     m = abs(b)
-    if m <= 15:
+    if m <= DIRECTLY_AHEAD_DEG:
         return "directly in front of you"
     if m <= cfg.front_deg:
         return f"in front of you, to your {side}"
@@ -161,7 +172,8 @@ def bearing_words(bearing_deg: float, cfg: SceneConfig) -> str:
 _DIST_ORDER = {"near": 0, "mid": 1, "far": 2}
 
 
-def annotate_occluded_by(entities: List[SceneEntity], max_bearing_delta: float = 18.0) -> None:
+def annotate_occluded_by(entities: List[SceneEntity],
+                         max_bearing_delta: float = OCCLUDER_BEARING_DELTA_DEG) -> None:
     """Mark remembered entities probably hidden behind a visible one (in place).
 
     Heuristic: the occluder is a still-visible entity at roughly the SAME bearing that is at
@@ -183,7 +195,7 @@ def annotate_occluded_by(entities: List[SceneEntity], max_bearing_delta: float =
                 best = (db, v)
         if best is not None:
             v = best[1]
-            who = "the person" if v.type in ("person", "human", "face") else f"the {v.type.replace('_', ' ')}"
+            who = "the person" if _is_person(v) else f"the {v.type.replace('_', ' ')}"
             r.attributes["probably_hidden_behind"] = f"{who} (id {v.id})"
 
 
@@ -216,20 +228,20 @@ def render_attr(key: str, value: str, cfg: SceneConfig) -> str:
 
 
 def _who(e: SceneEntity) -> str:
-    if e.type in ("person", "human", "face"):
+    if _is_person(e):
         return "someone"
     return f"a {e.type.replace('_', ' ')}"
 
 
 def elevation_words(elevation_deg: float) -> str:
     """Vertical placement vs her horizon; empty when roughly level."""
-    if elevation_deg >= 45:
+    if elevation_deg >= ELEVATION_EXTREME_DEG:
         return "well above you"
-    if elevation_deg >= 15:
+    if elevation_deg >= ELEVATION_NOTABLE_DEG:
         return "above you"
-    if elevation_deg <= -45:
+    if elevation_deg <= -ELEVATION_EXTREME_DEG:
         return "far below you"
-    if elevation_deg <= -15:
+    if elevation_deg <= -ELEVATION_NOTABLE_DEG:
         return "below you"
     return ""
 
@@ -323,7 +335,7 @@ def render_remembered(entities: List[SceneEntity], cfg: SceneConfig) -> str:
         return "Nothing notable out of view is still remembered."
     lines = ["Remembered (out of view) — you could turn to look:"]
     for e in sorted(out, key=lambda e: e.last_seen_s):
-        subj = "a person" if e.type in ("person", "human", "face") else f"a {e.type.replace('_', ' ')}"
+        subj = "a person" if _is_person(e) else f"a {e.type.replace('_', ' ')}"
         lines.append(f"- {subj} (id {e.id}) was {bearing_words(e.bearing_deg, cfg)} "
                      f"about {int(e.last_seen_s)}s ago")
     return "\n".join(lines)
