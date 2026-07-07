@@ -138,6 +138,8 @@ class SoundCue(BaseModel):
     zone: Zone = Zone.front
     bearing_deg: float = 0.0
     kind: str = "sound"                    # speech|sound
+    # SCAFFOLD(intensity): populated by the collector but rendered nowhere yet — reserved for
+    # loudness-aware phrasing ("a LOUD noise to your left")
     intensity: Optional[str] = None        # coarse: quiet|normal|loud
 
 
@@ -203,6 +205,9 @@ class ReplyContent(BaseModel):
 
 class ErrorCode(int, Enum):
     SUCCESS = 0
+    # UNKNOWN_PROFILE / PARSE_ERROR are RESERVED: never emitted on the SOAR reply path — those
+    # conditions degrade silently with a log-only warning (an error reply wedges the SOAR say
+    # pipeline). Kept for wire-compat and for future non-SOAR callers that can handle errors.
     UNKNOWN_PROFILE = 1
     SERVER_UNREACHABLE = 2
     PARSE_ERROR = 3

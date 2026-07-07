@@ -95,7 +95,10 @@ class LanguagePolicy:
             return text
 
     def to_user_language(self, text: str, target_language: str) -> str:
-        """Translate the canonical (pivot) reply into the user's language — the output leg.
+        """SCAFFOLD(output leg): unused on the live path — the VOICE node owns localization
+        (canonical-EN contract); kept for headless callers (TUI/messenger) without a voice hop.
+
+        Translate the canonical (pivot) reply into the user's language — the output leg.
 
         Symmetric with :meth:`to_model_language`: only languages that were translated *in* get
         translated *out*. Native languages pass through untouched (the model consumed them

@@ -108,7 +108,9 @@ class OpenAIChatClient:
 
     def stream_chat(self, messages: List[Dict[str, Any]], *, response_schema=None,
                     **options) -> Iterator[str]:
-        """Yield content token deltas. Tools are intentionally not streamed here (resolved in
+        """SCAFFOLD(streaming): no live caller yet — groundwork for token-level TTS/barge-in.
+
+        Yield content token deltas. Tools are intentionally not streamed here (resolved in
         the blocking path); this method exists so the TTS path can consume tokens later."""
         payload = self._payload(messages, response_schema=response_schema, stream=True, **options)
         try:

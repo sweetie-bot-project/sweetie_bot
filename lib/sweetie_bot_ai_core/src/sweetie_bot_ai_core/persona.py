@@ -25,6 +25,8 @@ class Persona(BaseModel):
     default_language: str = "en"
     max_reply_words: int = 60
     allow_tools: bool = True
+    # SCAFFOLD(voice_hints): per-language TTS hints (e.g. ru: female) carried by the persona;
+    # no consumer reads them yet — reserved for the voice node to pick gendered voices
     voice_hints: Dict[str, str] = Field(default_factory=dict)
 
 
