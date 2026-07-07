@@ -19,7 +19,21 @@
     <!-- ~tools (dispatch modes) -->
     <rosparam command="load" file="$(find sweetie_bot_llm)/config/tools.yaml"/>
     <rosparam command="load" file="$(find sweetie_bot_llm)/config/scene.yaml"/>
+    <!-- ~profiles (deployed source of truth; missing -> code DEFAULT_PROFILES fallback) -->
+    <rosparam command="load" file="$(find sweetie_bot_llm)/config/profiles.yaml"/>
     <param name="persona_dir" value="$(arg persona_dir)"/>
     <param name="default_persona" value="$(arg default_persona)"/>
+    <!-- Runtime tunables NOT set here (rosparam defaults documented for operators):
+           ~reply_delay        (float, default 1.5 s) — deliberate pause before a spoken reply;
+                               re-read per reply, so `rosparam set /llm_agent/reply_delay 3.0`
+                               applies live without a restart.
+           ~proactive/*        — autonomous self-talk driver, re-read every tick (live-tunable):
+             enabled (true)  period (5 s)  min_gap (25 s)
+             alone_after (20 s)  alone_gap (45 s)      — empty-scene musing
+             lull_after (18 s)   lull_prob (0.25)      — present-human lull asides
+             profile (self-talk-en, alias of self-talk)  persona ('')
+             cue_alone / cue_lull / cue_lull_pool
+             voice_ns (voice/syn) — read once at startup (needs a restart to change).
+           Defaults live in proactive.py:ProactiveConfig / agent_node.py. -->
   </node>
 </launch>
