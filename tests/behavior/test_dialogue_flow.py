@@ -73,21 +73,18 @@ def test_standard_dialogue_flow(world):
     assert "interlocutor" not in low, f"spoke the internal 'interlocutor' label: {t.text!r}"
     assert "(id" not in low and not re.search(r"\bid\s*\d", low), f"spoke an internal id: {t.text!r}"
     assert "around you right now" not in low, f"recited the scene block verbatim: {t.text!r}"
-    # (5a) a SECOND human appears -> greeted too. Re-anchor first: the (2) greeting is still in
-    # the scrape buffer and would satisfy this wait_grep (false pass).
-    world.col["soar_log"].anchor()
+    # (5) a SECOND human appearing mid-conversation is deliberately NOT greeted — INTENDED
+    # single-interlocutor focus (user, 2026-07-07): "we speak right now with the person we
+    # focused on; focus changes to the other person only if THEY spoke and captured our
+    # attention". (The 2026-07-07 re-anchor briefly asserted a 2nd greeting here and exposed
+    # that no such contract exists — removed on the user's call. Focus-shift-on-speech is a
+    # separate, not-yet-solid behavior; test it if/when it is firmed up.) The spawn/vanish
+    # stays as scenario churn: the ongoing conversation must survive it.
     world.spawn(person(id=102, bearing=-30.0, dist=1.6))
-    assert world.col["soar_log"].wait_grep("SPECIFIC: GREETING", timeout=25.0), \
-        "no greeting for the second human who appeared"
-    # (5b) that human disappears -> missing-notice, or (robust fallback) re-greet on return
+    rospy.sleep(4.5)
     world.vanish(102)
-    rospy.sleep(4.5)   # SWM visibility timeout
-    if not world.col["soar_log"].wait_grep("SPECIFIC: MISSING", timeout=8.0):
-        world.col["soar_log"].anchor()   # the (5a) greeting must not satisfy the re-greet wait
-        world.spawn(person(id=102, bearing=-30.0, dist=1.6))
-        assert world.col["soar_log"].wait_grep("SPECIFIC: GREETING", timeout=25.0), \
-            "neither a missing-notice nor a re-greet after a human disappeared and returned"
-    # (4) human says goodbye -> goodbye reaction
+    # (4) human says goodbye -> goodbye reaction (re-anchored: the (2) greeting is still in
+    # the scrape buffer and repeated-marker waits must not match it)
     world.col["soar_log"].anchor()
     world.speech.say("Okay, goodbye Sweetie!")
     assert world.col["soar_log"].wait_grep("SPECIFIC: GOODBYE", timeout=25.0), \

@@ -88,7 +88,7 @@ unit tests next to its component (user policy):
 | must-pass | touch → vocal reaction (was UNKNOWN; classified works after P24 fix) | PASS |
 | must-pass | occlusion chain from depth seam (was UNKNOWN; verified end-to-end FIRST TIME EVER) | PASS |
 | must-fail | conversation resumes after id churn | XFAIL — reproduces the LIVE P19 stale-interlocutor wedge |
-| must-fail | 2nd human greeted while already conversing (`test_standard_dialogue_flow` 5a) | FAIL (real, exposed 2026-07-07 by re-anchoring the wait_grep that had false-passed on the FIRST greeting; SWM registers the human, SOAR proposes no greeting — greeting appears keyed to conversation state, needs a .soar fix, out of refactor scope) |
+| by-design | 2nd human appearing mid-conversation is NOT greeted (`test_standard_dialogue_flow` 5) | INTENDED single-interlocutor focus (user 2026-07-07): focus shifts only when the newcomer SPEAKS and captures attention. The 07-07 re-anchor briefly asserted a 2nd greeting (the old wait_grep had false-passed on the FIRST greeting) — assert removed on the user's call; spawn/vanish kept as churn. Focus-shift-on-speech itself is not yet solid — future behavior test when firmed up |
 | must-fail | EN first-turn voice channel | XFAIL — P26: talk lang defaults to ru at fresh start |
 | pending | pony lost-once at the VISION seam (fuser-level score schedules via stub_detector) | next scenario |
 
