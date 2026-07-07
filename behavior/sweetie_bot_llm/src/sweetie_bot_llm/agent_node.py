@@ -60,9 +60,14 @@ class LLMAgentNode:
         # --- build core ----------------------------------------------------------------------
         registry = build_llm_registry(providers_cfg, logger=rospy.logwarn,
                                       default_options=default_options)
-        personas = (PersonaRegistry.from_dir(persona_dir, default_name=default_persona)
-                    if persona_dir and os.path.isdir(persona_dir)
-                    else PersonaRegistry(default_name=default_persona))
+        if persona_dir and os.path.isdir(persona_dir):
+            personas = PersonaRegistry.from_dir(persona_dir, default_name=default_persona)
+        else:
+            # the built-in DEFAULT_PERSONA is a minimal FAILSAFE (identity only) — running on
+            # it means the rich YAML guidance (touch map, pony-kin, recall phrasing) is absent
+            rospy.logwarn("llm_agent: persona dir %r missing — running on the minimal built-in "
+                          "failsafe persona, NOT the deployed sweetie.yaml", persona_dir)
+            personas = PersonaRegistry(default_name=default_persona)
         tools = ToolRegistry.from_config(tools_cfg) if tools_cfg else ToolRegistry()
 
         translate = None
