@@ -150,3 +150,20 @@ def test_short_turns_are_allowed_to_recur_without_note():
     note = "ALREADY responded"
     assert not any(note in m["content"]
                    for c in reg.calls for m in c["messages"] if m["role"] == "system")
+
+
+# --- assess_scene: explicit SCAFFOLD stub ----------------------------------------------------------
+
+def test_assess_scene_is_an_explicit_stub():
+    """assess_scene must NOT fall through to the conversational reply path (it used to,
+    silently ignoring image_b64). Pinned: explicit INTERNAL + no model call."""
+    reg = RecordingRegistry([_reply_json("should never be generated")])
+    logs = []
+    agent = Agent(reg, logger=logs.append)
+    from sweetie_bot_ai_core.schema import ErrorCode
+    reply = agent.handle(AgentRequest(request_type=RequestType.assess_scene,
+                                      text="what do you see?", image_b64="aGVsbG8="))
+    assert reply.error_code == ErrorCode.INTERNAL
+    assert "not implemented" in reply.error_desc
+    assert reg.calls == []                              # no LLM call for the stub
+    assert any("assess_scene" in l for l in logs)

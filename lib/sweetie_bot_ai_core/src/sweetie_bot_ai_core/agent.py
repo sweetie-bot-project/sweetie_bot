@@ -13,12 +13,11 @@ When tools are disabled for the profile/persona, step 1 is skipped → a single 
 """
 from __future__ import annotations
 
-import difflib
 import json
 import uuid
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional, Protocol
+from typing import Callable, Dict, List, Optional, Protocol, Tuple
 
 from .history import ConversationHistory
 from .persona import PersonaRegistry
@@ -28,8 +27,24 @@ from .scene import SceneConfig, diff as scene_diff, is_occluded, render_scene, s
 from .schema import (AgentReply, AgentRequest, ErrorCode, Emotion, ReplyContent, RequestType,
                      RobotState, SceneState, SentenceType, ToolCall, ToolResult,
                      classify_json_schema, reply_json_schema)
+from .similarity import (ANSWERED_MIN_LEN, ANSWERED_RATIO, REPEAT_MIN_LEN, REPEAT_RATIO,
+                         is_near_duplicate, normalize)
 from .tools import DispatchMode, ToolRegistry
 from .translation import detect_language
+
+
+# anti-repeat regenerate: one diverging retry, temperature bumped over the profile base, capped
+REGEN_TEMP_BUMP = 0.3
+REGEN_TEMP_CAP = 1.2
+# per-path base-temperature fallbacks used ONLY when a profile omits 'temperature'; they differ
+# by design — self-talk runs slightly warmer so repeated cues still produce varied asides
+REPLY_BASE_TEMP = 0.8
+SELF_TALK_BASE_TEMP = 0.9
+# rolling windows for the two repeat guards
+RECENT_REPLIES_WINDOW = 6      # her own replies (loop breaker)
+ANSWERED_TURNS_WINDOW = 8      # human turns already answered (re-poke guard)
+# observability: single-line scene_block log truncation
+SCENE_LOG_MAX_CHARS = 600
 
 
 _NO_REPEAT_NOTE = (
@@ -123,8 +138,8 @@ class Agent:
         self.profiles = profiles or DEFAULT_PROFILES
         self.scene_config = scene_config or SceneConfig()
         self._prev_scene = SceneState()
-        self._recent_replies = deque(maxlen=6)   # rolling window to break repeat loops
-        self._answered_turns = deque(maxlen=8)   # human turns already answered (re-poke guard)
+        self._recent_replies = deque(maxlen=RECENT_REPLIES_WINDOW)
+        self._answered_turns = deque(maxlen=ANSWERED_TURNS_WINDOW)
         self.log = logger or (lambda m: None)
 
     # -- public entry -------------------------------------------------------------------------
@@ -137,31 +152,20 @@ class Agent:
 
     @staticmethod
     def _norm_turn(text) -> str:
-        return " ".join((text or "").lower().split())
+        return normalize(text)
 
     def _already_answered(self, text) -> bool:
         """True if this human turn was already answered and nothing new was said since — a lull
         re-poke (SOAR re-emits the last speech event on a pause). History is context only: she
         must not answer the same turn again. Short turns ('yes','ok') are allowed to recur."""
-        cur = self._norm_turn(text)
-        if len(cur) < 8:
-            return False
-        for prev in self._answered_turns:
-            if cur == prev or difflib.SequenceMatcher(None, cur, prev).ratio() > 0.92:
-                return True
-        return False
+        return any(is_near_duplicate(text, prev, min_len=ANSWERED_MIN_LEN, ratio=ANSWERED_RATIO)
+                   for prev in self._answered_turns)
 
     def _is_repeat(self, text) -> bool:
         """True if `text` (near-)duplicates a recent reply — she is looping. Pure/testable.
         Short affirmations ("yes", "okay") are allowed to recur; only longer lines count."""
-        cur = " ".join((text or "").lower().split())
-        if len(cur) < 12:
-            return False
-        for prev in self._recent_replies:
-            p = " ".join(prev.lower().split())
-            if cur == p or difflib.SequenceMatcher(None, cur, p).ratio() > 0.9:
-                return True
-        return False
+        return any(is_near_duplicate(text, prev, min_len=REPEAT_MIN_LEN, ratio=REPEAT_RATIO)
+                   for prev in self._recent_replies)
 
     def handle(self, request: AgentRequest) -> AgentReply:
         try:
@@ -171,6 +175,8 @@ class Agent:
                 return self._handle_rephrase(request)
             if request.request_type == RequestType.self_talk:
                 return self._handle_self_talk(request)
+            if request.request_type == RequestType.assess_scene:
+                return self._handle_assess_scene(request)
             return self._handle_reply(request)
         except RegistryError as e:
             self.log(f"registry error: {e}")
@@ -179,11 +185,81 @@ class Agent:
             self.log(f"agent internal error: {e!r}")
             return AgentReply(error_code=ErrorCode.INTERNAL, error_desc=repr(e))
 
+    # -- shared helpers (per-path degrade semantics stay with each caller) ----------------------
+
+    def _profile_or(self, name: str, fallback: str) -> ProfileConfig:
+        """Look up a profile; unknown names degrade to the named fallback with a log-only
+        warning (never an error to SOAR — wedge safety, C3)."""
+        profile = self.profiles.get(name)
+        if profile is None:
+            self.log(f"unknown profile {name!r}; falling back to {fallback!r}")
+            profile = self.profiles.get(fallback) or DEFAULT_PROFILES[fallback]
+        return profile
+
+    def _scene_snapshot(self) -> SceneState:
+        """Scene snapshot INCLUDING the short-term retention buffer. The TypeError fallback
+        covers providers without the ``include_remembered`` kwarg (NullSceneProvider, older
+        sims) — do not remove it, duck-typed providers are part of the seam contract."""
+        try:
+            return self.scene_provider.snapshot(include_remembered=True)
+        except TypeError:
+            return self.scene_provider.snapshot()
+
+    def _regenerate_if_repeat(self, messages, profile, text, emotion, sentence_type, *,
+                              base_temp_default: float, keep_first_if_empty: bool
+                              ) -> Tuple[str, Emotion, SentenceType, Optional[str]]:
+        """Anti-repetition: if the decoded reply near-duplicates a recent line she is looping
+        (SOAR can re-propose a talk op on near-identical event windows). Regenerate ONCE with a
+        diverging steer note and a bumped temperature. NEVER raises — on a failed retry the
+        first reply is kept (empty/error would wedge the SOAR say pipeline, lang.py lesson).
+
+        ``keep_first_if_empty``: the self-talk path keeps its first aside when the retry decodes
+        to silence (and strips the retry text); the reply path takes the retry verbatim.
+        Returns (text, emotion, sentence_type, raw_retry_content_or_None).
+        """
+        if not (text and self._is_repeat(text)):
+            return text, emotion, sentence_type, None
+        try:
+            opts = {**profile.options,
+                    "temperature": min(REGEN_TEMP_CAP,
+                                       float(profile.options.get("temperature",
+                                                                 base_temp_default))
+                                       + REGEN_TEMP_BUMP)}
+            result, _ = self.registry.chat(
+                messages + [{"role": "system", "content": _NO_REPEAT_NOTE}],
+                response_schema=reply_json_schema(), **opts)
+            second = ReplyContent.model_validate(self._safe_json(result.content))
+            if keep_first_if_empty:
+                s_text = (second.response_text or "").strip()
+                if not s_text:
+                    return text, emotion, sentence_type, None
+                return s_text, second.emotion, second.sentence_type, result.content
+            return second.response_text, second.emotion, second.sentence_type, result.content
+        except Exception as e:  # noqa: BLE001 - keep the first reply if the retry fails
+            self.log(f"anti-repeat retry failed: {e!r}")
+            return text, emotion, sentence_type, None
+
+    def _decode_reply_or(self, content_str, fallback_text: str
+                         ) -> Tuple[str, Emotion, SentenceType]:
+        """Decode a constrained structured reply, degrading to ``fallback_text`` on a bad
+        decode or empty text (rephrase: the canned line; self-talk: silence — both are valid
+        outcomes for their paths, unlike the reply path which lets a bad decode raise)."""
+        try:
+            content = ReplyContent.model_validate(self._safe_json(content_str))
+            text = (content.response_text or "").strip()
+            emotion, sentence_type = content.emotion, content.sentence_type
+        except Exception:  # noqa: BLE001 - bad structured decode: use the path's fallback
+            self.log(f"structured decode failed; degrading to fallback {fallback_text!r:.60}")
+            text, emotion, sentence_type = "", Emotion.neutral, SentenceType.statement
+        if not text:
+            text = fallback_text
+        return text, emotion, sentence_type
+
     # -- reply path ---------------------------------------------------------------------------
 
     def _handle_reply(self, request: AgentRequest) -> AgentReply:
         persona = self.personas.get(request.persona)
-        profile = self.profiles.get(request.profile) or DEFAULT_PROFILES["complex-en"]
+        profile = self._profile_or(request.profile, "complex-en")
         state = self.state_provider.snapshot()
 
         # detect the actual input language (the adapter's text_language is a static config
@@ -199,11 +275,7 @@ class Agent:
         # ambient environmental awareness: front-weighted scene + inter-turn delta.
         # include the short-term retention buffer so recently-departed objects stay in her
         # ambient awareness ("where did the pony go") without requiring a tool call.
-        try:
-            raw_scene = self.scene_provider.snapshot(include_remembered=True)
-        except TypeError:   # provider without retention support (e.g. NullSceneProvider)
-            raw_scene = self.scene_provider.snapshot()
-        scene = select_salient(raw_scene, self.scene_config)
+        scene = select_salient(self._scene_snapshot(), self.scene_config)
         events = scene_diff(self._prev_scene, scene, self.scene_config)
         self._prev_scene = scene
         scene_block = render_scene(scene, events, self.scene_config)
@@ -214,7 +286,7 @@ class Agent:
         if scene_block:
             # single-line observability: the behavior-synth harness (and live debugging) asserts
             # on what perception actually reached the prompt
-            self.log("scene_block: " + scene_block.replace(chr(10), " | ")[:600])
+            self.log("scene_block: " + scene_block.replace(chr(10), " | ")[:SCENE_LOG_MAX_CHARS])
 
         language_note = None
         if user_lang != "en":
@@ -244,41 +316,33 @@ class Agent:
             self.log("re-poke: already answered this turn — steering to move on")
             messages = messages + [{"role": "system", "content": _ALREADY_ANSWERED_NOTE}]
 
-        # Final constrained structured reply.
+        # Final constrained structured reply. A bad decode RAISES here (handled in handle() ->
+        # INTERNAL): unlike rephrase/self-talk this path has no safe local fallback text.
         result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
                                         **profile.options)
         content = ReplyContent.model_validate(self._safe_json(result.content))
-        # anti-repetition: if she is about to repeat a recent line she is looping (SOAR can
-        # re-propose a talk op on near-identical event windows). Regenerate ONCE, diverging.
-        # NEVER return empty/error here — that wedges the SOAR say pipeline (lang.py lesson).
-        if self._is_repeat(content.response_text):
-            try:
-                retry_opts = {**profile.options,
-                              "temperature": min(1.2, float(profile.options.get("temperature", 0.8)) + 0.3)}
-                result, _ = self.registry.chat(messages + [{"role": "system", "content": _NO_REPEAT_NOTE}],
-                                               response_schema=reply_json_schema(), **retry_opts)
-                content = ReplyContent.model_validate(self._safe_json(result.content))
-            except Exception as e:  # noqa: BLE001 - keep the first reply if the retry fails
-                self.log(f"anti-repeat retry failed: {e!r}")
-        if content.response_text and content.response_text.strip():
-            self._recent_replies.append(content.response_text.strip())
+        text, emotion_c, sentence_type, retry_raw = self._regenerate_if_repeat(
+            messages, profile, content.response_text, content.emotion, content.sentence_type,
+            base_temp_default=REPLY_BASE_TEMP, keep_first_if_empty=False)
+        if text and text.strip():
+            self._recent_replies.append(text.strip())
         # remember we answered this human turn, so a lull re-poke of the same text moves on
         # rather than answering it a second time.
         ans = self._norm_turn(user_text)
-        if len(ans) >= 8:
+        if len(ans) >= ANSWERED_MIN_LEN:
             self._answered_turns.append(ans)
         # canonical-EN output: NO agent-side back-translation - the voice node owns
         # localization (it translates every non-EN say from en; agent-side RU output was
         # double-translated and mangled, P25)
-        emotion = Emotion.anger if occluded else content.emotion
+        emotion = Emotion.anger if occluded else emotion_c
         return AgentReply(
-            response_text=content.response_text,
+            response_text=text,
             emotion=emotion,
-            sentence_type=content.sentence_type,
+            sentence_type=sentence_type,
             tool_calls=proposed,
             language="en",                 # canonical; voice/say/<lang> localizes downstream
             error_code=ErrorCode.SUCCESS,
-            raw=result.content,
+            raw=retry_raw if retry_raw is not None else result.content,
         )
 
     # -- rephrase path (constrained rewording of a scripted line) -----------------------------
@@ -295,7 +359,7 @@ class Agent:
         if not line:
             return AgentReply(response_text="", language="en", error_code=ErrorCode.SUCCESS)
         persona = self.personas.get(request.persona)
-        profile = self.profiles.get(request.profile) or DEFAULT_PROFILES["rephrase-en"]
+        profile = self._profile_or(request.profile, "rephrase-en")
         name = persona.display_name if persona else "Sweetie Bot"
         system_prompt = (
             f"You are {name}. You are about to say ONE line out loud - say the SAME thing, but "
@@ -319,14 +383,8 @@ class Agent:
         messages = hist.build_messages(system_prompt, [], user_text)
         result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
                                         **profile.options)
-        try:
-            content = ReplyContent.model_validate(self._safe_json(result.content))
-            text = (content.response_text or "").strip()
-            emotion, sentence_type = content.emotion, content.sentence_type
-        except Exception:  # noqa: BLE001 - bad structured decode: fall back to the canned line
-            text, emotion, sentence_type = "", Emotion.neutral, SentenceType.statement
-        if not text:
-            text = line                        # degrade to the canned line, never to silence
+        # degrade to the canned line, never to silence
+        text, emotion, sentence_type = self._decode_reply_or(result.content, line)
         return AgentReply(
             response_text=text,
             emotion=emotion,
@@ -353,15 +411,11 @@ class Agent:
         if not cue:
             return AgentReply(response_text="", language="en", error_code=ErrorCode.SUCCESS)
         persona = self.personas.get(request.persona)
-        profile = self.profiles.get(request.profile) or DEFAULT_PROFILES["self-talk-en"]
+        profile = self._profile_or(request.profile, "self-talk-en")
         name = persona.display_name if persona else "Sweetie Bot"
         # read-only scene snapshot (no diff, no _prev_scene write): lets her name what she sees
-        try:
-            raw_scene = self.scene_provider.snapshot(include_remembered=True)
-        except TypeError:
-            raw_scene = self.scene_provider.snapshot()
-        scene_block = render_scene(select_salient(raw_scene, self.scene_config), [],
-                                   self.scene_config)
+        scene_block = render_scene(select_salient(self._scene_snapshot(), self.scene_config),
+                                   [], self.scene_config)
         system_prompt = (
             f"You are {name}. Something around you just caught your attention and you feel like "
             "saying one brief thought out loud - to yourself, not to anyone in particular.\n"
@@ -385,23 +439,11 @@ class Agent:
         messages = hist.build_messages(system_prompt, [], user_text)
         result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
                                         **profile.options)
-        try:
-            content = ReplyContent.model_validate(self._safe_json(result.content))
-            text = (content.response_text or "").strip()
-            emotion, sentence_type = content.emotion, content.sentence_type
-        except Exception:  # noqa: BLE001 - bad decode: stay silent, this is an optional aside
-            text, emotion, sentence_type = "", Emotion.neutral, SentenceType.statement
-        if text and self._is_repeat(text):
-            try:
-                st_opts = {**profile.options,
-                           "temperature": min(1.2, float(profile.options.get("temperature", 0.9)) + 0.3)}
-                r2, _ = self.registry.chat(messages + [{"role": "system", "content": _NO_REPEAT_NOTE}],
-                                           response_schema=reply_json_schema(), **st_opts)
-                c2 = ReplyContent.model_validate(self._safe_json(r2.content))
-                if (c2.response_text or "").strip():
-                    text, emotion, sentence_type = c2.response_text.strip(), c2.emotion, c2.sentence_type
-            except Exception:  # noqa: BLE001 - keep the original aside if the retry fails
-                pass
+        # bad decode: stay silent — silence is a valid spontaneous "remark" on this path
+        text, emotion, sentence_type = self._decode_reply_or(result.content, "")
+        text, emotion, sentence_type, _raw = self._regenerate_if_repeat(
+            messages, profile, text, emotion, sentence_type,
+            base_temp_default=SELF_TALK_BASE_TEMP, keep_first_if_empty=True)
         if text:
             self._recent_replies.append(text)
         return AgentReply(
@@ -449,6 +491,18 @@ class Agent:
         label = self._safe_json(result.content).get("label", labels[-1])
         return AgentReply(response_text=str(label), language="en", raw=result.content)
 
+    # -- assess_scene path (SCAFFOLD: reserved for a future VLM hop) ---------------------------
+
+    def _handle_assess_scene(self, request: AgentRequest) -> AgentReply:
+        # SCAFFOLD(assess_scene): ``request.image_b64`` arrives through the action but no VLM
+        # provider is wired yet. Explicit stub so the request type no longer silently falls
+        # through to the conversational reply path (which ignored the image). SOAR never sends
+        # this type today; when a VLM lands, route image_b64 + prompt to it here.
+        self.log("assess_scene requested but not implemented (image_b64 %s)"
+                 % ("present" if request.image_b64 else "absent"))
+        return AgentReply(error_code=ErrorCode.INTERNAL,
+                          error_desc="assess_scene not implemented (reserved VLM scaffold)")
+
     # -- helpers ------------------------------------------------------------------------------
 
     @staticmethod
@@ -467,8 +521,7 @@ class Agent:
     def _tool_result_msg(tc: ToolCall, content: str) -> Dict:
         return {"role": "tool", "tool_call_id": tc.id, "name": tc.name, "content": content}
 
-    @staticmethod
-    def _safe_json(text: str) -> dict:
+    def _safe_json(self, text: str) -> dict:
         try:
             return json.loads(text)
         except (json.JSONDecodeError, TypeError):
@@ -480,4 +533,8 @@ class Agent:
                         return json.loads(text[a:b + 1])
                     except json.JSONDecodeError:
                         pass
+            # log-only diagnostic (C3): callers own the degrade; PARSE_ERROR is never
+            # returned on the SOAR path (an error reply wedges the say pipeline)
+            self.log(f"unparseable structured content (len={len(text) if isinstance(text, str) else 'n/a'}); "
+                     "empty-dict fallback")
             return {}
