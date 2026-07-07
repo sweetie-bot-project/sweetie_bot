@@ -179,59 +179,66 @@ soar:
         lang-model:
             type: 'lang-model'
             backend: agent
-            service_ns: "llm_request"
+#L          service_ns: "llm_request"
+            # --- legacy-backend rollback config (uncomment with backend: legacy) ---
+            # The '#L' lines below (service_ns + per-request prompt_header_name /
+            # prompt_fact_templates / llm_profile_name / attrib_requests /
+            # start_event_history_with_heard) belong ONLY to the legacy CompleteRaw
+            # backend, preserved as one-flag-away rollback config. The AGENT backend
+            # reads: requests.<name>.{profile, persona, text_language, max_events,
+            # max_predicates} (the caps are LIVE on the agent path now) + timeout.
             requests:
                 'complex-en':
-                    prompt_header_name: "complex-en"
-                    prompt_fact_templates:
-                        'talk-heard': [ "Human says \"{text}\"\n"  ]
-                        'talk-said': [ "Sweetie says \"{text}\"\n" ]
-                        'talk-ignored': [ "Human didn't answer.\n" ]
-                        'talk-no-answer': [ "Human says nothing.\n" ]
-                        'talk-illegible': [ "Human says something illegible.\n" ]
+#L                  prompt_header_name: "complex-en"
+#L                  prompt_fact_templates:
+#L                      'talk-heard': [ "Human says \"{text}\"\n"  ]
+#L                      'talk-said': [ "Sweetie says \"{text}\"\n" ]
+#L                      'talk-ignored': [ "Human didn't answer.\n" ]
+#L                      'talk-no-answer': [ "Human says nothing.\n" ]
+#L                      'talk-illegible': [ "Human says something illegible.\n" ]
                     max_events: 5
                     max_predicates: 5
-                    llm_profile_name: 'en'
-                    attrib_requests:
-                        - type: 'map'
-                          nlp_model: 'en_core_web_sm'
-                          map:
-                            love: [ 'love' ]
-                            joy: [ 'joy', 'happy', 'happiness' ]
-                            surprise: [ 'surprise' ]
-                            neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
-                            sadness: [ 'sad', 'sadness' ]
-                            fear: [ 'fear', 'scared', 'scary', 'fright' ]
-                            anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
-                          attrib: 'emotion'
-                          fallback_value: 'neutral'
-                          prompt: "Sweetie thinks about human's answer and the emotion she feels is "
-                          leading_text: "The emotion Sweetie feels is "
-                          stop_list: ['.', '!', "\n"]
-                        - type: 'classification'
-                          classification_model: 'bert_sentiment'
-                          attrib: 'additional_emotion'
-                          override_attrib: 'emotion'
-                          fallback_value: 'neutral'
-                          leading_text: ''
-                          merge_map:
-                            love: [ 'love' ]
-                            joy: [ 'neutral', 'joy', ]
-                            surprise: [ 'neutral', 'surprise' ]
-                            neutral: [ 'neutral', 'surprise', 'fear', 'sadness' ]
-                            sadness: [ 'neutral', 'sadness', ]
-                            fear: [ 'neutral', 'fear' ]
-                            anger: [ 'anger' ]
-                        - type: 'regex'
-                          regex: '(?P<result>[^"]+)"'
-                          prompt: 'Sweetie says "'
-                          stop_list: ["\n", "\\n"]
-                        - type: 'regex-test'
-                          regex: ".*\\?.*"
-                          attrib: 'sentence-type'
-                          value_match: 'question'
-                          value_nomatch: 'statement'
-                          stop_list: ["\n"]
+#L                  llm_profile_name: 'en'
+#L                  attrib_requests:
+#L                      - type: 'map'
+#L                        nlp_model: 'en_core_web_sm'
+#L                        map:
+#L                          love: [ 'love' ]
+#L                          joy: [ 'joy', 'happy', 'happiness' ]
+#L                          surprise: [ 'surprise' ]
+#L                          neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
+#L                          sadness: [ 'sad', 'sadness' ]
+#L                          fear: [ 'fear', 'scared', 'scary', 'fright' ]
+#L                          anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
+#L                        attrib: 'emotion'
+#L                        fallback_value: 'neutral'
+#L                        prompt: "Sweetie thinks about human's answer and the emotion she feels is "
+#L                        leading_text: "The emotion Sweetie feels is "
+#L                        stop_list: ['.', '!', "\n"]
+#L                      - type: 'classification'
+#L                        classification_model: 'bert_sentiment'
+#L                        attrib: 'additional_emotion'
+#L                        override_attrib: 'emotion'
+#L                        fallback_value: 'neutral'
+#L                        leading_text: ''
+#L                        merge_map:
+#L                          love: [ 'love' ]
+#L                          joy: [ 'neutral', 'joy', ]
+#L                          surprise: [ 'neutral', 'surprise' ]
+#L                          neutral: [ 'neutral', 'surprise', 'fear', 'sadness' ]
+#L                          sadness: [ 'neutral', 'sadness', ]
+#L                          fear: [ 'neutral', 'fear' ]
+#L                          anger: [ 'anger' ]
+#L                      - type: 'regex'
+#L                        regex: '(?P<result>[^"]+)"'
+#L                        prompt: 'Sweetie says "'
+#L                        stop_list: ["\n", "\\n"]
+#L                      - type: 'regex-test'
+#L                        regex: ".*\\?.*"
+#L                        attrib: 'sentence-type'
+#L                        value_match: 'question'
+#L                        value_nomatch: 'statement'
+#L                        stop_list: ["\n"]
                 'simple-en':
                     # P1 fix: SOAR tries simple-en FIRST for every verbolization (priority 3)
                     # and the structured agent never fails to parse, so - unlike the legacy
@@ -239,88 +246,88 @@ soar:
                     # every turn would stay on the constrained simple profile. Map it to the
                     # rich conversational profile instead (tools on, no tight token cap).
                     profile: 'complex-en'
-                    prompt_header_name: "simple-en"
-                    prompt_fact_templates:
-                        'talk-heard': [ "Human: {text}\n\r"  ]
-                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
-                        'talk-ignored': [ "Human: Human didn't answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
-                        'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
-                        'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
+#L                  prompt_header_name: "simple-en"
+#L                  prompt_fact_templates:
+#L                      'talk-heard': [ "Human: {text}\n\r"  ]
+#L                      'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
+#L                      'talk-ignored': [ "Human: Human didn't answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
+#L                      'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
+#L                      'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
                     max_events: 6
                     max_predicates: 0
-                    start_event_history_with_heard: true
-                    llm_profile_name: 'en'
-                    attrib_requests:
-                        - type: 'regex'
-                          prompt: "My emotion: "
-                          #regex: '\s*(?P<emotion_raw>\w+)\s*[|;]\s*Sweetie Bot: (?P<result>.*)'
-                          regex: '[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)'
-                          stop_list: ["\n"]
-                        - type: 'map'
-                          nlp_model: 'en_core_web_sm'
-                          attrib: 'emotion'
-                          fallback_value: 'neutral'
-                          leading_text: ''
-                          map:
-                            love: [ 'love' ]
-                            joy: [ 'joy', 'happy', 'happiness' ]
-                            surprise: [ 'surprise' ]
-                            neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
-                            sadness: [ 'sad', 'sadness' ]
-                            fear: [ 'fear', 'scared', 'scary', 'fright' ]
-                            anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
-                        - type: 'classification'
-                          classification_model: 'bert_sentiment'
-                          attrib: 'additional_emotion'
-                          override_attrib: 'additional_emotion'
-                          fallback_value: 'neutral'
-                          leading_text: ''
-                          merge_map:
-                            love: [ 'love' ]
-                            joy: [ 'neutral', 'joy', ]
-                            surprise: [ 'neutral', 'surprise' ]
-                            neutral: [ 'neutral', 'surprise', 'fear', 'sadness' ]
-                            sadness: [ 'neutral', 'sadness', ]
-                            fear: [ 'neutral', 'fear' ]
-                            anger: [ 'angry', 'anger', 'mad', 'unhappy' ]
-                        - type: 'regex-test'
-                          regex: ".*\\?.*"
-                          attrib: 'sentence-type'
-                          value_match: 'question'
-                          value_nomatch: 'statement'
+#L                  start_event_history_with_heard: true
+#L                  llm_profile_name: 'en'
+#L                  attrib_requests:
+#L                      - type: 'regex'
+#L                        prompt: "My emotion: "
+#L                        #regex: '\s*(?P<emotion_raw>\w+)\s*[|;]\s*Sweetie Bot: (?P<result>.*)'
+#L                        regex: '[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)'
+#L                        stop_list: ["\n"]
+#L                      - type: 'map'
+#L                        nlp_model: 'en_core_web_sm'
+#L                        attrib: 'emotion'
+#L                        fallback_value: 'neutral'
+#L                        leading_text: ''
+#L                        map:
+#L                          love: [ 'love' ]
+#L                          joy: [ 'joy', 'happy', 'happiness' ]
+#L                          surprise: [ 'surprise' ]
+#L                          neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
+#L                          sadness: [ 'sad', 'sadness' ]
+#L                          fear: [ 'fear', 'scared', 'scary', 'fright' ]
+#L                          anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
+#L                      - type: 'classification'
+#L                        classification_model: 'bert_sentiment'
+#L                        attrib: 'additional_emotion'
+#L                        override_attrib: 'additional_emotion'
+#L                        fallback_value: 'neutral'
+#L                        leading_text: ''
+#L                        merge_map:
+#L                          love: [ 'love' ]
+#L                          joy: [ 'neutral', 'joy', ]
+#L                          surprise: [ 'neutral', 'surprise' ]
+#L                          neutral: [ 'neutral', 'surprise', 'fear', 'sadness' ]
+#L                          sadness: [ 'neutral', 'sadness', ]
+#L                          fear: [ 'neutral', 'fear' ]
+#L                          anger: [ 'angry', 'anger', 'mad', 'unhappy' ]
+#L                      - type: 'regex-test'
+#L                        regex: ".*\\?.*"
+#L                        attrib: 'sentence-type'
+#L                        value_match: 'question'
+#L                        value_nomatch: 'statement'
                 'failsafe-en':
-                    prompt_header_name: "failsafe-en"
-                    prompt_fact_templates:
-                        'talk-heard': [ "Human: {text}\n\r"  ]
-                        'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
-                        'talk-ignored': [ "Human: Human didn't answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
-                        'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
-                        'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
+#L                  prompt_header_name: "failsafe-en"
+#L                  prompt_fact_templates:
+#L                      'talk-heard': [ "Human: {text}\n\r"  ]
+#L                      'talk-said': [ "My emotion: {emotion} | Sweetie Bot: {text}\n\r\n\r" ]
+#L                      'talk-ignored': [ "Human: Human didn't answer.\n\r", "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
+#L                      'talk-no-answer': [ "Human: Human stays silent.\n\r", "Human: Human continues to stay silent.\n\r" ]
+#L                      'talk-illegible': [ "Human: Answer not recognized.\n\r" ]
                     max_events: 2
                     max_predicates: 0
-                    start_event_history_with_heard: true
-                    llm_profile_name: 'en'
-                    attrib_requests:
-                        - type: 'regex'
-                          prompt: "My emotion: "
-                          #regex: '\s*(?P<emotion_raw>\w+)\s*[|;]\s*Sweetie Bot: (?P<result>.*)'
-                          regex: '[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)'
-                          stop_list: ["\n"]
-                        - type: 'map'
-                          nlp_model: 'en_core_web_sm'
-                          attrib: 'emotion'
-                          fallback_value: 'neutral'
-                          leading_text: ''
-                          map:
-                            love: [ 'love' ]
-                            joy: [ 'joy', 'happy', 'happiness' ]
-                            surprise: [ 'surprise' ]
-                            neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
-                            sadness: [ 'sad', 'sadness' ]
-                            fear: [ 'fear', 'scared', 'scary', 'fright' ]
-                            anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
-                        - type: 'regex-test'
-                          regex: ".*\\?.*"
-                          attrib: 'sentence-type'
-                          value_match: 'question'
-                          value_nomatch: 'statement'
+#L                  start_event_history_with_heard: true
+#L                  llm_profile_name: 'en'
+#L                  attrib_requests:
+#L                      - type: 'regex'
+#L                        prompt: "My emotion: "
+#L                        #regex: '\s*(?P<emotion_raw>\w+)\s*[|;]\s*Sweetie Bot: (?P<result>.*)'
+#L                        regex: '[^|]*\|\s*[Ss]weetie\s+[Bb]ot:\s*(?P<result>.*)'
+#L                        stop_list: ["\n"]
+#L                      - type: 'map'
+#L                        nlp_model: 'en_core_web_sm'
+#L                        attrib: 'emotion'
+#L                        fallback_value: 'neutral'
+#L                        leading_text: ''
+#L                        map:
+#L                          love: [ 'love' ]
+#L                          joy: [ 'joy', 'happy', 'happiness' ]
+#L                          surprise: [ 'surprise' ]
+#L                          neutral: [ 'neutral', 'indifference', 'nothing', 'none' ]
+#L                          sadness: [ 'sad', 'sadness' ]
+#L                          fear: [ 'fear', 'scared', 'scary', 'fright' ]
+#L                          anger: [ 'anger', 'angry', 'mad', 'unhappy', 'fury', 'furious' ]
+#L                      - type: 'regex-test'
+#L                        regex: ".*\\?.*"
+#L                        attrib: 'sentence-type'
+#L                        value_match: 'question'
+#L                        value_nomatch: 'statement'

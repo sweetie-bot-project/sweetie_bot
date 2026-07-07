@@ -39,6 +39,9 @@ class AgentLangModel(OutputModule):
         self._default_persona = config.get("persona") or ""
         self._default_language = config.get("text_language", "en")
         self._timeout = float(config.get("timeout", 30.0))
+        # top-level cap fallbacks; the per-request values in soar.yaml override (R5)
+        self._max_events = config.get("max_events")
+        self._max_predicates = config.get("max_predicates")
         self._client = actionlib.SimpleActionClient(action_ns, GenerateReplyAction)
         if not self._client.wait_for_server(rospy.Duration(5.0)):
             rospy.logwarn("lang-model(agent): action server '%s' not available yet", action_ns)
@@ -85,8 +88,12 @@ class AgentLangModel(OutputModule):
         profile = req_cfg.get("profile", request_name)        # default profile == request name
         persona = req_cfg.get("persona", self._default_persona)
         language = req_cfg.get("text_language", self._default_language)
+        # R5: honor the per-request caps (legacy semantics: newest N, 0 = none, missing ->
+        # top-level fallback -> unbounded). These were silently ignored on the agent path.
+        max_events = req_cfg.get("max_events", self._max_events)
+        max_predicates = req_cfg.get("max_predicates", self._max_predicates)
 
-        history = self._build_history(events)
+        history = self._build_history(events, max_events=max_events)
         if text is None:
             for ev in sorted(events, key=lambda e: e.stamp, reverse=True):
                 if ev.type == 'talk-heard':
@@ -106,7 +113,13 @@ class AgentLangModel(OutputModule):
         goal.profile = profile
         goal.text = text or ""
         goal.history_json = json.dumps(history)
-        context = [p.text for p in predicates]
+        # predicates capped like events: newest N in chronological order (legacy
+        # predicates[-max:] semantics; 0 = none). The silence-state note below is NOT a
+        # predicate and is never capped away.
+        preds = sorted(predicates, key=lambda p: p.stamp)
+        if max_predicates is not None:
+            preds = preds[-max_predicates:] if max_predicates > 0 else []
+        context = [p.text for p in preds]
         if any(ev.type in ('talk-ignored', 'talk-no-answer') for ev in events):
             # silence framed as the interlocutor's current state (an attribute of the human),
             # not as something the human said - the weaving directive keeps her from reciting it
