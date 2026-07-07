@@ -205,3 +205,32 @@ def test_zones_and_distance_words(collector):
     assert by_id[1].zone == Zone.front and by_id[1].distance == "near"
     assert by_id[2].zone == Zone.side
     assert by_id[3].distance == "far"
+
+
+# --- shared SceneConfig: collector and core classify identically (R1) --------------------------------
+
+def test_collector_and_core_classify_identically_with_shared_config(monkeypatch):
+    """agent_node hands ONE SceneConfig to both the collector and the Agent core; a boundary
+    bearing must land in the same zone on both sides of the seam."""
+    from sweetie_bot_ai_core.scene import SceneConfig, classify_zone
+    t = {"now": 100.0}
+    monkeypatch.setattr(sc_mod.rospy, "Subscriber", lambda *a, **k: None)
+    monkeypatch.setattr(sc_mod.tf2_ros, "Buffer", lambda: FakeTF())
+    monkeypatch.setattr(sc_mod.tf2_ros, "TransformListener", lambda buf: None)
+    shared = SceneConfig(front_deg=45.0, side_deg=100.0)     # non-default geometry
+    c = sc_mod.SceneCollector(stable_frame="odom", forward_frame="base_link",
+                              scene_config=shared, bearing_sign=1.0, clock=lambda: t["now"])
+    assert c._cfg is shared                                   # same INSTANCE, not a copy
+    # ~50 deg: front under the default 60 cfg, side under the shared 45 cfg
+    c._on_detections(det_array(det(id=1, x=1.0, y=-1.2)))
+    e = c.snapshot().entities[0]
+    assert e.zone == classify_zone(e.bearing_deg, shared)
+    assert e.zone == Zone.side                                # proves the shared cfg was used
+
+
+def test_default_exclude_types_constant_is_the_ctor_default(monkeypatch):
+    monkeypatch.setattr(sc_mod.rospy, "Subscriber", lambda *a, **k: None)
+    monkeypatch.setattr(sc_mod.tf2_ros, "Buffer", lambda: FakeTF())
+    monkeypatch.setattr(sc_mod.tf2_ros, "TransformListener", lambda buf: None)
+    c = sc_mod.SceneCollector()
+    assert c._exclude_types == set(sc_mod.DEFAULT_EXCLUDE_TYPES)

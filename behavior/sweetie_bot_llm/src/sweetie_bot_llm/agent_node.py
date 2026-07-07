@@ -78,14 +78,20 @@ class LLMAgentNode:
 
         self._state = StateCollector(
             ignored_servos=set(rospy.get_param("/disabled_servos", {}).keys()))
+        # THE SceneConfig: constructed ONCE from ~scene and handed to BOTH the collector (zone
+        # classification at ingest) and the Agent core (salience + rendering) — the two
+        # classifications can no longer diverge by construction (R1)
+        scene_config = SceneConfig(**{k: scene_cfg[k] for k in (
+            "front_deg", "side_deg", "max_entities", "max_remembered", "max_sounds")
+            if k in scene_cfg})
         # scene provider (environmental awareness); tolerate a missing vision stack gracefully
         scene_kwargs = {k: scene_cfg[k] for k in (
-            "detections_topic", "sound_topic", "forward_frame", "stable_frame", "front_deg",
-            "side_deg", "retention_ttl_s", "near_m", "mid_m", "bearing_sign",
+            "detections_topic", "sound_topic", "forward_frame", "stable_frame",
+            "retention_ttl_s", "near_m", "mid_m", "bearing_sign",
             "sound_bearing_sign", "sound_bearing_offset_deg", "min_score",
-                        "exclude_types") if k in scene_cfg}
+            "exclude_types") if k in scene_cfg}
         try:
-            self._scene = SceneCollector(**scene_kwargs)
+            self._scene = SceneCollector(scene_config=scene_config, **scene_kwargs)
         except Exception as e:  # noqa: BLE001 - never block the node on scene setup
             rospy.logwarn("llm_agent: scene provider unavailable (%r); running without it", e)
             self._scene = None
@@ -97,8 +103,7 @@ class LLMAgentNode:
                             state_provider=self._state, scene_provider=self._scene,
                             effector=self._effector, language_policy=policy,
                             profiles=profiles,
-                            scene_config=SceneConfig(front_deg=scene_cfg.get("front_deg", 60.0),
-                                                     side_deg=scene_cfg.get("side_deg", 120.0)),
+                            scene_config=scene_config,
                             logger=rospy.loginfo)
 
         # --- persona switching (clean runtime switch) ---------------------------------------
@@ -159,7 +164,11 @@ class LLMAgentNode:
             snap = self._scene.snapshot(include_remembered=False)
         except TypeError:
             snap = self._scene.snapshot()
-        except Exception:  # noqa: BLE001 - a scene hiccup must not crash the driver
+        except Exception as e:  # noqa: BLE001 - a scene hiccup must not crash the driver
+            # R7: a permanently broken snapshot silently disables presence-gated proactive
+            # behavior — surface it (throttled) instead of swallowing
+            rospy.logwarn_throttle(30.0, "llm_agent: scene snapshot failed in presence "
+                                         "check (%r); assuming nobody present" % (e,))
             return False
         return any((e.type or "") in _HUMAN_TYPES for e in snap.entities)
 

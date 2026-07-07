@@ -28,6 +28,29 @@ from sweetie_bot_text_msgs.msg import DetectionArray, SoundEvent
 _SPEECH_DETECTING = 2
 _SPEECH_DECODED = 4
 
+# detection types that are NOT scene objects for the prompt: 'sound'/'speech' come from the
+# microphone on the same topic and are already covered by SoundCue (double-count), 'hand' is a
+# body part of an already-listed person, not a separate entity. scene.yaml carries the explicit
+# deploy override; this is the single code-side default (R2).
+DEFAULT_EXCLUDE_TYPES = ("sound", "speech", "hand")
+
+# multi-publisher merge window (P27): frames from all /detections publishers within this many
+# seconds are merged, newest-per-id wins
+MERGE_WINDOW_S = 0.6
+# DOA speaker attribution: max |entity bearing - speech DOA bearing| to bind speaker identity
+SPEAKER_DOA_TOLERANCE_DEG = 35.0
+# loudness threshold for the coarse SoundCue intensity word
+LOUD_INTENSITY_THRESHOLD = 0.6
+
+
+def _warn_throttle(msg: str) -> None:
+    """Throttled diagnostic that can never break perception (R7): TF hiccups are normal at
+    startup, but a PERSISTENTLY dead TF silently kills retention — surface it."""
+    try:
+        rospy.logwarn_throttle(30.0, msg)
+    except Exception:  # noqa: BLE001 - no ROS time in unit tests / early startup
+        pass
+
 
 class _Remembered:
     __slots__ = ("point_stable", "type", "attributes", "last_t")
@@ -42,23 +65,24 @@ class _Remembered:
 class SceneCollector:
     def __init__(self, *, detections_topic="detections", sound_topic="sound_event",
                  forward_frame="base_link", stable_frame="odom",
-                 front_deg=60.0, side_deg=120.0, retention_ttl_s=90.0,
+                 scene_config: Optional[SceneConfig] = None, retention_ttl_s=90.0,
                  near_m=1.0, mid_m=2.5, bearing_sign=1.0,
                  sound_bearing_sign=1.0, sound_bearing_offset_deg=0.0,
-                 min_score=0.3, exclude_types=("sound", "speech", "hand"),
+                 min_score=0.3, exclude_types=DEFAULT_EXCLUDE_TYPES,
                  clock=time.monotonic):
         self._forward_frame = forward_frame
         self._stable_frame = stable_frame
-        self._cfg = SceneConfig(front_deg=front_deg, side_deg=side_deg)
+        # THE zone geometry: the SAME SceneConfig instance the Agent core renders with
+        # (agent_node constructs one and hands it to both) — collector-side zone classification
+        # and core-side salience can no longer diverge by construction (R1). Standalone use
+        # (tests, headless) falls back to the shared defaults.
+        self._cfg = scene_config or SceneConfig()
         self._ttl = retention_ttl_s
         self._near_m, self._mid_m = near_m, mid_m
         self._bearing_sign = bearing_sign
         self._sound_sign = sound_bearing_sign
         self._sound_offset = sound_bearing_offset_deg
         self._min_score = min_score
-        # detection types that are NOT scene objects for the prompt: 'sound'/'speech' come from
-        # the microphone on the same topic and are already covered by SoundCue (double-count),
-        # 'hand' is a body part of an already-listed person, not a separate entity.
         self._exclude_types = set(exclude_types or ())
         self._color_hist: Dict[int, deque] = {}   # per-track-id recent color names (debounce)
         self._clock = clock
@@ -69,7 +93,7 @@ class SceneCollector:
         # keeping only the single latest frame made the scene flicker per-publisher (P27) -
         # merge everything received within a short window instead, newest-per-id wins
         self._recent = []                 # [(monotonic_t, DetectionArray)]
-        self._merge_window_s = 0.6
+        self._merge_window_s = MERGE_WINDOW_S
         self._latest: Optional[DetectionArray] = None
         self._sound: Optional[SoundEvent] = None
         self._remembered: Dict[int, _Remembered] = {}
@@ -123,7 +147,11 @@ class SceneCollector:
             ps.point = det.pose.position
             out = self._tf.transform(ps, target_frame, rospy.Duration(0.2))
             return (out.point.x, out.point.y, out.point.z)
-        except Exception:  # noqa: BLE001 - TF may be unavailable; degrade gracefully
+        except Exception as e:  # noqa: BLE001 - TF may be unavailable; degrade gracefully
+            # R7: a persistently dead TF silently kills BOTH the live scene and retention
+            # (every detection is dropped here) — surface it instead of swallowing
+            _warn_throttle("scene_collector: TF %s->%s failed (%r); detections are being "
+                           "dropped" % (getattr(det.header, "frame_id", "?"), target_frame, e))
             return None
 
     def _bearing_dist(self, point):
@@ -213,7 +241,11 @@ class SceneCollector:
             ps.point.x, ps.point.y, ps.point.z = point_stable
             out = self._tf.transform(ps, self._forward_frame, rospy.Duration(0.2))
             return (out.point.x, out.point.y, out.point.z)
-        except Exception:  # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
+            # R7: remembered entities become invisible when this transform dies — say so
+            _warn_throttle("scene_collector: retention transform %s->%s failed (%r); "
+                           "remembered entities are hidden" % (self._stable_frame,
+                                                               self._forward_frame, e))
             return None
 
     def _sound_cues(self):
@@ -224,7 +256,7 @@ class SceneCollector:
         is_speech = bool(s.sound_flags & (_SPEECH_DETECTING | _SPEECH_DECODED))
         for az in s.doa_azimuth[:1]:  # strongest candidate
             bearing = self._sound_sign * math.degrees(az) + self._sound_offset
-            intensity = "loud" if (s.intensity or 0) > 0.6 else "normal"
+            intensity = "loud" if (s.intensity or 0) > LOUD_INTENSITY_THRESHOLD else "normal"
             cues.append(SoundCue(bearing_deg=bearing, zone=classify_zone(bearing, self._cfg),
                                  kind="speech" if is_speech else "sound", intensity=intensity))
         return cues
@@ -235,7 +267,7 @@ class SceneCollector:
         if not speech:
             return
         for c in speech:
-            best, best_err = None, 35.0   # deg tolerance
+            best, best_err = None, SPEAKER_DOA_TOLERANCE_DEG
             for e in entities:
                 if not e.in_frame or e.zone == Zone.rear:
                     continue
