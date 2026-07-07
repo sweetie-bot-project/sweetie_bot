@@ -21,7 +21,9 @@ import actionlib
 from actionlib_msgs.msg import GoalStatus
 
 from .output_module import OutputModule, OutputModulesLoader
-from .lang_legacy import LegacyLangModel, TalkEvent, Predicate, WMEParseError
+from .lang_legacy import LegacyLangModel
+from .wme_parsing import TalkEvent, Predicate, WMEParseError
+from .history_contract import build_history, drop_duplicate_tail
 
 from sweetie_bot_text_msgs.msg import GenerateReplyAction, GenerateReplyGoal
 
@@ -45,19 +47,10 @@ class AgentLangModel(OutputModule):
     # -- helpers ------------------------------------------------------------------------------
 
     @staticmethod
-    def _build_history(events):
-        turns = []
-        for ev in sorted(events, key=lambda e: e.stamp):
-            if ev.type == 'talk-heard':
-                turns.append({"speaker": "human", "text": ev.text})
-            elif ev.type == 'talk-said':
-                turns.append({"speaker": "sweetie", "text": ev.text,
-                              "emotion": getattr(ev, 'emotion', None)})
-            elif ev.type in ('talk-ignored', 'talk-no-answer'):
-                pass  # silence is NOT human speech: conveyed as system context, not a turn
-            elif ev.type == 'talk-illegible':
-                turns.append({"speaker": "human", "text": "(says something unclear)"})
-        return turns
+    def _build_history(events, max_events=None):
+        # thin call: the serialization contract lives in history_contract.py (stdlib-only,
+        # pinned from BOTH pythons — see that module's docstring)
+        return build_history(events, max_events=max_events)
 
     # -- OutputModule hooks -------------------------------------------------------------------
 
@@ -100,8 +93,7 @@ class AgentLangModel(OutputModule):
                     text = ev.text
                     break
         # avoid duplicating the current utterance both as history tail and as `text`
-        if text is not None and history and history[-1].get("text") == text:
-            history = history[:-1]
+        history = drop_duplicate_tail(history, text)
 
         # Silence turns (talk-no-answer / ignored / illegible) are handled by SOAR's OWN talk
         # rules (pause/ignored follow-ups are deliberate behaviors) - the agent answers whatever

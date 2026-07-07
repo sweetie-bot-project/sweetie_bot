@@ -116,6 +116,66 @@ def test_reply_with_real_tool_call_args_roundtrips():
     assert calls[1]["arguments"]["fields"] == ["battery_level", "charge_status"]
 
 
+def test_history_contract_fixture_parses():
+    """Venv side of the two-python contract pin: the SAME literal fixture as
+    behavior/sweetie_bot_soar/tests/test_history_contract.py::CONTRACT_TURNS, replayed through
+    parse_history. If the SOAR-side serialization drifts, one of the two suites goes red."""
+    CONTRACT_TURNS = [
+        {"speaker": "human", "text": "Hello Sweetie! How are you today?"},
+        {"speaker": "sweetie", "text": "I'm feeling chipper today!", "emotion": "joy"},
+        {"speaker": "human", "text": "(says something unclear)"},
+    ]
+    turns = parse_history(json.dumps(CONTRACT_TURNS))
+    assert len(turns) == 3
+    assert turns[0].speaker == "human" and turns[0].emotion is None
+    assert turns[1].speaker == "sweetie" and turns[1].emotion == Emotion.joy
+    assert turns[2].text == "(says something unclear)"
+    # a None emotion on a sweetie turn must also parse (build_history emits it for a
+    # talk-said event without an emotion WME)
+    turns2 = parse_history(json.dumps([{"speaker": "sweetie", "text": "hi", "emotion": None}]))
+    assert turns2[0].emotion is None
+
+
+def test_soar_yaml_emotion_maps_subset_of_emotion_enum():
+    """R4: the soar.yaml emotion-map KEYS must stay a subset of the canonical Emotion enum
+    (schema.Emotion is the single source of truth; SOAR reuses values as animation-tags)."""
+    import os
+    import pytest
+    yaml = pytest.importorskip("yaml")
+    path = os.path.abspath(os.path.join(
+        HERE, "..", "..", "..", "config", "sweetie_bot_proto3_deploy", "default", "soar.yaml"))
+    if not os.path.exists(path):
+        pytest.skip("deploy soar.yaml not present")
+    with open(path, "r", encoding="utf-8") as f:
+        raw = f.read()
+    # the legacy-backend rollback config is kept as '#L'-commented lines — validate it too by
+    # un-commenting in memory (rollback must stay consistent with the enum to be usable)
+    doc = yaml.safe_load("\n".join(
+        ("  " + l[2:]) if l.startswith("#L") else l for l in raw.splitlines()))
+    allowed = {e.value for e in Emotion}
+    found = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            # only EMOTION maps (attrib: emotion / additional_emotion) — soar.yaml also has
+            # unrelated intent maps (greeting/dance/...) with the same 'map' key shape
+            is_emotion_req = str(node.get("attrib", "")).startswith(("emotion", "additional_emotion")) \
+                or str(node.get("override_attrib", "")).startswith(("emotion", "additional_emotion"))
+            for k, v in node.items():
+                if k in ("map", "merge_map") and isinstance(v, dict) and is_emotion_req:
+                    found.append(set(v.keys()))
+                else:
+                    walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    walk(doc)
+    assert found, "no emotion maps found — soar.yaml layout changed? update this test"
+    for keys in found:
+        assert keys <= allowed, f"emotion-map keys {keys - allowed} not in Emotion enum"
+
+
 def test_parse_history_skips_malformed_turns_keeps_good():
     hj = json.dumps([{"speaker": "human", "text": "hi"},
                      {"no_speaker_field": "x"},

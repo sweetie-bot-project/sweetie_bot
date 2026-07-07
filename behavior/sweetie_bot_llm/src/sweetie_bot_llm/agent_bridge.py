@@ -88,8 +88,6 @@ def fill_result(result: Any, reply: AgentReply) -> Any:
         setattr(result, k, v)
     return result
 
-
-# Convenience for the (rewritten) SOAR output module side: serialize talk events to history_json.
-def events_to_history_json(events: List[dict]) -> str:
-    """events: list of {speaker, text, emotion?} dicts (already verbolized by the caller)."""
-    return json.dumps(events)
+# The SOAR-side history serialization lives in sweetie_bot_soar/output_modules/
+# history_contract.py (stdlib-only; this venv module cannot be imported there — two-python
+# wall). Its fixtures are replayed against parse_history above by test_agent_bridge.py.
