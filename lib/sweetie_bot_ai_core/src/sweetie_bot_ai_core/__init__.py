@@ -4,8 +4,9 @@ Reusable headless (sim / TUI / messenger). The ROS node in ``sweetie_bot_llm`` i
 that injects a RobotStateProvider + EffectorPort and exposes the agent over ROS.
 """
 from .agent import (Agent, EffectorPort, NullEffector, NullSceneProvider, NullStateProvider,
-                    ProfileConfig, RobotStateProvider, SceneProvider)
+                    RobotStateProvider, SceneProvider)
 from .client import ChatResult, LLMClientError, OpenAIChatClient
+from .profiles import DEFAULT_PROFILES, ProfileConfig, load_profiles
 from .history import ConversationHistory
 from .persona import DEFAULT_PERSONA, Persona, PersonaRegistry
 from .prompt import build_system_prompt
@@ -19,7 +20,7 @@ from .translation import (LanguagePolicy, LibreTranslateProvider, NullTranslatio
                           TranslationProvider)
 
 __all__ = [
-    "Agent", "AgentRequest", "AgentReply", "ProfileConfig",
+    "Agent", "AgentRequest", "AgentReply", "ProfileConfig", "DEFAULT_PROFILES", "load_profiles",
     "RobotStateProvider", "SceneProvider", "EffectorPort",
     "NullStateProvider", "NullSceneProvider", "NullEffector",
     "OpenAIChatClient", "ChatResult", "LLMClientError",

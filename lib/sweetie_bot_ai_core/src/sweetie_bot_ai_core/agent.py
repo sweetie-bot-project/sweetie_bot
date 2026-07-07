@@ -14,13 +14,14 @@ When tools are disabled for the profile/persona, step 1 is skipped → a single 
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from collections import deque
-from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Protocol, Tuple
 
 from .history import ConversationHistory
 from .persona import PersonaRegistry
+from .profiles import DEFAULT_PROFILES, ProfileConfig, load_profiles  # noqa: F401 - re-export
 from .prompt import build_system_prompt
 from .registry import ProviderRegistry, RegistryError
 from .scene import SceneConfig, diff as scene_diff, is_occluded, render_scene, select_salient
@@ -88,33 +89,12 @@ class NullEffector:
                           id=tool_call.id)
 
 
-@dataclass
-class ProfileConfig:
-    allow_tools: bool = True
-    max_verbatim_turns: int = 8
-    max_tool_iters: int = 3
-    options: Dict[str, object] = field(default_factory=lambda: {"temperature": 0.8})
+# ProfileConfig / DEFAULT_PROFILES / load_profiles moved to profiles.py (canonical names are
+# now language-neutral); re-exported above for import compatibility.
 
-
-DEFAULT_PROFILES: Dict[str, ProfileConfig] = {
-    # primary path: full context + dynamic state + tools
-    "complex-en": ProfileConfig(allow_tools=True, max_verbatim_turns=8, max_tool_iters=3,
-                                options={"temperature": 0.8, "max_tokens": 512}),
-    # fast lightweight path: reduced context, no tools
-    "simple-en": ProfileConfig(allow_tools=False, max_verbatim_turns=4, max_tool_iters=0,
-                               options={"temperature": 0.7, "max_tokens": 160}),
-    # minimal degraded path
-    "failsafe-en": ProfileConfig(allow_tools=False, max_verbatim_turns=2, max_tool_iters=0,
-                                 options={"temperature": 0.6, "max_tokens": 120}),
-    # canned-speech rephrase hop (text-action interceptor): fast, tool-free. Runs WARM for real
-    # variety - the isolated prompt (no scene/ambient) keeps it on-topic, so the old 1.0->0.8 trim
-    # (which fought full-reply-path drift) isn't needed here; 0.8 read as near-verbatim on-robot.
-    "rephrase-en": ProfileConfig(allow_tools=False, max_verbatim_turns=0, max_tool_iters=0,
-                                 options={"temperature": 1.05, "max_tokens": 96}),
-    # spontaneous self-talk hop (proactive seam): scene-aware, tool-free, brief
-    "self-talk-en": ProfileConfig(allow_tools=False, max_verbatim_turns=0, max_tool_iters=0,
-                                  options={"temperature": 0.8, "max_tokens": 80}),
-}
+# request names may carry a legacy language suffix (SOAR sends 'complex-en' etc.) — resolution
+# strips one trailing "-<2-letter-lang>" when the exact name is unknown
+_PROFILE_LANG_SUFFIX_RX = re.compile(r"-[a-z]{2}$")
 
 
 class Agent:
@@ -187,14 +167,19 @@ class Agent:
 
     # -- shared helpers (per-path degrade semantics stay with each caller) ----------------------
 
-    def _profile_or(self, name: str, fallback: str) -> ProfileConfig:
-        """Look up a profile; unknown names degrade to the named fallback with a log-only
-        warning (never an error to SOAR — wedge safety, C3)."""
+    def _profile(self, name: str, fallback: str) -> ProfileConfig:
+        """Resolve a profile name: exact -> strip a trailing '-<lang>' suffix (SOAR request
+        names like 'complex-en' stay valid against the language-neutral canonical names) ->
+        named fallback with a log-only warning (never an error to SOAR — wedge safety, C3)."""
         profile = self.profiles.get(name)
-        if profile is None:
-            self.log(f"unknown profile {name!r}; falling back to {fallback!r}")
-            profile = self.profiles.get(fallback) or DEFAULT_PROFILES[fallback]
-        return profile
+        if profile is not None:
+            return profile
+        stripped = _PROFILE_LANG_SUFFIX_RX.sub("", name or "")
+        profile = self.profiles.get(stripped)
+        if profile is not None:
+            return profile
+        self.log(f"unknown profile {name!r}; falling back to {fallback!r}")
+        return self.profiles.get(fallback) or DEFAULT_PROFILES[fallback]
 
     def _scene_snapshot(self) -> SceneState:
         """Scene snapshot INCLUDING the short-term retention buffer. The TypeError fallback
@@ -259,7 +244,7 @@ class Agent:
 
     def _handle_reply(self, request: AgentRequest) -> AgentReply:
         persona = self.personas.get(request.persona)
-        profile = self._profile_or(request.profile, "complex-en")
+        profile = self._profile(request.profile, "complex")
         state = self.state_provider.snapshot()
 
         # detect the actual input language (the adapter's text_language is a static config
@@ -359,7 +344,7 @@ class Agent:
         if not line:
             return AgentReply(response_text="", language="en", error_code=ErrorCode.SUCCESS)
         persona = self.personas.get(request.persona)
-        profile = self._profile_or(request.profile, "rephrase-en")
+        profile = self._profile(request.profile, "rephrase")
         name = persona.display_name if persona else "Sweetie Bot"
         system_prompt = (
             f"You are {name}. You are about to say ONE line out loud - say the SAME thing, but "
@@ -411,7 +396,7 @@ class Agent:
         if not cue:
             return AgentReply(response_text="", language="en", error_code=ErrorCode.SUCCESS)
         persona = self.personas.get(request.persona)
-        profile = self._profile_or(request.profile, "self-talk-en")
+        profile = self._profile(request.profile, "self-talk")
         name = persona.display_name if persona else "Sweetie Bot"
         # read-only scene snapshot (no diff, no _prev_scene write): lets her name what she sees
         scene_block = render_scene(select_salient(self._scene_snapshot(), self.scene_config),
