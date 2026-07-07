@@ -73,6 +73,57 @@ def test_fill_result_inplace():
     assert res.emotion == "surprise"
 
 
+def test_goal_to_request_labels_and_image():
+    goal = SimpleNamespace(request_type="classify", text="I love sunny days!",
+                           labels_json=json.dumps(["positive", "negative", "neutral"]),
+                           image_b64="aGVsbG8=")
+    req = goal_to_request(goal)
+    assert req.request_type == RequestType.classify
+    assert req.labels == ["positive", "negative", "neutral"]
+    assert req.image_b64 == "aGVsbG8="
+
+
+def test_goal_to_request_malformed_json_fields_degrade_empty():
+    goal = SimpleNamespace(request_type="reply", text="hi",
+                           labels_json="{not json", context_json="[unterminated",
+                           history_json="also not json")
+    req = goal_to_request(goal)
+    assert req.labels == []
+    assert req.context_facts == []
+    assert req.history == []
+
+
+def test_goal_to_request_context_facts_stringified():
+    goal = SimpleNamespace(text="hi", context_json=json.dumps(
+        ["the human's favorite color is teal", 42, {"k": "v"}]))
+    req = goal_to_request(goal)
+    # every entry is coerced to str (SOAR predicates arrive as arbitrary json values)
+    assert req.context_facts[0] == "the human's favorite color is teal"
+    assert req.context_facts[1] == "42"
+    assert len(req.context_facts) == 3
+
+
+def test_reply_with_real_tool_call_args_roundtrips():
+    # real live tool calls (proto3 llm_agent log 2026-07-03): get_scene + get_robot_state
+    reply = AgentReply(
+        response_text="Let me look around!", emotion=Emotion.joy,
+        tool_calls=[ToolCall(name="get_scene", arguments={"include_remembered": True}),
+                    ToolCall(name="get_robot_state",
+                             arguments={"fields": ["battery_level", "charge_status"]})])
+    d = reply_to_result_dict(reply)
+    calls = json.loads(d["tool_calls_json"])
+    assert calls[0] == {"name": "get_scene", "arguments": {"include_remembered": True}}
+    assert calls[1]["arguments"]["fields"] == ["battery_level", "charge_status"]
+
+
+def test_parse_history_skips_malformed_turns_keeps_good():
+    hj = json.dumps([{"speaker": "human", "text": "hi"},
+                     {"no_speaker_field": "x"},
+                     {"speaker": "sweetie", "text": "hello!"}])
+    turns = parse_history(hj)
+    assert [t.speaker for t in turns] == ["human", "sweetie"]
+
+
 def test_servo_fault_filter_debounces_comm_noise():
     """Bus comm errors are normal noise; only persistent error states are faults."""
     import pytest
