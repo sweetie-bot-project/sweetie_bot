@@ -1,4 +1,8 @@
-"""PROBE: reproduce the LIVE boop signature — emotion displays, squeak_nose sound never plays.
+"""REGRESSION: boop tap-race (was a live-bug PROBE; green at the 2026-07-07 baseline and
+since — kept as the permanent guard on the tap-vs-verbolize race. Probe-era diagnosis
+below, preserved for archaeology.)
+
+Original probe notes: reproduce the LIVE boop signature — emotion displays, squeak_nose sound never plays.
 
 Live diagnosis (boop_sound_diagnosis_2026-07-06.md): on the real robot, nose boops showed an
 emotional reaction but NO `voice/play_wav squeak_nose` was ever dispatched (zero

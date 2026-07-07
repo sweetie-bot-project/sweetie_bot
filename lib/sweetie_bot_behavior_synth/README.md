@@ -49,6 +49,28 @@ def test_hidden_pony_recalled_with_direction(world):   # `world` injected by the
 - **Determinism policy**: assert on mechanism (profile, say issued/not, refs streamed/not,
   scene-block content) and on checker-level prose (lemmas, direction words) — never exact text.
 
+## Unit-level safety net (added 2026-07-07, llm-agent-rework refactor)
+
+Heavy sim tests here cover BEHAVIORS only; everything mechanically testable lives as classical
+unit tests next to its component (user policy):
+
+- `lib/sweetie_bot_ai_core/tests/` — **VENV units** (pydantic 2):
+  `PYTHONPATH=src ~/sbllm-venv/bin/python -m pytest tests/ -q`.
+  Covers: agent paths (classify / anti-repeat regenerate / re-poke / context_facts /
+  assess_scene stub), profile aliasing + profiles.yaml==fallback pin, prompt & scene
+  rendering, persona-yaml drift guard, registry/tools config wiring, language seam
+  (zh/en/ru vs the REAL languages.yaml), select_salient purity.
+- `behavior/sweetie_bot_llm/tests/` — **VENV units** (source ROS first for the
+  scene-collector suite): merge window / retention TTL / color debounce / DOA attribution
+  (fake TF + injected clock, no master), bridge parsing, proactive decision matrix,
+  `first_lang`, soar.yaml emotion-maps ⊆ Emotion enum.
+- `behavior/sweetie_bot_soar/tests/` — **SYSTEM-python units** (no ROS needed):
+  `python3 -m pytest tests/ -q`. The events→history_json contract (newest-N caps, silence
+  exclusion, tail-dedup). **Cross-python contract pin**: the SAME literal fixture lives in
+  `test_history_contract.py` (system py, build side) and
+  `sweetie_bot_llm/tests/test_agent_bridge.py::test_history_contract_fixture_parses`
+  (venv py, parse side) — serialization drift turns one of the two suites red.
+
 ## Faithfulness ledger (calibrated 2026-07-03; two consecutive agreeing runs)
 
 | Group | Test | Status |
@@ -66,6 +88,7 @@ def test_hidden_pony_recalled_with_direction(world):   # `world` injected by the
 | must-pass | touch → vocal reaction (was UNKNOWN; classified works after P24 fix) | PASS |
 | must-pass | occlusion chain from depth seam (was UNKNOWN; verified end-to-end FIRST TIME EVER) | PASS |
 | must-fail | conversation resumes after id churn | XFAIL — reproduces the LIVE P19 stale-interlocutor wedge |
+| must-fail | 2nd human greeted while already conversing (`test_standard_dialogue_flow` 5a) | FAIL (real, exposed 2026-07-07 by re-anchoring the wait_grep that had false-passed on the FIRST greeting; SWM registers the human, SOAR proposes no greeting — greeting appears keyed to conversation state, needs a .soar fix, out of refactor scope) |
 | must-fail | EN first-turn voice channel | XFAIL — P26: talk lang defaults to ru at fresh start |
 | pending | pony lost-once at the VISION seam (fuser-level score schedules via stub_detector) | next scenario |
 

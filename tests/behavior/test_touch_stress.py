@@ -1,4 +1,9 @@
-"""STRESS PROBE: reenact the user's live sequence that killed touch reactions.
+"""REGRESSION: touch-stress wedge (was a live-bug PROBE; the wedge was fixed in
+5b64b83c — verbolize fast-fail loop — and this test has been green since; kept as the
+permanent guard that rapid multi-zone touch during conversation never wedges SOAR again.
+Probe-era diagnosis below, preserved for archaeology.)
+
+Original probe notes: reenact the user's live sequence that killed touch reactions.
 
 Live report (2026-07-06): "I talked to the robot and touched a LOT of places very quickly,
 then tried the boop - and it's not working"; later NO touch zone reacted at all (operational
