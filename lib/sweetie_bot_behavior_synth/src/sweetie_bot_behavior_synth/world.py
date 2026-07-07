@@ -80,18 +80,6 @@ class World:
         rospy.sleep(2.0)
         return undo
 
-    def override_soar_params(self, **params):
-        """Mid-test /soar param override: reconfigure (respawn) + reopen the operational window
-        + re-anchor scrapers. Returns an undo callable (params only; window stays open)."""
-        from .resets import soar_reconfigure as _rc, set_operational as _so
-        ok, undo = _rc(params)
-        assert ok, "soar reset with overrides failed"
-        if self.spec.operational:
-            _so(True)
-        self.col["soar_log"].anchor()
-        rospy.sleep(2.0)
-        return undo
-
     # -- ground truth --------------------------------------------------------------------------------
     def truth(self, id: int) -> SynthEntity:
         return self._truth[id]
