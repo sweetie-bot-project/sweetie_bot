@@ -14,8 +14,7 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Optional
 
 import rospy
-from sweetie_bot_text_msgs.msg import (DetectionArray, TextActionActionGoal, TextCommand,
-                                       GenerateReplyActionGoal, GenerateReplyActionResult)
+from sweetie_bot_text_msgs.msg import DetectionArray, TextCommand
 from geometry_msgs.msg import PoseStamped
 
 LOG_DIR = os.path.expanduser("~/.ros/log/latest")
@@ -65,25 +64,6 @@ class SayRecord:
     text: str
 
 
-class SayCollector(TopicCollector):
-    def __init__(self, topic: str = "voice/syn/goal"):
-        super().__init__(topic, TextActionActionGoal)
-
-    @staticmethod
-    def _rec(msg) -> Optional[SayRecord]:
-        t = msg.goal.command.type
-        if t.startswith("voice/say/"):
-            return SayRecord(lang=t.rsplit("/", 1)[-1], text=msg.goal.command.command)
-        return None
-
-    def says(self, since: float = 0.0) -> List[SayRecord]:
-        return [r for r in (self._rec(m) for m in self.messages(since)) if r is not None]
-
-    def wait_say(self, timeout: float = 25.0, since: float = 0.0) -> Optional[SayRecord]:
-        m = self.wait_for(lambda m: self._rec(m) is not None, timeout, since)
-        return self._rec(m) if m is not None else None
-
-
 @dataclass
 class TurnRecord:
     """One LLM turn as seen on the generate_reply action."""
@@ -93,41 +73,6 @@ class TurnRecord:
     emotion: str = ""
     sentence_type: str = ""
     said: Optional[SayRecord] = None   # what actually went to the voice (filled by World)
-
-
-class ReplyCollector:
-    """Pairs /generate_reply goals with results chronologically (tests run turns serially)."""
-
-    def __init__(self, ns: str = "generate_reply"):
-        self._goals = TopicCollector(ns + "/goal", GenerateReplyActionGoal)
-        self._results = TopicCollector(ns + "/result", GenerateReplyActionResult)
-
-    def clear(self):
-        self._goals.clear()
-        self._results.clear()
-
-    def turns(self, since: float = 0.0) -> List[TurnRecord]:
-        gs = self._goals.messages(since)
-        rs = self._results.messages(since)
-        out = []
-        for g, r in zip(gs, rs):
-            out.append(TurnRecord(profile=g.goal.profile, text_in=g.goal.text,
-                                  text=r.result.response_text, emotion=r.result.emotion,
-                                  sentence_type=r.result.sentence_type))
-        return out
-
-    def wait_turn(self, n_before: int, timeout: float = 30.0, since: float = 0.0) -> Optional[TurnRecord]:
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline and not rospy.is_shutdown():
-            ts = self.turns(since)
-            if len(ts) > n_before:
-                return ts[n_before]
-            rospy.sleep(0.15)
-        return None
-
-    def close(self):
-        self._goals.close()
-        self._results.close()
 
 
 class LogScraper:
