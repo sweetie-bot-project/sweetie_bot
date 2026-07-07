@@ -110,6 +110,68 @@ def test_translation_failure_degrades_to_original_text():
     assert reply.error_code == 0
 
 
+# --- zh/en/ru seam against the REAL deployed languages.yaml (Phase 8) ----------------------------
+
+LANGUAGES_YAML = __import__("os").path.abspath(__import__("os").path.join(
+    __import__("os").path.dirname(__file__), "..", "..", "..",
+    "behavior", "sweetie_bot_llm", "config", "languages.yaml"))
+
+
+def _real_policy(provider):
+    import os
+    import pytest
+    import yaml
+    if not os.path.exists(LANGUAGES_YAML):
+        pytest.skip("languages.yaml not present")
+    with open(LANGUAGES_YAML, "r", encoding="utf-8") as f:
+        lp = yaml.safe_load(f)["language_policy"]
+    return LanguagePolicy(native_languages=lp["native_languages"], pivot=lp["pivot"],
+                          provider=provider)
+
+
+def test_real_languages_yaml_zh_ja_native_ru_pivots_both_ways():
+    """Pin the REAL deployed policy: zh/ja consumed natively; ru is NOT native (P11:
+    qwen2.5 ru output poor) so it pivots BOTH ways through en."""
+    prov = RecordingProvider()
+    pol = _real_policy(prov)
+    # native passthrough in
+    assert pol.to_model_language(ZH_LIVE, "zh") == ZH_LIVE
+    assert pol.to_model_language("こんにちは", "ja") == "こんにちは"
+    assert prov.calls == []
+    # ru pivots in...
+    pol.to_model_language(RU_LIVE, "ru")
+    assert prov.calls[-1] == (RU_LIVE, "ru", "en")
+    # ...and (on the scaffold output leg) back out
+    pol.to_user_language("Hello!", "ru")
+    assert prov.calls[-1] == ("Hello!", "en", "ru")
+    # zh never gets an output hop from the policy (the VOICE node owns zh localization)
+    n = len(prov.calls)
+    assert pol.to_user_language("Hello!", "zh") == "Hello!"
+    assert len(prov.calls) == n
+
+
+def test_detect_language_mixed_zh_latin():
+    """Mixed-script STT output: enough han among the letters -> zh (per-letter ratio,
+    latin words don't drown the han because the threshold is 30% of alphabetic chars)."""
+    assert detect_language("你好小马 Sweetie 你在哪里", "en") == "zh"
+    # a lone han char in an otherwise-english sentence stays with the declared language
+    assert detect_language("Hello Sweetie robot friend 好", "en") == "en"
+
+
+def test_zh_input_no_double_translation_contract():
+    """Full no-double-translation contract for zh: native in (no translate hop), canonical-EN
+    out (reply.language == 'en'; the voice node does the ONE en->zh hop downstream)."""
+    prov = RecordingProvider()
+    pol = _real_policy(prov)
+    reg = CapturingRegistry()
+    agent = Agent(reg, language_policy=pol)
+    reply = agent.handle(AgentRequest(text=ZH_LIVE, text_language="en", profile="simple-en"))
+    assert prov.calls == []                        # nothing translated agent-side
+    assert reply.language == "en"
+    sys_msg = next(m["content"] for m in reg.all_messages[0] if m["role"] == "system")
+    assert "Always answer in English" in sys_msg   # the note that keeps the model on-pivot
+
+
 # --- to_user_language (output-leg SCAFFOLD; unused on the live path) -----------------------------
 
 def test_to_user_language_scaffold_symmetry():

@@ -2,6 +2,19 @@
 # Languages the chosen model handles natively are fed straight to the model; everything else is
 # translated to the pivot first. The agent's canonical output language is the pivot (en); TTS
 # does the final user-facing localization (prevents double-translation with STT/TTS).
+#
+# ADDING A SPOKEN LANGUAGE (checklist — config only, nothing in code):
+#   1. hmi_robot.yaml (proto3_deploy) `voice: lang:` — add it to the comma list; the FIRST
+#      entry is the default voicing language for agent-initiated speech (proactive asides).
+#   2. soar.yaml sound config `lang_filter` — add it so tagged sound reactions stay eligible.
+#   3. THIS file `native_languages` — add it ONLY if the LLM reads it natively (otherwise it
+#      auto-pivots via LibreTranslate; ru is deliberately NOT listed — P11, poor ru output).
+#   4. TTS: hmi_robot.yaml voice_profile `langs` must include it (Coqui already covers zh —
+#      the voice node maps zh -> zh-cn internally) + the LibreTranslate en<->lang model must
+#      be installed on :5002
+#      (verify: curl -s localhost:5002/translate -d 'q=Hello&source=en&target=<lang>').
+# The zh hop was verified live 2026-07-07: en->zh works with the plain 'zh' target; STT
+# already pivots any language to en at the STT node; the agent stays canonical-EN throughout.
 language_policy:
   pivot: en
   native_languages:    # Qwen2.5 handles these well enough to consume directly

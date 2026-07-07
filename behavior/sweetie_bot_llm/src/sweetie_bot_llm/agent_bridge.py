@@ -18,6 +18,20 @@ def _get(obj: Any, name: str, default: str = "") -> str:
     return val if val is not None else default
 
 
+def first_lang(param_value, fallback: str = "en") -> str:
+    """First language of a comma-separated preference list ('zh,en,ru' -> 'zh').
+
+    The robot's spoken-language order lives in the /voice/lang rosparam (hmi_robot.yaml);
+    the FIRST entry is the default voicing language for agent-initiated speech (proactive
+    asides). Pure so the parsing is unit-testable; agent_node passes the raw param value.
+    """
+    for part in str(param_value or "").split(","):
+        lang = part.strip().lower()
+        if lang:
+            return lang
+    return fallback
+
+
 def parse_history(history_json: str) -> List[TalkTurn]:
     if not history_json:
         return []

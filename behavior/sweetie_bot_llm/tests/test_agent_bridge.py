@@ -116,6 +116,18 @@ def test_reply_with_real_tool_call_args_roundtrips():
     assert calls[1]["arguments"]["fields"] == ["battery_level", "charge_status"]
 
 
+def test_first_lang_parses_preference_lists():
+    from sweetie_bot_llm.agent_bridge import first_lang
+    assert first_lang("zh,en,ru") == "zh"          # the Phase-8 target list
+    assert first_lang("ru,en") == "ru"             # the pre-flip live list
+    assert first_lang("en") == "en"
+    assert first_lang(" ZH , en") == "zh"          # whitespace + case normalized
+    assert first_lang(",en") == "en"               # empty leading entry skipped
+    assert first_lang("") == "en"                  # fallback
+    assert first_lang(None) == "en"
+    assert first_lang("", fallback="ru") == "ru"
+
+
 def test_history_contract_fixture_parses():
     """Venv side of the two-python contract pin: the SAME literal fixture as
     behavior/sweetie_bot_soar/tests/test_history_contract.py::CONTRACT_TURNS, replayed through

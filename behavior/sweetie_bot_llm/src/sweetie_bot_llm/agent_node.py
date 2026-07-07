@@ -31,7 +31,7 @@ from sweetie_bot_ai_core.schema import AgentRequest, RequestType
 from sweetie_bot_text_msgs.msg import (GenerateReplyAction, GenerateReplyFeedback,
                                        GenerateReplyResult, TextActionAction, TextActionGoal)
 
-from .agent_bridge import goal_to_request, fill_result
+from .agent_bridge import goal_to_request, fill_result, first_lang
 from .state_collector import StateCollector
 from .scene_collector import SceneCollector
 from .tool_adapters import ToolAdapters
@@ -150,11 +150,11 @@ class LLMAgentNode:
         return d
 
     def _robot_lang(self) -> str:
-        """Robot default spoken language = first prefix of /voice/lang (fallback /hmi/lang, en)."""
+        """Robot default spoken language = first entry of /voice/lang (fallback /hmi/lang, en)."""
         for key in ("/voice/lang", "/hmi/lang"):
             v = rospy.get_param(key, "")
             if v:
-                return str(v).split(",")[0].strip()
+                return first_lang(v)
         return "en"
 
     def _humans_present(self) -> bool:
