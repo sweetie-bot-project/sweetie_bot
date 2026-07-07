@@ -42,8 +42,10 @@ def test_hidden_pony_recalled_with_direction(world):   # `world` injected by the
   per-turn `scene_block:` observability line), `world.expect_quiet(s)`.
 - **Isolation**: every test starts with a full SOAR reset (reconfigure, hard-timeboxed, with
   kill+respawn fallback — P23) + agent `~reset` + fresh synth streams; params overridden via
-  `@soar_params(...)` are restored afterwards. `@agent_params` tests restart the agent node and
-  are batched last.
+  `@soar_params(...)` are restored afterwards. `@agent_params` does NOT restart the agent node:
+  it is a plain rosparam set + agent `~reset` (the node re-reads `~proactive` every tick and
+  `~reply_delay` per reply), restored on teardown — construction-time params would need a real
+  process restart, which no test uses.
 - **Determinism policy**: assert on mechanism (profile, say issued/not, refs streamed/not,
   scene-block content) and on checker-level prose (lemmas, direction words) — never exact text.
 
