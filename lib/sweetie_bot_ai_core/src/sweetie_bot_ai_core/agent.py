@@ -60,6 +60,32 @@ _ALREADY_ANSWERED_NOTE = (
     "gentle change of subject. Keep it short; never re-explain what you already told them."
 )
 
+_LULL_NOTE = (
+    "NOTE: The human has said nothing just now — this is a quiet pause, not a question to "
+    "answer. Say ONE short, natural remark in your own voice that keeps the moment warm or "
+    "gently moves the conversation along."
+)
+
+_RETRY_SENTENCE_NOTE = (
+    "Your previous draft was not a usable utterance. Reply again with one short, natural "
+    "sentence in your own voice."
+)
+
+# last resort when even the regenerate decodes to junk: the reply path must never return
+# empty text (it wedges the SOAR say pipeline — lang.py lesson)
+_DEGENERATE_FALLBACK = "Hmm... I just lost my train of thought."
+
+
+def _is_degenerate(text: str, *, lull: bool) -> bool:
+    """Decode-junk detector for the reply path. Empty text is junk on any turn; on a LULL
+    goal (SOAR poked with ``text=''``) a bare single word is junk too — live, lull goals
+    decoded to label echoes ('joy', 'you') and got voiced. On a real turn a single word
+    ("Yes!") is a legitimate answer and stays untouched."""
+    words = re.findall(r"\w+", text or "")
+    if not words:
+        return True
+    return lull and len(words) == 1
+
 
 class RobotStateProvider(Protocol):
     def snapshot(self) -> RobotState: ...
@@ -141,11 +167,13 @@ class Agent:
         return any(is_near_duplicate(text, prev, min_len=ANSWERED_MIN_LEN, ratio=ANSWERED_RATIO)
                    for prev in self._answered_turns)
 
-    def _is_repeat(self, text) -> bool:
+    def _is_repeat(self, text, extra=()) -> bool:
         """True if `text` (near-)duplicates a recent reply — she is looping. Pure/testable.
-        Short affirmations ("yes", "okay") are allowed to recur; only longer lines count."""
+        Short affirmations ("yes", "okay") are allowed to recur; only longer lines count.
+        ``extra``: further known-said lines (her own turns from the request history) — after
+        an agent restart the in-memory window is empty while SOAR still carries them."""
         return any(is_near_duplicate(text, prev, min_len=REPEAT_MIN_LEN, ratio=REPEAT_RATIO)
-                   for prev in self._recent_replies)
+                   for prev in (*self._recent_replies, *extra))
 
     def handle(self, request: AgentRequest) -> AgentReply:
         try:
@@ -191,7 +219,8 @@ class Agent:
             return self.scene_provider.snapshot()
 
     def _regenerate_if_repeat(self, messages, profile, text, emotion, sentence_type, *,
-                              base_temp_default: float, keep_first_if_empty: bool
+                              base_temp_default: float, keep_first_if_empty: bool,
+                              extra_recent=()
                               ) -> Tuple[str, Emotion, SentenceType, Optional[str]]:
         """Anti-repetition: if the decoded reply near-duplicates a recent line she is looping
         (SOAR can re-propose a talk op on near-identical event windows). Regenerate ONCE with a
@@ -202,8 +231,9 @@ class Agent:
         to silence (and strips the retry text); the reply path takes the retry verbatim.
         Returns (text, emotion, sentence_type, raw_retry_content_or_None).
         """
-        if not (text and self._is_repeat(text)):
+        if not (text and self._is_repeat(text, extra=extra_recent)):
             return text, emotion, sentence_type, None
+        self.log(f"repeat detected — regenerating: {text!r:.80}")
         try:
             opts = {**profile.options,
                     "temperature": min(REGEN_TEMP_CAP,
@@ -223,6 +253,29 @@ class Agent:
         except Exception as e:  # noqa: BLE001 - keep the first reply if the retry fails
             self.log(f"anti-repeat retry failed: {e!r}")
             return text, emotion, sentence_type, None
+
+    def _retry_degenerate(self, messages, profile, *, lull: bool
+                          ) -> Tuple[str, Emotion, SentenceType, Optional[str]]:
+        """The decoded reply is junk (see ``_is_degenerate``): regenerate ONCE with a
+        corrective note; if the retry is junk too, return the fixed fallback line — the
+        reply path must never return empty (lang.py lesson). NEVER raises."""
+        self.log("degenerate reply — regenerating once")
+        try:
+            opts = {**profile.options,
+                    "temperature": min(REGEN_TEMP_CAP,
+                                       float(profile.options.get("temperature",
+                                                                 REPLY_BASE_TEMP))
+                                       + REGEN_TEMP_BUMP)}
+            result, _ = self.registry.chat(
+                messages + [{"role": "system", "content": _RETRY_SENTENCE_NOTE}],
+                response_schema=reply_json_schema(), **opts)
+            second = ReplyContent.model_validate(self._safe_json(result.content))
+            s_text = (second.response_text or "").strip()
+            if not _is_degenerate(s_text, lull=lull):
+                return s_text, second.emotion, second.sentence_type, result.content
+        except Exception as e:  # noqa: BLE001 - junk retry: fall through to the fallback line
+            self.log(f"degenerate-reply retry failed: {e!r}")
+        return _DEGENERATE_FALLBACK, Emotion.neutral, SentenceType.statement, None
 
     def _decode_reply_or(self, content_str, fallback_text: str
                          ) -> Tuple[str, Emotion, SentenceType]:
@@ -297,7 +350,14 @@ class Agent:
         proposed: List[ToolCall] = []
         if tools_offered:
             messages, proposed = self._tool_loop(messages, profile)
-        if re_poke:
+        # empty-text lull goal (SOAR pokes on a pause with no talk-heard event): without a
+        # user turn build_messages leaves the model continuing after its OWN last line — an
+        # undefined task that occasionally decodes to label junk. Give it a defined one.
+        lull = not (request.text or "").strip()
+        if lull:
+            self.log("lull goal (empty text) — steering to a short natural remark")
+            messages = messages + [{"role": "system", "content": _LULL_NOTE}]
+        elif re_poke:
             self.log("re-poke: already answered this turn — steering to move on")
             messages = messages + [{"role": "system", "content": _ALREADY_ANSWERED_NOTE}]
 
@@ -306,9 +366,16 @@ class Agent:
         result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
                                         **profile.options)
         content = ReplyContent.model_validate(self._safe_json(result.content))
+        # her own turns as SOAR delivered them: after an agent restart/reset the in-memory
+        # _recent_replies window is empty while the history still carries what she said
+        said_before = tuple(t.text for t in request.history if t.speaker == "sweetie")[-3:]
         text, emotion_c, sentence_type, retry_raw = self._regenerate_if_repeat(
             messages, profile, content.response_text, content.emotion, content.sentence_type,
-            base_temp_default=REPLY_BASE_TEMP, keep_first_if_empty=False)
+            base_temp_default=REPLY_BASE_TEMP, keep_first_if_empty=False,
+            extra_recent=said_before)
+        if _is_degenerate(text or "", lull=lull):
+            text, emotion_c, sentence_type, retry_raw = self._retry_degenerate(
+                messages, profile, lull=lull)
         if text and text.strip():
             self._recent_replies.append(text.strip())
         # remember we answered this human turn, so a lull re-poke of the same text moves on
