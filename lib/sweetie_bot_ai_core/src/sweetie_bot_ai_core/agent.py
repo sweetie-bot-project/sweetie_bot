@@ -481,8 +481,8 @@ class Agent:
         profile = self._profile(request.profile, "self-talk")
         name = persona.display_name if persona else "Sweetie Bot"
         # read-only scene snapshot (no diff, no _prev_scene write): lets her name what she sees
-        scene_block = render_scene(select_salient(self._scene_snapshot(), self.scene_config),
-                                   [], self.scene_config)
+        scene_sel = select_salient(self._scene_snapshot(), self.scene_config)
+        scene_block = render_scene(scene_sel, [], self.scene_config)
         system_prompt = (
             f"You are {name}. Something around you just caught your attention and you feel like "
             "saying one brief thought out loud - to yourself, not to anyone in particular.\n"
@@ -511,6 +511,10 @@ class Agent:
         text, emotion, sentence_type, _raw = self._regenerate_if_repeat(
             messages, profile, text, emotion, sentence_type,
             base_temp_default=SELF_TALK_BASE_TEMP, keep_first_if_empty=True)
+        if is_occluded(scene_sel):
+            # blocked camera: the same deterministic irritation the reply path forces —
+            # the WARNING banner drives the words, this drives the eyes (anger -> evil_look)
+            emotion = Emotion.anger
         if text:
             self._recent_replies.append(text)
         return AgentReply(
