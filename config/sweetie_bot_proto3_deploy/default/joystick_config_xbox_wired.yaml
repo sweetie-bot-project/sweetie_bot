@@ -3,6 +3,7 @@ buttons:
     joy_topic: "joystick"
     key_topic: "keys_pressed"
     deadzone: 0.1
+    enabled_on_start: true
     buttons:
         0: "3"
         1: "2"
@@ -32,6 +33,7 @@ head:
     type: JointAxes
     joy_topic: "joystick"
     joints_topic: "joints_ref"
+    enabled_on_start: false
     buttons: 
         5:
             joint: "head_joint1"
