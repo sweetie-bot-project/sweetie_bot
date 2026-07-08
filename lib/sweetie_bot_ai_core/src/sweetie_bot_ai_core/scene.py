@@ -286,17 +286,16 @@ PONY_PAIR_MAX_BEARING_DEG = 25.0
 
 
 def fold_pony_faces(entities: List[SceneEntity]) -> List[SceneEntity]:
-    """Coat-vs-mane color semantics (user insight, 2026-07-08): the pony_face crop excludes
-    the mane, so its measured color IS the coat; the body crop mixes coat+mane, so a body
-    color that DISAGREES with the face is the mane. View-level fold only — retention, diff
-    and events keep seeing the raw attributes. Each pony_face pairs with the nearest pony
-    (same in-frame status, bearing within PONY_PAIR_MAX_BEARING_DEG); on disagreement the
-    pony renders coat_color/mane_color instead of color, and the face's own color is
-    suppressed (it would duplicate the coat)."""
+    """Coat-vs-mane color distillation (user semantics, 2026-07-08): the pony_face crop
+    excludes the mane, so a measured face color is ALWAYS the coat. When the body color
+    MATCHES the face, the mane is probably small — both crops saw coat, mane unknown.
+    When they DIFFER, a big mane dominated the body crop — the body color IS the mane.
+    The LLM only ever receives the distilled form: coat_color (whenever a face was
+    measured) plus mane_color only when it is actually known; a raw `color` stays only on
+    an unpaired body, whose coat/mane split cannot be told. View-level fold only —
+    retention, diff and events keep seeing the raw attributes. A pony_face pairs with the
+    nearest pony (same in-frame status, bearing within PONY_PAIR_MAX_BEARING_DEG)."""
     out = list(entities)
-    pony_idx = [i for i, e in enumerate(out) if e.type == "pony"]
-    if not pony_idx:
-        return out
     for fi, face in enumerate(out):
         if face.type != "pony_face":
             continue
@@ -304,27 +303,28 @@ def fold_pony_faces(entities: List[SceneEntity]) -> List[SceneEntity]:
         if not fcolor:
             continue
         best = None
-        for pi in pony_idx:
-            p = out[pi]
-            if p.in_frame != face.in_frame:
+        for pi, p in enumerate(out):
+            if p.type != "pony" or p.in_frame != face.in_frame:
                 continue
             d = abs(p.bearing_deg - face.bearing_deg)
             if d <= PONY_PAIR_MAX_BEARING_DEG and (best is None or d < best[1]):
                 best = (pi, d)
+        face_attrs = dict(face.attributes)
+        face_attrs.pop("color")
         if best is None:
+            # no body in view: the face still tells the coat
+            face_attrs["coat_color"] = fcolor
+            out[fi] = face.model_copy(update={"attributes": face_attrs})
             continue
+        out[fi] = face.model_copy(update={"attributes": face_attrs})
         pony = out[best[0]]
         pcolor = pony.attributes.get("color")
-        face_attrs = dict(face.attributes)
-        del face_attrs["color"]
-        out[fi] = face.model_copy(update={"attributes": face_attrs})
         pony_attrs = dict(pony.attributes)
+        pony_attrs.pop("color", None)
+        pony_attrs["coat_color"] = fcolor
         if pcolor and pcolor != fcolor:
-            pony_attrs.pop("color")
-            pony_attrs["coat_color"] = fcolor
-            pony_attrs["mane_color"] = pcolor
-        else:
-            pony_attrs["color"] = fcolor   # agreeing or unmeasured body: the face IS the coat
+            pony_attrs["mane_color"] = pcolor   # big mane dominated the body crop
+        # matching or unmeasured body: mane unknown — say nothing about it
         out[best[0]] = pony.model_copy(update={"attributes": pony_attrs})
     return out
 

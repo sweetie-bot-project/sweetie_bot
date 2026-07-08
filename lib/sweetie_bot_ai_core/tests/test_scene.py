@@ -353,12 +353,15 @@ def test_paired_disagreeing_colors_render_coat_and_mane():
     assert "mostly" not in _line(block, "pony face")
 
 
-def test_paired_agreeing_colors_render_one_plain_color():
+def test_paired_agreeing_colors_mean_small_mane_coat_only():
+    # matching face+body: both crops saw the coat (mane too small to dominate) — the
+    # distilled form is coat only, the mane stays UNKNOWN and unmentioned
     st = SceneState(entities=[_pony(1, 20, color="pink"),
                               _pony(2, 18, type_="pony_face", color="pink")])
     block = render_scene(st, [], CFG)
     pony_line = _line(block, "a pony (id 1)")
-    assert "mostly pink" in pony_line and "coat" not in pony_line
+    assert "coat mostly pink" in pony_line
+    assert "mane" not in pony_line
     assert "mostly" not in _line(block, "pony face")
 
 
@@ -366,20 +369,24 @@ def test_face_color_fills_an_unmeasured_body():
     st = SceneState(entities=[_pony(1, 20),
                               _pony(2, 21, type_="pony_face", color="orange")])
     block = render_scene(st, [], CFG)
-    assert "mostly orange" in _line(block, "a pony (id 1)")
+    pony_line = _line(block, "a pony (id 1)")
+    assert "coat mostly orange" in pony_line
+    assert "mane" not in pony_line
     assert "mostly" not in _line(block, "pony face")
 
 
 def test_far_apart_face_and_pony_do_not_pair():
+    # unpaired body keeps its RAW color (coat/mane split unknowable); the lone face still
+    # tells the coat
     st = SceneState(entities=[_pony(1, -40, color="purple"),
                               _pony(2, 30, type_="pony_face", color="lavender")])
     block = render_scene(st, [], CFG)
-    assert "coat" not in block
-    assert "mostly purple" in _line(block, "a pony (id 1)")
-    assert "mostly lavender" in _line(block, "pony face")
+    pony_line = _line(block, "a pony (id 1)")
+    assert "mostly purple" in pony_line and "coat" not in pony_line
+    assert "coat mostly lavender" in _line(block, "pony face")
 
 
-def test_lone_face_keeps_its_color():
+def test_lone_face_color_is_the_coat():
     st = SceneState(entities=[_pony(2, 30, type_="pony_face", color="lavender")])
     block = render_scene(st, [], CFG)
-    assert "mostly lavender" in _line(block, "pony face")
+    assert "coat mostly lavender" in _line(block, "pony face")
