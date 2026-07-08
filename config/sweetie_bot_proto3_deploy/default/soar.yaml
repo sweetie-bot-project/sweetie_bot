@@ -20,8 +20,12 @@ soar:
             topic: "/hmi/joy_decoder/keys_pressed"
             last_activity_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 10.0, 300.0] }
         touch:
-            type: "joystick"
+            # touch_pulse (was: joystick): a tap shorter than a SOAR tick is edge-latched so
+            # it still boops; a refractory cooldown absorbs rapid re-taps (HANDOFF M.4b#4)
+            type: "touch_pulse"
             topic: "/touch"
+            pulse_hold: 0.6
+            cooldown: 1.5
             last_activity_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 3.0, 30.0 ] }
         swm:
             type: "swm"

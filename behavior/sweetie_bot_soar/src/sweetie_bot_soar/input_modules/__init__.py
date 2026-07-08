@@ -2,6 +2,7 @@ from .input_module import *
 from .rand import Rand
 from .timer import Clock
 from .joystick import Joystick
+from .touch_pulse import TouchPulse
 from .camera import Camera
 from .swm import SpatialWorldModel
 from .battery import Battery
