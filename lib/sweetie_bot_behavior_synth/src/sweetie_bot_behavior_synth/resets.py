@@ -130,3 +130,74 @@ def soar_reconfigure(overrides: Optional[Dict[str, object]] = None,
             return True, undo
         rospy.logwarn("behavior_synth: reconfigure unhealthy (P23) - falling back to respawn")
     return soar_respawn(ns), undo
+
+
+# ------------------------------------------------------------------ head pose (O.2) --------------
+def recenter_head(timeout: float = 8.0) -> bool:
+    """Drive the head joints back to nominal (zeros) via /motion/controller/joint_trajectory.
+
+    Sim head pose drifts monotonically across test-worlds (look-at churn + aborted animations);
+    once the head parks off-center the synthetic human's `yaw-head` bin leaves `center` and SOAR
+    stops binding TALK-EVENT SOURCE from vision — say_and_wait then times out with a perfectly
+    healthy llm_agent. Saved head trajectories can't recover on their own: they START at nominal
+    with 0.522 rad path tolerance, so a drifted head gets `invalid_pose` rejections. This goal is
+    synthesized FROM the current pose, so it is always admissible.
+    """
+    import actionlib
+    from actionlib_msgs.msg import GoalStatus
+    from control_msgs.msg import (FollowJointTrajectoryAction, FollowJointTrajectoryGoal,
+                                  JointTolerance)
+    from trajectory_msgs.msg import JointTrajectoryPoint
+    from sensor_msgs.msg import JointState
+
+    names = ["head_joint1", "head_joint2", "head_joint3", "head_joint4"]
+
+    def head_pose():
+        js = rospy.wait_for_message("/joint_states", JointState, timeout=5.0)
+        pos = dict(zip(js.name, js.position))
+        return [pos.get(n, 0.0) for n in names]
+
+    client = actionlib.SimpleActionClient("motion/controller/joint_trajectory",
+                                          FollowJointTrajectoryAction)
+    # 2 attempts: right after a soar respawn the first goal has been seen to come back quickly
+    # without moving the head (transient rejection); one retry after a settle covers it
+    for attempt in range(2):
+        try:
+            cur = head_pose()
+        except rospy.ROSException:
+            rospy.logwarn("behavior_synth: recenter_head: no /joint_states - skipping")
+            return False
+        if max(abs(c) for c in cur) < 0.1:
+            return True                  # already nominal - don't spend a motion on it
+
+        goal = FollowJointTrajectoryGoal()
+        goal.trajectory.joint_names = names
+        goal.trajectory.points = [
+            JointTrajectoryPoint(positions=cur, time_from_start=rospy.Duration(0.0)),
+            JointTrajectoryPoint(positions=[0.0] * len(names),
+                                 time_from_start=rospy.Duration(2.0)),
+        ]
+        # mirror the saved-trajectory convention (0.522/0.174), path widened: we deliberately
+        # traverse a large arc from an arbitrary drifted pose
+        goal.path_tolerance = [JointTolerance(name=n, position=1.0) for n in names]
+        goal.goal_tolerance = [JointTolerance(name=n, position=0.174) for n in names]
+
+        if not client.wait_for_server(rospy.Duration(5.0)):
+            rospy.logwarn("behavior_synth: recenter_head: joint_trajectory server unavailable")
+            return False
+        client.send_goal(goal)
+        if client.wait_for_result(rospy.Duration(timeout)):
+            state, res = client.get_state(), client.get_result()
+            if state != GoalStatus.SUCCEEDED:
+                rospy.logwarn("behavior_synth: recenter_head: goal state=%s error=%s %r", state,
+                              getattr(res, "error_code", "?"), getattr(res, "error_string", "?"))
+        else:
+            client.cancel_goal()
+            rospy.logwarn("behavior_synth: recenter_head: motion timed out")
+        residual = max(abs(p) for p in head_pose())
+        if residual <= 0.3:
+            return True
+        rospy.logwarn("behavior_synth: recenter_head: residual %.2f rad (attempt %d)",
+                      residual, attempt + 1)
+        rospy.sleep(2.0)
+    return False

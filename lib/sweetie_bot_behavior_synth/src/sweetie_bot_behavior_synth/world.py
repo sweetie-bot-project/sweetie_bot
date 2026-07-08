@@ -13,7 +13,8 @@ import rospy
 
 from .collectors import SayRecord, TurnRecord, make_collectors
 from .dsl import ScenarioSpec, SynthEntity
-from .resets import agent_reset, apply_params, set_operational, soar_reconfigure
+from .resets import (agent_reset, apply_params, recenter_head, set_operational,
+                     soar_reconfigure)
 from .streams import SynthDetections, SynthSpeech
 
 
@@ -40,6 +41,17 @@ class World:
         if self.spec.agent_params:
             self._undo_agent_params = apply_params(self.spec.agent_params, "/llm_agent")
         agent_reset()
+        # O.2 binding precondition: sim head pose drifts across test-worlds; off-center head
+        # kills the vision-side TALK-EVENT SOURCE binding (yaw-head leaves `center`) and every
+        # say_and_wait then times out with a healthy llm_agent. Recenter BEFORE the synthetic
+        # scene starts so SWM ingests it with a nominal head. Hard-fail only when the test
+        # actually depends on the binding (a human entity is present).
+        centered = recenter_head()
+        if not centered and any(e.type == "human" for e in self.spec.entities):
+            raise AssertionError(
+                "head recenter failed and this scenario needs vision binding (O.2): "
+                "SOAR will not emit TALK-EVENT SOURCE with an off-center head - "
+                "restart the sim brain if this persists")
         self.detections.start(self.spec.entities)
         rospy.sleep(1.0)                       # let SWM ingest the initial scene
         self.col["soar_log"].anchor()
