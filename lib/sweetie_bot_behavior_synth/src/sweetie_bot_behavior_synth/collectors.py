@@ -44,6 +44,11 @@ class TopicCollector:
     def count(self, since: float = 0.0) -> int:
         return len(self.messages(since))
 
+    def stamps(self, since: float = 0.0):
+        """Receive times (time.monotonic) of buffered messages, oldest first."""
+        with self._lock:
+            return [t for t, _ in self._buf if t >= since]
+
     def wait_for(self, pred: Callable, timeout: float = 10.0, since: float = 0.0):
         """Return the first message matching pred (arriving or already buffered), else None."""
         deadline = time.monotonic() + timeout
