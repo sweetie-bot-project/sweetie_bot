@@ -17,6 +17,7 @@ class PoseJoints(InputModule):
         storage_ns = self.getConfigParameter(config, 'storage_ns', allowed_types=str)
         pose_name_list = self.getConfigParameter(config, 'pose_list', allowed_types=list, check_func = lambda lst: all(isinstance(p, str) for p in lst), error_desc = 'must be list of string.')
         default_tolerance = self.getConfigParameter(config, 'tolerance', allowed_types=(float, int), check_func = lambda tol: tol >= 0.0, error_desc='must be positive number.')
+        ignore_joints = self.getConfigParameter(config, 'ignore_joints', allowed_types=list, check_func = lambda jnts: all(isinstance(jnt, str) for jnt in jnts), error_desc='joints names is list expected.')
         try:
             self._time_bins_map = BinsMap( config['time_bins_map'] )
         except (KeyError, TypeError, ValueError) as e:
@@ -36,9 +37,9 @@ class PoseJoints(InputModule):
             msg_tol = robot_pose.load_joint_state_param(storage_ns + '/joint_state_tolerance/' + pose_name)
             # add pose to list
             if msg_tol == None:
-                self._pose_list.append( robot_pose.PoseWithDefaultTolerance(pose_name, msg, default_tolerance) )
+                self._pose_list.append( robot_pose.PoseWithDefaultTolerance(pose_name, msg, default_tolerance, ignore_joints=ignore_joints) )
             else:
-                self._pose_list.append( robot_pose.PoseWithTolerance(pose_name, msg, tol_msg, default_tolerance) )
+                self._pose_list.append( robot_pose.PoseWithTolerance(pose_name, msg, tol_msg, default_tolerance, ignore_joints=ignore_joints) )
 
         # message buffers
         self._lock = Lock()

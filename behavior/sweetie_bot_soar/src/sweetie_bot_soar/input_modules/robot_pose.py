@@ -4,9 +4,9 @@ import rospy
 from sensor_msgs.msg import JointState
 
 class PoseWithDefaultTolerance:
-    def __init__(self, name, msg, tolerance):
+    def __init__(self, name, msg, tolerance, ignore_joints = []):
         self.name = name
-        self._pose = { joint: position for joint, position in zip(msg.name, msg.position) }
+        self._pose = { joint: position for joint, position in zip(msg.name, msg.position) if joint not in ignore_joints }
         self._tolerance = tolerance
 
     def check(self, msg):
@@ -24,10 +24,10 @@ class PoseWithTolerance:
         def __init__(self, position, tolerance):
             self.position, self.tolerance = position, tolerance
 
-    def __init__(self, name, msg, tol_msg, default_tolerance):
+    def __init__(self, name, msg, tol_msg, default_tolerance, ignore_joints = []):
         self.name = name
         # get pose
-        self._pose = { joint: PoseWithTolerance.Pair(position, default_tolerance) for joint, position in zip(msg.name, msg.position) }
+        self._pose = { joint: PoseWithTolerance.Pair(position, default_tolerance) for joint, position in zip(msg.name, msg.position) if joint not in ignore_joints }
         # set tolerance if it is provided
         for joint, tolerance in zip(tol_msg.name, tol_msg.position):
             pair = self._pose.get(joint)

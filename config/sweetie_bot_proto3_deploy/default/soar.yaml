@@ -52,8 +52,9 @@ soar:
             type: "pose_joints"
             topic: "joint_states"
             storage_ns: "saved_msgs"
-            pose_list: [ "head_nominal" ]
+            pose_list: [ "head_nominal", "head_zero" ]
             tolerance: 0.174 # 10 degrees
+            ignore_joints: []
             time_bins_map: { names: [ "just", "recently", "long-time" ], values: [ 10.0, 60.0 ] }
             movement_detection_joints: [ 'head_joint1', 'head_joint2', 'head_joint3', 'head_joint4' ]
             movement_detection_velocity_threshold: 0.1
@@ -70,6 +71,7 @@ soar:
             storage_ns: "saved_msgs"
             pose_list: [ "body_nominal", "body_walk", "body_zero", "body_zero_crouched", "body_crouched" ]
             tolerance: 0.174 # 10 degrees
+            ignore_joints: []
             time_bins_map: { names: [ "just", "recently", "long-time" ], values: [ 10.0, 60.0 ] }
             movement_detection_joints: [ 'leg1_joint1', 'leg1_joint2', 'leg1_joint3', 'leg1_joint4', 'leg1_joint5', 'leg1_joint6',
                       'leg2_joint1', 'leg2_joint2', 'leg2_joint3', 'leg2_joint4', 'leg2_joint5', 'leg2_joint6',
