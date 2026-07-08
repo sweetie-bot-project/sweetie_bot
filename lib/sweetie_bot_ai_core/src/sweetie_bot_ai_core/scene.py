@@ -55,6 +55,8 @@ class SceneConfig:
         "held_by": "being held by someone",   # value is a tracker id — never surface it
         "color": "mostly {v}",                # measured dominant color (vision colorname) — the
                                               # structural fix for her INVENTING object colors
+        "coat_color": "coat mostly {v}",      # from a paired pony_face (crop excludes the mane)
+        "mane_color": "mane mostly {v}",      # the body color that disagreed with the face
         "waving": "waving",
     })
 
@@ -278,6 +280,55 @@ def _describe(e: SceneEntity, cfg: SceneConfig, locate: bool = True) -> str:
     return head
 
 
+# --- pony coat/mane fold ---------------------------------------------------------------------
+
+PONY_PAIR_MAX_BEARING_DEG = 25.0
+
+
+def fold_pony_faces(entities: List[SceneEntity]) -> List[SceneEntity]:
+    """Coat-vs-mane color semantics (user insight, 2026-07-08): the pony_face crop excludes
+    the mane, so its measured color IS the coat; the body crop mixes coat+mane, so a body
+    color that DISAGREES with the face is the mane. View-level fold only — retention, diff
+    and events keep seeing the raw attributes. Each pony_face pairs with the nearest pony
+    (same in-frame status, bearing within PONY_PAIR_MAX_BEARING_DEG); on disagreement the
+    pony renders coat_color/mane_color instead of color, and the face's own color is
+    suppressed (it would duplicate the coat)."""
+    out = list(entities)
+    pony_idx = [i for i, e in enumerate(out) if e.type == "pony"]
+    if not pony_idx:
+        return out
+    for fi, face in enumerate(out):
+        if face.type != "pony_face":
+            continue
+        fcolor = face.attributes.get("color")
+        if not fcolor:
+            continue
+        best = None
+        for pi in pony_idx:
+            p = out[pi]
+            if p.in_frame != face.in_frame:
+                continue
+            d = abs(p.bearing_deg - face.bearing_deg)
+            if d <= PONY_PAIR_MAX_BEARING_DEG and (best is None or d < best[1]):
+                best = (pi, d)
+        if best is None:
+            continue
+        pony = out[best[0]]
+        pcolor = pony.attributes.get("color")
+        face_attrs = dict(face.attributes)
+        del face_attrs["color"]
+        out[fi] = face.model_copy(update={"attributes": face_attrs})
+        pony_attrs = dict(pony.attributes)
+        if pcolor and pcolor != fcolor:
+            pony_attrs.pop("color")
+            pony_attrs["coat_color"] = fcolor
+            pony_attrs["mane_color"] = pcolor
+        else:
+            pony_attrs["color"] = fcolor   # agreeing or unmeasured body: the face IS the coat
+        out[best[0]] = pony.model_copy(update={"attributes": pony_attrs})
+    return out
+
+
 # --- prompt block ----------------------------------------------------------------------------
 
 _ID_NOTE = ("(These notes are your OWN private perception — NOT lines to read out. Never quote, "
@@ -292,9 +343,10 @@ _ID_NOTE = ("(These notes are your OWN private perception — NOT lines to read 
 def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) -> str:
     """The always-on ambient block: 'Around you right now' + 'Since you last replied'."""
     lines: List[str] = []
-    occluded = [e for e in state.entities if e.type == CAMERA_OCCLUDED and e.in_frame]
+    entities = fold_pony_faces(state.entities)
+    occluded = [e for e in entities if e.type == CAMERA_OCCLUDED and e.in_frame]
     # in-frame only: remembered (out-of-view) entities have their own "Recently seen" section
-    normal = [e for e in state.entities if e.type != CAMERA_OCCLUDED and e.in_frame]
+    normal = [e for e in entities if e.type != CAMERA_OCCLUDED and e.in_frame]
     if occluded:
         lines.append("WARNING: something is pressed right against your camera - your view is "
                      "blocked and you can barely see anything right now. This is annoying and "
@@ -315,7 +367,7 @@ def render_scene(state: SceneState, events: List[SceneEvent], cfg: SceneConfig) 
             lines.append(f"- {ev.detail}.")
     # recently-departed objects: keep them in her ambient awareness for the retention window so
     # "where did the X go" works without requiring a tool call (7b models are tool-shy)
-    remembered = [e for e in state.entities
+    remembered = [e for e in entities
                   if not e.in_frame and e.type != CAMERA_OCCLUDED]
     if remembered:
         lines.append("Recently seen (now OUT of view - when asked where one of these went, "

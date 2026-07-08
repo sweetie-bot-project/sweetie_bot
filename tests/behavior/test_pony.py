@@ -47,3 +47,23 @@ def test_states_measured_pony_color(world):
     low = t.text.lower()
     for wrong in ("pink", "purple", "green", "red", "yellow", "orange", "gray", "grey"):
         assert wrong not in low, f"invented color {wrong!r} alongside the data: {t.text!r}"
+
+
+@behavior_test
+@scene(person(id=101, bearing=0.0, dist=1.5))
+def test_states_coat_and_mane_when_face_color_disagrees(world):
+    """Coat-vs-mane semantics (user insight, HANDOFF M.1): the pony_face crop excludes the
+    mane, so the face's measured color IS the coat; the body crop mixes coat+mane, so a
+    DISAGREEING body color is the mane. Structural render change (not a prompt rule): a
+    paired pony+pony_face with different colors renders 'coat mostly lavender, mane mostly
+    purple' on the pony line and suppresses the pony-face color (it duplicates the coat)."""
+    world.spawn(entity("pony", id=201, bearing=+20.0, dist=1.2, color="purple"))
+    world.spawn(entity("pony_face", id=202, bearing=+21.0, dist=1.2, color="lavender"))
+    world.wait_seen("pony")
+    t = world.say_and_wait("What color is the pony you see?")
+    # mechanism-first: the paired colors must render as coat/mane in the scene she answered from
+    assert world.col["agent_log"].wait_grep(
+        r"scene_block: .*coat mostly lavender, mane mostly purple", timeout=5.0), \
+        "paired disagreeing pony/pony_face colors never rendered as coat/mane"
+    check.mentions(t.text, ["lavender"])    # the coat (from the face crop)
+    check.mentions(t.text, ["purple"])      # the mane (the disagreeing body color)

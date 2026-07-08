@@ -330,3 +330,56 @@ def test_select_salient_does_not_mutate_input():
     out_hidden = next(e for e in sel.entities if e.id == 9)
     assert "probably_hidden_behind" in out_hidden.attributes
     assert "probably_hidden_behind" not in hidden.attributes
+
+
+# --- pony coat/mane fold (user insight 2026-07-08: face crop = coat; disagreeing body = mane) --
+
+def _pony(id, bearing, type_="pony", **attrs):
+    return SceneEntity(id=id, type=type_, bearing_deg=bearing,
+                       zone=classify_zone(bearing, CFG),
+                       attributes={k: str(v) for k, v in attrs.items()})
+
+
+def _line(block, needle):
+    return next(l for l in block.splitlines() if needle in l)
+
+
+def test_paired_disagreeing_colors_render_coat_and_mane():
+    st = SceneState(entities=[_pony(1, 20, color="purple"),
+                              _pony(2, 21, type_="pony_face", color="lavender")])
+    block = render_scene(st, [], CFG)
+    assert "coat mostly lavender, mane mostly purple" in _line(block, "a pony (id 1)")
+    # the face's own color would duplicate the coat — suppressed
+    assert "mostly" not in _line(block, "pony face")
+
+
+def test_paired_agreeing_colors_render_one_plain_color():
+    st = SceneState(entities=[_pony(1, 20, color="pink"),
+                              _pony(2, 18, type_="pony_face", color="pink")])
+    block = render_scene(st, [], CFG)
+    pony_line = _line(block, "a pony (id 1)")
+    assert "mostly pink" in pony_line and "coat" not in pony_line
+    assert "mostly" not in _line(block, "pony face")
+
+
+def test_face_color_fills_an_unmeasured_body():
+    st = SceneState(entities=[_pony(1, 20),
+                              _pony(2, 21, type_="pony_face", color="orange")])
+    block = render_scene(st, [], CFG)
+    assert "mostly orange" in _line(block, "a pony (id 1)")
+    assert "mostly" not in _line(block, "pony face")
+
+
+def test_far_apart_face_and_pony_do_not_pair():
+    st = SceneState(entities=[_pony(1, -40, color="purple"),
+                              _pony(2, 30, type_="pony_face", color="lavender")])
+    block = render_scene(st, [], CFG)
+    assert "coat" not in block
+    assert "mostly purple" in _line(block, "a pony (id 1)")
+    assert "mostly lavender" in _line(block, "pony face")
+
+
+def test_lone_face_keeps_its_color():
+    st = SceneState(entities=[_pony(2, 30, type_="pony_face", color="lavender")])
+    block = render_scene(st, [], CFG)
+    assert "mostly lavender" in _line(block, "pony face")
