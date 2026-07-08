@@ -85,7 +85,13 @@ def select_salient(state: SceneState, cfg: SceneConfig) -> SceneState:
 
     Keeps every front entity, then fills up to ``max_entities`` with side entities. Rear is dropped.
     """
-    visible = [e for e in state.entities if e.in_frame and e.zone != Zone.rear]
+    # camera_occluded is a frame-level flag riding the detection channel, not a spatial
+    # object: its pose sits ~at the camera origin, so its body-frame zone is numerically
+    # unstable (flaps with every head move). Bypass zone/budget selection entirely —
+    # is_occluded() runs on the SELECTED scene and must always see it while in frame.
+    occluded_flags = [e for e in state.entities if e.in_frame and e.type == CAMERA_OCCLUDED]
+    visible = [e for e in state.entities
+               if e.in_frame and e.zone != Zone.rear and e.type != CAMERA_OCCLUDED]
     front = [e for e in visible if e.zone == Zone.front]
     side = [e for e in visible if e.zone == Zone.side]
     front.sort(key=_entity_sort_key)
@@ -94,6 +100,7 @@ def select_salient(state: SceneState, cfg: SceneConfig) -> SceneState:
     if len(chosen) < cfg.max_entities:
         chosen += side[: cfg.max_entities - len(chosen)]
     chosen.sort(key=_entity_sort_key)
+    chosen += occluded_flags
     # remembered (out-of-frame) entities pass through regardless of zone - their bearing is
     # recomputed against her CURRENT forward, so "it was to your right" stays true after she
     # turns; render_scene shows them in the "Recently seen" section
@@ -122,8 +129,10 @@ def _is_person(e: SceneEntity) -> bool:
 
 def diff(prev: SceneState, curr: SceneState, cfg: SceneConfig) -> List[SceneEvent]:
     """Diff two *salient* SceneStates by id → arrived / left / changed events."""
-    prev_map = {e.id: e for e in prev.entities}
-    curr_map = {e.id: e for e in curr.entities}
+    # the occlusion flag never verbalizes through generic events ("a camera occluded
+    # appeared" is nonsense speech fuel) — the render_scene WARNING banner is its only voice
+    prev_map = {e.id: e for e in prev.entities if e.type != CAMERA_OCCLUDED}
+    curr_map = {e.id: e for e in curr.entities if e.type != CAMERA_OCCLUDED}
     events: List[SceneEvent] = []
     # locate PEOPLE only when several are present (to tell them apart); with a single person she
     # addresses them as "you" and their position is pure recitation fuel. Objects always located.
