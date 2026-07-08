@@ -10,6 +10,7 @@ from std_srvs.srv import SetBool, SetBoolResponse
 from std_msgs.msg import Bool
 
 from .soar import Soar, SoarState
+from .toggle_debounce import ToggleDebounce
 
 class SoarNode:
     def __init__(self, node_name):
@@ -25,6 +26,9 @@ class SoarNode:
         # can gate on it: latched Bool republished on every start/stop.
         self.operational_pub = rospy.Publisher('~operational', Bool, queue_size=1, latch=True)
         self._publish_operational(False)
+        # a TOGGLE is state-relative: an accidental double-fire (rviz double-click, key
+        # repeat) inverts the caller's intent. Absorb repeats server-side for every caller.
+        self._toggle_debounce = ToggleDebounce(window_s=rospy.get_param('~toggle_debounce', 0.7))
         # create SOAR envelopment
         self.soar = Soar()
         self.timer = None
@@ -70,6 +74,10 @@ class SoarNode:
         return SetBoolResponse(success = result)
 
     def triggerOperationalCallback(self, req):
+        if not self._toggle_debounce.accept(rospy.get_time()):
+            rospy.logwarn('soar: toggle_operational repeat within %.1fs debounced '
+                          '(double-click / key repeat?)', self._toggle_debounce.window_s)
+            return TriggerResponse(success=False, message='debounced: repeated toggle')
         state = self.soar.getState()
         if state in (SoarState.STOPPED, SoarState.UNCONFIGURED):
             result = self.soar.start()
