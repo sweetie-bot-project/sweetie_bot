@@ -28,11 +28,11 @@ buttons:
         2: "L2"
         6: "right"
         7: "down"
-eyes:
+head:
     type: JointAxes
     joy_topic: "joystick"
-    joints_topic: "eyes_joints_ref"
-    buttons: { }
+    joints_topic: "joints_ref"
+    buttons: {}
     axes:
         0:
             joint: "eyes_yaw"
@@ -44,12 +44,6 @@ eyes:
             speed: 0.0
             min: -1.2
             max: 1.2
-head:
-    type: JointAxes
-    joy_topic: "joystick"
-    joints_topic: "head_joints_ref"
-    buttons: { }
-    axes:
         5:
             joint: "joint51"
             speed: 0.0

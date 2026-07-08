@@ -27,26 +27,10 @@ buttons:
         3: "tumble"
         4: "right"
         5: "down"
-eyes: 
+head: 
     type: JointAxes
     joy_topic: "joystick"
-    joints_topic: "eyes_joints_ref"
-    buttons: {}
-    axes:
-        2:
-            joint: "eyes_yaw"
-            speed: 0.0
-            min: -1.2
-            max: 1.2
-        3:
-            joint: "eyes_pitch"
-            speed: 0.0
-            min: -1.2
-            max: 1.2
-head:
-    type: JointAxes
-    joy_topic: "joystick"
-    joints_topic: "head_joints_ref"
+    joints_topic: "joints_ref"
     buttons:
         7:
             joint: "head_joint1"
@@ -59,6 +43,16 @@ head:
             min: -0.2
             max: 1.2
     axes:
+        2:
+            joint: "eyes_yaw"
+            speed: 0.0
+            min: -1.2
+            max: 1.2
+        3:
+            joint: "eyes_pitch"
+            speed: 0.0
+            min: -1.2
+            max: 1.2
         1:
             joint: "head_joint2"
             speed: 0.0
