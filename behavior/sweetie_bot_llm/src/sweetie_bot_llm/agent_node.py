@@ -27,6 +27,7 @@ from sweetie_bot_ai_core import (Agent, LanguagePolicy, PersonaRegistry, SceneCo
                                  build_llm_registry, load_profiles)
 from sweetie_bot_ai_core.translation import LibreTranslateProvider
 from sweetie_bot_ai_core.schema import AgentRequest, RequestType
+from sweetie_bot_ai_core.scene import CAMERA_OCCLUDED
 
 from sweetie_bot_text_msgs.msg import (GenerateReplyAction, GenerateReplyFeedback,
                                        GenerateReplyResult, TextActionAction, TextActionGoal)
@@ -127,6 +128,7 @@ class LLMAgentNode:
         self._operational = True   # SOAR operational; proactive self-talk is gated OFF when False
         self._last_activity = rospy.get_time()   # time of the last real conversational turn
         self._last_selftalk = 0.0                # time of the last proactive aside
+        self._occluded_since = None              # wall time the camera became covered; None=clear
         self._pro = self._load_proactive_cfg()
         self._voice = actionlib.SimpleActionClient(
             rospy.get_param("~proactive/voice_ns", "voice/syn"), TextActionAction)
@@ -148,7 +150,8 @@ class LLMAgentNode:
         d = ProactiveConfig()
         p = rospy.get_param("~proactive", {}) or {}
         for f in ("enabled", "period", "min_gap", "alone_after", "alone_gap", "lull_after",
-                  "lull_prob", "profile", "persona", "cue_alone", "cue_lull", "cue_lull_pool"):
+                  "lull_prob", "profile", "persona", "cue_alone", "cue_lull", "cue_lull_pool",
+                  "occluded_after", "occluded_gap", "cue_occluded"):
             if f in p:
                 setattr(d, f, p[f])
         return d
@@ -176,6 +179,19 @@ class LLMAgentNode:
             return False
         return any((e.type or "") in _HUMAN_TYPES for e in snap.entities)
 
+    def _camera_occluded(self) -> bool:
+        """True while the vision pipeline reports the lens covered (camera_occluded entity)."""
+        if self._scene is None:
+            return False
+        try:
+            snap = self._scene.snapshot(include_remembered=False)
+        except TypeError:
+            snap = self._scene.snapshot()
+        except Exception:  # noqa: BLE001 - a scene hiccup must not fake a complaint
+            return False
+        return any((e.type or "") == CAMERA_OCCLUDED and getattr(e, "in_frame", True)
+                   for e in snap.entities)
+
     def _proactive_tick(self, _evt):
         # live-re-read the tunables so they can be adjusted with rosparam set without a restart
         self._pro = self._load_proactive_cfg()
@@ -186,8 +202,17 @@ class LLMAgentNode:
             return
         try:
             now = rospy.get_time()
+            # occlusion edge tracking: complaints gate on how LONG the lens has been covered
+            if self._camera_occluded():
+                if self._occluded_since is None:
+                    self._occluded_since = now
+                occluded_for = now - self._occluded_since
+            else:
+                self._occluded_since = None
+                occluded_for = None
             cue = choose_proactive_cue(self._humans_present(), now - self._last_activity,
-                                       now - self._last_selftalk, self._pro, random.random())
+                                       now - self._last_selftalk, self._pro, random.random(),
+                                       occluded_for=occluded_for)
             if cue is not None:
                 self._fire_self_talk(cue)
         finally:
