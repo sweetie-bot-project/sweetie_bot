@@ -9,6 +9,29 @@ from typing import List, Optional
 from .persona import Persona
 from .schema import RobotState
 
+# Shared tool guidance. Keep ACTION tools first-class: an earlier info-only phrasing ("if you
+# need live information ... otherwise just answer") steered the model away from ever calling
+# actuator tools on direct "dance for me" asks (probed on qwen2.5:7b, 2026-07-08).
+_TOOL_NOTE = (
+    "You have tools available. If you need live information (such as your battery, the "
+    "time, or your physical status) to answer truthfully, call the appropriate tool "
+    "first. If the human asks you to perform a physical action that one of your tools "
+    "provides, call that tool so you actually do it, then answer. Otherwise just answer.")
+
+
+def build_tool_phase_prompt(persona: Persona) -> str:
+    """Minimal system prompt for the TOOL-DECISION call (identity + tool guidance only).
+
+    The tool loop must not share the full reply prompt: on a 7B the ~14 persona style
+    guidelines dilute the tool schema until native tool-calling collapses (measured on
+    qwen2.5:7b: "give me your hoof" triggered play_animation 0/5 under the full prompt —
+    sometimes emitting the call as junk TEXT — vs 5/5 under this lean prompt; scene/state
+    blocks alone cost 3-5/5). Structurally the decision call needs nothing else: the scene
+    and robot state are exactly what the info tools FETCH, and the style guidelines govern
+    the voiced reply, which is composed by the later constrained call under the full prompt.
+    """
+    return persona.description.strip() + "\n\n" + _TOOL_NOTE
+
 
 def build_system_prompt(persona: Persona, state: Optional[RobotState] = None, *,
                         tools_offered: bool = False,
@@ -37,10 +60,7 @@ def build_system_prompt(persona: Persona, state: Optional[RobotState] = None, *,
 
     # --- tool guidance ----------------------------------------------------------------------
     if tools_offered:
-        parts.append(
-            "You have tools available. If you need live information (such as your battery, the "
-            "time, or your physical status) to answer truthfully, call the appropriate tool "
-            "first; otherwise just answer.")
+        parts.append(_TOOL_NOTE)
 
     # --- dynamic scene block (what she perceives around her) --------------------------------
     if scene_block:

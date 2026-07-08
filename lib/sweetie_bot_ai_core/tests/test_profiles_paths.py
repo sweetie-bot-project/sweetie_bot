@@ -87,3 +87,47 @@ def test_unknown_profile_self_talk_falls_back_to_self_talk_profile():
     assert reply.response_text == "Hi there!"
     assert reg.calls[0]["opts"]["temperature"] == 0.8
     assert reg.calls[0]["opts"]["max_tokens"] == 80
+
+
+def test_tool_phase_runs_on_lean_prompt_and_grafts_results_into_full_prompt():
+    """The tool-DECISION call must use the lean tool-phase prompt (identity + tool note only:
+    a 7B stops emitting native tool calls when the schema competes with the full persona
+    style guidance), while the FINAL constrained call runs on the full reply prompt with the
+    assistant tool-call turn + tool result grafted in."""
+    from sweetie_bot_ai_core.client import ChatResult
+    from sweetie_bot_ai_core.prompt import build_tool_phase_prompt
+    from sweetie_bot_ai_core.schema import ToolCall
+
+    class ToolCallingRegistry(RecordingRegistry):
+        def chat(self, messages, *, tools=None, response_schema=None, **kw):
+            self.calls.append({"messages": [dict(m) for m in messages], "tools": bool(tools),
+                               "schema": response_schema is not None, "opts": dict(kw)})
+            scripted = self.contents.pop(0)
+            if isinstance(scripted, ChatResult):
+                return scripted, "scripted"
+            return ChatResult(content=scripted), "scripted"
+
+    reg = ToolCallingRegistry([
+        ChatResult(content="", tool_calls=[ToolCall(name="get_robot_state", arguments={})]),
+        ChatResult(content=""),          # tool loop iter 1: no further calls
+        REPLY_JSON,                      # final constrained reply
+    ])
+    agent = Agent(reg)
+    reply = agent.handle(AgentRequest(text="Sweetie, how full is your battery?",
+                                      profile="complex-en"))
+    assert reply.response_text == "Hi there!"
+    tool_call, final_call = reg.calls[0], reg.calls[-1]
+    # tool phase: lean system prompt, tools offered, no grammar
+    assert tool_call["tools"] and not tool_call["schema"]
+    assert tool_call["messages"][0]["content"] == build_tool_phase_prompt(
+        agent.personas.active)
+    # final phase: FULL prompt (differs from the lean one), grammar on, tools not re-offered
+    assert final_call["schema"] and not final_call["tools"]
+    full_system = final_call["messages"][0]["content"]
+    assert full_system != tool_call["messages"][0]["content"]
+    assert "Keep your reply to at most" in full_system
+    # the tool exchange is grafted into the final messages (assistant tool-call + tool result)
+    roles = [m["role"] for m in final_call["messages"]]
+    assert "tool" in roles, f"tool result missing from final messages: {roles}"
+    assert any(m["role"] == "assistant" and m.get("tool_calls")
+               for m in final_call["messages"]), "assistant tool-call turn missing"

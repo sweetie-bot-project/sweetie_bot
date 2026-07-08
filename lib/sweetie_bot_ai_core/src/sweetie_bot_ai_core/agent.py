@@ -22,7 +22,7 @@ from typing import Callable, Dict, List, Optional, Protocol, Tuple
 from .history import ConversationHistory
 from .persona import PersonaRegistry
 from .profiles import DEFAULT_PROFILES, ProfileConfig, load_profiles  # noqa: F401 - re-export
-from .prompt import build_system_prompt
+from .prompt import build_system_prompt, build_tool_phase_prompt
 from .registry import ProviderRegistry, RegistryError
 from .scene import SceneConfig, diff as scene_diff, is_occluded, render_scene, select_salient
 from .schema import (AgentReply, AgentRequest, ErrorCode, Emotion, ReplyContent, RequestType,
@@ -349,7 +349,16 @@ class Agent:
 
         proposed: List[ToolCall] = []
         if tools_offered:
-            messages, proposed = self._tool_loop(messages, profile)
+            # the tool-DECISION call runs on a minimal prompt (identity + tool note): under the
+            # full persona prompt a 7B loses the tool schema in the style guidelines and stops
+            # emitting native tool calls (see build_tool_phase_prompt). The loop's tail —
+            # assistant tool-call turns + tool results — is grafted onto the full-prompt
+            # messages so the constrained reply is composed WITH the tool outcomes in context.
+            tool_msgs = hist.build_messages(build_tool_phase_prompt(persona),
+                                            request.history, user_text)
+            n_before = len(tool_msgs)
+            tool_msgs, proposed = self._tool_loop(tool_msgs, profile)
+            messages = messages + tool_msgs[n_before:]
         # empty-text lull goal (SOAR pokes on a pause with no talk-heard event): without a
         # user turn build_messages leaves the model continuing after its OWN last line — an
         # undefined task that occasionally decodes to label junk. Give it a defined one.
@@ -516,8 +525,13 @@ class Agent:
     def _tool_loop(self, messages, profile):
         proposed: List[ToolCall] = []
         offered_tools = self.tools.to_openai_tools()
-        for _ in range(profile.max_tool_iters):
+        for it in range(profile.max_tool_iters):
             result, _name = self.registry.chat(messages, tools=offered_tools, **profile.options)
+            # observability (harness + live debugging): what the model DID with the offered
+            # tools — a missing 'tool call <name>' adapter line is otherwise ambiguous between
+            # "model declined" and "plumbing dropped it"
+            self.log("tool loop iter %d (%s): model requested %s"
+                     % (it, _name, [tc.name for tc in result.tool_calls] or "no tools"))
             if not result.tool_calls:
                 break
             messages.append(self._assistant_toolcall_msg(result))
