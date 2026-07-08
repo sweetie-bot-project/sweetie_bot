@@ -66,11 +66,21 @@ class ToolRegistry:
 
     @classmethod
     def from_config(cls, config: Optional[dict]) -> "ToolRegistry":
-        """Build from a config mapping tool-name -> {dispatch_mode: ...} overriding defaults."""
+        """Build from a config mapping tool-name -> spec overrides. Overridable fields:
+        ``dispatch_mode``, ``description``, ``parameters`` — deployment config owns what the
+        model is told about a tool (e.g. the concrete animation names available on THIS robot),
+        the code owns only ROS-free defaults. Unknown config keys are ignored (adapter-side
+        config like ``animations`` rides in the same block)."""
         reg = cls()
         for name, override in (config or {}).items():
-            if name in reg._tools and "dispatch_mode" in override:
-                reg.set_mode(name, DispatchMode(override["dispatch_mode"]))
+            tool = reg._tools.get(name)
+            if tool is None:
+                continue
+            update = {k: override[k] for k in ("description", "parameters") if k in override}
+            if "dispatch_mode" in override:
+                update["dispatch_mode"] = DispatchMode(override["dispatch_mode"])
+            if update:
+                reg._tools[name] = tool.model_copy(update=update)
         return reg
 
 

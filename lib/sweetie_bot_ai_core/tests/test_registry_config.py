@@ -30,19 +30,45 @@ def _load(name):
 def test_tool_registry_from_real_tools_yaml():
     cfg = _load("tools.yaml")
     reg = ToolRegistry.from_config(cfg.get("tools"))
-    # arbitration contract: info tools execute, actuator tools stay disabled
+    # arbitration contract: info tools execute; play_animation executes SYNCHRONOUSLY inside
+    # the reply turn (HANDOFF #3 motion tool calls — deliberate contract change, tools.yaml
+    # documents the arbitration story); look_at has no synchronous story -> stays disabled
     assert reg.mode("get_robot_state") == DispatchMode.execute
     assert reg.mode("look_at") == DispatchMode.disabled
-    assert reg.mode("play_animation") == DispatchMode.disabled
+    assert reg.mode("play_animation") == DispatchMode.execute
     # get_scene has no yaml override -> keeps its code default (execute, read-only perception)
     assert reg.mode("get_scene") == DispatchMode.execute
     offered = {t.name for t in reg.offered()}
-    assert offered == {"get_robot_state", "get_scene"}
+    assert offered == {"get_robot_state", "get_scene", "play_animation"}
+    # deployment config owns what the model is told: the yaml enum lists THIS robot's
+    # animations and the adapter-side mapping covers exactly the same names
+    anim = reg.get("play_animation")
+    enum = anim.parameters["properties"]["name"]["enum"]
+    mapping = cfg["tools"]["play_animation"]["animations"]
+    assert set(enum) == set(mapping)
+    assert "dance" in anim.description
 
 
 def test_tool_registry_unknown_names_in_config_are_ignored():
     reg = ToolRegistry.from_config({"no_such_tool": {"dispatch_mode": "execute"}})
     assert reg.get("no_such_tool") is None
+
+
+def test_tool_registry_config_overrides_description_and_parameters():
+    reg = ToolRegistry.from_config({"play_animation": {
+        "dispatch_mode": "execute",
+        "description": "Wave a hoof.",
+        "parameters": {"type": "object",
+                       "properties": {"name": {"type": "string", "enum": ["wave"]}},
+                       "required": ["name"]},
+        "animations": {"wave": "wave_traj"},   # adapter-side key: ignored by the registry
+    }})
+    tool = reg.get("play_animation")
+    assert tool.dispatch_mode == DispatchMode.execute
+    assert tool.description == "Wave a hoof."
+    assert tool.parameters["properties"]["name"]["enum"] == ["wave"]
+    # unrelated tools keep their code defaults
+    assert reg.get("look_at").dispatch_mode == DispatchMode.disabled
 
 
 # --- build_llm_registry with the real providers.yaml ----------------------------------------------
