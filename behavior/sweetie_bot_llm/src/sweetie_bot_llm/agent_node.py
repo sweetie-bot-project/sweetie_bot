@@ -95,7 +95,11 @@ class LLMAgentNode:
         except Exception as e:  # noqa: BLE001 - never block the node on scene setup
             rospy.logwarn("llm_agent: scene provider unavailable (%r); running without it", e)
             self._scene = None
-        self._effector = ToolAdapters(self._state, scene_collector=self._scene)
+        # animation allowlist rides in the play_animation tool block (tools.yaml); the registry
+        # ignores it, the adapter maps friendly name -> saved trajectory
+        animations = ((tools_cfg or {}).get("play_animation", {}) or {}).get("animations", {})
+        self._effector = ToolAdapters(self._state, scene_collector=self._scene,
+                                      animations=animations)
         # ~profiles (profiles.yaml) is the deployed source of truth; missing param -> the
         # language-neutral code fallback (DEFAULT_PROFILES)
         profiles = load_profiles({"profiles": profiles_cfg}) if profiles_cfg else None

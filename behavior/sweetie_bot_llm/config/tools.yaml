@@ -1,13 +1,33 @@
 # Tool dispatch policy (sweetie_bot_ai_core.ToolRegistry.from_config).
 # dispatch_mode: execute | propose | disabled
+# from_config also honours `description`/`parameters` overrides: deployment config owns what
+# the model is told about a tool (e.g. the animation names available on THIS robot).
 #
-# IMPORTANT (arbitration): SOAR is the sole arbiter of shared actuators (eyes/animations/gaze)
-# and already drives expression from the returned `emotion`. The LLM must NOT race it, so
-# actuator tools stay 'disabled'/'propose'. Only side-effect-free info tools are 'execute'.
+# IMPORTANT (arbitration): SOAR is the sole arbiter of shared actuators and already drives
+# expression from the returned `emotion`. Actuator tools may be 'execute' ONLY when the adapter
+# runs them SYNCHRONOUSLY inside the reply turn — SOAR is idle-waiting on the GenerateReply
+# result then, so the tool cannot race SOAR-proposed behaviors (see tool_adapters.py). Keep the
+# total turn under the SOAR lang-module timeout (30 s): LLM calls ~3 s + animation 4-6 s fits.
 tools:
   get_robot_state:
     dispatch_mode: execute      # read-only: time, battery, pose, servo faults
   look_at:
-    dispatch_mode: disabled     # actuator -> SOAR-arbitrated (enable as 'propose' only once
-  play_animation:               #            SOAR rules opt in to consuming tool proposals)
-    dispatch_mode: disabled
+    dispatch_mode: disabled     # actuator: no synchronous-execution story yet (continuous gaze)
+  play_animation:
+    dispatch_mode: execute      # actuator: run synchronously inside the reply turn (see above)
+    description: >-
+      Perform a body animation with your whole body. Use 'dance' when the human asks you to
+      dance, and 'give_hoof' when the human asks for your hoof, a hoof-shake, a brohoof or a
+      handshake. Only call this when the human explicitly asks you to perform the motion.
+    parameters:
+      type: object
+      properties:
+        name:
+          type: string
+          enum: [dance, give_hoof]
+          description: Which animation to perform.
+      required: [name]
+    # adapter-side: friendly name -> saved joint trajectory (/saved_msgs/joint_trajectory/*)
+    animations:
+      dance: dance_stamp
+      give_hoof: greeting2
