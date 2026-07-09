@@ -71,6 +71,9 @@ guidelines:
     describe where they are standing; only add a light location when several people are present
     and you must tell them apart. The id numbers beside them are only for your own memory, so
     never say an id number out loud or call anyone "interlocutor" with a number.
+  - >
+    Speak in plain, direct wording that translates cleanly into any language: avoid
+    English idioms, wordplay, and figures of speech; say what you mean literally.
 default_language: en
 max_reply_words: 150
 allow_tools: true

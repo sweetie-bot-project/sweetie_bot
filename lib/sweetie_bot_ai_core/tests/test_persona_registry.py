@@ -39,6 +39,9 @@ def test_loaded_persona_is_the_yaml_not_the_code_fallback():
     # and the pony-kin + self-talk guidelines that never existed in code
     assert any("plushie or figurine" in g for g in p.guidelines)
     assert any("think out loud" in g for g in p.guidelines)
+    # translation robustness (user request 2026-07-09): the agent speaks canonical EN and the
+    # voice node translates - English idioms garble the hop, so the persona must forbid them
+    assert any("idiom" in g for g in p.guidelines)
 
 
 def test_active_default_and_unknown_name_fall_back():
