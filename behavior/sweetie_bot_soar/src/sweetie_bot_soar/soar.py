@@ -163,7 +163,9 @@ class Soar:
             self._stop_request = True
             # wait until state has changed (hardcoded timeout 10 seconds)
             self._lock_cond.wait_for(lambda: self._state != SoarState.RUNNING, 10)
-            return self._state == SoarState.RUNNING
+            # success == the kernel actually reached STOPPED (the old `== RUNNING` reported
+            # False exactly when the stop WORKED - every toggle-off looked failed in logs)
+            return self._state == SoarState.STOPPED
 
     def cleanup(self):
         # peform deconfiguration
