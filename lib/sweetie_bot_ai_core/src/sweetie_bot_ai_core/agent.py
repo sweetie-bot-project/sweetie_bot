@@ -75,6 +75,22 @@ _RETRY_SENTENCE_NOTE = (
 # empty text (it wedges the SOAR say pipeline — lang.py lesson)
 _DEGENERATE_FALLBACK = "Hmm... I just lost my train of thought."
 
+# self-talk emotion whitelist: with a CLEAR lens a spontaneous muse must stay friendly —
+# the 7B occasionally self-tags [anger] on a neutral cue (live T.1#1, 2026-07-09). anger
+# stays reachable ONLY via the occlusion override below; fear has no self-talk use at all.
+_FRIENDLY_SELF_TALK_EMOTIONS = frozenset({
+    Emotion.neutral, Emotion.joy, Emotion.love, Emotion.sadness, Emotion.surprise})
+
+# forbidden vision-only inference (user rule 2026-07-08): a muse must never claim the place
+# is empty/quiet — out of frame does not mean absent, her venues are loud crowded halls.
+# The model re-infers this even with rewritten cues, so the guard is a deterministic
+# post-decode DROP (empty text = valid self-talk silence). Never re-instruct instead:
+# injected corrections get parroted by the 7B (the live prompt-echo defect, S.4#4).
+# \b keeps derived forms like "quietly" (the lull-pool humming cue) passable.
+_SILENCE_INFERENCE_RX = re.compile(
+    r"\b(?:quiet|silen(?:ce|t)|alone|no[- ]?one|nobody|empty room|by myself)\b",
+    re.IGNORECASE)
+
 
 def _is_degenerate(text: str, *, lull: bool) -> bool:
     """Decode-junk detector for the reply path. Empty text is junk on any turn; on a LULL
@@ -515,6 +531,17 @@ class Agent:
             # blocked camera: the same deterministic irritation the reply path forces —
             # the WARNING banner drives the words, this drives the eyes (anger -> evil_look)
             emotion = Emotion.anger
+        elif emotion not in _FRIENDLY_SELF_TALK_EMOTIONS:
+            # clear lens: clamp a stray model-tagged anger/fear on a muse to neutral
+            emotion = Emotion.neutral
+        if text:
+            m = _SILENCE_INFERENCE_RX.search(text)
+            if m:
+                # deterministic drop, and the log line is the live calibration channel:
+                # extend the denylist from "silence guard: dropped" occurrences
+                self.log("self-talk silence guard: dropped %r (matched %r)"
+                         % (text, m.group(0)))
+                text = ""
         if text:
             self._recent_replies.append(text)
         return AgentReply(
