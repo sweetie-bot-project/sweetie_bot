@@ -29,6 +29,8 @@ class ProactiveConfig:
     min_gap: float = 25.0       # hard global minimum between ANY two asides (s)
     alone_after: float = 20.0   # empty scene: quiet at least this long before musing (s)
     alone_gap: float = 45.0     # empty scene: minimum gap between successive "alone" asides (s)
+    presence_grace: float = 10.0  # a human seen within this many seconds still counts as present -
+                                  # bridges 1-frame detector dropouts of far/blurry people (T.1#3)
     lull_after: float = 18.0    # human present but no turn for ~this long == a one-turn lull (s)
     lull_prob: float = 0.25     # per-tick chance to speak up during a present lull
     profile: str = "self-talk-en"
@@ -97,3 +99,20 @@ def choose_proactive_cue(present, since_activity, since_selftalk, cfg, roll, occ
         idx = int((roll / cfg.lull_prob) * len(pool)) % len(pool) if cfg.lull_prob > 0 else 0
         return pool[idx]
     return None
+
+
+# entity types that count as a human for the presence gate (ponies are pony/pony_face)
+_HUMAN_TYPES = frozenset({"person", "human", "face", "body"})
+
+
+def humans_present(entities, grace_s, types=_HUMAN_TYPES):
+    """Is a human present, tolerating brief detector dropouts?
+
+    An entity counts while it is in frame OR was last seen no more than ``grace_s`` ago
+    (remembered scene entities carry ``last_seen_s``; in-frame ones have it at 0.0).
+    A 1-frame dropout of a far/blurry person must not read as "alone" - that fired the
+    alone-cue with a person standing right there (live 2026-07-08, T.1#3).
+    """
+    return any((getattr(e, "type", "") or "") in types
+               and (getattr(e, "in_frame", True) or getattr(e, "last_seen_s", 0.0) <= grace_s)
+               for e in entities)

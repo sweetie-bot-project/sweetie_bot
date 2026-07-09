@@ -36,10 +36,9 @@ from .agent_bridge import goal_to_request, fill_result, first_lang
 from .state_collector import StateCollector
 from .scene_collector import SceneCollector
 from .tool_adapters import ToolAdapters
-from .proactive import ProactiveConfig, choose_proactive_cue
+from .proactive import ProactiveConfig, choose_proactive_cue, humans_present
 
 # entity types that count as a present human (ponies are pony_*, other objects are their label)
-_HUMAN_TYPES = {"person", "human", "face", "body"}
 
 
 class LLMAgentNode:
@@ -150,7 +149,7 @@ class LLMAgentNode:
         d = ProactiveConfig()
         p = rospy.get_param("~proactive", {}) or {}
         for f in ("enabled", "period", "min_gap", "alone_after", "alone_gap", "lull_after",
-                  "lull_prob", "profile", "persona", "cue_alone", "cue_lull", "cue_lull_pool",
+                  "lull_prob", "presence_grace", "profile", "persona", "cue_alone", "cue_lull", "cue_lull_pool",
                   "occluded_after", "occluded_gap", "cue_occluded"):
             if f in p:
                 setattr(d, f, p[f])
@@ -168,7 +167,7 @@ class LLMAgentNode:
         if self._scene is None:
             return False
         try:
-            snap = self._scene.snapshot(include_remembered=False)
+            snap = self._scene.snapshot(include_remembered=True)
         except TypeError:
             snap = self._scene.snapshot()
         except Exception as e:  # noqa: BLE001 - a scene hiccup must not crash the driver
@@ -177,7 +176,9 @@ class LLMAgentNode:
             rospy.logwarn_throttle(30.0, "llm_agent: scene snapshot failed in presence "
                                          "check (%r); assuming nobody present" % (e,))
             return False
-        return any((e.type or "") in _HUMAN_TYPES for e in snap.entities)
+        # remembered humans within presence_grace still count: a 1-frame detector
+        # dropout of a far/blurry person must not read as "alone" (T.1#3)
+        return humans_present(snap.entities, self._pro.presence_grace)
 
     def _camera_occluded(self) -> bool:
         """True while the vision pipeline reports the lens covered (camera_occluded entity)."""

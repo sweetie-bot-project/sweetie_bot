@@ -17,6 +17,8 @@ are rate-limited (min_gap) and are statements, so they never CHAIN into a monolo
 """
 import re
 
+import rospy
+
 from sweetie_bot_behavior_synth import agent_params, behavior_test, person, scene
 
 _SAY_RX = re.compile(r"\[proactive\] say \[\w+\] (.+?)\s*$")
@@ -56,3 +58,29 @@ def test_present_but_silent_prompts_self_talk(world):
     said = _proactive_said(world, timeout=30.0)
     assert said, "present-lull aside had no text"
     assert not said.endswith("?"), f"lull aside nagged (question): {said!r}"
+
+
+@behavior_test
+@scene(person(id=101, bearing=0.0, dist=1.5))
+@agent_params(**{"proactive/enabled": True, "proactive/period": 2.0, "proactive/min_gap": 1.0,
+                 "proactive/alone_after": 2.0, "proactive/alone_gap": 2.0,
+                 "proactive/lull_after": 999.0, "proactive/lull_prob": 0.0,
+                 "proactive/presence_grace": 10.0})
+def test_presence_grace_delays_alone_cue_after_departure(world):
+    """A person leaving the frame (or a 1-frame detector dropout of a far/blurry person -
+    the live T.1#3 defect) must NOT flip the presence gate to "alone" instantly: the
+    alone-cue may fire only after presence_grace expires (remembered humans seen within
+    the grace still count as present).
+
+    Asserts on the fire-ATTEMPT marker '[proactive #' (logged BEFORE generation) - NOT on
+    '[proactive] say': the silence-inference guard may legitimately drop the voiced text,
+    and a voice-based check would miss a fired-but-dropped aside. lull_prob=0 keeps the
+    present-lull trigger silent, so any fire attempt here IS the alone-cue."""
+    assert not world.col["agent_log"].grep(r"\[proactive #"), \
+        "proactive fired while the person was still visible"
+    world.vanish(101)
+    rospy.sleep(6.0)   # inside grace: old code fired ~2-4.6s after vanish (alone_after+tick)
+    assert not world.col["agent_log"].grep(r"\[proactive #"), \
+        "alone cue fired inside the presence grace (detector-dropout regression)"
+    hits = world.col["agent_log"].wait_grep(r"\[proactive #", timeout=15.0)
+    assert hits, "alone cue never fired after the presence grace expired"

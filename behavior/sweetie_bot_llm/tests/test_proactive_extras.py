@@ -1,9 +1,12 @@
 """Remaining decision-matrix cells for choose_proactive_cue (complements test_proactive.py).
 
-Covers boundary equalities, degenerate configs (prob 0 / empty pool), and the deterministic
-roll->pool-index mapping the variety guarantee relies on.
+Covers boundary equalities, degenerate configs (prob 0 / empty pool), the deterministic
+roll->pool-index mapping the variety guarantee relies on, and the humans_present grace
+predicate (T.1#3: a 1-frame detector dropout must not read as "alone").
 """
-from sweetie_bot_llm.proactive import ProactiveConfig, choose_proactive_cue
+from types import SimpleNamespace
+
+from sweetie_bot_llm.proactive import ProactiveConfig, choose_proactive_cue, humans_present
 
 CFG = ProactiveConfig(min_gap=25, alone_after=20, alone_gap=45, lull_after=18, lull_prob=0.25)
 
@@ -69,3 +72,35 @@ def test_pool_index_exact_formula():
     for roll in (0.01, 0.08, 0.15, 0.22):
         expected = pool[int((roll / 0.25) * n) % n]
         assert choose_proactive_cue(True, 30, 60, CFG, roll) == expected
+
+
+# --- humans_present grace predicate (T.1#3) --------------------------------------------------------
+
+def _e(type_="human", in_frame=True, last_seen_s=0.0):
+    return SimpleNamespace(type=type_, in_frame=in_frame, last_seen_s=last_seen_s)
+
+
+def test_in_frame_human_present_even_with_zero_grace():
+    assert humans_present([_e()], grace_s=0.0)
+
+
+def test_dropout_within_grace_counts_as_present():
+    # the live shape: a far/blurry person dropped for a frame, remembered 0.3s ago
+    assert humans_present([_e(in_frame=False, last_seen_s=0.3)], grace_s=10.0)
+
+
+def test_departed_beyond_grace_is_absent():
+    assert not humans_present([_e(in_frame=False, last_seen_s=12.0)], grace_s=10.0)
+
+
+def test_grace_boundary_is_inclusive():
+    assert humans_present([_e(in_frame=False, last_seen_s=10.0)], grace_s=10.0)
+
+
+def test_non_human_types_do_not_count():
+    entities = [_e(type_="chair"), _e(type_="pony_face", in_frame=False, last_seen_s=1.0)]
+    assert not humans_present(entities, grace_s=10.0)
+
+
+def test_empty_scene_is_absent():
+    assert not humans_present([], grace_s=10.0)
