@@ -79,13 +79,14 @@ class SoarNode:
                           '(double-click / key repeat?)', self._toggle_debounce.window_s)
             return TriggerResponse(success=False, message='debounced: repeated toggle')
         state = self.soar.getState()
-        if state in (SoarState.STOPPED, SoarState.UNCONFIGURED):
-            result = self.soar.start()
-            self._publish_operational(bool(result))
-        else:
-            result = self.soar.stop()
-            self._publish_operational(False)
-
+        starting = state in (SoarState.STOPPED, SoarState.UNCONFIGURED)
+        result = self.soar.start() if starting else self.soar.stop()
+        operational = bool(result) if starting else False
+        # accepted toggles used to be SILENT (only rejects logged) - that blindness cost a
+        # live investigation (T.4). The string below is a grep seam for tests: keep stable.
+        rospy.loginfo('soar: toggle_operational accepted: %s -> operational=%s (result=%s)',
+                      state, operational, bool(result))
+        self._publish_operational(operational)
         return TriggerResponse(success = result)
 
     def stepCallback(self, req):
