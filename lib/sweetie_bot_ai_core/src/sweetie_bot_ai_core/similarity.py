@@ -28,13 +28,21 @@ def normalize(text) -> str:
     return " ".join((text or "").lower().split())
 
 
-def is_near_duplicate(a, b, *, min_len: int, ratio: float) -> bool:
+def is_near_duplicate(a, b, *, min_len: int, ratio: float, contains: bool = False) -> bool:
     """True when ``a`` and ``b`` are the same line up to small wording drift.
 
     ``a`` shorter than ``min_len`` (after normalization) never matches. Comparison is exact
     equality first, then difflib ratio > ``ratio``.
+
+    ``contains``: also match when one normalized line appears verbatim inside the other and
+    the contained line is >= ``min_len``. A glued superstring (intro + previous reply) dilutes
+    the ratio below the threshold while still voicing the old line word-for-word (live
+    2026-07-08: 0.886 vs 0.9). OFF by default: the already-answered guard must NOT treat a
+    longer new question that contains an answered one as already answered.
     """
     na, nb = normalize(a), normalize(b)
     if len(na) < min_len:
         return False
-    return na == nb or difflib.SequenceMatcher(None, na, nb).ratio() > ratio
+    if na == nb or difflib.SequenceMatcher(None, na, nb).ratio() > ratio:
+        return True
+    return contains and len(nb) >= min_len and (nb in na or na in nb)

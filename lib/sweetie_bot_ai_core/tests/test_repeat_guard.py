@@ -33,6 +33,41 @@ def test_reset_ambient_clears_the_window():
     assert len(a._recent_replies) == 0
 
 
+# --- superstring containment (live 2026-07-08 23:05 & 23:16: the PTT intro got glued in front
+#     of the previous reply VERBATIM; difflib ratio ~0.886 < 0.9 so it was voiced — twice)
+from sweetie_bot_ai_core.similarity import (REPEAT_MIN_LEN, REPEAT_RATIO,   # noqa: E402
+                                            is_near_duplicate)
+
+PREV_LIVE = ("You've been so quiet for a moment—did you find that cute little toy pony "
+             "over there by accident?")
+GLUED_LIVE = "Hello! I am Sweetie Bot! " + PREV_LIVE
+
+
+def test_is_repeat_catches_glued_superstring():
+    a = _bare_agent()
+    a._recent_replies.append(PREV_LIVE)
+    assert a._is_repeat(GLUED_LIVE)
+
+
+def test_is_repeat_catches_verbatim_fragment_of_recent_reply():
+    a = _bare_agent()
+    a._recent_replies.append(PREV_LIVE)
+    assert a._is_repeat("Did you find that cute little toy pony over there by accident?")
+
+
+def test_is_repeat_containment_respects_min_len():
+    a = _bare_agent()
+    a._recent_replies.append("Yes!")   # a short window entry inside a longer fresh reply
+    assert not a._is_repeat("Yes! What a lovely warm day we are having together.")
+
+
+def test_near_duplicate_default_stays_ratio_only():
+    # the already-answered re-poke guard calls is_near_duplicate WITHOUT contains: a longer
+    # new question containing an answered one must NOT be marked already-answered
+    assert not is_near_duplicate(GLUED_LIVE, PREV_LIVE,
+                                 min_len=REPEAT_MIN_LEN, ratio=REPEAT_RATIO)
+
+
 # --- re-poke guard: an already-answered human turn re-emitted on a lull must NOT be re-answered
 from sweetie_bot_ai_core import AgentRequest        # noqa: E402
 from sweetie_bot_ai_core.client import ChatResult   # noqa: E402

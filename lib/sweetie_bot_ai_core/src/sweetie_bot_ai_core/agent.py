@@ -187,8 +187,11 @@ class Agent:
         """True if `text` (near-)duplicates a recent reply — she is looping. Pure/testable.
         Short affirmations ("yes", "okay") are allowed to recur; only longer lines count.
         ``extra``: further known-said lines (her own turns from the request history) — after
-        an agent restart the in-memory window is empty while SOAR still carries them."""
-        return any(is_near_duplicate(text, prev, min_len=REPEAT_MIN_LEN, ratio=REPEAT_RATIO)
+        an agent restart the in-memory window is empty while SOAR still carries them.
+        ``contains``: a reply that carries a recent line verbatim inside new glue is the same
+        loop (live 2026-07-08: intro + previous reply glued, ratio-only let it through)."""
+        return any(is_near_duplicate(text, prev, min_len=REPEAT_MIN_LEN, ratio=REPEAT_RATIO,
+                                     contains=True)
                    for prev in (*self._recent_replies, *extra))
 
     def handle(self, request: AgentRequest) -> AgentReply:
