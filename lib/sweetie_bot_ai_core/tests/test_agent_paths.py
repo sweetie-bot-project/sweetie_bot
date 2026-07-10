@@ -112,6 +112,55 @@ def test_short_affirmations_never_count_as_repeats():
     assert reply.response_text == "Yes!"
 
 
+# --- superstring + note-echo leaks (live 2026-07-08 23:05/23:16 and 23:28) ----------------------
+
+PREV_LIVE = ("You've been so quiet for a moment—did you find that cute little toy pony "
+             "over there by accident?")
+GLUED_LIVE = "Hello! I am Sweetie Bot! " + PREV_LIVE   # voiced twice live: ratio 0.886 < 0.9
+
+
+def test_reply_regenerates_when_decode_glues_intro_onto_previous_reply():
+    # live: empty-text lull request decoded to intro + previous reply glued verbatim
+    reg = RecordingRegistry([_reply_json(GLUED_LIVE), _reply_json(FRESH_LINE)])
+    agent = Agent(reg)
+    agent._recent_replies.append(PREV_LIVE)
+    reply = agent.handle(AgentRequest(text="", profile="simple-en"))
+    assert len(reg.calls) == 2
+    assert any("Do NOT repeat yourself" in m["content"]
+               for m in reg.calls[1]["messages"] if m["role"] == "system")
+    assert reply.response_text == FRESH_LINE
+
+
+def test_reply_never_voices_the_injected_note_verbatim():
+    # live 2026-07-08 23:28: the retry echoed the steer note and it was VOICED [anger]
+    from sweetie_bot_ai_core.agent import _DEGENERATE_FALLBACK, _NO_REPEAT_NOTE
+    reg = RecordingRegistry([_reply_json(REPEAT_LINE), _reply_json(_NO_REPEAT_NOTE)])
+    agent = Agent(reg)
+    agent._recent_replies.append(REPEAT_LINE)
+    reply = agent.handle(AgentRequest(text="Tell me something nice!", profile="simple-en"))
+    assert reply.response_text == _DEGENERATE_FALLBACK
+
+
+def test_reply_discards_retry_echoing_a_note_fragment():
+    from sweetie_bot_ai_core.agent import _DEGENERATE_FALLBACK
+    echo = ("Well, I should say something clearly different, with fresh wording, "
+            "and move the conversation forward.")
+    reg = RecordingRegistry([_reply_json(REPEAT_LINE), _reply_json(echo)])
+    agent = Agent(reg)
+    agent._recent_replies.append(REPEAT_LINE)
+    reply = agent.handle(AgentRequest(text="Tell me something nice!", profile="simple-en"))
+    assert reply.response_text == _DEGENERATE_FALLBACK
+
+
+def test_reply_keeps_retry_that_merely_mentions_repeating():
+    fresh = "I promise not to repeat that story — here's a brand new one about a comet!"
+    reg = RecordingRegistry([_reply_json(REPEAT_LINE), _reply_json(fresh)])
+    agent = Agent(reg)
+    agent._recent_replies.append(REPEAT_LINE)
+    reply = agent.handle(AgentRequest(text="Tell me something nice!", profile="simple-en"))
+    assert reply.response_text == fresh
+
+
 # --- context_facts injection ---------------------------------------------------------------------
 
 def test_context_facts_reach_the_system_prompt():

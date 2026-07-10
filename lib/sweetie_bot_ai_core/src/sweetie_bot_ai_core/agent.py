@@ -92,6 +92,25 @@ _SILENCE_INFERENCE_RX = re.compile(
     re.IGNORECASE)
 
 
+# any verbatim run of this many words from the steer note marks a retry as a prompt echo
+_NOTE_SHINGLE_WORDS = 5
+
+
+def _echoes_note(text: str) -> bool:
+    """True when a retry parrots the injected anti-repeat steer note (any verbatim 5-word
+    run, punctuation-insensitive). An echoed INSTRUCTION near-duplicates no recent REPLY, so
+    the repeat verify alone lets it through — live 2026-07-08 23:28 the note was voiced
+    word-for-word. Shingles come from ``_NO_REPEAT_NOTE`` itself: rewording the note cannot
+    desync this guard."""
+    def _words(s):
+        return re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).split()
+    w, n = _words(text), _words(_NO_REPEAT_NOTE)
+    hay = {" ".join(w[i:i + _NOTE_SHINGLE_WORDS])
+           for i in range(len(w) - _NOTE_SHINGLE_WORDS + 1)}
+    return any(" ".join(n[i:i + _NOTE_SHINGLE_WORDS]) in hay
+               for i in range(len(n) - _NOTE_SHINGLE_WORDS + 1))
+
+
 def _is_degenerate(text: str, *, lull: bool) -> bool:
     """Decode-junk detector for the reply path. Empty text is junk on any turn; on a LULL
     goal (SOAR poked with ``text=''``) a bare single word is junk too — live, lull goals
@@ -243,8 +262,10 @@ class Agent:
                               ) -> Tuple[str, Emotion, SentenceType, Optional[str]]:
         """Anti-repetition: if the decoded reply near-duplicates a recent line she is looping
         (SOAR can re-propose a talk op on near-identical event windows). Regenerate ONCE with a
-        diverging steer note and a bumped temperature. NEVER raises — on a failed retry the
-        first reply is kept (empty/error would wedge the SOAR say pipeline, lang.py lesson).
+        diverging steer note and a bumped temperature. NEVER raises — on a failed retry, or a
+        retry that parrots the steer note itself (``_echoes_note``), the first reply is kept
+        (empty/error would wedge the SOAR say pipeline, lang.py lesson); the reply path's
+        post-verify then lands on the fallback line instead of voicing the loop or the note.
 
         ``keep_first_if_empty``: the self-talk path keeps its first aside when the retry decodes
         to silence (and strips the retry text); the reply path takes the retry verbatim.
@@ -263,6 +284,10 @@ class Agent:
                 messages + [{"role": "system", "content": _NO_REPEAT_NOTE}],
                 response_schema=reply_json_schema(), **opts)
             second = ReplyContent.model_validate(self._safe_json(result.content))
+            if _echoes_note(second.response_text or ""):
+                self.log("anti-repeat retry echoed the steer note — discarding: "
+                         f"{second.response_text!r:.80}")
+                return text, emotion, sentence_type, None
             if keep_first_if_empty:
                 s_text = (second.response_text or "").strip()
                 if not s_text:
