@@ -471,11 +471,15 @@ sp {talk-llm*prefer*look-at-last-interlocutor
 # finish dialog
 #
 
-# look around for any possible speakers
+# look around for any possible speakers.
+# Runway guard: wait until no human has been seen for the whole `just` window (10 s), not 2 s —
+# a human who JUST left the frame belongs to the missing-speaker flow («Where are you, ...?»),
+# and this rule's success FINISHES the talk, which would kill that flow before its own
+# not-visible-for-10-s precondition can mature.
 sp {talk-llm*propose*searching-anyone
 	(state <s> ^substate talk-llm ^beliefs <b> ^lang <lang>)
     -{(<b> ^object <obj>)
-      (<obj> ^type human ^input-link.visible now)
+      (<obj> ^type human ^input-link.visible {<<|now| |just|>>})
      }
 -->
 	(<s> ^operator <op> +, <, =)
@@ -508,11 +512,23 @@ sp {talk-llm*propose*searching-anyone-have-failed-finish-talk
 #
 
 # speaker is considered missing if he did not answered question (?)
+# Gated on is-missing: ONE search per disappearance episode. is-missing is latched after a
+# failed search and removed only when the speaker is seen again, so the cap re-arms on return.
+# Without the gate every utterance (incl. the search's own say) re-arms talk-waiting-answer
+# and the search loops forever.
+# Also gated on an empty flexbe channel so a fresh search never aborts a foreign in-flight
+# flexbe behavior (flexbe*propose*abort kills any cmd not owned by the current process).
 sp {talk-llm*propose*searching-missing-speaker
-	(state <s> ^substate talk-llm -^searching-missing-speaker ^beliefs.predicate <pred> ^lang <lang>)
-	(<pred> ^name talk-waiting-answer ^object <obj>) 
+	(state <s> ^substate talk-llm -^searching-missing-speaker ^beliefs <b> ^lang <lang> ^io.output-link <ol>)
+	-(<ol> ^flexbe <any-cmd>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name talk-waiting-answer ^object <obj>)
 	(<obj> ^input-link <il> ^label <label>)
 	-(<il> ^visible {<<|now| |just|>>})
+	-{
+	  (<b> ^predicate <pm>)
+	  (<pm> ^name is-missing ^object <obj>)
+	}
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name searching-missing-speaker ^substate flexbe ^process-args <a> ^interruptable volatile ^required-resource head speech)
@@ -561,7 +577,7 @@ sp {talk-llm*propose*missing-speaker-is-not-found
 	}
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name speaker-is-missing ^type cognition automatic)
+	(<op> ^name speaker-is-missing ^type cognition automatic ^print (concat |SPECIFIC: MISSING-LATCHED.| (crlf)))
 	(<op> ^add-predicate <pred-new>)
 	(<pred-new> ^name is-missing ^object <obj> ^text |Human leaved abruply during previous conversation. Sweeie does not know why he did this.|)
 }
