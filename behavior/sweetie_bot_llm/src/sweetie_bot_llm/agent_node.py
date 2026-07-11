@@ -36,7 +36,8 @@ from .agent_bridge import goal_to_request, fill_result, first_lang
 from .state_collector import StateCollector
 from .scene_collector import SceneCollector
 from .tool_adapters import ToolAdapters
-from .proactive import ProactiveConfig, choose_proactive_cue, humans_present
+from .proactive import (ProactiveConfig, choose_proactive_cue, humans_present,
+                        occlusion_edge_cue)
 
 # entity types that count as a present human (ponies are pony_*, other objects are their label)
 
@@ -128,16 +129,21 @@ class LLMAgentNode:
         self._last_activity = rospy.get_time()   # time of the last real conversational turn
         self._last_selftalk = 0.0                # time of the last proactive aside
         self._occluded_since = None              # wall time the camera became covered; None=clear
+        self._occlusion_complained = False       # this cover episode already got its complaint
         self._pro = self._load_proactive_cfg()
         self._voice = actionlib.SimpleActionClient(
             rospy.get_param("~proactive/voice_ns", "voice/syn"), TextActionAction)
         self._pro_seq = 0
         if self._pro.enabled:
             rospy.Timer(rospy.Duration(self._pro.period), self._proactive_tick)
+            # fast companion timer: ONLY the occlusion edge complaint (riding the main tick
+            # would cost up to 2*period of extra latency on a freshly covered lens)
+            rospy.Timer(rospy.Duration(1.0), self._occlusion_edge_tick)
             rospy.loginfo("llm_agent: proactive self-talk driver ON "
-                          "(period=%.1fs alone_after=%.0fs lull_after=%.0fs lull_prob=%.2f)",
+                          "(period=%.1fs alone_after=%.0fs lull_after=%.0fs lull_prob=%.2f "
+                          "edge_after=%.1fs)",
                           self._pro.period, self._pro.alone_after, self._pro.lull_after,
-                          self._pro.lull_prob)
+                          self._pro.lull_prob, self._pro.occluded_edge_after)
 
         rospy.loginfo("llm_agent: ready (personas=%s, providers=%s)",
                       personas.names(), list(registry.health().keys()))
@@ -150,7 +156,7 @@ class LLMAgentNode:
         p = rospy.get_param("~proactive", {}) or {}
         for f in ("enabled", "period", "min_gap", "alone_after", "alone_gap", "lull_after",
                   "lull_prob", "presence_grace", "profile", "persona", "cue_alone", "cue_lull", "cue_lull_pool",
-                  "occluded_after", "occluded_gap", "cue_occluded"):
+                  "occluded_after", "occluded_gap", "cue_occluded", "occluded_edge_after"):
             if f in p:
                 setattr(d, f, p[f])
         return d
@@ -203,18 +209,51 @@ class LLMAgentNode:
             return
         try:
             now = rospy.get_time()
-            # occlusion edge tracking: complaints gate on how LONG the lens has been covered
-            if self._camera_occluded():
-                if self._occluded_since is None:
-                    self._occluded_since = now
-                occluded_for = now - self._occluded_since
-            else:
-                self._occluded_since = None
-                occluded_for = None
+            occluded_for = self._update_occlusion(now)
             cue = choose_proactive_cue(self._humans_present(), now - self._last_activity,
                                        now - self._last_selftalk, self._pro, random.random(),
                                        occluded_for=occluded_for)
             if cue is not None:
+                if occluded_for is not None:
+                    # while covered the chooser can only have picked the occlusion cue:
+                    # consume the episode so the edge timer cannot double-complain
+                    self._occlusion_complained = True
+                self._fire_self_talk(cue)
+        finally:
+            self._agent_lock.release()
+
+    def _update_occlusion(self, now):
+        """Track the cover episode; return seconds covered so far (None = clear lens).
+
+        Call only under self._agent_lock (both timers use it). The falling edge closes the
+        episode, so the next cover complains immediately again.
+        """
+        if self._camera_occluded():
+            if self._occluded_since is None:
+                self._occluded_since = now
+            return now - self._occluded_since
+        self._occluded_since = None
+        self._occlusion_complained = False
+        return None
+
+    def _occlusion_edge_tick(self, _evt):
+        """Fast path: the FIRST complaint of a cover episode, ~occluded_edge_after after the
+        rising edge — exempt from min_gap/occluded_gap (the repeat-while-held cadence stays on
+        the main tick via choose_proactive_cue)."""
+        self._pro = self._load_proactive_cfg()
+        if not self._pro.enabled or not self._operational or self._server.is_active():
+            return
+        if not self._agent_lock.acquire(blocking=False):
+            return
+        try:
+            occluded_for = self._update_occlusion(rospy.get_time())
+            cue = occlusion_edge_cue(occluded_for, self._occlusion_complained, self._pro)
+            if cue is not None:
+                rospy.loginfo("llm_agent: [proactive] occlusion edge complaint (covered %.1fs)",
+                              occluded_for)
+                # consume the episode BEFORE generating: even a failed attempt must not
+                # retry at 1Hz; the held repeat (occluded_gap) is the recovery
+                self._occlusion_complained = True
                 self._fire_self_talk(cue)
         finally:
             self._agent_lock.release()
@@ -267,7 +306,12 @@ class LLMAgentNode:
                 self._scene.reset()
             self._agent.registry.reset_breakers()
             self._agent.personas.reset_active()
-            rospy.loginfo("llm_agent: state reset (ambient scene, retention, breakers, persona)")
+            # occlusion episode state: _proactive_tick skips maintenance while disabled, so a
+            # test toggling proactive off mid-episode would otherwise freeze it here forever
+            self._occluded_since = None
+            self._occlusion_complained = False
+            rospy.loginfo("llm_agent: state reset (ambient scene, retention, breakers, persona, "
+                          "occlusion episode)")
             return TriggerResponse(success=True, message="reset")
         except Exception as e:  # noqa: BLE001
             rospy.logerr("llm_agent: reset failed: %r", e)
