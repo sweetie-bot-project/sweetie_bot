@@ -15,6 +15,10 @@ Two triggers (option: driven on the LLM side, bypassing SOAR):
                     blind she must never muse "the space is empty" (it only LOOKS empty), and
                     self-talk is the ONLY speech path left — SOAR sends no reply goals without
                     a visible person to bind a talk event to (live finding, 2026-07-08).
+                    Two complaint paths: the EDGE (occlusion_edge_cue - immediate one-shot per
+                    cover episode, ~2s debounce, exempt from min_gap/occluded_gap) and the
+                    repeat-while-held (here in choose_proactive_cue, occluded_after/occluded_gap
+                    cadence).
 """
 from __future__ import annotations
 
@@ -61,6 +65,9 @@ class ProactiveConfig:
     # drives the eyes.
     occluded_after: float = 10.0  # covered at least this long before complaining (s)
     occluded_gap: float = 30.0    # minimum gap between successive complaints (s)
+    occluded_edge_after: float = 2.0  # rising-edge debounce before the IMMEDIATE first
+                                      # complaint of a cover episode; that complaint is
+                                      # exempt from min_gap/occluded_gap by design
     cue_occluded: str = ("Something is pressed right against your camera - your view is "
                          "blocked and you can barely see anything. It is annoying and rude: "
                          "complain out loud that your view is covered and ask whoever did it "
@@ -100,6 +107,24 @@ def choose_proactive_cue(present, since_activity, since_selftalk, cfg, roll, occ
         return pool[idx]
     return None
 
+
+
+def occlusion_edge_cue(occluded_for, complained, cfg):
+    """The IMMEDIATE complaint on the occlusion rising edge. Pure decision, no I/O.
+
+    Fires ONCE per cover episode as soon as the lens has been covered for
+    cfg.occluded_edge_after (a short debounce against a hand merely waved across the camera).
+    Deliberately takes NO since_selftalk: the first complaint of an episode is exempt from
+    min_gap/occluded_gap by construction (the user covered the lens live and had to wait out
+    the full held cadence before hearing anything, 2026-07-08). Repeat-while-held complaints
+    stay behind choose_proactive_cue's occluded_after/occluded_gap cadence.
+
+    occluded_for - seconds the camera has been continuously covered; None when clear
+    complained   - has this cover episode already had its complaint (edge OR held)
+    """
+    if occluded_for is None or complained:
+        return None
+    return cfg.cue_occluded if occluded_for >= cfg.occluded_edge_after else None
 
 # entity types that count as a human for the presence gate (ponies are pony/pony_face)
 _HUMAN_TYPES = frozenset({"person", "human", "face", "body"})
