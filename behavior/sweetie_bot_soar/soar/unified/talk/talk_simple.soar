@@ -520,10 +520,17 @@ sp {talk-llm*propose*searching-missing-speaker
 }
 
 # continue search until speaker is not visible
+# This proposal is what keeps the search selected (and its resources held) for its whole
+# run: looking-at-human is worst-choice (<), so while this proposes, a visible bystander
+# cannot steal the head resource and conflict-kill the search process. The negation must
+# bind the SPEAKER's input-link (<obj-il>): an unbound <il> quantifies over all of working
+# memory ("nobody visible at all"), which is false whenever a bystander is visible — the
+# continuer then never fired in a crowd and the search livelocked with look-at, relaunching
+# the flexbe goal every decide cycle (the live «Где вы» machine-gun burst, 13 goals/3 s).
 sp {talk-llm*propose*seaching-missing-speaker-wait
 	(state <s> ^substate talk-llm ^searching-missing-speaker <proc>)
 	(<proc>  ^object.input-link <obj-il>)
-	-(<il> ^visible {<<|now| |just|>>})
+	-(<obj-il> ^visible {<<|now| |just|>>})
 -->
 	(<s> ^operator <o> +, =)
 	(<o> ^name searching-missing-speaker-wait ^substate flexbe ^process-link <proc>)
