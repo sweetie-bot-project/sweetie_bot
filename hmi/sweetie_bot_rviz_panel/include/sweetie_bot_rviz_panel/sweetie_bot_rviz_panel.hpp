@@ -12,7 +12,8 @@
 #include <ui_sweetie_bot_rviz_panel.h>
 
 // Other ROS dependencies
-#include <std_srvs/Trigger.h>
+#include <std_srvs/SetBool.h>
+#include <std_msgs/Bool.h>
 
 namespace sweetie_bot_rviz_panel
 {
@@ -50,6 +51,14 @@ namespace sweetie_bot_rviz_panel
             virtual void load(const rviz::Config & config);
 
         /**
+         *  Signals emitted from ROS callback threads; the GUI thread updates
+         *  widgets in the connected slot (queued when cross-thread).
+         */
+        Q_SIGNALS:
+
+            void operationalStateChanged(bool operational);
+
+        /**
          *  Next come a couple of public Qt Slots.
          */
         public Q_SLOTS:
@@ -63,17 +72,25 @@ namespace sweetie_bot_rviz_panel
             void button_start_motor_state_viewer();
             void button_start_trajectory_editor();
             void button_kill_joint_state_ref();
+            // Runs on the GUI thread: cache the operational state and update the label.
+            void set_operational_label(bool operational);
 
         /**
          *  Finally, we close up with protected member variables
          */
         protected:
+            // Reflect /soar/operational into the label (marshalled to the GUI thread).
+            void operational_callback(const std_msgs::Bool::ConstPtr & msg);
+
             // UI pointer
             std::shared_ptr<Ui::control_buttons> ui_;
             // ROS declaration
             ros::NodeHandle nh_;
-	    ros::ServiceClient toggle_operational_caller_;
-            std_srvs::Trigger srv_;
+	    ros::ServiceClient set_operational_caller_;
+            ros::Subscriber operational_sub_;
+            std_srvs::SetBool srv_;
+            // Last state seen on /soar/operational; written only on the GUI thread.
+            bool operational_ = false;
     };
 } // namespace sweetie_bot_rviz_panel
 #endif

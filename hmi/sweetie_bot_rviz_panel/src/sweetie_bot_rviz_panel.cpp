@@ -13,21 +13,46 @@ namespace sweetie_bot_rviz_panel
         // Extend the widget with all attributes and children from UI file
         ui_->setupUi(this);
 
-        // Define ROS publisher
-        toggle_operational_caller_ = nh_.serviceClient<std_srvs::Trigger>("/soar/toggle_operational");
+        // Absolute, idempotent operational control + ground-truth state feed.
+        set_operational_caller_ = nh_.serviceClient<std_srvs::SetBool>("/soar/set_operational");
+        operational_sub_ = nh_.subscribe("/soar/operational", 1, &sweetieBotRvizPanel::operational_callback, this);
 
         connect(ui_->pushButtonToggleOperational, SIGNAL(clicked()), this, SLOT(button_toggle_operational()));
         connect(ui_->pushButtonMotorStateViewer, SIGNAL(clicked()), this, SLOT(button_start_motor_state_viewer()));
         connect(ui_->pushButtonTrajectoryEditor, SIGNAL(clicked()), this, SLOT(button_start_trajectory_editor()));
         connect(ui_->pushButtonKillJointStateRef, SIGNAL(clicked()), this, SLOT(button_kill_joint_state_ref()));
+
+        // Reflect /soar/operational into the label on the GUI thread. AutoConnection is Direct when
+        // the ROS callback already runs on the GUI thread, Queued otherwise -- correct either way.
+        connect(this, SIGNAL(operationalStateChanged(bool)), this, SLOT(set_operational_label(bool)));
     }
 
 
     void sweetieBotRvizPanel::button_toggle_operational()
     {
         ROS_INFO_STREAM("Button 'toggle_operational' pressed.");
-	toggle_operational_caller_.call(srv_);
-        ui_->labelToggleOperational->setText( ( srv_.response.success ) ? "True" : "False" );
+        // Send an absolute target (flip of the last known state) -- idempotent, so a stray
+        // duplicate carries the same value and cannot cause a spurious extra toggle.
+        srv_.request.data = !operational_;
+        if ( !set_operational_caller_.call(srv_) || !srv_.response.success )
+        {
+            ROS_ERROR("Failed to set operational state via /soar/set_operational");
+        }
+        // The label is driven by /soar/operational (ground truth), not by this response.
+    }
+
+
+    void sweetieBotRvizPanel::operational_callback(const std_msgs::Bool::ConstPtr & msg)
+    {
+        // Marshal to the GUI thread; never touch Qt widgets or shared state from here.
+        Q_EMIT operationalStateChanged(msg->data);
+    }
+
+
+    void sweetieBotRvizPanel::set_operational_label(bool operational)
+    {
+        operational_ = operational;
+        ui_->labelToggleOperational->setText( operational ? "True" : "False" );
     }
 
 
