@@ -340,14 +340,24 @@ sp {talk-llm*propose*ignor-me-answer
 	(<res> ^status succeed ^print (concat |SPECIFIC: GOODBYE ON IGNORANCE.| (crlf)))
 }
 
-# missing speaker reaction
+# missing speaker reaction — the give-up phrase, sequenced right AFTER the one-shot glance at
+# the last known position (fresh glanced-missing latch; the old ^initiated-at {> <time>} guard
+# compared against an UNBOUND <time> — the ^time.just binding was missing — so the rule was
+# eligible any lull for the whole episode). The talk-said topic guard (ignor-me pattern) keeps
+# it to one reaction even while the latch stays inside the just window.
 sp {talk-llm*propose*say-missing-answer
-	(state <s> ^substate talk-llm -^talking ^beliefs.predicate <pred> ^lang <lang>)
-	(<pred> ^name is-missing ^object <obj> ^initiated-at {> <time>})
+	(state <s> ^substate talk-llm -^talking ^beliefs <b> ^lang <lang> ^time.just <time> ^recent-events <ev-pool>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name is-missing ^object <obj>)
+	(<b> ^predicate <pg>)
+	(<pg> ^name glanced-missing ^object <obj> ^initiated-at {> <time>})
+	-{(<ev-pool> ^event <ev>)
+	  (<ev> ^name talk-said ^object <obj> ^topic missing)
+    }
 -->
  	(<s> ^operator <op> +, =)
 	(<op> ^name rule-answering-on-event ^substate verbolize ^process-args <args>)
-	(<args> ^object <obj> ^topic goodbye ^skip look-at ^text |Interlocutor is missing.| ^animation-tag sad ^lang <lang> ^emotion sad ^type statement)
+	(<args> ^object <obj> ^topic goodbye missing ^skip look-at ^text |Interlocutor is missing.| ^animation-tag sad ^lang <lang> ^emotion sad ^type statement)
 	(<args> ^result <res>)
 	(<res> ^status succeed ^print (concat |SPECIFIC: MISSING.| (crlf)))
 }
@@ -476,10 +486,18 @@ sp {talk-llm*prefer*look-at-last-interlocutor
 # a human who JUST left the frame belongs to the missing-speaker flow («Where are you, ...?»),
 # and this rule's success FINISHES the talk, which would kill that flow before its own
 # not-visible-for-10-s precondition can mature.
+# Mid-episode guard: while a missing-interlocutor episode is latched but the glance has not
+# happened yet, hold off — otherwise finish-talk kills the glance + give-up chain.
 sp {talk-llm*propose*searching-anyone
 	(state <s> ^substate talk-llm ^beliefs <b> ^lang <lang>)
     -{(<b> ^object <obj>)
       (<obj> ^type human ^input-link.visible {<<|now| |just|>>})
+     }
+    -{(<b> ^predicate <pm>)
+      (<pm> ^name is-missing ^object <om>)
+      -{(<b> ^predicate <pg>)
+        (<pg> ^name glanced-missing ^object <om>)
+       }
      }
 -->
 	(<s> ^operator <op> +, <, =)
@@ -594,6 +612,57 @@ sp {talk-llm*propose*speaker-is-missing-remove
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name terminate-speaker-is-missing ^type cognition automatic)
+	(<op> ^remove-predicate <pred>)
+}
+
+# glance ONCE at the last remembered position of a missing interlocutor, then give up
+# (say-missing-answer). lookat2 uses the previous SWM position for invisible objects, so this
+# actually re-checks where the person was — they are often just off the field of view. If the
+# glance FINDS them, visible=now removes is-missing (episode over) and say-found-missing reacts.
+# Plain acceptable (not worst-choice): the glance must win its one 5 s slot right after the
+# failed search — at worst-choice it ties with searching-anyone, which would finish the talk
+# before the give-up reaction can run. One-shot by the glanced-missing latch, so it cannot
+# monopolize attention beyond that slot.
+sp {talk-llm*propose*looking-at-missing-speaker
+	(state <s> ^substate talk-llm ^beliefs <b>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name is-missing ^object <obj>)
+	-{
+	  (<b> ^predicate <pg>)
+	  (<pg> ^name glanced-missing ^object <obj>)
+	}
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name looking-at-missing-speaker ^substate look-at ^object <obj> ^process-args <a>)
+	(<a> ^object <obj> ^deadline-time 5.0)
+}
+
+# latch the finished glance: one glance per disappearance episode (no periodic re-checking of
+# an empty position). The look-at process ends via its deadline or normal termination.
+sp {talk-llm*propose*glanced-missing-latch
+	(state <s> ^substate talk-llm ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^name looking-at-missing-speaker ^reason {<<|terminated| |deadline|>>} ^process.object <obj>)
+	(<b> ^predicate <pm>)
+	(<pm> ^name is-missing ^object <obj>)
+	-{
+	  (<b> ^predicate <pg>)
+	  (<pg> ^name glanced-missing ^object <obj>)
+	}
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name glanced-missing-latch ^type cognition automatic ^print (concat |SPECIFIC: GLANCED-MISSING.| (crlf)))
+	(<op> ^add-predicate <pred-new>)
+	(<pred-new> ^name glanced-missing ^object <obj>)
+}
+
+# clear the glance latch together with is-missing when the person is seen again
+sp {talk-llm*propose*glanced-missing-remove
+	(state <s> ^bottom-state 1 ^beliefs.predicate <pred>)
+	(<pred> ^name glanced-missing ^object.input-link.visible now)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name terminate-glanced-missing ^type cognition automatic)
 	(<op> ^remove-predicate <pred>)
 }
 
