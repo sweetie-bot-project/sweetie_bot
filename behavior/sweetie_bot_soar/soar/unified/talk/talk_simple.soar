@@ -564,9 +564,12 @@ sp {talk-llm*propose*seaching-missing-speaker-found
 	(<op> ^parent <cmd> ^attribute abort ^link-value graceful_stop)
 }
 
-# add missing predicate if speaker is not found
+# add missing predicate if speaker is not found.
+# <obj> must bind via the event's ^process.object: the talk-llm state has NO ^object attribute
+# (the (<s> ^object ...) elaboration lives only in talk.soar, which this agent does not load —
+# a state ^object condition here is dead code and silently disabled this latch since the fork).
 sp {talk-llm*propose*missing-speaker-is-not-found
-	(state <s> ^substate talk-llm ^beliefs <b> ^object <obj>)
+	(state <s> ^substate talk-llm ^beliefs <b>)
 	(<b> ^event <ev>)
 	(<ev> ^name searching-missing-speaker ^reason terminated ^status succeed ^process.object <obj>)
 	(<obj> ^input-link <obj-il>)
