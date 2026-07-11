@@ -24,7 +24,8 @@ from .persona import PersonaRegistry
 from .profiles import DEFAULT_PROFILES, ProfileConfig, load_profiles  # noqa: F401 - re-export
 from .prompt import build_system_prompt, build_tool_phase_prompt
 from .registry import ProviderRegistry, RegistryError
-from .scene import SceneConfig, diff as scene_diff, is_occluded, render_scene, select_salient
+from .scene import (SceneConfig, _is_person, diff as scene_diff, is_occluded, render_scene,
+                    select_salient)
 from .schema import (AgentReply, AgentRequest, ErrorCode, Emotion, ReplyContent, RequestType,
                      RobotState, SceneState, SentenceType, ToolCall, ToolResult,
                      classify_json_schema, reply_json_schema)
@@ -71,6 +72,56 @@ _RETRY_SENTENCE_NOTE = (
     "sentence in your own voice."
 )
 
+# hand-question guard: when asked what they are holding and NO held object is in the rendered
+# scene, deliver the missing datum as CONTEXT (the lull/re-poke note doctrine) — absence of a
+# 'holding' percept renders nothing about hands, and the 7B fills the void with an invented
+# object (live 2026-07-08 23:06: "a small book"). Epistemic wording only: absence of detection
+# is NOT empty hands (vision drops low-confidence holds), so the note says what she SEES,
+# never "their hands are empty". No example objects anywhere (negation blindness: examples
+# get parroted). Wording contract: must share no 5-word shingle with the natural honest reply
+# ("I don't see anything in your hands right now") — _echoes_note guards this note too.
+_HAND_UNSEEN_NOTE = (
+    "NOTE: Right now your vision shows nothing in the human's hands — though a small "
+    "thing could escape your eyes, so this is only what you SEE, not certainty. Answer "
+    "from what you actually see; never guess or make up an object."
+)
+
+# lead word + same-sentence hand phrase (the [^.?!] gap keeps them in one clause). RU patterns
+# are the backstop for the raw request text and the translate-service-down degrade path — RU
+# is normally pivoted to EN before the model (languages.yaml: ru not native).
+_HAND_Q_EN_RX = re.compile(
+    r"\b(?:what|guess|tell me|do you know|can you (?:tell|see)|do you see)\b"
+    r"[^.?!]{0,40}?"
+    r"(?:\bin my hands?\b|\b(?:am i|i ?am|i'm) holding\b"
+    r"|\bdo i (?:have|hold)\b[^.?!]{0,20}?\bhands?\b)",
+    re.IGNORECASE)
+
+_HAND_Q_RU_RX = re.compile(
+    r"(?:\bчто\b|\bугадай\b|\bскажи\b|\bзнаешь\b|\bвидишь\b)"
+    r"[^.?!]{0,40}?"
+    r"(?:\bу меня в рук(?:е|ах)\b|\bв рук(?:е|ах) у меня\b|\bя держу\b|\bдержу я\b)",
+    re.IGNORECASE)
+
+
+def _asks_whats_in_hand(*texts) -> bool:
+    """Human hand/holding question, EN + RU, over any of the given text variants (the reply
+    path probes both the raw request text and the EN pivot)."""
+    return any(t and (_HAND_Q_EN_RX.search(t) or _HAND_Q_RU_RX.search(t)) for t in texts)
+
+
+def _sees_held_object(scene) -> bool:
+    """True when the rendered scene AFFIRMATIVELY shows a held object: a visible person with
+    a 'holding' attr, or any in-frame entity marked held_by. In that case the unseen-hand
+    note would contradict what the prompt already says — skip it."""
+    for e in scene.entities:
+        if not e.in_frame:
+            continue
+        if _is_person(e) and "holding" in e.attributes:
+            return True
+        if "held_by" in e.attributes:
+            return True
+    return False
+
 # last resort when even the regenerate decodes to junk: the reply path must never return
 # empty text (it wedges the SOAR say pipeline — lang.py lesson)
 _DEGENERATE_FALLBACK = "Hmm... I just lost my train of thought."
@@ -92,23 +143,29 @@ _SILENCE_INFERENCE_RX = re.compile(
     re.IGNORECASE)
 
 
-# any verbatim run of this many words from the steer note marks a retry as a prompt echo
+# any verbatim run of this many words from a steer/context note marks a reply as a prompt echo
 _NOTE_SHINGLE_WORDS = 5
+
+# notes whose verbatim echo in a decoded reply must never be voiced
+_ECHO_GUARDED_NOTES = (_NO_REPEAT_NOTE, _HAND_UNSEEN_NOTE)
 
 
 def _echoes_note(text: str) -> bool:
-    """True when a retry parrots the injected anti-repeat steer note (any verbatim 5-word
+    """True when a decoded reply parrots an injected steer/context note (any verbatim 5-word
     run, punctuation-insensitive). An echoed INSTRUCTION near-duplicates no recent REPLY, so
-    the repeat verify alone lets it through — live 2026-07-08 23:28 the note was voiced
-    word-for-word. Shingles come from ``_NO_REPEAT_NOTE`` itself: rewording the note cannot
+    the repeat verify alone lets it through — live 2026-07-08 23:28 the anti-repeat note was
+    voiced word-for-word. Shingles come from the notes themselves: rewording a note cannot
     desync this guard."""
     def _words(s):
         return re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).split()
-    w, n = _words(text), _words(_NO_REPEAT_NOTE)
+    w = _words(text)
     hay = {" ".join(w[i:i + _NOTE_SHINGLE_WORDS])
            for i in range(len(w) - _NOTE_SHINGLE_WORDS + 1)}
-    return any(" ".join(n[i:i + _NOTE_SHINGLE_WORDS]) in hay
-               for i in range(len(n) - _NOTE_SHINGLE_WORDS + 1))
+    return any(
+        " ".join(n[i:i + _NOTE_SHINGLE_WORDS]) in hay
+        for note in _ECHO_GUARDED_NOTES
+        for n in (_words(note),)
+        for i in range(len(n) - _NOTE_SHINGLE_WORDS + 1))
 
 
 def _is_degenerate(text: str, *, lull: bool) -> bool:
@@ -413,6 +470,13 @@ class Agent:
         elif re_poke:
             self.log("re-poke: already answered this turn — steering to move on")
             messages = messages + [{"role": "system", "content": _ALREADY_ANSWERED_NOTE}]
+        # unseen-hand guard: asked what they hold while the scene shows no held object —
+        # deliver the missing datum (see _HAND_UNSEEN_NOTE). Composes with re-poke ("move
+        # on" must not confabulate either); last position = strongest recency for the 7B.
+        if not lull and _asks_whats_in_hand(request.text, user_text) \
+                and not _sees_held_object(scene):
+            self.log("hand guard: no held object in scene — injecting unseen-hand note")
+            messages = messages + [{"role": "system", "content": _HAND_UNSEEN_NOTE}]
 
         # Final constrained structured reply. A bad decode RAISES here (handled in handle() ->
         # INTERNAL): unlike rephrase/self-talk this path has no safe local fallback text.
