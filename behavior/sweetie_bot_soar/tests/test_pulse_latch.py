@@ -104,6 +104,13 @@ def test_press_down_at_tick_during_refractory_is_exposed():
     assert pl.exposed(1.10) == []           # exposure ended with the release
 
 
+def test_defaults_match_deployed_config():
+    # soar.yaml carries the same values; the code defaults must not drift from it
+    pl = PulseLatch()
+    assert pl.hold_s == 0.6
+    assert pl.cooldown_s == 0.8
+
+
 def test_zones_are_independent():
     pl = PulseLatch(hold_s=0.6, cooldown_s=1.5)
     pl.feed(["cheek_left"], 0.0)            # held cheek

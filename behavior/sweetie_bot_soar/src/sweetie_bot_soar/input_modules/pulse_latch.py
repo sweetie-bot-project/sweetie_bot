@@ -19,7 +19,7 @@ class PulseLatch:
       and release chatter after a hold cannot re-latch.
     """
 
-    def __init__(self, hold_s: float = 0.6, cooldown_s: float = 1.5):
+    def __init__(self, hold_s: float = 0.6, cooldown_s: float = 0.8):
         self.hold_s = float(hold_s)
         self.cooldown_s = float(cooldown_s)
         self._held = frozenset()        # zones down per the LAST message

@@ -28,7 +28,7 @@ class TouchPulse(InputModule):
             raise ValueError('TouchPulse input module: "last_activity_bins_map" parameter '
                              'must present.') from e
         self._latch = PulseLatch(hold_s=float(config.get('pulse_hold', 0.6)),
-                                 cooldown_s=float(config.get('cooldown', 1.5)))
+                                 cooldown_s=float(config.get('cooldown', 0.8)))
 
         self._lock = Lock()
         self._last_activity_timestamp = 0.0

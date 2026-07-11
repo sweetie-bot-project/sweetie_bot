@@ -21,11 +21,13 @@ soar:
             last_activity_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 10.0, 300.0] }
         touch:
             # touch_pulse (was: joystick): a tap shorter than a SOAR tick is edge-latched so
-            # it still boops; a refractory cooldown absorbs rapid re-taps (HANDOFF M.4b#4)
+            # it still boops; a refractory cooldown absorbs rapid re-tap LATCHES only —
+            # physically-held zones are ALWAYS exposed (finger on sensor = truth), so a
+            # retry hold after a boop she ignored while talking is seen immediately
             type: "touch_pulse"
             topic: "/touch"
             pulse_hold: 0.6
-            cooldown: 1.5
+            cooldown: 0.8
             last_activity_bins_map: { names: [ "now", "recently", "long-time" ], values: [ 3.0, 30.0 ] }
         swm:
             type: "swm"
