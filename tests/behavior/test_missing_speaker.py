@@ -83,7 +83,12 @@ def _establish_dialogue(world):
     unanswered entirely (verified in sim: TALK-HEARD + SOURCE, yet no GenerateReply goal)."""
     world.col["soar_log"].wait_grep("SPECIFIC: GREETING", timeout=30.0)
     t = _say_with_retry(world, "Hello Sweetie! How are you today?")
-    rospy.sleep(6.0)
+    # Drain until the answering PROCESS finishes, not a fixed sleep: say_and_wait returns at
+    # the reply TEXT, but the turn keeps running (voicing + spurious dance_stamp tool calls,
+    # ~7 s) — a fixed 6 s drain was outrun in sim and the follow-up ask landed mid-turn and
+    # went entirely unanswered (no talk-waiting-answer -> the search can never arm).
+    world.col["soar_log"].wait_grep(r"FINISH PROCESS llm-answering-on", timeout=30.0)
+    rospy.sleep(3.0)
     return t
 
 
@@ -114,15 +119,19 @@ def _go_missing(world):
 def test_missing_speaker_search_once_per_episode(world):
     _establish_dialogue(world)
 
-    # EPISODE 1 runs in the CROWD regime (the live loop context): a bystander spawned
-    # AFTER the ask has bound to 101 keeps some human visible, so searching-anyone can
-    # never fire and finish the talk — the talk keeps re-poking and, pre-fix, each cycle
-    # re-fires the search: the «Где вы» loop. (In an empty room searching-anyone ends the
-    # talk after the first search and masks the loop — verified in sim.)
+    # EPISODE 1 runs in the CROWD regime (the live loop context): a bystander keeps some
+    # human visible, so searching-anyone can never fire and finish the talk — the hold
+    # phase below then guards the livelock (pre-fix, a visible bystander killed the dead-
+    # continuer search via the resource arbiter and it relaunched every decide cycle).
+    # The bystander is spawned only AFTER the search launches: an un-greeted human spawned
+    # during the arming window steals her answer turn (SOAR tie-breaks toward the greeting)
+    # and talk-waiting-answer for the vanished speaker never arms (seen in sim run 7).
+    # Spawned visible through the search + hold, 202 also gets greeted while VISIBLE, so
+    # episode 2 never sees the greet-the-vanished-bystander + search-for-202 hazard.
     _go_missing(world)
-    world.spawn(person(id=202, bearing=-40.0, dist=2.0))
     assert _wait_count(world, _SEARCH_RX, 1, timeout=30.0), \
         "missing-speaker search never fired after the interlocutor went off-frame"
+    world.spawn(person(id=202, bearing=-40.0, dist=2.0))
     # THE CAP: one search per episode, however long the talk lives.
     rospy.sleep(40.0)
     assert _count(world, _SEARCH_RX) == 1, \
@@ -159,13 +168,15 @@ def test_missing_speaker_glance_once_then_gives_up(world):
         "is-missing never latched after the failed search"
     # the give-up phrase must NOT precede the glance (sequenced by the glanced latch)
     assert _count(world, _GONE_RX) == 0, "give-up reaction fired before the glance"
-    n_lookat0 = _count(world, _LOOKAT_HUMAN_RX)
 
     # the glance: a look-at lands on the (invisible) human, then the glance latch closes
+    # NOTE: no look-at-cmd-count assert here — the glance launches ~3 ms after MISSING-LATCHED,
+    # faster than any post-search baseline can be taken (anchor race), and lookat2 may also reuse
+    # an in-flight cmd without logging a new issue line. The glanced-missing latch itself requires
+    # the looking-at-missing-speaker process to have run to termination/deadline, so it IS the
+    # reliable evidence that the glance executed.
     assert world.col["soar_log"].wait_grep(_GLANCED_RX, timeout=20.0), \
         "glance at the last known position never ran (no glanced-missing latch)"
-    assert _count(world, _LOOKAT_HUMAN_RX) > n_lookat0, \
-        "no look-at cmd issued during the glance window"
 
     # give-up: the sad missing reaction, once, after the glance
     assert _wait_count(world, _GONE_RX, 1, timeout=30.0), \
