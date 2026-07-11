@@ -516,11 +516,14 @@ sp {talk-llm*propose*searching-anyone-have-failed-finish-talk
 # failed search and removed only when the speaker is seen again, so the cap re-arms on return.
 # Without the gate every utterance (incl. the search's own say) re-arms talk-waiting-answer
 # and the search loops forever.
-# Also gated on an empty flexbe channel so a fresh search never aborts a foreign in-flight
-# flexbe behavior (flexbe*propose*abort kills any cmd not owned by the current process).
+# NO flexbe-channel gate here: gating the proposer on an empty flexbe channel starves the
+# search behind the talk ANIMATIONS of her own answer turn (measured in sim: every
+# talk-waiting-answer window expired while a gesture cmd was in flight, so the search never
+# proposed). Aborting an in-flight animation to launch the search is the original pre-fix
+# semantics and is acceptable for this volatile, resource-arbitrated behavior; the loop/burst
+# protection lives in the continuer fix and the is-missing episode cap, not here.
 sp {talk-llm*propose*searching-missing-speaker
-	(state <s> ^substate talk-llm -^searching-missing-speaker ^beliefs <b> ^lang <lang> ^io.output-link <ol>)
-	-(<ol> ^flexbe <any-cmd>)
+	(state <s> ^substate talk-llm -^searching-missing-speaker ^beliefs <b> ^lang <lang>)
 	(<b> ^predicate <pred>)
 	(<pred> ^name talk-waiting-answer ^object <obj>)
 	(<obj> ^input-link <il> ^label <label>)
