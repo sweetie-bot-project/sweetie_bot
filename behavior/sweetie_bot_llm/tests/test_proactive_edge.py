@@ -40,11 +40,12 @@ def test_edge_is_structurally_exempt_from_gaps():
     assert "since_selftalk" not in inspect.signature(occlusion_edge_cue).parameters
 
 
-def test_held_repeat_cadence_unchanged():
-    # the ~30s repeat while covered stays gated in choose_proactive_cue: inside occluded_gap ->
-    # silent, past it -> complaint (pins "keep the existing repeat while held")
-    mid = (CFG.min_gap + CFG.occluded_gap) / 2.0
-    assert choose_proactive_cue(False, 100.0, mid, CFG, 0.0, occluded_for=100.0) is None
-    cue = choose_proactive_cue(False, 100.0, CFG.occluded_gap + 1.0, CFG, 0.0,
+def test_held_repeat_paces_on_occluded_gap():
+    # the repeat while covered stays gated in choose_proactive_cue by occluded_gap ALONE
+    # (her normal speech cadence, below and exempt from min_gap): inside the gap -> silent,
+    # past it -> complaint
+    assert choose_proactive_cue(False, 100.0, CFG.occluded_gap - 0.1, CFG, 0.0,
+                                occluded_for=100.0) is None
+    cue = choose_proactive_cue(False, 100.0, CFG.occluded_gap + 0.1, CFG, 0.0,
                                occluded_for=100.0)
     assert cue == CFG.cue_occluded

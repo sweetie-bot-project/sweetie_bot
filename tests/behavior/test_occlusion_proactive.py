@@ -44,9 +44,10 @@ def _wait_attempts(world, n, timeout):
 @behavior_test
 @scene()   # empty: alone/lull disabled below; while covered the chooser cannot reach them anyway
 @agent_params(**{"proactive/enabled": True,
-                 "proactive/min_gap": 25.0,          # production cadence, pinned on purpose
+                 "proactive/min_gap": 25.0,
                  "proactive/occluded_after": 10.0,
-                 "proactive/occluded_gap": 30.0,
+                 "proactive/occluded_gap": 30.0,     # pinned LARGE for phase isolation: only
+                                                     # the EDGE may fire inside these phases
                  "proactive/occluded_edge_after": 2.0,
                  "proactive/alone_after": 999.0, "proactive/alone_gap": 999.0,
                  "proactive/lull_after": 999.0, "proactive/lull_prob": 0.0})
@@ -80,3 +81,32 @@ def test_occlusion_edge_complains_immediately_once_per_episode(world):
         m = _SAY_EMO_RX.search(line)
         assert m and m.group(1) == "anger", \
             "occluded aside voiced without anger: %r" % (line,)
+
+
+@behavior_test
+@scene()
+@agent_params(**{"proactive/enabled": True,
+                 "proactive/min_gap": 25.0,          # deliberately LARGER than occluded_gap:
+                 "proactive/occluded_after": 5.0,    # the repeat landing well inside min_gap
+                 "proactive/occluded_gap": 8.0,      # IS the exemption proof
+                 "proactive/occluded_edge_after": 2.0,
+                 "proactive/alone_after": 999.0, "proactive/alone_gap": 999.0,
+                 "proactive/lull_after": 999.0, "proactive/lull_prob": 0.0})
+def test_occlusion_repeat_paces_on_occluded_gap_not_min_gap(world):
+    """While the cover HOLDS the complaint must repeat at her normal speech cadence
+    (occluded_gap), not the idle-aside min_gap (user 2026-07-11: 30s felt far too long).
+    With occluded_gap=8 < min_gap=25 the second complaint must land well before min_gap
+    could ever allow it. RED on the old chooser (min_gap gated the occlusion branch too)."""
+    world.spawn(entity("camera_occluded", id=903, bearing=0.0, dist=0.1))
+    assert _wait_attempts(world, 1, timeout=8.0), "no edge complaint on cover"
+
+    # too early for a repeat: _last_selftalk is set after generation, so since_selftalk
+    # here is at most ~4s < occluded_gap — the held path must still be silent
+    rospy.sleep(4.0)
+    assert _attempts(world) == 1, "repeat fired faster than occluded_gap"
+
+    # the held repeat must arrive ~occluded_gap after the last aside — far inside min_gap.
+    # Old code needed since_selftalk >= min_gap (25s) too: earliest repeat ~29s after the
+    # edge complaint, past this deadline -> RED there, GREEN with the exemption.
+    assert _wait_attempts(world, 2, timeout=20.0), \
+        "no held repeat at occluded_gap (min_gap still gating the occlusion branch?)"

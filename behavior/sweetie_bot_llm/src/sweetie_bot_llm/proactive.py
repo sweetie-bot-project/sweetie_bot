@@ -63,8 +63,12 @@ class ProactiveConfig:
     # C) covered camera: complain, do not muse. The cue names the situation explicitly (the
     # scene render adds its WARNING banner too); the anger override in _handle_self_talk
     # drives the eyes.
-    occluded_after: float = 10.0  # covered at least this long before complaining (s)
-    occluded_gap: float = 30.0    # minimum gap between successive complaints (s)
+    occluded_after: float = 10.0  # covered at least this long before a held-repeat
+                                  # complaint (s; the episode's FIRST complaint is the
+                                  # edge path below)
+    occluded_gap: float = 10.0    # gap between repeat complaints while covered (s) — her
+                                  # normal speech cadence; deliberately BELOW and exempt
+                                  # from min_gap (an ongoing cover is an active grievance)
     occluded_edge_after: float = 2.0  # rising-edge debounce before the IMMEDIATE first
                                       # complaint of a cover episode; that complaint is
                                       # exempt from min_gap/occluded_gap by design
@@ -84,13 +88,17 @@ def choose_proactive_cue(present, since_activity, since_selftalk, cfg, roll, occ
     roll           - a random draw in [0, 1) for the probabilistic lull trigger
     occluded_for   - seconds the camera has been continuously covered; None when clear
     """
-    if since_selftalk < cfg.min_gap:
-        return None
     if occluded_for is not None:
         # covered RIGHT NOW: complain (C) or stay silent — never fall through to the
-        # misleading "empty space" muse and never narrate a lull she cannot actually see
+        # misleading "empty space" muse and never narrate a lull she cannot actually see.
+        # Checked BEFORE min_gap: while the cover holds she repeats the complaint at her
+        # normal speech cadence (occluded_gap), not the idle-aside min_gap — an ongoing
+        # cover is an active grievance, not musing (user, 2026-07-11). The episode's
+        # FIRST complaint is faster still: the edge path (occlusion_edge_cue).
         if occluded_for >= cfg.occluded_after and since_selftalk >= cfg.occluded_gap:
             return cfg.cue_occluded
+        return None
+    if since_selftalk < cfg.min_gap:
         return None
     if not present:
         if since_selftalk >= cfg.alone_gap and since_activity >= cfg.alone_after:

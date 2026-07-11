@@ -31,7 +31,8 @@
              enabled (true)  period (5 s)  min_gap (25 s)
              alone_after (20 s)  alone_gap (45 s)      — empty-scene musing
              lull_after (18 s)   lull_prob (0.25)      — present-human lull asides
-             occluded_after (10 s)  occluded_gap (30 s) — repeat-while-covered complaints
+             occluded_after (10 s)  occluded_gap (10 s) — repeat-while-covered complaints
+                                         at her speech cadence (exempt from min_gap)
              occluded_edge_after (2 s) — immediate first complaint of a cover episode
                                          (exempt from min_gap/occluded_gap)
              profile (self-talk-en, alias of self-talk)  persona ('')
