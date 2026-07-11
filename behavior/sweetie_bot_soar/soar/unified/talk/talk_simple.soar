@@ -362,6 +362,25 @@ sp {talk-llm*propose*say-missing-answer
 	(<res> ^status succeed ^print (concat |SPECIFIC: MISSING.| (crlf)))
 }
 
+# found the missing interlocutor: joyful reaction on the is-missing -> visible transition ONLY
+# (a plain appearance never had is-missing, so it can not fire). Keyed on the removal event of
+# is-missing; the talk-said topic guard (ignor-me pattern) keeps it to one reaction while the
+# event stays inside the just window.
+sp {talk-llm*propose*say-found-missing
+	(state <s> ^substate talk-llm -^talking ^beliefs.event <ev> ^lang <lang> ^time.just <time> ^recent-events <ev-pool>)
+	(<ev> ^name is-missing ^reason terminated ^predicate.object <obj> ^initiated-at {> <time>})
+	(<obj> ^input-link.visible now)
+	-{(<ev-pool> ^event <ev2>)
+	  (<ev2> ^name talk-said ^object <obj> ^topic found)
+    }
+-->
+ 	(<s> ^operator <op> +, =)
+	(<op> ^name rule-answering-on-event ^substate verbolize ^process-args <args>)
+	(<args> ^object <obj> ^topic found ^text |Oh, there you are!| |I found you!| |There you are! I was looking for you.| ^animation-tag greeting ^lang <lang> ^emotion happy ^type statement)
+	(<args> ^result <res>)
+	(<res> ^status succeed ^print (concat |SPECIFIC: FOUND-MISSING.| (crlf)))
+}
+
 # EXTRA REACTIONS
 
 # brohoof
