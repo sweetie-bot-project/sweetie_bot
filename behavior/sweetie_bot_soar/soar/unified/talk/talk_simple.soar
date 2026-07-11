@@ -720,6 +720,18 @@ sp {talk-llm*propose*terminate-talk-waiting-answer
 	(<op> ^name terminate-talk-waiting-answer ^type cognition automatic ^remove-predicate <pred>)
 }
 
+# terminate predicate on touch: a human touching me is engaging, not ignoring me. Mirrors the
+# speaking rule above so touch counts as a response and the ignore deadline never fires while
+# I am being petted (the tactile verbolize reaction still happens on its own).
+sp {talk-llm*propose*terminate-talk-waiting-answer*on-touch
+	(state <s> ^bottom-state 1 ^beliefs.predicate <pred> ^io.input-link.touch <touch>)
+	(<pred> ^name talk-waiting-answer)
+	(<touch> ^pressed <spot>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name terminate-talk-waiting-answer ^type cognition automatic ^remove-predicate <pred>)
+}
+
 # talk-ignored: speaker ignors question
 sp {talk-llm*propose*add-talk-ignored
 	(state <s> ^top-state 1 ^beliefs <b> ^io.input-link.sound.speech 0)
