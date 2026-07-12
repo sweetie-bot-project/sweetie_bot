@@ -122,10 +122,14 @@ sp {talk-llm*elborate*visible-interlocutor
    (<s> ^visible-interlocutor <obj>)
 }
 
+# candidate for greeting: a VISIBLE (now) un-greeted human. Belief objects outlive
+# departure by memorize_time (600 s) and greeted decays at perceive-end recently, so
+# without the visibility gate she greets the empty air after someone leaves — and the
+# phantom talk-said then arms the missing-speaker search for them.
 sp {talk-llm*elborate*interlocutor-candidate
 	(state <s> ^substate talk-llm ^beliefs <b>)
 	(<b> ^object <obj>)
-	(<obj> ^type human -^is-greeted)
+	(<obj> ^type human -^is-greeted ^input-link.visible now)
 	-{(<b> ^predicate <pred>)
 	  (<pred> ^name expecting-to-leave ^object <obj>)
 	}
@@ -786,6 +790,9 @@ sp {talk-llm*prefer*talk-heard*speaker-detection-sound
 	(<s> ^operator <op1> > <op2>)
 }
 
+# NOTE: dead at binding time — the most recent event is the just-created objectless
+# talk-heard itself, so ^most-recent-event.object never matches here. The interlocutor
+# rule above is what actually resolves the speaker race; this stays as belt-and-braces.
 sp {talk-llm*elaborate*speaker-detection-visible-human*most-recent
 	(state <s> ^substate talk-llm ^operator <op> +  ^most-recent-event.object <obj>)
 	(<op> ^name speaker-detection-visible-human ^object <obj>)
