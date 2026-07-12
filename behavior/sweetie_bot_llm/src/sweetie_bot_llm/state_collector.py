@@ -7,12 +7,12 @@ from __future__ import annotations
 
 import datetime
 import threading
-from typing import List, Optional
+from typing import Dict, Optional
 
 import rospy
 from sensor_msgs.msg import BatteryState, JointState
 
-from sweetie_bot_ai_core.schema import RobotState
+from sweetie_bot_ai_core.schema import RobotState, ServoInfo, servo_info
 
 # HerkulexState is optional (message package may not be present in all builds).
 try:
@@ -63,9 +63,9 @@ class StateCollector:
                  ignored_servos=None, subscribe=True):
         self._lock = threading.Lock()
         self._battery: Optional[BatteryState] = None
-        self._servo_faults: List[str] = []
+        # name -> latest NOTABLE ServoInfo (off / overheating); healthy servos are absent
+        self._servos: Dict[str, ServoInfo] = {}
         self._fault_filter = ServoFaultFilter()
-        self._overheated: List[str] = []
         self._overheat_temp = overheat_temp
         # hardware-disabled servos (single source of truth: /disabled_servos, hardware.yaml):
         # entirely invisible to the LLM state view - a known-dead servo is not news
@@ -94,27 +94,31 @@ class StateCollector:
             self._moving = moving
 
     def _on_servo(self, msg):
-        if getattr(msg, "name", None) in self._ignored_servos:
+        name = getattr(msg, "name", None)
+        if name in self._ignored_servos:
             return
-        faults, overheated = [], []
+        key = name or "unknown"
         try:
-            name = getattr(msg, "name", None)
-            # transient bus comm errors are NORMAL on this robot - only persistent error
-            # states reach the LLM (she must not narrate routine comm retries as faults)
-            if self._fault_filter.observe(name or "unknown", bool(getattr(msg, "status_error", 0))):
-                faults.append(name or "unknown")
-            temp = getattr(msg, "temperature", None)
-            if temp is not None and temp > self._overheat_temp:
-                overheated.append(name or "unknown")
+            # decode is a pure function in the AI core (unit-tested there); this handler only
+            # adapts the ROS message fields (note the msg's field is misspelled "respond_sucess")
+            info = servo_info(
+                key,
+                status_error=int(getattr(msg, "status_error", 0) or 0),
+                status_detail=int(getattr(msg, "status_detail", 0) or 0),
+                respond_success=bool(getattr(msg, "respond_sucess", True)),
+                temperature_c=getattr(msg, "temperature", None),
+                overheat_temp=self._overheat_temp,
+            )
         except Exception:  # noqa: BLE001
-            pass
+            return
+        # transient bus comm glitches (a one-frame MOTOR_ON flicker or spurious error bit) are
+        # NORMAL on this robot - only a persistent notable state reaches the LLM
+        notable = self._fault_filter.observe(key, info is not None)
         with self._lock:
-            for n in faults:
-                if n not in self._servo_faults:
-                    self._servo_faults.append(n)
-            for n in overheated:
-                if n not in self._overheated:
-                    self._overheated.append(n)
+            if notable and info is not None:
+                self._servos[key] = info
+            else:
+                self._servos.pop(key, None)
 
     # -- RobotStateProvider seam --------------------------------------------------------------
 
@@ -122,8 +126,7 @@ class StateCollector:
         now = datetime.datetime.now()
         with self._lock:
             bat = self._battery
-            faults = list(self._servo_faults)
-            overheated = list(self._overheated)
+            servos = list(self._servos.values())
             moving = self._moving
         battery_percent = None
         battery_status = None
@@ -136,7 +139,6 @@ class StateCollector:
             weekday=_WEEKDAYS[now.weekday()],
             battery_percent=battery_percent,
             battery_status=battery_status,
-            servo_faults=faults,
-            overheated_servos=overheated,
+            servos=servos,
             moving=moving,
         )

@@ -7,7 +7,7 @@ from sweetie_bot_ai_core import (Agent, AgentRequest, ConversationHistory, Emoti
                                  PersonaRegistry, ProviderRegistry, RegistryError, RobotState,
                                  SentenceType, ToolRegistry, reply_json_schema)
 from sweetie_bot_ai_core.client import ChatResult
-from sweetie_bot_ai_core.schema import TalkTurn, ToolCall, ToolResult
+from sweetie_bot_ai_core.schema import ServoInfo, TalkTurn, ToolCall, ToolResult
 from sweetie_bot_ai_core.tools import DispatchMode
 from sweetie_bot_ai_core.translation import LanguagePolicy
 
@@ -23,7 +23,8 @@ def test_reply_schema_is_strict():
 
 def test_robot_state_summary():
     st = RobotState(battery_percent=80, battery_status="discharging", pose="body_nominal",
-                    datetime_iso="2026-06-30T16:00", servo_faults=["head_joint1"])
+                    datetime_iso="2026-06-30T16:00",
+                    servos=[ServoInfo(name="head_joint1", on=False)])
     summ = st.human_summary()
     assert "80%" in summ and "body_nominal" in summ and "head_joint1" in summ
 

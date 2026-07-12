@@ -321,15 +321,43 @@ def test_id_note_has_no_parroted_position_example():
     assert "say an id number" in low                  # id/interlocutor prohibition stays
 
 
-# --- servo faults name the leg location explicitly (front vs hind) ---------------------------
+# --- servo state: leg location + on/off + overheat temperature -------------------------------
 
-def test_servo_faults_get_leg_location():
-    from sweetie_bot_ai_core.schema import RobotState
-    summary = RobotState(servo_faults=["leg3_joint2"],
-                         overheated_servos=["leg1_hip"]).human_summary()
-    assert "hind-left leg" in summary        # leg3
-    assert "front-left leg" in summary       # leg1
+def test_servo_state_summary_locations_and_temp():
+    from sweetie_bot_ai_core.schema import RobotState, ServoInfo
+    summary = RobotState(servos=[
+        ServoInfo(name="leg3_joint2", on=False),
+        ServoInfo(name="leg1_hip", on=True, temperature_c=82.0),
+    ]).human_summary()
+    assert "hind-left leg" in summary        # leg3 -> off line
+    assert "front-left leg" in summary       # leg1 -> overheating line
     assert "leg3_joint2" in summary          # raw name preserved alongside the location
+    assert "off" in summary.lower()          # torque-off state is stated
+    assert "82°C" in summary                 # temperature surfaced
+
+
+def test_servo_info_decode():
+    from sweetie_bot_ai_core.schema import (SERVO_DETAIL_MOTOR_ON, SERVO_ERR_TEMPERATURE,
+                                            servo_info)
+    on = SERVO_DETAIL_MOTOR_ON
+    # healthy: torque on, cool, no error -> not surfaced at all
+    assert servo_info("s", status_detail=on, temperature_c=40.0) is None
+    # torque free -> OFF (no temperature, it is not hot)
+    s_off = servo_info("s", status_detail=0, temperature_c=40.0)
+    assert s_off is not None and s_off.on is False and s_off.temperature_c is None
+    # over the threshold -> overheating with the temperature surfaced, still holding
+    s_hot = servo_info("s", status_detail=on, temperature_c=85.0)
+    assert s_hot is not None and s_hot.on is True and s_hot.temperature_c == 85.0
+    # the overheat ERROR BIT counts even when the reported temp is under threshold
+    s_bit = servo_info("s", status_detail=on, status_error=SERVO_ERR_TEMPERATURE,
+                       temperature_c=50.0)
+    assert s_bit is not None and s_bit.temperature_c == 50.0
+    # not responding -> OFF regardless of the detail byte
+    s_dead = servo_info("s", status_detail=on, respond_success=False, temperature_c=40.0)
+    assert s_dead is not None and s_dead.on is False
+    # a non-thermal error bit alone on a healthy torqued servo is NOT surfaced (user-scoped:
+    # only overheat + on/off matter)
+    assert servo_info("s", status_detail=on, status_error=1, temperature_c=40.0) is None
 
 
 # --- purity: select_salient must not mutate its input (C2) -------------------------------------

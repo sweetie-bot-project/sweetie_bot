@@ -220,11 +220,12 @@ def test_servo_fault_filter_debounces_comm_noise():
 
 def test_state_collector_ignores_disabled_servos():
     """Servos listed in /disabled_servos are invisible to the LLM state view - no fault,
-    no overheat - while other servos still report (the ignore must not mask real faults)."""
+    no overheat - while other servos still report (the ignore must not mask a real overheat)."""
     import pytest
     pytest.importorskip("rospy")
     from types import SimpleNamespace
 
+    from sweetie_bot_ai_core.schema import SERVO_DETAIL_MOTOR_ON
     from sweetie_bot_llm.state_collector import ServoFaultFilter, StateCollector
 
     c = StateCollector(subscribe=False, ignored_servos={"head_joint1"})
@@ -233,9 +234,43 @@ def test_state_collector_ignores_disabled_servos():
     for ts in (0.0, 1.5, 3.0, 4.5):
         t[0] = ts
         for name in ("head_joint1", "leg1_joint2"):
-            c._on_servo(SimpleNamespace(name=name, status_error=1, temperature=95.0))
-    s = c.snapshot()
-    assert "head_joint1" not in s.servo_faults
-    assert "head_joint1" not in s.overheated_servos
-    assert "leg1_joint2" in s.servo_faults
-    assert "leg1_joint2" in s.overheated_servos
+            c._on_servo(SimpleNamespace(name=name, status_error=0,
+                                        status_detail=SERVO_DETAIL_MOTOR_ON, temperature=95.0))
+    names = {info.name for info in c.snapshot().servos}
+    assert "head_joint1" not in names          # ignored servo stays invisible
+    assert "leg1_joint2" in names
+    leg = next(i for i in c.snapshot().servos if i.name == "leg1_joint2")
+    assert leg.on is True                        # MOTOR_ON set -> holding
+    assert leg.temperature_c == 95.0             # overheat temperature surfaced
+
+
+def test_state_collector_servo_on_off_and_recovery():
+    """Torque-off vs overheat vs healthy map to the structured servos list; a servo that
+    returns healthy is dropped again on the first clean report."""
+    import pytest
+    pytest.importorskip("rospy")
+    from types import SimpleNamespace
+
+    from sweetie_bot_ai_core.schema import SERVO_DETAIL_MOTOR_ON
+    from sweetie_bot_llm.state_collector import ServoFaultFilter, StateCollector
+
+    on = SERVO_DETAIL_MOTOR_ON
+    c = StateCollector(subscribe=False)
+    t = [0.0]
+    c._fault_filter = ServoFaultFilter(min_reports=4, min_span_s=3.0, clock=lambda: t[0])
+
+    def feed(detail, temp):
+        for ts in (0.0, 1.5, 3.0, 4.5):
+            t[0] = ts
+            c._on_servo(SimpleNamespace(name="leg2_hip", status_error=0,
+                                        status_detail=detail, temperature=temp))
+
+    feed(on, 40.0)                                # healthy torqued servo: never surfaced
+    assert c.snapshot().servos == []
+    feed(0, 40.0)                                 # torque removed: reported OFF, not hot
+    svs = c.snapshot().servos
+    assert len(svs) == 1 and svs[0].name == "leg2_hip"
+    assert svs[0].on is False and svs[0].temperature_c is None
+    t[0] = 5.0                                    # torque restored: dropped on the first clean report
+    c._on_servo(SimpleNamespace(name="leg2_hip", status_error=0, status_detail=on, temperature=40.0))
+    assert c.snapshot().servos == []

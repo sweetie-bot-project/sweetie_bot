@@ -70,6 +70,36 @@ def friendly_servo(name: str) -> str:
     return name
 
 
+# Herkulex status-register bits — mirror sweetie_bot_herkulex_msgs/HerkulexState (kept as literals
+# so this module stays ROS-free). Full register lives in that .msg; we surface only two facts to
+# the LLM: whether the servo is holding (torque ON) and whether it is overheating.
+SERVO_ERR_TEMPERATURE = 4      # status_error: exceed-temperature / overheat bit
+SERVO_DETAIL_MOTOR_ON = 64     # status_detail: torque enabled (motor is holding)
+
+
+class ServoInfo(BaseModel):
+    """One NOTABLE servo surfaced to the LLM. Healthy servos are omitted entirely (the prompt must
+    never carry a ~20-servo telemetry dump). ``temperature_c`` is present ONLY when overheating."""
+    name: str
+    on: bool = True                        # torque enabled & responding, vs off/free/unreachable
+    temperature_c: Optional[float] = None  # set only when the servo is overheating
+
+
+def servo_info(name: str, *, status_error: int = 0, status_detail: int = 0,
+               respond_success: bool = True, temperature_c: Optional[float] = None,
+               overheat_temp: float = 80.0) -> Optional[ServoInfo]:
+    """Decode one Herkulex servo reading into a NOTABLE ServoInfo, or None when it is healthy
+    (torque on and not overheating). Mirrors SOAR's herkulex_servos.py: ``on`` = responding AND
+    MOTOR_ON (a torque-free, faulted or unreachable servo reads OFF); ``overheating`` = the
+    temperature error bit OR the measured temperature exceeding ``overheat_temp``."""
+    on = bool(respond_success) and bool(status_detail & SERVO_DETAIL_MOTOR_ON)
+    overheating = bool(status_error & SERVO_ERR_TEMPERATURE) or (
+        temperature_c is not None and temperature_c > overheat_temp)
+    if on and not overheating:
+        return None
+    return ServoInfo(name=name, on=on, temperature_c=temperature_c if overheating else None)
+
+
 # --- conversation + state --------------------------------------------------------------------
 
 class TalkTurn(BaseModel):
@@ -88,8 +118,7 @@ class RobotState(BaseModel):
     weekday: Optional[str] = None
     battery_percent: Optional[float] = None
     battery_status: Optional[str] = None   # charging|discharging|full|unknown
-    servo_faults: List[str] = Field(default_factory=list)   # names of failed/overheated servos
-    overheated_servos: List[str] = Field(default_factory=list)
+    servos: List[ServoInfo] = Field(default_factory=list)   # NOTABLE servos only (off / overheating)
     pose: Optional[str] = None             # named body pose, e.g. body_nominal
     moving: Optional[bool] = None
     mood: Optional[str] = None             # current robot mood if known
@@ -107,11 +136,15 @@ class RobotState(BaseModel):
         if self.pose:
             mv = " (moving)" if self.moving else ""
             parts.append(f"Body pose: {self.pose}{mv}.")
-        if self.servo_faults:
-            parts.append(f"Servo faults: {', '.join(friendly_servo(s) for s in self.servo_faults)}.")
-        if self.overheated_servos:
-            parts.append("Overheated servos: "
-                         f"{', '.join(friendly_servo(s) for s in self.overheated_servos)}.")
+        off = [s for s in self.servos if not s.on]
+        if off:
+            parts.append("Servos turned off (torque disabled): "
+                         f"{', '.join(friendly_servo(s.name) for s in off)}.")
+        hot = [s for s in self.servos if s.temperature_c is not None]
+        if hot:
+            items = ", ".join(f"{friendly_servo(s.name)} ({s.temperature_c:.0f}°C)"
+                              for s in hot)
+            parts.append(f"Overheating servos: {items}.")
         if self.mood:
             parts.append(f"Mood: {self.mood}.")
         return " ".join(parts)
