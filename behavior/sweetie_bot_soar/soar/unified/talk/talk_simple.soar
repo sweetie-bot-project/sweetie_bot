@@ -769,9 +769,28 @@ sp {talk-llm*propose*talk-heard*speaker-detection-sound
 #	(<op> ^print (concat (crlf) (crlf) |TALK-EVENT UNKNOWN from sound: | <label> (crlf)))
 #}
 
-# speech source: visible human
+# speech source: the focused interlocutor, when visible. Speech binds to the person we are
+# talking WITH, never to a bystander who merely lingers in the visible-now bin (single-
+# interlocutor focus). Same operator name as below on purpose: the sound/DOA prefer and the
+# center tie-break keep applying, and on live hardware sound can still shift focus.
+sp {talk-llm*propose*talk-heard*speaker-detection-interlocutor
+	(state <s> ^substate talk-llm ^visible-interlocutor <obj> ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^name {<<|talk-heard| |talk-illegible|>>} -^object)
+	(<obj> ^label <label>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name speaker-detection-visible-human ^type cognition automatic ^object <obj>)
+	(<op> ^parent <ev> ^attribute object ^link-value <obj>)
+	(<op> ^print (concat (crlf) (crlf) |TALK-EVENT SOURCE from vision: | <label> | [interlocutor]| (crlf)))
+}
+
+# speech source: visible human — bootstrap fallback ONLY, when no focused interlocutor is
+# in frame (first contact, or the interlocutor stepped out). The -^visible-interlocutor
+# negation keeps a just-vanished bystander (visible-now lingers 2 s past the last
+# detection) from stealing the event mid-conversation.
 sp {talk-llm*propose*talk-heard*speaker-detection-visible-human
-	(state <s> ^substate talk-llm ^beliefs <b>)
+	(state <s> ^substate talk-llm -^visible-interlocutor ^beliefs <b>)
 	(<b> ^event <ev> ^object <obj>)
 	(<ev> ^name {<<|talk-heard| |talk-illegible|>>} -^object)
 	(<obj> ^input-link.visible now ^label <label> ^type human)
