@@ -35,8 +35,15 @@ class ProactiveConfig:
     alone_gap: float = 45.0     # empty scene: minimum gap between successive "alone" asides (s)
     presence_grace: float = 10.0  # a human seen within this many seconds still counts as present -
                                   # bridges 1-frame detector dropouts of far/blurry people (T.1#3)
-    lull_after: float = 18.0    # human present but no turn for ~this long == a one-turn lull (s)
+    lull_after: float = 27.0    # human present but no turn for ~this long == a one-turn lull (s).
+                                # Raised 18->27 (user 2026-07-12: she filled every pause / mused
+                                # too much when nobody was speaking to her; keep in the 25-30 band,
+                                # above min_gap so a lull aside never beats the global idle floor).
     lull_prob: float = 0.25     # per-tick chance to speak up during a present lull
+    speech_grace: float = 2.5   # a human counts as "still speaking" for this long after the last
+                                # SPEECH_DETECTING frame / button release (mirrors SOAR's
+                                # soar.yaml speech_timeout); bridges 1-frame VAD dropouts so a
+                                # muse cannot slip through the gap between words (see is_human_speaking)
     profile: str = "self-talk-en"
     persona: str = ""
     # "alone" = nobody visible IN FRAME and nobody talking with her. She must NOT conclude the
@@ -78,7 +85,8 @@ class ProactiveConfig:
                          "to take their hand (or whatever it is) off your face.")
 
 
-def choose_proactive_cue(present, since_activity, since_selftalk, cfg, roll, occluded_for=None):
+def choose_proactive_cue(present, since_activity, since_selftalk, cfg, roll, occluded_for=None,
+                         human_speaking=False):
     """Return the cue string to speak, or None. Pure decision, no I/O.
 
     present        - is a human currently visible (bool)
@@ -87,7 +95,13 @@ def choose_proactive_cue(present, since_activity, since_selftalk, cfg, roll, occ
     cfg            - ProactiveConfig
     roll           - a random draw in [0, 1) for the probabilistic lull trigger
     occluded_for   - seconds the camera has been continuously covered; None when clear
+    human_speaking - a human is speaking or holding the push-to-talk button RIGHT NOW: never
+                     talk over them (restores the pre-refactor SOAR -^talking wait that this
+                     SOAR-bypassing driver dropped, regression commit 7e71bad1). OUTRANKS even
+                     the covered-camera complaint: waiting for the question beats complaining.
     """
+    if human_speaking:
+        return None
     if occluded_for is not None:
         # covered RIGHT NOW: complain (C) or stay silent — never fall through to the
         # misleading "empty space" muse and never narrate a lull she cannot actually see.
@@ -115,6 +129,21 @@ def choose_proactive_cue(present, since_activity, since_selftalk, cfg, roll, occ
         return pool[idx]
     return None
 
+
+def is_human_speaking(ptt_pressed, since_speech, speech_grace):
+    """Is a human speaking or about to speak right now? Pure predicate, no I/O.
+
+    Mirrors SOAR's `io.input-link.sound.speech` gate on the agent side (see choose_proactive_cue's
+    human_speaking). True while the push-to-talk button is held OR the last SPEECH_DETECTING frame
+    was within `speech_grace` seconds. The button is the earliest, most decisive signal (it fires
+    before any transcription and survives the mic-mute-while-she-talks); the graced speech flag
+    covers ambient/non-PTT speech and bridges 1-frame VAD dropouts between words.
+
+    ptt_pressed  - is the mic button currently held (bool)
+    since_speech - seconds since the last SPEECH_DETECTING frame (or button release)
+    speech_grace - how long a human still counts as speaking after that (s)
+    """
+    return bool(ptt_pressed or since_speech < speech_grace)
 
 
 def occlusion_edge_cue(occluded_for, complained, cfg):
