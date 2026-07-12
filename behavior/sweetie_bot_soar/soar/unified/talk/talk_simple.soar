@@ -525,7 +525,7 @@ sp {talk-llm*propose*searching-anyone
 -->
 	(<s> ^operator <op> +, <, =)
 	(<op> ^name searching-anyone ^substate flexbe ^process-args <a> ^interruptable volatile ^required-resource head speech)
-	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text |Where did everyone go?| ^lang <lang>)
+	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^is_relative True ^text |Where did everyone go?| ^lang <lang>)
 }
 
 # abort immediatelly if any human is found
@@ -576,7 +576,7 @@ sp {talk-llm*propose*searching-missing-speaker
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name searching-missing-speaker ^substate flexbe ^process-args <a> ^interruptable volatile ^required-resource head speech)
-	(<a> ^object <obj> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^text (concat |Where are you, interlocutor | <label> |?|) ^lang <lang>)
+	(<a> ^object <obj> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^is_relative True ^text (concat |Where are you, interlocutor | <label> |?|) ^lang <lang>)
 }
 
 # continue search until speaker is not visible
