@@ -36,6 +36,8 @@
   <!-- proto3 camera_link_optical is non-standard (x-left,y-up): negate x,y of published 3D positions -->
   <arg name="flip_optical_xy"    default="true" />
   <arg name="tracker"            default="human" />
+  <!-- local link fatal on the real robot -> ERROR-grade, never-silent logs. false in sim. -->
+  <arg name="provider_critical"  default="false" />
 
   <!-- py3.10 tracker-fuser SERVICE (ROS-free; bash wrapper execs the sbcore-venv). From sweetie_bot_vision. -->
   <node pkg="sweetie_bot_vision" type="vision_proxy_fuser_wrapper.sh" name="vision_proxy_fuser"
@@ -48,6 +50,7 @@
   <node pkg="sweetie_bot_vision_proxy" type="vision_proxy_node" name="vision_proxy" output="screen" respawn="true">
     <param name="pipeline" value="udpsrc port=$(arg gst_port) ! application/x-rtp,encoding-name=JPEG,payload=26 ! rtpjpegdepay ! jpegparse ! appsink name=sink emit-signals=true sync=false drop=true max-buffers=1" />
     <param name="provider_host"       value="$(arg provider_host)" />
+    <param name="provider_critical"   value="$(arg provider_critical)" />
     <param name="provider_port"       value="$(arg provider_port)" />
     <param name="remote_host"         value="$(arg remote_host)" if="$(eval remote_host != '')" />
     <param name="remote_port"         value="$(arg remote_port)" if="$(eval remote_port != '')" />

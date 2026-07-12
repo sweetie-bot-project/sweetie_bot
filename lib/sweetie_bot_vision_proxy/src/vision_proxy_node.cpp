@@ -202,37 +202,62 @@ struct ProviderConn {
     bool healthy() const { return healthy_; }
     // watchdog escalation: tear down even an apparently-open link and retry NOW (skip backoff).
     void force_reset() { teardown(); next_attempt_ = std::chrono::steady_clock::time_point{}; }
+    // mark this link CRITICAL (the local provider): failure logs at ERROR grade and NEVER goes
+    // silent -- run-real is blind without it. Optional remotes stay quiet-after-a-few (default).
+    void set_critical(bool c) { critical_ = c; }
 protected:
     virtual void teardown() = 0;
     // fail-fast gate: while in post-failure backoff, don't touch the network at all.
     bool in_backoff() const { return std::chrono::steady_clock::now() < next_attempt_; }
     void note_ok() {
-        if (!healthy_ && fails_ > 0) {
+        if (!healthy_ && fails_ > 0) {                 // failed -> healthy transition: ONE line
             double down = std::chrono::duration<double>(
                 std::chrono::steady_clock::now() - down_since_).count();
-            char b[64];
-            std::snprintf(b, sizeof(b), "RECOVERED after %.1fs (%d failures)", down, fails_);
-            ROS_WARN_STREAM(name() << " provider link " << b);
+            char b[80];
+            std::snprintf(b, sizeof(b), "(re)established after %.1fs (%d failed attempts)", down, fails_);
+            ROS_INFO_STREAM(name() << " provider link " << b);
         }
         healthy_ = true; fails_ = 0; backoff_s_ = 0.5;
     }
     void note_fail(const std::string& what) {
         teardown();
         auto now = std::chrono::steady_clock::now();
-        if (fails_ == 0) {                       // healthy -> dead transition: unthrottled, loud
+        ++fails_;
+        // Per-link severity. The LOCAL critical link (run-real is blind without it) logs at
+        // ERROR grade and NEVER goes silent: a throttled ERROR keeps repeating until it returns.
+        // An OPTIONAL remote logs a few loud WARNs, announces it is going quiet ONCE, then retries
+        // silently at a capped interval (degradation, not a fatal outage).
+        if (fails_ == 1) {                                  // healthy -> dead transition, unthrottled
             down_since_ = now;
-            ROS_WARN_STREAM(name() << " provider link DOWN: " << what);
-        } else {
-            ROS_WARN_STREAM_THROTTLE(3.0, name() << " query failed (retry in " << backoff_s_
-                                     << "s): " << what);
-        }
-        healthy_ = false; ++fails_;
+            if (critical_) ROS_ERROR_STREAM(name() << " LOCAL provider link DOWN: " << what);
+            else           ROS_WARN_STREAM (name() << " provider link DOWN: " << what);
+        } else if (critical_) {                             // critical: loud forever, but throttled
+            ROS_ERROR_STREAM_THROTTLE(loud_repeat_s_, name() << " LOCAL provider link still down (retry in "
+                                      << backoff_s_ << "s): " << what);
+        } else if (fails_ <= noisy_fails_) {                // optional remote: a few loud attempts
+            ROS_WARN_STREAM(name() << " provider link still down (attempt " << fails_
+                            << ", retry in " << backoff_s_ << "s): " << what);
+        } else if (fails_ == noisy_fails_ + 1) {            // ...then announce going quiet, ONCE
+            ROS_WARN_STREAM(name() << " provider link still down after " << noisy_fails_
+                            << " attempts -- retrying quietly every " << quiet_backoff_s_ << "s");
+        }                                                   // fails_ > noisy_fails_+1: silent, keep retrying
+        healthy_ = false;
         next_attempt_ = now + std::chrono::duration_cast<std::chrono::steady_clock::duration>(
             std::chrono::duration<double>(backoff_s_));
-        backoff_s_ = std::min(backoff_s_ * 2.0, 3.0);
+        double cap = critical_ ? loud_cap_s_
+                   : (fails_ > noisy_fails_ ? quiet_backoff_s_ : loud_cap_s_);
+        backoff_s_ = std::min(backoff_s_ * 2.0, cap);
     }
     bool healthy_ = false; int fails_ = 0;
     double backoff_s_ = 0.5;
+    // logging policy. critical_ (local): ERROR + never silent, fast reconnect (loud_cap_s_).
+    // else (remote): quiet after noisy_fails_ loud WARNs, capped retry at quiet_backoff_s_.
+    // loud_repeat_s_ = throttle window for the critical link's repeated ERROR.
+    bool critical_ = false;
+    int noisy_fails_ = 5;
+    double loud_cap_s_ = 3.0;
+    double quiet_backoff_s_ = 30.0;
+    double loud_repeat_s_ = 15.0;
     std::chrono::steady_clock::time_point down_since_{}, next_attempt_{};
 };
 
@@ -473,6 +498,10 @@ public:
         // a reconnect cycle (and an ERROR log) when nothing succeeds for too long.
         pnh_.param<double>("provider_io_timeout", provider_io_timeout_, 2.0);
         pnh_.param<double>("provider_watchdog", provider_watchdog_, 10.0);
+        // provider_critical: the LOCAL link is FATAL on the real robot (run-real is blind without
+        // it) -> ERROR-grade, never-silent logging. Default false so sim/noreal (no local
+        // container) keeps a clean log. vision.launch wires this to run_real.
+        pnh_.param<bool>("provider_critical", provider_critical_, false);
         pnh_.param<std::string>("fuser_host", fuser_host_, "127.0.0.1");
         pnh_.param<int>("fuser_port", fuser_port_, 9100);
         pnh_.param<int>("ring_size", ring_size_, 60);
@@ -674,6 +703,22 @@ private:
         if (type == "hand") return cv::Scalar(0, 200, 255);
         return cv::Scalar(200, 200, 200);
     }
+    // measured-color debug tint: BGR for each name the perfusion colorname vocabulary can emit,
+    // so a box is drawn in the RECOGNIZED color (operator eyeballs the recognizer per object).
+    bool named_color(const std::string& name, cv::Scalar& out) {
+        static const std::unordered_map<std::string, cv::Scalar> M = {
+            {"red", {0, 0, 230}},          {"orange", {0, 140, 255}},
+            {"yellow", {0, 220, 255}},     {"green", {0, 200, 0}},
+            {"cyan", {255, 255, 0}},       {"blue", {255, 80, 0}},
+            {"purple", {200, 0, 160}},     {"pink", {180, 105, 255}},
+            {"brown", {19, 69, 139}},      {"lavender", {230, 162, 200}},
+            {"white", {255, 255, 255}},    {"gray", {128, 128, 128}},
+            {"black", {50, 50, 50}}};
+        auto it = M.find(name);
+        if (it == M.end()) return false;
+        out = it->second;
+        return true;
+    }
     void draw(cv::Mat& img, const std::vector<TrackedDet>& dets, uint64_t cap_ts_ns) {
         // TOP-LEFT HUD: rolling FPS (publish cadence) + pipeline latency (ingest -> draw).
         uint64_t now_wall = ros::WallTime::now().toNSec();
@@ -744,6 +789,9 @@ private:
         }
         for (const auto& d : dets) {
             cv::Scalar c = color_for(d.type);
+            std::string measured;   // "color" attribute -> tint box + append name to the label
+            for (const auto& kv : d.attrs)
+                if (kv.first == "color" && named_color(kv.second, c)) measured = kv.second;
             cv::Rect r(cv::Point(static_cast<int>(d.bbox[0]), static_cast<int>(d.bbox[1])),
                        cv::Point(static_cast<int>(d.bbox[2]), static_cast<int>(d.bbox[3])));
             r &= cv::Rect(0, 0, img.cols, img.rows);
@@ -759,6 +807,7 @@ private:
             std::string lbl = d.type;
             if (d.track_id >= 0) lbl += "#" + std::to_string(d.track_id);
             for (const auto& kv : d.attrs) if (kv.first == "gesture") lbl += " " + kv.second;
+            if (!measured.empty()) lbl += " " + measured;
             int base = 0; cv::Size ts = cv::getTextSize(lbl, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &base);
             int tx = r.x, ty = std::max(0, r.y - 5);
             cv::rectangle(img, cv::Rect(tx, std::max(0, ty - ts.height - base), ts.width + 4, ts.height + base + 4), c, cv::FILLED);
@@ -804,6 +853,7 @@ private:
     void worker_loop() {
         WsProvider local(prov_host_, prov_port_, prov_target_, "",  // local = synchronous FAST path;
                          provider_io_timeout_);                       // every op wall-clock-bounded
+        local.set_critical(provider_critical_);   // real robot: ERROR-grade, never-silent local logs
         std::vector<std::unique_ptr<RemoteWorker>> remotes;          // remotes = async best-effort, off the loop
         for (const auto& rs : remote_specs_) {                       // one async worker per remote container
             std::unique_ptr<ProviderConn> conn;
@@ -907,6 +957,7 @@ private:
     double remote_max_staleness_ms_ = 1500.0;
     double provider_io_timeout_ = 2.0;   // per-op wall-clock bound on the local provider link (s)
     double provider_watchdog_ = 10.0;    // no-local-success escalation threshold (s)
+    bool provider_critical_ = false;     // local link fatal (run-real): ERROR + never-silent logs
     double local_down_secs_ = 0.0;       // seconds since last successful local reply (worker thread)
     GstElement* pipeline_p_ = nullptr; GstAppSink* appsink_ = nullptr;
     std::atomic<bool> running_{false};

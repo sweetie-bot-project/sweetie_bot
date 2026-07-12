@@ -22,6 +22,7 @@
 			<arg name="image_frame_id"   value="$(arg frame_id)"/>
 			<arg name="detections_topic" value="detections"/>
 			<arg name="tracker"          value="human"/>
+			<arg name="provider_critical" value="$(arg run_real)"/>
 			<arg name="remote_host"      value="$(arg remote_host)"/>
 			<arg name="remote_port"      value="$(arg remote_port)"/>
 			<arg name="remote_insecure"  value="$(arg remote_insecure)"/>
