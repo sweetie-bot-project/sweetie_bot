@@ -148,7 +148,7 @@ sp {joystick*propose*disable-joystick
 	-(<b> ^process <proc>)
 -->
 	(<s> ^operator <op> +, =)
-	(<op> ^name disable-joystick-head-eyes ^type decision-enter automatic ^removed-output-command enable-joystick ^output-command-args <cmd>)
+	(<op> ^name disable-joystick-head-eyes ^type decision-enter automatic ^remove-output-command enable-joystick ^output-command-args <cmd>)
 }
 
 #
