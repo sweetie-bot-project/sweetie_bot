@@ -120,7 +120,10 @@ def select_salient(state: SceneState, cfg: SceneConfig) -> SceneState:
 
 # --- inter-turn diff -------------------------------------------------------------------------
 
-_PERSON_TYPES = ("person", "human", "face")
+# "body" = a face-less human track (pose/IoU, no bound face) from the vision fuser; it is
+# EXCLUSIVELY human (ponies are pony/pony_face). Kept in sync with proactive.py:_HUMAN_TYPES —
+# the two drifted once and she read the raw label "body" aloud (live 2026-07-12).
+_PERSON_TYPES = ("person", "human", "face", "body")
 
 
 def _is_person(e: SceneEntity) -> bool:

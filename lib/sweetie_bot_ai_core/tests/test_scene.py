@@ -101,6 +101,24 @@ def test_render_remembered():
     assert "id 9" in txt and "14s ago" in txt and "left" in txt
 
 
+def test_body_entity_reads_as_person():
+    """A face-less human track arrives from the vision fuser as type='body'. It must read as a
+    PERSON, never the raw detector label 'body' (live 2026-07-12: she called people 'bodies').
+    'body' is exclusively human on the wire (ponies are pony/pony_face)."""
+    from sweetie_bot_ai_core.scene import _describe, _who
+    body = SceneEntity(id=4, type="body", bearing_deg=0.0, zone=Zone.front)
+    desc = _describe(body, CFG).lower()
+    assert "person" in desc and "body" not in desc     # "a person (id 4)", not "a body ..."
+    assert _who(body) == "someone"
+    # full ambient block never leaks the label
+    txt = render_scene(select_salient(SceneState(entities=[body]), CFG), [], CFG)
+    assert "a person" in txt and "body" not in txt.lower()
+    # arrival event uses human wording
+    arr = diff(SceneState(), SceneState(entities=[body]), CFG)
+    assert arr and "someone appeared" in arr[0].detail.lower()
+    assert "body" not in arr[0].detail.lower()
+
+
 # --- agent integration: scene block reaches the prompt ---------------------------------------
 
 class SceneStub:
