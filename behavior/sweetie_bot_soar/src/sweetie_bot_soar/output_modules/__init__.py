@@ -6,6 +6,7 @@ from . import speech_visualization
 from . import nop
 from . import lang
 from . import look_at
+from . import set_operational
 from . import set_mode
 from . import set_bool
 from . import hold_bool
