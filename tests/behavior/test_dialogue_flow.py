@@ -86,9 +86,25 @@ def test_standard_dialogue_flow(world):
     # (4) human says goodbye -> goodbye reaction (re-anchored: the (2) greeting is still in
     # the scrape buffer and repeated-marker waits must not match it)
     world.col["soar_log"].anchor()
+    # Say the goodbye in the post-turn quiet window: a canned reaction proposes on
+    # most-recent-event, and an in-flight chatter reply that completes AFTER the goodbye
+    # talk-heard steals that slot -> the canned goodbye is skipped and the LLM answers
+    # instead (pre-existing race, distinct from the speech-binding bug; the batch-answer
+    # turn model rework owns the real fix). Non-asserted wait: if chatter is idle the
+    # timeout just falls through and the say proceeds.
+    world.col["soar_log"].wait_grep(
+        r"FINISH PROCESS (llm-answering-on|rule-answering-on|rule-asking)", timeout=30.0)
+    rospy.sleep(0.5)
     world.speech.say("Okay, goodbye Sweetie!")
     assert world.col["soar_log"].wait_grep("SPECIFIC: GOODBYE", timeout=25.0), \
         "no goodbye reaction to 'goodbye'"
+    # mechanism pin: the goodbye speech must have bound via the interlocutor-exclusive
+    # rule, not a lucky indifferent pick between the interlocutor and the just-vanished
+    # bystander (pre-fix the binding was a ~coin flip; a bare GOODBYE pass proves nothing).
+    # Plain grep, not wait_grep: the log was anchored before the goodbye say and the
+    # GOODBYE marker is causally downstream of the binding.
+    assert world.col["soar_log"].grep(r"TALK-EVENT SOURCE from vision: .*\[interlocutor\]"), \
+        "goodbye bound via the bootstrap rule - interlocutor-exclusive binding regressed"
 
 
 # ---------------------------------------------------------------------------------------------
