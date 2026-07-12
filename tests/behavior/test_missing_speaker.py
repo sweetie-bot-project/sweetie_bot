@@ -210,3 +210,32 @@ def test_missing_speaker_found_reaction(world):
         "no found-you reaction when the missing interlocutor reappeared"
     rospy.sleep(10.0)
     assert _count(world, _FOUND_RX) == 1, "found-you reaction repeated"
+
+
+@behavior_test
+@agent_params(**{"proactive/enabled": False})
+@soar_params(**{"input/swm/time_bins_map": _FAST_BINS})
+@scene(person(id=101, bearing=0.0, dist=1.5))
+def test_missing_speaker_glance_is_relative(world):
+    """The missing-speaker glance must be dispatched RELATIVE, so head_look_around plays from the
+    CURRENT head pose and is admissible from any angle. This fixes the live 2026-07-12 abort: with
+    her head turned toward the vanished speaker, the ABSOLUTE trajectory (start-pose head_zero,
+    per-joint path tolerance 0.522 rad) was rejected `invalid_pose` by the RT controller before the
+    sweep, so «Where are you» never voiced and the MISSING-LATCHED / give-up / found chain never
+    armed. Structural check: the flexbe launch goal for the search carries is_relative=True. RED
+    before the `^is_relative True` flip in talk_simple.soar (the param is absent), GREEN after.
+
+    NOTE: the turned-head PHYSICAL proof (glance no longer aborts from a >0.522 rad head) is a LIVE
+    re-test, not a sim assertion: sim look-at splits gaze to the eyes and keeps the head under
+    ~0.3 rad, and a forced head drift is fought back below threshold by look-at, so the >0.522
+    condition cannot be faithfully staged in sim. test_missing_speaker_glance_once_then_gives_up
+    covers the full chain from a nominal head (relative must not regress it)."""
+    _establish_dialogue(world)
+    _go_missing(world)
+    assert _wait_count(world, _SEARCH_RX, 1, timeout=30.0), \
+        "missing-speaker search never fired after the interlocutor went off-frame"
+    search_lines = world.col["soar_log"].grep(_SEARCH_RX)
+    assert any("'/is_relative': 'True'" in ln for ln in search_lines), \
+        ("missing-speaker glance not dispatched relative — the flexbe goal lacks is_relative=True, "
+         "so head_look_around plays absolute and aborts invalid_pose from a turned head. "
+         "Launch lines: %r" % search_lines)
