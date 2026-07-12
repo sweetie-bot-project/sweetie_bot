@@ -104,7 +104,7 @@ class ExecuteStepSequenceBase(Dummy):
             elif state in [ GoalStatus.REJECTED, GoalStatus.RECALLED ]:
                 # Execution has not started, perhaps due to invalid goal.
                 self.log_once('warn', 'ExecuteStepSequence: FollowStepSequence action rejected: ' + repr(result.error_code) + " " + result.error_string)
-                if result.error_code in [ FollowStepSequence.TOLERANCE_VIOLATED, FollowStepSequence.UNABLE_TO_APPEND]:
+                if result.error_code in [ FollowStepSequenceResult.TOLERANCE_VIOLATED, FollowStepSequenceResult.UNABLE_TO_APPEND]:
                     # Starting pose is invalid
                     return 'invalid_pose'
             # Any another kind of error.
