@@ -30,14 +30,15 @@ from sweetie_bot_ai_core.schema import AgentRequest, RequestType
 from sweetie_bot_ai_core.scene import CAMERA_OCCLUDED
 
 from sweetie_bot_text_msgs.msg import (GenerateReplyAction, GenerateReplyFeedback,
-                                       GenerateReplyResult, TextActionAction, TextActionGoal)
+                                       GenerateReplyResult, SoundEvent, TextActionAction,
+                                       TextActionGoal)
 
 from .agent_bridge import goal_to_request, fill_result, first_lang
 from .state_collector import StateCollector
 from .scene_collector import SceneCollector
 from .tool_adapters import ToolAdapters
 from .proactive import (ProactiveConfig, choose_proactive_cue, humans_present,
-                        occlusion_edge_cue)
+                        is_human_speaking, occlusion_edge_cue)
 
 # entity types that count as a present human (ponies are pony_*, other objects are their label)
 
@@ -128,11 +129,25 @@ class LLMAgentNode:
         self._operational = True   # SOAR operational; proactive self-talk is gated OFF when False
         self._last_activity = rospy.get_time()   # time of the last real conversational turn
         self._last_selftalk = 0.0                # time of the last proactive aside
+        # PTT/speech gate: never muse over a human who is speaking or holding the push-to-talk
+        # button. Restores the pre-refactor SOAR -^talking wait that this SOAR-bypassing driver
+        # dropped (regression 7e71bad1); mirrors SOAR's io.input-link.sound.speech using the same
+        # SPEECH_DETECTING flag + the raw mic_button. Init BEFORE the subscriptions below so a
+        # message arriving mid-startup cannot hit an unset attribute.
+        self._ptt_pressed = False                # mic button currently held
+        self._last_human_speech = 0.0            # wall time of the last SPEECH_DETECTING frame
         self._occluded_since = None              # wall time the camera became covered; None=clear
         self._occlusion_complained = False       # this cover episode already got its complaint
         self._pro = self._load_proactive_cfg()
         self._voice = actionlib.SimpleActionClient(
             rospy.get_param("~proactive/voice_ns", "voice/syn"), TextActionAction)
+        # speech-gate inputs — the SAME signals SOAR gates self-talk on: the raw push-to-talk
+        # button (earliest, and it survives the mic-mute-while-she-talks) and the mic's
+        # SPEECH_DETECTING flag (ambient speech; read directly, NOT the scene's DOA-gated
+        # is_speech, which is dead live when the mic DOA is empty).
+        rospy.Subscriber("mic_button", Bool, self._on_mic_button, queue_size=1)
+        rospy.Subscriber(scene_cfg.get("sound_topic", "sound_event"), SoundEvent,
+                         self._on_sound_event, queue_size=1)
         self._pro_seq = 0
         if self._pro.enabled:
             rospy.Timer(rospy.Duration(self._pro.period), self._proactive_tick)
@@ -141,9 +156,10 @@ class LLMAgentNode:
             rospy.Timer(rospy.Duration(1.0), self._occlusion_edge_tick)
             rospy.loginfo("llm_agent: proactive self-talk driver ON "
                           "(period=%.1fs alone_after=%.0fs lull_after=%.0fs lull_prob=%.2f "
-                          "edge_after=%.1fs)",
+                          "edge_after=%.1fs speech_grace=%.1fs)",
                           self._pro.period, self._pro.alone_after, self._pro.lull_after,
-                          self._pro.lull_prob, self._pro.occluded_edge_after)
+                          self._pro.lull_prob, self._pro.occluded_edge_after,
+                          self._pro.speech_grace)
 
         rospy.loginfo("llm_agent: ready (personas=%s, providers=%s)",
                       personas.names(), list(registry.health().keys()))
@@ -155,7 +171,8 @@ class LLMAgentNode:
         d = ProactiveConfig()
         p = rospy.get_param("~proactive", {}) or {}
         for f in ("enabled", "period", "min_gap", "alone_after", "alone_gap", "lull_after",
-                  "lull_prob", "presence_grace", "profile", "persona", "cue_alone", "cue_lull", "cue_lull_pool",
+                  "lull_prob", "presence_grace", "speech_grace", "profile", "persona", "cue_alone",
+                  "cue_lull", "cue_lull_pool",
                   "occluded_after", "occluded_gap", "cue_occluded", "occluded_edge_after"):
             if f in p:
                 setattr(d, f, p[f])
@@ -199,6 +216,12 @@ class LLMAgentNode:
         return any((e.type or "") == CAMERA_OCCLUDED and getattr(e, "in_frame", True)
                    for e in snap.entities)
 
+    def _human_speaking(self, now) -> bool:
+        """A human is speaking / about to speak — hold all proactive speech (agent-side mirror of
+        SOAR's -^talking). Reuses the pure predicate so the gate is unit-testable off-robot."""
+        return is_human_speaking(self._ptt_pressed, now - self._last_human_speech,
+                                 self._pro.speech_grace)
+
     def _proactive_tick(self, _evt):
         # live-re-read the tunables so they can be adjusted with rosparam set without a restart
         self._pro = self._load_proactive_cfg()
@@ -212,7 +235,8 @@ class LLMAgentNode:
             occluded_for = self._update_occlusion(now)
             cue = choose_proactive_cue(self._humans_present(), now - self._last_activity,
                                        now - self._last_selftalk, self._pro, random.random(),
-                                       occluded_for=occluded_for)
+                                       occluded_for=occluded_for,
+                                       human_speaking=self._human_speaking(now))
             if cue is not None:
                 if occluded_for is not None:
                     # while covered the chooser can only have picked the occlusion cue:
@@ -242,6 +266,9 @@ class LLMAgentNode:
         the main tick via choose_proactive_cue)."""
         self._pro = self._load_proactive_cfg()
         if not self._pro.enabled or not self._operational or self._server.is_active():
+            return
+        # never complain over a human who is speaking/pressing PTT (mirror the main tick's gate)
+        if self._human_speaking(rospy.get_time()):
             return
         if not self._agent_lock.acquire(blocking=False):
             return
@@ -321,6 +348,23 @@ class LLMAgentNode:
         self._operational = bool(msg.data)
         rospy.loginfo("llm_agent: operational=%s (proactive self-talk %s)",
                       self._operational, "enabled" if self._operational else "gated OFF")
+
+    def _on_mic_button(self, msg: Bool):
+        # push-to-talk: while held the human is (about to be) speaking -> suppress muses; treat
+        # the press as fresh activity so the lull clock restarts and she stays quiet after release.
+        self._ptt_pressed = bool(msg.data)
+        if self._ptt_pressed:
+            self._last_activity = rospy.get_time()
+
+    def _on_sound_event(self, msg: SoundEvent):
+        # the same SPEECH_DETECTING flag SOAR reads (input_modules/sound.py). A human speaking
+        # counts as activity, so no lull aside fires for lull_after after they stop — this also
+        # covers the button-release -> transcription -> generate_reply gap (where _ptt_pressed is
+        # already False and speech_grace may have lapsed but is_active() has not yet latched).
+        if msg.sound_flags & SoundEvent.SPEECH_DETECTING:
+            now = rospy.get_time()
+            self._last_human_speech = now
+            self._last_activity = now
 
     def _on_set_persona(self, msg: String):
         if self._agent.personas.set_active(msg.data.strip()):
