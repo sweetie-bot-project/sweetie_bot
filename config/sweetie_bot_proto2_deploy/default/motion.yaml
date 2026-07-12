@@ -38,10 +38,18 @@ dynamics_inv:
     priority: 20
     legs: [ leg1, leg3, leg4, leg2 ]
     use_ref_joint_position: true
+    enable_adjustment: false
+    adjustment_enable_scale: false
+    adjustment_enable_projection: false
+    adjustment_min_effort_norm: 0.1
+    adjustment_max_value: 0.1
+    adjustment_alpha_free: 0.8
+    adjustment_coeff_contact: 0.001
 aggregator_real:
     priority: 20
     publish_on_timer: false
     publish_on_event: true
+    publish_effort: true
 kinematics_fwd_real:
     priority: 20
     kinematic_chains: [ leg1, leg3, leg4, leg2, head ]

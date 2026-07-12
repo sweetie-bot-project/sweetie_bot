@@ -39,8 +39,13 @@ class JoyDecoderBase
 JoyDecoderBase::JoyDecoderBase(ros::NodeHandle& nh, const std::string& name, const YAML::Node& node)
 {
 	set_enable_sub_ = nh.subscribe(name, 1, &JoyDecoderBase::callbackSetEnable, this);
-	is_enabled_ = false;
 	joy_sub_ = nh.subscribe(node["joy_topic"].as<std::string>(), 1, &JoyDecoderBase::callbackJoyMsg, this);
+	if (node["enabled_on_start"]) {
+		is_enabled_ = node["enabled_on_start"].as<bool>();
+	}
+	else {
+		is_enabled_ = true;
+	}
 }
 
 void JoyDecoderBase::setEnabled(bool enabled) 
@@ -312,8 +317,7 @@ int main(int argc, char **argv)
 		ROS_ERROR_STREAM("JoystickDecoder: configuration parse error: " << e.what());
 		return -1;
 	}
-	// start decoders
-	for(auto& decoder : decoders) decoder->setEnabled(true);
+	// start event loop
 	ros::spin();
 
 	return 0;

@@ -84,7 +84,7 @@ sp {general-movement*propose*animation
 # invoke RandHeadMovements for random timeout 
 # do this only in nominal pose
 sp {general-movement*propose*rand-head-movements
-	(state <s> ^name movement ^substate general ^mode full -^subprocess ^io.input-link.body.pose body_nominal)
+	(state <s> ^name movement ^substate general -^subprocess ^io.input-link.body.pose body_nominal)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name moving-head ^substate flexbe ^process-args <a> ^required-resource head ^interruptable volatile)

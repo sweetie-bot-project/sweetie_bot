@@ -68,3 +68,7 @@ soar:
             action_ns: "voice/syn"
         speech-visualization:
             topic: "hmi/speech_visualization"
+        enable-joystick:
+            type: 'hold-bool-topic'
+            topic: 'hmi/joy_decoder/head'
+

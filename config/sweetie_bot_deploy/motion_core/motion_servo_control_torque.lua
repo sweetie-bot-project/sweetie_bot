@@ -86,7 +86,9 @@ depl:stream("servo_ident.in_battery_state", ros:topic("~in_battery_state"))
 -- data flow: servo_ident -> servo_inv
 depl:connect("servo_ident.out_servo_models", "servo_inv.in_servo_models", rtt.Variable("ConnPolicy"));
 -- data flow: servo_ident -> aggregator_real
-depl:connect("servo_ident.out_torque_error_fixed", "aggregator_real.in_joints", rtt.Variable("ConnPolicy"));
+depl:connect("servo_ident.out_joints_fixed", "aggregator_real.in_joints", rtt.Variable("ConnPolicy"));
+-- data flow: servo_ident -> dynamics_inv
+depl:connect("servo_ident.out_joints_error_fixed", "dynamics_inv.in_joints_error_fixed", rtt.Variable("ConnPolicy"));
 -- timer syncronization: start of next control cycle
 depl:connect(timer.controller.port, "servo_ident.sync_step", rtt.Variable("ConnPolicy"));
 

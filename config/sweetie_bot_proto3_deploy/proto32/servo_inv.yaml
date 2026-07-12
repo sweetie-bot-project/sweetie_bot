@@ -6,8 +6,9 @@ servo_inv:
     extrapolate_position: false
 servo_ident:
     priority: 10
+    publish_joint_error: true
     control_delay: 0.0224
-    velocity_diff_cycles: 1
+    velocity_diff_cycles: 2
     min_accepted_velocity: 0.1
     relaxation_factor: 0.995
     error_averaging_time: 5.0

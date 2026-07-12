@@ -3,7 +3,7 @@ from .output_module import OutputModule, OutputModulesLoader
 import rospy
 from sweetie_bot_control_msgs.srv import SetMode, SetModeResponse, SetModeRequest
 
-class SetModeModule(OutputModule):
+class SetModeService(OutputModule):
 
     def _init(self, name, config):
         # module initialization
@@ -34,4 +34,4 @@ class SetModeModule(OutputModule):
         else:
             return 'failed'
 
-OutputModulesLoader.register("set-mode", SetModeModule)
+OutputModulesLoader.register("set-mode-service", SetModeService)

@@ -108,9 +108,6 @@ sp {talk-llm*elborate*interlocutor
 	-{(<b> ^predicate <pred>)
 	  (<pred> ^name expecting-to-leave ^object <obj>)
 	}
-	-{(<b> ^predicate <pred>)
-	  (<pred> ^name ignors-me ^actor <obj>)
-	}
 -->
    (<s> ^interlocutor <obj>)
 }
@@ -526,6 +523,17 @@ sp {talk-llm*propose*searching-anyone
 	(<s> ^operator <op> +, <, =)
 	(<op> ^name searching-anyone ^substate flexbe ^process-args <a> ^interruptable volatile ^required-resource head speech)
 	(<a> ^behavior ExecuteJointTrajectoryAndSay ^joint_trajectory |head_look_around| ^is_relative True ^text |Where did everyone go?| ^lang <lang>)
+}
+
+# continue search until someone is visible
+sp {talk-llm*propose*seaching-missing-speaker-wait
+	(state <s> ^substate talk-llm ^searching-anyone <proc> ^beliefs <b>)
+    -{(<b> ^object <obj>)
+      (<obj> ^type human ^input-link.visible now)
+     }
+-->
+	(<s> ^operator <o> +, =)
+	(<o> ^name searching-anyone-wait ^substate flexbe ^process-link <proc>)
 }
 
 # abort immediatelly if any human is found

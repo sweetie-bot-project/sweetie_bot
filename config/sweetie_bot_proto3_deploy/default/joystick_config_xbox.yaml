@@ -2,6 +2,7 @@ buttons:
     type: KeyPressed
     joy_topic: "joystick"
     key_topic: "keys_pressed"
+    enabled_on_start: true
     buttons:
         0: "3"
         1: "2"
@@ -27,10 +28,11 @@ buttons:
         5: "L2"
         6: "right"
         7: "down"
-eyes:
+head:
     type: JointAxes
     joy_topic: "joystick"
-    joints_topic: "eyes_joints_ref"
+    joints_topic: "joints_ref"
+    enabled_on_start: false
     buttons: {}
     axes:
         0:
@@ -43,12 +45,6 @@ eyes:
             speed: 0.0
             min: -1.2
             max: 1.2
-head:
-    type: JointAxes
-    joy_topic: "joystick"
-    joints_topic: "head_joints_ref"
-    buttons: {}
-    axes:
         4:
             joint: "head_joint1"
             speed: -0.4
