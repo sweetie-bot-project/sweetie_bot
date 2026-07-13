@@ -94,8 +94,11 @@ sp {joystick*propose*enable-joystick
 	(<ol> -^enable-joystick)
 -->
 	(<s> ^operator <op> +, >, =)
-	(<op> ^name enable-joystick-head-eyes ^type automatic ^add-output-command enable-joystick ^output-command-args <cmd>)
+	(<op> ^name enable-joystick-head-eyes ^type automatic)
+	(<op> ^add-output-command enable-joystick ^output-command-args <cmd>)
 	(<cmd> ^process <proc> ^automatic-remove 1)
+	(<op> ^add-output-command-2 enable-controller-joint-state-head ^output-command-args-2 <cmd2>)
+	(<cmd2> ^process <proc> ^automatic-remove 1 ^operational 1 ^resource head eyes)
 }
 
 # start process 
@@ -143,12 +146,23 @@ sp {joystick*propose*terminate-process
 
 # disable joystick if subprocess terminated
 sp {joystick*propose*disable-joystick
-	(state <s> ^top-state 1 ^beliefs <b> ^io.output-link.enable-joystick <cmd>)
+	(state <s> ^bottom-state 1 ^beliefs <b> ^io.output-link.enable-joystick <cmd>)
 	(<cmd> ^process <proc>)
 	-(<b> ^process <proc>)
 -->
 	(<s> ^operator <op> +, =)
 	(<op> ^name disable-joystick-head-eyes ^type decision-enter automatic ^remove-output-command enable-joystick ^output-command-args <cmd>)
+}
+
+# disable controller if subprocess terminated
+sp {joystick*propose*disable-controller
+	(state <s> ^bottom-state 1 ^beliefs <b> ^io.output-link.enable-controller-joint-state-head <cmd>)
+	(<cmd> ^process <proc>)
+	(<proc> ^substate joystick)
+	-(<b> ^process <proc>)
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name disable-controller-head-eyes ^type decision-enter automatic ^remove-output-command enable-controller-joint-state-head ^output-command-args <cmd>)
 }
 
 #

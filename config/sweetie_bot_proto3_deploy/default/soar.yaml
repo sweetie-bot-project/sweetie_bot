@@ -187,6 +187,9 @@ soar:
         enable-joystick:
             type: 'hold-bool-topic'
             topic: 'hmi/joy_decoder/head'
+        enable-controller-joint-state-head:
+            type: 'set-operational'
+            controller: 'motion/controller/joint_state_head'
         lang-model:
             type: 'lang-model'
             backend: agent
