@@ -49,6 +49,17 @@ ANSWERED_TURNS_WINDOW = 8      # human turns already answered (re-poke guard)
 SCENE_LOG_MAX_CHARS = 600
 
 
+class TurnAborted(Exception):
+    """The caller superseded this turn (e.g. a newer actionlib goal preempted it, or a real
+    turn arrived during a proactive aside): stop at the next LLM call boundary instead of
+    running the turn's remaining calls — on the single-flight GPU every wasted call
+    head-of-line blocks the goal that replaced us (2026-07-13 14b fluency diagnosis: superseded
+    rephrase goals finished all their calls, stalling the successor past the caller's ~3s
+    literal-text fallback). Deliberately NOT mapped to an error reply: an aborted turn is not
+    a failure, its result would be discarded — ``handle()`` re-raises it so the caller can
+    preempt cleanly (the never-empty-reply rule guards SUCCEEDED results, not superseded goals)."""
+
+
 _NO_REPEAT_NOTE = (
     "You already said almost exactly this a moment ago. Do NOT repeat yourself — say "
     "something clearly different, with fresh wording, and move the conversation forward."
@@ -238,6 +249,7 @@ class Agent:
         self._prev_scene = SceneState()
         self._recent_replies = deque(maxlen=RECENT_REPLIES_WINDOW)
         self._answered_turns = deque(maxlen=ANSWERED_TURNS_WINDOW)
+        self._abort_check = None   # per-turn; set by handle(), read by _chat()
         self.log = logger or (lambda m: None)
 
     # -- public entry -------------------------------------------------------------------------
@@ -270,7 +282,13 @@ class Agent:
                                      contains=True)
                    for prev in (*self._recent_replies, *extra))
 
-    def handle(self, request: AgentRequest) -> AgentReply:
+    def handle(self, request: AgentRequest,
+               abort_check: Optional[Callable[[], bool]] = None) -> AgentReply:
+        """``abort_check``: polled before every LLM call; True => raise :class:`TurnAborted`
+        (single-flight callers wire it to "a newer goal superseded this one"). Single-flight
+        by contract — the instance attribute is safe because callers already serialise
+        handle() (the node's _agent_lock)."""
+        self._abort_check = abort_check
         try:
             if request.request_type == RequestType.classify:
                 return self._handle_classify(request)
@@ -281,14 +299,26 @@ class Agent:
             if request.request_type == RequestType.assess_scene:
                 return self._handle_assess_scene(request)
             return self._handle_reply(request)
+        except TurnAborted:
+            self.log("turn aborted (superseded) — stopped at an LLM call boundary")
+            raise
         except RegistryError as e:
             self.log(f"registry error: {e}")
             return AgentReply(error_code=ErrorCode.SERVER_UNREACHABLE, error_desc=str(e))
         except Exception as e:  # noqa: BLE001 - never crash the caller
             self.log(f"agent internal error: {e!r}")
             return AgentReply(error_code=ErrorCode.INTERNAL, error_desc=repr(e))
+        finally:
+            self._abort_check = None
 
     # -- shared helpers (per-path degrade semantics stay with each caller) ----------------------
+
+    def _chat(self, *args, **kwargs):
+        """The single LLM choke point — every model call goes through here so a superseded
+        turn stops before its next call instead of finishing 2-4 doomed ones."""
+        if self._abort_check is not None and self._abort_check():
+            raise TurnAborted()
+        return self.registry.chat(*args, **kwargs)
 
     def _profile(self, name: str, fallback: str) -> ProfileConfig:
         """Resolve a profile name: exact -> strip a trailing '-<lang>' suffix (SOAR request
@@ -319,7 +349,8 @@ class Agent:
                               ) -> Tuple[str, Emotion, SentenceType, Optional[str]]:
         """Anti-repetition: if the decoded reply near-duplicates a recent line she is looping
         (SOAR can re-propose a talk op on near-identical event windows). Regenerate ONCE with a
-        diverging steer note and a bumped temperature. NEVER raises — on a failed retry, or a
+        diverging steer note and a bumped temperature. NEVER raises (except TurnAborted —
+        a superseded turn stops here like everywhere else) — on a failed retry, or a
         retry that parrots the steer note itself (``_echoes_note``), the first reply is kept
         (empty/error would wedge the SOAR say pipeline, lang.py lesson); the reply path's
         post-verify then lands on the fallback line instead of voicing the loop or the note.
@@ -337,7 +368,7 @@ class Agent:
                                        float(profile.options.get("temperature",
                                                                  base_temp_default))
                                        + REGEN_TEMP_BUMP)}
-            result, _ = self.registry.chat(
+            result, _ = self._chat(
                 messages + [{"role": "system", "content": _NO_REPEAT_NOTE}],
                 response_schema=reply_json_schema(), **opts)
             second = ReplyContent.model_validate(self._safe_json(result.content))
@@ -351,6 +382,8 @@ class Agent:
                     return text, emotion, sentence_type, None
                 return s_text, second.emotion, second.sentence_type, result.content
             return second.response_text, second.emotion, second.sentence_type, result.content
+        except TurnAborted:   # superseded turn: the result is discarded anyway — stop now
+            raise
         except Exception as e:  # noqa: BLE001 - keep the first reply if the retry fails
             self.log(f"anti-repeat retry failed: {e!r}")
             return text, emotion, sentence_type, None
@@ -359,7 +392,8 @@ class Agent:
                           ) -> Tuple[str, Emotion, SentenceType, Optional[str]]:
         """The decoded reply is junk (see ``_is_degenerate``): regenerate ONCE with a
         corrective note; if the retry is junk too, return the fixed fallback line — the
-        reply path must never return empty (lang.py lesson). NEVER raises."""
+        reply path must never return empty (lang.py lesson). NEVER raises (except
+        TurnAborted — a superseded turn stops here like everywhere else)."""
         self.log("degenerate reply — regenerating once")
         try:
             opts = {**profile.options,
@@ -367,13 +401,15 @@ class Agent:
                                        float(profile.options.get("temperature",
                                                                  REPLY_BASE_TEMP))
                                        + REGEN_TEMP_BUMP)}
-            result, _ = self.registry.chat(
+            result, _ = self._chat(
                 messages + [{"role": "system", "content": _RETRY_SENTENCE_NOTE}],
                 response_schema=reply_json_schema(), **opts)
             second = ReplyContent.model_validate(self._safe_json(result.content))
             s_text = (second.response_text or "").strip()
             if not _is_degenerate(s_text, lull=lull):
                 return s_text, second.emotion, second.sentence_type, result.content
+        except TurnAborted:   # superseded turn: the result is discarded anyway — stop now
+            raise
         except Exception as e:  # noqa: BLE001 - junk retry: fall through to the fallback line
             self.log(f"degenerate-reply retry failed: {e!r}")
         return _DEGENERATE_FALLBACK, Emotion.neutral, SentenceType.statement, None
@@ -480,7 +516,7 @@ class Agent:
 
         # Final constrained structured reply. A bad decode RAISES here (handled in handle() ->
         # INTERNAL): unlike rephrase/self-talk this path has no safe local fallback text.
-        result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
+        result, _ = self._chat(messages, response_schema=reply_json_schema(),
                                         **profile.options)
         content = ReplyContent.model_validate(self._safe_json(result.content))
         # her own turns as SOAR delivered them: after an agent restart/reset the in-memory
@@ -556,7 +592,7 @@ class Agent:
                      'and subject, boldly new phrasing:\n"%s"' % line)
         hist = ConversationHistory(max_verbatim_turns=0)
         messages = hist.build_messages(system_prompt, [], user_text)
-        result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
+        result, _ = self._chat(messages, response_schema=reply_json_schema(),
                                         **profile.options)
         # degrade to the canned line, never to silence
         text, emotion, sentence_type = self._decode_reply_or(result.content, line)
@@ -612,7 +648,7 @@ class Agent:
                      "Say one brief, spontaneous thought out loud." % cue)
         hist = ConversationHistory(max_verbatim_turns=0)
         messages = hist.build_messages(system_prompt, [], user_text)
-        result, _ = self.registry.chat(messages, response_schema=reply_json_schema(),
+        result, _ = self._chat(messages, response_schema=reply_json_schema(),
                                         **profile.options)
         # bad decode: stay silent — silence is a valid spontaneous "remark" on this path
         text, emotion, sentence_type = self._decode_reply_or(result.content, "")
@@ -649,7 +685,7 @@ class Agent:
         proposed: List[ToolCall] = []
         offered_tools = self.tools.to_openai_tools()
         for it in range(profile.max_tool_iters):
-            result, _name = self.registry.chat(messages, tools=offered_tools, **profile.options)
+            result, _name = self._chat(messages, tools=offered_tools, **profile.options)
             # observability (harness + live debugging): what the model DID with the offered
             # tools — a missing 'tool call <name>' adapter line is otherwise ambiguous between
             # "model declined" and "plumbing dropped it"
@@ -681,7 +717,7 @@ class Agent:
                f"that best fits the text. Allowed labels: {', '.join(labels)}.")
         messages = [{"role": "system", "content": sys},
                     {"role": "user", "content": request.text}]
-        result, _ = self.registry.chat(messages, response_schema=classify_json_schema(labels),
+        result, _ = self._chat(messages, response_schema=classify_json_schema(labels),
                                         temperature=0.0)
         label = self._safe_json(result.content).get("label", labels[-1])
         return AgentReply(response_text=str(label), language="en", raw=result.content)
