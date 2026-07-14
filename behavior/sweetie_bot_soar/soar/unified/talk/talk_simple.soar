@@ -36,6 +36,43 @@ sp {talk-llm*propose*expecting-to-leave
 	(<pred-new> ^name expecting-to-leave ^object <obj> ^deadline-time 60.0)
 }
 
+# recovery: the stonewalled human re-speaking cancels expecting-to-leave - addressing me
+# is engaging, not leaving (mirrors terminate-talk-waiting-answer). The initiated-at guard
+# excludes the goodbye talk-heard that caused the latch itself (it predates the predicate).
+# DEFERRED while a search behavior is in flight: answering launched mid-search trips a
+# pre-existing goal-stack no-change-impasse cascade that HALTS the SOAR kernel ("Goal stack
+# depth exceeded 23", 3 sessions in logs, two via pre-existing looking-at-human paths). The
+# talk-heard event persists in beliefs, so the cancel fires seconds later, search done.
+sp {talk-llm*propose*cancel-expecting-to-leave*on-speech
+	(state <s> ^bottom-state 1 ^beliefs <b>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name expecting-to-leave ^object <obj> ^initiated-at <tp>)
+	(<b> ^event <ev>)
+	(<ev> ^name talk-heard ^object <obj> ^initiated-at {> <tp>})
+	-{(<b> ^process <proc-search>)
+	  (<proc-search> ^name {<<|searching-missing-speaker| |searching-anyone|>>})}
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name cancel-expecting-to-leave ^type cognition automatic ^remove-predicate <pred>
+	      ^print (concat |SPECIFIC: LEAVE-CANCELLED SPEECH.| (crlf)))
+}
+
+# recovery: touch cancels ALL expecting-to-leave latches (touch is unattributed; physical
+# contact = engagement). Mirrors terminate-talk-waiting-answer*on-touch. Same search-in-
+# flight deferral as the on-speech rule (kernel-halt landmine, see above).
+sp {talk-llm*propose*cancel-expecting-to-leave*on-touch
+	(state <s> ^bottom-state 1 ^beliefs <b> ^io.input-link.touch <touch>)
+	(<b> ^predicate <pred>)
+	(<pred> ^name expecting-to-leave)
+	(<touch> ^pressed <spot>)
+	-{(<b> ^process <proc-search>)
+	  (<proc-search> ^name {<<|searching-missing-speaker| |searching-anyone|>>})}
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name cancel-expecting-to-leave ^type cognition automatic ^remove-predicate <pred>
+	      ^print (concat |SPECIFIC: LEAVE-CANCELLED TOUCH.| (crlf)))
+}
+
 #
 # ELABORATIONS 
 #
