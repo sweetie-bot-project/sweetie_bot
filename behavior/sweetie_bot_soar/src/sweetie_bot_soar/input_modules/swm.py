@@ -521,7 +521,13 @@ class SpatialWorldModel(InputModule):
             time_now = rospy.Time.now().to_sec();
             # spatial memory update is mandatory
             self.__updateSpatialMemory(time_now)
-            # remove WMEs which corresponds to outdated objects
+            # remove WMEs which corresponds to outdated objects (queued by
+            # __updateSpatialMemory: WMEs may only be destroyed in SOAR context;
+            # clear() without deinit() leaked them, and a removal during a kernel
+            # stop froze the leaked WME at `visible now` - the phantom behind the
+            # 2026-07-14 focusing-attention livelock)
+            for soar_view in self._soar_view_remove_list:
+                soar_view.deinit()
             self._soar_view_remove_list.clear()
             # update WMEs 
             for mem_elem in self._memory_map.values():
