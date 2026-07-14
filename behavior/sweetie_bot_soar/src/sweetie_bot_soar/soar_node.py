@@ -70,6 +70,10 @@ class SoarNode:
             result = self.soar.start()
         else:
             result = self.soar.stop()
+        # the SetBool path (rviz panel) used to be SILENT - the 2026-07-14 00:42:55
+        # operational-off toggle was invisible in the post-mortem logs. Grep seam: keep stable.
+        rospy.loginfo('soar: set_operational request: data=%s -> operational=%s (result=%s)',
+                      bool(req.data), bool(req.data) and bool(result), bool(result))
         self._publish_operational(bool(req.data) and bool(result))
         return SetBoolResponse(success = result)
 
