@@ -63,8 +63,12 @@ sp {attention*elaborate*reconsider-decision-utility-threshold
 
 # look at the object
 sp {attention*propose*look-at-new-atention-focus
-	(state <s> ^substate attention -^focusing-attention ^evaluation-frame <en> ^process <sproc>)
+	(state <s> ^substate attention -^focusing-attention ^evaluation-frame <en> ^process <sproc> ^beliefs <b>)
 	(<en> ^object <obj> ^utility <utility>)
+	-{
+	  (<b> ^predicate <pf>)
+	  (<pf> ^name attention-focus-failed ^object <obj>)
+	}
 	(<s> ^focus-reconsider-time <reconsider-time> ^attempt-to-focus-time <focus-timeout>)
 -->
 	(<s> ^operator <op> +, = <utility>)
@@ -83,8 +87,12 @@ sp {attention*propose*look-at-attention-focus
 
 # conside new attention focus if its utility is greater then threshold
 sp {attention*propose*switch-atention-focus
-	(state <s> ^substate attention ^focusing-attention <proc-old> ^evaluation-frame <eval-new> ^decision-reconsider-utility-threshold <threshold>)
+	(state <s> ^substate attention ^focusing-attention <proc-old> ^evaluation-frame <eval-new> ^decision-reconsider-utility-threshold <threshold> ^beliefs <b>)
 	(<eval-new> ^utility {>= <threshold> <utility>} ^object <obj>)
+	-{
+	  (<b> ^predicate <pf>)
+	  (<pf> ^name attention-focus-failed ^object <obj>)
+	}
 	(<s> ^focus-reconsider-time <reconsider-time> ^attempt-to-focus-time <focus-timeout>)
 -->
 	(<s> ^operator <op> +, = <utility>)
@@ -99,6 +107,61 @@ sp {attention*prefer*switch
 	(state <s> ^substate attention ^operator <op1> + ^operator {<> <op1> <op2>} +)
 	(<op1> ^name focusing-attention -^type continue-subprocess)
 	(<op2> ^name continue-focusing-attention)
+-->
+	(<s> ^operator <op1> > <op2>)
+}
+
+# FAILED-FOCUS LATCH
+
+# A focusing-attention process that terminates with status failed (look-at fast-fail: the
+# SWM store entry is gone while the belief WME persists, unsafe target, controller reject)
+# must not be re-proposed for the same object on the next decide cycle: live 2026-07-14 the
+# fast-fail loop ran at ~4/s for 5.5 min and starved the answer machinery. The latch is a
+# per-object belief predicate with a 15 s deadline (cleared by the native predicate
+# deadline sweep, log seam "DEADLINE predicate attention-focus-failed"), so a transient
+# failure costs an object at most 15 s of attention, never a permanent blacklist.
+# ^reason rejected (process evicted by the resource arbiter before running) must NOT
+# latch: resource churn is not the object's fault.
+sp {attention*propose*attention-focus-failed-latch
+	(state <s> ^substate attention ^beliefs <b>)
+	(<b> ^event <ev>)
+	(<ev> ^name focusing-attention ^reason terminated -^reason rejected ^status failed ^process.object <obj>)
+	-{
+	  (<b> ^predicate <pf>)
+	  (<pf> ^name attention-focus-failed ^object <obj>)
+	}
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name attention-focus-failed-latch ^type cognition automatic ^print (concat |SPECIFIC: ATTENTION-FOCUS-FAILED.| (crlf)))
+	(<op> ^add-predicate <pred-new>)
+	(<pred-new> ^name attention-focus-failed ^object <obj> ^deadline-time 15.0)
+}
+
+# if every candidate object is latched propose an explicit wait: the attention substate
+# stays selected by its parent while evaluation frames exist, and an operator-less
+# substate cascades state-no-change impasses
+sp {attention*propose*wait-all-focus-candidates-latched
+	(state <s> ^substate attention -^focusing-attention ^evaluation-frame ^beliefs <b>)
+	-{
+	  (<s> ^evaluation-frame <en>)
+	  (<en> ^object <obj>)
+	  -{
+	    (<b> ^predicate <pf>)
+	    (<pf> ^name attention-focus-failed ^object <obj>)
+	  }
+	}
+-->
+	(<s> ^operator <op> +, =)
+	(<op> ^name waiting-attention-focus ^substate wait)
+}
+
+# the latch must win the decision slot immediately: focusing-attention proposals carry
+# numeric utility preferences and value-based exploration starves a plain indifferent
+# cognition operator (observed: 61 fast-fails before the latch was first selected)
+sp {attention*prefer*failed-latch
+	(state <s> ^substate attention ^operator <op1> + ^operator {<> <op1> <op2>} +)
+	(<op1> ^name attention-focus-failed-latch)
+	(<op2> ^name <<|focusing-attention| |continue-focusing-attention|>>)
 -->
 	(<s> ^operator <op1> > <op2>)
 }
