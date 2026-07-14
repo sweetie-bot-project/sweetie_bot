@@ -28,6 +28,8 @@
   <arg name="gst_port"           default="5000" />
   <arg name="ring_size"          default="60" />
   <arg name="image_topic"        default="/image_raw" />
+  <!-- pre-draw pixels for dataset consumers (data recorder); image_topic keeps the HUD/boxes -->
+  <arg name="clean_image_topic"  default="/vision_proxy/image_clean" />
   <arg name="image_frame_id"     default="camera_link_optical" />
   <arg name="detections_topic"   default="detections" />
   <arg name="skeleton_topic"     default="/hmi/vision_skeletons" />
@@ -61,6 +63,7 @@
     <param name="fuser_port"          value="$(arg fuser_port)" />
     <param name="ring_size"           value="$(arg ring_size)" />
     <param name="image_topic"         value="$(arg image_topic)" />
+    <param name="clean_image_topic"   value="$(arg clean_image_topic)" />
     <param name="image_frame_id"      value="$(arg image_frame_id)" />
     <param name="detections_topic"    value="$(arg detections_topic)" />
     <param name="camera_rotation_deg" value="$(arg camera_rotation_deg)" />

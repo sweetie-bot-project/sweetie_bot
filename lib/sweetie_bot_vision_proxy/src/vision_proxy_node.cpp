@@ -506,6 +506,10 @@ public:
         pnh_.param<int>("fuser_port", fuser_port_, 9100);
         pnh_.param<int>("ring_size", ring_size_, 60);
         pnh_.param<std::string>("image_topic", image_topic_, "/image_raw");
+        // Pre-draw pixels for dataset consumers (the data recorder records this topic): image_topic
+        // keeps the HUD/boxes for the operator view, clean_image_topic carries the same frame
+        // BEFORE draw() mutates it. Published lazily (only while subscribed).
+        pnh_.param<std::string>("clean_image_topic", clean_image_topic_, "/vision_proxy/image_clean");
         pnh_.param<std::string>("image_frame_id", image_frame_id_, "camera_link_optical");
         pnh_.param<std::string>("detections_topic", det_topic_, "detections");
         // cyber HUD font via opencv_freetype; empty/missing path -> Hershey fallback
@@ -539,6 +543,7 @@ public:
         }
         result_pub_ = nh_.advertise<std_msgs::String>("/vision_proxy/result_json", 10);
         image_pub_ = nh_.advertise<sensor_msgs::Image>(image_topic_, 1);
+        clean_pub_ = nh_.advertise<sensor_msgs::Image>(clean_image_topic_, 1);
         det_pub_ = nh_.advertise<sweetie_bot_text_msgs::DetectionArray>(det_topic_, 5);
     }
     ~VisionProxyNode() { stop(); }
@@ -911,6 +916,9 @@ private:
                     std_msgs::Header hdr;
                     hdr.stamp = ros::Time().fromNSec(f.capture_ts_ns);
                     hdr.frame_id = image_frame_id_;
+                    // clean copy leaves before draw() mutates raw in place (toImageMsg copies)
+                    if (clean_pub_.getNumSubscribers() > 0)
+                        clean_pub_.publish(cv_bridge::CvImage(hdr, "bgr8", raw).toImageMsg());
                     draw(raw, std::vector<TrackedDet>(), f.capture_ts_ns);
                     image_pub_.publish(cv_bridge::CvImage(hdr, "bgr8", raw).toImageMsg());
                 }
@@ -929,6 +937,8 @@ private:
             cv::Mat raw_img = cv::imdecode(cv::Mat(1, static_cast<int>(f.jpeg.size()), CV_8UC1, f.jpeg.data()),
                                            cv::IMREAD_COLOR);
             if (!raw_img.empty()) {
+                if (clean_pub_.getNumSubscribers() > 0)
+                    clean_pub_.publish(cv_bridge::CvImage(hdr, "bgr8", raw_img).toImageMsg());
                 cv::Mat img = raw_img.clone();
                 draw(img, dets, f.capture_ts_ns);
                 image_pub_.publish(cv_bridge::CvImage(hdr, "bgr8", img).toImageMsg());
@@ -939,11 +949,11 @@ private:
     }
 
     ros::NodeHandle nh_, pnh_;
-    ros::Publisher result_pub_, image_pub_, det_pub_;
+    ros::Publisher result_pub_, image_pub_, clean_pub_, det_pub_;
     struct RemoteSpec { std::string host, target, token; int port = 443; bool tls = true; bool insecure = false; };
     std::vector<RemoteSpec> remote_specs_;
     std::string pipeline_, prov_host_, prov_target_, remote_host_, remote_target_, remote_token_,
-                fuser_host_, image_topic_, image_frame_id_, det_topic_;
+                fuser_host_, image_topic_, clean_image_topic_, image_frame_id_, det_topic_;
     std::map<std::string, std::string> type_map_;
     int prov_port_ = 8080, remote_port_ = 8443, fuser_port_ = 9100, ring_size_ = 60, rot_deg_ = 0;
     bool remote_insecure_ = true;
