@@ -133,6 +133,55 @@ def _sees_held_object(scene) -> bool:
             return True
     return False
 
+# position-recital guard: the scene block gives a LONE person no position (they are "you" —
+# scene.py locate_people), yet the model still narrates one from thin air ("You're right in
+# front of me." — 14B consistent 3/3, 2026-07-14; the 7B flaked the same ~1-in-2). There is
+# no data to remove at the source (pure inference, not a leak), so the backstop is post-decode
+# and DETERMINISTIC: sentences claiming a position the prompt never carried are stripped
+# (keeps the good part of the reply, no GPU); a fully-recital reply regenerates once with the
+# missing-datum note, then lands on the fixed fallback. Position talk stays legal when the
+# rendered scene_block itself carried it (crowds, located objects) — the gate reads the block,
+# the single source of truth for what she perceived. Scene jargon (interlocutor, raw ids) is
+# banned unconditionally: the prompt forbids speaking the id even when positions render.
+_POSITION_RECITAL_RX = re.compile(
+    r"\bin front\b"
+    r"|\b(?:to|on|at) (?:my|your) (?:left|right)\b"
+    r"|\b(?:left|right) of (?:me|you)\b",
+    re.IGNORECASE)
+
+_SCENE_JARGON_RX = re.compile(r"\binterlocutors?\b|\(\s*id\b", re.IGNORECASE)
+
+# regenerate-leg note: same doctrine as _HAND_UNSEEN_NOTE (deliver the missing datum as
+# context, no examples — negation blindness). Wording contract, both pinned by tests: must
+# not match the guard regexes itself, and must share no 5-word shingle with a natural reply
+# (_echoes_note guards this note too).
+_NO_POSITION_NOTE = (
+    "NOTE: Your scene awareness holds no placement details for anyone right now. "
+    "Speak to people warmly and directly, without describing where anyone is."
+)
+
+
+def _recites_scene(text: str, *, scene_has_position: bool) -> bool:
+    """True when a reply narrates scene internals she must not voice: scene jargon (always),
+    or a spatial position when the rendered scene carried none — position talk is legitimate
+    ONLY as recall of rendered data."""
+    if _SCENE_JARGON_RX.search(text or ""):
+        return True
+    return not scene_has_position and bool(_POSITION_RECITAL_RX.search(text or ""))
+
+
+_SENTENCE_SPLIT_RX = re.compile(r"(?<=[.!?…])\s+")
+
+
+def _strip_recital(text: str, *, scene_has_position: bool) -> str:
+    """Deterministically drop the reciting sentences, keeping the rest of the reply — the
+    observed failure shape is a good answer plus a trailing recital sentence, and stripping
+    rescues the answer identically on any model size."""
+    kept = [s for s in _SENTENCE_SPLIT_RX.split(text or "")
+            if s and not _recites_scene(s, scene_has_position=scene_has_position)]
+    return " ".join(kept).strip()
+
+
 # last resort when even the regenerate decodes to junk: the reply path must never return
 # empty text (it wedges the SOAR say pipeline — lang.py lesson)
 _DEGENERATE_FALLBACK = "Hmm... I just lost my train of thought."
@@ -158,7 +207,7 @@ _SILENCE_INFERENCE_RX = re.compile(
 _NOTE_SHINGLE_WORDS = 5
 
 # notes whose verbatim echo in a decoded reply must never be voiced
-_ECHO_GUARDED_NOTES = (_NO_REPEAT_NOTE, _HAND_UNSEEN_NOTE)
+_ECHO_GUARDED_NOTES = (_NO_REPEAT_NOTE, _HAND_UNSEEN_NOTE, _NO_POSITION_NOTE)
 
 
 def _echoes_note(text: str) -> bool:
@@ -414,6 +463,36 @@ class Agent:
             self.log(f"degenerate-reply retry failed: {e!r}")
         return _DEGENERATE_FALLBACK, Emotion.neutral, SentenceType.statement, None
 
+    def _retry_recital(self, messages, profile, *, lull: bool, scene_has_position: bool
+                       ) -> Tuple[str, Emotion, SentenceType, Optional[str]]:
+        """The whole reply was a scene recital (stripping left nothing usable): regenerate
+        ONCE with the missing-datum note; a retry that still recites, parrots the note, or
+        decodes to junk lands on the fixed fallback line — the recital is never voiced and
+        the reply path never returns empty. NEVER raises (except TurnAborted — a superseded
+        turn stops here like everywhere else)."""
+        self.log("position guard: reply is all recital — regenerating once")
+        try:
+            opts = {**profile.options,
+                    "temperature": min(REGEN_TEMP_CAP,
+                                       float(profile.options.get("temperature",
+                                                                 REPLY_BASE_TEMP))
+                                       + REGEN_TEMP_BUMP)}
+            result, _ = self._chat(
+                messages + [{"role": "system", "content": _NO_POSITION_NOTE}],
+                response_schema=reply_json_schema(), **opts)
+            second = ReplyContent.model_validate(self._safe_json(result.content))
+            s_text = (second.response_text or "").strip()
+            if not _is_degenerate(s_text, lull=lull) \
+                    and not _recites_scene(s_text, scene_has_position=scene_has_position) \
+                    and not _echoes_note(s_text):
+                return s_text, second.emotion, second.sentence_type, result.content
+            self.log(f"position guard: retry still recites — falling back: {s_text!r:.60}")
+        except TurnAborted:   # superseded turn: the result is discarded anyway — stop now
+            raise
+        except Exception as e:  # noqa: BLE001 - junk retry: fall through to the fallback line
+            self.log(f"position-guard retry failed: {e!r}")
+        return _DEGENERATE_FALLBACK, Emotion.neutral, SentenceType.statement, None
+
     def _decode_reply_or(self, content_str, fallback_text: str
                          ) -> Tuple[str, Emotion, SentenceType]:
         """Decode a constrained structured reply, degrading to ``fallback_text`` on a bad
@@ -535,6 +614,18 @@ class Agent:
         if _is_degenerate(text or "", lull=lull):
             text, emotion_c, sentence_type, retry_raw = self._retry_degenerate(
                 messages, profile, lull=lull)
+        # position-recital guard (deterministic, model-agnostic): never voice a position
+        # the prompt did not carry, nor scene jargon ever. Strip first — the observed failure
+        # shape leaves a natural reply — and regenerate only when stripping guts the reply.
+        scene_has_position = bool(_POSITION_RECITAL_RX.search(scene_block or ""))
+        if text and _recites_scene(text, scene_has_position=scene_has_position):
+            stripped = _strip_recital(text, scene_has_position=scene_has_position)
+            if not _is_degenerate(stripped, lull=lull):
+                self.log(f"position guard: recital stripped: {text!r:.80}")
+                text = stripped
+            else:
+                text, emotion_c, sentence_type, retry_raw = self._retry_recital(
+                    messages, profile, lull=lull, scene_has_position=scene_has_position)
         if text and text.strip():
             self._recent_replies.append(text.strip())
         # remember we answered this human turn, so a lull re-poke of the same text moves on
