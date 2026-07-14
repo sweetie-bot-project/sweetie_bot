@@ -25,6 +25,7 @@ from std_srvs.srv import Trigger, TriggerResponse
 
 from sweetie_bot_ai_core import (Agent, LanguagePolicy, PersonaRegistry, SceneConfig, ToolRegistry,
                                  build_llm_registry, load_profiles)
+from sweetie_bot_ai_core.agent import TurnAborted
 from sweetie_bot_ai_core.translation import LibreTranslateProvider
 from sweetie_bot_ai_core.schema import AgentRequest, RequestType
 from sweetie_bot_ai_core.scene import CAMERA_OCCLUDED
@@ -295,7 +296,14 @@ class LLMAgentNode:
                            text=cue, persona=(self._pro.persona or None),
                            text_language=lang, reply_language=lang)
         try:
-            reply = self._agent.handle(req)
+            # a real goal arriving makes the server active while we hold the lock — abort the
+            # aside at the next LLM call boundary instead of making the human wait out a
+            # doomed muse generation (the post-generation staleness guard below stays as the
+            # backstop for a goal that lands after the last call)
+            reply = self._agent.handle(req, abort_check=self._server.is_active)
+        except TurnAborted:
+            rospy.loginfo("llm_agent: [proactive] aborted mid-generation (real turn arrived)")
+            return
         except Exception as e:  # noqa: BLE001
             rospy.logwarn("llm_agent: proactive self_talk failed: %r", e)
             return
@@ -373,27 +381,48 @@ class LLMAgentNode:
             rospy.logwarn("llm_agent: unknown persona %s", msg.data)
 
     def _execute(self, goal):
-        if self._server.is_preempt_requested():
+        request = goal_to_request(goal)
+        # A REPLY goal is never aborted nor dropped: lang.py maps ANY non-SUCCEEDED terminal
+        # state to "error", which kills the answer and can wedge the SOAR say pipeline — a
+        # superseded reply is delivered late instead (a stale client handle ignores it).
+        # Droppable goals (rephrase/self_talk) abort freely: text_action.py answers PREEMPTED
+        # with its verbatim-line fallback (slow, not silent).
+        droppable = request.request_type != RequestType.reply
+        if droppable and self._server.is_preempt_requested():
             self._server.set_preempted()
             return
-        request = goal_to_request(goal)
         rospy.loginfo("llm_agent: request profile=%s lang=%s text=%r",
                       request.profile, request.text_language, request.text[:80])
-        with self._agent_lock:
-            reply = self._agent.handle(request)
+        try:
+            with self._agent_lock:
+                # abort at the next LLM call boundary when a newer goal supersedes this one:
+                # on the single-flight GPU, finishing a doomed multi-call turn head-of-line
+                # blocks the goal that replaced it (2026-07-13 fluency diagnosis)
+                reply = self._agent.handle(
+                    request,
+                    abort_check=self._server.is_preempt_requested if droppable else None)
+        except TurnAborted:
+            rospy.loginfo("llm_agent: goal superseded mid-generation — aborted at an LLM "
+                          "call boundary (profile=%s)", request.profile)
+            self._server.set_preempted()
+            return
         if request.request_type != RequestType.self_talk:
             self._last_activity = rospy.get_time()   # a real turn happened; reset the lull clock
 
-        if self._server.is_preempt_requested():
-            self._server.set_preempted()
-            return
+        # No post-generation preempt drop here: a computed reply is ALWAYS delivered. A
+        # finished rephrase delivered late is harmless (its caller either still waits or
+        # ignores the stale handle); a dropped REPLY surfaces as "error" in lang.py.
 
         # deliberate conversational pause: give the human a beat to breathe and think before
-        # she answers (tunable live via ~reply_delay; only for real spoken replies).
+        # she answers (tunable live via ~reply_delay; only for real spoken replies). The pause
+        # is for the HUMAN, not the queue: if a newer goal is already waiting, deliver now —
+        # but still deliver (a finished reply is never dropped; wedge-safety).
         if request.request_type == RequestType.reply and reply.error_code.value == 0:
-            delay = float(rospy.get_param("~reply_delay", 1.5))
-            if delay > 0:
-                rospy.sleep(delay)
+            deadline = rospy.get_time() + float(rospy.get_param("~reply_delay", 1.5))
+            while rospy.get_time() < deadline and not rospy.is_shutdown():
+                if self._server.is_preempt_requested():
+                    break
+                rospy.sleep(0.05)
 
         result = GenerateReplyResult()
         fill_result(result, reply)
