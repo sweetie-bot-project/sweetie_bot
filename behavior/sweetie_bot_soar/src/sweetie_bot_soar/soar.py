@@ -29,9 +29,12 @@ class Soar:
         self._kernel.RegisterForAgentEvent(sml.smlEVENT_BEFORE_AGENT_REINITIALIZED, Soar.beforeReinitCallback, self) 
         self._kernel.RegisterForAgentEvent(sml.smlEVENT_AFTER_AGENT_REINITIALIZED, Soar.afterReinitCallback, self) 
         # perform configuration
-        self._lock_cond = threading.Condition() # condition variable to protect 
+        self._lock_cond = threading.Condition() # condition variable to protect
         self._state = SoarState.UNCONFIGURED
         self._stop_request = False
+        # kernel self-halt tracking: a HALTED agent ignores run commands until InitSoar()
+        self._halted = False
+        self.on_halt = None # node-supplied hook, invoked once on spontaneous kernel halt
         self._update_timestamp = rospy.Time()
         self._update_period = 0.1
         self._input_modules = list()
@@ -67,6 +70,13 @@ class Soar:
         return True
 
     def printCallback(event_id, self, agent, message):
+        # The kernel announces a spontaneous self-halt (goal-stack no-change cascade, stack
+        # overflow) via a print event fired just before RunAllAgentsForever returns. Latch it
+        # here: it is the only reliable halt signal - GetRunState() reports INTERRUPTED for
+        # BOTH a halt and a clean requested stop, so it cannot tell them apart in stopCallback.
+        # The agent never calls (halt)/(interrupt) intentionally, so this string means a wedge.
+        if "System halted" in message:
+            self._halted = True
         rospy.loginfo("SOAR log: " + message.strip())
 
     def beforeReinitCallback(event_id, self, agent):
@@ -101,13 +111,37 @@ class Soar:
         rospy.loginfo("SOAR kernel is started.")
 
     def stopCallback(event_id, self, kernel):
-        # called in SOAR stream when kernel is started
+        # called in SOAR stream when kernel stops: requested stop OR spontaneous kernel
+        # self-halt ("Goal stack depth exceeded N on a no-change impasse" and kin), which
+        # previously left the node up but brain-dead with /soar/operational latched True.
+        # self._halted was latched by printCallback if this stop is a halt.
         with self._lock_cond:
             self._state = SoarState.STOPPED
+            halted = self._halted
             self._lock_cond.notify()
+        if halted:
+            # grep seam (keep stable): the halt used to be invisible outside the SOAR trace
+            rospy.logerr("soar: kernel HALTED by agent - operational forced off")
+            # forensics must run OUTSIDE this SML event callback: blocking client calls
+            # from inside an event handler can deadlock the kernel event thread
+            threading.Thread(target=self._dump_halt_forensics).start()
+            if self.on_halt is not None:
+                try:
+                    self.on_halt()
+                except Exception as e:
+                    rospy.logerr("soar: on_halt hook failed: %s", e)
+            return
         # log status
         if self.checkNoErrors():
             rospy.loginfo("SOAR kernel is stopped.")
+
+    def _dump_halt_forensics(self):
+        # goal-stack dump for the post-mortem; WM stays intact until InitSoar()
+        try:
+            stack = self._agent.ExecuteCommandLine("print --stack")
+            rospy.logerr("soar: goal stack at halt:\n%s", stack)
+        except Exception as e:
+            rospy.logerr("soar: goal stack dump failed: %s", e)
 
     def updateCallback(event_id, self, kernel, run_flags):
         # called in SOAR thread after output phases
@@ -147,6 +181,14 @@ class Soar:
             # check that state is correct
             if self._state != SoarState.STOPPED:
                 return False
+            # recover from a prior kernel self-halt: a HALTED agent silently ignores every
+            # run command until InitSoar() resets it. InitSoar fires the reinit callbacks,
+            # which cycle the io modules - the same proven path cleanup() uses. So the next
+            # set_operational(true) fully heals with no `rosnode kill /soar`.
+            if self._halted:
+                rospy.loginfo("soar: recovering from kernel halt (InitSoar)")
+                self._agent.InitSoar()
+                self._halted = False
             # start all agents: RunAllAgentsForever() blocks until kernel is stopped so run in new thread
             run_thread = threading.Thread(target = self._kernel.RunAllAgentsForever)
             run_thread.start()

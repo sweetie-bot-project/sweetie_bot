@@ -31,6 +31,11 @@ class SoarNode:
         self._toggle_debounce = ToggleDebounce(window_s=rospy.get_param('~toggle_debounce', 0.7))
         # create SOAR envelopment
         self.soar = Soar()
+        # a spontaneous kernel self-halt (goal-stack no-change cascade) leaves the node up but
+        # brain-dead; force the latched operational state off so gaters (llm_agent proactive,
+        # occlusion complaints, rviz panel) stop treating the dead brain as live. Recovery is
+        # a human re-enable: the next set_operational(true) InitSoar()s the kernel back.
+        self.soar.on_halt = self._on_kernel_halt
         self.timer = None
         self.period = 1.0
         # configure node: by default perform 3 attempts with 5 second period
@@ -64,6 +69,10 @@ class SoarNode:
             self.operational_pub.publish(Bool(bool(value)))
         except Exception:
             pass
+
+    def _on_kernel_halt(self):
+        # invoked from the SOAR thread when the kernel self-halts (see Soar.stopCallback).
+        self._publish_operational(False)
 
     def setOperationalCallback(self, req):
         if req.data:
