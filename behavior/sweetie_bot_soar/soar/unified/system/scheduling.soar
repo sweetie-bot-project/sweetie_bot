@@ -62,11 +62,17 @@ sp {scheduling*elaborate*orphaned-process-state
 # DECISIONS 
 
 # propose execute direct subprocesses without creation of scheduling state
-sp {scheduling*propose*direct-subprocess 
+# Indifferent (=): a parent may hold several active subprocesses at once (e.g. a flexbe
+# search and a look-at that momentarily co-activate). Their continue operators are equally
+# valid continuations; without = two of them TIE with no resolution -> tie impasse ->
+# state-no-change cascade to the goal-stack limit -> the kernel self-halts in a single
+# decision (before the resource-conflict machinery can evict the loser). = lets the decision
+# pick one and proceed; the conflict is then resolved on the next cycle as designed.
+sp {scheduling*propose*direct-subprocess
 	(state <s> ^substate <p-substate> ^subprocess <proc> ^level <level>)
 	(<proc> ^name <name> )
 -->
-	(<s> ^operator <op> +)
+	(<s> ^operator <op> +, =)
 	(<op> ^name <name> ^type scheduling decision-exit continue-subprocess ^process-link <proc>)
 	(<op> ^subprocess <proc> ^parent-substate <s> ^level <level>)
 }
@@ -80,12 +86,15 @@ sp {scheduling*propose*scheduling
 }
 
 # propose subprocesse which do not have state
-sp {scheduling*propose*subprocess 
+# Indifferent (=): same tie-impasse hazard as direct-subprocess above when a scheduling state
+# carries several process frames -- the per-frame continue operators must be indifferent so
+# two of them do not tie into the goal-stack-limit self-halt.
+sp {scheduling*propose*subprocess
 	(state <s> ^substate scheduling ^scheduling.process <frame>)
 	(<frame> ^level <level> ^link <proc> ^parent-substate <ps>)
 	(<proc> ^name <name>)
 -->
-	(<s> ^operator <op> +)
+	(<s> ^operator <op> +, =)
 	(<op> ^name <name> ^type scheduling continue-subprocess ^process-link <proc>)
 	(<op> ^subprocess <proc> ^level <level> ^parent-substate <ps>)
 }
