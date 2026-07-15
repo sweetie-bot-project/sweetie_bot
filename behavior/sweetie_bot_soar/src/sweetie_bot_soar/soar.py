@@ -174,6 +174,12 @@ class Soar:
 
     def start(self):
         with self._lock_cond:
+            # idempotent: a duplicate set_operational(true) while already RUNNING must not
+            # desync the latched /soar/operational. start() used to return False when already
+            # running, so the node recorded operational=False while the loop kept going (muses,
+            # occlusion complaints, rviz label silently suppressed). Mirror of the stop() fix.
+            if self._state == SoarState.RUNNING:
+                return True
             # check if kernel is unconfigured and configure it
             if self._state == SoarState.UNCONFIGURED:
                 if not self.configure():
