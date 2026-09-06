@@ -4,6 +4,17 @@ servo_inv:
     lead: 0.0
     sign_dead_zone: 0.001
     extrapolate_position: false
+    # Bound on the effort feedforward's share of the servo goal, in radians.
+    # The term is alpha[3]*effort/(kp*V*kgear) ~ 0.177 rad per N*m and was
+    # otherwise UNLIMITED -- the measured amplifier behind the leg eFuse trips.
+    # A clean stance needs under 0.015; a leg that tripped carried 0.479; a
+    # restore into a collapsed pose asked for 17.30, about three times the
+    # joint's whole travel, so every joint was driven to its mechanical limit
+    # at full PWM. Validated on the robot 2026-09-07: repro 1 no longer trips,
+    # and on the worst joint the commanded error was 0.147 rad instead of
+    # 0.385. Trade: under a pathological load the limb SAGS rather than
+    # tripping. 0 disables the bound and restores the previous behaviour.
+    effort_offset_max: 0.10
 servo_ident:
     priority: 10
     publish_joint_error: true
