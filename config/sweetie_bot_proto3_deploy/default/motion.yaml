@@ -58,9 +58,18 @@ dynamics_inv:
     adjustment_enable_scale: false
     adjustment_enable_projection: true
     adjustment_min_effort_norm: 0.1
-    adjustment_max_value: 0.1
+    adjustment_max_value: 0.05
     adjustment_coeff_contact: 0.001
     adjustment_alpha_free: 0.9
+    # Contact-weight ramp -- fault #1, hardware-validated 4.7x on 2026-09-06
+    # ("no more contact hunting"). A support producer stepping 0->1 transfers
+    # load over ~10 cycles instead of in one, which removes the shock that a
+    # support TRANSITION put through the chain. The component default is
+    # false, so without these two lines every brain restart disarms the fix.
+    # Properties exist only in the patched dynamics_inv on proto4; inert on a
+    # stock binary.
+    contact_weight_enable: true
+    contact_weight_rate: 0.1
 servo_inv:
     priority: 20
     lead: 0.056
