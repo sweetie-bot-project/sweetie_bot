@@ -56,11 +56,11 @@ dynamics_inv:
     use_ref_joint_position: true
     enable_adjustment: true
     adjustment_enable_scale: false
-    adjustment_enable_projection: false
+    adjustment_enable_projection: true
     adjustment_min_effort_norm: 0.1
     adjustment_max_value: 0.1
     adjustment_coeff_contact: 0.001
-    adjustment_alpha_free: 0.8
+    adjustment_alpha_free: 0.9
 servo_inv:
     priority: 20
     lead: 0.056
