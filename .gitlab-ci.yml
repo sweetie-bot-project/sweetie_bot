@@ -34,9 +34,15 @@
           hardware/sweetie_bot_mic_button/CATKIN_IGNORE \
           lib/sweetie_bot_vision_proxy/CATKIN_IGNORE
       else
+        # TEMPORARY: sweetie_bot_vision_proxy needs gstreamer-1.0 and
+        # gstreamer-app-1.0, which this image does not carry, so the package
+        # cannot be built here yet. amd64 is its REAL target -- delete this
+        # line as soon as the build image ships libgstreamer1.0-dev and
+        # libgstreamer-plugins-base1.0-dev (now declared in its package.xml).
         touch \
           hardware/sweetie_bot_self_test/CATKIN_IGNORE \
-          hardware/sweetie_bot_touch/CATKIN_IGNORE
+          hardware/sweetie_bot_touch/CATKIN_IGNORE \
+          lib/sweetie_bot_vision_proxy/CATKIN_IGNORE
       fi
     - |
       source "/opt/ros/$ROS_DISTRO/setup.bash"
