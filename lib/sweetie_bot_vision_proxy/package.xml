@@ -27,4 +27,9 @@
        gstreamer-1.0 + gstreamer-app-1.0, jsoncpp -->
   <depend>libboost-system-dev</depend>
   <depend>libjsoncpp-dev</depend>
+  <!-- gstreamer ingest; CMakeLists does pkg_check_modules(GST REQUIRED
+       gstreamer-1.0 gstreamer-app-1.0). gstreamer-app-1.0 comes from the
+       plugins-base development package. -->
+  <depend>libgstreamer1.0-dev</depend>
+  <depend>libgstreamer-plugins-base1.0-dev</depend>
 </package>
